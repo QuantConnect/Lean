@@ -30,6 +30,48 @@ namespace QuantConnect.Securities.Option
     public static class OptionStrategies
     {
         /// <summary>
+        /// Symbol properties database to use to get contract multipliers
+        /// </summary>
+        private static SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+
+        /// <summary>
+        /// Creates a Covered Call strategy that consists of selling one call contract and buying 1 lot shares of the underlying.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price for the call option contract</param>
+        /// <param name="expiration">The expiration date for the call option contract</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy CoveredCall(Symbol canonicalOption, decimal strike, DateTime expiration)
+        {
+            CheckCanonicalOptionSymbol(canonicalOption, "CoveredCall");
+            CheckExpirationDate(expiration, "CoveredCall", nameof(expiration));
+
+            var underlyingQuantity = (int)_symbolPropertiesDatabase.GetSymbolProperties(canonicalOption.ID.Market, canonicalOption,
+                canonicalOption.SecurityType, "").ContractMultiplier;
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.CoveredCall.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = new List<OptionStrategy.OptionLegData>
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = strike, Quantity = -1, Expiration = expiration
+                    }
+                },
+                UnderlyingLegs = new List<OptionStrategy.UnderlyingLegData>
+                {
+                    new OptionStrategy.UnderlyingLegData
+                    {
+                        Quantity = underlyingQuantity, Symbol = canonicalOption.Underlying
+                    }
+                }
+            };
+        }
+
+        /// <summary>
         /// Method creates new Bear Call Spread strategy, that consists of two calls with the same expiration but different strikes.
         /// The strike price of the short call is below the strike of the long call. This is a credit spread.
         /// </summary>
@@ -45,21 +87,12 @@ namespace QuantConnect.Securities.Option
             DateTime expiration
             )
         {
-            if (!canonicalOption.HasUnderlying ||
-                canonicalOption.ID.StrikePrice != 0.0m)
-            {
-                throw new ArgumentException("BearCallSpread: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
-            }
+            CheckCanonicalOptionSymbol(canonicalOption, "BearCallSpread");
+            CheckExpirationDate(expiration, "BearCallSpread", nameof(expiration));
 
             if (leg1Strike >= leg2Strike)
             {
                 throw new ArgumentException("BearCallSpread: leg1Strike must be less than leg2Strike", "leg1Strike, leg2Strike");
-            }
-
-            if (expiration == DateTime.MaxValue ||
-                expiration == DateTime.MinValue)
-            {
-                throw new ArgumentException("BearCallSpread: expiration must contain expiration date", nameof(expiration));
             }
 
             return new OptionStrategy
@@ -97,21 +130,12 @@ namespace QuantConnect.Securities.Option
             DateTime expiration
             )
         {
-            if (!canonicalOption.HasUnderlying ||
-                canonicalOption.ID.StrikePrice != 0.0m)
-            {
-                throw new ArgumentException("BearPutSpread: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
-            }
+            CheckCanonicalOptionSymbol(canonicalOption, "BearPutSpread");
+            CheckExpirationDate(expiration, "BearPutSpread", nameof(expiration));
 
             if (leg1Strike <= leg2Strike)
             {
                 throw new ArgumentException("BearPutSpread: leg1Strike must be greater than leg2Strike", "leg1Strike, leg2Strike");
-            }
-
-            if (expiration == DateTime.MaxValue ||
-                expiration == DateTime.MinValue)
-            {
-                throw new ArgumentException("BearPutSpread: expiration must contain expiration date", nameof(expiration));
             }
 
             return new OptionStrategy
@@ -150,21 +174,12 @@ namespace QuantConnect.Securities.Option
             DateTime expiration
             )
         {
-            if (!canonicalOption.HasUnderlying ||
-                canonicalOption.ID.StrikePrice != 0.0m)
-            {
-                throw new ArgumentException("BullCallSpread: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
-            }
+            CheckCanonicalOptionSymbol(canonicalOption, "BullCallSpread");
+            CheckExpirationDate(expiration, "BullCallSpread", nameof(expiration));
 
             if (leg1Strike >= leg2Strike)
             {
                 throw new ArgumentException("BullCallSpread: leg1Strike must be less than leg2Strike", "leg1Strike, leg2Strike");
-            }
-
-            if (expiration == DateTime.MaxValue ||
-                expiration == DateTime.MinValue)
-            {
-                throw new ArgumentException("BullCallSpread: expiration must contain expiration date", nameof(expiration));
             }
 
             return new OptionStrategy
@@ -202,21 +217,12 @@ namespace QuantConnect.Securities.Option
             DateTime expiration
             )
         {
-            if (!canonicalOption.HasUnderlying ||
-                canonicalOption.ID.StrikePrice != 0.0m)
-            {
-                throw new ArgumentException("BullPutSpread: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
-            }
+            CheckCanonicalOptionSymbol(canonicalOption, "BullPutSpread");
+            CheckExpirationDate(expiration, "BullPutSpread", nameof(expiration));
 
             if (leg1Strike <= leg2Strike)
             {
                 throw new ArgumentException("BullPutSpread: leg1Strike must be greater than leg2Strike", "leg1Strike, leg2Strike");
-            }
-
-            if (expiration == DateTime.MaxValue ||
-                expiration == DateTime.MinValue)
-            {
-                throw new ArgumentException("BullPutSpread: expiration must contain expiration date", nameof(expiration));
             }
 
             return new OptionStrategy
@@ -248,17 +254,8 @@ namespace QuantConnect.Securities.Option
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy Straddle(Symbol canonicalOption, decimal strike, DateTime expiration)
         {
-            if (!canonicalOption.HasUnderlying ||
-                canonicalOption.ID.StrikePrice != 0.0m)
-            {
-                throw new ArgumentException("Straddle: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
-            }
-
-            if (expiration == DateTime.MaxValue ||
-                expiration == DateTime.MinValue)
-            {
-                throw new ArgumentException("Straddle: expiration must contain expiration date", nameof(expiration));
-            }
+            CheckCanonicalOptionSymbol(canonicalOption, "Straddle");
+            CheckExpirationDate(expiration, "Straddle", nameof(expiration));
 
             return new OptionStrategy
             {
@@ -297,21 +294,12 @@ namespace QuantConnect.Securities.Option
             DateTime expiration
             )
         {
-            if (!canonicalOption.HasUnderlying ||
-                canonicalOption.ID.StrikePrice != 0.0m)
-            {
-                throw new ArgumentException("Strangle: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
-            }
+            CheckCanonicalOptionSymbol(canonicalOption, "Strangle");
+            CheckExpirationDate(expiration, "Strangle", nameof(expiration));
 
             if (leg1Strike <= leg2Strike)
             {
                 throw new ArgumentException("Strangle: leg1Strike must be greater than leg2Strike", "leg1Strike, leg2Strike");
-            }
-
-            if (expiration == DateTime.MaxValue ||
-                expiration == DateTime.MinValue)
-            {
-                throw new ArgumentException("Strangle: expiration must contain expiration date", nameof(expiration));
             }
 
             return new OptionStrategy
@@ -352,23 +340,14 @@ namespace QuantConnect.Securities.Option
             DateTime expiration
             )
         {
-            if (!canonicalOption.HasUnderlying ||
-                canonicalOption.ID.StrikePrice != 0.0m)
-            {
-                throw new ArgumentException("CallButterfly: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
-            }
+            CheckCanonicalOptionSymbol(canonicalOption, "CallButterfly");
+            CheckExpirationDate(expiration, "CallButterfly", nameof(expiration));
 
             if (leg1Strike <= leg2Strike ||
                 leg3Strike >= leg2Strike ||
                 leg1Strike - leg2Strike != leg2Strike - leg3Strike)
             {
                 throw new ArgumentException("CallButterfly: upper and lower strikes must both be equidistant from the middle strike", "leg1Strike, leg2Strike, leg3Strike");
-            }
-
-            if (expiration == DateTime.MaxValue ||
-                expiration == DateTime.MinValue)
-            {
-                throw new ArgumentException("CallButterfly: expiration must contain expiration date", nameof(expiration));
             }
 
             return new OptionStrategy
@@ -412,23 +391,14 @@ namespace QuantConnect.Securities.Option
             DateTime expiration
             )
         {
-            if (!canonicalOption.HasUnderlying ||
-                canonicalOption.ID.StrikePrice != 0.0m)
-            {
-                throw new ArgumentException("PutButterfly: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
-            }
+            CheckCanonicalOptionSymbol(canonicalOption, "PutButterfly");
+            CheckExpirationDate(expiration, "PutButterfly", nameof(expiration));
 
             if (leg1Strike <= leg2Strike ||
                 leg3Strike >= leg2Strike ||
                 leg1Strike - leg2Strike != leg2Strike - leg3Strike)
             {
                 throw new ArgumentException("PutButterfly: upper and lower strikes must both be equidistant from the middle strike", "leg1Strike, leg2Strike, leg3Strike");
-            }
-
-            if (expiration == DateTime.MaxValue ||
-                expiration == DateTime.MinValue)
-            {
-                throw new ArgumentException("PutButterfly: expiration must contain expiration date", nameof(expiration));
             }
 
             return new OptionStrategy
@@ -472,19 +442,9 @@ namespace QuantConnect.Securities.Option
             DateTime expiration2
             )
         {
-            if (!canonicalOption.HasUnderlying ||
-                canonicalOption.ID.StrikePrice != 0.0m)
-            {
-                throw new ArgumentException("CallCalendarSpread: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
-            }
-
-            if (expiration1 == DateTime.MaxValue ||
-                expiration1 == DateTime.MinValue ||
-                expiration2 == DateTime.MaxValue ||
-                expiration2 == DateTime.MinValue)
-            {
-                throw new ArgumentException("CallCalendarSpread: expiration must contain expiration date", "expiration1, expiration2");
-            }
+            CheckCanonicalOptionSymbol(canonicalOption, "CallCalendarSpread");
+            CheckExpirationDate(expiration1, "CallCalendarSpread", nameof(expiration1));
+            CheckExpirationDate(expiration2, "CallCalendarSpread", nameof(expiration2));
 
             if (expiration1 >= expiration2)
             {
@@ -525,19 +485,9 @@ namespace QuantConnect.Securities.Option
             DateTime expiration2
             )
         {
-            if (!canonicalOption.HasUnderlying ||
-                canonicalOption.ID.StrikePrice != 0.0m)
-            {
-                throw new ArgumentException("PutCalendarSpread: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
-            }
-
-            if (expiration1 == DateTime.MaxValue ||
-                expiration1 == DateTime.MinValue ||
-                expiration2 == DateTime.MaxValue ||
-                expiration2 == DateTime.MinValue)
-            {
-                throw new ArgumentException("PutCalendarSpread: expiration must contain expiration date", "expiration1, expiration2");
-            }
+            CheckCanonicalOptionSymbol(canonicalOption, "PutCalendarSpread");
+            CheckExpirationDate(expiration1, "PutCalendarSpread", nameof(expiration1));
+            CheckExpirationDate(expiration2, "PutCalendarSpread", nameof(expiration2));
 
             if (expiration1 >= expiration2)
             {
@@ -561,6 +511,28 @@ namespace QuantConnect.Securities.Option
                     }
                 }
             };
+        }
+
+        /// <summary>
+        /// Checks that canonical option symbol is valid
+        /// </summary>
+        private static void CheckCanonicalOptionSymbol(Symbol canonicalOption, string strategyName)
+        {
+            if (!canonicalOption.HasUnderlying || canonicalOption.ID.StrikePrice != 0.0m)
+            {
+                throw new ArgumentException($"{strategyName}: canonicalOption must contain canonical option symbol", nameof(canonicalOption));
+            }
+        }
+
+        /// <summary>
+        /// Checks that expiration date is valid
+        /// </summary>
+        private static void CheckExpirationDate(DateTime expiration, string strategyName, string parameterName)
+        {
+            if (expiration == DateTime.MaxValue || expiration == DateTime.MinValue)
+            {
+                throw new ArgumentException($"{strategyName}: expiration must contain expiration date", parameterName);
+            }
         }
     }
 }
