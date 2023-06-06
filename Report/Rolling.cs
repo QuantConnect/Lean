@@ -36,25 +36,20 @@ namespace QuantConnect.Report
         /// <returns>Rolling beta</returns>
         public static Series<DateTime, double> Beta(SortedList<DateTime, double> performancePoints, SortedList<DateTime, double> benchmarkPoints, int windowSize = 132)
         {
-            var dailyReturnsSeries = new Series<DateTime, double>(performancePoints);
-            dailyReturnsSeries.ResampleEquivalence(date => date.Date, s => s.LastValue())
-                .PercentChange();
+            var decimalDailyDictionary = new SortedDictionary<DateTime, decimal>(performancePoints.ToDictionary(item => item.Key, item => (decimal)item.Value));
+            var dailyDictionary = StatisticsBuilder.PreprocessPerformanceValues(decimalDailyDictionary);
+            var dailyReturnsSeries = new Series<DateTime, double>(dailyDictionary);
 
-            var benchmarkReturns = new Series<DateTime, double>(benchmarkPoints);
-            benchmarkReturns.ResampleEquivalence(date => date.Date, s => s.LastValue())
-                .CumulativeReturns();
-
+            Series<DateTime, double> benchmarkReturns;
             if (benchmarkPoints.Count != 0)
             {
                 var decimalBenchmarkDictionary = new SortedDictionary<DateTime, decimal>(benchmarkPoints.ToDictionary(item => item.Key, item => (decimal)item.Value));
-                var benchmarkReturnsList = StatisticsBuilder.CreateDifferences(decimalBenchmarkDictionary, benchmarkPoints.Keys.First(), benchmarkPoints.Keys.Last()).Skip(1);
-                benchmarkReturns = new Series<DateTime, double>(benchmarkReturnsList);
+                var benchmarkReturnsDictionary = StatisticsBuilder.CreateDifferences(decimalBenchmarkDictionary, benchmarkPoints.Keys.First(), benchmarkPoints.Keys.Last());
+                benchmarkReturns = new Series<DateTime, double>(benchmarkReturnsDictionary);
             }
-
-            if (performancePoints.Count != 0)
+            else
             {
-                var dailyDictionary = performancePoints.ToDictionary(item => item.Key, item => (double)(item.Value / 100)).Skip(2);
-                dailyReturnsSeries = new Series<DateTime, double>(dailyDictionary);
+                benchmarkReturns = new Series<DateTime, double>(benchmarkPoints);
             }
 
             var returns = Frame.CreateEmpty<DateTime, string>();

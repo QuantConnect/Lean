@@ -50,6 +50,7 @@ namespace QuantConnect.Tests.Report
             new double[] { 1.829905, 3.804112, -0.1581819, -0.04307238, -2.942012 }, 2, new double[] { -1.0071140181639988, -1.0070287327461955 })]
         [TestCase(new double[] { -32.85916, 54.16154, -10.30944, -20.34978, -97.10619 },
             new double[] { 1.829905, 3.804112, -0.1581819, -0.04307238, -2.942012 }, 2, new double[] { 0.0005318694569107083, -0.010360916195344518})]
+        [TestCase(new double[] { }, new double[] { }, 2, new double[] { })]
         public void BetaProducesCorrectValues(double[] benchmarkValues, double[] performanceValues, int period, double[] expected)
         {
             var benchmarkPoints = new SortedList<DateTime, double>(CreateFakeSeries(benchmarkValues));
