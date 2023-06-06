@@ -1397,7 +1397,7 @@ namespace QuantConnect.Algorithm
 
         private static void CheckComboOrderSizing(List<Leg> legs, decimal quantity)
         {
-            var greatestsCommonDivisor = legs.Select(leg => leg.Quantity).GreatestCommonDivisor();
+            var greatestsCommonDivisor = legs.Select(leg => Math.Abs(leg.Quantity)).GreatestCommonDivisor();
 
             if (greatestsCommonDivisor != 1)
             {
