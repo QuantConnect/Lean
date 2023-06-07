@@ -113,12 +113,10 @@ namespace QuantConnect.Statistics
 
             // Convert our benchmark values into a percentage daily performance of the benchmark, this will shorten the series by one since
             // its the percentage change between each entry (No day 0 sample)
-            var listBenchmark = CreateDifferences(benchmark, fromDate, toDate);
+            var benchmarkEnumerable = CreateBenchmarkDifferences(benchmark, fromDate, toDate);
 
-            // We will skip past day 1 of performance values to deal with the OnOpen orders causing misalignment between benchmark and
-            // algorithm performance. So we drop the first value of listBenchmark (Day 1), and drop two values from performance (Day 0, Day 1)
-            listBenchmark = listBenchmark.Skip(1).ToList();
-            var listPerformance = performance.Values.Skip(2).Select(x => (double)(x / 100)).ToList();
+            var listBenchmark = benchmarkEnumerable.Select(x => x.Value).ToList();
+            var listPerformance = PreprocessPerformanceValues(performance).Select(x => x.Value).ToList();
 
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
 
@@ -280,35 +278,63 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Creates a list of percentage change for the period
+        /// Yields pairs of date and percentage change for the period
         /// </summary>
         /// <param name="points">The values to calculate percentage change for</param>
         /// <param name="fromDate">Starting date (inclusive)</param>
         /// <param name="toDate">Ending date (inclusive)</param>
-        /// <returns>The list of percentage change</returns>
-        private static List<double> CreateDifferences(SortedDictionary<DateTime, decimal> points, DateTime fromDate, DateTime toDate)
+        /// <returns>Pairs of date and percentage change</returns>
+        public static IEnumerable<KeyValuePair<DateTime, double>> CreateBenchmarkDifferences(IEnumerable<KeyValuePair<DateTime, decimal>> points, DateTime fromDate, DateTime toDate)
         {
-            var dtPrevious = new DateTime();
-            var listPercentage = new List<double>();
+            DateTime dtPrevious = default;
+            var previous = 0m;
+            var firstValueSkipped = false;
+            double deltaPercentage;
 
             // Get points performance array for the given period:
-            foreach (var dt in points.Keys.Where(dt => dt >= fromDate.Date && dt.Date <= toDate))
+            foreach (var kvp in points.Where(kvp => kvp.Key >= fromDate.Date && kvp.Key.Date <= toDate))
             {
-                decimal previous;
-                var hasPrevious = points.TryGetValue(dtPrevious, out previous);
-                if (hasPrevious && previous != 0)
-                {
-                    var deltaPercentage = (points[dt] - previous) / previous;
-                    listPercentage.Add((double)deltaPercentage);
-                }
-                else if (hasPrevious)
-                {
-                    listPercentage.Add(0);
-                }
-                dtPrevious = dt;
-            }
+                var dt = kvp.Key;
+                var value = kvp.Value;
 
-            return listPercentage;
+                if (dtPrevious != default)
+                {
+                    deltaPercentage = 0;
+                    if (previous != 0)
+                    {
+                        deltaPercentage = (double)((value - previous) / previous);
+                    }
+
+                    // We will skip past day 1 of performance values to deal with the OnOpen orders causing misalignment between benchmark and
+                    // algorithm performance. So we drop the first value of listBenchmark (Day 1), and drop two values from performance (Day 0, Day 1)
+                    if (firstValueSkipped)
+                    {
+                        yield return new KeyValuePair<DateTime, double>(dt, deltaPercentage);
+                    }
+                    else
+                    {
+                        firstValueSkipped = true;
+                    }
+                }
+
+                dtPrevious = dt;
+                previous = value;
+            }
+        }
+
+        /// <summary>
+        /// Skips the first two entries from the given points and divides each entry by 100
+        /// </summary>
+        /// <param name="points">The values to divide by 100</param>
+        /// <returns>Pairs of date and performance value divided by 100</returns>
+        public static IEnumerable<KeyValuePair<DateTime, double>> PreprocessPerformanceValues(IEnumerable<KeyValuePair<DateTime, decimal>> points)
+        {
+            // We will skip past day 1 of performance values to deal with the OnOpen orders causing misalignment between benchmark and
+            // algorithm performance. So we drop two values from performance (Day 0, Day 1)
+            foreach (var kvp in points.Skip(2))
+            {
+                yield return new KeyValuePair<DateTime, double>(kvp.Key, (double)(kvp.Value / 100));
+            }
         }
     }
 }
