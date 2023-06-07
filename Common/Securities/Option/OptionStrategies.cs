@@ -177,11 +177,11 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Creates a Naked Put strategy that consists of selling 1 call contract.
+        /// Creates a Naked Put strategy that consists of selling 1 put contract.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
-        /// <param name="strike">The strike price for the call option contract</param>
-        /// <param name="expiration">The expiration date for the call option contract</param>
+        /// <param name="strike">The strike price for the put option contract</param>
+        /// <param name="expiration">The expiration date for the put option contract</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy NakedPut(Symbol canonicalOption, decimal strike, DateTime expiration)
         {
