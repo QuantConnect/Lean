@@ -82,14 +82,7 @@ namespace QuantConnect.Securities.Option
         public static OptionStrategy ProtectiveCall(Symbol canonicalOption, decimal strike, DateTime expiration)
         {
             // Since a protective call is an inverted covered call, we can just use the CoveredCall method and invert the legs
-            var strategy = CoveredCall(canonicalOption, strike, expiration);
-            strategy.Name = OptionStrategyDefinitions.ProtectiveCall.Name;
-            foreach (var leg in strategy.OptionLegs.Cast<OptionStrategy.LegData>().Concat(strategy.UnderlyingLegs))
-            {
-                leg.Quantity *= -1;
-            }
-
-            return strategy;
+            return InvertStrategy(CoveredCall(canonicalOption, strike, expiration), OptionStrategyDefinitions.ProtectiveCall.Name);
         }
 
         /// <summary>
@@ -139,14 +132,7 @@ namespace QuantConnect.Securities.Option
         public static OptionStrategy ProtectivePut(Symbol canonicalOption, decimal strike, DateTime expiration)
         {
             // Since a protective put is an inverted covered put, we can just use the CoveredPut method and invert the legs
-            var strategy = CoveredPut(canonicalOption, strike, expiration);
-            strategy.Name = OptionStrategyDefinitions.ProtectivePut.Name;
-            foreach (var leg in strategy.OptionLegs.Cast<OptionStrategy.LegData>().Concat(strategy.UnderlyingLegs))
-            {
-                leg.Quantity *= -1;
-            }
-
-            return strategy;
+            return InvertStrategy(CoveredPut(canonicalOption, strike, expiration), OptionStrategyDefinitions.ProtectivePut.Name);
         }
 
         /// <summary>
@@ -411,27 +397,41 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Method creates new Strangle strategy, that buying a call option and a put option with the same expiration date.
+        /// Creates a Short Straddle strategy that consists of selling a call and a put, both with the same strike price and expiration.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price for the option contracts</param>
+        /// <param name="expiration">The expiration date for the option contracts</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ShortStraddle(Symbol canonicalOption, decimal strike, DateTime expiration)
+        {
+            // Since a short straddle is an inverted straddle, we can just use the Straddle method and invert the legs
+            return InvertStrategy(Straddle(canonicalOption, strike, expiration), OptionStrategyDefinitions.ShortStraddle.Name);
+        }
+
+        /// <summary>
+        /// Method creates new Strangle strategy, that buying a call option and a put option with the same expiration date
         /// The strike price of the call is above the strike of the put.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
-        /// <param name="leg1Strike">The strike price of the long call</param>
-        /// <param name="leg2Strike">The strike price of the long put</param>
+        /// <param name="callLegStrike">The strike price of the long call</param>
+        /// <param name="putLegStrike">The strike price of the long put</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy Strangle(
             Symbol canonicalOption,
-            decimal leg1Strike,
-            decimal leg2Strike,
+            decimal callLegStrike,
+            decimal putLegStrike,
             DateTime expiration
             )
         {
             CheckCanonicalOptionSymbol(canonicalOption, "Strangle");
             CheckExpirationDate(expiration, "Strangle", nameof(expiration));
 
-            if (leg1Strike <= leg2Strike)
+            if (callLegStrike <= putLegStrike)
             {
-                throw new ArgumentException("Strangle: leg1Strike must be greater than leg2Strike", "leg1Strike, leg2Strike");
+                throw new ArgumentException($"Strangle: {nameof(callLegStrike)} must be greater than {nameof(putLegStrike)}",
+                    $"{nameof(callLegStrike)}, {nameof(putLegStrike)}");
             }
 
             return new OptionStrategy
@@ -443,15 +443,29 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1, Expiration = expiration
+                        Right = OptionRight.Call, Strike = callLegStrike, Quantity = 1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1,
-                        Expiration = expiration
+                        Right = OptionRight.Put, Strike = putLegStrike, Quantity = 1, Expiration = expiration
                     }
                 }
             };
+        }
+
+        /// <summary>
+        /// Creates a Short Strangle strategy that consists of selling a call and a put, with the same expiration date and
+        /// the call strike being above the put strike.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="callLegStrike">The strike price of the short call</param>
+        /// <param name="putLegStrike">The strike price of the short put</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ShortStrangle(Symbol canonicalOption, decimal callLegStrike, decimal putLegStrike, DateTime expiration)
+        {
+            // Since a short strangle is an inverted strangle, we can just use the Strangle method and invert the legs
+            return InvertStrategy(Strangle(canonicalOption, callLegStrike, putLegStrike, expiration), OptionStrategyDefinitions.ShortStrangle.Name);
         }
 
         /// <summary>
@@ -665,6 +679,20 @@ namespace QuantConnect.Securities.Option
             {
                 throw new ArgumentException($"{strategyName}: expiration must contain expiration date", parameterName);
             }
+        }
+
+        /// <summary>
+        /// Inverts the given strategy by multiplying all legs' quantities by -1 and changing the strategy name.
+        /// </summary>
+        private static OptionStrategy InvertStrategy(OptionStrategy strategy, string invertedStrategyName)
+        {
+            strategy.Name = invertedStrategyName;
+            foreach (var leg in strategy.OptionLegs.Cast<OptionStrategy.LegData>().Concat(strategy.UnderlyingLegs))
+            {
+                leg.Quantity *= -1;
+            }
+
+            return strategy;
         }
     }
 }
