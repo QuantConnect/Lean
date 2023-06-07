@@ -192,7 +192,7 @@ namespace QuantConnect.Algorithm
                 // what the start date should be used. Defaulting to always open
                 result = Time - _warmupBarCount.Value * defaultResolutionToUse.ToTimeSpan();
 
-                foreach (var universe in _pendingUniverseAdditions.Concat(UniverseManager.Values))
+                foreach (var universe in UniverseManager.Values)
                 {
                     var config = universe.Configuration;
                     var resolution = universe.Configuration.Resolution;

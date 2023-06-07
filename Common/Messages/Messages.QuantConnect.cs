@@ -153,6 +153,8 @@ namespace QuantConnect
 
             public static string CreateOptionChainRequiresOptionSymbol = "CreateOptionChain requires an option symbol.";
 
+            public static string CreateFutureChainRequiresFutureSymbol = "CreateFutureChain requires a future symbol.";
+
             public static string GreatestCommonDivisorEmptyList = "The list of values cannot be empty";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

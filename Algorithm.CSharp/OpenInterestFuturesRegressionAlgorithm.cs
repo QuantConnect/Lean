@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Transactions.OrdersCount == 0 && slice.HasData)
             {
-                var matched = slice.Keys.Where(s => !ExpectedExpiryDates.Contains(s.ID.Date)).ToList();
+                var matched = slice.Keys.Where(s => !s.IsCanonical() && !ExpectedExpiryDates.Contains(s.ID.Date)).ToList();
                 if (matched.Count != 0)
                 {
                     throw new Exception($"{matched.Count}/{slice.Keys.Count} were unexpected expiry date(s): " + string.Join(", ", matched.Select(x => x.ID.Date)));

@@ -13,24 +13,25 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Util;
+using QuantConnect.Securities;
+using System.Collections.Generic;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
-using QuantConnect.Util;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 
 namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
+        // this is so that later during 'UniverseSelection.CreateUniverses' we wont remove the user universes from the UniverseManager
+        private readonly HashSet<Symbol> _universeSelectionUniverses = new ();
         private bool _isEmitWarmupInsightWarningSent;
         private bool _isEmitDelistedInsightWarningSent;
 
@@ -86,12 +87,8 @@ namespace QuantConnect.Algorithm
         {
             foreach (var universe in UniverseSelection.CreateUniverses(this))
             {
-                lock(_pendingUniverseAdditionsLock)
-                {
-                    // on purpose we don't call 'AddUniverse' here so that these universes don't get registered as user added
-                    // this is so that later during 'UniverseSelection.CreateUniverses' we wont remove them from UniverseManager
-                    _pendingUniverseAdditions.Add(universe);
-                }
+                AddUniverse(universe);
+                _universeSelectionUniverses.Add(universe.Configuration.Symbol);
             }
 
             if (DebugMode)
@@ -110,43 +107,36 @@ namespace QuantConnect.Algorithm
         {
             if (UtcTime >= UniverseSelection.GetNextRefreshTimeUtc())
             {
-                var universes = UniverseSelection.CreateUniverses(this).ToDictionary(u => u.Configuration.Symbol);
-
-                // remove deselected universes by symbol
-                foreach (var ukvp in UniverseManager)
+                // remove deselected universes by symbol before we create new universes
+                foreach (var ukvp in UniverseManager.Where(kvp => kvp.Value.DisposeRequested))
                 {
                     var universeSymbol = ukvp.Key;
-                    if (_userAddedUniverses.Contains(universeSymbol))
-                    {
-                        // prevent removal of qc algorithm created user defined universes
-                        continue;
-                    }
-
-                    if (ukvp.Value.DisposeRequested)
-                    {
-                        // have to remove in the next loop after the universe is marked as disposed, when 'Dispose()' is called it will trigger universe selection
-                        // and deselect all symbols, sending the removed security changes, which are picked up by the AlgorithmManager and tags securities
-                        // as non tradable as long as they are not active in any universe (uses UniverseManager.ActiveSecurities)
-                        // but they will remain tradable if a position is still being hold since they won't be remove from the UniverseManager
-                        // but this last part will not happen if we remove the universe from the UniverseManager right away, since it won't be part of 'UniverseManager'. 
-                        // And we have to remove the universe even if it's present at 'universes' because that one is another New universe that should get added!
-                        // 'UniverseManager' will skip duplicate entries getting added.
-                        UniverseManager.Remove(universeSymbol);
-                    }
-
-                    Universe universe;
-                    if (!universes.TryGetValue(universeSymbol, out universe))
-                    {
-                        // mark this universe as disposed to remove all child subscriptions
-                        ukvp.Value.Dispose();
-                    }
+                    // have to remove in the next loop after the universe is marked as disposed, when 'Dispose()' is called it will trigger universe selection
+                    // and deselect all symbols, sending the removed security changes, which are picked up by the AlgorithmManager and tags securities
+                    // as non tradable as long as they are not active in any universe (uses UniverseManager.ActiveSecurities)
+                    // but they will remain tradable if a position is still being hold since they won't be remove from the UniverseManager
+                    // but this last part will not happen if we remove the universe from the UniverseManager right away, since it won't be part of 'UniverseManager'.
+                    // And we have to remove the universe even if it's present at 'universes' because that one is another New universe that should get added!
+                    // 'UniverseManager' will skip duplicate entries getting added.
+                    UniverseManager.Remove(universeSymbol);
+                    _universeSelectionUniverses.Remove(universeSymbol);
                 }
 
-                // add newly selected universes
-                foreach (var ukvp in universes)
+                var toRemove = new HashSet<Symbol>(_universeSelectionUniverses);
+                foreach (var universe in UniverseSelection.CreateUniverses(this))
                 {
-                    // note: UniverseManager.Add uses TryAdd, so don't need to worry about duplicates here
-                    UniverseManager.Add(ukvp);
+                    // add newly selected universes
+                    _universeSelectionUniverses.Add(universe.Configuration.Symbol);
+                    AddUniverse(universe);
+
+                    toRemove.Remove(universe.Configuration.Symbol);
+                }
+
+                // remove deselected universes by symbol but prevent removal of qc algorithm created user defined universes
+                foreach (var universeSymbol in toRemove)
+                {
+                    // mark this universe as disposed to remove all child subscriptions
+                    UniverseManager[universeSymbol].Dispose();
                 }
             }
 

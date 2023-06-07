@@ -35,6 +35,12 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _aapl;
         private Symbol _twx;
 
+        private Dictionary<string, decimal> _rawPrices = new()
+        {
+            { "AOL", 70  },
+            { "AAPL", 650 }
+        };
+
         public override void Initialize()
         {
             _twx = QuantConnect.Symbol.Create("TWX", SecurityType.Equity, Market.USA);
@@ -105,6 +111,15 @@ namespace QuantConnect.Algorithm.CSharp
                 if (config.Any(dataConfig => dataConfig.DataNormalizationMode != DataNormalizationMode.Raw))
                 {
                     throw new Exception($"Was expecting DataNormalizationMode.Raw configurations for {security.Symbol}");
+                }
+
+                if (security.Symbol.SecurityType == SecurityType.Equity)
+                {
+                    var expectedPrice = _rawPrices[security.Symbol.ID.Symbol];
+                    if (Math.Abs(security.Price - expectedPrice) > expectedPrice * 0.1m)
+                    {
+                        throw new Exception($"Unexpected raw prices for symbol {security.Symbol}");
+                    }
                 }
             }
             _changes = SecurityChanges.None;
