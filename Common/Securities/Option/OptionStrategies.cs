@@ -150,6 +150,60 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Creates a Naked Call strategy that consists of selling 1 call contract.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price for the call option contract</param>
+        /// <param name="expiration">The expiration date for the call option contract</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy NakedCall(Symbol canonicalOption, decimal strike, DateTime expiration)
+        {
+            CheckCanonicalOptionSymbol(canonicalOption, "NakedCall");
+            CheckExpirationDate(expiration, "NakedCall", nameof(expiration));
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.NakedCall.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = new List<OptionStrategy.OptionLegData>
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = strike, Quantity = -1, Expiration = expiration
+                    }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Creates a Naked Put strategy that consists of selling 1 put contract.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price for the put option contract</param>
+        /// <param name="expiration">The expiration date for the put option contract</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy NakedPut(Symbol canonicalOption, decimal strike, DateTime expiration)
+        {
+            CheckCanonicalOptionSymbol(canonicalOption, "NakedPut");
+            CheckExpirationDate(expiration, "NakedPut", nameof(expiration));
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.NakedPut.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = new List<OptionStrategy.OptionLegData>
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = strike, Quantity = -1, Expiration = expiration
+                    }
+                }
+            };
+        }
+
+        /// <summary>
         /// Method creates new Bear Call Spread strategy, that consists of two calls with the same expiration but different strikes.
         /// The strike price of the short call is below the strike of the long call. This is a credit spread.
         /// </summary>
