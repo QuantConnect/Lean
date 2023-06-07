@@ -18,10 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Orders;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,157 +28,107 @@ namespace QuantConnect.Algorithm.CSharp
     /// This algorithm demonstrate how to use OptionStrategies helper class to batch send orders for common strategies.
     /// In this case, the algorithm tests the Butterfly Put and Short Butterfly Put strategies.
     /// </summary>
-    public class LongAndShortButterflyPutStrategiesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class LongAndShortButterflyPutStrategiesAlgorithm : OptionStrategyFactoryMethodsBaseAlgorithm
     {
-        private Symbol _optionSymbol;
+        protected override int ExpectedOrdersCount { get; } = 6;
+
         private OptionStrategy _butterflyPut;
         private OptionStrategy _shortButterflyPut;
 
-        public override void Initialize()
+        protected override void TradeStrategy(OptionChain chain)
         {
-            SetStartDate(2015, 12, 24);
-            SetEndDate(2015, 12, 24);
-            SetCash(1000000);
-
-            var option = AddOption("GOOG");
-            _optionSymbol = option.Symbol;
-
-            option.SetFilter(-2, +2, 0, 180);
-
-            SetBenchmark("GOOG");
-        }
-
-        public override void OnData(Slice slice)
-        {
-            if (!Portfolio.Invested)
+            var contractsByExpiry = chain.Where(x => x.Right == OptionRight.Put).GroupBy(x => x.Expiry);
+            foreach (var group in contractsByExpiry)
             {
-                if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
+                var expiry = group.Key;
+                var contracts = group.ToList();
+
+                if (contracts.Count < 3)
                 {
-                    var contractsByExpiry = chain.Where(x => x.Right == OptionRight.Put).GroupBy(x => x.Expiry);
-
-                    foreach (var group in contractsByExpiry)
-                    {
-                        var expiry = group.Key;
-                        var contracts = group.ToList();
-
-                        if (contracts.Count < 3)
-                        {
-                            continue;
-                        }
-
-                        var strikes = contracts.Select(x => x.Strike).OrderBy(x => x).ToArray();
-                        var atmStrike = contracts.MinBy(x => Math.Abs(x.Strike - chain.Underlying.Value)).Strike;
-                        var spread = Math.Min(atmStrike - strikes[0], strikes[^1] - atmStrike);
-                        var itmStrike = atmStrike + spread;
-                        var otmStrike = atmStrike - spread;
-
-                        if (strikes.Contains(otmStrike) && strikes.Contains(itmStrike))
-                        {
-                            // Ready to trade
-                            _butterflyPut = OptionStrategies.ButterflyPut(_optionSymbol, itmStrike, atmStrike, otmStrike, expiry);
-                            _shortButterflyPut = OptionStrategies.ShortButterflyPut(_optionSymbol, itmStrike, atmStrike, otmStrike, expiry);
-                            Buy(_butterflyPut, 2);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Verify that the strategy was traded
-                var positionGroup = Portfolio.Positions.Groups.Single();
-
-                var buyingPowerModel = positionGroup.BuyingPowerModel as OptionStrategyPositionGroupBuyingPowerModel;
-                if (buyingPowerModel == null)
-                {
-                    throw new Exception($@"Expected position group buying power model type: {nameof(OptionStrategyPositionGroupBuyingPowerModel)
-                        }. Actual: {positionGroup.BuyingPowerModel.GetType()}");
+                    continue;
                 }
 
-                if (positionGroup.Positions.Count() != 3)
+                var strikes = contracts.Select(x => x.Strike).OrderBy(x => x).ToArray();
+                var atmStrike = contracts.MinBy(x => Math.Abs(x.Strike - chain.Underlying.Value)).Strike;
+                var spread = Math.Min(atmStrike - strikes[0], strikes[^1] - atmStrike);
+                var itmStrike = atmStrike + spread;
+                var otmStrike = atmStrike - spread;
+
+                if (strikes.Contains(otmStrike) && strikes.Contains(itmStrike))
                 {
-                    throw new Exception($"Expected position group to have 3 positions. Actual: {positionGroup.Positions.Count()}");
+                    // Ready to trade
+                    _butterflyPut = OptionStrategies.ButterflyPut(_optionSymbol, itmStrike, atmStrike, otmStrike, expiry);
+                    _shortButterflyPut = OptionStrategies.ShortButterflyPut(_optionSymbol, itmStrike, atmStrike, otmStrike, expiry);
+                    Buy(_butterflyPut, 2);
                 }
-
-                var higherStrike = _butterflyPut.OptionLegs.Max(leg => leg.Strike);
-                var higherStrikePosition = positionGroup.Positions
-                    .Single(x => x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == higherStrike);
-
-                if (higherStrikePosition.Quantity != 2)
-                {
-                    throw new Exception($"Expected higher strike position quantity to be 2. Actual: {higherStrikePosition.Quantity}");
-                }
-
-                var lowerStrike = _butterflyPut.OptionLegs.Min(leg => leg.Strike);
-                var lowerStrikePosition = positionGroup.Positions
-                    .Single(x => x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == lowerStrike);
-
-                if (lowerStrikePosition.Quantity != 2)
-                {
-                    throw new Exception($"Expected lower strike position quantity to be 2. Actual: {lowerStrikePosition.Quantity}");
-                }
-
-                var middleStrike = _butterflyPut.OptionLegs.Single(leg => leg.Strike < higherStrike && leg.Strike > lowerStrike).Strike;
-                var middleStrikePosition = positionGroup.Positions
-                    .Single(x => x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == middleStrike);
-
-                if (middleStrikePosition.Quantity != -4)
-                {
-                    throw new Exception($"Expected middle strike position quantity to be -4. Actual: {middleStrikePosition.Quantity}");
-                }
-
-                // Now we should be able to close the position using the inverse strategy (a short butterfly put)
-                Buy(_shortButterflyPut, 2);
-
-                // We can quit now, no more testing required
-                Quit();
             }
         }
 
-        public override void OnEndOfAlgorithm()
+        protected override void AssertStrategyPositionGroup(IPositionGroup positionGroup)
         {
-            if (Portfolio.Invested)
+            if (positionGroup.Positions.Count() != 3)
             {
-                throw new Exception("Expected no holdings at end of algorithm");
+                throw new Exception($"Expected position group to have 3 positions. Actual: {positionGroup.Positions.Count()}");
             }
 
-            var ordersCount = Transactions.GetOrders((order) => order.Status == OrderStatus.Filled).Count();
-            if (ordersCount != 6)
+            var higherStrike = _butterflyPut.OptionLegs.Max(leg => leg.Strike);
+            var higherStrikePosition = positionGroup.Positions
+                .Single(x => x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == higherStrike);
+
+            if (higherStrikePosition.Quantity != 2)
             {
-                throw new Exception(
-                    "Expected 6 orders to have been submitted and filled, 3 for buying the butterfly put and 3 for the liquidation." +
-                    $" Actual {ordersCount}");
+                throw new Exception($"Expected higher strike position quantity to be 2. Actual: {higherStrikePosition.Quantity}");
+            }
+
+            var lowerStrike = _butterflyPut.OptionLegs.Min(leg => leg.Strike);
+            var lowerStrikePosition = positionGroup.Positions
+                .Single(x => x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == lowerStrike);
+
+            if (lowerStrikePosition.Quantity != 2)
+            {
+                throw new Exception($"Expected lower strike position quantity to be 2. Actual: {lowerStrikePosition.Quantity}");
+            }
+
+            var middleStrike = _butterflyPut.OptionLegs.Single(leg => leg.Strike < higherStrike && leg.Strike > lowerStrike).Strike;
+            var middleStrikePosition = positionGroup.Positions
+                .Single(x => x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == middleStrike);
+
+            if (middleStrikePosition.Quantity != -4)
+            {
+                throw new Exception($"Expected middle strike position quantity to be -4. Actual: {middleStrikePosition.Quantity}");
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        protected override void LiquidateStrategy()
         {
-            Debug(orderEvent.ToString());
+            // We should be able to close the position using the inverse strategy (a short butterfly put)
+            Buy(_shortButterflyPut, 2);
         }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public override bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public override Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4494;
+        public override long DataPoints => 4494;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public override int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "6"},
             {"Average Win", "0%"},
