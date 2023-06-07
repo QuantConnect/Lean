@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "VA",
-                (ind, expected) => Assert.AreEqual(expected, (double)((VolumeProfile)ind).ValueAreaVolume,0.01)
+                (ind, expected) => Assert.AreEqual(expected, (double)((VolumeProfile)ind).ValueAreaVolume, 0.01)
                 );
         }
 
@@ -110,13 +110,13 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsFalse(vp.IsReady);
             for (int i = 0; i < 3; i++)
             {
-                vp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1,Volume=1, Time = reference.AddDays(1 + i) });
+                vp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 1, Time = reference.AddDays(1 + i) });
             }
             Assert.IsTrue(vp.IsReady);
             vp.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(vp);
-            vp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume=1, Time = reference.AddDays(1) });
+            vp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 1, Time = reference.AddDays(1) });
             Assert.AreEqual(vp.Current.Value, 1m);
         }
 
@@ -133,6 +133,19 @@ namespace QuantConnect.Tests.Indicators
             {
                 vp.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1 + i) });
                 Assert.AreEqual(i == period - 1, vp.IsReady);
+            }
+        }
+
+        [Test]
+        public void DoesNotFailWithRepeatedInputCloseValues()
+        {
+            var closeValues = new double[] { 313.25, 313.248, 313.241, 313.249, 313.243, 314.245, 315.241 };
+            var vp = new VolumeProfile(2);
+            var reference = new DateTime(2000, 1, 1);
+            var period = ((IIndicatorWarmUpPeriodProvider)vp).WarmUpPeriod;
+            for (var i = 0; i < closeValues.Length; i++)
+            {
+                Assert.DoesNotThrow(() => vp.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = (decimal)closeValues[i], Volume = closeValues[i] != 313.243 ? 100 : 0, Time = reference.AddDays(1 + i) }));
             }
         }
     }

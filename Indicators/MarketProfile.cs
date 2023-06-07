@@ -219,10 +219,16 @@ namespace QuantConnect.Indicators
             {
                 var RemovedDataPoint = _oldDataPoints.MostRecentlyRemoved;
                 ClosePrice = Round(RemovedDataPoint.Item1);
-                _volumePerPrice[ClosePrice] -= RemovedDataPoint.Item2;
-                if (_volumePerPrice[ClosePrice] == 0)
+                // Two equal points can be inserted in _oldDataPoints, where the volume of the second one is zero. Then
+                // when the first one is removed from _oldDataPoints, its value in _volumePerPrice is also removed as
+                // the remaining value is zero.
+                if (_volumePerPrice.ContainsKey(ClosePrice))
                 {
-                    _volumePerPrice.Remove(ClosePrice);
+                    _volumePerPrice[ClosePrice] -= RemovedDataPoint.Item2;
+                    if (_volumePerPrice[ClosePrice] == 0)
+                    {
+                        _volumePerPrice.Remove(ClosePrice);
+                    }
                 }
             }
         }
