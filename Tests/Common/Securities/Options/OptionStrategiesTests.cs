@@ -78,5 +78,58 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(underlying, underlyingLeg.Symbol);
             Assert.AreEqual(-100, underlyingLeg.Quantity);
         }
+        [Test]
+        public void BuildsCoveredPutStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var strike = 350m;
+            var expiration = new DateTime(2023, 08, 18);
+
+            var strategy = OptionStrategies.CoveredPut(canonicalOptionSymbol, strike, expiration);
+
+            Assert.AreEqual(OptionStrategyDefinitions.CoveredPut.Name, strategy.Name);
+            Assert.AreEqual(underlying, strategy.Underlying);
+            Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
+
+            Assert.AreEqual(1, strategy.OptionLegs.Count);
+            var optionLeg = strategy.OptionLegs[0];
+            Assert.AreEqual(OptionRight.Put, optionLeg.Right);
+            Assert.AreEqual(strike, optionLeg.Strike);
+            Assert.AreEqual(expiration, optionLeg.Expiration);
+            Assert.AreEqual(-1, optionLeg.Quantity);
+
+            Assert.AreEqual(1, strategy.UnderlyingLegs.Count);
+            var underlyingLeg = strategy.UnderlyingLegs[0];
+            Assert.AreEqual(underlying, underlyingLeg.Symbol);
+            Assert.AreEqual(-100, underlyingLeg.Quantity);
+        }
+
+        [Test]
+        public void BuildsProtectivePutStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var strike = 350m;
+            var expiration = new DateTime(2023, 08, 18);
+
+            var strategy = OptionStrategies.ProtectivePut(canonicalOptionSymbol, strike, expiration);
+
+            Assert.AreEqual(OptionStrategyDefinitions.ProtectivePut.Name, strategy.Name);
+            Assert.AreEqual(underlying, strategy.Underlying);
+            Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
+
+            Assert.AreEqual(1, strategy.OptionLegs.Count);
+            var optionLeg = strategy.OptionLegs[0];
+            Assert.AreEqual(OptionRight.Put, optionLeg.Right);
+            Assert.AreEqual(strike, optionLeg.Strike);
+            Assert.AreEqual(expiration, optionLeg.Expiration);
+            Assert.AreEqual(1, optionLeg.Quantity);
+
+            Assert.AreEqual(1, strategy.UnderlyingLegs.Count);
+            var underlyingLeg = strategy.UnderlyingLegs[0];
+            Assert.AreEqual(underlying, underlyingLeg.Symbol);
+            Assert.AreEqual(100, underlyingLeg.Quantity);
+        }
     }
 }

@@ -15,9 +15,9 @@ from AlgorithmImports import *
 
 ### <summary>
 ### This algorithm demonstrate how to use OptionStrategies helper class to batch send orders for common strategies.
-### In this case, the algorithm tests the Covered and Protective Call strategies.
+### In this case, the algorithm tests the Covered and Protective Put strategies.
 ### </summary>
-class CoveredAndProtectiveCallStrategiesAlgorithm(QCAlgorithm):
+class CoveredAndProtectivePutStrategiesAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2015, 12, 24)
@@ -41,9 +41,9 @@ class CoveredAndProtectiveCallStrategiesAlgorithm(QCAlgorithm):
                 if len(contracts) == 0: continue
                 contract = contracts[0]
                 if contract != None:
-                    self._covered_call = OptionStrategies.CoveredCall(self._option_symbol, contract.Strike, contract.Expiry)
-                    self._protective_call = OptionStrategies.ProtectiveCall(self._option_symbol, contract.Strike, contract.Expiry)
-                    self.Buy(self._covered_call, 2)
+                    self._covered_put = OptionStrategies.CoveredPut(self._option_symbol, contract.Strike, contract.Expiry)
+                    self._protective_put = OptionStrategies.ProtectivePut(self._option_symbol, contract.Strike, contract.Expiry)
+                    self.Buy(self._covered_put, 2)
         else:
             # Verify that the strategy was traded
             positionGroup = list(self.Portfolio.Positions.Groups)[0]
@@ -58,12 +58,12 @@ class CoveredAndProtectiveCallStrategiesAlgorithm(QCAlgorithm):
                 raise Exception(f"Expected position group to have 2 positions. Actual: {len(positions)}")
 
             optionPosition = [position for position in positions if position.Symbol.SecurityType == SecurityType.Option][0]
-            if optionPosition.Symbol.ID.OptionRight != OptionRight.Call:
-                raise Exception(f"Expected option position to be a call. Actual: {optionPosition.Symbol.ID.OptionRight}")
+            if optionPosition.Symbol.ID.OptionRight != OptionRight.Put:
+                raise Exception(f"Expected option position to be a put. Actual: {optionPosition.Symbol.ID.OptionRight}")
 
             underlyingPosition = [position for position in positions if position.Symbol.SecurityType == SecurityType.Equity][0]
             expectedOptionPositionQuantity = -2
-            expectedUnderlyingPositionQuantity = 2 * self.Securities[self._option_symbol].SymbolProperties.ContractMultiplier
+            expectedUnderlyingPositionQuantity = -2 * self.Securities[self._option_symbol].SymbolProperties.ContractMultiplier
 
             if optionPosition.Quantity != expectedOptionPositionQuantity:
                 raise Exception(f"Expected option position quantity to be {expectedOptionPositionQuantity}. Actual: {optionPosition.Quantity}")
@@ -71,8 +71,8 @@ class CoveredAndProtectiveCallStrategiesAlgorithm(QCAlgorithm):
             if underlyingPosition.Quantity != expectedUnderlyingPositionQuantity:
                 raise Exception(f"Expected underlying position quantity to be {expectedUnderlyingPositionQuantity}. Actual: {underlyingPosition.Quantity}")
 
-            # Now we should be able to close the position using the inverse strategy (a protective call)
-            self.Buy(self._protective_call, 2);
+            # Now we should be able to close the position using the inverse strategy (a protective put)
+            self.Buy(self._protective_put, 2);
 
             # We can quit now, no more testing required
             self.Quit();
@@ -83,7 +83,7 @@ class CoveredAndProtectiveCallStrategiesAlgorithm(QCAlgorithm):
 
         orders_count = len(list(self.Transactions.GetOrders(lambda order: order.Status == OrderStatus.Filled)))
         if orders_count != 4:
-            raise Exception("Expected 4 orders to have been submitted and filled, 2 for buying the covered call and 2 for the liquidation. "
+            raise Exception("Expected 4 orders to have been submitted and filled, 2 for buying the covered put and 2 for the liquidation. "
                             f"Actual {orders_count}")
 
     def OnOrderEvent(self, orderEvent):

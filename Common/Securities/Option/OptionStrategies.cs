@@ -93,6 +93,63 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Creates a Covered Put strategy that consists of selling 1 put contract and 1 lot of the underlying.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price for the put option contract</param>
+        /// <param name="expiration">The expiration date for the put option contract</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy CoveredPut(Symbol canonicalOption, decimal strike, DateTime expiration)
+        {
+            CheckCanonicalOptionSymbol(canonicalOption, "CoveredPut");
+            CheckExpirationDate(expiration, "CoveredPut", nameof(expiration));
+
+            var underlyingQuantity = -(int)_symbolPropertiesDatabase.GetSymbolProperties(canonicalOption.ID.Market, canonicalOption,
+                canonicalOption.SecurityType, "").ContractMultiplier;
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.CoveredPut.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = new List<OptionStrategy.OptionLegData>
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = strike, Quantity = -1, Expiration = expiration
+                    }
+                },
+                UnderlyingLegs = new List<OptionStrategy.UnderlyingLegData>
+                {
+                    new OptionStrategy.UnderlyingLegData
+                    {
+                        Quantity = underlyingQuantity, Symbol = canonicalOption.Underlying
+                    }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Creates a Protective Put strategy that consists of buying 1 put contract and 1 lot of the underlying.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price for the put option contract</param>
+        /// <param name="expiration">The expiration date for the put option contract</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ProtectivePut(Symbol canonicalOption, decimal strike, DateTime expiration)
+        {
+            // Since a protective put is an inverted covered put, we can just use the CoveredPut method and invert the legs
+            var strategy = CoveredPut(canonicalOption, strike, expiration);
+            strategy.Name = OptionStrategyDefinitions.ProtectivePut.Name;
+            foreach (var leg in strategy.OptionLegs.Cast<OptionStrategy.LegData>().Concat(strategy.UnderlyingLegs))
+            {
+                leg.Quantity *= -1;
+            }
+
+            return strategy;
+        }
+
+        /// <summary>
         /// Method creates new Bear Call Spread strategy, that consists of two calls with the same expiration but different strikes.
         /// The strike price of the short call is below the strike of the long call. This is a credit spread.
         /// </summary>

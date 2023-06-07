@@ -27,13 +27,13 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This algorithm demonstrate how to use OptionStrategies helper class to batch send orders for common strategies.
-    /// In this case, the algorithm tests the Covered and Protective Call strategies.
+    /// In this case, the algorithm tests the Covered and Protective Put strategies.
     /// </summary>
-    public class CoveredAndProtectiveCallStrategiesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoveredAndProtectivePutStrategiesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _optionSymbol;
-        private OptionStrategy _coveredCall;
-        private OptionStrategy _protectiveCall;
+        private OptionStrategy _coveredPut;
+        private OptionStrategy _protectivePut;
 
         public override void Initialize()
         {
@@ -62,9 +62,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (contract != null)
                     {
-                        _coveredCall = OptionStrategies.CoveredCall(_optionSymbol, contract.Strike, contract.Expiry);
-                        _protectiveCall = OptionStrategies.ProtectiveCall(_optionSymbol, contract.Strike, contract.Expiry);
-                        Buy(_coveredCall, 2);
+                        _coveredPut = OptionStrategies.CoveredPut(_optionSymbol, contract.Strike, contract.Expiry);
+                        _protectivePut = OptionStrategies.ProtectivePut(_optionSymbol, contract.Strike, contract.Expiry);
+                        Buy(_coveredPut, 2);
                     }
                 }
             }
@@ -86,14 +86,14 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 var optionPosition = positionGroup.Positions.Single(x => x.Symbol.SecurityType == SecurityType.Option);
-                if (optionPosition.Symbol.ID.OptionRight != OptionRight.Call)
+                if (optionPosition.Symbol.ID.OptionRight != OptionRight.Put)
                 {
-                    throw new Exception($"Expected option position to be a call. Actual: {optionPosition.Symbol.ID.OptionRight}");
+                    throw new Exception($"Expected option position to be a put. Actual: {optionPosition.Symbol.ID.OptionRight}");
                 }
 
                 var underlyingPosition = positionGroup.Positions.Single(x => x.Symbol.SecurityType == SecurityType.Equity);
                 var expectedOptionPositionQuantity = -2;
-                var expectedUnderlyingPositionQuantity = 2 * Securities[_optionSymbol].SymbolProperties.ContractMultiplier;
+                var expectedUnderlyingPositionQuantity = -2 * Securities[_optionSymbol].SymbolProperties.ContractMultiplier;
 
                 if (optionPosition.Quantity != expectedOptionPositionQuantity)
                 {
@@ -107,8 +107,8 @@ namespace QuantConnect.Algorithm.CSharp
                         }. Actual: {underlyingPosition.Quantity}");
                 }
 
-                // Now we should be able to close the position using the inverse strategy (a protective call)
-                Buy(_protectiveCall, 2);
+                // Now we should be able to close the position using the inverse strategy (a protective put)
+                Buy(_protectivePut, 2);
 
                 // We can quit now, no more testing required
                 Quit();
@@ -125,7 +125,7 @@ namespace QuantConnect.Algorithm.CSharp
             var ordersCount = Transactions.GetOrders((order) => order.Status == OrderStatus.Filled).Count();
             if (ordersCount != 4)
             {
-                throw new Exception("Expected 4 orders to have been submitted and filled, 2 for buying the covered call and 2 for the liquidation." +
+                throw new Exception("Expected 4 orders to have been submitted and filled, 2 for buying the covered put and 2 for the liquidation." +
                     $" Actual {ordersCount}");
             }
         }
@@ -180,10 +180,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$8.00"},
-            {"Estimated Strategy Capacity", "$120000.00"},
-            {"Lowest Capacity Asset", "GOOCV WBGM92QHIYO6|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "32.18%"},
-            {"OrderListHash", "44aee2765df08ed1dad3b1723445ac5e"}
+            {"Estimated Strategy Capacity", "$160000.00"},
+            {"Lowest Capacity Asset", "GOOCV 30AKMEIPOSS1Y|GOOCV VP83T1ZUHROL"},
+            {"Portfolio Turnover", "32.12%"},
+            {"OrderListHash", "e9463ceca671e9ddd44ea5b1fa930ba8"}
         };
     }
 }
