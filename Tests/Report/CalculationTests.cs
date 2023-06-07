@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Report
             var i = 0;
             return inputs.ToList().ToDictionary(item =>
             {
-                var time = new DateTime(1, 1, 1).AddDays(i);
+                var time = new DateTime(2000, 1, 1).AddDays(i);
                 i++;
 
                 return time;

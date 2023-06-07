@@ -286,8 +286,8 @@ namespace QuantConnect.Statistics
         /// <returns>Pairs of date and percentage change</returns>
         public static IEnumerable<KeyValuePair<DateTime, double>> CreateBenchmarkDifferences(IEnumerable<KeyValuePair<DateTime, decimal>> points, DateTime fromDate, DateTime toDate)
         {
-            var dtPrevious = new DateTime();
-            var previous = (decimal)0;
+            DateTime dtPrevious = default;
+            var previous = 0m;
             var firstValueSkipped = false;
             double deltaPercentage;
 
@@ -297,7 +297,7 @@ namespace QuantConnect.Statistics
                 var dt = kvp.Key;
                 var value = kvp.Value;
 
-                if (dtPrevious != new DateTime() || dt == dtPrevious)
+                if (dtPrevious != default)
                 {
                     deltaPercentage = 0;
                     if (previous != 0)
