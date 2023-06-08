@@ -734,6 +734,56 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Creates a new Iron Condor strategy which consists of a long put, a short put, a short call and a long option,
+        /// all with the same expiration date and with increasing strikes prices in the mentioned order.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="longPutStrike">Long put option strike price</param>
+        /// <param name="shortPutStrike">Short put option strike price</param>
+        /// <param name="shortCallStrike">Short call option strike price</param>
+        /// <param name="longCallStrike">Long call option strike price</param>
+        /// <param name="expiration">Expiration date for all the options</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy IronCondor(Symbol canonicalOption, decimal longPutStrike, decimal shortPutStrike, decimal shortCallStrike,
+            decimal longCallStrike, DateTime expiration)
+        {
+            CheckCanonicalOptionSymbol(canonicalOption, "IronCondor");
+            CheckExpirationDate(expiration, "IronCondor", nameof(expiration));
+
+            if (longPutStrike >= shortPutStrike || shortPutStrike >= shortCallStrike || shortCallStrike >= longCallStrike)
+            {
+                throw new ArgumentException("IronCondor: strike prices must be in ascending order",
+                    $"{nameof(longPutStrike)}, {nameof(shortPutStrike)}, {nameof(shortCallStrike)}, {nameof(longCallStrike)}");
+            }
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.IronCondor.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = new List<OptionStrategy.OptionLegData>
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = longPutStrike, Quantity = 1, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = shortPutStrike, Quantity = -1, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = shortCallStrike, Quantity = -1, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = longCallStrike, Quantity = 1, Expiration = expiration
+                    }
+                }
+            };
+        }
+
+        /// <summary>
         /// Checks that canonical option symbol is valid
         /// </summary>
         private static void CheckCanonicalOptionSymbol(Symbol canonicalOption, string strategyName)
