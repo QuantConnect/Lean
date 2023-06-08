@@ -19,9 +19,11 @@ using System.Collections.Generic;
 using System.Linq;
 
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,133 +31,85 @@ namespace QuantConnect.Algorithm.CSharp
     /// This algorithm demonstrate how to use OptionStrategies helper class to batch send orders for common strategies.
     /// In this case, the algorithm tests the Straddle and Short Straddle strategies.
     /// </summary>
-    public class LongAndShortStraddleStrategiesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class LongAndShortStraddleStrategiesAlgorithm : OptionStrategyFactoryMethodsBaseAlgorithm
     {
-        private Symbol _optionSymbol;
         private OptionStrategy _straddle;
         private OptionStrategy _shortStraddle;
 
-        public override void Initialize()
+        protected override int ExpectedOrdersCount { get; } = 4;
+
+        protected override void TradeStrategy(OptionChain chain)
         {
-            SetStartDate(2015, 12, 24);
-            SetEndDate(2015, 12, 24);
-            SetCash(1000000);
+            var contracts = chain
+                .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                .ThenByDescending(x => x.Expiry)
+                .GroupBy(x => new { x.Strike, x.Expiry })
+                .FirstOrDefault(group => group.Any(x => x.Right == OptionRight.Call) && group.Any(x => x.Right == OptionRight.Put));
 
-            var option = AddOption("GOOG");
-            _optionSymbol = option.Symbol;
-
-            option.SetFilter(-2, +2, 0, 180);
-
-            SetBenchmark("GOOG");
-        }
-
-        public override void OnData(Slice slice)
-        {
-            if (!Portfolio.Invested)
+            if (contracts != null)
             {
-                if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
-                {
-                    var contracts = chain
-                        .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
-                        .ThenByDescending(x => x.Expiry)
-                        .GroupBy(x => new { x.Strike, x.Expiry })
-                        .FirstOrDefault(group => group.Any(x => x.Right == OptionRight.Call) && group.Any(x => x.Right == OptionRight.Put));
+                var contract = contracts.First();
 
-                    if (contracts != null)
-                    {
-                        var contract = contracts.First();
-
-                        _straddle = OptionStrategies.Straddle(_optionSymbol, contract.Strike, contract.Expiry);
-                        _shortStraddle = OptionStrategies.ShortStraddle(_optionSymbol, contract.Strike, contract.Expiry);
-                        Buy(_straddle, 2);
-                    }
-                }
-            }
-            else
-            {
-                // Verify that the strategy was traded
-                var positionGroup = Portfolio.Positions.Groups.Single();
-
-                var buyingPowerModel = positionGroup.BuyingPowerModel as OptionStrategyPositionGroupBuyingPowerModel;
-                if (buyingPowerModel == null)
-                {
-                    throw new Exception($@"Expected position group buying power model type: {nameof(OptionStrategyPositionGroupBuyingPowerModel)
-                        }. Actual: {positionGroup.BuyingPowerModel.GetType()}");
-                }
-
-                if (positionGroup.Positions.Count() != 2)
-                {
-                    throw new Exception($"Expected position group to have 2 positions. Actual: {positionGroup.Positions.Count()}");
-                }
-
-                var callPosition = positionGroup.Positions.Single(x => x.Symbol.ID.OptionRight == OptionRight.Call);
-                var putPosition = positionGroup.Positions.Single(x => x.Symbol.ID.OptionRight == OptionRight.Put);
-
-                var expectedCallPositionQuantity = 2;
-                var expectedPutPositionQuantity = 2;
-
-                if (callPosition.Quantity != expectedCallPositionQuantity)
-                {
-                    throw new Exception($@"Expected call position quantity to be {expectedCallPositionQuantity}. Actual: {callPosition.Quantity}");
-                }
-
-                if (putPosition.Quantity != expectedPutPositionQuantity)
-                {
-                    throw new Exception($@"Expected put position quantity to be {expectedPutPositionQuantity}. Actual: {putPosition.Quantity}");
-                }
-
-                // Now we should be able to close the position using the inverse strategy (a short straddle)
-                Buy(_shortStraddle, 2);
-
-                // We can quit now, no more testing required
-                Quit();
+                _straddle = OptionStrategies.Straddle(_optionSymbol, contract.Strike, contract.Expiry);
+                _shortStraddle = OptionStrategies.ShortStraddle(_optionSymbol, contract.Strike, contract.Expiry);
+                Buy(_straddle, 2);
             }
         }
 
-        public override void OnEndOfAlgorithm()
+        protected override void AssertStrategyPositionGroup(IPositionGroup positionGroup)
         {
-            if (Portfolio.Invested)
+            if (positionGroup.Positions.Count() != 2)
             {
-                throw new Exception("Expected no holdings at end of algorithm");
+                throw new Exception($"Expected position group to have 2 positions. Actual: {positionGroup.Positions.Count()}");
             }
 
-            var ordersCount = Transactions.GetOrders((order) => order.Status == OrderStatus.Filled).Count();
-            if (ordersCount != 4)
+            var callPosition = positionGroup.Positions.Single(x => x.Symbol.ID.OptionRight == OptionRight.Call);
+            var putPosition = positionGroup.Positions.Single(x => x.Symbol.ID.OptionRight == OptionRight.Put);
+
+            var expectedCallPositionQuantity = 2;
+            var expectedPutPositionQuantity = 2;
+
+            if (callPosition.Quantity != expectedCallPositionQuantity)
             {
-                throw new Exception("Expected 4 orders to have been submitted and filled, 2 for buying the straddle and 2 for the liquidation." +
-                    $" Actual {ordersCount}");
+                throw new Exception($@"Expected call position quantity to be {expectedCallPositionQuantity}. Actual: {callPosition.Quantity}");
+            }
+
+            if (putPosition.Quantity != expectedPutPositionQuantity)
+            {
+                throw new Exception($@"Expected put position quantity to be {expectedPutPositionQuantity}. Actual: {putPosition.Quantity}");
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        protected override void LiquidateStrategy()
         {
-            Debug(orderEvent.ToString());
+            // We should be able to close the position using the inverse strategy (a short straddle)
+            Buy(_shortStraddle, 2);
         }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public override bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public override Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4494;
+        public override long DataPoints => 4494;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public override int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "4"},
             {"Average Win", "0%"},

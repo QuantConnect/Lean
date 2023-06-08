@@ -13,72 +13,41 @@
 
 from AlgorithmImports import *
 
+from OptionStrategyFactoryMethodsBaseAlgorithm import *
+
 ### <summary>
 ### This algorithm demonstrate how to use OptionStrategies helper class to batch send orders for common strategies.
 ### In this case, the algorithm tests the Naked Put strategy.
 ### </summary>
-class NakedPutStrategyAlgorithm(QCAlgorithm):
+class NakedPutStrategyAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2015, 12, 24)
-        self.SetEndDate(2015, 12, 24)
-        self.SetCash(1000000)
+    def ExpectedOrdersCount(self) -> int:
+        return 2
 
-        option = self.AddOption("GOOG")
-        self._option_symbol = option.Symbol
+    def TradeStrategy(self, chain: OptionChain, option_symbol: Symbol):
+        contracts = sorted(sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.Strike)),
+                           key = lambda x: x.Expiry, reverse=True)
 
-        option.SetFilter(-2, +2, 0, 180)
+        if len(contracts) == 0: return
+        contract = contracts[0]
+        if contract != None:
+            self._naked_put = OptionStrategies.NakedPut(option_symbol, contract.Strike, contract.Expiry)
+            self.Buy(self._naked_put, 2)
 
-        self.SetBenchmark("GOOG")
+    def AssertStrategyPositionGroup(self, positionGroup: IPositionGroup, option_symbol: Symbol):
+        positions = list(positionGroup.Positions)
+        if len(positions) != 1:
+            raise Exception(f"Expected position group to have 1 positions. Actual: {len(positions)}")
 
-    def OnData(self,slice):
-        if not self.Portfolio.Invested:
-            for kvp in slice.OptionChains:
-                chain = kvp.Value
-                contracts = sorted(sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.Strike)),
-                                   key = lambda x: x.Expiry, reverse=True)
+        optionPosition = [position for position in positions if position.Symbol.SecurityType == SecurityType.Option][0]
+        if optionPosition.Symbol.ID.OptionRight != OptionRight.Put:
+            raise Exception(f"Expected option position to be a put. Actual: {optionPosition.Symbol.ID.OptionRight}")
 
-                if len(contracts) == 0: continue
-                contract = contracts[0]
-                if contract != None:
-                    self._naked_call = OptionStrategies.NakedPut(self._option_symbol, contract.Strike, contract.Expiry)
-                    self.Buy(self._naked_call, 2)
-        else:
-            # Verify that the strategy was traded
-            positionGroup = list(self.Portfolio.Positions.Groups)[0]
+        expectedOptionPositionQuantity = -2
 
-            buyingPowerModel = positionGroup.BuyingPowerModel
-            if not isinstance(buyingPowerModel, OptionStrategyPositionGroupBuyingPowerModel):
-                raise Exception("Expected position group buying power model type: OptionStrategyPositionGroupBuyingPowerModel. "
-                                f"Actual: {type(positionGroup.BuyingPowerModel).__name__}")
+        if optionPosition.Quantity != expectedOptionPositionQuantity:
+            raise Exception(f"Expected option position quantity to be {expectedOptionPositionQuantity}. Actual: {optionPosition.Quantity}")
 
-            positions = list(positionGroup.Positions)
-            if len(positions) != 1:
-                raise Exception(f"Expected position group to have 1 positions. Actual: {len(positions)}")
-
-            optionPosition = [position for position in positions if position.Symbol.SecurityType == SecurityType.Option][0]
-            if optionPosition.Symbol.ID.OptionRight != OptionRight.Put:
-                raise Exception(f"Expected option position to be a put. Actual: {optionPosition.Symbol.ID.OptionRight}")
-
-            expectedOptionPositionQuantity = -2
-
-            if optionPosition.Quantity != expectedOptionPositionQuantity:
-                raise Exception(f"Expected option position quantity to be {expectedOptionPositionQuantity}. Actual: {optionPosition.Quantity}")
-
-            # Now we can liquidate by selling the strategy
-            self.Sell(self._naked_call, 2);
-
-            # We can quit now, no more testing required
-            self.Quit();
-
-    def OnEndOfAlgorithm(self):
-        if self.Portfolio.Invested:
-            raise Exception("Expected no holdings at end of algorithm")
-
-        orders_count = len(list(self.Transactions.GetOrders(lambda order: order.Status == OrderStatus.Filled)))
-        if orders_count != 2:
-            raise Exception("Expected 2 orders to have been submitted and filled, 1 for buying the Naked call and 1 for the liquidation. "
-                            f"Actual {orders_count}")
-
-    def OnOrderEvent(self, orderEvent):
-        self.Debug(str(orderEvent))
+    def LiquidateStrategy(self):
+        # Now we can liquidate by selling the strategy
+        self.Sell(self._naked_put, 2)

@@ -18,10 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Orders;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,136 +28,86 @@ namespace QuantConnect.Algorithm.CSharp
     /// This algorithm demonstrate how to use OptionStrategies helper class to batch send orders for common strategies.
     /// In this case, the algorithm tests the Covered and Protective Put strategies.
     /// </summary>
-    public class CoveredAndProtectivePutStrategiesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoveredAndProtectivePutStrategiesAlgorithm : OptionStrategyFactoryMethodsBaseAlgorithm
     {
-        private Symbol _optionSymbol;
         private OptionStrategy _coveredPut;
         private OptionStrategy _protectivePut;
 
-        public override void Initialize()
+        protected override int ExpectedOrdersCount { get; } = 4;
+
+        protected override void TradeStrategy(OptionChain chain)
         {
-            SetStartDate(2015, 12, 24);
-            SetEndDate(2015, 12, 24);
-            SetCash(1000000);
+            var contract = chain
+                .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                .ThenByDescending(x => x.Expiry)
+                .FirstOrDefault();
 
-            var option = AddOption("GOOG");
-            _optionSymbol = option.Symbol;
-
-            option.SetFilter(-2, +2, 0, 180);
-
-            SetBenchmark("GOOG");
-        }
-
-        public override void OnData(Slice slice)
-        {
-            if (!Portfolio.Invested)
+            if (contract != null)
             {
-                if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
-                {
-                    var contract = chain
-                        .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
-                        .ThenByDescending(x => x.Expiry)
-                        .FirstOrDefault();
-
-                    if (contract != null)
-                    {
-                        _coveredPut = OptionStrategies.CoveredPut(_optionSymbol, contract.Strike, contract.Expiry);
-                        _protectivePut = OptionStrategies.ProtectivePut(_optionSymbol, contract.Strike, contract.Expiry);
-                        Buy(_coveredPut, 2);
-                    }
-                }
-            }
-            else
-            {
-                // Verify that the strategy was traded
-                var positionGroup = Portfolio.Positions.Groups.Single();
-
-                var buyingPowerModel = positionGroup.BuyingPowerModel as OptionStrategyPositionGroupBuyingPowerModel;
-                if (buyingPowerModel == null)
-                {
-                    throw new Exception($@"Expected position group buying power model type: {nameof(OptionStrategyPositionGroupBuyingPowerModel)
-                        }. Actual: {positionGroup.BuyingPowerModel.GetType()}");
-                }
-
-                if (positionGroup.Positions.Count() != 2)
-                {
-                    throw new Exception($"Expected position group to have 2 positions. Actual: {positionGroup.Positions.Count()}");
-                }
-
-                var optionPosition = positionGroup.Positions.Single(x => x.Symbol.SecurityType == SecurityType.Option);
-                if (optionPosition.Symbol.ID.OptionRight != OptionRight.Put)
-                {
-                    throw new Exception($"Expected option position to be a put. Actual: {optionPosition.Symbol.ID.OptionRight}");
-                }
-
-                var underlyingPosition = positionGroup.Positions.Single(x => x.Symbol.SecurityType == SecurityType.Equity);
-                var expectedOptionPositionQuantity = -2;
-                var expectedUnderlyingPositionQuantity = -2 * Securities[_optionSymbol].SymbolProperties.ContractMultiplier;
-
-                if (optionPosition.Quantity != expectedOptionPositionQuantity)
-                {
-                    throw new Exception($@"Expected option position quantity to be {expectedOptionPositionQuantity
-                        }. Actual: {optionPosition.Quantity}");
-                }
-
-                if (underlyingPosition.Quantity != expectedUnderlyingPositionQuantity)
-                {
-                    throw new Exception($@"Expected underlying position quantity to be {expectedUnderlyingPositionQuantity
-                        }. Actual: {underlyingPosition.Quantity}");
-                }
-
-                // Now we should be able to close the position using the inverse strategy (a protective put)
-                Buy(_protectivePut, 2);
-
-                // We can quit now, no more testing required
-                Quit();
+                _coveredPut = OptionStrategies.CoveredPut(_optionSymbol, contract.Strike, contract.Expiry);
+                _protectivePut = OptionStrategies.ProtectivePut(_optionSymbol, contract.Strike, contract.Expiry);
+                Buy(_coveredPut, 2);
             }
         }
 
-        public override void OnEndOfAlgorithm()
+        protected override void AssertStrategyPositionGroup(IPositionGroup positionGroup)
         {
-            if (Portfolio.Invested)
+            if (positionGroup.Positions.Count() != 2)
             {
-                throw new Exception("Expected no holdings at end of algorithm");
+                throw new Exception($"Expected position group to have 2 positions. Actual: {positionGroup.Positions.Count()}");
             }
 
-            var ordersCount = Transactions.GetOrders((order) => order.Status == OrderStatus.Filled).Count();
-            if (ordersCount != 4)
+            var optionPosition = positionGroup.Positions.Single(x => x.Symbol.SecurityType == SecurityType.Option);
+            if (optionPosition.Symbol.ID.OptionRight != OptionRight.Put)
             {
-                throw new Exception("Expected 4 orders to have been submitted and filled, 2 for buying the covered put and 2 for the liquidation." +
-                    $" Actual {ordersCount}");
+                throw new Exception($"Expected option position to be a put. Actual: {optionPosition.Symbol.ID.OptionRight}");
+            }
+
+            var underlyingPosition = positionGroup.Positions.Single(x => x.Symbol.SecurityType == SecurityType.Equity);
+            var expectedOptionPositionQuantity = -2;
+            var expectedUnderlyingPositionQuantity = -2 * Securities[_optionSymbol].SymbolProperties.ContractMultiplier;
+
+            if (optionPosition.Quantity != expectedOptionPositionQuantity)
+            {
+                throw new Exception($@"Expected option position quantity to be {expectedOptionPositionQuantity}. Actual: {optionPosition.Quantity}");
+            }
+
+            if (underlyingPosition.Quantity != expectedUnderlyingPositionQuantity)
+            {
+                throw new Exception($@"Expected underlying position quantity to be {expectedUnderlyingPositionQuantity}. Actual: {underlyingPosition.Quantity}");
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        protected override void LiquidateStrategy()
         {
-            Debug(orderEvent.ToString());
+            // We should be able to close the position using the inverse strategy (a protective put)
+            Buy(_protectivePut, 2);
         }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public override bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public override Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4494;
+        public override long DataPoints => 4494;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public override int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "4"},
             {"Average Win", "0%"},

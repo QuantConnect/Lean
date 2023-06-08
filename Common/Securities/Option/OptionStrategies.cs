@@ -473,25 +473,25 @@ namespace QuantConnect.Securities.Option
         /// The upper and lower strikes must both be equidistant from the middle strike.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
-        /// <param name="leg1Strike">The upper strike price of the long call</param>
-        /// <param name="leg2Strike">The middle strike price of the two short calls</param>
-        /// <param name="leg3Strike">The lower strike price of the long call</param>
+        /// <param name="higherStrike">The upper strike price of the long call</param>
+        /// <param name="middleStrike">The middle strike price of the two short calls</param>
+        /// <param name="lowerStrike">The lower strike price of the long call</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy CallButterfly(
             Symbol canonicalOption,
-            decimal leg1Strike,
-            decimal leg2Strike,
-            decimal leg3Strike,
+            decimal higherStrike,
+            decimal middleStrike,
+            decimal lowerStrike,
             DateTime expiration
             )
         {
             CheckCanonicalOptionSymbol(canonicalOption, "CallButterfly");
             CheckExpirationDate(expiration, "CallButterfly", nameof(expiration));
 
-            if (leg1Strike <= leg2Strike ||
-                leg3Strike >= leg2Strike ||
-                leg1Strike - leg2Strike != leg2Strike - leg3Strike)
+            if (higherStrike <= middleStrike ||
+                lowerStrike >= middleStrike ||
+                higherStrike - middleStrike != middleStrike - lowerStrike)
             {
                 throw new ArgumentException("CallButterfly: upper and lower strikes must both be equidistant from the middle strike", "leg1Strike, leg2Strike, leg3Strike");
             }
@@ -505,18 +505,55 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1, Expiration = expiration
+                        Right = OptionRight.Call, Strike = higherStrike, Quantity = 1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = -2, Expiration = expiration
+                        Right = OptionRight.Call, Strike = middleStrike, Quantity = -2, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg3Strike, Quantity = 1, Expiration = expiration
+                        Right = OptionRight.Call, Strike = lowerStrike, Quantity = 1, Expiration = expiration
                     }
                 }
             };
+        }
+
+        /// <summary>
+        /// Creates a new Butterfly Call strategy that consists of two short calls at a middle strike,
+        /// and one long call each at a lower and upper strike.
+        /// The upper and lower strikes must both be equidistant from the middle strike.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="higherStrike">The upper strike price of the long call</param>
+        /// <param name="middleStrike">The middle strike price of the two short calls</param>
+        /// <param name="lowerStrike">The lower strike price of the long call</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        /// <remarks>Alias for <see cref="CallButterfly" /></remarks>
+        public static OptionStrategy ButterflyCall(Symbol canonicalOption, decimal higherStrike, decimal middleStrike, decimal lowerStrike,
+            DateTime expiration)
+        {
+            return CallButterfly(canonicalOption, higherStrike, middleStrike, lowerStrike, expiration);
+        }
+
+        /// <summary>
+        /// Creates a new Butterfly Call strategy that consists of two long calls at a middle strike,
+        /// and one short call each at a lower and upper strike.
+        /// The upper and lower strikes must both be equidistant from the middle strike.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="higherStrike">The upper strike price of the short call</param>
+        /// <param name="middleStrike">The middle strike price of the two long calls</param>
+        /// <param name="lowerStrike">The lower strike price of the short call</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ShortButterflyCall(Symbol canonicalOption, decimal higherStrike, decimal middleStrike, decimal lowerStrike,
+            DateTime expiration)
+        {
+            // Since a short butterfly call is an inverted butterfly call, we can just use the ButterflyCall method and invert the legs
+            return InvertStrategy(ButterflyCall(canonicalOption, higherStrike, middleStrike, lowerStrike, expiration),
+                OptionStrategyDefinitions.ShortButterflyCall.Name);
         }
 
         /// <summary>
@@ -524,25 +561,25 @@ namespace QuantConnect.Securities.Option
         /// The upper and lower strikes must both be equidistant from the middle strike.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
-        /// <param name="leg1Strike">The upper strike price of the long put</param>
-        /// <param name="leg2Strike">The middle strike price of the two short puts</param>
-        /// <param name="leg3Strike">The lower strike price of the long put</param>
+        /// <param name="higherStrike">The upper strike price of the long put</param>
+        /// <param name="middleStrike">The middle strike price of the two short puts</param>
+        /// <param name="lowerStrike">The lower strike price of the long put</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy PutButterfly(
             Symbol canonicalOption,
-            decimal leg1Strike,
-            decimal leg2Strike,
-            decimal leg3Strike,
+            decimal higherStrike,
+            decimal middleStrike,
+            decimal lowerStrike,
             DateTime expiration
             )
         {
             CheckCanonicalOptionSymbol(canonicalOption, "PutButterfly");
             CheckExpirationDate(expiration, "PutButterfly", nameof(expiration));
 
-            if (leg1Strike <= leg2Strike ||
-                leg3Strike >= leg2Strike ||
-                leg1Strike - leg2Strike != leg2Strike - leg3Strike)
+            if (higherStrike <= middleStrike ||
+                lowerStrike >= middleStrike ||
+                higherStrike - middleStrike != middleStrike - lowerStrike)
             {
                 throw new ArgumentException("PutButterfly: upper and lower strikes must both be equidistant from the middle strike", "leg1Strike, leg2Strike, leg3Strike");
             }
@@ -556,21 +593,58 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1,
+                        Right = OptionRight.Put, Strike = higherStrike, Quantity = 1,
                         Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = -2,
+                        Right = OptionRight.Put, Strike = middleStrike, Quantity = -2,
                         Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg3Strike, Quantity = 1,
+                        Right = OptionRight.Put, Strike = lowerStrike, Quantity = 1,
                         Expiration = expiration
                     }
                 }
             };
+        }
+
+        /// <summary>
+        /// Creates a new Butterfly Put strategy that consists of two short puts at a middle strike,
+        /// and one long put each at a lower and upper strike.
+        /// The upper and lower strikes must both be equidistant from the middle strike.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="higherStrike">The upper strike price of the long put</param>
+        /// <param name="middleStrike">The middle strike price of the two short puts</param>
+        /// <param name="lowerStrike">The lower strike price of the long put</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        /// <remarks>Alias for <see cref="PutButterfly" /></remarks>
+        public static OptionStrategy ButterflyPut(Symbol canonicalOption, decimal higherStrike, decimal middleStrike, decimal lowerStrike,
+            DateTime expiration)
+        {
+            return PutButterfly(canonicalOption, higherStrike, middleStrike, lowerStrike, expiration);
+        }
+
+        /// <summary>
+        /// Creates a new Butterfly Put strategy that consists of two long puts at a middle strike,
+        /// and one short put each at a lower and upper strike.
+        /// The upper and lower strikes must both be equidistant from the middle strike.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="higherStrike">The upper strike price of the short put</param>
+        /// <param name="middleStrike">The middle strike price of the two long puts</param>
+        /// <param name="lowerStrike">The lower strike price of the short put</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ShortButterflyPut(Symbol canonicalOption, decimal higherStrike, decimal middleStrike, decimal lowerStrike,
+            DateTime expiration)
+        {
+            // Since a short butterfly put is an inverted butterfly put, we can just use the ButterflyPut method and invert the legs
+            return InvertStrategy(ButterflyPut(canonicalOption, higherStrike, middleStrike, lowerStrike, expiration),
+                OptionStrategyDefinitions.ShortButterflyPut.Name);
         }
 
         /// <summary>

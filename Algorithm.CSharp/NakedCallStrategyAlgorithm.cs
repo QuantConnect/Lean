@@ -18,10 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Orders;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,126 +28,77 @@ namespace QuantConnect.Algorithm.CSharp
     /// This algorithm demonstrate how to use OptionStrategies helper class to batch send orders for common strategies.
     /// In this case, the algorithm tests the Naked Call strategy.
     /// </summary>
-    public class NakedCallStrategyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class NakedCallStrategyAlgorithm : OptionStrategyFactoryMethodsBaseAlgorithm
     {
-        private Symbol _optionSymbol;
         private OptionStrategy _nakedCall;
 
-        public override void Initialize()
+        protected override int ExpectedOrdersCount { get; } = 2;
+
+        protected override void TradeStrategy(OptionChain chain)
         {
-            SetStartDate(2015, 12, 24);
-            SetEndDate(2015, 12, 24);
-            SetCash(1000000);
+            var contract = chain
+                .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                .ThenByDescending(x => x.Expiry)
+                .FirstOrDefault();
 
-            var option = AddOption("GOOG");
-            _optionSymbol = option.Symbol;
-
-            option.SetFilter(-2, +2, 0, 180);
-
-            SetBenchmark("GOOG");
-        }
-
-        public override void OnData(Slice slice)
-        {
-            if (!Portfolio.Invested)
+            if (contract != null)
             {
-                if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
-                {
-                    var contract = chain
-                        .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
-                        .ThenByDescending(x => x.Expiry)
-                        .FirstOrDefault();
-
-                    if (contract != null)
-                    {
-                        _nakedCall = OptionStrategies.NakedCall(_optionSymbol, contract.Strike, contract.Expiry);
-                        Buy(_nakedCall, 2);
-                    }
-                }
-            }
-            else
-            {
-                // Verify that the strategy was traded
-                var positionGroup = Portfolio.Positions.Groups.Single();
-
-                var buyingPowerModel = positionGroup.BuyingPowerModel as OptionStrategyPositionGroupBuyingPowerModel;
-                if (buyingPowerModel == null)
-                {
-                    throw new Exception($@"Expected position group buying power model type: {nameof(OptionStrategyPositionGroupBuyingPowerModel)
-                        }. Actual: {positionGroup.BuyingPowerModel.GetType()}");
-                }
-
-                if (positionGroup.Positions.Count() != 1)
-                {
-                    throw new Exception($"Expected position group to have 1 position. Actual: {positionGroup.Positions.Count()}");
-                }
-
-                var optionPosition = positionGroup.Positions.Single(x => x.Symbol.SecurityType == SecurityType.Option);
-                if (optionPosition.Symbol.ID.OptionRight != OptionRight.Call)
-                {
-                    throw new Exception($"Expected option position to be a call. Actual: {optionPosition.Symbol.ID.OptionRight}");
-                }
-
-                var expectedOptionPositionQuantity = -2;
-
-                if (optionPosition.Quantity != expectedOptionPositionQuantity)
-                {
-                    throw new Exception($@"Expected option position quantity to be {expectedOptionPositionQuantity
-                        }. Actual: {optionPosition.Quantity}");
-                }
-
-                // Now we can liquidate by selling the strategy
-                Sell(_nakedCall, 2);
-
-                // We can quit now, no more testing required
-                Quit();
+                _nakedCall = OptionStrategies.NakedCall(_optionSymbol, contract.Strike, contract.Expiry);
+                Buy(_nakedCall, 2);
             }
         }
 
-        public override void OnEndOfAlgorithm()
+        protected override void AssertStrategyPositionGroup(IPositionGroup positionGroup)
         {
-            if (Portfolio.Invested)
+            if (positionGroup.Positions.Count() != 1)
             {
-                throw new Exception("Expected no holdings at end of algorithm");
+                throw new Exception($"Expected position group to have 1 position. Actual: {positionGroup.Positions.Count()}");
             }
 
-            var ordersCount = Transactions.GetOrders((order) => order.Status == OrderStatus.Filled).Count();
-            if (ordersCount != 2)
+            var optionPosition = positionGroup.Positions.Single(x => x.Symbol.SecurityType == SecurityType.Option);
+            if (optionPosition.Symbol.ID.OptionRight != OptionRight.Call)
             {
-                throw new Exception("Expected 2 orders to have been submitted and filled, 1 for buying the naked call and 1 for the liquidation." +
-                    $" Actual {ordersCount}");
+                throw new Exception($"Expected option position to be a call. Actual: {optionPosition.Symbol.ID.OptionRight}");
+            }
+
+            var expectedOptionPositionQuantity = -2;
+
+            if (optionPosition.Quantity != expectedOptionPositionQuantity)
+            {
+                throw new Exception($@"Expected option position quantity to be {expectedOptionPositionQuantity}. Actual: {optionPosition.Quantity}");
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        protected override void LiquidateStrategy()
         {
-            Debug(orderEvent.ToString());
+            // We can liquidate by selling the strategy
+            Sell(_nakedCall, 2);
         }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public override bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public override Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4494;
+        public override long DataPoints => 4494;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public override int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},
