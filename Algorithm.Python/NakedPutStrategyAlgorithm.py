@@ -31,8 +31,8 @@ class NakedPutStrategyAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
         if len(contracts) == 0: return
         contract = contracts[0]
         if contract != None:
-            self._naked_call = OptionStrategies.NakedPut(option_symbol, contract.Strike, contract.Expiry)
-            self.Buy(self._naked_call, 2)
+            self._naked_put = OptionStrategies.NakedPut(option_symbol, contract.Strike, contract.Expiry)
+            self.Buy(self._naked_put, 2)
 
     def AssertStrategyPositionGroup(self, positionGroup: IPositionGroup, option_symbol: Symbol):
         positions = list(positionGroup.Positions)
@@ -50,4 +50,4 @@ class NakedPutStrategyAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
 
     def LiquidateStrategy(self):
         # Now we can liquidate by selling the strategy
-        self.Sell(self._naked_call, 2)
+        self.Sell(self._naked_put, 2)

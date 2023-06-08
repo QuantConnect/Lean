@@ -60,6 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
                     _butterflyPut = OptionStrategies.ButterflyPut(_optionSymbol, itmStrike, atmStrike, otmStrike, expiry);
                     _shortButterflyPut = OptionStrategies.ShortButterflyPut(_optionSymbol, itmStrike, atmStrike, otmStrike, expiry);
                     Buy(_butterflyPut, 2);
+                    break;
                 }
             }
         }

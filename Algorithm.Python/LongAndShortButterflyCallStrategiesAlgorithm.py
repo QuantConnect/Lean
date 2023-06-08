@@ -45,6 +45,7 @@ class LongAndShortButterflyCallStrategiesAlgorithm(OptionStrategyFactoryMethodsB
                 self._butterfly_call = OptionStrategies.ButterflyCall(option_symbol, otmStrike, atmStrike, itmStrike, expiry)
                 self._short_butterfly_call = OptionStrategies.ShortButterflyCall(option_symbol, otmStrike, atmStrike, itmStrike, expiry)
                 self.Buy(self._butterfly_call, 2)
+                return
 
     def AssertStrategyPositionGroup(self, positionGroup: IPositionGroup, option_symbol: Symbol):
         positions = list(positionGroup.Positions)
