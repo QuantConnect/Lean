@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,9 +32,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         // and on the next trading day we use this data to produce the split instance
         private decimal? _splitFactor;
         private decimal _referencePrice;
-        private CorporateFactorProvider _factorFile;
+        private IFactorFileProvider _factorFileProvider;
         private MapFile _mapFile;
-        private SubscriptionDataConfig _config;
+
+        /// <summary>
+        /// The current instance being used
+        /// </summary>
+        protected CorporateFactorProvider FactorFile { get; private set; }
+
+        /// <summary>
+        /// The associated configuration
+        /// </summary>
+        protected SubscriptionDataConfig Config { get; private set; }
 
         /// <summary>
         /// Initializes this instance
@@ -49,9 +58,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             IMapFileProvider mapFileProvider,
             DateTime startTime)
         {
-            _config = config;
-            _mapFile = mapFileProvider.ResolveMapFile(_config);
-            _factorFile = factorFileProvider.Get(_config.Symbol) as CorporateFactorProvider;
+            Config = config;
+            _factorFileProvider = factorFileProvider;
+            _mapFile = mapFileProvider.ResolveMapFile(Config);
+            InitializeFactorFile();
         }
 
         /// <summary>
@@ -59,10 +69,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="eventArgs">The new tradable day event arguments</param>
         /// <returns>New split event if any</returns>
-        public IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
+        public virtual IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
-            if (_config.Symbol == eventArgs.Symbol
-                && _factorFile != null
+            if (Config.Symbol == eventArgs.Symbol
+                && FactorFile != null
                 && _mapFile.HasData(eventArgs.Date))
             {
                 var factor = _splitFactor;
@@ -71,7 +81,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     var close = _referencePrice;
                     if (close == 0)
                     {
-                        throw new InvalidOperationException($"Zero reference price for {_config.Symbol} split at {eventArgs.Date}");
+                        throw new InvalidOperationException($"Zero reference price for {Config.Symbol} split at {eventArgs.Date}");
                     }
 
                     _splitFactor = null;
@@ -86,7 +96,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 decimal splitFactor;
                 decimal referencePrice;
-                if (_factorFile.HasSplitEventOnNextTradingDay(eventArgs.Date, out splitFactor, out referencePrice))
+                if (FactorFile.HasSplitEventOnNextTradingDay(eventArgs.Date, out splitFactor, out referencePrice))
                 {
                     _splitFactor = splitFactor;
                     _referencePrice = referencePrice;
@@ -98,6 +108,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         SplitType.Warning);
                 }
             }
+        }
+
+        /// <summary>
+        /// Initializes the factor file to use
+        /// </summary>
+        protected void InitializeFactorFile()
+        {
+            FactorFile = _factorFileProvider.Get(Config.Symbol) as CorporateFactorProvider;
         }
     }
 }

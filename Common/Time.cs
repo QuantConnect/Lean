@@ -141,6 +141,30 @@ namespace QuantConnect
         private const long SecondToMillisecond = 1000;
 
         /// <summary>
+        /// Helper method to get the new live auxiliary data due time
+        /// </summary>
+        /// <returns>The due time for the new auxiliary data emission</returns>
+        public static TimeSpan GetNextLiveAuxiliaryDataDueTime()
+        {
+            return GetNextLiveAuxiliaryDataDueTime(DateTime.UtcNow);
+        }
+
+        /// <summary>
+        /// Helper method to get the new live auxiliary data due time
+        /// </summary>
+        /// <param name="utcNow">The current utc time</param>
+        /// <returns>The due time for the new auxiliary data emission</returns>
+        public static TimeSpan GetNextLiveAuxiliaryDataDueTime(DateTime utcNow)
+        {
+            var nowNewYork = utcNow.ConvertFromUtc(TimeZones.NewYork);
+            if (nowNewYork.TimeOfDay < LiveAuxiliaryDataOffset)
+            {
+                return LiveAuxiliaryDataOffset - nowNewYork.TimeOfDay;
+            }
+            return nowNewYork.Date.AddDays(1).Add(+LiveAuxiliaryDataOffset) - nowNewYork;
+        }
+
+        /// <summary>
         /// Helper method to adjust a waiting time, in milliseconds, so it's uneven with the second turn around
         /// </summary>
         /// <param name="waitTimeMillis">The desired wait time</param>
