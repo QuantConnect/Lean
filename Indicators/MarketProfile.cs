@@ -161,19 +161,29 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator, Point of Control (POC) price</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
+            // If the point is fill forward it has zero volume, then it could pop a real point
+            // from _oldDataPoints
+            if (input.IsFillForward)
+            {
+                return 0m;
+            }
+
             // Define Volume and add it to _volumePerPrice and _oldDataPoints
             var VolumeQuantity = GetVolume(input);
             Add(input,VolumeQuantity);
 
             // Get the index of the close price with maximum volume
             _pointOfControl = GetMax();
+
+            var volumePerPriceCount = VolumePerPrice.Count;
+
             // Get the POC price and volume values
-            POCPrice = VolumePerPrice.Keys[_pointOfControl];
-            POCVolume = VolumePerPrice.Values[_pointOfControl];
+            POCPrice = volumePerPriceCount != 0 ? VolumePerPrice.Keys[_pointOfControl] : 0;
+            POCVolume = volumePerPriceCount != 0 ? VolumePerPrice.Values[_pointOfControl] : 0;
 
             // Get the highest and lowest close prices
-            ProfileHigh = VolumePerPrice.Keys.Max();
-            ProfileLow = VolumePerPrice.Keys.Min();
+            ProfileHigh = volumePerPriceCount != 0 ? VolumePerPrice.Keys.Max() : 0;
+            ProfileLow = volumePerPriceCount != 0 ? VolumePerPrice.Keys.Min() : 0;
 
             // Calculate the Value Area Volume and Value Area High and Low
             CalculateValueArea();
@@ -280,7 +290,7 @@ namespace QuantConnect.Indicators
             // When this loop ends we will have a more accurate value of ValueAreaVolume
             // but mainly the prices that delimite this area, ValueAreaLow and ValueAreaHigh
             // so ValueArea, can also be seen as the range between ValueAreaLow and ValueAreaHigh
-            while (currentVolume <= ValueAreaVolume)
+            while (currentVolume <= ValueAreaVolume && ValueAreaVolume != 0)
             {
                 lastMin = minIndex;
                 lastMax = maxIndex;
@@ -327,8 +337,8 @@ namespace QuantConnect.Indicators
                 // We expand this range between minIndex and maxIndex until the sum of all volume values between
                 // them is bigger than the initial ValueAreaVolume value
             }
-            ValueAreaHigh = VolumePerPrice.Keys[maxIndex];
-            ValueAreaLow = VolumePerPrice.Keys[minIndex];
+            ValueAreaHigh = VolumePerPrice.Count != 0 ? VolumePerPrice.Keys[maxIndex] : 0;
+            ValueAreaLow = VolumePerPrice.Count != 0 ? VolumePerPrice.Keys[minIndex] : 0;
         }
 
         /// <summary>

@@ -136,16 +136,39 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
-        [Test]
-        public void DoesNotFailWithRepeatedInputCloseValues()
+        [TestCase(new double[] { 313.25, 313.248, 313.241, 313.249, 313.243, 314.245, 315.241 })] // Represents a sequence of real bars and a FF bar
+        [TestCase(new double[] { 313.25, 313.243, 313.243, 313.243, 313.243, 314.245, 315.241 })] // Represents a sequence of a real bar and FF bars
+        [TestCase(new double[] { 314.243, 313.243, 313.243, 313.243, 313.25, 313.245, 315.241, 316.241})] // Represents a sequence of FF bars and a real bar
+        [TestCase(new double[] { 313.25, 313.243, 313.25, 313.243, 313.25, 314.245, 315.241 })] // Represents an alternant sequence of FF bars and real bars
+        [TestCase(new double[] { 313.243, 313.243, 313.25, 313.243, 313.243, 314.245, 315.241 })] // Represents a sequence of FF bars, a real bar and FF bars
+        [TestCase(new double[] { 313.243, 313.243, 313.243, 313.243, 313.243, 313.243, 313.243 })] // Represents a sequence of FF bars
+        [TestCase(new double[] { 312.25, 312.248, 312.241, 312.249, 312.243, 314.245, 315.241 })] // Represents a sequence of real bars and a zero volume bar
+        [TestCase(new double[] { 312.25, 312.243, 312.243, 312.243, 312.243, 314.245, 315.241 })] // Represents a sequence of a real bar and zero volume bars
+        [TestCase(new double[] { 314.243, 312.243, 312.243, 312.243, 312.25, 312.245, 315.241, 316.241 })] // Represents a sequence of zero volume bars and a real bar
+        [TestCase(new double[] { 312.25, 312.243, 312.25, 312.243, 312.25, 314.245, 315.241 })] // Represents an alternant sequence of zero volume bars and real bars
+        [TestCase(new double[] { 312.243, 312.243, 312.25, 312.243, 312.243, 314.245, 315.241 })] // Represents a sequence of zero volume bars, a real bar and zero volume bars
+        [TestCase(new double[] { 312.243, 312.243, 312.243, 312.243, 312.243, 312.243, 312.243 })] // Represents a sequence of zero volume bars
+        public void DoesNotFailWithRepeatedInputCloseValues(double[] closeValues)
         {
-            var closeValues = new double[] { 313.25, 313.248, 313.241, 313.249, 313.243, 314.245, 315.241 };
             var vp = new VolumeProfile(2);
             var reference = new DateTime(2000, 1, 1);
             var period = ((IIndicatorWarmUpPeriodProvider)vp).WarmUpPeriod;
             for (var i = 0; i < closeValues.Length; i++)
             {
-                Assert.DoesNotThrow(() => vp.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = (decimal)closeValues[i], Volume = closeValues[i] != 313.243 ? 100 : 0, Time = reference.AddDays(1 + i) }));
+                var dataPoint = new TradeBar() { Symbol = Symbols.AAPL, Close = (decimal)closeValues[i], Volume = 100, Time = reference.AddDays(1 + i) };
+                if (closeValues[i] == 313.243) // Represents Fill Forward points
+                {
+                    Assert.DoesNotThrow(() => vp.Update(dataPoint.Clone(true)));
+                }
+                else if (closeValues[i] == 312.243) // Represents points with zero volume
+                {
+                    dataPoint.Volume = 0;
+                    Assert.DoesNotThrow(() => vp.Update(dataPoint));
+                }
+                else
+                {
+                    Assert.DoesNotThrow(() => vp.Update(dataPoint));
+                }
             }
         }
     }
