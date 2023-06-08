@@ -706,8 +706,8 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Creates new Put Calendar Spread strategy which consists of a short and a long call
-        /// with the same strikes but with the long call having a further expiration date.
+        /// Creates new Put Calendar Spread strategy which consists of a short and a long put
+        /// with the same strikes but with the long put having a further expiration date.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="strike">The strike price of the both legs</param>
