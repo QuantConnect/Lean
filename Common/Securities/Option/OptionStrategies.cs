@@ -493,7 +493,8 @@ namespace QuantConnect.Securities.Option
                 lowerStrike >= middleStrike ||
                 higherStrike - middleStrike != middleStrike - lowerStrike)
             {
-                throw new ArgumentException("CallButterfly: upper and lower strikes must both be equidistant from the middle strike", "leg1Strike, leg2Strike, leg3Strike");
+                throw new ArgumentException("ButterflyCall: upper and lower strikes must both be equidistant from the middle strike",
+                    $"{nameof(higherStrike)}, {nameof(middleStrike)}, {nameof(lowerStrike)}");
             }
 
             return new OptionStrategy
@@ -581,7 +582,8 @@ namespace QuantConnect.Securities.Option
                 lowerStrike >= middleStrike ||
                 higherStrike - middleStrike != middleStrike - lowerStrike)
             {
-                throw new ArgumentException("PutButterfly: upper and lower strikes must both be equidistant from the middle strike", "leg1Strike, leg2Strike, leg3Strike");
+                throw new ArgumentException("ButterflyPut: upper and lower strikes must both be equidistant from the middle strike",
+                    $"{nameof(higherStrike)}, {nameof(middleStrike)}, {nameof(lowerStrike)}");
             }
 
             return new OptionStrategy
@@ -648,27 +650,24 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Method creates new Call Calendar Spread strategy, that is a short one call option and long a second call option with a more distant expiration.
+        /// Creates new Call Calendar Spread strategy which consists of a short and a long call
+        /// with the same strikes but with the long call having a further expiration date.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="strike">The strike price of the both legs</param>
-        /// <param name="expiration1">Option expiration near date</param>
-        /// <param name="expiration2">Option expiration far date</param>
+        /// <param name="nearExpiration">Near expiration date for the short option</param>
+        /// <param name="farExpiration">Far expiration date for the long option</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy CallCalendarSpread(
-            Symbol canonicalOption,
-            decimal strike,
-            DateTime expiration1,
-            DateTime expiration2
-            )
+        public static OptionStrategy CallCalendarSpread(Symbol canonicalOption, decimal strike, DateTime nearExpiration, DateTime farExpiration)
         {
             CheckCanonicalOptionSymbol(canonicalOption, "CallCalendarSpread");
-            CheckExpirationDate(expiration1, "CallCalendarSpread", nameof(expiration1));
-            CheckExpirationDate(expiration2, "CallCalendarSpread", nameof(expiration2));
+            CheckExpirationDate(nearExpiration, "CallCalendarSpread", nameof(nearExpiration));
+            CheckExpirationDate(farExpiration, "CallCalendarSpread", nameof(farExpiration));
 
-            if (expiration1 >= expiration2)
+            if (nearExpiration >= farExpiration)
             {
-                throw new ArgumentException("CallCalendarSpread: near expiration must be less than far expiration", "expiration1, expiration2");
+                throw new ArgumentException("CallCalendarSpread: near expiration must be less than far expiration",
+                    $"{nameof(nearExpiration)}, {nameof(farExpiration)}");
             }
 
             return new OptionStrategy
@@ -680,38 +679,51 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = strike, Quantity = -1, Expiration = expiration1
+                        Right = OptionRight.Call, Strike = strike, Quantity = -1, Expiration = nearExpiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = strike, Quantity = 1, Expiration = expiration2
+                        Right = OptionRight.Call, Strike = strike, Quantity = 1, Expiration = farExpiration
                     }
                 }
             };
         }
 
         /// <summary>
-        /// Method creates new Put Calendar Spread strategy, that is a short one put option and long a second put option with a more distant expiration.
+        /// Creates new Short Call Calendar Spread strategy which consists of a short and a long call
+        /// with the same strikes but with the short call having a further expiration date.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="strike">The strike price of the both legs</param>
-        /// <param name="expiration1">Option expiration near date</param>
-        /// <param name="expiration2">Option expiration far date</param>
+        /// <param name="nearExpiration">Near expiration date for the long option</param>
+        /// <param name="farExpiration">Far expiration date for the short option</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy PutCalendarSpread(
-            Symbol canonicalOption,
-            decimal strike,
-            DateTime expiration1,
-            DateTime expiration2
-            )
+        public static OptionStrategy ShortCallCalendarSpread(Symbol canonicalOption, decimal strike, DateTime nearExpiration, DateTime farExpiration)
+        {
+            // Since a short call calendar spread is an inverted call calendar, we can just use the CallCalendarSpread method and invert the legs
+            return InvertStrategy(CallCalendarSpread(canonicalOption, strike, nearExpiration, farExpiration),
+                OptionStrategyDefinitions.ShortCallCalendarSpread.Name);
+        }
+
+        /// <summary>
+        /// Creates new Put Calendar Spread strategy which consists of a short and a long put
+        /// with the same strikes but with the long put having a further expiration date.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price of the both legs</param>
+        /// <param name="nearExpiration">Near expiration date for the short option</param>
+        /// <param name="farExpiration">Far expiration date for the long option</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy PutCalendarSpread(Symbol canonicalOption, decimal strike, DateTime nearExpiration, DateTime farExpiration)
         {
             CheckCanonicalOptionSymbol(canonicalOption, "PutCalendarSpread");
-            CheckExpirationDate(expiration1, "PutCalendarSpread", nameof(expiration1));
-            CheckExpirationDate(expiration2, "PutCalendarSpread", nameof(expiration2));
+            CheckExpirationDate(nearExpiration, "PutCalendarSpread", nameof(nearExpiration));
+            CheckExpirationDate(farExpiration, "PutCalendarSpread", nameof(farExpiration));
 
-            if (expiration1 >= expiration2)
+            if (nearExpiration >= farExpiration)
             {
-                throw new ArgumentException("PutCalendarSpread: near expiration must be less than far expiration", "expiration1, expiration2");
+                throw new ArgumentException("PutCalendarSpread: near expiration must be less than far expiration",
+                    $"{nameof(nearExpiration)}, {nameof(farExpiration)}");
             }
 
             return new OptionStrategy
@@ -723,14 +735,30 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = strike, Quantity = -1, Expiration = expiration1
+                        Right = OptionRight.Put, Strike = strike, Quantity = -1, Expiration = nearExpiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = strike, Quantity = 1, Expiration = expiration2
+                        Right = OptionRight.Put, Strike = strike, Quantity = 1, Expiration = farExpiration
                     }
                 }
             };
+        }
+
+        /// <summary>
+        /// Creates new Short Put Calendar Spread strategy which consists of a short and a long put
+        /// with the same strikes but with the short put having a further expiration date.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price of the both legs</param>
+        /// <param name="nearExpiration">Near expiration date for the long option</param>
+        /// <param name="farExpiration">Far expiration date for the short option</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ShortPutCalendarSpread(Symbol canonicalOption, decimal strike, DateTime nearExpiration, DateTime farExpiration)
+        {
+            // Since a short put calendar spread is an inverted put calendar, we can just use the PutCalendarSpread method and invert the legs
+            return InvertStrategy(PutCalendarSpread(canonicalOption, strike, nearExpiration, farExpiration),
+                OptionStrategyDefinitions.ShortPutCalendarSpread.Name);
         }
 
         /// <summary>

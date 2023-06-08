@@ -509,6 +509,180 @@ namespace QuantConnect.Tests.Common.Securities.Options
         }
 
         [Test]
+        public void FailsBuildingCallCalendarSpreadStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var strike = 350m;
+            var nearExpiration = new DateTime(2023, 08, 18);
+            var farExpiration = new DateTime(2023, 09, 18);
+
+            // Invalid expiration dates
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, DateTime.MinValue, farExpiration));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, DateTime.MaxValue, farExpiration));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, DateTime.MinValue));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, DateTime.MaxValue));
+
+            // Switched expiration dates
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, farExpiration, nearExpiration));
+
+            // Same expiration dates
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, nearExpiration));
+
+        }
+
+        [Test]
+        public void BuildsCallCalendarSpreadStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var strike = 350m;
+            var nearExpiration = new DateTime(2023, 08, 18);
+            var farExpiration = new DateTime(2023, 09, 18);
+
+            var strategy = OptionStrategies.CallCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, farExpiration);
+
+            Assert.AreEqual(OptionStrategyDefinitions.CallCalendarSpread.Name, strategy.Name);
+            Assert.AreEqual(underlying, strategy.Underlying);
+            Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
+
+            Assert.AreEqual(2, strategy.OptionLegs.Count);
+            Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
+
+            var nearExpirationLeg = strategy.OptionLegs.Single(x => x.Expiration == nearExpiration);
+            Assert.AreEqual(OptionRight.Call, nearExpirationLeg.Right);
+            Assert.AreEqual(nearExpiration, nearExpirationLeg.Expiration);
+            Assert.AreEqual(-1, nearExpirationLeg.Quantity);
+
+            var farExpirationLeg = strategy.OptionLegs.Single(x => x.Expiration == farExpiration);
+            Assert.AreEqual(OptionRight.Call, farExpirationLeg.Right);
+            Assert.AreEqual(farExpiration, farExpirationLeg.Expiration);
+            Assert.AreEqual(1, farExpirationLeg.Quantity);
+        }
+
+        [Test]
+        public void BuildsShortCallCalendarSpreadStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var strike = 350m;
+            var nearExpiration = new DateTime(2023, 08, 18);
+            var farExpiration = new DateTime(2023, 09, 18);
+
+            var strategy = OptionStrategies.ShortCallCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, farExpiration);
+
+            Assert.AreEqual(OptionStrategyDefinitions.ShortCallCalendarSpread.Name, strategy.Name);
+            Assert.AreEqual(underlying, strategy.Underlying);
+            Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
+
+            Assert.AreEqual(2, strategy.OptionLegs.Count);
+            Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
+
+            var nearExpirationLeg = strategy.OptionLegs.Single(x => x.Expiration == nearExpiration);
+            Assert.AreEqual(OptionRight.Call, nearExpirationLeg.Right);
+            Assert.AreEqual(nearExpiration, nearExpirationLeg.Expiration);
+            Assert.AreEqual(1, nearExpirationLeg.Quantity);
+
+            var farExpirationLeg = strategy.OptionLegs.Single(x => x.Expiration == farExpiration);
+            Assert.AreEqual(OptionRight.Call, farExpirationLeg.Right);
+            Assert.AreEqual(farExpiration, farExpirationLeg.Expiration);
+            Assert.AreEqual(-1, farExpirationLeg.Quantity);
+        }
+
+        [Test]
+        public void FailsBuildingPutCalendarSpreadStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var strike = 350m;
+            var nearExpiration = new DateTime(2023, 08, 18);
+            var farExpiration = new DateTime(2023, 09, 18);
+
+            // Invalid expiration dates
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, DateTime.MinValue, farExpiration));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, DateTime.MaxValue, farExpiration));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, DateTime.MinValue));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, DateTime.MaxValue));
+
+            // Switched expiration dates
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, farExpiration, nearExpiration));
+
+            // Same expiration dates
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, nearExpiration));
+
+        }
+
+        [Test]
+        public void BuildsPutCalendarSpreadStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var strike = 350m;
+            var nearExpiration = new DateTime(2023, 08, 18);
+            var farExpiration = new DateTime(2023, 09, 18);
+
+            var strategy = OptionStrategies.PutCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, farExpiration);
+
+            Assert.AreEqual(OptionStrategyDefinitions.PutCalendarSpread.Name, strategy.Name);
+            Assert.AreEqual(underlying, strategy.Underlying);
+            Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
+
+            Assert.AreEqual(2, strategy.OptionLegs.Count);
+            Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
+
+            var nearExpirationLeg = strategy.OptionLegs.Single(x => x.Expiration == nearExpiration);
+            Assert.AreEqual(OptionRight.Put, nearExpirationLeg.Right);
+            Assert.AreEqual(nearExpiration, nearExpirationLeg.Expiration);
+            Assert.AreEqual(-1, nearExpirationLeg.Quantity);
+
+            var farExpirationLeg = strategy.OptionLegs.Single(x => x.Expiration == farExpiration);
+            Assert.AreEqual(OptionRight.Put, farExpirationLeg.Right);
+            Assert.AreEqual(farExpiration, farExpirationLeg.Expiration);
+            Assert.AreEqual(1, farExpirationLeg.Quantity);
+        }
+
+        [Test]
+        public void BuildsShortPutCalendarSpreadStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var strike = 350m;
+            var nearExpiration = new DateTime(2023, 08, 18);
+            var farExpiration = new DateTime(2023, 09, 18);
+
+            var strategy = OptionStrategies.ShortPutCalendarSpread(canonicalOptionSymbol, strike, nearExpiration, farExpiration);
+
+            Assert.AreEqual(OptionStrategyDefinitions.ShortPutCalendarSpread.Name, strategy.Name);
+            Assert.AreEqual(underlying, strategy.Underlying);
+            Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
+
+            Assert.AreEqual(2, strategy.OptionLegs.Count);
+            Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
+
+            var nearExpirationLeg = strategy.OptionLegs.Single(x => x.Expiration == nearExpiration);
+            Assert.AreEqual(OptionRight.Put, nearExpirationLeg.Right);
+            Assert.AreEqual(nearExpiration, nearExpirationLeg.Expiration);
+            Assert.AreEqual(1, nearExpirationLeg.Quantity);
+
+            var farExpirationLeg = strategy.OptionLegs.Single(x => x.Expiration == farExpiration);
+            Assert.AreEqual(OptionRight.Put, farExpirationLeg.Right);
+            Assert.AreEqual(farExpiration, farExpirationLeg.Expiration);
+            Assert.AreEqual(-1, farExpirationLeg.Quantity);
+        }
+
+        [Test]
         public void FailsBuildingIronCondorStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
