@@ -693,10 +693,6 @@ namespace QuantConnect.Securities
         /// <returns>The maximum order size that is currently executable in the specified direction</returns>
         public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
         {
-            Log.Trace("SecurityPortfolioMananger.GetMarginRemaining(): Warning: It is recommended to use " +
-                "PositionGroupBuyingPowerModel.GetPositionGroupBuyingPower instead of this method " +
-                "in order to consider other position groups that might be impacted by the contemplated order.");
-
             var security = Securities[symbol];
 
             var positionGroup = Positions.GetOrCreateDefaultGroup(security);

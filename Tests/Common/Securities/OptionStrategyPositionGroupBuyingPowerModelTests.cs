@@ -1619,6 +1619,218 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.That(buyingPower.Value, Is.EqualTo(expectedBuyingPower).Within(1e-18));
         }
 
+        [Test]
+        public void BuyingPowerForStrategyStartingFromOptionPositionInSameDirection()
+        {
+            // 1. Sell a call option
+            // 2. Get the available buying power for the long call
+
+            var expiration = new DateTime(2023, 05, 19);
+            var spy = _algorithm.AddEquity("SPY");
+            spy.SetMarketPrice(new Tick { Value = 400m });
+            var spyMay19_300Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 300, expiration));
+            spyMay19_300Call.SetMarketPrice(new Tick { Value = 110m });
+            var spyMay19_350Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 350, expiration));
+            spyMay19_350Call.SetMarketPrice(new Tick { Value = 100m });
+
+            // 1. Sell a call option
+            spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, -1);
+
+            var initialPositionGroup = _portfolio.Positions.Groups.Single();
+
+            var finalPositionGroup = new PositionGroup(new OptionStrategyPositionGroupBuyingPowerModel(
+                OptionStrategies.BearCallSpread(spyMay19_300Call.Symbol.Canonical, spyMay19_300Call.StrikePrice, spyMay19_350Call.StrikePrice,
+                    expiration)),
+                1,
+                initialPositionGroup.Positions.Single(),
+                new Position(spyMay19_350Call.Symbol, 1, 1));
+
+            // 2. Get the available buying power for the long call
+            var buyingPower = finalPositionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(
+                _portfolio, finalPositionGroup, OrderDirection.Buy)).Value;
+
+            Assert.AreEqual(_portfolio.MarginRemaining, buyingPower);
+        }
+
+        [Test]
+        public void BuyingPowerForStrategyStartingFromOptionPositionInOppositeDirection()
+        {
+            // 1. Buy 10 call options
+            // 2. Get the available buying power for the resulting "what-if" position group after buying 5 bear call spreads
+            //    with the short call in the holdings as the long leg (reducing the existing position)
+
+            var expiration = new DateTime(2023, 05, 19);
+            var spy = _algorithm.AddEquity("SPY");
+            spy.SetMarketPrice(new Tick { Value = 400m });
+            var spyMay19_300Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 300, expiration));
+            spyMay19_300Call.SetMarketPrice(new Tick { Value = 110m });
+            var spyMay19_350Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 350, expiration));
+            spyMay19_350Call.SetMarketPrice(new Tick { Value = 100m });
+
+            // 1. Buy 10 call options
+            spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, 10);
+
+            // Buying 4 bear call with spyMay19_300Call as the short leg and spyMay19_350Call as the long leg,
+            // would leave us with 6 spyMay19_300Call and 4 spyMay19_350Call, so the resolved position group will be a long call
+            // (for spyMay19_350Call)
+            var finalPositionGroup = new PositionGroup(new OptionStrategyPositionGroupBuyingPowerModel(
+                OptionStrategies.NakedCall(spyMay19_350Call.Symbol.Canonical, spyMay19_350Call.StrikePrice, expiration)),
+                6,
+                new Position(spyMay19_350Call.Symbol, 6, 1));
+
+            // 2. Get the available buying power
+            var initialPositionGroup = _portfolio.Positions.Groups.Single();
+            var buyingPower = finalPositionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(
+                _portfolio, finalPositionGroup, OrderDirection.Buy)).Value;
+
+            var expectedBuyingPower = _portfolio.MarginRemaining
+                + initialPositionGroup.BuyingPowerModel.GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(_portfolio, initialPositionGroup));
+            Assert.AreEqual(expectedBuyingPower, buyingPower);
+        }
+
+        [Test]
+        [Explicit]
+        public void BuyingPowerForStrategyStartingFromOptionPositionInOppositeDirectionAndLiquidating()
+        {
+            // 1. Buy 10 call options
+            // 2. Get the available buying power for the resulting "what-if" position group after buying 5 bear call spreads
+            //    with the short call in the holdings as the long leg (reducing the existing position)
+
+            var expiration = new DateTime(2023, 05, 19);
+            var spy = _algorithm.AddEquity("SPY");
+            spy.SetMarketPrice(new Tick { Value = 400m });
+            var spyMay19_300Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 300, expiration));
+            spyMay19_300Call.SetMarketPrice(new Tick { Value = 110m });
+            var spyMay19_350Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 350, expiration));
+            spyMay19_350Call.SetMarketPrice(new Tick { Value = 100m });
+
+            // 1. Buy 10 call options
+            spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, 10);
+
+            var initialPositionGroup = _portfolio.Positions.Groups.Single();
+
+            // Buying 12 bear call with spyMay19_300Call as the short leg and spyMay19_350Call as the long leg,
+            // would leave us with -2 spyMay19_300Call (since holdings is 10) and 12 spyMay19_350Call,
+            // so the resolved position group will be a bear call with quantity -2
+            var quantity = 10 - 12;
+            var finalPositionGroup = initialPositionGroup.WithQuantity(quantity, _portfolio.Positions);
+
+            // 2. Get the available buying power
+            var buyingPower = finalPositionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(
+                _portfolio, finalPositionGroup, OrderDirection.Buy)).Value;
+
+            var expectedBuyingPower = _portfolio.MarginRemaining
+                + initialPositionGroup.BuyingPowerModel.GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(_portfolio, initialPositionGroup));
+            Assert.AreEqual(expectedBuyingPower, buyingPower);
+        }
+
+        [Test]
+        public void BuyingPowerForOptionStartingFromStrategyWithALegInSameDirection()
+        {
+            // 1. Buy 10 bear call spreads
+            // 2. Get the available buying power for increasing one of the legs
+
+            var expiration = new DateTime(2023, 05, 19);
+            var spy = _algorithm.AddEquity("SPY");
+            spy.SetMarketPrice(new Tick { Value = 400m });
+            var spyMay19_300Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 300, expiration));
+            spyMay19_300Call.SetMarketPrice(new Tick { Value = 110m });
+            var spyMay19_350Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 350, expiration));
+            spyMay19_350Call.SetMarketPrice(new Tick { Value = 100m });
+
+            // 1. Buy 10 bear call spreads
+            spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, -10);
+            spyMay19_350Call.Holdings.SetHoldings(spyMay19_350Call.Price, +10);
+
+            var initialPositionGroup = _portfolio.Positions.Groups.Single();
+            Assert.AreEqual(OptionStrategyDefinitions.BearCallSpread.Name, initialPositionGroup.BuyingPowerModel.ToString());
+
+            // 2. Get the available buying power for increasing one of the legs.
+            // The resulting position group will be the same as the initial one
+            // since we are only increasing the short leg but that won't affect the group
+            var finalPositionGroup = initialPositionGroup;
+
+            var buyingPower = finalPositionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(
+                _portfolio, finalPositionGroup, OrderDirection.Buy)).Value;
+
+            Assert.AreEqual(_portfolio.MarginRemaining, buyingPower);
+        }
+
+        [Test]
+        [Explicit]
+        public void BuyingPowerForOptionStartingFromStrategyWithALegInTheOppositeDirection()
+        {
+            // 1. Buy 10 bear call spreads
+            // 2. Get the available buying power for reducing one of the legs
+
+            var expiration = new DateTime(2023, 05, 19);
+            var spy = _algorithm.AddEquity("SPY");
+            spy.SetMarketPrice(new Tick { Value = 400m });
+            var spyMay19_300Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 300, expiration));
+            spyMay19_300Call.SetMarketPrice(new Tick { Value = 110m });
+            var spyMay19_350Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 350, expiration));
+            spyMay19_350Call.SetMarketPrice(new Tick { Value = 100m });
+
+            // 1. Buy 10 bear call spreads
+            spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, -10);
+            spyMay19_350Call.Holdings.SetHoldings(spyMay19_350Call.Price, +10);
+
+            var initialPositionGroup = _portfolio.Positions.Groups.Single();
+            Assert.AreEqual(OptionStrategyDefinitions.BearCallSpread.Name, initialPositionGroup.BuyingPowerModel.ToString());
+
+            // 2. Get the available buying power for reducing one of the legs
+            // If we want to reduce the short leg, by 5, the whole bear call will be reduced to 5 and the options separated into two groups
+            var quantity = -10 + 5;
+            var finalPositionGroup = initialPositionGroup.WithQuantity(quantity, _portfolio.Positions);
+
+            var buyingPower = finalPositionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(
+                _portfolio, finalPositionGroup, OrderDirection.Buy)).Value;
+
+            var expectedBuyingPower = _portfolio.MarginRemaining
+                + initialPositionGroup.BuyingPowerModel.GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(_portfolio, initialPositionGroup));
+            Assert.AreEqual(expectedBuyingPower, buyingPower);
+        }
+
+        [Test]
+        [Explicit]
+        public void BuyingPowerForOptionStartingFromStrategyWithALegInTheOppositeDirectionAndLiquidating()
+        {
+            // 1. Buy 10 bear call spreads
+            // 2. Get the available buying power for reducing one of the legs
+
+            var expiration = new DateTime(2023, 05, 19);
+            var spy = _algorithm.AddEquity("SPY");
+            spy.SetMarketPrice(new Tick { Value = 400m });
+            var spyMay19_300Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 300, expiration));
+            spyMay19_300Call.SetMarketPrice(new Tick { Value = 110m });
+            var spyMay19_350Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 350, expiration));
+            spyMay19_350Call.SetMarketPrice(new Tick { Value = 100m });
+
+            // 1. Buy 10 bear call spreads
+            spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, -10);
+            spyMay19_350Call.Holdings.SetHoldings(spyMay19_350Call.Price, +10);
+
+            var initialPositionGroup = _portfolio.Positions.Groups.Single();
+            Assert.AreEqual(OptionStrategyDefinitions.BearCallSpread.Name, initialPositionGroup.BuyingPowerModel.ToString());
+
+            // 2. Get the available buying power for reducing one of the legs
+            // If we want to order 20 of the short call (buy 20 of the call),
+            // the whole bear call group will be eliminated and the options separated into two groups.
+            // The resulting group for the order will be a naked call
+            var quantity = -10 + 20;
+            var finalPositionGroup = new PositionGroup(new OptionStrategyPositionGroupBuyingPowerModel(
+                OptionStrategies.NakedCall(spyMay19_300Call.Symbol.Canonical, spyMay19_300Call.StrikePrice, expiration)),
+                quantity,
+                new Position(spyMay19_300Call.Symbol, quantity, 1));
+
+            var buyingPower = finalPositionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(
+                _portfolio, finalPositionGroup, OrderDirection.Buy)).Value;
+
+            var expectedBuyingPower = _portfolio.MarginRemaining
+                + initialPositionGroup.BuyingPowerModel.GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(_portfolio, initialPositionGroup));
+            Assert.AreEqual(expectedBuyingPower, buyingPower);
+        }
+
         private static readonly TestCaseData[] ReservedBuyingPowerImpactTestCases = new[]
         {
             // option strategy definition, initial position quantity, new position quantity
