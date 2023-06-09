@@ -103,9 +103,10 @@ namespace QuantConnect.Algorithm
                                 underlyingSymbol.Value,
                                 resolution,
                                 underlyingSymbol.ID.Market,
-                                false,
-                                0,
-                                configs.IsExtendedMarketHours());
+                                configs.IsFillForward(),
+                                Security.NullLeverage,
+                                configs.IsExtendedMarketHours(),
+                                dataNormalizationMode: DataNormalizationMode.Raw);
                         }
 
                         // set data mode raw and default volatility model
