@@ -161,16 +161,9 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator, Point of Control (POC) price</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            // If the point is fill forward it has zero volume, then it could pop a real point
-            // from _oldDataPoints
-            if (input.IsFillForward)
-            {
-                return 0m;
-            }
-
             // Define Volume and add it to _volumePerPrice and _oldDataPoints
             var VolumeQuantity = GetVolume(input);
-            Add(input,VolumeQuantity);
+            Add(input, VolumeQuantity);
 
             // Get the index of the close price with maximum volume
             _pointOfControl = GetMax();

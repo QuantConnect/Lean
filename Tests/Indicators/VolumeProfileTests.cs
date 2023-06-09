@@ -136,40 +136,82 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
-        [TestCase(new double[] { 313.25, 313.248, 313.241, 313.249, 313.243, 314.245, 315.241 })] // Represents a sequence of real bars and a FF bar
-        [TestCase(new double[] { 313.25, 313.243, 313.243, 313.243, 313.243, 314.245, 315.241 })] // Represents a sequence of a real bar and FF bars
-        [TestCase(new double[] { 314.243, 313.243, 313.243, 313.243, 313.25, 313.245, 315.241, 316.241})] // Represents a sequence of FF bars and a real bar
-        [TestCase(new double[] { 313.25, 313.243, 313.25, 313.243, 313.25, 314.245, 315.241 })] // Represents an alternant sequence of FF bars and real bars
-        [TestCase(new double[] { 313.243, 313.243, 313.25, 313.243, 313.243, 314.245, 315.241 })] // Represents a sequence of FF bars, a real bar and FF bars
-        [TestCase(new double[] { 313.243, 313.243, 313.243, 313.243, 313.243, 313.243, 313.243 })] // Represents a sequence of FF bars
-        [TestCase(new double[] { 312.25, 312.248, 312.241, 312.249, 312.243, 314.245, 315.241 })] // Represents a sequence of real bars and a zero volume bar
-        [TestCase(new double[] { 312.25, 312.243, 312.243, 312.243, 312.243, 314.245, 315.241 })] // Represents a sequence of a real bar and zero volume bars
-        [TestCase(new double[] { 314.243, 312.243, 312.243, 312.243, 312.25, 312.245, 315.241, 316.241 })] // Represents a sequence of zero volume bars and a real bar
-        [TestCase(new double[] { 312.25, 312.243, 312.25, 312.243, 312.25, 314.245, 315.241 })] // Represents an alternant sequence of zero volume bars and real bars
-        [TestCase(new double[] { 312.243, 312.243, 312.25, 312.243, 312.243, 314.245, 315.241 })] // Represents a sequence of zero volume bars, a real bar and zero volume bars
-        [TestCase(new double[] { 312.243, 312.243, 312.243, 312.243, 312.243, 312.243, 312.243 })] // Represents a sequence of zero volume bars
-        public void DoesNotFailWithRepeatedInputCloseValues(double[] closeValues)
+        [TestCaseSource(nameof(BarsSequenceCases))]
+        public void DoesNotFailWithZeroVolumeBars(Bar[] bars)
         {
             var vp = new VolumeProfile(2);
             var reference = new DateTime(2000, 1, 1);
             var period = ((IIndicatorWarmUpPeriodProvider)vp).WarmUpPeriod;
-            for (var i = 0; i < closeValues.Length; i++)
+            for (var i = 0; i < bars.Length; i++)
             {
-                var dataPoint = new TradeBar() { Symbol = Symbols.AAPL, Close = (decimal)closeValues[i], Volume = 100, Time = reference.AddDays(1 + i) };
-                if (closeValues[i] == 313.243) // Represents Fill Forward points
-                {
-                    Assert.DoesNotThrow(() => vp.Update(dataPoint.Clone(true)));
-                }
-                else if (closeValues[i] == 312.243) // Represents points with zero volume
-                {
-                    dataPoint.Volume = 0;
-                    Assert.DoesNotThrow(() => vp.Update(dataPoint));
-                }
-                else
-                {
-                    Assert.DoesNotThrow(() => vp.Update(dataPoint));
-                }
+                var dataPoint = new TradeBar() { Symbol = Symbols.AAPL, Close = bars[i].closePrice, Volume = bars[i].volume, Time = reference.AddDays(1 + i) };
+                Assert.DoesNotThrow(() => vp.Update(dataPoint));
+                Assert.AreEqual(bars[i].expectedPOCPrice, vp.Current.Value);
             }
+        }
+
+        public static Bar[][] BarsSequenceCases =
+        {
+            new Bar[] // Represents a sequence of real bars and a zero volume bar
+            {
+                new Bar(){ closePrice = 314.25m, volume = 100, expectedPOCPrice = 314.25m},
+                new Bar(){ closePrice = 314.242m, volume = 100, expectedPOCPrice = 314.25m},
+                new Bar(){ closePrice = 314.248m, volume = 0, expectedPOCPrice = 314.25m},
+                new Bar(){ closePrice = 315.25m, volume = 100, expectedPOCPrice = 315.25m},
+                new Bar(){ closePrice = 315.241m, volume = 100, expectedPOCPrice = 315.25m}
+            },
+
+            new Bar[] // Represents a sequence of a real bar and zero volume bars
+            {
+                new Bar(){ closePrice = 313.25m, volume = 100, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 0},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 0},
+                new Bar(){ closePrice = 313.241m, volume = 0, expectedPOCPrice = 0}
+            },
+
+            new Bar[] // Represents a sequence of zero volume bars and a real bar
+            {
+                new Bar(){ closePrice = 314.243m, volume = 0, expectedPOCPrice = 314.25m},
+                new Bar(){ closePrice = 314.243m, volume = 0, expectedPOCPrice = 314.25m},
+                new Bar(){ closePrice = 314.243m, volume = 0, expectedPOCPrice = 0},
+                new Bar(){ closePrice = 314.243m, volume = 0, expectedPOCPrice = 0},
+                new Bar(){ closePrice = 315.243m, volume = 100, expectedPOCPrice = 315.25m},
+            },
+
+            new Bar[] // Represents an alternant sequence of zero volume bars and real bars
+            {
+                new Bar(){ closePrice = 312.25m, volume = 100, expectedPOCPrice = 312.25m},
+                new Bar(){ closePrice = 312.243m, volume = 0, expectedPOCPrice = 312.25m},
+                new Bar(){ closePrice = 312.25m, volume = 100, expectedPOCPrice = 312.25m},
+                new Bar(){ closePrice = 312.243m, volume = 0, expectedPOCPrice = 312.25m},
+                new Bar(){ closePrice = 312.243m, volume = 100, expectedPOCPrice = 312.25m},
+            },
+
+            new Bar[] // Represents a sequence of zero volume bars, a real bar and zero volume bars
+            {
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.25m, volume = 100, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 0},
+            },
+
+            new Bar[] // Represents a sequence of zero volume bars
+            {
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.25m, volume =  0, expectedPOCPrice = 0},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 0},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 0},
+            }
+        };
+
+        public class Bar
+        {
+            public decimal closePrice;
+            public decimal volume;
+            public decimal expectedPOCPrice;
         }
     }
 }
