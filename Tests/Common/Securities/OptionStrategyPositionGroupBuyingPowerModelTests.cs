@@ -1575,46 +1575,12 @@ namespace QuantConnect.Tests.Common.Securities
         public void BuyingPowerForPositionGroupCalculation(OptionStrategyDefinition optionStrategyDefinition, int initialPositionQuantity,
             int orderQuantity, decimal expectedBuyingPower)
         {
-            var initialMargin = _portfolio.MarginRemaining;
-            var initialPositionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity, updateCashbook: false);
+            var initialPositionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity, updateCashbook: true);
+            var orderPositionGroup = initialPositionGroup.WithQuantity(Math.Abs(orderQuantity), _portfolio.Positions);
 
-            var finalQuantity = initialPositionQuantity + orderQuantity;
-            IPositionGroup finalPositionGroup = null;
-
-            if (finalQuantity != 0)
-            {
-                finalPositionGroup = initialPositionGroup.WithQuantity(
-                    Math.Sign(initialPositionQuantity) == Math.Sign(finalQuantity)
-                        // Positive to create a group in the same "side" of the initial position, without changing position signs
-                        ? Math.Abs(finalQuantity)
-                        // Negative to create a group in the opposite "side" of the initial position, changing position signs
-                        : -Math.Abs(finalQuantity),
-                    _portfolio.Positions);
-            }
-            else
-            {
-                finalPositionGroup = new PositionGroup(initialPositionGroup.Key, 0, new Dictionary<Symbol, IPosition>());
-            }
-
-            Assert.AreEqual(Math.Abs(finalQuantity), finalPositionGroup.Quantity);
-            // Final position is in the same "side", so the signs of the positions should be the same
-            if (Math.Sign(initialPositionQuantity) == Math.Sign(finalQuantity))
-            {
-                Assert.IsTrue(finalPositionGroup.All(finalPosition =>
-                    Math.Sign(finalPosition.Quantity) == Math.Sign(initialPositionGroup.GetPosition(finalPosition.Symbol).Quantity)));
-            }
-            // Final position is in the opposite "side", so the signs of the positions should be the opposite
-            else if (Math.Sign(initialPositionQuantity) == -Math.Sign(finalQuantity))
-            {
-                Assert.IsTrue(finalPositionGroup.All(finalPosition =>
-                    Math.Sign(finalPosition.Quantity) == -Math.Sign(initialPositionGroup.GetPosition(finalPosition.Symbol).Quantity)));
-            }
-
-            var buyingPower = finalPositionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(
-                _portfolio,
-                finalPositionGroup,
-                // The order direction is irrelevant for the position group buying power calculation
-                OrderDirection.Buy));
+            var orderDirection = Math.Sign(initialPositionQuantity) == Math.Sign(orderQuantity) ? OrderDirection.Buy : OrderDirection.Sell;
+            var buyingPower = initialPositionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(
+                _portfolio, orderPositionGroup, orderDirection));
 
             Assert.That(buyingPower.Value, Is.EqualTo(expectedBuyingPower).Within(1e-18));
         }

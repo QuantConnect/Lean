@@ -432,17 +432,20 @@ namespace QuantConnect.Securities.Positions
 
             // 2. Determine if closing position
             IPositionGroup existing;
-            if (parameters.Portfolio.Positions.Groups.TryGetGroup(parameters.PositionGroup.Key, out existing) &&
-                parameters.PositionGroup.Closes(existing))
+            if (parameters.Portfolio.Positions.Groups.TryGetGroup(parameters.PositionGroup.Key, out existing))
             {
-                // 2a. Add reserved buying power of current position
-                // Using the existing position group's buying power model to compute its reserved buying power and initial margin requirement.
-                // This is necessary because the margin calculations depend on the option strategy underneath the position group's BPM.
-                buyingPower += existing.Key.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(parameters.Portfolio, existing);
+                var isInverted = parameters.PositionGroup.IsInvertedOf(existing);
+                if (isInverted && parameters.Direction == OrderDirection.Buy || !isInverted && parameters.Direction == OrderDirection.Sell)
+                {
+                    // 2a. Add reserved buying power of current position
+                    // Using the existing position group's buying power model to compute its reserved buying power and initial margin requirement.
+                    // This is necessary because the margin calculations depend on the option strategy underneath the position group's BPM.
+                    buyingPower += existing.Key.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(parameters.Portfolio, existing);
 
-                // 2b. Rebate the initial margin equivalent of current position
-                // this interface doesn't have a concept of initial margin as it's an impl detail of the BuyingPowerModel base class
-                buyingPower += Math.Abs(existing.Key.BuyingPowerModel.GetInitialMarginRequirement(parameters.Portfolio, existing));
+                    // 2b. Rebate the initial margin equivalent of current position
+                    // this interface doesn't have a concept of initial margin as it's an impl detail of the BuyingPowerModel base class
+                    buyingPower += Math.Abs(existing.Key.BuyingPowerModel.GetInitialMarginRequirement(parameters.Portfolio, existing));
+                }
             }
 
             return buyingPower;
