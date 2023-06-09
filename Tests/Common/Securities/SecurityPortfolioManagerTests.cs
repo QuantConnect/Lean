@@ -2748,6 +2748,76 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(settledAudCash.ConversionRate, unsettledAudCash.ConversionRate);
         }
 
+        private static TestCaseData[] MarginRemainingTestCases => new[]
+            {
+                new TestCaseData(SecurityType.Equity, 0, OrderDirection.Buy),
+                new TestCaseData(SecurityType.Equity, 0, OrderDirection.Sell),
+                new TestCaseData(SecurityType.Equity, +100, OrderDirection.Buy),
+                new TestCaseData(SecurityType.Equity, +100, OrderDirection.Sell).Explicit(),
+                new TestCaseData(SecurityType.Equity, -100, OrderDirection.Buy).Explicit(),
+                new TestCaseData(SecurityType.Equity, -100, OrderDirection.Sell),
+                new TestCaseData(SecurityType.Option, 0, OrderDirection.Buy),
+                new TestCaseData(SecurityType.Option, 0, OrderDirection.Sell),
+                new TestCaseData(SecurityType.Option, +10, OrderDirection.Buy),
+                new TestCaseData(SecurityType.Option, +10, OrderDirection.Sell).Explicit(),
+                new TestCaseData(SecurityType.Option, -10, OrderDirection.Buy),
+                new TestCaseData(SecurityType.Option, -10, OrderDirection.Sell),
+                new TestCaseData(SecurityType.FutureOption, 0, OrderDirection.Buy),
+                new TestCaseData(SecurityType.FutureOption, 0, OrderDirection.Sell),
+                new TestCaseData(SecurityType.FutureOption, +10, OrderDirection.Buy),
+                new TestCaseData(SecurityType.FutureOption, +10, OrderDirection.Sell),
+                new TestCaseData(SecurityType.FutureOption, -10, OrderDirection.Buy),
+                new TestCaseData(SecurityType.FutureOption, -10, OrderDirection.Sell),
+            };
+
+        [TestCaseSource(nameof(MarginRemainingTestCases))]
+        public void GetsMarginRemainingForSecurity(SecurityType securityType, int initialHoldingsQuantity,
+            OrderDirection direction)
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.SetSecurityInitializer(security => security.FeeModel = new ConstantFeeModel(0));
+            algorithm.SetCash(1000000);
+
+            Security security = null;
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    security = algorithm.AddEquity("SPY");
+                    break;
+                case SecurityType.Option:
+                    security = algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 300, new DateTime(2023, 05, 19)));
+                    break;
+                case SecurityType.FutureOption:
+                    var underlying = algorithm.AddFuture("ES");
+                    security = algorithm.AddFutureOptionContract(Symbols.CreateFutureOptionSymbol(underlying.Symbol,
+                        OptionRight.Call, 300, new DateTime(2023, 05, 19)));
+                    break;
+                default:
+                    Assert.Fail("Invalid security type.");
+                    break;
+            }
+
+            security.SetMarketPrice(new Tick { Value = 100m });
+            security.Holdings.SetHoldings(security.Price, initialHoldingsQuantity);
+
+            var goingInSameDirection = security.Holdings.IsLong && direction == OrderDirection.Buy
+                || security.Holdings.IsShort && direction == OrderDirection.Sell;
+
+            var marginRemaining = algorithm.Portfolio.GetMarginRemaining(security.Symbol, direction);
+
+            if (goingInSameDirection)
+            {
+                Assert.AreEqual(algorithm.Portfolio.MarginRemaining, marginRemaining);
+            }
+            else
+            {
+                var expectedMarginRemaining = algorithm.Portfolio.MarginRemaining
+                    + security.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForCurrentHoldings(security))
+                    + Math.Abs(security.BuyingPowerModel.GetInitialMarginRequirement(new InitialMarginParameters(security, security.Holdings.Quantity)));
+                Assert.AreEqual(expectedMarginRemaining, marginRemaining);
+            }
+        }
+
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)

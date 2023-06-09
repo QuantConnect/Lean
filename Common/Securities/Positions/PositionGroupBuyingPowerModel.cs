@@ -425,6 +425,7 @@ namespace QuantConnect.Securities.Positions
             //   1. Get portfolio's MarginRemaining (free buying power)
             //   2. Determine if closing position
             //   2a. Add reserved buying power freed up by closing the position
+            //   2b. Rebate initial buying power required for current position [to match current behavior, might not be possible]
 
             // 1. Get MarginRemaining
             var buyingPower = parameters.Portfolio.MarginRemaining;
@@ -438,6 +439,10 @@ namespace QuantConnect.Securities.Positions
                 // Using the existing position group's buying power model to compute its reserved buying power and initial margin requirement.
                 // This is necessary because the margin calculations depend on the option strategy underneath the position group's BPM.
                 buyingPower += existing.Key.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(parameters.Portfolio, existing);
+
+                // 2b. Rebate the initial margin equivalent of current position
+                // this interface doesn't have a concept of initial margin as it's an impl detail of the BuyingPowerModel base class
+                buyingPower += Math.Abs(existing.Key.BuyingPowerModel.GetInitialMarginRequirement(parameters.Portfolio, existing));
             }
 
             return buyingPower;
