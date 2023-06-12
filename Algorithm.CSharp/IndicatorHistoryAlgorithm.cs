@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _symbol;
 
-        private IndicatorBase<IndicatorDataPoint> _sma;
+        private BollingerBands _bollingerBands;
 
         /// <summary>
         /// Initialize the data and resolution you require for your strategy
@@ -42,37 +42,40 @@ namespace QuantConnect.Algorithm.CSharp
 
             _symbol = AddEquity("SPY", Resolution.Daily).Symbol;
 
-            _sma = SMA(_symbol, 14, Resolution.Daily);
-            // Let's keep SMA values for a 14 day period
-            _sma.Window = 14;
+            _bollingerBands = BB(_symbol, 20, 2.0m, resolution: Resolution.Daily);
+            // Let's keep BB values for a 20 day period
+            _bollingerBands.Window = 20;
+            // Also keep the same period of data for the middle band
+            _bollingerBands.MiddleBand.Window = 20;
         }
 
         public void OnData(Slice slice)
         {
-            if (!_sma.IsReady || Portfolio.Invested) return;
+            if (!_bollingerBands.IsReady) return;
 
-            // The window is filled up, we have 14 days worth of SMA values to use at our convenience
-            if (_sma.WindowCount == _sma.Window)
+            // The window is filled up, we have 20 days worth of BB values to use at our convenience
+            if (_bollingerBands.WindowCount == _bollingerBands.Window)
             {
-                // Let's say that hypothetically, we want to buy shares of the equity when the SMA is less than its 14 days old value
-                if (_sma[0] < _sma[_sma.WindowCount - 1])
+                // We can access the current and oldest (in our period) values of the indicator
+                Log($"Current BB value: {_bollingerBands[0].EndTime} - {_bollingerBands[0].Value}");
+                Log($@"Oldest BB value: {
+                    _bollingerBands[_bollingerBands.WindowCount - 1].EndTime} - {_bollingerBands[_bollingerBands.WindowCount - 1].Value}");
+
+                // Let's log the BB values for the last 20 days, for demonstration purposes on how it can be enumerated
+                foreach (var dataPoint in _bollingerBands)
                 {
-                    Buy(_symbol, 100);
-
-                    // Let's log the SMA values for the last 14 days, for demonstration purposes on how it can be enumerated
-                    foreach (var dataPoint in _sma)
-                    {
-                        Log($"SMA @{dataPoint.EndTime}: {dataPoint.Value}");
-                    }
+                    Log($"BB @{dataPoint.EndTime}: {dataPoint.Value}");
                 }
-            }
-        }
 
-        public override void OnEndOfAlgorithm()
-        {
-            if (!Portfolio.Invested)
-            {
-                throw new Exception("Expected the portfolio to be invested at the end of the algorithm");
+                // We can also do the same for internal indicators:
+                var middleBand = _bollingerBands.MiddleBand;
+                Log($"Current BB Middle Band value: {middleBand[0].EndTime} - {middleBand[0].Value}");
+                Log($@"Oldest BB Middle Band value: {
+                    middleBand[middleBand.WindowCount - 1].EndTime} - {middleBand[middleBand.WindowCount - 1].Value}");
+                foreach (var dataPoint in middleBand)
+                {
+                    Log($"BB Middle Band @{dataPoint.EndTime}: {dataPoint.Value}");
+                }
             }
         }
 
@@ -101,30 +104,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "0"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "7.998%"},
-            {"Drawdown", "4.500%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Net Profit", "16.635%"},
-            {"Sharpe Ratio", "1.144"},
-            {"Probabilistic Sharpe Ratio", "57.499%"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.015"},
-            {"Beta", "0.455"},
-            {"Annual Standard Deviation", "0.049"},
-            {"Annual Variance", "0.002"},
-            {"Information Ratio", "-1.769"},
-            {"Tracking Error", "0.056"},
-            {"Treynor Ratio", "0.123"},
-            {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$1500000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.08%"},
-            {"OrderListHash", "337525763b81bead1e0ca6f4e40115f3"}
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-1.66"},
+            {"Tracking Error", "0.094"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
+            {"Portfolio Turnover", "0%"},
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }
