@@ -19,14 +19,19 @@ using System.Diagnostics;
 using QuantConnect.Logging;
 using System.Collections.Generic;
 using QuantConnect.Data.Consolidators;
+using System.Drawing;
+using System.Collections;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
     /// Abstract Indicator base, meant to contain non-generic fields of indicator base to support non-typed inputs
     /// </summary>
-    public abstract partial class IndicatorBase : IIndicator
+    public abstract partial class IndicatorBase : IIndicator, IEnumerable<IndicatorDataPoint>
     {
+        // A window of data over a certain look-back period to keep track of the history of the indicator
+        protected RollingWindow<IndicatorDataPoint> _window;
+
         /// <summary>
         /// The data consolidators associated with this indicator if any
         /// </summary>
@@ -61,6 +66,26 @@ namespace QuantConnect.Indicators
         public event IndicatorUpdatedHandler Updated;
 
         /// <summary>
+        /// Period of the history window for the indicator
+        /// </summary>
+        public int Window
+        {
+            get
+            {
+                return _window.Size;
+            }
+            set
+            {
+                var newWindow = new RollingWindow<IndicatorDataPoint>(value);
+                for (var i = 0; i < _window.Count; i++)
+                {
+                    newWindow.Add(_window[_window.Count - i - 1]);
+                }
+                _window = newWindow;
+            }
+        }
+
+        /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>
         public abstract void Reset();
@@ -71,6 +96,7 @@ namespace QuantConnect.Indicators
         protected IndicatorBase()
         {
             Current = new IndicatorDataPoint(DateTime.MinValue, 0m);
+            _window = new RollingWindow<IndicatorDataPoint>(2) { Current };
         }
 
         /// <summary>
@@ -78,9 +104,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         protected IndicatorBase(string name)
+            : this()
         {
             Name = name;
-            Current = new IndicatorDataPoint(DateTime.MinValue, 0m);
         }
 
         /// <summary>
@@ -89,6 +115,7 @@ namespace QuantConnect.Indicators
         /// <param name="consolidated">This is the new piece of data produced by this indicator</param>
         protected virtual void OnUpdated(IndicatorDataPoint consolidated)
         {
+            _window.Add(consolidated);
             Updated?.Invoke(this, consolidated);
         }
 
@@ -99,6 +126,43 @@ namespace QuantConnect.Indicators
         /// <param name="input">The value to use to update this indicator</param>
         /// <returns>True if this indicator is ready, false otherwise</returns>
         public abstract bool Update(IBaseData input);
+
+        /// <summary>
+        /// Indexes the history windows, where index 0 is the most recent indicator value
+        /// </summary>
+        /// <param name="i">The index</param>
+        /// <returns>the ith most recent indicator value</returns>
+        public IndicatorDataPoint this[int i]
+        {
+            get
+            {
+                return _window[i];
+            }
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the history window.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the history window.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        public IEnumerator<IndicatorDataPoint> GetEnumerator()
+        {
+            return _window.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the history window.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.IEnumerator" /> object that can be used to iterate through the history window.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
         /// <summary>
         /// ToString Overload for Indicator Base
@@ -173,10 +237,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         protected IndicatorBase(string name)
-        {
-            Name = name;
-            Current = new IndicatorDataPoint(DateTime.MinValue, 0m);
-        }
+            : base(name)
+        {}
 
         /// <summary>
         /// Updates the state of this indicator with the given value and returns true
@@ -251,6 +313,7 @@ namespace QuantConnect.Indicators
         {
             Samples = 0;
             _previousInput.Clear();
+            _window.Reset();
             Current = new IndicatorDataPoint(DateTime.MinValue, default(decimal));
         }
 
