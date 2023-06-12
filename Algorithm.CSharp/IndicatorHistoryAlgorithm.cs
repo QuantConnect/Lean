@@ -58,6 +58,12 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_sma[0] < _sma[_sma.WindowCount - 1])
                 {
                     Buy(_symbol, 100);
+
+                    // Let's log the SMA values for the last 14 days, for demonstration purposes on how it can be enumerated
+                    foreach (var dataPoint in _sma)
+                    {
+                        Log($"SMA @{dataPoint.EndTime}: {dataPoint.Value}");
+                    }
                 }
             }
         }

@@ -40,6 +40,10 @@ class IndicatorHistoryAlgorithm(QCAlgorithm):
             if self.sma[0] < self.sma[self.sma.WindowCount - 1]:
                 self.Buy(self.symbol, 100)
 
+                # Let's log the SMA values for the last 14 days, for demonstration purposes on how it can be enumerated
+                for dataPoint in self.sma:
+                    self.Log(f"SMA @{dataPoint.EndTime}: {dataPoint.Value}")
+
     def OnEndOfAlgorithm(self):
         if not self.Portfolio.Invested:
             raise Exception("Expected the portfolio to be invested at the end of the algorithm")
