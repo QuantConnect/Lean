@@ -58,25 +58,7 @@ namespace QuantConnect
 
             public static string NoItemsRemovedYet = "No items have been removed yet!";
 
-            public static string WindowIsEmpty = "Rolling window is empty";
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string IndexOutOfSizeRange(int size)
-            {
-                return Invariant($"Index must be between 0 and {size - 1} (rolling window is of size {size})");
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string IndexOutOfCountRange(int count, int index)
-            {
-                return Invariant($"Index must be between 0 and {count - 1} (entry {index} does not exist yet)");
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string SetIndexOutOfRange(int count)
-            {
-                return Invariant($"Must be between 0 and {count - 1}");
-            }
+            public static string IndexOutOfSizeRange = "Index must be a non-negative integer";
         }
     }
 }

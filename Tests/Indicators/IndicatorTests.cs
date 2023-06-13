@@ -233,7 +233,7 @@ namespace QuantConnect.Tests.Indicators
         public void IndicatorKeepsHistory(int historyWindow)
         {
             var indicator = new TestIndicator("Test indicator");
-            indicator.Window = historyWindow;
+            indicator.Window.Size = historyWindow;
 
             var points = new List<IndicatorDataPoint>(100);
             var referenceDate = new DateTime(2023, 06, 12, 9, 0, 0);
@@ -271,116 +271,52 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void HistoryWindowCanBeIndexedOutsideCount()
-        {
-            var indicator = new TestIndicator("Test indicator");
-            Assert.AreEqual(IndicatorBase.DefaultWindowSize, indicator.Window);
-
-            const int windowSize = 10;
-            indicator.Window = windowSize;
-            Assert.AreEqual(windowSize, indicator.Window);
-            Assert.AreEqual(1, indicator.WindowCount);
-
-            // Update the indicator a few times
-            var referenceDate = new DateTime(2023, 06, 12, 9, 0, 0);
-            // Start from 1 because the indicator has a value by default (DateTime.Min, 0)
-            for (var i = 1; i < windowSize / 2; i++)
-            {
-                indicator.Update(referenceDate.AddMinutes(i - 1), i);
-                Assert.AreEqual(i + 1, indicator.WindowCount);
-            }
-
-            // Index the indicator outside the current count but within its size
-            for (var i = indicator.WindowCount; i < indicator.Window; i++)
-            {
-                Assert.GreaterOrEqual(i, indicator.WindowCount);
-
-                Assert.IsNull(indicator[i]);
-                Assert.AreEqual(windowSize, indicator.Window);
-            }
-        }
-
-        [Test]
-        public void HistoryWindowCanBeIndexedOutsideSize()
-        {
-            var indicator = new TestIndicator("Test indicator");
-            Assert.AreEqual(IndicatorBase.DefaultWindowSize, indicator.Window);
-
-            // Index the indicator outside the current size
-            var initialSize = indicator.Window;
-            for (var i = initialSize; i < initialSize + 10; i++)
-            {
-                Assert.IsNull(indicator[i]);
-                Assert.AreEqual(i + 1, indicator.Window);
-            }
-        }
-
-        [Test]
-        public void HistoryWindowResizingUpKeepsCurrentValues()
-        {
-            var indicator = new TestIndicator("Test indicator");
-            indicator.Window = 5;
-
-            // Update the indicator to fill up the window
-            var referenceDate = new DateTime(2023, 06, 12, 9, 0, 0);
-            var dataPoints = new List<IndicatorDataPoint>(indicator.Window);
-            for (var i = 0; i < indicator.Window; i++)
-            {
-                indicator.Update(referenceDate.AddMinutes(i), i);
-                dataPoints.Insert(0, indicator.Current);
-            }
-
-            indicator.Window = indicator.Window * 2;
-            Assert.AreEqual(dataPoints.Count, indicator.WindowCount);
-            CollectionAssert.AreEqual(dataPoints, indicator.Take(dataPoints.Count));
-        }
-
-        [Test]
-        public void HistoryWindowResizingDownKeepsCurrentValuesWithinNewSize()
-        {
-            var indicator = new TestIndicator("Test indicator");
-            indicator.Window = 10;
-
-            // Update the indicator to fill up the window
-            var referenceDate = new DateTime(2023, 06, 12, 9, 0, 0);
-            var dataPoints = new List<IndicatorDataPoint>(indicator.Window);
-            for (var i = 0; i < indicator.Window; i++)
-            {
-                indicator.Update(referenceDate.AddMinutes(i), i);
-                dataPoints.Insert(0, indicator.Current);
-            }
-
-            var smallerSize = indicator.Window / 2;
-            indicator.Window = smallerSize;
-            Assert.AreEqual(smallerSize, indicator.Window);
-            Assert.AreEqual(indicator.WindowCount, indicator.Window);
-            CollectionAssert.AreEqual(dataPoints.Take(indicator.WindowCount), indicator);
-        }
-
-        [Test]
         public void HistoryWindowIsCorrectlyReset()
         {
             var indicator = new TestIndicator("Test indicator");
-            indicator.Window = 20;
+            indicator.Window.Size = 20;
 
             // Update the indicator a few times
             var referenceDate = new DateTime(2023, 06, 12, 9, 0, 0);
-            for (var i = 1; i < indicator.Window; i++)
+            for (var i = 1; i < indicator.Window.Size; i++)
             {
                 indicator.Update(referenceDate.AddMinutes(i - 1), i);
             }
 
-            Assert.AreEqual(indicator.Window, indicator.WindowCount);
+            Assert.AreEqual(indicator.Window.Size, indicator.Window.Count);
 
             indicator.Reset();
 
             // Window size is kept
-            Assert.AreEqual(20, indicator.Window);
+            Assert.AreEqual(20, indicator.Window.Size);
 
             // Window values are removed
-            Assert.AreEqual(1, indicator.WindowCount);
+            Assert.AreEqual(1, indicator.Window.Count);
             Assert.AreEqual(new IndicatorDataPoint(DateTime.MinValue, 0), indicator[0]);
             Assert.IsNull(indicator[1]);
+        }
+
+        [Test]
+        public void CanAccessCurrentAndPreviousState()
+        {
+            var indicator = new TestIndicator("Test indicator");
+            indicator.Window.Size = 10;
+
+            // Update the indicator a few times
+            var referenceDate = new DateTime(2023, 06, 12, 9, 0, 0);
+            var dataPoints = new List<IndicatorDataPoint>(indicator.Window.Size);
+            for (var i = 0; i < indicator.Window.Size; i++)
+            {
+                var dateTime = referenceDate.AddMinutes(i);
+                indicator.Update(dateTime, i);
+                dataPoints.Add(new IndicatorDataPoint(dateTime, i));
+            }
+
+            Assert.AreEqual(dataPoints[^1], indicator.Current);
+            Assert.AreEqual(dataPoints[^1], indicator[0]);
+
+            Assert.AreEqual(dataPoints[^2], indicator.Previous);
+            Assert.AreEqual(dataPoints[^2], indicator[1]);
         }
 
         private static void TestComparisonOperators<TValue>()

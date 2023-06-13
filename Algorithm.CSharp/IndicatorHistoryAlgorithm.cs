@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 
 using QuantConnect.Data;
@@ -44,39 +43,38 @@ namespace QuantConnect.Algorithm.CSharp
 
             _bollingerBands = BB(_symbol, 20, 2.0m, resolution: Resolution.Daily);
             // Let's keep BB values for a 20 day period
-            _bollingerBands.Window = 20;
+            _bollingerBands.Window.Size = 20;
             // Also keep the same period of data for the middle band
-            _bollingerBands.MiddleBand.Window = 20;
+            _bollingerBands.MiddleBand.Window.Size = 20;
         }
 
         public void OnData(Slice slice)
         {
             if (!_bollingerBands.IsReady) return;
 
-            // The window is filled up, we have 20 days worth of BB values to use at our convenience
-            if (_bollingerBands.WindowCount == _bollingerBands.Window)
+            // We can access the current and oldest (in our period) values of the indicator
+            Log($"Current BB value: {_bollingerBands[0].EndTime} - {_bollingerBands[0].Value}");
+            Log($@"Oldest BB value: {_bollingerBands[_bollingerBands.Window.Count - 1].EndTime} - {
+                _bollingerBands[_bollingerBands.Window.Count - 1].Value}");
+
+            // Let's log the BB values for the last 20 days, for demonstration purposes on how it can be enumerated
+            foreach (var dataPoint in _bollingerBands)
             {
-                // We can access the current and oldest (in our period) values of the indicator
-                Log($"Current BB value: {_bollingerBands[0].EndTime} - {_bollingerBands[0].Value}");
-                Log($@"Oldest BB value: {
-                    _bollingerBands[_bollingerBands.WindowCount - 1].EndTime} - {_bollingerBands[_bollingerBands.WindowCount - 1].Value}");
-
-                // Let's log the BB values for the last 20 days, for demonstration purposes on how it can be enumerated
-                foreach (var dataPoint in _bollingerBands)
-                {
-                    Log($"BB @{dataPoint.EndTime}: {dataPoint.Value}");
-                }
-
-                // We can also do the same for internal indicators:
-                var middleBand = _bollingerBands.MiddleBand;
-                Log($"Current BB Middle Band value: {middleBand[0].EndTime} - {middleBand[0].Value}");
-                Log($@"Oldest BB Middle Band value: {
-                    middleBand[middleBand.WindowCount - 1].EndTime} - {middleBand[middleBand.WindowCount - 1].Value}");
-                foreach (var dataPoint in middleBand)
-                {
-                    Log($"BB Middle Band @{dataPoint.EndTime}: {dataPoint.Value}");
-                }
+                Log($"BB @{dataPoint.EndTime}: {dataPoint.Value}");
             }
+
+            // We can also do the same for internal indicators:
+            var middleBand = _bollingerBands.MiddleBand;
+            Log($"Current BB Middle Band value: {middleBand[0].EndTime} - {middleBand[0].Value}");
+            Log($@"Oldest BB Middle Band value: {middleBand[middleBand.Window.Count - 1].EndTime} - {
+                middleBand[middleBand.Window.Count - 1].Value}");
+            foreach (var dataPoint in middleBand)
+            {
+                Log($"BB Middle Band @{dataPoint.EndTime}: {dataPoint.Value}");
+            }
+
+            // We are done now!
+            Quit();
         }
 
         /// <summary>
@@ -92,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4031;
+        public long DataPoints => 161;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -120,8 +118,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.66"},
-            {"Tracking Error", "0.094"},
+            {"Information Ratio", "-7.674"},
+            {"Tracking Error", "0.085"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

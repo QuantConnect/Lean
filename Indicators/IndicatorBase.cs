@@ -28,16 +28,6 @@ namespace QuantConnect.Indicators
     /// </summary>
     public abstract partial class IndicatorBase : IIndicator, IEnumerable<IndicatorDataPoint>
     {
-        // A window of data over a certain look-back period to keep track of the history of the indicator
-        private RollingWindow<IndicatorDataPoint> _window;
-
-        private IndicatorDataPoint _current;
-
-        /// <summary>
-        /// The default size of the history window for the indicator
-        /// </summary>
-        public static int DefaultWindowSize { get; } = 2;
-
         /// <summary>
         /// The data consolidators associated with this indicator if any
         /// </summary>
@@ -53,12 +43,23 @@ namespace QuantConnect.Indicators
         {
             get
             {
-                return _current;
+                return Window[0];
             }
             protected set
             {
-                _current = value;
-                _window.Add(_current);
+                Window.Add(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets the previous state of this indicator. If the state has not been updated
+        /// then the time on the value will equal DateTime.MinValue.
+        /// </summary>
+        public IndicatorDataPoint Previous
+        {
+            get
+            {
+                return Window.Size > 1 ? Window[1] : new IndicatorDataPoint(DateTime.MinValue, 0);
             }
         }
 
@@ -83,29 +84,9 @@ namespace QuantConnect.Indicators
         public event IndicatorUpdatedHandler Updated;
 
         /// <summary>
-        /// Period of the history window for the indicator
+        /// A rolling window keeping a history of the indicator values of a given period
         /// </summary>
-        public int Window
-        {
-            get
-            {
-                return _window.Size;
-            }
-            set
-            {
-                var newWindow = new RollingWindow<IndicatorDataPoint>(value);
-                for (var i = 0; i < _window.Count; i++)
-                {
-                    newWindow.Add(_window[_window.Count - i - 1]);
-                }
-                _window = newWindow;
-            }
-        }
-
-        /// <summary>
-        /// Current number of values available in the history window
-        /// </summary>
-        public int WindowCount { get { return _window.Count; } }
+        public RollingWindow<IndicatorDataPoint> Window { get; }
 
         /// <summary>
         /// Resets this indicator to its initial state
@@ -117,7 +98,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         protected IndicatorBase()
         {
-            _window = new RollingWindow<IndicatorDataPoint>(DefaultWindowSize);
+            Window = new RollingWindow<IndicatorDataPoint>(Indicator.DefaultWindowSize);
             Current = new IndicatorDataPoint(DateTime.MinValue, 0m);
         }
 
@@ -149,14 +130,6 @@ namespace QuantConnect.Indicators
         public abstract bool Update(IBaseData input);
 
         /// <summary>
-        /// Resets the history window
-        /// </summary>
-        protected void ResetWindow()
-        {
-            _window.Reset();
-        }
-
-        /// <summary>
         /// Indexes the history windows, where index 0 is the most recent indicator value.
         /// If index is greater or equal than the current count, it returns null.
         /// If the index is greater or equal than the window size, it returns null and resizes the windows to i + 1.
@@ -167,16 +140,7 @@ namespace QuantConnect.Indicators
         {
             get
             {
-                if (i >= _window.Count)
-                {
-                    if (i >= _window.Size)
-                    {
-                        Window = i + 1;
-                    }
-                    return null;
-                }
-
-                return _window[i];
+                return Window[i];
             }
         }
 
@@ -189,7 +153,7 @@ namespace QuantConnect.Indicators
         /// <filterpriority>1</filterpriority>
         public IEnumerator<IndicatorDataPoint> GetEnumerator()
         {
-            return _window.GetEnumerator();
+            return Window.GetEnumerator();
         }
 
         /// <summary>
@@ -353,7 +317,7 @@ namespace QuantConnect.Indicators
         {
             Samples = 0;
             _previousInput.Clear();
-            ResetWindow();
+            Window.Reset();
             Current = new IndicatorDataPoint(DateTime.MinValue, default(decimal));
         }
 
