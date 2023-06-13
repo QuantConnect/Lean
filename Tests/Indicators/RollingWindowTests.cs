@@ -245,6 +245,14 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(default(int), window[i]);
                 Assert.AreEqual(i + 1, window.Size);
             }
+
+            // Explicitly resize the window
+            var oldSize = window.Size;
+            window.Size = window.Size + 10;
+            for (var i = oldSize; i < window.Size; i++)
+            {
+                Assert.AreEqual(default(int), window[i]);
+            }
         }
 
         [Test]
@@ -259,6 +267,20 @@ namespace QuantConnect.Tests.Indicators
                 window[i] = i;
                 Assert.AreEqual(i, window[i]);
                 Assert.AreEqual(i + 1, window.Size);
+            }
+        }
+
+        [Test]
+        public void NewElementsHaveDefaultValuesWhenResizingUp()
+        {
+            var window = new RollingWindow<int>(10);
+
+            // Explicitly resize the window
+            var oldSize = window.Size;
+            window.Size = window.Size * 2;
+            for (var i = oldSize; i < window.Size; i++)
+            {
+                Assert.AreEqual(default(int), window[i]);
             }
         }
 
