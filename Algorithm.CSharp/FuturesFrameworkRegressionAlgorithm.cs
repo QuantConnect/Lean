@@ -118,6 +118,14 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
+            var internalSubscriptions = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(includeInternalConfigs: true)
+                .Where(x => x.SecurityType == SecurityType.Future && x.IsInternalFeed && canonicals.Contains(x.Symbol.Canonical)).ToList();
+            // an open interest subscription for each + trade and quote for the currently mapped continuous future
+            if (internalSubscriptions.Count != (nonCanonicals.Count + canonicals.Count + canonicals.Count * 2))
+            {
+                throw new Exception($"Unexpected internal subscription count {internalSubscriptions.Count}");
+            }
+
             // we expect a single continuous universe at the time
             var universeSubscriptions = SubscriptionManager.Subscriptions.Count(x => x.Symbol.ID.Symbol.Contains("QC-UNIVERSE-CONTINUOUS"));
             if (universeSubscriptions != 1)
