@@ -204,6 +204,36 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void WindowCanBeIndexedOutsideCountUsingSetter()
+        {
+            const int windowSize = 20;
+            const int initialElementsCount = 5;
+            const int indexingStart = 10;
+            var window = new RollingWindow<int>(windowSize);
+
+            // Add some data to the window
+            for (var i = 0; i < initialElementsCount; i++)
+            {
+                window.Add(i);
+            }
+            Assert.AreEqual(initialElementsCount, window.Count);
+
+            // Index the indicator outside the current count but within its size
+            for (var i = indexingStart; i < window.Size; i++)
+            {
+                window[i] = i;
+                Assert.AreEqual(i, window[i]);
+                Assert.AreEqual(windowSize, window.Size);
+            }
+
+            // The middle indexes that were not touched should have the default value
+            for (var i = initialElementsCount; i < indexingStart; i++)
+            {
+                Assert.AreEqual(default(int), window[i]);
+            }
+        }
+
+        [Test]
         public void WindowCanBeIndexedOutsideSizeAndGetsResized()
         {
             const int windowSize = 10;

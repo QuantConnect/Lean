@@ -192,9 +192,13 @@ namespace QuantConnect.Indicators
                         throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.IndexOutOfSizeRange);
                     }
 
-                    if (i > _size - 1)
+                    if (i > _list.Count - 1)
                     {
-                        Resize(i + 1);
+                        if (i > _size - 1)
+                        {
+                            Resize(i + 1);
+                        }
+
                         var count = _list.Count;
                         for (var j = 0; j < i - count + 1; j++)
                         {
@@ -327,11 +331,8 @@ namespace QuantConnect.Indicators
             {
                 _listLock.EnterWriteLock();
 
-                if (size > _list.Capacity)
-                {
-                    _list.Capacity = size;
-                }
-                else if (size < _list.Count)
+                _list.EnsureCapacity(size);
+                if (size < _list.Count)
                 {
                     _list.RemoveRange(0, _list.Count - size);
                 }
