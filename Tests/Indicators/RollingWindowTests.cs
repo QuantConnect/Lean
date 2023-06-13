@@ -1,11 +1,11 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Indicators;
@@ -172,19 +173,180 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ThrowsWhenIndexingOutOfRange()
+        public void ThrowsWhenIndexIsNegative()
         {
             var window = new RollingWindow<int>(1);
             Assert.IsFalse(window.IsReady);
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[0]; });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[-1]; });
+        }
 
-            window.Add(0);
-            Assert.AreEqual(1, window.Count);
-            Assert.AreEqual(0, window[0]);
-            Assert.IsTrue(window.IsReady);
+        [Test]
+        public void WindowCanBeIndexedOutsideCount()
+        {
+            const int windowSize = 10;
+            var window = new RollingWindow<int>(windowSize);
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[1]; });
+            // Add some data to the window
+            const int count = windowSize / 2;
+            for (var i = 0; i < count; i++)
+            {
+                window.Add(i);
+            }
+            Assert.AreEqual(count, window.Count);
+
+            // Index the indicator outside the current count but within its size
+            for (var i = window.Count; i < window.Size; i++)
+            {
+                Assert.AreEqual(default(int), window[i]);
+                Assert.AreEqual(windowSize, window.Size);
+            }
+        }
+
+        [Test]
+        public void WindowCanBeIndexedOutsideCountUsingSetter()
+        {
+            const int windowSize = 20;
+            const int initialElementsCount = 5;
+            const int indexingStart = 10;
+            var window = new RollingWindow<int>(windowSize);
+
+            // Add some data to the window
+            for (var i = 0; i < initialElementsCount; i++)
+            {
+                window.Add(i);
+            }
+            Assert.AreEqual(initialElementsCount, window.Count);
+
+            // Index the indicator outside the current count but within its size
+            for (var i = indexingStart; i < window.Size; i++)
+            {
+                window[i] = i;
+                Assert.AreEqual(i, window[i]);
+                Assert.AreEqual(windowSize, window.Size);
+            }
+
+            // The middle indexes that were not touched should have the default value
+            for (var i = initialElementsCount; i < indexingStart; i++)
+            {
+                Assert.AreEqual(default(int), window[i]);
+            }
+        }
+
+        [Test]
+        public void WindowCanBeIndexedOutsideSizeAndGetsResized()
+        {
+            const int windowSize = 10;
+            var window = new RollingWindow<int>(windowSize);
+
+            // Index the indicator outside the current size
+            for (var i = windowSize; i < windowSize + 10; i++)
+            {
+                Assert.AreEqual(default(int), window[i]);
+                Assert.AreEqual(i + 1, window.Size);
+            }
+
+            // Explicitly resize the window
+            var oldSize = window.Size;
+            window.Size = window.Size + 10;
+            for (var i = oldSize; i < window.Size; i++)
+            {
+                Assert.AreEqual(default(int), window[i]);
+            }
+        }
+
+        [Test]
+        public void WindowCanBeIndexedOutsideSizeUsingSetterAndGetsResized()
+        {
+            const int windowSize = 10;
+            var window = new RollingWindow<int>(windowSize);
+
+            // Index the indicator outside the current size
+            for (var i = windowSize; i < windowSize + 10; i++)
+            {
+                window[i] = i;
+                Assert.AreEqual(i, window[i]);
+                Assert.AreEqual(i + 1, window.Size);
+            }
+        }
+
+        [Test]
+        public void NewElementsHaveDefaultValuesWhenResizingUp()
+        {
+            var window = new RollingWindow<int>(10);
+
+            // Explicitly resize the window
+            var oldSize = window.Size;
+            window.Size = window.Size * 2;
+            for (var i = oldSize; i < window.Size; i++)
+            {
+                Assert.AreEqual(default(int), window[i]);
+            }
+        }
+
+        [Test]
+        public void HistoryWindowResizingUpKeepsCurrentValues()
+        {
+            const int windowSize = 10;
+            var window = new RollingWindow<int>(windowSize);
+
+            // Fill the window up
+            var values = new List<int>(window.Size);
+            for (var i = 0; i < window.Size; i++)
+            {
+                window.Add(i);
+                values.Insert(0, i);
+            }
+
+            // Resize up
+            window.Size = window.Size * 2;
+            Assert.AreEqual(values.Count, window.Count);
+            CollectionAssert.AreEqual(values, window.Take(values.Count));
+        }
+
+        [Test]
+        public void HistoryWindowResizingDownKeepsCurrentValuesWithinNewSizeBelowCurrentCount()
+        {
+            const int windowSize = 20;
+            const int smallerSize = 10;
+
+            var window = new RollingWindow<int>(windowSize);
+
+            // Fill the window up
+            var values = new List<int>(window.Size);
+            for (var i = 0; i < window.Size; i++)
+            {
+                window.Add(i);
+                values.Insert(0, i);
+            }
+
+            window.Size = smallerSize;
+            Assert.AreEqual(smallerSize, window.Size);
+            Assert.AreEqual(smallerSize, window.Count);
+            CollectionAssert.AreEqual(values.Take(smallerSize), window);
+        }
+
+        [Test]
+        public void HistoryWindowResizingDownKeepsCurrentValuesWithinNewSizeAboveCurrentCount()
+        {
+            const int windowSize = 20;
+            const int dataCount = 5;
+            const int smallerSize = 10;
+
+            var window = new RollingWindow<int>(windowSize);
+
+            // Add some data to the window
+            var values = new List<int>(window.Size);
+            for (var i = 0; i < dataCount; i++)
+            {
+                window.Add(i);
+                values.Insert(0, i);
+            }
+
+            window.Size = smallerSize;
+            Assert.AreEqual(smallerSize, window.Size);
+            Assert.AreEqual(dataCount, window.Count);
+            CollectionAssert.AreEqual(values.Take(smallerSize), window);
         }
     }
 }

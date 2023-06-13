@@ -863,7 +863,7 @@ namespace QuantConnect.Research
             var name = indicator.GetType().Name;
 
             var properties = indicator.GetType().GetProperties()
-                .Where(x => x.PropertyType.IsGenericType && x.Name != "Consolidators")
+                .Where(x => x.PropertyType.IsGenericType && x.Name != "Consolidators" && x.Name != "Window")
                 .ToDictionary(x => x.Name, y => new List<IndicatorDataPoint>());
             properties.Add(name, new List<IndicatorDataPoint>());
 

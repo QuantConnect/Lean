@@ -227,6 +227,98 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(3, indicatorTimeList.Count(x => x.Minute == 32));
         }
 
+        [TestCase(2)]
+        [TestCase(5)]
+        [TestCase(10)]
+        public void IndicatorKeepsHistory(int historyWindow)
+        {
+            var indicator = new TestIndicator("Test indicator");
+            indicator.Window.Size = historyWindow;
+
+            var points = new List<IndicatorDataPoint>(100);
+            var referenceDate = new DateTime(2023, 06, 12, 9, 0, 0);
+            for (int i = 0; i < 100; i++)
+            {
+                // The first iteration will not update the indicator. By default, first value is IndicatorDataPoint(DateTime.MinValue, 0)
+                if (i == 0)
+                {
+                    var defaultValue = new IndicatorDataPoint(DateTime.MinValue, 0);
+                    Assert.AreEqual(defaultValue, indicator.Current);
+                    Assert.AreEqual(defaultValue, indicator[0]);
+                }
+                else
+                {
+                    var dateTime = referenceDate.AddMinutes(i);
+                    indicator.Update(dateTime, i);
+                    var expected = new IndicatorDataPoint(dateTime, i);
+
+                    Assert.AreEqual(expected, indicator.Current);
+                    Assert.AreEqual(expected, indicator[0]);
+                }
+
+                points.Insert(0, indicator[0]);
+                var startIndex = Math.Max(0, i - historyWindow + 1);
+                for (int j = startIndex; j <= i; j++)
+                {
+                    Assert.AreEqual(points[i - j], indicator[i - j]);
+                }
+
+                // Check the enumerator
+                var windowPoints = indicator.ToList();
+                var count = i - startIndex < historyWindow ? i - startIndex + 1 : historyWindow;
+                CollectionAssert.AreEqual(points.GetRange(0, count), windowPoints);
+            }
+        }
+
+        [Test]
+        public void HistoryWindowIsCorrectlyReset()
+        {
+            var indicator = new TestIndicator("Test indicator");
+            indicator.Window.Size = 20;
+
+            // Update the indicator a few times
+            var referenceDate = new DateTime(2023, 06, 12, 9, 0, 0);
+            for (var i = 1; i < indicator.Window.Size; i++)
+            {
+                indicator.Update(referenceDate.AddMinutes(i - 1), i);
+            }
+
+            Assert.AreEqual(indicator.Window.Size, indicator.Window.Count);
+
+            indicator.Reset();
+
+            // Window size is kept
+            Assert.AreEqual(20, indicator.Window.Size);
+
+            // Window values are removed
+            Assert.AreEqual(1, indicator.Window.Count);
+            Assert.AreEqual(new IndicatorDataPoint(DateTime.MinValue, 0), indicator[0]);
+            Assert.IsNull(indicator[1]);
+        }
+
+        [Test]
+        public void CanAccessCurrentAndPreviousState()
+        {
+            var indicator = new TestIndicator("Test indicator");
+            indicator.Window.Size = 10;
+
+            // Update the indicator a few times
+            var referenceDate = new DateTime(2023, 06, 12, 9, 0, 0);
+            var dataPoints = new List<IndicatorDataPoint>(indicator.Window.Size);
+            for (var i = 0; i < indicator.Window.Size; i++)
+            {
+                var dateTime = referenceDate.AddMinutes(i);
+                indicator.Update(dateTime, i);
+                dataPoints.Add(new IndicatorDataPoint(dateTime, i));
+            }
+
+            Assert.AreEqual(dataPoints[^1], indicator.Current);
+            Assert.AreEqual(dataPoints[^1], indicator[0]);
+
+            Assert.AreEqual(dataPoints[^2], indicator.Previous);
+            Assert.AreEqual(dataPoints[^2], indicator[1]);
+        }
+
         private static void TestComparisonOperators<TValue>()
         {
             var indicator = new TestIndicator();
