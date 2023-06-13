@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
@@ -24,13 +25,14 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm asserting the behavior of using universe selection with futures
     /// </summary>
-    public class FuturesFrameworkRegressionAlgorithmAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FuturesFrameworkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private static Symbol _es = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
         private static Symbol _gold = QuantConnect.Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX);
@@ -65,6 +67,22 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnData(Slice slice)
+        {
+            var future = _es;
+            if (Time.Date >= new DateTime(2013, 10, 09))
+            {
+                future = _gold;
+            }
+
+            var continuous = Securities[future];
+            if (continuous.Price == Securities[(continuous as Future).Mapped].Price)
+            {
+                // prices should never match because we are using the default backwards adjusted mode, they would match if we used raw mode
+                throw new Exception($"Unexpected continuous future price {continuous.Price}");
+            }
+        }
+
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             foreach (var added in changes.AddedSecurities)
@@ -81,6 +99,38 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     _removedCanonical[removed.Symbol] = true;
                 }
+            }
+
+            var canonicals = changes.AddedSecurities.Select(x => x.Symbol.Canonical).ToHashSet();
+            var nonCanonicals = changes.AddedSecurities.Where(x => !x.Symbol.IsCanonical()).ToList();
+            foreach (var subscriptions in SubscriptionManager.Subscriptions.Where(x => canonicals.Contains(x.Symbol.Canonical)).GroupBy(x => x.Symbol.Canonical))
+            {
+                // trade & quote for canonical + contract chain (universe data)
+                if (subscriptions.Count(x => x.Symbol.IsCanonical()) != canonicals.Count * 3)
+                {
+                    throw new Exception($"Unexpected canonical subscription count {subscriptions.Count(x => x.Symbol.IsCanonical())}");
+                }
+
+                // trade and quote for non canonicals
+                if (subscriptions.Count(x => !x.Symbol.IsCanonical()) != nonCanonicals.Count * 2)
+                {
+                    throw new Exception($"Unexpected non canonical subscription count {subscriptions.Count(x => !x.Symbol.IsCanonical())}");
+                }
+            }
+
+            // we expect a single continuous universe at the time
+            var universeSubscriptions = SubscriptionManager.Subscriptions.Count(x => x.Symbol.ID.Symbol.Contains("QC-UNIVERSE-CONTINUOUS"));
+            if (universeSubscriptions != 1)
+            {
+                throw new Exception($"Unexpected universe subscription count {universeSubscriptions}");
+            }
+
+            // we expect a single canonical at the time
+            var canonicalSubscriptions = SubscriptionManager.Subscriptions.Where(x => !x.Symbol.ID.Symbol.Contains("QC-UNIVERSE-CONTINUOUS") && x.Symbol.IsCanonical())
+                .Select(x => x.Symbol.Canonical).ToHashSet();
+            if (canonicalSubscriptions.Count != 1)
+            {
+                throw new Exception($"Unexpected universe subscription count {universeSubscriptions}");
             }
         }
 
