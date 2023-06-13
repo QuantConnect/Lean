@@ -34,7 +34,8 @@ class IndicatorHistoryAlgorithm(QCAlgorithm):
         self.bollingerBands.MiddleBand.Window.Size = 20;
 
     def OnData(self, slice: Slice):
-        if not self.bollingerBands.IsReady: return
+        # Let's wait for our indicator to fully initialize and have a full window of history data
+        if not self.bollingerBands.Window.IsReady: return
 
         # We can access the current and oldest (in our period) values of the indicator
         self.Log(f"Current BB value: {self.bollingerBands[0].EndTime} - {self.bollingerBands[0].Value}")

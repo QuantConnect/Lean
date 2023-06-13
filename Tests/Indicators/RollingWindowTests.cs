@@ -218,6 +218,21 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void WindowCanBeIndexedOutsideSizeUsingSetterAndGetsResized()
+        {
+            const int windowSize = 10;
+            var window = new RollingWindow<int>(windowSize);
+
+            // Index the indicator outside the current size
+            for (var i = windowSize; i < windowSize + 10; i++)
+            {
+                window[i] = i;
+                Assert.AreEqual(i, window[i]);
+                Assert.AreEqual(i + 1, window.Size);
+            }
+        }
+
+        [Test]
         public void HistoryWindowResizingUpKeepsCurrentValues()
         {
             const int windowSize = 10;

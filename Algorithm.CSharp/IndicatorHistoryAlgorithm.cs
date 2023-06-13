@@ -50,7 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public void OnData(Slice slice)
         {
-            if (!_bollingerBands.IsReady) return;
+            // Let's wait for our indicator to fully initialize and have a full window of history data
+            if (!_bollingerBands.Window.IsReady) return;
 
             // We can access the current and oldest (in our period) values of the indicator
             Log($"Current BB value: {_bollingerBands[0].EndTime} - {_bollingerBands[0].Value}");
@@ -90,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 161;
+        public long DataPoints => 153;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -118,8 +119,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-7.674"},
-            {"Tracking Error", "0.085"},
+            {"Information Ratio", "-7.209"},
+            {"Tracking Error", "0.087"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
