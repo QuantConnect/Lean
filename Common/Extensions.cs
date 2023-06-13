@@ -3470,63 +3470,98 @@ namespace QuantConnect
         /// <param name="filter">The option filter to use</param>
         /// <param name="universeSettings">The universe settings, will use algorithm settings if null</param>
         /// <returns><see cref="OptionChainUniverse"/> for the given symbol</returns>
+        public static OptionChainUniverse CreateOptionChain(this IAlgorithm algorithm, Symbol symbol, PyObject filter, UniverseSettings universeSettings = null)
+        {
+            var result = CreateOptionChain(algorithm, symbol, out var option, universeSettings);
+            option.SetFilter(filter);
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="OptionChainUniverse"/> for a given symbol
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance to create universes for</param>
+        /// <param name="symbol">Symbol of the option</param>
+        /// <param name="filter">The option filter to use</param>
+        /// <param name="universeSettings">The universe settings, will use algorithm settings if null</param>
+        /// <returns><see cref="OptionChainUniverse"/> for the given symbol</returns>
         public static OptionChainUniverse CreateOptionChain(this IAlgorithm algorithm, Symbol symbol, Func<OptionFilterUniverse, OptionFilterUniverse> filter, UniverseSettings universeSettings = null)
+        {
+            var result = CreateOptionChain(algorithm, symbol, out var option, universeSettings);
+            option.SetFilter(filter);
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="OptionChainUniverse"/> for a given symbol
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance to create universes for</param>
+        /// <param name="symbol">Symbol of the option</param>
+        /// <param name="universeSettings">The universe settings, will use algorithm settings if null</param>
+        /// <returns><see cref="OptionChainUniverse"/> for the given symbol</returns>
+        private static OptionChainUniverse CreateOptionChain(this IAlgorithm algorithm, Symbol symbol, out Option option, UniverseSettings universeSettings = null)
         {
             if (!symbol.SecurityType.IsOption())
             {
                 throw new ArgumentException(Messages.Extensions.CreateOptionChainRequiresOptionSymbol);
             }
 
-            // rewrite non-canonical symbols to be canonical
-            var market = symbol.ID.Market;
-            var underlying = symbol.Underlying;
-            if (!symbol.IsCanonical())
-            {
-                // The underlying can be a non-equity Symbol, so we must explicitly
-                // initialize the Symbol using the CreateOption(Symbol, ...) overload
-                // to ensure that the underlying SecurityType is preserved and not
-                // written as SecurityType.Equity.
-                var alias = $"?{underlying.Value}";
+            // resolve defaults if not specified
+            var settings = universeSettings ?? algorithm.UniverseSettings;
 
-                symbol = Symbol.CreateOption(
-                    underlying,
-                    market,
-                    underlying.SecurityType.DefaultOptionStyle(),
-                    default(OptionRight),
-                    0m,
-                    SecurityIdentifier.DefaultDate,
-                    alias);
+            option = (Option)algorithm.AddSecurity(symbol.Canonical, settings.Resolution, settings.FillForward, settings.Leverage, settings.ExtendedMarketHours);
+
+            return (OptionChainUniverse)algorithm.UniverseManager.Values.Single(universe => universe.Configuration.Symbol == symbol.Canonical);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="FuturesChainUniverse"/> for a given symbol
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance to create universes for</param>
+        /// <param name="symbol">Symbol of the future</param>
+        /// <param name="filter">The future filter to use</param>
+        /// <param name="universeSettings">The universe settings, will use algorithm settings if null</param>
+        public static IEnumerable<Universe> CreateFutureChain(this IAlgorithm algorithm, Symbol symbol, PyObject filter, UniverseSettings universeSettings = null)
+        {
+            var result = CreateFutureChain(algorithm, symbol, out var future, universeSettings);
+            future.SetFilter(filter);
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="FuturesChainUniverse"/> for a given symbol
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance to create universes for</param>
+        /// <param name="symbol">Symbol of the future</param>
+        /// <param name="filter">The future filter to use</param>
+        /// <param name="universeSettings">The universe settings, will use algorithm settings if null</param>
+        public static IEnumerable<Universe> CreateFutureChain(this IAlgorithm algorithm, Symbol symbol, Func<FutureFilterUniverse, FutureFilterUniverse> filter, UniverseSettings universeSettings = null)
+        {
+            var result = CreateFutureChain(algorithm, symbol, out var future, universeSettings);
+            future.SetFilter(filter);
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="FuturesChainUniverse"/> for a given symbol
+        /// </summary>
+        private static IEnumerable<Universe> CreateFutureChain(this IAlgorithm algorithm, Symbol symbol, out Future future, UniverseSettings universeSettings = null)
+        {
+            if (symbol.SecurityType != SecurityType.Future)
+            {
+                throw new ArgumentException(Messages.Extensions.CreateFutureChainRequiresFutureSymbol);
             }
 
             // resolve defaults if not specified
             var settings = universeSettings ?? algorithm.UniverseSettings;
 
-            // create canonical security object, but don't duplicate if it already exists
-            Security security;
-            Option optionChain;
-            if (!algorithm.Securities.TryGetValue(symbol, out security))
-            {
-                var config = algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
-                    typeof(ZipEntryName),
-                    symbol,
-                    settings.Resolution,
-                    settings.FillForward,
-                    settings.ExtendedMarketHours,
-                    false);
-                optionChain = (Option)algorithm.Securities.CreateSecurity(symbol, config, settings.Leverage, false);
-            }
-            else
-            {
-                optionChain = (Option)security;
-            }
+            var dataNormalizationMode = settings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
 
-            // set the option chain contract filter function
-            optionChain.SetFilter(filter);
+            future = (Future)algorithm.AddSecurity(symbol.Canonical, settings.Resolution, settings.FillForward, settings.Leverage, settings.ExtendedMarketHours,
+                settings.DataMappingMode, dataNormalizationMode, settings.ContractDepthOffset);
 
-            // force option chain security to not be directly tradable AFTER it's configured to ensure it's not overwritten
-            optionChain.IsTradable = false;
-
-            return new OptionChainUniverse(optionChain, settings);
+            // let's yield back both the future chain and the continuous future universe
+            return algorithm.UniverseManager.Values.Where(universe => universe.Configuration.Symbol == symbol.Canonical || ContinuousContractUniverse.CreateSymbol(symbol.Canonical) == universe.Configuration.Symbol);
         }
 
         /// <summary>

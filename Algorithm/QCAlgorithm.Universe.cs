@@ -34,9 +34,7 @@ namespace QuantConnect.Algorithm
         // original motivation: adding equity/options to enforce equity raw data mode
         private readonly object _pendingUniverseAdditionsLock = new object();
         private readonly List<UserDefinedUniverseAddition> _pendingUserDefinedUniverseSecurityAdditions = new List<UserDefinedUniverseAddition>();
-        private readonly List<Universe> _pendingUniverseAdditions = new List<Universe>();
-        // this is so that later during 'UniverseSelection.CreateUniverses' we wont remove these user universes from the UniverseManager
-        private readonly HashSet<Symbol> _userAddedUniverses = new HashSet<Symbol>();
+        private bool _pendingUniverseAdditions;
         private ConcurrentSet<Symbol> _rawNormalizationWarningSymbols = new ConcurrentSet<Symbol>();
         private readonly int _rawNormalizationWarningSymbolsMaxCount = 10;
 
@@ -70,7 +68,7 @@ namespace QuantConnect.Algorithm
             // rewrite securities w/ derivatives to be in raw mode
             lock (_pendingUniverseAdditionsLock)
             {
-                if (_pendingUniverseAdditions.Count + _pendingUserDefinedUniverseSecurityAdditions.Count == 0)
+                if (!_pendingUniverseAdditions && _pendingUserDefinedUniverseSecurityAdditions.Count == 0)
                 {
                     // no point in looping through everything if there's no pending changes
                     return;
@@ -167,12 +165,11 @@ namespace QuantConnect.Algorithm
                 }
 
                 // finally add any pending universes, this will make them available to the data feed
-                foreach (var universe in _pendingUniverseAdditions)
-                {
-                    UniverseManager.Add(universe.Configuration.Symbol, universe);
-                }
+                // The universe will be added at the end of time step, same as the AddData user defined universes.
+                // This is required to be independent of the start and end date set during initialize
+                UniverseManager.ProcessChanges();
 
-                _pendingUniverseAdditions.Clear();
+                _pendingUniverseAdditions = false;
                 _pendingUserDefinedUniverseSecurityAdditions.Clear();
             }
 
@@ -204,13 +201,9 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Universes)]
         public Universe AddUniverse(Universe universe)
         {
-            lock (_pendingUniverseAdditionsLock)
-            {
-                // The universe will be added at the end of time step, same as the AddData user defined universes.
-                // This is required to be independent of the start and end date set during initialize
-                _pendingUniverseAdditions.Add(universe);
-                _userAddedUniverses.Add(universe.Configuration.Symbol);
-            }
+            _pendingUniverseAdditions = true;
+            // note: UniverseManager.Add uses TryAdd, so don't need to worry about duplicates here
+            UniverseManager.Add(universe.Configuration.Symbol, universe);
             return universe;
         }
 
@@ -497,20 +490,11 @@ namespace QuantConnect.Algorithm
              // ensuring that we load the option chain for every asset found in the underlying's Universe.
              Universe universe;
              if (!UniverseManager.TryGetValue(underlyingSymbol, out universe))
-             {
-                lock(_pendingUniverseAdditionsLock)
-                {
-                    // The universe might be already added, but not registered with the UniverseManager.
-                    universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
-                    if (universe == null)
-                    {
-                    underlyingSymbol = AddSecurity(underlyingSymbol).Symbol;
-                    }
+            {
+                underlyingSymbol = AddSecurity(underlyingSymbol).Symbol;
 
-                    // Recheck again, we should have a universe addition pending for the provided Symbol
-                    universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
-                }
-                if (universe == null)
+                // Recheck again, we should have a universe addition pending for the provided Symbol
+                if (!UniverseManager.TryGetValue(underlyingSymbol, out universe))
                 {
                     // Should never happen, but it could be that the subscription
                     // created with AddSecurity is not aligned with the Symbol we're using.
@@ -572,37 +556,33 @@ namespace QuantConnect.Algorithm
             // add this security to the user defined universe
             Universe universe;
             var universeSymbol = UserDefinedUniverse.CreateSymbol(security.Type, security.Symbol.ID.Market);
-            lock (_pendingUniverseAdditionsLock)
+            if (!UniverseManager.TryGetValue(universeSymbol, out universe))
             {
-                if (!UniverseManager.TryGetValue(universeSymbol, out universe))
+                if (universe == null)
                 {
-                    universe = _pendingUniverseAdditions.FirstOrDefault(x => x.Configuration.Symbol == universeSymbol);
-                    if (universe == null)
-                    {
-                        // create a new universe, these subscription settings don't currently get used
-                        // since universe selection proper is never invoked on this type of universe
-                        var uconfig = new SubscriptionDataConfig(subscription, symbol: universeSymbol, isInternalFeed: true, fillForward: false,
-                            exchangeTimeZone: DateTimeZone.Utc,
-                            dataTimeZone: DateTimeZone.Utc);
+                    // create a new universe, these subscription settings don't currently get used
+                    // since universe selection proper is never invoked on this type of universe
+                    var uconfig = new SubscriptionDataConfig(subscription, symbol: universeSymbol, isInternalFeed: true, fillForward: false,
+                        exchangeTimeZone: DateTimeZone.Utc,
+                        dataTimeZone: DateTimeZone.Utc);
 
-                        // this is the universe symbol, has no real entry in the mhdb, will default to market and security type
-                        // set entry in market hours database for the universe subscription to match the config
-                        var symbolString = MarketHoursDatabase.GetDatabaseSymbolKey(uconfig.Symbol);
-                        MarketHoursDatabase.SetEntry(uconfig.Market, symbolString, uconfig.SecurityType,
-                            SecurityExchangeHours.AlwaysOpen(uconfig.ExchangeTimeZone), uconfig.DataTimeZone);
+                    // this is the universe symbol, has no real entry in the mhdb, will default to market and security type
+                    // set entry in market hours database for the universe subscription to match the config
+                    var symbolString = MarketHoursDatabase.GetDatabaseSymbolKey(uconfig.Symbol);
+                    MarketHoursDatabase.SetEntry(uconfig.Market, symbolString, uconfig.SecurityType,
+                        SecurityExchangeHours.AlwaysOpen(uconfig.ExchangeTimeZone), uconfig.DataTimeZone);
 
-                        universe = new UserDefinedUniverse(uconfig,
-                            new UniverseSettings(
-                                subscription.Resolution,
-                                security.Leverage,
-                                subscription.FillDataForward,
-                                subscription.ExtendedMarketHours,
-                                TimeSpan.Zero),
-                            QuantConnect.Time.MaxTimeSpan,
-                            new List<Symbol>());
+                    universe = new UserDefinedUniverse(uconfig,
+                        new UniverseSettings(
+                            subscription.Resolution,
+                            security.Leverage,
+                            subscription.FillDataForward,
+                            subscription.ExtendedMarketHours,
+                            TimeSpan.Zero),
+                        QuantConnect.Time.MaxTimeSpan,
+                        new List<Symbol>());
 
-                        AddUniverse(universe);
-                    }
+                    AddUniverse(universe);
                 }
             }
 

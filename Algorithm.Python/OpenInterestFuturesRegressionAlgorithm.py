@@ -34,7 +34,7 @@ class OpenInterestFuturesRegressionAlgorithm(QCAlgorithm):
     
     def OnData(self,data):
         if self.Transactions.OrdersCount == 0 and data.HasData:
-            matched = list(filter(lambda s: not (s.ID.Date in self.expected_expiry_dates), data.Keys))
+            matched = list(filter(lambda s: not (s.ID.Date in self.expected_expiry_dates) and not s.IsCanonical(), data.Keys))
             if len(matched) != 0:
                 raise Exception(f"{len(matched)}/{len(slice.Keys)} were unexpected expiry date(s): " + ", ".join(list(map(lambda x: x.ID.Date, matched))))
 
