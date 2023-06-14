@@ -324,6 +324,24 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         order = self.Transactions.GetOrderById(orderEvent.OrderId)
         self.Log("{0}: {1}: {2}".format(self.Time, order.Type, orderEvent))
 
+        if orderEvent.Quantity == 0:
+            raise Exception("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity")
+
+        if orderEvent.Quantity != order.Quantity:
+            raise Exception("OrderEvent quantity should hold the current order Quantity")
+
+        if (type(order) is LimitOrder and orderEvent.LimitPrice == 0 or
+            type(order) is StopLimitOrder and orderEvent.LimitPrice == 0):
+            raise Exception("OrderEvent LimitPrice is Not expected to be 0 for LimitOrder and StopLimitOrder")
+
+        if type(order) is StopMarketOrder and orderEvent.StopPrice == 0:
+            raise Exception("OrderEvent StopPrice is Not expected to be 0 for StopMarketOrder")
+
+        # We can access the order ticket from the order event
+        if orderEvent.Ticket is None:
+            raise Exception("OrderEvent Ticket was not set")
+        if orderEvent.OrderId != orderEvent.Ticket.OrderId:
+            raise Exception("OrderEvent.OrderId and orderEvent.Ticket.OrderId do not match")
 
     def CheckPairOrdersForFills(self, longOrder, shortOrder):
         if longOrder.Status == OrderStatus.Filled:

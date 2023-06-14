@@ -26,7 +26,6 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
-using QuantConnect.Securities.Positions;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
@@ -1187,6 +1186,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     // update the ticket after we've processed the fill, but before the event, this way everything is ready for user code
                     tickets[i].AddOrderEvent(orderEvent);
+                    orderEvent.Ticket = tickets[i];
                 }
             }
 
