@@ -195,7 +195,6 @@ namespace QuantConnect.Orders
         /// The order ticket associated to the order
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [ProtoMember(18)]
         public OrderTicket Ticket { get; set; }
 
         /// <summary>
