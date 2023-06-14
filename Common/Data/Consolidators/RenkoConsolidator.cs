@@ -285,6 +285,12 @@ namespace QuantConnect.Data.Consolidators
             }
         }
 
+        /// <summary>
+        /// Gets the closest BarSize-Multiple to the price.
+        /// </summary>
+        /// <remarks>Based on: The Art of Computer Programming, Vol I, pag 39. Donald E. Knuth</remarks>
+        /// <param name="price">Price to be rounded to the closest BarSize-Multiple</param>
+        /// <returns>The closest BarSize-Multiple to the price</returns>
         private decimal GetClosestMultiple(decimal price)
         {
             var modulus = price - BarSize * Math.Floor(price / BarSize);
