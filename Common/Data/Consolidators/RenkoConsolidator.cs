@@ -140,8 +140,7 @@ namespace QuantConnect.Data.Consolidators
                 _firstTick = false;
 
                 // Round our first rate to the same length as BarSize
-                var decimalPlaces = BarSize.GetDecimalPlaces();
-                rate = Math.Round(rate, decimalPlaces);
+                rate = GetClosestMultiple(rate);
 
                 OpenOn = data.Time;
                 CloseOn = data.Time;
@@ -284,6 +283,13 @@ namespace QuantConnect.Data.Consolidators
                 OpenRate = limit;
                 HighRate = limit;
             }
+        }
+
+        private decimal GetClosestMultiple(decimal price)
+        {
+            var modulus = price - BarSize * Math.Floor(price / BarSize);
+            var round = Math.Round(modulus / BarSize);
+            return BarSize * (Math.Floor(price / BarSize) + round);
         }
     }
 
