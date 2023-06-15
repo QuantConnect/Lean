@@ -292,6 +292,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// The current algorithm statistics for the running algorithm.
+        /// </summary>
+        StatisticsResults Statistics
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the function used to define the benchmark. This function will return
         /// the value of the benchmark at a requested date/time
         /// </summary>
@@ -349,11 +357,6 @@ namespace QuantConnect.Interfaces
         /// Returns the current Slice object
         /// </summary>
         Slice CurrentSlice { get; }
-
-        /// <summary>
-        /// The current running statistics
-        /// </summary>
-        StatisticsResults Statistics { get; }
 
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:

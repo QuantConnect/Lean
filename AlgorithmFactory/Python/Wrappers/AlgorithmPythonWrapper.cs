@@ -452,7 +452,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public InsightManager Insights => _baseAlgorithm.Insights;
 
-        //TODO: Move this to a better/more appropiate place
         /// <summary>
         /// Sets the statistics service instance to be used by the algorithm
         /// </summary>
@@ -460,15 +459,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetStatisticsService(IStatisticsService statisticsService) => _baseAlgorithm.SetStatisticsService(statisticsService);
 
         /// <summary>
-        /// The current running statistics
+        /// The current statistics for the running algorithm.
         /// </summary>
-        public StatisticsResults Statistics
-        {
-            get
-            {
-                return _baseAlgorithm.Statistics;
-            }
-        }
+        public StatisticsResults Statistics => _baseAlgorithm.Statistics;
 
         /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm

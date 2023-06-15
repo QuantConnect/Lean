@@ -1274,9 +1274,9 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Calculates and get the current running statistics for the algorithm
+        /// Calculates and gets the current statistics for the algorithm
         /// </summary>
-        /// <returns>The current running statistics</returns>
+        /// <returns>The current statistics</returns>
         public StatisticsResults StatisticsResults()
         {
             // could happen if algorithm failed to init

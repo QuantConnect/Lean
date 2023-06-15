@@ -19,14 +19,15 @@ using System.ComponentModel.Composition;
 namespace QuantConnect.Statistics
 {
     /// <summary>
+    /// This interface exposes methods for accessing algorithm statistics results at runtime.
     /// </summary>
     [InheritedExport(typeof(IStatisticsService))]
     public interface IStatisticsService
     {
         /// <summary>
-        /// Calculates and get the current running statistics for the algorithm
+        /// Calculates and gets the current statistics for the algorithm
         /// </summary>
-        /// <returns>The current running statistics</returns>
+        /// <returns>The current statistics</returns>
         StatisticsResults StatisticsResults();
     }
 }

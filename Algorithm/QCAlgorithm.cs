@@ -91,6 +91,7 @@ namespace QuantConnect.Algorithm
         private ConcurrentQueue<string> _debugMessages = new ConcurrentQueue<string>();
         private ConcurrentQueue<string> _logMessages = new ConcurrentQueue<string>();
         private ConcurrentQueue<string> _errorMessages = new ConcurrentQueue<string>();
+        private IStatisticsService _statisticsService;
 
         //Error tracking to avoid message flooding:
         private string _previousDebugMessage = "";
@@ -576,24 +577,8 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(MachineLearning)]
         public ObjectStore ObjectStore { get; private set; }
 
-        // TODO: Move this to the top
-        private IStatisticsService _statisticsService;
-
-        //TODO: Move this to a better/more appropiate place
         /// <summary>
-        /// Sets the statistics service instance to be used by the algorithm
-        /// </summary>
-        /// <param name="statisticsService">The statistics service instance</param>
-        public void SetStatisticsService(IStatisticsService statisticsService)
-        {
-            if (_statisticsService == null)
-            {
-                _statisticsService = statisticsService;
-            }
-        }
-
-        /// <summary>
-        /// The current running statistics
+        /// The current statistics for the running algorithm.
         /// </summary>
         public StatisticsResults Statistics
         {
@@ -3092,6 +3077,18 @@ namespace QuantConnect.Algorithm
             // startDate is set relative to the algorithm's timezone.
             _startDate = _start.Date;
             _endDate = QuantConnect.Time.EndOfTime;
+        }
+
+        /// <summary>
+        /// Sets the statistics service instance to be used by the algorithm
+        /// </summary>
+        /// <param name="statisticsService">The statistics service instance</param>
+        public void SetStatisticsService(IStatisticsService statisticsService)
+        {
+            if (_statisticsService == null)
+            {
+                _statisticsService = statisticsService;
+            }
         }
     }
 }
