@@ -124,6 +124,11 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="barSize">The constant value size of each bar</param>
         public RenkoConsolidator(decimal barSize)
         {
+            if (barSize <= 0)
+            {
+                throw new ArgumentException("Renko consolidator BarSize must be strictly greater than zero");
+            }
+
             BarSize = barSize;
         }
 
@@ -140,7 +145,7 @@ namespace QuantConnect.Data.Consolidators
                 _firstTick = false;
 
                 // Round our first rate to the same length as BarSize
-                rate = GetClosestMultiple(rate);
+                rate = GetClosestMultiple(rate, BarSize);
 
                 OpenOn = data.Time;
                 CloseOn = data.Time;
@@ -290,12 +295,18 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <remarks>Based on: The Art of Computer Programming, Vol I, pag 39. Donald E. Knuth</remarks>
         /// <param name="price">Price to be rounded to the closest BarSize-Multiple</param>
+        /// <param name="barSize">The size of the Renko bar</param>
         /// <returns>The closest BarSize-Multiple to the price</returns>
-        private decimal GetClosestMultiple(decimal price)
+        public static decimal GetClosestMultiple(decimal price, decimal barSize)
         {
-            var modulus = price - BarSize * Math.Floor(price / BarSize);
-            var round = Math.Round(modulus / BarSize);
-            return BarSize * (Math.Floor(price / BarSize) + round);
+            if (barSize <= 0)
+            {
+                throw new ArgumentException("BarSize must be strictly greater than zero");
+            }
+
+            var modulus = price - barSize * Math.Floor(price / barSize);
+            var round = Math.Round(modulus / barSize);
+            return barSize * (Math.Floor(price / barSize) + round);
         }
     }
 

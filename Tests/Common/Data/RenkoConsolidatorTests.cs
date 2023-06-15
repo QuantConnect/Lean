@@ -26,6 +26,14 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class RenkoConsolidatorTests
     {
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void WickedRenkoConsolidatorFailsWhenBarSizeIsZero(double barSize)
+        {
+            var message = Assert.Throws<ArgumentException>( () => new RenkoConsolidator((decimal)barSize));
+            Assert.AreEqual("Renko consolidator BarSize must be strictly greater than zero", message.Message);
+        }
+
         [Test]
         public void WickedOutputTypeIsRenkoBar()
         {
@@ -674,6 +682,35 @@ namespace QuantConnect.Tests.Common.Data
             consolidator1.Dispose();
             consolidator2.Dispose();
             consolidator3.Dispose();
+        }
+
+        [TestCase(12.38684, 0.0001, 12.3868)]
+        [TestCase(12.38686, 0.0001, 12.3869)]
+        [TestCase(3.38694, 0.001, 3.387)]
+        [TestCase(3.38644, 0.001, 3.386)]
+        [TestCase(41.38698, 0.01, 41.39)]
+        [TestCase(41.38498, 0.01, 41.38)]
+        [TestCase(16.38696, 0.1, 16.4)]
+        [TestCase(16.32696, 0.1, 16.3)]
+        [TestCase(7.38692, 1, 7)]
+        [TestCase(7.78692, 1, 8)]
+        [TestCase(81.38679, 10, 80)]
+        [TestCase(88.38679, 10, 90)]
+        [TestCase(1247.38682, 100, 1200)]
+        [TestCase(1257.38682, 100, 1300)]
+        [TestCase(44500.2349, 1000, 45000)]
+        [TestCase(44300.2349, 1000, 44000)]
+        public void GetClosestMultipleWorksAsExpected(double price, double barSize, double expectedClosestMultiple)
+        {
+            Assert.AreEqual((decimal)expectedClosestMultiple, RenkoConsolidator.GetClosestMultiple((decimal)price, (decimal)barSize));
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void GetClosestMultipleFailsWhenBarSizeIsLessThanZero(double barSize)
+        {
+            var message = Assert.Throws<ArgumentException>(() => RenkoConsolidator.GetClosestMultiple((decimal)34.78989, (decimal)barSize));
+            Assert.AreEqual("BarSize must be strictly greater than zero", message.Message);
         }
 
         private class TestRenkoConsolidator : RenkoConsolidator
