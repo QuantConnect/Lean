@@ -55,6 +55,11 @@ namespace QuantConnect.Algorithm.CSharp
             // We cannot access _ticket directly because it is assigned asynchronously:
             // this order event could be triggered before _ticket is assigned.
             var ticket = orderEvent.Ticket;
+            if (ticket == null)
+            {
+                throw new Exception("Expected order ticket in order event to not be null");
+            }
+
             Debug(ticket.ToString());
         }
 

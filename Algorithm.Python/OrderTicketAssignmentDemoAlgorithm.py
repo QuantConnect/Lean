@@ -38,6 +38,9 @@ class OrderTicketAssignmentDemoAlgorithm(QCAlgorithm):
         # We cannot access self.ticket directly because it is assigned asynchronously:
         # this order event could be triggered before self.ticket is assigned.
         ticket = orderEvent.Ticket
+        if ticket is None:
+            raise Exception("Expected order ticket in order event to not be null")
+
         self.Debug(ticket.ToString())
 
     def OnEndOfAlgorithm(self):
