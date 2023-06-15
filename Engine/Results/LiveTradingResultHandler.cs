@@ -642,8 +642,6 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Add our value:
                 Charts[chartName].Series[seriesName].Values.Add(new ChartPoint(time, value));
-
-                InvalidateStatistics();
             }
             Log.Debug("LiveTradingResultHandler.Sample(): Done sampling " + chartName + "." + seriesName);
         }
@@ -707,8 +705,6 @@ namespace QuantConnect.Lean.Engine.Results
                         }
                     }
                 }
-
-                InvalidateStatistics();
             }
             Log.Debug("LiveTradingResultHandler.SampleRange(): Finished sampling");
         }
@@ -1283,7 +1279,16 @@ namespace QuantConnect.Lean.Engine.Results
         /// <returns>The current running statistics</returns>
         public StatisticsResults StatisticsResults()
         {
-            return GetStatisticsResults();
+            // could happen if algorithm failed to init
+            if (Algorithm == null)
+            {
+                return new StatisticsResults();
+            }
+
+            var charts = new Dictionary<string, Chart>(Charts);
+            var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
+
+            return GenerateStatisticsResults(charts, profitLoss);
         }
     }
 }

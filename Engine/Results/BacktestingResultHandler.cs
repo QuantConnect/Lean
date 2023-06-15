@@ -338,7 +338,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var charts = new Dictionary<string, Chart>(Charts);
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                     var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                    var statisticsResults = GetStatisticsResults(charts, profitLoss, _capacityEstimate);
+                    var statisticsResults = GenerateStatisticsResults(charts, profitLoss, _capacityEstimate);
                     var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary, capacityEstimate: _capacityEstimate);
 
                     FinalStatistics = statisticsResults.Summary;
@@ -552,8 +552,6 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     series.AddPoint(time, value);
                 }
-
-                InvalidateStatistics();
             }
         }
 
@@ -620,8 +618,6 @@ namespace QuantConnect.Lean.Engine.Results
                         }
                     }
                 }
-
-                InvalidateStatistics();
             }
         }
 
@@ -700,7 +696,6 @@ namespace QuantConnect.Lean.Engine.Results
             if (Algorithm == null) return;
 
             _capacityEstimate.UpdateMarketCapacity(forceProcess);
-            InvalidateStatistics();
 
             // Invalidate the processed days count so it gets recalculated
             _progressMonitor.InvalidateProcessedDays();
@@ -757,7 +752,16 @@ namespace QuantConnect.Lean.Engine.Results
         /// <returns>The current running statistics</returns>
         public StatisticsResults StatisticsResults()
         {
-            return GetStatisticsResults(capacityEstimate: _capacityEstimate);
+            // could happen if algorithm failed to init
+            if (Algorithm == null)
+            {
+                return new StatisticsResults();
+            }
+
+            var charts = new Dictionary<string, Chart>(Charts);
+            var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
+
+            return GenerateStatisticsResults(charts, profitLoss, _capacityEstimate);
         }
     }
 }
