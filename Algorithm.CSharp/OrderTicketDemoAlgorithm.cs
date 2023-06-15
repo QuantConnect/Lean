@@ -431,7 +431,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             var order = Transactions.GetOrderById(orderEvent.OrderId);
-            Console.WriteLine("{0}: {1}: {2}", Time, order.Type, orderEvent);
+            Log($"{Time}: {order.Type}: {orderEvent}");
 
             if (orderEvent.Quantity == 0)
             {
@@ -449,6 +449,16 @@ namespace QuantConnect.Algorithm.CSharp
             if (order is StopMarketOrder && orderEvent.StopPrice == 0)
             {
                 throw new Exception("OrderEvent StopPrice is Not expected to be 0 for StopMarketOrder");
+            }
+
+            // We can access the order ticket from the order event
+            if (orderEvent.Ticket == null)
+            {
+                throw new Exception("OrderEvent Ticket was not set");
+            }
+            if (orderEvent.OrderId != orderEvent.Ticket.OrderId)
+            {
+                throw new Exception("OrderEvent.OrderId and orderEvent.Ticket.OrderId do not match");
             }
         }
 

@@ -26,7 +26,6 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
-using QuantConnect.Securities.Positions;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
@@ -1009,7 +1008,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // Get orders and tickets
                 var orders = new List<Order>(orderEvents.Count);
-                var tickets = new List<OrderTicket>(orderEvents.Count);
 
                 for (var i = 0; i < orderEvents.Count; i++)
                 {
@@ -1037,7 +1035,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         LogOrderEvent(orderEvent);
                         return;
                     }
-                    tickets.Add(ticket);
+                    orderEvent.Ticket = ticket;
                 }
 
                 var fillsToProcess = new List<OrderEvent>(orderEvents.Count);
@@ -1047,7 +1045,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     var orderEvent = orderEvents[i];
                     var order = orders[i];
-                    var ticket = tickets[i];
+                    var ticket = orderEvent.Ticket;
 
                     _cancelPendingOrders.UpdateOrRemove(order.Id, orderEvent.Status);
                     // set the status of our order object based on the fill event
@@ -1186,7 +1184,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     }
 
                     // update the ticket after we've processed the fill, but before the event, this way everything is ready for user code
-                    tickets[i].AddOrderEvent(orderEvent);
+                    orderEvent.Ticket.AddOrderEvent(orderEvent);
                 }
             }
 
