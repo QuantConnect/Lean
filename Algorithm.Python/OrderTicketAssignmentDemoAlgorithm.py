@@ -30,6 +30,8 @@ class OrderTicketAssignmentDemoAlgorithm(QCAlgorithm):
         self.Consolidate(self.symbol, timedelta(hours=1), self.HourConsolidator)
 
     def HourConsolidator(self, bar: TradeBar):
+        # Reset self.ticket to None on each new bar
+        self.ticket = None
         self.ticket = self.MarketOrder(self.symbol, 1, asynchronous=True)
         self.Debug(f"{self.Time}: Buy: Price {bar.Price}, orderId: {self.ticket.OrderId}")
         self.trade_count += 1
@@ -40,6 +42,8 @@ class OrderTicketAssignmentDemoAlgorithm(QCAlgorithm):
         ticket = orderEvent.Ticket
         if ticket is None:
             raise Exception("Expected order ticket in order event to not be null")
+        if orderEvent.Status == OrderStatus.Submitted and self.ticket is not None:
+            raise Exception("Field self.ticket not expected no be assigned on the first order event")
 
         self.Debug(ticket.ToString())
 

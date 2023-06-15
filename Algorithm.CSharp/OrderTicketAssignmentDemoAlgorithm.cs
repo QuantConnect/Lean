@@ -44,6 +44,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             Consolidate(_symbol, TimeSpan.FromHours(1), (TradeBar bar) =>
             {
+                // Reset _ticket to null on each new bar
+                _ticket = null;
                 _ticket = MarketOrder(_symbol, 1, asynchronous: true);
                 Debug($"{Time}: Buy: Price {bar.Price}, orderId: {_ticket.OrderId}");
                 _tradeCount++;
@@ -58,6 +60,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (ticket == null)
             {
                 throw new Exception("Expected order ticket in order event to not be null");
+            }
+            if (orderEvent.Status == OrderStatus.Submitted && _ticket != null)
+            {
+                throw new Exception("Field _ticket not expected no be assigned on the first order event");
             }
 
             Debug(ticket.ToString());
