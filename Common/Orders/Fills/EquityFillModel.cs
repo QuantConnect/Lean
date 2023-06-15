@@ -16,7 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QLNet;
+
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
@@ -450,8 +450,7 @@ namespace QuantConnect.Orders.Fills
             if (subscribedTypes.Contains(typeof(Tick)))
             {
                 var primaryExchangeCode = ((Equity)asset).PrimaryExchange.Code;
-                var officialOpen = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OfficialOpen);
-                var openingPrints = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OpeningPrints);
+                var openTradeTickFlags = (uint)(TradeConditionFlags.OfficialOpen | TradeConditionFlags.OpeningPrints);
 
                 var trades = asset.Cache.GetAll<Tick>()
                     .Where(x => x.TickType == TickType.Trade && asset.Exchange.DateTimeIsOpen(x.Time))
@@ -459,10 +458,10 @@ namespace QuantConnect.Orders.Fills
 
                 // Get the first valid (non-zero) tick of trade type from an open market
                 var tick = trades
-                    .Where(x => !string.IsNullOrWhiteSpace(x.SaleCondition))
                     .FirstOrDefault(x =>
-                        x.TickType == TickType.Trade && x.ExchangeCode == primaryExchangeCode &&
-                        (x.ParsedSaleCondition == officialOpen || x.ParsedSaleCondition == openingPrints) &&
+                        !string.IsNullOrWhiteSpace(x.SaleCondition) &&
+                        x.ExchangeCode == primaryExchangeCode &&
+                        (x.ParsedSaleCondition & openTradeTickFlags) != 0 &&
                         asset.Exchange.DateTimeIsOpen(x.Time));
 
                 // If there is no OfficialOpen or OpeningPrints in the current list of trades,
@@ -592,8 +591,7 @@ namespace QuantConnect.Orders.Fills
             if (subscribedTypes.Contains(typeof(Tick)))
             {
                 var primaryExchangeCode = ((Equity)asset).PrimaryExchange.Code;
-                var officialClose = (uint)(TradeConditionFlags.Regular | TradeConditionFlags.OfficialClose);
-                var closingPrints = (uint)(TradeConditionFlags.Regular | TradeConditionFlags.ClosingPrints);
+                var closeTradeTickFlags = (uint)(TradeConditionFlags.OfficialClose | TradeConditionFlags.ClosingPrints);
 
                 var trades = asset.Cache.GetAll<Tick>()
                     .Where(x => x.TickType == TickType.Trade)
@@ -601,9 +599,10 @@ namespace QuantConnect.Orders.Fills
 
                 // Get the last valid (non-zero) tick of trade type from an close market
                 var tick = trades
-                    .Where(x => !string.IsNullOrWhiteSpace(x.SaleCondition))
-                    .LastOrDefault(x => x.ExchangeCode == primaryExchangeCode &&
-                        (x.ParsedSaleCondition == officialClose || x.ParsedSaleCondition == closingPrints));
+                    .LastOrDefault(x =>
+                        !string.IsNullOrWhiteSpace(x.SaleCondition) &&
+                        x.ExchangeCode == primaryExchangeCode
+                        && (x.ParsedSaleCondition & closeTradeTickFlags) != 0);
 
                 // If there is no OfficialClose or ClosingPrints in the current list of trades,
                 // we will wait for the next up to 1 minute before accepting the last tick without flags
@@ -915,7 +914,7 @@ namespace QuantConnect.Orders.Fills
         private TradeBar GetBestEffortTradeBar(Security asset, DateTime orderTime)
         {
             TradeBar bestEffortTradeBar = null;
-            
+
             var subscribedTypes = GetSubscribedTypes(asset);
 
             if (subscribedTypes.Contains(typeof(Tick)))
