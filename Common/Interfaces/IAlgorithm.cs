@@ -30,6 +30,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Interfaces
 {
@@ -348,6 +349,11 @@ namespace QuantConnect.Interfaces
         /// Returns the current Slice object
         /// </summary>
         Slice CurrentSlice { get; }
+
+        /// <summary>
+        /// The current running statistics
+        /// </summary>
+        StatisticsResults Statistics { get; }
 
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
@@ -786,5 +792,11 @@ namespace QuantConnect.Interfaces
         /// <param name="symbol">The symbol to get the ticker for</param>
         /// <returns>The mapped ticker for a symbol</returns>
         string Ticker(Symbol symbol);
+
+        /// <summary>
+        /// Sets the statistics service instance to be used by the algorithm
+        /// </summary>
+        /// <param name="statisticsService">The statistics service instance</param>
+        void SetStatisticsService(IStatisticsService statisticsService);
     }
 }

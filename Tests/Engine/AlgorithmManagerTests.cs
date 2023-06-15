@@ -38,6 +38,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Statistics;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Engine
@@ -254,6 +255,11 @@ namespace QuantConnect.Tests.Engine
 
             public void SetDataManager(IDataFeedSubscriptionManager dataManager)
             {
+            }
+
+            public StatisticsResults StatisticsResults()
+            {
+                return new StatisticsResults();
             }
         }
 

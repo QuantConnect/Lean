@@ -338,7 +338,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var charts = new Dictionary<string, Chart>(Charts);
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                     var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                    var statisticsResults = GenerateStatisticsResults(charts, profitLoss, _capacityEstimate);
+                    var statisticsResults = GetStatisticsResults(charts, profitLoss, _capacityEstimate);
                     var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary, capacityEstimate: _capacityEstimate);
 
                     FinalStatistics = statisticsResults.Summary;
@@ -392,6 +392,7 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
+            Algorithm.SetStatisticsService(this);
             StartingPortfolioValue = startingPortfolioValue;
             DailyPortfolioValue = StartingPortfolioValue;
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
@@ -551,6 +552,8 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     series.AddPoint(time, value);
                 }
+
+                InvalidateStatistics();
             }
         }
 
@@ -617,6 +620,8 @@ namespace QuantConnect.Lean.Engine.Results
                         }
                     }
                 }
+
+                InvalidateStatistics();
             }
         }
 
@@ -695,6 +700,7 @@ namespace QuantConnect.Lean.Engine.Results
             if (Algorithm == null) return;
 
             _capacityEstimate.UpdateMarketCapacity(forceProcess);
+            InvalidateStatistics();
 
             // Invalidate the processed days count so it gets recalculated
             _progressMonitor.InvalidateProcessedDays();
@@ -743,6 +749,15 @@ namespace QuantConnect.Lean.Engine.Results
                 Console.SetOut(new FuncTextWriter(msg => Log.Trace(msg)));
                 Console.SetError(new FuncTextWriter(msg => Log.Error(msg)));
             }
+        }
+
+        /// <summary>
+        /// Calculates and get the current running statistics for the algorithm
+        /// </summary>
+        /// <returns>The current running statistics</returns>
+        public StatisticsResults StatisticsResults()
+        {
+            return GetStatisticsResults(capacityEstimate: _capacityEstimate);
         }
     }
 }

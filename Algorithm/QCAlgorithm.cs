@@ -576,6 +576,33 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(MachineLearning)]
         public ObjectStore ObjectStore { get; private set; }
 
+        // TODO: Move this to the top
+        private IStatisticsService _statisticsService;
+
+        //TODO: Move this to a better/more appropiate place
+        /// <summary>
+        /// Sets the statistics service instance to be used by the algorithm
+        /// </summary>
+        /// <param name="statisticsService">The statistics service instance</param>
+        public void SetStatisticsService(IStatisticsService statisticsService)
+        {
+            if (_statisticsService == null)
+            {
+                _statisticsService = statisticsService;
+            }
+        }
+
+        /// <summary>
+        /// The current running statistics
+        /// </summary>
+        public StatisticsResults Statistics
+        {
+            get
+            {
+                return _statisticsService?.StatisticsResults() ?? new StatisticsResults();
+            }
+        }
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>

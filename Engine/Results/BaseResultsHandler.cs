@@ -834,6 +834,46 @@ namespace QuantConnect.Lean.Engine.Results
             return statisticsResults;
         }
 
+        // TODO: Move these to their corresponding places
+        private object _statisticsLock = new();
+
+        private bool _recalculateStatistics;
+
+        /// <summary>
+        /// Invalidate the statistics so they are recalculated on the next request
+        /// </summary>
+        protected void InvalidateStatistics()
+        {
+            lock (_statisticsLock)
+            {
+                _recalculateStatistics = true;
+            }
+        }
+
+        private StatisticsResults _statistics = new();
+
+        /// <summary>
+        /// Gets the current statistics results for the algorithm, re-calculating them if necessary.
+        /// </summary>
+        protected StatisticsResults GetStatisticsResults(Dictionary<string, Chart> charts = null,
+            SortedDictionary<DateTime, decimal> profitLoss = null, CapacityEstimate capacityEstimate = null)
+        {
+            // TODO: is this lock necessary?
+            lock (_statisticsLock)
+            {
+                // could happen if algorithm failed to init
+                if (Algorithm != null && _recalculateStatistics)
+                {
+                    var chartsToUse = charts ?? new Dictionary<string, Chart>(Charts);
+                    var profitLossToUse = profitLoss ?? new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
+                    _statistics = GenerateStatisticsResults(chartsToUse, profitLossToUse, capacityEstimate);
+                    _recalculateStatistics = false;
+                }
+
+                return _statistics;
+            }
+        }
+
         /// <summary>
         /// Save an algorithm message to the log store. Uses a different timestamped method of adding messaging to interweve debug and logging messages.
         /// </summary>

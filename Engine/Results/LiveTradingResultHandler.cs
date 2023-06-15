@@ -642,6 +642,8 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Add our value:
                 Charts[chartName].Series[seriesName].Values.Add(new ChartPoint(time, value));
+
+                InvalidateStatistics();
             }
             Log.Debug("LiveTradingResultHandler.Sample(): Done sampling " + chartName + "." + seriesName);
         }
@@ -705,6 +707,8 @@ namespace QuantConnect.Lean.Engine.Results
                         }
                     }
                 }
+
+                InvalidateStatistics();
             }
             Log.Debug("LiveTradingResultHandler.SampleRange(): Finished sampling");
         }
@@ -717,6 +721,7 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
+            Algorithm.SetStatisticsService(this);
             DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
             _portfolioValue = new ReferenceWrapper<decimal>(startingPortfolioValue);
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
@@ -1270,6 +1275,15 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             return holdings;
+        }
+
+        /// <summary>
+        /// Calculates and get the current running statistics for the algorithm
+        /// </summary>
+        /// <returns>The current running statistics</returns>
+        public StatisticsResults StatisticsResults()
+        {
+            return GetStatisticsResults();
         }
     }
 }

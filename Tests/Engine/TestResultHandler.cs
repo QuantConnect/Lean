@@ -24,6 +24,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine
@@ -196,6 +197,11 @@ namespace QuantConnect.Tests.Engine
 
         public void ProcessSynchronousEvents(bool forceProcess = false)
         {
+        }
+
+        public StatisticsResults StatisticsResults()
+        {
+            return new StatisticsResults();
         }
     }
 }
