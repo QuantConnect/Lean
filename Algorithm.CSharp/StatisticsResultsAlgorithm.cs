@@ -13,12 +13,14 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -28,6 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class StatisticsResultsAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private const string MostTradedSecurityStatistic = "Most Traded Security";
+        private const string MostTradedSecurityTradeCountStatistic = "Most Traded Security Trade Count";
+
         private Symbol _spy;
 
         private Symbol _ibm;
@@ -39,6 +44,8 @@ namespace QuantConnect.Algorithm.CSharp
         private ExponentialMovingAverage _fastIbmEma;
 
         private ExponentialMovingAverage _slowIbmEma;
+
+        private Dictionary<Symbol, int> _tradeCounts = new();
 
         public override void Initialize()
         {
@@ -79,9 +86,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(Orders.OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (orderEvent.Status == Orders.OrderStatus.Filled)
+            if (orderEvent.Status == OrderStatus.Filled)
             {
                 // We can access the statistics summary at runtime
                 var statistics = Statistics.Summary;
@@ -91,6 +98,63 @@ namespace QuantConnect.Algorithm.CSharp
                 // Access a single statistic
                 Log($"Total trades so far: {statistics[PerformanceMetrics.TotalTrades]}");
                 Log($"Sharpe Ratio: {statistics[PerformanceMetrics.SharpeRatio]}");
+
+                // --------
+
+                // We can also set custom summary statistics:
+
+                KeyValuePair<Symbol, int> mostTradeSecurityKvp;
+
+                // Before the first fill event, our custom statistics should not be set in the summary
+                if (_tradeCounts.All(kvp => kvp.Value == 0))
+                {
+                    if (statistics.ContainsKey(MostTradedSecurityStatistic))
+                    {
+                        throw new Exception($"Statistic {MostTradedSecurityStatistic} should not be set yet");
+                    }
+                    if (statistics.ContainsKey(MostTradedSecurityTradeCountStatistic))
+                    {
+                        throw new Exception($"Statistic {MostTradedSecurityTradeCountStatistic} should not be set yet");
+                    }
+                }
+                else
+                {
+                    // The current most traded security should be set in the summary
+                    mostTradeSecurityKvp = _tradeCounts.MaxBy(kvp => kvp.Value);
+                    CheckMostTradedSecurityStatistic(statistics, mostTradeSecurityKvp.Key, mostTradeSecurityKvp.Value);
+                }
+
+                // Update the trade count
+                var tradeCount = _tradeCounts.GetValueOrDefault(orderEvent.Symbol);
+                _tradeCounts[orderEvent.Symbol] = tradeCount + 1;
+
+                // Set the most traded security
+                mostTradeSecurityKvp = _tradeCounts.MaxBy(kvp => kvp.Value);
+                SetSummaryStatistic(MostTradedSecurityStatistic, mostTradeSecurityKvp.Key);
+                SetSummaryStatistic(MostTradedSecurityTradeCountStatistic, mostTradeSecurityKvp.Value);
+
+                // Re-calculate statistics:
+                statistics = Statistics.Summary;
+
+                // Let's keep track of our custom summary statistics after the update
+                CheckMostTradedSecurityStatistic(statistics, mostTradeSecurityKvp.Key, mostTradeSecurityKvp.Value);
+            }
+        }
+
+        private void CheckMostTradedSecurityStatistic(Dictionary<string, string> statistics, Symbol mostTradedSecurity, int tradeCount)
+        {
+            var mostTradedSecurityStatistic = statistics[MostTradedSecurityStatistic];
+            var mostTradedSecurityTradeCountStatistic = statistics[MostTradedSecurityTradeCountStatistic];
+            Log($"Most traded security: {mostTradedSecurityStatistic}");
+            Log($"Most traded security trade count: {mostTradedSecurityTradeCountStatistic}");
+
+            if (mostTradedSecurityStatistic != mostTradedSecurity)
+            {
+                throw new Exception($"Most traded security should be {mostTradedSecurity} but it is {mostTradedSecurityStatistic}");
+            }
+            if (mostTradedSecurityTradeCountStatistic != tradeCount.ToStringInvariant())
+            {
+                throw new Exception($"Most traded security trade count should be {tradeCount} but it is {mostTradedSecurityTradeCountStatistic}");
             }
         }
 

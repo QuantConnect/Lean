@@ -261,6 +261,10 @@ namespace QuantConnect.Tests.Engine
             {
                 return new StatisticsResults();
             }
+
+            public void SetSummaryStatistic(string name, string value)
+            {
+            }
         }
 
         class NullRealTimeHandler : IRealTimeHandler

@@ -43,6 +43,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _previousPortfolioTurnoverSample;
         private bool _packetDroppedWarning;
         private int _logCount;
+        private ConcurrentDictionary<string, string> _customSummaryStatistics;
         // used for resetting out/error upon completion
         private static readonly TextWriter StandardOut = Console.Out;
         private static readonly TextWriter StandardError = Console.Error;
@@ -243,6 +244,7 @@ namespace QuantConnect.Lean.Engine.Results
             };
             _previousSalesVolume = new (2);
             _previousSalesVolume.Add(0);
+            _customSummaryStatistics = new();
         }
 
         /// <summary>
@@ -824,6 +826,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performance.Values, benchmark.Values, portfolioTurnover.Values,
                         StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions, estimatedStrategyCapacity, AlgorithmCurrencySymbol);
+                    statisticsResults.AddCustomSummaryStatistics(_customSummaryStatistics);
                 }
             }
             catch (Exception err)
@@ -930,6 +933,16 @@ namespace QuantConnect.Lean.Engine.Results
                 // increase count after we add
                 currentMessageCount++;
             }
+        }
+
+        /// <summary>
+        /// Sets or updates a custom summary statistic
+        /// </summary>
+        /// <param name="name">The statistic name</param>
+        /// <param name="value">The statistic value</param>
+        protected void SummaryStatistic(string name, string value)
+        {
+            _customSummaryStatistics.AddOrUpdate(name, value);
         }
     }
 }

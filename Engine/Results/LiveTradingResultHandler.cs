@@ -1281,5 +1281,15 @@ namespace QuantConnect.Lean.Engine.Results
         {
             return GenerateStatisticsResults();
         }
+
+        /// <summary>
+        /// Sets or updates a custom summary statistic
+        /// </summary>
+        /// <param name="name">The statistic name</param>
+        /// <param name="value">The statistic value</param>
+        public void SetSummaryStatistic(string name, string value)
+        {
+            SummaryStatistic(name, value);
+        }
     }
 }

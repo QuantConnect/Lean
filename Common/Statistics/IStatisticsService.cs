@@ -29,5 +29,12 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <returns>The current statistics</returns>
         StatisticsResults StatisticsResults();
+
+        /// <summary>
+        /// Sets or updates a custom summary statistic
+        /// </summary>
+        /// <param name="name">The statistic name</param>
+        /// <param name="value">The statistic value</param>
+        void SetSummaryStatistic(string name, string value);
     }
 }
