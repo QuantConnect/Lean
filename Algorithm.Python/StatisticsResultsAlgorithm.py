@@ -89,6 +89,15 @@ class StatisticsResultsAlgorithm(QCAlgorithm):
             # Let's keep track of our custom summary statistics after the update
             self.CheckMostTradedSecurityStatistic(statistics, most_trade_security, most_trade_security_trade_count)
 
+    def OnEndOfAlgorithm(self):
+        statistics = self.Statistics.Summary
+        if StatisticsResultsAlgorithm.MostTradedSecurityStatistic not in statistics:
+            raise Exception(f"Statistic {StatisticsResultsAlgorithm.MostTradedSecurityStatistic} should be in the summary statistics")
+        if StatisticsResultsAlgorithm.MostTradedSecurityTradeCountStatistic not in statistics:
+            raise Exception(f"Statistic {StatisticsResultsAlgorithm.MostTradedSecurityTradeCountStatistic} should be in the summary statistics")
+
+        most_trade_security, most_trade_security_trade_count = self.GetMostTradeSecurity()
+        self.CheckMostTradedSecurityStatistic(statistics, most_trade_security, most_trade_security_trade_count)
 
     def CheckMostTradedSecurityStatistic(self, statistics: Dict[str, str], mostTradedSecurity: Symbol, tradeCount: int):
         mostTradedSecurityStatistic = statistics[StatisticsResultsAlgorithm.MostTradedSecurityStatistic]

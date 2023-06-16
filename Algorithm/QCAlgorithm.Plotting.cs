@@ -338,6 +338,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="name">Name of the custom summary statistic</param>
         /// <param name="value">Value of the custom summary statistic</param>
+        [DocumentationAttribute(StatisticsTag)]
         public void SetSummaryStatistic(string name, string value)
         {
             _statisticsService.SetSummaryStatistic(name, value);
@@ -348,6 +349,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="name">Name of the custom summary statistic</param>
         /// <param name="value">Value of the custom summary statistic</param>
+        [DocumentationAttribute(StatisticsTag)]
         public void SetSummaryStatistic(string name, int value)
         {
             _statisticsService.SetSummaryStatistic(name, value.ToStringInvariant());
@@ -358,6 +360,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="name">Name of the custom summary statistic</param>
         /// <param name="value">Value of the custom summary statistic</param>
+        [DocumentationAttribute(StatisticsTag)]
         public void SetSummaryStatistic(string name, double value)
         {
             _statisticsService.SetSummaryStatistic(name, value.ToStringInvariant());
@@ -368,6 +371,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="name">Name of the custom summary statistic</param>
         /// <param name="value">Value of the custom summary statistic</param>
+        [DocumentationAttribute(StatisticsTag)]
         public void SetSummaryStatistic(string name, decimal value)
         {
             _statisticsService.SetSummaryStatistic(name, value.ToStringInvariant());

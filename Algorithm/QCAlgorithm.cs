@@ -3085,6 +3085,7 @@ namespace QuantConnect.Algorithm
         /// Sets the statistics service instance to be used by the algorithm
         /// </summary>
         /// <param name="statisticsService">The statistics service instance</param>
+        [DocumentationAttribute(StatisticsTag)]
         public void SetStatisticsService(IStatisticsService statisticsService)
         {
             if (_statisticsService == null)

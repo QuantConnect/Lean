@@ -141,6 +141,21 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnEndOfAlgorithm()
+        {
+            var statistics = Statistics.Summary;
+            if (!statistics.ContainsKey(MostTradedSecurityStatistic))
+            {
+                throw new Exception($"Statistic {MostTradedSecurityStatistic} should be in the summary statistics");
+            }
+            if (!statistics.ContainsKey(MostTradedSecurityTradeCountStatistic))
+            {
+                throw new Exception($"Statistic {MostTradedSecurityTradeCountStatistic} should be in the summary statistics");
+            }
+            var mostTradeSecurityKvp = _tradeCounts.MaxBy(kvp => kvp.Value);
+            CheckMostTradedSecurityStatistic(statistics, mostTradeSecurityKvp.Key, mostTradeSecurityKvp.Value);
+        }
+
         private void CheckMostTradedSecurityStatistic(Dictionary<string, string> statistics, Symbol mostTradedSecurity, int tradeCount)
         {
             var mostTradedSecurityStatistic = statistics[MostTradedSecurityStatistic];

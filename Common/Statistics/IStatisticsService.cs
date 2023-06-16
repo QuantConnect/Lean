@@ -21,7 +21,6 @@ namespace QuantConnect.Statistics
     /// <summary>
     /// This interface exposes methods for accessing algorithm statistics results at runtime.
     /// </summary>
-    [InheritedExport(typeof(IStatisticsService))]
     public interface IStatisticsService
     {
         /// <summary>
