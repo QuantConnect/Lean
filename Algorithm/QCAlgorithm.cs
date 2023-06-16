@@ -77,6 +77,7 @@ namespace QuantConnect.Algorithm
         const string SecuritiesAndPortfolio = "Securities and Portfolio";
         const string TradingAndOrders = "Trading and Orders";
         const string Universes = "Universes";
+        const string StatisticsTag = "Statistics";
         #endregion
 
         private readonly TimeKeeper _timeKeeper;
@@ -580,6 +581,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// The current statistics for the running algorithm.
         /// </summary>
+        [DocumentationAttribute(StatisticsTag)]
         public StatisticsResults Statistics
         {
             get
