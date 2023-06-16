@@ -17,6 +17,7 @@ using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
+using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 
@@ -27,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <meta name="tag" content="transaction fees and slippage" />
     /// <meta name="tag" content="custom fill models" />
-    public class CustomPartialFillModelAlgorithm : QCAlgorithm
+    public class CustomPartialFillModelAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
         private SecurityHolding _holdings;
@@ -89,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // Set this fill amount
                 fill.FillQuantity = Math.Sign(order.Quantity) * 10;
 
-                if (absoluteRemaining == fill.FillQuantity)
+                if (absoluteRemaining == Math.Abs(fill.FillQuantity))
                 {
                     fill.Status = OrderStatus.Filled;
                     _absoluteRemainingByOrderId.Remove(order.Id);
@@ -97,12 +98,63 @@ namespace QuantConnect.Algorithm.CSharp
                 else
                 {
                     fill.Status = OrderStatus.PartiallyFilled;
-                    _absoluteRemainingByOrderId[order.Id] = absoluteRemaining - fill.FillQuantity;
+                    _absoluteRemainingByOrderId[order.Id] = absoluteRemaining - Math.Abs(fill.FillQuantity);
                     var price = fill.FillPrice;
                     _algorithm.Debug($"{_algorithm.Time} - Partial Fill - Remaining {absoluteRemaining} Price - {price}");
                 }
                 return fill;
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 582;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "25"},
+            {"Average Win", "0.03%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "7.374%"},
+            {"Drawdown", "0.500%"},
+            {"Expectancy", "0.979"},
+            {"Net Profit", "1.170%"},
+            {"Sharpe Ratio", "3.145"},
+            {"Probabilistic Sharpe Ratio", "86.532%"},
+            {"Loss Rate", "40%"},
+            {"Win Rate", "60%"},
+            {"Profit-Loss Ratio", "2.31"},
+            {"Alpha", "0.004"},
+            {"Beta", "0.073"},
+            {"Annual Standard Deviation", "0.016"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-5.354"},
+            {"Tracking Error", "0.111"},
+            {"Treynor Ratio", "0.697"},
+            {"Total Fees", "$25.00"},
+            {"Estimated Strategy Capacity", "$29000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Portfolio Turnover", "10.74%"},
+            {"OrderListHash", "528a768635ab9c8e8acf543858cd09b7"}
+        };
     }
 }
