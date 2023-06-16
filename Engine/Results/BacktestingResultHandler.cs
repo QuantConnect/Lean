@@ -752,16 +752,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <returns>The current statistics</returns>
         public StatisticsResults StatisticsResults()
         {
-            // could happen if algorithm failed to init
-            if (Algorithm == null)
-            {
-                return new StatisticsResults();
-            }
-
-            var charts = new Dictionary<string, Chart>(Charts);
-            var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-
-            return GenerateStatisticsResults(charts, profitLoss, _capacityEstimate);
+            return GenerateStatisticsResults(_capacityEstimate);
         }
     }
 }

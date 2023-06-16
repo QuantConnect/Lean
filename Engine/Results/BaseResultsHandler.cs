@@ -835,6 +835,30 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Calculates and gets the current statistics for the algorithm.
+        /// It will use the current <see cref="Charts"/> and profit loss information calculated from the current transaction record
+        /// to generate the results.
+        /// </summary>
+        /// <returns>The current statistics</returns>
+        protected StatisticsResults GenerateStatisticsResults(CapacityEstimate estimatedStrategyCapacity = null)
+        {
+            // could happen if algorithm failed to init
+            if (Algorithm == null)
+            {
+                return new StatisticsResults();
+            }
+
+            Dictionary<string, Chart> charts;
+            lock (ChartLock)
+            {
+                charts = new(Charts);
+            }
+            var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
+
+            return GenerateStatisticsResults(charts, profitLoss, estimatedStrategyCapacity);
+        }
+
+        /// <summary>
         /// Save an algorithm message to the log store. Uses a different timestamped method of adding messaging to interweve debug and logging messages.
         /// </summary>
         /// <param name="message">String message to store</param>
