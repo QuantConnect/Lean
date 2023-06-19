@@ -392,6 +392,7 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
+            Algorithm.SetStatisticsService(this);
             StartingPortfolioValue = startingPortfolioValue;
             DailyPortfolioValue = StartingPortfolioValue;
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
@@ -743,6 +744,25 @@ namespace QuantConnect.Lean.Engine.Results
                 Console.SetOut(new FuncTextWriter(msg => Log.Trace(msg)));
                 Console.SetError(new FuncTextWriter(msg => Log.Error(msg)));
             }
+        }
+
+        /// <summary>
+        /// Calculates and gets the current statistics for the algorithm
+        /// </summary>
+        /// <returns>The current statistics</returns>
+        public StatisticsResults StatisticsResults()
+        {
+            return GenerateStatisticsResults(_capacityEstimate);
+        }
+
+        /// <summary>
+        /// Sets or updates a custom summary statistic
+        /// </summary>
+        /// <param name="name">The statistic name</param>
+        /// <param name="value">The statistic value</param>
+        public void SetSummaryStatistic(string name, string value)
+        {
+            SummaryStatistic(name, value);
         }
     }
 }

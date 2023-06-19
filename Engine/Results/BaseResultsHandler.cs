@@ -43,6 +43,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _previousPortfolioTurnoverSample;
         private bool _packetDroppedWarning;
         private int _logCount;
+        private ConcurrentDictionary<string, string> _customSummaryStatistics;
         // used for resetting out/error upon completion
         private static readonly TextWriter StandardOut = Console.Out;
         private static readonly TextWriter StandardError = Console.Error;
@@ -243,6 +244,7 @@ namespace QuantConnect.Lean.Engine.Results
             };
             _previousSalesVolume = new (2);
             _previousSalesVolume.Add(0);
+            _customSummaryStatistics = new();
         }
 
         /// <summary>
@@ -825,6 +827,8 @@ namespace QuantConnect.Lean.Engine.Results
                     statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performance.Values, benchmark.Values, portfolioTurnover.Values,
                         StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions, estimatedStrategyCapacity, AlgorithmCurrencySymbol);
                 }
+
+                statisticsResults.AddCustomSummaryStatistics(_customSummaryStatistics);
             }
             catch (Exception err)
             {
@@ -832,6 +836,30 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             return statisticsResults;
+        }
+
+        /// <summary>
+        /// Calculates and gets the current statistics for the algorithm.
+        /// It will use the current <see cref="Charts"/> and profit loss information calculated from the current transaction record
+        /// to generate the results.
+        /// </summary>
+        /// <returns>The current statistics</returns>
+        protected StatisticsResults GenerateStatisticsResults(CapacityEstimate estimatedStrategyCapacity = null)
+        {
+            // could happen if algorithm failed to init
+            if (Algorithm == null)
+            {
+                return new StatisticsResults();
+            }
+
+            Dictionary<string, Chart> charts;
+            lock (ChartLock)
+            {
+                charts = new(Charts);
+            }
+            var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
+
+            return GenerateStatisticsResults(charts, profitLoss, estimatedStrategyCapacity);
         }
 
         /// <summary>
@@ -906,6 +934,16 @@ namespace QuantConnect.Lean.Engine.Results
                 // increase count after we add
                 currentMessageCount++;
             }
+        }
+
+        /// <summary>
+        /// Sets or updates a custom summary statistic
+        /// </summary>
+        /// <param name="name">The statistic name</param>
+        /// <param name="value">The statistic value</param>
+        protected void SummaryStatistic(string name, string value)
+        {
+            _customSummaryStatistics.AddOrUpdate(name, value);
         }
     }
 }

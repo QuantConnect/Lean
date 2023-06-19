@@ -334,6 +334,50 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Set a custom summary statistic for the algorithm.
+        /// </summary>
+        /// <param name="name">Name of the custom summary statistic</param>
+        /// <param name="value">Value of the custom summary statistic</param>
+        [DocumentationAttribute(StatisticsTag)]
+        public void SetSummaryStatistic(string name, string value)
+        {
+            _statisticsService.SetSummaryStatistic(name, value);
+        }
+
+        /// <summary>
+        /// Set a custom summary statistic for the algorithm.
+        /// </summary>
+        /// <param name="name">Name of the custom summary statistic</param>
+        /// <param name="value">Value of the custom summary statistic</param>
+        [DocumentationAttribute(StatisticsTag)]
+        public void SetSummaryStatistic(string name, int value)
+        {
+            _statisticsService.SetSummaryStatistic(name, value.ToStringInvariant());
+        }
+
+        /// <summary>
+        /// Set a custom summary statistic for the algorithm.
+        /// </summary>
+        /// <param name="name">Name of the custom summary statistic</param>
+        /// <param name="value">Value of the custom summary statistic</param>
+        [DocumentationAttribute(StatisticsTag)]
+        public void SetSummaryStatistic(string name, double value)
+        {
+            _statisticsService.SetSummaryStatistic(name, value.ToStringInvariant());
+        }
+
+        /// <summary>
+        /// Set a custom summary statistic for the algorithm.
+        /// </summary>
+        /// <param name="name">Name of the custom summary statistic</param>
+        /// <param name="value">Value of the custom summary statistic</param>
+        [DocumentationAttribute(StatisticsTag)]
+        public void SetSummaryStatistic(string name, decimal value)
+        {
+            _statisticsService.SetSummaryStatistic(name, value.ToStringInvariant());
+        }
+
+        /// <summary>
         /// Get the chart updates by fetch the recent points added and return for dynamic Charting.
         /// </summary>
         /// <param name="clearChartData"></param>
