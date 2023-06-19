@@ -826,13 +826,14 @@ namespace QuantConnect.Lean.Engine.Results
 
                     statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performance.Values, benchmark.Values, portfolioTurnover.Values,
                         StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions, estimatedStrategyCapacity, AlgorithmCurrencySymbol);
-                    statisticsResults.AddCustomSummaryStatistics(_customSummaryStatistics);
                 }
             }
             catch (Exception err)
             {
                 Log.Error(err, "BaseResultsHandler.GenerateStatisticsResults(): Error generating statistics packet");
             }
+
+            statisticsResults.AddCustomSummaryStatistics(_customSummaryStatistics);
 
             return statisticsResults;
         }
