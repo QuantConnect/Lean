@@ -23,6 +23,8 @@ using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Tests.Engine.DataFeeds;
+using Moq;
+using static QuantConnect.Tests.Engine.PerformanceBenchmarkAlgorithms;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -211,16 +213,53 @@ class Test(AlphaStreamsBrokerageModel):
             Assert.AreEqual(Market.Oanda, oandaSecurity.Symbol.ID.Market);
         }
 
-        [Test]
-        public void BrokerageNameFollowsSetBrokerageModel()
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void BrokerageNameFollowsSetBrokerageModel(Language language)
         {
-            Assert.AreEqual(BrokerageName.Default, _algo.BrokerageName);
+            if (language == Language.CSharp)
+            {
+                Assert.AreEqual(BrokerageName.Default, _algo.BrokerageName);
 
-            _algo.SetBrokerageModel(BrokerageName.OandaBrokerage);
-            Assert.AreEqual(BrokerageName.OandaBrokerage, _algo.BrokerageName);
+                _algo.SetBrokerageModel(BrokerageName.OandaBrokerage);
+                Assert.AreEqual(BrokerageName.OandaBrokerage, _algo.BrokerageName);
 
-            _algo.SetBrokerageModel(new InteractiveBrokersBrokerageModel());
-            Assert.AreEqual(BrokerageName.InteractiveBrokersBrokerage, _algo.BrokerageName);
+                _algo.SetBrokerageModel(new InteractiveBrokersBrokerageModel());
+                Assert.AreEqual(BrokerageName.InteractiveBrokersBrokerage, _algo.BrokerageName);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var testModule = PyModule.FromString("testModule",
+                        @"
+from AlgorithmImports import *
+
+def getAlgorithm():
+    return QCAlgorithm()
+
+def setBrokerageModel(algorithm, brokerageModel):
+    algorithm.SetBrokerageModel(brokerageModel)
+
+def getBrokerageName(algorithm):
+    return algorithm.BrokerageName
+        ");
+
+                    var getAlgorithm = testModule.GetAttr("getAlgorithm");
+                    var algorithm = getAlgorithm.Invoke();
+
+                    var setBrokerageModel = testModule.GetAttr("setBrokerageModel");
+                    var getBrokerageName = testModule.GetAttr("getBrokerageName");
+
+                    Assert.AreEqual(BrokerageName.Default, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+
+                    setBrokerageModel.Invoke(algorithm, BrokerageName.OandaBrokerage.ToPython());
+                    Assert.AreEqual(BrokerageName.OandaBrokerage, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+
+                    setBrokerageModel.Invoke(algorithm, new InteractiveBrokersBrokerageModel().ToPython());
+                    Assert.AreEqual(BrokerageName.InteractiveBrokersBrokerage, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+                }
+            }
         }
 
         /// <summary>
