@@ -23,8 +23,12 @@ using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Tests.Engine.DataFeeds;
-using Moq;
-using static QuantConnect.Tests.Engine.PerformanceBenchmarkAlgorithms;
+using QuantConnect.Securities;
+using QuantConnect.Benchmarks;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders.Slippage;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -226,6 +230,9 @@ class Test(AlphaStreamsBrokerageModel):
 
                 _algo.SetBrokerageModel(new InteractiveBrokersBrokerageModel());
                 Assert.AreEqual(BrokerageName.InteractiveBrokersBrokerage, _algo.BrokerageName);
+
+                _algo.SetBrokerageModel(new CustomBrokerageModel());
+                Assert.AreEqual(BrokerageName.Default, _algo.BrokerageName);
             }
             else
             {
@@ -258,6 +265,9 @@ def getBrokerageName(algorithm):
 
                     setBrokerageModel.Invoke(algorithm, new InteractiveBrokersBrokerageModel().ToPython());
                     Assert.AreEqual(BrokerageName.InteractiveBrokersBrokerage, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+
+                    setBrokerageModel.Invoke(algorithm, new CustomBrokerageModel().ToPython());
+                    Assert.AreEqual(BrokerageName.Default, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
                 }
             }
         }
@@ -272,6 +282,90 @@ def getBrokerageName(algorithm):
             string brokerage;
             _algo.BrokerageModel.DefaultMarkets.TryGetValue(secType, out brokerage);
             return brokerage;
+        }
+
+        private class CustomBrokerageModel : IBrokerageModel
+        {
+            public AccountType AccountType => throw new System.NotImplementedException();
+
+            public decimal RequiredFreeBuyingPowerPercent => throw new System.NotImplementedException();
+
+            public IReadOnlyDictionary<SecurityType, string> DefaultMarkets => throw new System.NotImplementedException();
+
+            public void ApplySplit(List<OrderTicket> tickets, Split split)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public bool CanExecuteOrder(Security security, Order order)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IBenchmark GetBenchmark(SecurityManager securities)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IBuyingPowerModel GetBuyingPowerModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IFeeModel GetFeeModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IFillModel GetFillModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public decimal GetLeverage(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IMarginInterestRateModel GetMarginInterestRateModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public ISettlementModel GetSettlementModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public ISettlementModel GetSettlementModel(Security security, AccountType accountType)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IShortableProvider GetShortableProvider()
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public ISlippageModel GetSlippageModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
         }
     }
 }

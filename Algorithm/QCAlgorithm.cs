@@ -93,6 +93,7 @@ namespace QuantConnect.Algorithm
         private ConcurrentQueue<string> _logMessages = new ConcurrentQueue<string>();
         private ConcurrentQueue<string> _errorMessages = new ConcurrentQueue<string>();
         private IStatisticsService _statisticsService;
+        private IBrokerageModel _brokerageModel;
 
         //Error tracking to avoid message flooding:
         private string _previousDebugMessage = "";
@@ -287,8 +288,22 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Modeling)]
         public IBrokerageModel BrokerageModel
         {
-            get;
-            private set;
+            get
+            {
+                return _brokerageModel;
+            }
+            private set
+            {
+                _brokerageModel = value;
+                try
+                {
+                    BrokerageName = Brokerages.BrokerageModel.GetBrokerageName(_brokerageModel);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    BrokerageName = BrokerageName.Default;
+                }
+            }
         }
 
         /// <summary>
@@ -1194,7 +1209,6 @@ namespace QuantConnect.Algorithm
         public void SetBrokerageModel(IBrokerageModel model)
         {
             BrokerageModel = model;
-            BrokerageName = Brokerages.BrokerageModel.GetBrokerageName(model);
             if (!_userSetSecurityInitializer)
             {
                 // purposefully use the direct setter vs Set method so we don't flip the switch :/
