@@ -211,6 +211,18 @@ class Test(AlphaStreamsBrokerageModel):
             Assert.AreEqual(Market.Oanda, oandaSecurity.Symbol.ID.Market);
         }
 
+        [Test]
+        public void BrokerageNameFollowsSetBrokerageModel()
+        {
+            Assert.AreEqual(BrokerageName.Default, _algo.BrokerageName);
+
+            _algo.SetBrokerageModel(BrokerageName.OandaBrokerage);
+            Assert.AreEqual(BrokerageName.OandaBrokerage, _algo.BrokerageName);
+
+            _algo.SetBrokerageModel(new InteractiveBrokersBrokerageModel());
+            Assert.AreEqual(BrokerageName.InteractiveBrokersBrokerage, _algo.BrokerageName);
+        }
+
         /// <summary>
         /// Returns the default market for a security type
         /// </summary>

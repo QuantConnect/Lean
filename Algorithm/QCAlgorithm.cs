@@ -163,7 +163,7 @@ namespace QuantConnect.Algorithm
             Portfolio = new SecurityPortfolioManager(Securities, Transactions, Settings, DefaultOrderProperties);
             SignalExport = new SignalExportManager(this);
 
-            BrokerageModel = new DefaultBrokerageModel();
+            SetBrokerageModel(new DefaultBrokerageModel());
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
             //Initialise to unlocked:
@@ -286,6 +286,16 @@ namespace QuantConnect.Algorithm
         /// </summary>
         [DocumentationAttribute(Modeling)]
         public IBrokerageModel BrokerageModel
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the brokerage name.
+        /// </summary>
+        [DocumentationAttribute(Modeling)]
+        public BrokerageName BrokerageName
         {
             get;
             private set;
@@ -1184,6 +1194,7 @@ namespace QuantConnect.Algorithm
         public void SetBrokerageModel(IBrokerageModel model)
         {
             BrokerageModel = model;
+            BrokerageName = Brokerages.BrokerageModel.GetBrokerageName(model);
             if (!_userSetSecurityInitializer)
             {
                 // purposefully use the direct setter vs Set method so we don't flip the switch :/
