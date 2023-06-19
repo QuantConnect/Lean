@@ -21,8 +21,8 @@ class CustomPartialFillModelAlgorithm(QCAlgorithm):
     '''Basic template algorithm that implements a fill model with partial fills'''
 
     def Initialize(self):
-        self.SetStartDate(2019,1,1)
-        self.SetEndDate(2019,3,1)
+        self.SetStartDate(2019, 1, 1)
+        self.SetEndDate(2019, 3, 1)
 
         equity = self.AddEquity("SPY", Resolution.Hour)
         self.spy = equity.Symbol
@@ -37,7 +37,7 @@ class CustomPartialFillModelAlgorithm(QCAlgorithm):
         if len(open_orders) != 0: return
 
         if self.Time.day > 10 and self.holdings.Quantity <= 0:
-            self.MarketOrder(self.spy, 100, True)
+            self.MarketOrder(self.spy, 105, True)
 
         elif self.Time.day > 20 and self.holdings.Quantity >= 0:
             self.MarketOrder(self.spy, -100, True)
@@ -56,16 +56,18 @@ class CustomPartialFillModel(FillModel):
         # Create the object
         fill = super().MarketFill(asset, order)
 
-        # Set this fill amount
-        fill.FillQuantity = np.sign(order.Quantity) * 10
+        # Set the fill amount to the maximum 10-multiple smaller than the order.Quantity for long orders
+        # Set the fill amount to the minimum 10-multiple greater than the order.Quantity for short orders
+        fill.FillQuantity = np.sign(order.Quantity) * 10 * math.floor(abs(order.Quantity) / 10)
 
-        if absoluteRemaining == abs(fill.FillQuantity):
+        if (absoluteRemaining < 10) or (absoluteRemaining == abs(fill.FillQuantity)):
+            fill.FillQuantity = np.sign(order.Quantity) * absoluteRemaining
             fill.Status = OrderStatus.Filled
             self.absoluteRemainingByOrderId.pop(order.Id, None)
         else:
             fill.Status = OrderStatus.PartiallyFilled
             self.absoluteRemainingByOrderId[order.Id] = absoluteRemaining - abs(fill.FillQuantity)
             price = fill.FillPrice
-            self.algorithm.Debug(f"{self.algorithm.Time} - Partial Fill - Remaining {absoluteRemaining} Price - {price}")
+            # self.algorithm.Debug(f"{self.algorithm.Time} - Partial Fill - Remaining {absoluteRemaining} Price - {price}")
 
         return fill

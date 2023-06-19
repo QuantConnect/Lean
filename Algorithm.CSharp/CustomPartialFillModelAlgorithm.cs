@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Time.Day > 10 && _holdings.Quantity <= 0)
             {
-                MarketOrder(_spy, 100, true);
+                MarketOrder(_spy, 105, true);
             }
             else if (Time.Day > 20 && _holdings.Quantity >= 0)
             {
@@ -87,11 +87,13 @@ namespace QuantConnect.Algorithm.CSharp
                 // Create the object
                 var fill = base.MarketFill(asset, order);
 
-                // Set this fill amount
-                fill.FillQuantity = Math.Sign(order.Quantity) * 10;
+                // Set the fill amount to the maximum 10-multiple smaller than the order.Quantity for long orders
+                // Set the fill amount to the minimum 10-multiple greater than the order.Quantity for short orders
+                fill.FillQuantity = Math.Sign(order.Quantity) * 10m * Math.Floor(Math.Abs(order.Quantity) / 10m);
 
-                if (absoluteRemaining == Math.Abs(fill.FillQuantity))
+                if (absoluteRemaining < 10 || absoluteRemaining == Math.Abs(fill.FillQuantity))
                 {
+                    fill.FillQuantity = Math.Sign(order.Quantity) * absoluteRemaining;
                     fill.Status = OrderStatus.Filled;
                     _absoluteRemainingByOrderId.Remove(order.Id);
                 }
@@ -100,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
                     fill.Status = OrderStatus.PartiallyFilled;
                     _absoluteRemainingByOrderId[order.Id] = absoluteRemaining - Math.Abs(fill.FillQuantity);
                     var price = fill.FillPrice;
-                    _algorithm.Debug($"{_algorithm.Time} - Partial Fill - Remaining {absoluteRemaining} Price - {price}");
+                    //_algorithm.Debug($"{_algorithm.Time} - Partial Fill - Remaining {_absoluteRemainingByOrderId[order.Id]} Price - {price}");
                 }
                 return fill;
             }
@@ -131,30 +133,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "25"},
-            {"Average Win", "0.03%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "7.374%"},
-            {"Drawdown", "0.500%"},
-            {"Expectancy", "0.979"},
-            {"Net Profit", "1.170%"},
-            {"Sharpe Ratio", "3.145"},
-            {"Probabilistic Sharpe Ratio", "86.532%"},
-            {"Loss Rate", "40%"},
-            {"Win Rate", "60%"},
-            {"Profit-Loss Ratio", "2.31"},
-            {"Alpha", "0.004"},
-            {"Beta", "0.073"},
-            {"Annual Standard Deviation", "0.016"},
+            {"Total Trades", "99"},
+            {"Average Win", "0.04%"},
+            {"Average Loss", "-0.04%"},
+            {"Compounding Annual Return", "2.444%"},
+            {"Drawdown", "0.700%"},
+            {"Expectancy", "0.108"},
+            {"Net Profit", "0.395%"},
+            {"Sharpe Ratio", "1.131"},
+            {"Probabilistic Sharpe Ratio", "52.416%"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "1.22"},
+            {"Alpha", "-0.009"},
+            {"Beta", "0.041"},
+            {"Annual Standard Deviation", "0.015"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-5.354"},
-            {"Tracking Error", "0.111"},
-            {"Treynor Ratio", "0.697"},
-            {"Total Fees", "$25.00"},
-            {"Estimated Strategy Capacity", "$29000000.00"},
+            {"Information Ratio", "-5.468"},
+            {"Tracking Error", "0.115"},
+            {"Treynor Ratio", "0.419"},
+            {"Total Fees", "$99.00"},
+            {"Estimated Strategy Capacity", "$83000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "10.74%"},
-            {"OrderListHash", "528a768635ab9c8e8acf543858cd09b7"}
+            {"Portfolio Turnover", "43.72%"},
+            {"OrderListHash", "7121e8aa523e8f05e784af14f4216fdd"}
         };
     }
 }
