@@ -1341,6 +1341,85 @@ def Test(dataFrame, symbol):
             }
         }
 
+        [TestCase("*symbols", true)]
+        [TestCase("*[str(symbol.ID) for symbol in symbols]", true)]
+        [TestCase("'AAPL', 'GOOG'", true)]
+        [TestCase("*symbols", false)]
+        [TestCase("*[str(symbol.ID) for symbol in symbols]", false)]
+        [TestCase("'AAPL', 'GOOG'", false)]
+        public void BackwardsCompatibilityDataFrame_loc_slicers(string index, bool cache)
+        {
+            if (cache)
+            {
+                SymbolCache.Set("SPY", Symbols.SPY);
+                SymbolCache.Set("AAPL", Symbols.AAPL);
+                SymbolCache.Set("GOOG", Symbols.GOOG);
+            }
+
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                    $@"
+def sortDataFrameIndex(dataFrame):
+    dataFrame.sort_index(ascending=True, inplace=True)
+
+def indexDataFrameBySymbols(dataFrame, symbols):
+    # MultiIndex slicing requires the index to be lexsorted
+    sortDataFrameIndex(dataFrame)
+    return dataFrame.loc[(slice({index}), slice(None)), :]
+
+def indexDataFrameBySymbol(dataFrame, symbol):
+    sortDataFrameIndex(dataFrame)
+    return dataFrame.loc[(symbol, slice(None)), :]
+");
+                dynamic indexDataFrameBySymbols = testModule.GetAttr("indexDataFrameBySymbols");
+                dynamic indexDataFrameBySymbol = testModule.GetAttr("indexDataFrameBySymbol");
+
+                var symbols = new List<Symbol> { Symbols.SPY, Symbols.AAPL, Symbols.GOOG };
+                var dataFrame = GetTestDataFrame(symbols);
+
+                var looupkSymbols = new List<Symbol> { Symbols.AAPL, Symbols.GOOG };
+                dynamic indexedDataFrame = null;
+                Assert.DoesNotThrow(() => indexedDataFrame = indexDataFrameBySymbols(dataFrame, looupkSymbols));
+                Assert.IsNotNull(indexedDataFrame);
+
+                dynamic aaplDataFrame = null;
+                Assert.DoesNotThrow(() => aaplDataFrame = indexDataFrameBySymbol(indexedDataFrame, Symbols.AAPL));
+                Assert.IsNotNull(aaplDataFrame);
+
+                dynamic googDataFrame = null;
+                Assert.DoesNotThrow(() => googDataFrame = indexDataFrameBySymbol(indexedDataFrame, Symbols.GOOG));
+                Assert.IsNotNull(googDataFrame);
+
+                // SPY entries should not be present in the indexed data frame since it was not part of the lookup symbols
+                dynamic spyDataFrame = null;
+                Assert.Throws<PythonException>(() => spyDataFrame = indexDataFrameBySymbol(indexedDataFrame, Symbols.SPY));
+                Assert.IsNull(spyDataFrame);
+            }
+        }
+
+        [TestCase("2013-10-07 04:00:00", true)]
+        [TestCase("2013-10-07 04:00:00", false)]
+        public void BackwardsCompatibilityDataFrame_loc_slicers_none(string index, bool cache)
+        {
+            if (cache)
+            {
+                SymbolCache.Set("SPY", Symbols.SPY);
+                SymbolCache.Set("AAPL", Symbols.AAPL);
+            }
+
+            using (Py.GIL())
+            {
+                dynamic test = PyModule.FromString("testModule",
+                    $@"
+def Test(dataFrame):
+    return dataFrame.loc[(slice(None), '{index}'), 'lastprice']").GetAttr("Test");
+
+                var symbols = new List<Symbol> { Symbols.SPY, Symbols.AAPL };
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(symbols)));
+            }
+        }
+
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
