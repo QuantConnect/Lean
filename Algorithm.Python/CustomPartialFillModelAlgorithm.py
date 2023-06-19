@@ -68,6 +68,6 @@ class CustomPartialFillModel(FillModel):
             fill.Status = OrderStatus.PartiallyFilled
             self.absoluteRemainingByOrderId[order.Id] = absoluteRemaining - abs(fill.FillQuantity)
             price = fill.FillPrice
-            # self.algorithm.Debug(f"{self.algorithm.Time} - Partial Fill - Remaining {absoluteRemaining} Price - {price}")
+            # self.algorithm.Debug(f"{self.algorithm.Time} - Partial Fill - Remaining {self.absoluteRemainingByOrderId[order.Id]} Price - {price}")
 
         return fill
