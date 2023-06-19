@@ -56,11 +56,10 @@ class CustomPartialFillModel(FillModel):
         # Create the object
         fill = super().MarketFill(asset, order)
 
-        # Set the fill amount to the maximum 10-multiple smaller than the order.Quantity for long orders
-        # Set the fill amount to the minimum 10-multiple greater than the order.Quantity for short orders
-        fill.FillQuantity = np.sign(order.Quantity) * 10 * math.floor(abs(order.Quantity) / 10)
+        # Set the fill amount
+        fill.FillQuantity = np.sign(order.Quantity) * 10
 
-        if (absoluteRemaining < 10) or (absoluteRemaining == abs(fill.FillQuantity)):
+        if (min(abs(fill.FillQuantity), absoluteRemaining) == absoluteRemaining):
             fill.FillQuantity = np.sign(order.Quantity) * absoluteRemaining
             fill.Status = OrderStatus.Filled
             self.absoluteRemainingByOrderId.pop(order.Id, None)

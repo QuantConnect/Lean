@@ -87,11 +87,9 @@ namespace QuantConnect.Algorithm.CSharp
                 // Create the object
                 var fill = base.MarketFill(asset, order);
 
-                // Set the fill amount to the maximum 10-multiple smaller than the order.Quantity for long orders
-                // Set the fill amount to the minimum 10-multiple greater than the order.Quantity for short orders
-                fill.FillQuantity = Math.Sign(order.Quantity) * 10m * Math.Floor(Math.Abs(order.Quantity) / 10m);
-
-                if (absoluteRemaining < 10 || absoluteRemaining == Math.Abs(fill.FillQuantity))
+                // Set the fill amount
+                fill.FillQuantity = Math.Sign(order.Quantity) * 10m;
+                if (Math.Min(Math.Abs(fill.FillQuantity), absoluteRemaining) == absoluteRemaining)
                 {
                     fill.FillQuantity = Math.Sign(order.Quantity) * absoluteRemaining;
                     fill.Status = OrderStatus.Filled;
@@ -133,30 +131,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "99"},
-            {"Average Win", "0.04%"},
-            {"Average Loss", "-0.04%"},
-            {"Compounding Annual Return", "2.444%"},
-            {"Drawdown", "0.700%"},
-            {"Expectancy", "0.108"},
-            {"Net Profit", "0.395%"},
-            {"Sharpe Ratio", "1.131"},
-            {"Probabilistic Sharpe Ratio", "52.416%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "1.22"},
+            {"Total Trades", "24"},
+            {"Average Win", "0.02%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "3.413%"},
+            {"Drawdown", "0.600%"},
+            {"Expectancy", "0.426"},
+            {"Net Profit", "0.550%"},
+            {"Sharpe Ratio", "1.604"},
+            {"Probabilistic Sharpe Ratio", "61.217%"},
+            {"Loss Rate", "44%"},
+            {"Win Rate", "56%"},
+            {"Profit-Loss Ratio", "1.52"},
             {"Alpha", "-0.009"},
-            {"Beta", "0.041"},
+            {"Beta", "0.05"},
             {"Annual Standard Deviation", "0.015"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-5.468"},
-            {"Tracking Error", "0.115"},
-            {"Treynor Ratio", "0.419"},
-            {"Total Fees", "$99.00"},
-            {"Estimated Strategy Capacity", "$83000000.00"},
+            {"Information Ratio", "-5.465"},
+            {"Tracking Error", "0.114"},
+            {"Treynor Ratio", "0.476"},
+            {"Total Fees", "$24.00"},
+            {"Estimated Strategy Capacity", "$89000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "43.72%"},
-            {"OrderListHash", "7121e8aa523e8f05e784af14f4216fdd"}
+            {"Portfolio Turnover", "10.59%"},
+            {"OrderListHash", "4b8c4127574cacaf8fd6e6d42c7f3f67"}
         };
     }
 }
