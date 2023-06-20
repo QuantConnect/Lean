@@ -52,6 +52,7 @@
     <Content Include="AddOptionContractExpiresRegressionAlgorithm.py" />
     <Content Include="AddOptionContractFromUniverseRegressionAlgorithm.py" />
     <Content Include="CustomMarginInterestRateModelAlgorithm.py" />
+    <Content Include="CustomPartialFillModelAlgorithm.py" />
     <Content Include="AddRiskManagementAlgorithm.py" />
     <Content Include="AddUniverseSelectionModelAlgorithm.py" />
     <Content Include="Alphas\ContingentClaimsAnalysisDefaultPredictionAlpha.py" />
@@ -78,7 +79,6 @@
     <None Include="CustomDataIconicTypesAddDataRegressionAlgorithm.py" />
     <None Include="TrainingExampleAlgorithm.py" />
     <None Include="LongOnlyAlphaStreamAlgorithm.py" />
-    <None Include="CustomPartialFillModelAlgorithm.py" />
     <Content Include="BasicTemplateOptionsConsolidationAlgorithm.py" />
     <None Include="BasicTemplateOptionsPriceModel.py" />
     <Content Include="CoarseFineOptionUniverseChainRegressionAlgorithm.py" />
