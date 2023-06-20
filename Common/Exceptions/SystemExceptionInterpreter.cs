@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,7 +23,7 @@ namespace QuantConnect.Exceptions
     /// </summary>
     public class SystemExceptionInterpreter : IExceptionInterpreter
     {
-        private static Regex FileAndLineRegex = new Regex("(\\w+.cs:line \\d+)", RegexOptions.Compiled);
+        private static Regex FileAndLineRegex = new ("(\\w+.cs:line \\d+)", RegexOptions.Compiled);
 
         /// <summary>
         /// Determines the order that an instance of this class should be called
@@ -45,11 +45,13 @@ namespace QuantConnect.Exceptions
         /// <returns>The interpreted exception</returns>
         public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {
+            var sanitized = new SanitizedException(exception.Message, exception.StackTrace);
+
             if (!TryGetLineAndFile(exception.StackTrace, out var fileAndLine))
             {
-                return exception;
+                return sanitized;
             }
-            return new Exception(exception.Message + fileAndLine, exception);
+            return new Exception(exception.Message + fileAndLine, innerException: sanitized);
         }
 
         /// <summary>
@@ -71,6 +73,21 @@ namespace QuantConnect.Exceptions
                 }
             }
             return false;
+        }
+
+        private class SanitizedException : Exception
+        {
+            private readonly string _message;
+            private readonly string _stackTrace;
+
+            public override string Message => _message;
+            public override string StackTrace => _stackTrace;
+
+            public SanitizedException(string message, string stackTrace)
+            {
+                _message = message;
+                _stackTrace = Extensions.ClearLeanPaths(stackTrace);
+            }
         }
     }
 }
