@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -25,6 +25,8 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Option;
+using QuantConnect.Indicators;
+using Microsoft.CSharp.RuntimeBinder;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -291,6 +293,84 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(tradeBars[0].Close, fromDynamicSecurityData.Close);
             Assert.AreEqual(tradeBars[0].Volume, fromDynamicSecurityData.Volume);
         }
+
+        #region Custom properties tests
+
+        [Test]
+        public void SetsAndGetsDynamicCustomPropertiesUsingCacheInterface()
+        {
+            var security = GetSecurity();
+            SetUpSecurityCustomProperties(security);
+
+            Assert.AreEqual(7, security.Cache.CustomProperties.Count);
+            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("Bool"));
+            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("Integer"));
+            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("Double"));
+            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("Decimal"));
+            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("String"));
+            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("DateTime"));
+            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("EMA"));
+
+            Assert.IsFalse(security.Cache.CustomProperties.ContainsKey("NotAProperty"));
+        }
+
+        [Test]
+        public void SetsAndGetsDynamicCustomPropertiesUsingDynamicInterface()
+        {
+            var security = GetSecurity();
+            SetUpSecurityCustomProperties(security);
+
+            dynamic dynamicSecurity = security;
+
+            Assert.AreEqual(true, dynamicSecurity.Bool);
+            Assert.AreEqual(1, dynamicSecurity.Integer);
+            Assert.AreEqual(2.0, dynamicSecurity.Double);
+            Assert.AreEqual(3.0m, dynamicSecurity.Decimal);
+            Assert.AreEqual("string", dynamicSecurity.String);
+            Assert.AreEqual(new DateTime(2023, 06, 20), dynamicSecurity.DateTime);
+            Assert.AreEqual(new ExponentialMovingAverage(10), dynamicSecurity.EMA);
+
+            Assert.Throws<RuntimeBinderException>(() => { var notAProperty = dynamicSecurity.NotAProperty; });
+        }
+
+        [Test]
+        public void SetsAndGetsDynamicCustomPropertiesUsingGenericInterface()
+        {
+            var security = GetSecurity();
+            SetUpSecurityCustomProperties(security);
+
+            Assert.AreEqual(true, security.TryGet<bool>("Bool", out var boolValue));
+            Assert.AreEqual(true, boolValue);
+            Assert.AreEqual(true, security.TryGet<int>("Integer", out var intValue));
+            Assert.AreEqual(1, intValue);
+            Assert.AreEqual(true, security.TryGet<double>("Double", out var doubleValue));
+            Assert.AreEqual(2.0, doubleValue);
+            Assert.AreEqual(true, security.TryGet<decimal>("Decimal", out var decimalValue));
+            Assert.AreEqual(3.0m, decimalValue);
+            Assert.AreEqual(true, security.TryGet<string>("String", out var stringValue));
+            Assert.AreEqual("string", stringValue);
+            Assert.AreEqual(true, security.TryGet<DateTime>("DateTime", out var dateTimeValue));
+            Assert.AreEqual(new DateTime(2023, 06, 20), dateTimeValue);
+            Assert.AreEqual(true, security.TryGet<ExponentialMovingAverage>("EMA", out var emaValue));
+            Assert.AreEqual(new ExponentialMovingAverage(10), emaValue);
+
+            Assert.AreEqual(false, security.TryGet<bool>("NotAProperty", out _));
+        }
+
+        private static void SetUpSecurityCustomProperties(Security security)
+        {
+            dynamic dynamicSecurity = security;
+
+            dynamicSecurity.Bool = true;
+            dynamicSecurity.Integer = 1;
+            dynamicSecurity.Double = 2.0;
+            dynamicSecurity.Decimal = 3.0m;
+            dynamicSecurity.String = "string";
+            dynamicSecurity.DateTime = new DateTime(2023, 06, 20);
+            dynamicSecurity.EMA = new ExponentialMovingAverage(10);
+        }
+
+        #endregion
 
         internal static Security GetSecurity(bool isMarketAlwaysOpen = true)
         {

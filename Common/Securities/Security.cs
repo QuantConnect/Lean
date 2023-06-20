@@ -16,6 +16,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Dynamic;
+using System.Reflection;
+using System.Globalization;
+
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -40,7 +44,7 @@ namespace QuantConnect.Securities
     /// Security object is intended to hold properties of the specific security asset. These properties can include trade start-stop dates,
     /// price, market hours, resolution of the security, the holdings information for this security and the specific fill model.
     /// </remarks>
-    public class Security : ISecurityPrice
+    public class Security : DynamicObject, ISecurityPrice
     {
         private LocalTimeKeeper _localTimeKeeper;
 
@@ -50,6 +54,73 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Just use a list + lock, not concurrent bag, avoid garbage it creates for features we don't need here. See https://github.com/dotnet/runtime/issues/23103</remarks>
         private readonly List<SubscriptionDataConfig> _subscriptionsBag;
+
+        #region DynamicObject Overrides and Helper Methods
+
+        public override bool TryGetMember(GetMemberBinder binder, out object result)
+        {
+            return Cache.CustomProperties.TryGetValue(binder.Name, out result);
+        }
+
+        public override bool TrySetMember(SetMemberBinder binder, object value)
+        {
+            Cache.CustomProperties[binder.Name] = value;
+            return true;
+        }
+
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+        {
+            try
+            {
+                result = Cache.CustomProperties.GetType().InvokeMember(binder.Name, BindingFlags.InvokeMethod, null, Cache.CustomProperties, args,
+                    CultureInfo.InvariantCulture);
+                return true;
+            }
+            catch
+            {
+                result = null;
+                return false;
+            }
+        }
+
+        public void Set(string key, object value)
+        {
+            Cache.CustomProperties[key] = value;
+        }
+
+        public bool TryGet<T>(string key, out T value)
+        {
+            if (Cache.CustomProperties.TryGetValue(key, out var obj))
+            {
+                // TODO: Throw when type mismatch or return false?
+                value = (T)obj;
+                return true;
+            }
+            value = default;
+            return false;
+        }
+
+        public T Get<T>(string key)
+        {
+            return (T)Cache.CustomProperties[key];
+        }
+
+        public bool Remove(string key)
+        {
+            return Cache.CustomProperties.Remove(key);
+        }
+
+        public bool Remove(string key, out object value)
+        {
+            return Cache.CustomProperties.Remove(key, out value);
+        }
+
+        public void Clear()
+        {
+            Cache.CustomProperties.Clear();
+        }
+
+        #endregion
 
         /// <summary>
         /// This securities <see cref="IShortableProvider"/>

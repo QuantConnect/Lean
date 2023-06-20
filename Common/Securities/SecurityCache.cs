@@ -23,12 +23,8 @@ using System.Runtime.CompilerServices;
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Base class caching caching spot for security data and any other temporary properties.
+    /// Base class caching spot for security data and any other temporary properties.
     /// </summary>
-    /// <remarks>
-    /// This class is virtually unused and will soon be made obsolete.
-    /// This comment made in a remark to prevent obsolete errors in all users algorithms
-    /// </remarks>
     public class SecurityCache
     {
         // let's share the empty readonly version, so we don't need null checks
@@ -98,6 +94,8 @@ namespace QuantConnect.Securities
         /// Gets the most recent open interest submitted to this cache
         /// </summary>
         public long OpenInterest { get; private set; }
+
+        public Dictionary<string, object> CustomProperties = new();
 
         /// <summary>
         /// Add a list of market data points to the local security cache for the current market price.
