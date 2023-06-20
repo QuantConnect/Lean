@@ -348,13 +348,13 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetsAndGetsDynamicCustomPropertiesUsingGenericInterface()
         {
             var security = GetSecurity();
-            security.Set("Bool", true);
-            security.Set("Integer", 1);
-            security.Set("Double", 2.0);
-            security.Set("Decimal", 3.0m);
-            security.Set("String", "string");
-            security.Set("DateTime", new DateTime(2023, 06, 20));
-            security.Set("EMA", new ExponentialMovingAverage(10));
+            security.Add("Bool", true);
+            security.Add("Integer", 1);
+            security.Add("Double", 2.0);
+            security.Add("Decimal", 3.0m);
+            security.Add("String", "string");
+            security.Add("DateTime", new DateTime(2023, 06, 20));
+            security.Add("EMA", new ExponentialMovingAverage(10));
 
             Assert.AreEqual(true, security.TryGet<bool>("Bool", out var boolValue));
             Assert.AreEqual(true, boolValue);
@@ -418,8 +418,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void RemovesCustomProperties()
         {
             var security = GetSecurity();
-            security.Set("Bool", true);
-            security.Set("DateTime", new DateTime(2023, 06, 20));
+            security.Add("Bool", true);
+            security.Add("DateTime", new DateTime(2023, 06, 20));
 
             Assert.IsTrue(security.Remove("Bool"));
             Assert.IsFalse(security.TryGet<bool>("Bool", out _));
@@ -435,8 +435,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void ClearsCustomProperties()
         {
             var security = GetSecurity();
-            security.Set("Decimal", 3.0m);
-            security.Set("DateTime", new DateTime(2023, 06, 20));
+            security.Add("Decimal", 3.0m);
+            security.Add("DateTime", new DateTime(2023, 06, 20));
 
             Assert.AreEqual(2, security.Cache.Properties.Count);
 
@@ -445,6 +445,31 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(security.TryGet<decimal>("Decimal", out _));
             Assert.IsFalse(security.TryGet<DateTime>("DateTime", out _));
 
+        }
+
+        [Test]
+        public void OverwritesCustomProperties()
+        {
+            var security = GetSecurity();
+            dynamic dynamicSecurity = security;
+
+            dynamicSecurity.DateTime = new DateTime(2023, 06, 20);
+            Assert.AreEqual(new DateTime(2023, 06, 20), dynamicSecurity.DateTime);
+
+            dynamicSecurity.DateTime = new DateTime(2024, 06, 20);
+            Assert.AreEqual(new DateTime(2024, 06, 20), dynamicSecurity.DateTime);
+        }
+
+        [Test]
+        public void InvokesCustomPropertyMethod()
+        {
+            var security = GetSecurity();
+            dynamic dynamicSecurity = security;
+
+            dynamicSecurity.MakeEma = new Func<int, decimal, ExponentialMovingAverage>(
+                (period, smoothingFactor) => new ExponentialMovingAverage(period, smoothingFactor));
+
+            Assert.AreEqual(new ExponentialMovingAverage(10, 0.5m), dynamicSecurity.MakeEma(10, 0.5m));
         }
 
         #endregion

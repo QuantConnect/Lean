@@ -32,7 +32,7 @@ class SecurityCustomPropertiesAlgorithm(QCAlgorithm):
         self.spy.SlowEma = self.EMA(self.spy.Symbol, 30, Resolution.Minute)
 
         # Using the generic interface to store our indicator as a custom property.
-        self.spy.Set("FastEma", self.EMA(self.spy.Symbol, 60, Resolution.Minute))
+        self.spy.Add("FastEma", self.EMA(self.spy.Symbol, 60, Resolution.Minute))
 
         # Using the indexer to store our indicator as a custom property
         self.spy["BB"] = self.BB(self.spy.Symbol, 20, 1, MovingAverageType.Simple, Resolution.Minute);

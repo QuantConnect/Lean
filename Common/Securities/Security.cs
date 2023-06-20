@@ -939,12 +939,12 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Sets the specified custom property on this object to the specified value.
+        /// AD the specified custom property.
         /// This allows us to use the security object as a dynamic object for quick storage.
         /// </summary>
         /// <param name="key">The property key</param>
         /// <param name="value">The property value</param>
-        public void Set(string key, object value)
+        public void Add(string key, object value)
         {
             Cache.Properties[key] = value;
         }
@@ -1016,7 +1016,7 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets or sets the specified custom property through the indexer.
-        /// This is a wrapper around the <see cref="Get{T}(string)"/> and <see cref="Set(string,object)"/> methods.
+        /// This is a wrapper around the <see cref="Get{T}(string)"/> and <see cref="Add(string,object)"/> methods.
         /// </summary>
         /// <param name="key">The property key</param>
         public object this[string key]
@@ -1027,7 +1027,7 @@ namespace QuantConnect.Securities
             }
             set
             {
-                Set(key, value);
+                Add(key, value);
             }
         }
 

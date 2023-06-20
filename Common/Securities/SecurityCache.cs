@@ -40,6 +40,9 @@ namespace QuantConnect.Securities
         private IReadOnlyList<BaseData> _lastTickTrades = _empty;
         private Dictionary<Type, IReadOnlyList<BaseData>> _dataByType;
 
+        private readonly object _propertiesLock = new();
+        private Dictionary<string, object> _properties;
+
         /// <summary>
         /// Gets the most recent price submitted to this cache
         /// </summary>
@@ -98,7 +101,21 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Collection of keyed custom properties
         /// </summary>
-        public Dictionary<string, object> Properties { get; } = new();
+        public Dictionary<string, object> Properties
+        {
+            get
+            {
+                lock(_propertiesLock)
+                {
+                    if (_properties == null)
+                    {
+                        _properties = new Dictionary<string, object>();
+                    }
+                }
+
+                return _properties;
+            }
+        }
 
         /// <summary>
         /// Add a list of market data points to the local security cache for the current market price.

@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             _dynamicSpy.SlowEma = EMA(_spy.Symbol, 30, Resolution.Minute);
 
             // Using the generic interface to store our indicator as a custom property
-            _spy.Set("FastEma", EMA(_spy.Symbol, 60, Resolution.Minute));
+            _spy.Add("FastEma", EMA(_spy.Symbol, 60, Resolution.Minute));
 
             // Using the indexer to store our indicator as a custom property
             _spy["BB"] = BB(_spy.Symbol, 20, 1, MovingAverageType.Simple, Resolution.Minute);
