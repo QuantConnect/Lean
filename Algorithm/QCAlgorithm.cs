@@ -164,7 +164,7 @@ namespace QuantConnect.Algorithm
             Portfolio = new SecurityPortfolioManager(Securities, Transactions, Settings, DefaultOrderProperties);
             SignalExport = new SignalExportManager(this);
 
-            SetBrokerageModel(new DefaultBrokerageModel());
+            BrokerageModel = new DefaultBrokerageModel();
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
             //Initialise to unlocked:
@@ -301,6 +301,7 @@ namespace QuantConnect.Algorithm
                 }
                 catch (ArgumentOutOfRangeException)
                 {
+                    // The brokerage model might be a custom one which has not a corresponding BrokerageName
                     BrokerageName = BrokerageName.Default;
                 }
             }
