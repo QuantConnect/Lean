@@ -95,7 +95,10 @@ namespace QuantConnect.Securities
         /// </summary>
         public long OpenInterest { get; private set; }
 
-        public Dictionary<string, object> CustomProperties = new();
+        /// <summary>
+        /// Collection of keyed custom properties
+        /// </summary>
+        public Dictionary<string, object> Properties { get; } = new();
 
         /// <summary>
         /// Add a list of market data points to the local security cache for the current market price.

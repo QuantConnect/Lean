@@ -302,16 +302,16 @@ namespace QuantConnect.Tests.Common.Securities
             var security = GetSecurity();
             SetUpSecurityCustomProperties(security);
 
-            Assert.AreEqual(7, security.Cache.CustomProperties.Count);
-            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("Bool"));
-            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("Integer"));
-            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("Double"));
-            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("Decimal"));
-            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("String"));
-            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("DateTime"));
-            Assert.IsTrue(security.Cache.CustomProperties.ContainsKey("EMA"));
+            Assert.AreEqual(7, security.Cache.Properties.Count);
+            Assert.IsTrue(security.Cache.Properties.ContainsKey("Bool"));
+            Assert.IsTrue(security.Cache.Properties.ContainsKey("Integer"));
+            Assert.IsTrue(security.Cache.Properties.ContainsKey("Double"));
+            Assert.IsTrue(security.Cache.Properties.ContainsKey("Decimal"));
+            Assert.IsTrue(security.Cache.Properties.ContainsKey("String"));
+            Assert.IsTrue(security.Cache.Properties.ContainsKey("DateTime"));
+            Assert.IsTrue(security.Cache.Properties.ContainsKey("EMA"));
 
-            Assert.IsFalse(security.Cache.CustomProperties.ContainsKey("NotAProperty"));
+            Assert.IsFalse(security.Cache.Properties.ContainsKey("NotAProperty"));
         }
 
         [Test]
@@ -341,20 +341,73 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(true, security.TryGet<bool>("Bool", out var boolValue));
             Assert.AreEqual(true, boolValue);
+            Assert.AreEqual(true, security.Get<bool>("Bool"));
+
             Assert.AreEqual(true, security.TryGet<int>("Integer", out var intValue));
             Assert.AreEqual(1, intValue);
+            Assert.AreEqual(1, security.Get<int>("Integer"));
+
             Assert.AreEqual(true, security.TryGet<double>("Double", out var doubleValue));
             Assert.AreEqual(2.0, doubleValue);
+            Assert.AreEqual(2.0, security.Get<double>("Double"));
+
             Assert.AreEqual(true, security.TryGet<decimal>("Decimal", out var decimalValue));
             Assert.AreEqual(3.0m, decimalValue);
+            Assert.AreEqual(3.0m, security.Get<decimal>("Decimal"));
+
             Assert.AreEqual(true, security.TryGet<string>("String", out var stringValue));
             Assert.AreEqual("string", stringValue);
+            Assert.AreEqual("string", security.Get<string>("String"));
+
             Assert.AreEqual(true, security.TryGet<DateTime>("DateTime", out var dateTimeValue));
             Assert.AreEqual(new DateTime(2023, 06, 20), dateTimeValue);
+            Assert.AreEqual(new DateTime(2023, 06, 20), security.Get<DateTime>("DateTime"));
+
             Assert.AreEqual(true, security.TryGet<ExponentialMovingAverage>("EMA", out var emaValue));
             Assert.AreEqual(new ExponentialMovingAverage(10), emaValue);
+            Assert.AreEqual(new ExponentialMovingAverage(10), security.Get<ExponentialMovingAverage>("EMA"));
 
             Assert.AreEqual(false, security.TryGet<bool>("NotAProperty", out _));
+            Assert.Throws<KeyNotFoundException>(() => security.Get<bool>("NotAProperty"));
+
+            Assert.Throws<InvalidCastException>(() => security.TryGet<SimpleMovingAverage>("EMA", out _));
+            Assert.Throws<InvalidCastException>(() => security.Get<SimpleMovingAverage>("EMA"));
+        }
+
+        [Test]
+        public void RemovesCustomProperties()
+        {
+            var security = GetSecurity();
+            SetUpSecurityCustomProperties(security);
+
+            Assert.IsTrue(security.Remove("Bool"));
+            Assert.IsFalse(security.TryGet<bool>("Bool", out _));
+            Assert.IsFalse(security.Remove("Bool"));
+
+            Assert.IsTrue(security.Remove("DateTime", out DateTime dateTime));
+            Assert.AreEqual(new DateTime(2023, 06, 20), dateTime);
+            Assert.IsFalse(security.TryGet<DateTime>("DateTime", out _));
+            Assert.IsFalse(security.Remove<DateTime>("DateTime", out _));
+        }
+
+        [Test]
+        public void ClearsCustomProperties()
+        {
+            var security = GetSecurity();
+            SetUpSecurityCustomProperties(security);
+
+            Assert.AreEqual(7, security.Cache.Properties.Count);
+
+            security.Clear();
+            Assert.AreEqual(0, security.Cache.Properties.Count);
+            Assert.IsFalse(security.TryGet<bool>("Bool", out _));
+            Assert.IsFalse(security.TryGet<int>("Integer", out _));
+            Assert.IsFalse(security.TryGet<double>("Double", out _));
+            Assert.IsFalse(security.TryGet<decimal>("Decimal", out _));
+            Assert.IsFalse(security.TryGet<string>("String", out _));
+            Assert.IsFalse(security.TryGet<DateTime>("DateTime", out _));
+            Assert.IsFalse(security.TryGet<ExponentialMovingAverage>("EMA", out _));
+
         }
 
         private static void SetUpSecurityCustomProperties(Security security)

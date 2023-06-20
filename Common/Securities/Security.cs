@@ -55,73 +55,6 @@ namespace QuantConnect.Securities
         /// <remarks>Just use a list + lock, not concurrent bag, avoid garbage it creates for features we don't need here. See https://github.com/dotnet/runtime/issues/23103</remarks>
         private readonly List<SubscriptionDataConfig> _subscriptionsBag;
 
-        #region DynamicObject Overrides and Helper Methods
-
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
-        {
-            return Cache.CustomProperties.TryGetValue(binder.Name, out result);
-        }
-
-        public override bool TrySetMember(SetMemberBinder binder, object value)
-        {
-            Cache.CustomProperties[binder.Name] = value;
-            return true;
-        }
-
-        public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
-        {
-            try
-            {
-                result = Cache.CustomProperties.GetType().InvokeMember(binder.Name, BindingFlags.InvokeMethod, null, Cache.CustomProperties, args,
-                    CultureInfo.InvariantCulture);
-                return true;
-            }
-            catch
-            {
-                result = null;
-                return false;
-            }
-        }
-
-        public void Set(string key, object value)
-        {
-            Cache.CustomProperties[key] = value;
-        }
-
-        public bool TryGet<T>(string key, out T value)
-        {
-            if (Cache.CustomProperties.TryGetValue(key, out var obj))
-            {
-                // TODO: Throw when type mismatch or return false?
-                value = (T)obj;
-                return true;
-            }
-            value = default;
-            return false;
-        }
-
-        public T Get<T>(string key)
-        {
-            return (T)Cache.CustomProperties[key];
-        }
-
-        public bool Remove(string key)
-        {
-            return Cache.CustomProperties.Remove(key);
-        }
-
-        public bool Remove(string key, out object value)
-        {
-            return Cache.CustomProperties.Remove(key, out value);
-        }
-
-        public void Clear()
-        {
-            Cache.CustomProperties.Clear();
-        }
-
-        #endregion
-
         /// <summary>
         /// This securities <see cref="IShortableProvider"/>
         /// </summary>
@@ -967,6 +900,121 @@ namespace QuantConnect.Securities
         {
             DataFilter = dataFilter;
         }
+
+        #region DynamicObject Overrides and Helper Methods
+
+        /// <summary>
+        /// This is a <see cref="DynamicObject"/> override. Not meant for external use.
+        /// </summary>
+        public override bool TryGetMember(GetMemberBinder binder, out object result)
+        {
+            return Cache.Properties.TryGetValue(binder.Name, out result);
+        }
+
+        /// <summary>
+        /// This is a <see cref="DynamicObject"/> override. Not meant for external use.
+        /// </summary>
+        public override bool TrySetMember(SetMemberBinder binder, object value)
+        {
+            Cache.Properties[binder.Name] = value;
+            return true;
+        }
+
+        /// <summary>
+        /// This is a <see cref="DynamicObject"/> override. Not meant for external use.
+        /// </summary>
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+        {
+            try
+            {
+                result = Cache.Properties.GetType().InvokeMember(binder.Name, BindingFlags.InvokeMethod, null, Cache.Properties, args,
+                    CultureInfo.InvariantCulture);
+                return true;
+            }
+            catch
+            {
+                result = null;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Sets the specified custom property on this object to the specified value.
+        /// This allows us to use the security object as a dynamic object for quick storage.
+        /// </summary>
+        /// <param name="key">The property key</param>
+        /// <param name="value">The property value</param>
+        public void Set(string key, object value)
+        {
+            Cache.Properties[key] = value;
+        }
+
+        /// <summary>
+        /// Gets the specified custom property
+        /// </summary>
+        /// <param name="key">The property key</param>
+        /// <param name="value">The property value</param>
+        /// <returns>True if the property is found.</returns>
+        /// <exception cref="InvalidCastException">If the property is found but its value cannot be casted to the speficied type</exception>
+        public bool TryGet<T>(string key, out T value)
+        {
+            if (Cache.Properties.TryGetValue(key, out var obj))
+            {
+                // TODO: Throw when type mismatch or return false?
+                value = (T)obj;
+                return true;
+            }
+            value = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Gets the specified custom property
+        /// </summary>
+        /// <param name="key">The property key</param>
+        /// <returns>The property value is found</returns>
+        /// <exception cref="KeyNotFoundException">If the property is not found</exception>
+        public T Get<T>(string key)
+        {
+            return (T)Cache.Properties[key];
+        }
+
+        /// <summary>
+        /// Removes a custom property.
+        /// </summary>
+        /// <param name="key">The property key</param>
+        /// <returns>True if the property is successfully removed</returns>
+        public bool Remove(string key)
+        {
+            return Cache.Properties.Remove(key);
+        }
+
+        /// <summary>
+        /// Removes a custom property.
+        /// </summary>
+        /// <param name="key">The property key</param>
+        /// <param name="value">The removed property value</param>
+        /// <returns>True if the property is successfully removed</returns>
+        public bool Remove<T>(string key, out T value)
+        {
+            value = default;
+            var result = Cache.Properties.Remove(key, out object objectValue);
+            if (result)
+            {
+                value = (T)objectValue;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Removes every custom property that had been set.
+        /// </summary>
+        public void Clear()
+        {
+            Cache.Properties.Clear();
+        }
+
+        #endregion
 
         /// <summary>
         /// Returns a string that represents the current object.
