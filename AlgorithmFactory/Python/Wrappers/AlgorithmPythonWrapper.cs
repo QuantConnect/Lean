@@ -183,6 +183,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public IBrokerageModel BrokerageModel => _baseAlgorithm.BrokerageModel;
 
         /// <summary>
+        /// Gets the brokerage name.
+        /// </summary>
+        public BrokerageName BrokerageName => _baseAlgorithm.BrokerageName;
+
+        /// <summary>
         /// Debug messages from the strategy:
         /// </summary>
         public ConcurrentQueue<string> DebugMessages => _baseAlgorithm.DebugMessages;

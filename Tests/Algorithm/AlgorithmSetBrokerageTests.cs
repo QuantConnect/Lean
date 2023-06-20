@@ -23,6 +23,12 @@ using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Securities;
+using QuantConnect.Benchmarks;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders.Slippage;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -211,6 +217,61 @@ class Test(AlphaStreamsBrokerageModel):
             Assert.AreEqual(Market.Oanda, oandaSecurity.Symbol.ID.Market);
         }
 
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void BrokerageNameFollowsSetBrokerageModel(Language language)
+        {
+            if (language == Language.CSharp)
+            {
+                Assert.AreEqual(BrokerageName.Default, _algo.BrokerageName);
+
+                _algo.SetBrokerageModel(BrokerageName.OandaBrokerage);
+                Assert.AreEqual(BrokerageName.OandaBrokerage, _algo.BrokerageName);
+
+                _algo.SetBrokerageModel(new InteractiveBrokersBrokerageModel());
+                Assert.AreEqual(BrokerageName.InteractiveBrokersBrokerage, _algo.BrokerageName);
+
+                _algo.SetBrokerageModel(new CustomBrokerageModel());
+                Assert.AreEqual(BrokerageName.Default, _algo.BrokerageName);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var testModule = PyModule.FromString("testModule",
+                        @"
+from AlgorithmImports import *
+
+def getAlgorithm():
+    return QCAlgorithm()
+
+def setBrokerageModel(algorithm, brokerageModel):
+    algorithm.SetBrokerageModel(brokerageModel)
+
+def getBrokerageName(algorithm):
+    return algorithm.BrokerageName
+        ");
+
+                    var getAlgorithm = testModule.GetAttr("getAlgorithm");
+                    var algorithm = getAlgorithm.Invoke();
+
+                    var setBrokerageModel = testModule.GetAttr("setBrokerageModel");
+                    var getBrokerageName = testModule.GetAttr("getBrokerageName");
+
+                    Assert.AreEqual(BrokerageName.Default, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+
+                    setBrokerageModel.Invoke(algorithm, BrokerageName.OandaBrokerage.ToPython());
+                    Assert.AreEqual(BrokerageName.OandaBrokerage, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+
+                    setBrokerageModel.Invoke(algorithm, new InteractiveBrokersBrokerageModel().ToPython());
+                    Assert.AreEqual(BrokerageName.InteractiveBrokersBrokerage, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+
+                    setBrokerageModel.Invoke(algorithm, new CustomBrokerageModel().ToPython());
+                    Assert.AreEqual(BrokerageName.Default, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+                }
+            }
+        }
+
         /// <summary>
         /// Returns the default market for a security type
         /// </summary>
@@ -221,6 +282,90 @@ class Test(AlphaStreamsBrokerageModel):
             string brokerage;
             _algo.BrokerageModel.DefaultMarkets.TryGetValue(secType, out brokerage);
             return brokerage;
+        }
+
+        private class CustomBrokerageModel : IBrokerageModel
+        {
+            public AccountType AccountType => throw new System.NotImplementedException();
+
+            public decimal RequiredFreeBuyingPowerPercent => throw new System.NotImplementedException();
+
+            public IReadOnlyDictionary<SecurityType, string> DefaultMarkets => throw new System.NotImplementedException();
+
+            public void ApplySplit(List<OrderTicket> tickets, Split split)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public bool CanExecuteOrder(Security security, Order order)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IBenchmark GetBenchmark(SecurityManager securities)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IBuyingPowerModel GetBuyingPowerModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IFeeModel GetFeeModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IFillModel GetFillModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public decimal GetLeverage(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IMarginInterestRateModel GetMarginInterestRateModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public ISettlementModel GetSettlementModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public ISettlementModel GetSettlementModel(Security security, AccountType accountType)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IShortableProvider GetShortableProvider()
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public ISlippageModel GetSlippageModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
         }
     }
 }

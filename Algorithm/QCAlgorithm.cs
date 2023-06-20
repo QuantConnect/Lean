@@ -93,6 +93,7 @@ namespace QuantConnect.Algorithm
         private ConcurrentQueue<string> _logMessages = new ConcurrentQueue<string>();
         private ConcurrentQueue<string> _errorMessages = new ConcurrentQueue<string>();
         private IStatisticsService _statisticsService;
+        private IBrokerageModel _brokerageModel;
 
         //Error tracking to avoid message flooding:
         private string _previousDebugMessage = "";
@@ -184,7 +185,7 @@ namespace QuantConnect.Algorithm
             // initialize the trade builder
             TradeBuilder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
 
-            SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(AccountType.Margin), SecuritySeeder.Null);
+            SecurityInitializer = new BrokerageModelSecurityInitializer(BrokerageModel, SecuritySeeder.Null);
 
             CandlestickPatterns = new CandlestickPatterns(this);
 
@@ -286,6 +287,31 @@ namespace QuantConnect.Algorithm
         /// </summary>
         [DocumentationAttribute(Modeling)]
         public IBrokerageModel BrokerageModel
+        {
+            get
+            {
+                return _brokerageModel;
+            }
+            private set
+            {
+                _brokerageModel = value;
+                try
+                {
+                    BrokerageName = Brokerages.BrokerageModel.GetBrokerageName(_brokerageModel);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    // The brokerage model might be a custom one which has not a corresponding BrokerageName
+                    BrokerageName = BrokerageName.Default;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the brokerage name.
+        /// </summary>
+        [DocumentationAttribute(Modeling)]
+        public BrokerageName BrokerageName
         {
             get;
             private set;

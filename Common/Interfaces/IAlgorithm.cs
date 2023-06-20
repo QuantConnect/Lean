@@ -125,6 +125,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the brokerage name.
+        /// </summary>
+        BrokerageName BrokerageName
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the brokerage message handler used to decide what to do
         /// with each message sent from the brokerage
         /// </summary>
