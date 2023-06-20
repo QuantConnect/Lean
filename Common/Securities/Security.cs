@@ -939,7 +939,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// AD the specified custom property.
+        /// Adds the specified custom property.
         /// This allows us to use the security object as a dynamic object for quick storage.
         /// </summary>
         /// <param name="key">The property key</param>

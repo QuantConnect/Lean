@@ -40,7 +40,6 @@ namespace QuantConnect.Securities
         private IReadOnlyList<BaseData> _lastTickTrades = _empty;
         private Dictionary<Type, IReadOnlyList<BaseData>> _dataByType;
 
-        private readonly object _propertiesLock = new();
         private Dictionary<string, object> _properties;
 
         /// <summary>
@@ -105,14 +104,10 @@ namespace QuantConnect.Securities
         {
             get
             {
-                lock(_propertiesLock)
+                if (_properties == null)
                 {
-                    if (_properties == null)
-                    {
-                        _properties = new Dictionary<string, object>();
-                    }
+                    _properties = new Dictionary<string, object>();
                 }
-
                 return _properties;
             }
         }
