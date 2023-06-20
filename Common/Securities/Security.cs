@@ -1014,6 +1014,23 @@ namespace QuantConnect.Securities
             Cache.Properties.Clear();
         }
 
+        /// <summary>
+        /// Gets or sets the specified custom property through the indexer.
+        /// This is a wrapper around the <see cref="Get{T}(string)"/> and <see cref="Set(string,object)"/> methods.
+        /// </summary>
+        /// <param name="key">The property key</param>
+        public object this[string key]
+        {
+            get
+            {
+                return Get<object>(key);
+            }
+            set
+            {
+                Set(key, value);
+            }
+        }
+
         #endregion
 
         /// <summary>

@@ -38,15 +38,25 @@ namespace QuantConnect.Algorithm.CSharp
 
             _spy = AddEquity("SPY", Resolution.Minute);
 
-            _dynamicSpy = _spy;
             // Using the dynamic interface to store our indicator as a custom property
+            _dynamicSpy = _spy;
             _dynamicSpy.SlowEma = EMA(_spy.Symbol, 30, Resolution.Minute);
+
             // Using the generic interface to store our indicator as a custom property
             _spy.Set("FastEma", EMA(_spy.Symbol, 60, Resolution.Minute));
+
+            // Using the indexer to store our indicator as a custom property
+            _spy["BB"] = BB(_spy.Symbol, 20, 1, MovingAverageType.Simple, Resolution.Minute);
+
         }
 
         public override void OnData(Slice data)
         {
+            if (!_dynamicSpy.FastEma.IsReady)
+            {
+                return;
+            }
+
             if (!Portfolio.Invested)
             {
                 // Using the dynamic interface to access the custom properties
@@ -60,6 +70,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Liquidate(_spy.Symbol);
             }
+
+            // Using the indexer to access the custom properties
+            var bb = _spy["BB"] as BollingerBands;
+            Plot("BB", bb.UpperBand, bb.MiddleBand, bb.LowerBand);
         }
 
         /// <summary>
@@ -88,29 +102,29 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "30"},
-            {"Average Win", "0.38%"},
-            {"Average Loss", "-0.08%"},
-            {"Compounding Annual Return", "127.177%"},
+            {"Average Win", "0.42%"},
+            {"Average Loss", "-0.09%"},
+            {"Compounding Annual Return", "78.519%"},
             {"Drawdown", "0.800%"},
-            {"Expectancy", "0.838"},
-            {"Net Profit", "1.055%"},
-            {"Sharpe Ratio", "11.681"},
-            {"Probabilistic Sharpe Ratio", "88.147%"},
-            {"Loss Rate", "67%"},
-            {"Win Rate", "33%"},
-            {"Profit-Loss Ratio", "4.51"},
-            {"Alpha", "0.226"},
+            {"Expectancy", "0.574"},
+            {"Net Profit", "0.744%"},
+            {"Sharpe Ratio", "11.684"},
+            {"Probabilistic Sharpe Ratio", "88.148%"},
+            {"Loss Rate", "73%"},
+            {"Win Rate", "27%"},
+            {"Profit-Loss Ratio", "4.90"},
+            {"Alpha", "0.227"},
             {"Beta", "0.341"},
             {"Annual Standard Deviation", "0.077"},
             {"Annual Variance", "0.006"},
-            {"Information Ratio", "-7.331"},
+            {"Information Ratio", "-7.329"},
             {"Tracking Error", "0.147"},
-            {"Treynor Ratio", "2.647"},
-            {"Total Fees", "$103.40"},
-            {"Estimated Strategy Capacity", "$7700000.00"},
+            {"Treynor Ratio", "2.648"},
+            {"Total Fees", "$103.09"},
+            {"Estimated Strategy Capacity", "$7300000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "597.28%"},
-            {"OrderListHash", "eb583d25c08cef6046cc1bbc01e5c440"}
+            {"Portfolio Turnover", "597.39%"},
+            {"OrderListHash", "5c28d5191259b2eb26f8e9694200c5c6"}
         };
     }
 }

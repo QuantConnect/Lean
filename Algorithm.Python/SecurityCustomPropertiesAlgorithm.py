@@ -34,10 +34,21 @@ class SecurityCustomPropertiesAlgorithm(QCAlgorithm):
         # Using the generic interface to store our indicator as a custom property.
         self.spy.Set("FastEma", self.EMA(self.spy.Symbol, 60, Resolution.Minute))
 
+        # Using the indexer to store our indicator as a custom property
+        self.spy["BB"] = self.BB(self.spy.Symbol, 20, 1, MovingAverageType.Simple, Resolution.Minute);
+
     def OnData(self, data):
+        if not self.spy.Get[IndicatorBase]("FastEma").IsReady:
+            return
+
         if not self.Portfolio.Invested:
+            # Using the property and the generic interface to access our indicator
             if self.spy.SlowEma > self.spy.Get[IndicatorBase]("FastEma"):
                 self.SetHoldings(self.spy.Symbol, 1)
         else:
             if self.spy.SlowEma < self.spy.Get[IndicatorBase]("FastEma"):
                 self.Liquidate(self.spy.Symbol)
+
+        # Using the indexer to access our indicator
+        bb: BollingerBands = self.spy["BB"]
+        self.Plot("BB", bb.UpperBand, bb.MiddleBand, bb.LowerBand)
