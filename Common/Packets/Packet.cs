@@ -178,5 +178,8 @@ namespace QuantConnect.Packets
 
         /// The language models response
         LanguageModelResponse,
+
+        /// Language model code analysis
+        LanguageModelCodeAnalysis,
     }
 }
