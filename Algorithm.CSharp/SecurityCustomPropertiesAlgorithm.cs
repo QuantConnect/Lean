@@ -13,10 +13,14 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -48,6 +52,12 @@ namespace QuantConnect.Algorithm.CSharp
             // Using the indexer to store our indicator as a custom property
             _spy["BB"] = BB(_spy.Symbol, 20, 1, MovingAverageType.Simple, Resolution.Minute);
 
+            // Fee factor to be used by the custom fee model
+            _dynamicSpy.FeeFactor = 0.00002m;
+            _spy.SetFeeModel(new CustomFeeModel());
+
+            // This property will be used to store the prices used to calculate the fees in order to assert the correct fee factor is used.
+            _dynamicSpy.OrdersFeesPrices = new Dictionary<int, decimal>();
         }
 
         public override void OnData(Slice data)
@@ -76,6 +86,55 @@ namespace QuantConnect.Algorithm.CSharp
             Plot("BB", bb.UpperBand, bb.MiddleBand, bb.LowerBand);
         }
 
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            if (orderEvent.Status == OrderStatus.Filled)
+            {
+                var fee = orderEvent.OrderFee;
+                var expectedFee = _dynamicSpy.OrdersFeesPrices[orderEvent.OrderId] * orderEvent.AbsoluteFillQuantity * _dynamicSpy.FeeFactor;
+                if (fee.Value.Amount != expectedFee)
+                {
+                    throw new Exception($"Custom fee model failed to set the correct fee. Expected: {expectedFee}. Actual: {fee.Value.Amount}");
+                }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (Transactions.OrdersCount == 0)
+            {
+                throw new Exception("No orders executed");
+            }
+        }
+
+        /// <summary>
+        /// This custom fee is implemented for demonstration purposes only.
+        /// </summary>
+        private class CustomFeeModel : FeeModel
+        {
+            public CustomFeeModel()
+            {
+            }
+
+            public override OrderFee GetOrderFee(OrderFeeParameters parameters)
+            {
+                var security = parameters.Security;
+                // custom fee math using the fee factor stored in security instance
+                var hasFeeFactor = security.TryGet<decimal>("FeeFactor", out var feeFactor);
+                if (!hasFeeFactor)
+                {
+                    feeFactor = 0.00001m;
+                }
+
+                // Store the price used to calculate the fee for this order
+                ((dynamic)security).OrdersFeesPrices[parameters.Order.Id] = security.Price;
+
+                var fee = Math.Max(1m, security.Price * parameters.Order.AbsoluteQuantity * feeFactor);
+
+                return new OrderFee(new CashAmount(fee, "USD"));
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -102,29 +161,29 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "30"},
-            {"Average Win", "0.42%"},
-            {"Average Loss", "-0.09%"},
-            {"Compounding Annual Return", "78.519%"},
+            {"Average Win", "0.43%"},
+            {"Average Loss", "-0.08%"},
+            {"Compounding Annual Return", "84.608%"},
             {"Drawdown", "0.800%"},
-            {"Expectancy", "0.574"},
-            {"Net Profit", "0.744%"},
-            {"Sharpe Ratio", "11.684"},
-            {"Probabilistic Sharpe Ratio", "88.148%"},
+            {"Expectancy", "0.628"},
+            {"Net Profit", "0.787%"},
+            {"Sharpe Ratio", "12.159"},
+            {"Probabilistic Sharpe Ratio", "88.912%"},
             {"Loss Rate", "73%"},
             {"Win Rate", "27%"},
-            {"Profit-Loss Ratio", "4.90"},
-            {"Alpha", "0.227"},
-            {"Beta", "0.341"},
+            {"Profit-Loss Ratio", "5.11"},
+            {"Alpha", "0.263"},
+            {"Beta", "0.342"},
             {"Annual Standard Deviation", "0.077"},
             {"Annual Variance", "0.006"},
-            {"Information Ratio", "-7.329"},
+            {"Information Ratio", "-7.082"},
             {"Tracking Error", "0.147"},
-            {"Treynor Ratio", "2.648"},
-            {"Total Fees", "$103.09"},
+            {"Treynor Ratio", "2.752"},
+            {"Total Fees", "$59.78"},
             {"Estimated Strategy Capacity", "$7300000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "597.39%"},
-            {"OrderListHash", "5c28d5191259b2eb26f8e9694200c5c6"}
+            {"Portfolio Turnover", "597.29%"},
+            {"OrderListHash", "e1c84e5ba45a44ab0da5af41c8becbb9"}
         };
     }
 }

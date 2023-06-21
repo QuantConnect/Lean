@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from cmath import isclose
 from AlgorithmImports import *
 
 ### <summary>
@@ -37,6 +38,13 @@ class SecurityCustomPropertiesAlgorithm(QCAlgorithm):
         # Using the indexer to store our indicator as a custom property
         self.spy["BB"] = self.BB(self.spy.Symbol, 20, 1, MovingAverageType.Simple, Resolution.Minute);
 
+        # Fee factor to be used by the custom fee model
+        self.spy["FeeFactor"] = 0.00002
+        self.spy.SetFeeModel(CustomFeeModel())
+
+        # This property will be used to store the prices used to calculate the fees in order to assert the correct fee factor is used.
+        self.spy["OrdersFeesPrices"] = {}
+
     def OnData(self, data):
         if not self.spy.Get[IndicatorBase]("FastEma").IsReady:
             return
@@ -52,3 +60,31 @@ class SecurityCustomPropertiesAlgorithm(QCAlgorithm):
         # Using the indexer to access our indicator
         bb: BollingerBands = self.spy["BB"]
         self.Plot("BB", bb.UpperBand, bb.MiddleBand, bb.LowerBand)
+
+    def OnOrderEvent(self, orderEvent):
+        if orderEvent.Status == OrderStatus.Filled:
+            fee = orderEvent.OrderFee
+            expectedFee = self.spy["OrdersFeesPrices"][orderEvent.OrderId] * orderEvent.AbsoluteFillQuantity * self.spy["FeeFactor"]
+            if not isclose(fee.Value.Amount, expectedFee, rel_tol=1e-15):
+                raise Exception(f"Custom fee model failed to set the correct fee. Expected: {expectedFee}. Actual: {fee.Value.Amount}")
+
+    def OnEndOfAlgorithm(self):
+        if self.Transactions.OrdersCount == 0:
+            raise Exception("No orders executed")
+
+class CustomFeeModel(FeeModel):
+    '''This custom fee is implemented for demonstration purposes only.'''
+
+    def GetOrderFee(self, parameters):
+        security = parameters.Security
+        # custom fee math using the fee factor stored in security instance
+        feeFactor = security["FeeFactor"]
+        if feeFactor is None:
+            feeFactor = 0.00001
+
+        # Store the price used to calculate the fee for this order
+        security["OrdersFeesPrices"][parameters.Order.Id] = security.Price
+
+        fee = max(1.0, security.Price * parameters.Order.AbsoluteQuantity * feeFactor)
+
+        return OrderFee(CashAmount(fee, "USD"))
