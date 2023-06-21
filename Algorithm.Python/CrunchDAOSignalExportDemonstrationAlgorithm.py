@@ -14,79 +14,98 @@
 from AlgorithmImports import *
 
 ### <summary>
-### This algorithm sends a current portfolio target to CrunchDAO API every time
-### the ema indicators crosses between themselves.
+### This algorithm sends portfolio targets to CrunchDAO API once a week.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="securities and portfolio" />
 class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
+    crunch_universe = []
+
     def Initialize(self):
-        ''' Initialize the date and add one equity symbol, as CrunchDAO only accepts stock and index symbols '''
+        self.SetStartDate(2023, 5, 22)
+        self.SetEndDate(2023, 5, 26)
+        self.SetCash(1_000_000)
 
-        self.SetStartDate(2013, 10, 7)   #Set Start Date
-        self.SetEndDate(2013, 10, 11)    #Set End Date
-        self.SetCash(100000)             #Set Strategy Cash
+        # Connect to CrunchDAO
+        api_key = ""            # Your CrunchDAO API key
+        model = ""              # The Id of your CrunchDAO model
+        submission_name = ""    # A name for the submission to distinguish it from your other submissions
+        comment = ""            # A comment for the submission
+        self.SignalExport.AddSignalExportProviders(CrunchDAOSignalExport(api_key, model, submission_name, comment))
 
-        self.spy = self.AddEquity("SPY").Symbol;
+        self.SetSecurityInitializer(BrokerageModelSecurityInitializer(self.BrokerageModel, FuncSecuritySeeder(self.GetLastKnownPrices)))
 
-        self.fast = self.EMA("SPY", 10)
-        self.slow = self.EMA("SPY", 100)
+        # Add a custom data universe to read the CrunchDAO skeleton
+        self.AddUniverse(CrunchDaoSkeleton, "CrunchDaoSkeleton", Resolution.Daily, self.select_symbols)
 
-        # Initialize these flags, to check when the ema indicators crosses between themselves
-        self.emaFastIsNotSet = True;
-        self.emaFastWasAbove = False;
+        # Create a Scheduled Event to submit signals every monday before the market opens
+        self.week = -1
+        self.Schedule.On(
+            self.DateRules.Every([DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday]), 
+            self.TimeRules.At(13, 15, TimeZones.Utc), 
+            self.submit_signals)
 
-        # Set the CrunchDAO signal export provider
-        # CrunchDAO API key: This value is provided by CrunchDAO when you sign up
-        self.crunchDAOApiKey = ""
+        self.Settings.MinimumOrderMarginPortfolioPercentage = 0
 
-        # CrunchDAO Model ID: When your email is verified, you can find this value in your CrunchDAO profile main page: https://tournament.crunchdao.com/profile/alpha
-        self.crunchDAOModel = ""
+        self.SetWarmUp(timedelta(45))
 
-        # Replace this value with the name for your submission (Optional)
-        self.crunchDAOSubmissionName = ""
+    def select_symbols(self, data: List[CrunchDaoSkeleton]) -> List[Symbol]:
+        return [x.Symbol for x in data]
 
-        # Replace this value with a comment for your submission (Optional)
-        self.crunchDAOComment = ""
-        self.SignalExport.AddSignalExportProviders(CrunchDAOSignalExport(self.crunchDAOApiKey, self.crunchDAOModel, self.crunchDAOSubmissionName, self.crunchDAOComment))
+    def OnSecuritiesChanged(self, changes):
+        for security in changes.RemovedSecurities:
+            if security in self.crunch_universe:
+                self.crunch_universe.remove(security)
+        self.crunch_universe.extend(changes.AddedSecurities)
+
+    def submit_signals(self):
+        if self.IsWarmingUp:
+            return
         
-        self.first_call = True
-        
-        self.SetWarmUp(100)
+        # Submit signals once per week
+        week_num = self.Time.isocalendar()[1]
+        if self.week == week_num:
+            return
+        self.week = week_num
 
-    def OnData(self, data):
-        ''' Reduce the quantity of holdings for spy or increase it when the EMA's indicators crosses
-        between themselves, then send a signal to CrunchDAO API '''
-        if self.IsWarmingUp: return
-        
-        # Place an order as soon as possible to send a signal.
-        if self.first_call:
-            self.SetHoldings("SPY", 0.1)
-            target = PortfolioTarget(self.spy, 0.1)
-            self.SignalExport.SetTargetPortfolio(target)
-            self.first_call = False
+        symbols = [security.Symbol for security in self.crunch_universe if security.Price > 0]
 
-        fast = self.fast.Current.Value
-        slow = self.slow.Current.Value
+        # Get historical price data
+        # close_prices = self.History(symbols, 22, Resolution.Daily).close.unstack(0)
 
-        # Set the value of flag _emaFastWasAbove, to know when the ema indicators crosses between themselves
-        if self.emaFastIsNotSet == True:
-            if fast > slow *1.001:
-                self.emaFastWasAbove = True
-            else:
-                self.emaFastWasAbove = False
-            self.emaFastIsNotSet = False;
+        # Create portfolio targets
+        weight_by_symbol = {symbol: 1/len(symbols) for symbol in symbols} # Add your logic here
+        targets = [PortfolioTarget(symbol, weight) for symbol, weight in weight_by_symbol.items()]
 
-        # Check whether ema fast and ema slow crosses. If they do, set holdings to SPY
-        # or reduce its holdings,update its value in self.target and send signals
-        # to the CrunchDAO API from self.target
-        if fast > slow * 1.001 and (not self.emaFastWasAbove):
-            self.SetHoldings("SPY", 0.1)
-            target = PortfolioTarget(self.spy, 0.1)
-            self.SignalExport.SetTargetPortfolio(target)
-        elif fast < slow * 0.999 and (self.emaFastWasAbove):
-            self.SetHoldings("SPY", 0.01)
-            target = PortfolioTarget(self.spy, 0.01)
-            self.SignalExport.SetTargetPortfolio(target)
+        # (Optional) Place trades
+        self.SetHoldings(targets)
+
+        # Send signals to CrunchDAO
+        success = self.SignalExport.SetTargetPortfolio(targets)
+        if not success:
+            self.Debug(f"Couldn't send targets at {self.Time}")
+
+
+class CrunchDaoSkeleton(PythonData):
+    
+    def GetSource(self, config, date, isLive):
+        return SubscriptionDataSource("https://tournament.crunchdao.com/data/skeleton.csv", SubscriptionTransportMedium.RemoteFile)
+
+    def Reader(self, config, line, date, isLive):
+        if not line[0].isdigit(): return None
+        skeleton = CrunchDaoSkeleton()
+        skeleton.Symbol = config.Symbol
+
+        try:
+            csv = line.split(',')
+            skeleton.EndTime = (datetime.strptime(csv[0], "%Y-%m-%d")).date() 
+            skeleton.Symbol =  Symbol(SecurityIdentifier.GenerateEquity(csv[1], Market.USA, mappingResolveDate=skeleton.Time), csv[1])
+            skeleton["Ticker"] = csv[1]
+
+        except ValueError:
+            # Do nothing
+            return None
+
+        return skeleton
