@@ -195,7 +195,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Down, -1)]
         [TestCase(Language.Python, InsightDirection.Flat, 1)]
         [TestCase(Language.Python, InsightDirection.Flat, -1)]
-        public virtual void InsightsReturnsTargetsConsistentWithDirection(Language language, InsightDirection direction, double weightSign)
+        public virtual void InsightsReturnsTargetsConsistentWithDirection(Language language, InsightDirection direction, int weightSign)
         {
             SetPortfolioConstruction(language);
 
