@@ -40,6 +40,11 @@ namespace QuantConnect.Indicators
         /// <returns>And indicator result representing the composition of the two indicators</returns>
         public delegate IndicatorResult IndicatorComposer(IndicatorBase left, IndicatorBase right);
 
+        /// <summary>
+        /// Event handler type for the CompositeIndicator.Reset event
+        /// </summary>
+        public delegate void ResetHandler();
+
         /// <summary>function used to compose the individual indicators</summary>
         private readonly IndicatorComposer _composer;
 
@@ -52,6 +57,11 @@ namespace QuantConnect.Indicators
         /// Gets the 'right' indicator for the delegate
         /// </summary>
         public IndicatorBase Right { get; private set; }
+
+        /// <summary>
+        /// Event handler that fires after this indicator is reset
+        /// </summary>
+        public event ResetHandler IsReset;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -67,6 +77,7 @@ namespace QuantConnect.Indicators
         public override void Reset() {
             Left.Reset();
             Right.Reset();
+            IsReset.Invoke();
             base.Reset();
         }
 

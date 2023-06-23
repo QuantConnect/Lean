@@ -98,7 +98,16 @@ namespace QuantConnect.Indicators
                 denominator.Update(consolidated);
             };
 
-            return numerator.Over(denominator);
+            var compositeIndicator = numerator.Over(denominator);
+            compositeIndicator.IsReset += () =>
+            {
+                x.Reset();
+                y.Reset();
+                numerator.Reset();
+                denominator.Reset();
+            };
+
+            return compositeIndicator;
         }
 
         /// <summary>

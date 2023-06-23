@@ -76,7 +76,7 @@ namespace QuantConnect.Indicators
         {
             _price.Reset();
             _volume.Reset();
-            _vwap = _price.WeightedBy(_volume, _period);
+            _vwap.Reset();
             base.Reset();
         }
 
