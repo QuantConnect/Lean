@@ -183,13 +183,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
-        [TestCase(Language.CSharp, InsightDirection.Up)]
-        [TestCase(Language.CSharp, InsightDirection.Down)]
-        [TestCase(Language.CSharp, InsightDirection.Flat)]
-        [TestCase(Language.Python, InsightDirection.Up)]
-        [TestCase(Language.Python, InsightDirection.Down)]
-        [TestCase(Language.Python, InsightDirection.Flat)]
-        public virtual void InsightsReturnsTargetsConsistentWithDirection(Language language, InsightDirection direction)
+        [TestCase(Language.CSharp, InsightDirection.Up, 1)]
+        [TestCase(Language.CSharp, InsightDirection.Up, -1)]
+        [TestCase(Language.CSharp, InsightDirection.Down, 1)]
+        [TestCase(Language.CSharp, InsightDirection.Down, -1)]
+        [TestCase(Language.CSharp, InsightDirection.Flat, 1)]
+        [TestCase(Language.CSharp, InsightDirection.Flat, -1)]
+        [TestCase(Language.Python, InsightDirection.Up, 1)]
+        [TestCase(Language.Python, InsightDirection.Up, -1)]
+        [TestCase(Language.Python, InsightDirection.Down, 1)]
+        [TestCase(Language.Python, InsightDirection.Down, -1)]
+        [TestCase(Language.Python, InsightDirection.Flat, 1)]
+        [TestCase(Language.Python, InsightDirection.Flat, -1)]
+        public virtual void InsightsReturnsTargetsConsistentWithDirection(Language language, InsightDirection direction, int weightSign)
         {
             SetPortfolioConstruction(language);
 
@@ -203,7 +209,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var expectedTargets = Algorithm.Securities
                 .Select(x => new PortfolioTarget(x.Key, (int)direction * Math.Floor(amount / x.Value.Price)));
 
-            var insights = Algorithm.Securities.Keys.Select(x => GetInsight(x, direction, Algorithm.UtcTime));
+            var insights = Algorithm.Securities.Keys.Select(x => GetInsight(x, direction, Algorithm.UtcTime, weight: weightSign * Weight));
             var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights.ToArray());
 
             AssertTargets(expectedTargets, actualTargets);

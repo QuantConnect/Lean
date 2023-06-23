@@ -64,4 +64,4 @@ class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruc
             insight: The insight to create a target for
         Returns:
             The value of the selected insight member'''
-        return insight.Weight
+        return abs(insight.Weight)
