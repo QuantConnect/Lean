@@ -39,22 +39,22 @@ class SecurityCustomPropertiesAlgorithm(QCAlgorithm):
         self.spy["BB"] = self.BB(self.spy.Symbol, 20, 1, MovingAverageType.Simple, Resolution.Minute);
 
         # Fee factor to be used by the custom fee model
-        self.spy["FeeFactor"] = 0.00002
+        self.spy.FeeFactor = 0.00002
         self.spy.SetFeeModel(CustomFeeModel())
 
         # This property will be used to store the prices used to calculate the fees in order to assert the correct fee factor is used.
-        self.spy["OrdersFeesPrices"] = {}
+        self.spy.OrdersFeesPrices = {}
 
     def OnData(self, data):
-        if not self.spy.Get[IndicatorBase]("FastEma").IsReady:
+        if not self.spy.FastEma.IsReady:
             return
 
         if not self.Portfolio.Invested:
             # Using the property and the generic interface to access our indicator
-            if self.spy.SlowEma > self.spy.Get[IndicatorBase]("FastEma"):
+            if self.spy.SlowEma > self.spy.FastEma:
                 self.SetHoldings(self.spy.Symbol, 1)
         else:
-            if self.spy.SlowEma < self.spy.Get[IndicatorBase]("FastEma"):
+            if self.spy.Get[IndicatorBase]("SlowEma") < self.spy.Get[IndicatorBase]("FastEma"):
                 self.Liquidate(self.spy.Symbol)
 
         # Using the indexer to access our indicator
@@ -64,7 +64,7 @@ class SecurityCustomPropertiesAlgorithm(QCAlgorithm):
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
             fee = orderEvent.OrderFee
-            expectedFee = self.spy["OrdersFeesPrices"][orderEvent.OrderId] * orderEvent.AbsoluteFillQuantity * self.spy["FeeFactor"]
+            expectedFee = self.spy.OrdersFeesPrices[orderEvent.OrderId] * orderEvent.AbsoluteFillQuantity * self.spy.FeeFactor
             if not isclose(fee.Value.Amount, expectedFee, rel_tol=1e-15):
                 raise Exception(f"Custom fee model failed to set the correct fee. Expected: {expectedFee}. Actual: {fee.Value.Amount}")
 
@@ -78,7 +78,7 @@ class CustomFeeModel(FeeModel):
     def GetOrderFee(self, parameters):
         security = parameters.Security
         # custom fee math using the fee factor stored in security instance
-        feeFactor = security["FeeFactor"]
+        feeFactor = security.FeeFactor
         if feeFactor is None:
             feeFactor = 0.00001
 
