@@ -318,7 +318,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public Beta B(Symbol target, Symbol reference, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(QuantConnect.Symbol.None, "B", resolution);
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"B({period})", resolution);
             var beta = new Beta(name, period, target, reference);
             InitializeIndicator(target, beta, resolution, selector);
             InitializeIndicator(reference, beta, resolution, selector);
