@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
             // Using the generic interface to access the custom properties
-            else if (_spy.Get<IndicatorBase>("SlowEma") < _spy.Get<IndicatorBase>("FastEma"))
+            else if (_spy.Get<ExponentialMovingAverage>("SlowEma") < _spy.Get<ExponentialMovingAverage>("FastEma"))
             {
                 Liquidate(_spy.Symbol);
             }

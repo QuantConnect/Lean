@@ -54,7 +54,7 @@ class SecurityCustomPropertiesAlgorithm(QCAlgorithm):
             if self.spy.SlowEma > self.spy.FastEma:
                 self.SetHoldings(self.spy.Symbol, 1)
         else:
-            if self.spy.Get[IndicatorBase]("SlowEma") < self.spy.Get[IndicatorBase]("FastEma"):
+            if self.spy.Get[ExponentialMovingAverage]("SlowEma") < self.spy.Get[ExponentialMovingAverage]("FastEma"):
                 self.Liquidate(self.spy.Symbol)
 
         # Using the indexer to access our indicator
