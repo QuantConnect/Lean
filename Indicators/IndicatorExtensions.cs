@@ -70,7 +70,7 @@ namespace QuantConnect.Indicators
         /// <param name="weight">Indicator that provides the average weights</param>
         /// <param name="period">Average period</param>
         /// <returns>Indicator that results of the average of first by weights given by second</returns>
-        public static CompositeIndicator WeightedBy<T, TWeight>(this IndicatorBase<T> value, TWeight weight, int period)
+        public static ResetCompositeIndicator WeightedBy<T, TWeight>(this IndicatorBase<T> value, TWeight weight, int period)
             where T : IBaseData
             where TWeight : IndicatorBase<IndicatorDataPoint>
         {
@@ -99,15 +99,14 @@ namespace QuantConnect.Indicators
             };
 
             var compositeIndicator = numerator.Over(denominator);
-            compositeIndicator.IsReset += () =>
-            {
+            var resetCompositeIndicator = new ResetCompositeIndicator(compositeIndicator, () => {
                 x.Reset();
                 y.Reset();
                 numerator.Reset();
                 denominator.Reset();
-            };
+            });
 
-            return compositeIndicator;
+            return resetCompositeIndicator;
         }
 
         /// <summary>
