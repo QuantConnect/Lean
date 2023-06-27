@@ -244,6 +244,8 @@ namespace QuantConnect.Lean.Engine.Setup
 
                         //Algorithm is live, not backtesting:
                         algorithm.SetLiveMode(true);
+                        algorithm.SetAlgorithmMode(liveJob.AlgorithmMode);
+                        algorithm.SetDeploymentTarget(liveJob.DeploymentTarget);
 
                         //Initialize the algorithm's starting date
                         algorithm.SetDateTime(DateTime.UtcNow);

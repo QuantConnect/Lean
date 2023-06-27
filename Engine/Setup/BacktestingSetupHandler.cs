@@ -164,6 +164,8 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     //Algorithm is backtesting, not live:
                     algorithm.SetLiveMode(false);
+                    algorithm.SetAlgorithmMode(job.AlgorithmMode);
+                    algorithm.SetDeploymentTarget(job.DeploymentTarget);
 
                     //Set the source impl for the event scheduling
                     algorithm.Schedule.SetEventSchedule(parameters.RealTimeHandler);

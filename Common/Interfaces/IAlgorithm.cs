@@ -251,6 +251,22 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Algorithm running mode.
+        /// </summary>
+        AlgorithmMode AlgorithmMode
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Deployment target, either local or cloud.
+        /// </summary>
+        DeploymentTarget DeploymentTarget
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the subscription settings to be used when adding securities via universe selection
         /// </summary>
         UniverseSettings UniverseSettings
@@ -705,6 +721,18 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="live">Bool live mode flag</param>
         void SetLiveMode(bool live);
+
+        /// <summary>
+        /// Sets the algorithm running mode
+        /// </summary>
+        /// <param name="algorithmMode">Algorithm mode</param>
+        void SetAlgorithmMode(AlgorithmMode algorithmMode);
+
+        /// <summary>
+        /// Sets the algorithm deployment target
+        /// </summary>
+        /// <param name="deploymentTarget">Deployment target</param>
+        void SetDeploymentTarget(DeploymentTarget deploymentTarget);
 
         /// <summary>
         /// Sets <see cref="IsWarmingUp"/> to false to indicate this algorithm has finished its warm up

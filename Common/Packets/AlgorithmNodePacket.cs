@@ -157,6 +157,18 @@ namespace QuantConnect.Packets
         public string HistoryProvider = "";
 
         /// <summary>
+        /// Algorithm running mode.
+        /// </summary>
+        [JsonProperty(PropertyName = "eAlgorithmMode")]
+        public AlgorithmMode AlgorithmMode;
+
+        /// <summary>
+        /// Deployment target, either local or cloud.
+        /// </summary>
+        [JsonProperty(PropertyName = "eDeploymentTarget")]
+        public DeploymentTarget DeploymentTarget;
+
+        /// <summary>
         /// Gets a unique name for the algorithm defined by this packet
         /// </summary>
         public string GetAlgorithmName()

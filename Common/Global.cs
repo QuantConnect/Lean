@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Converters;
 using System.Runtime.Serialization;
 using System.Runtime.CompilerServices;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
@@ -1220,5 +1219,55 @@ namespace QuantConnect
             new DateTime(2022, 12, 26),
             new DateTime(2023, 12, 25)
         };
+    }
+
+    /// <summary>
+    /// Represents the types deployment targets for algorithms
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum DeploymentTarget
+    {
+        /// <summary>
+        /// Cloud Platform (0)
+        /// </summary>
+        [EnumMember(Value = "cloud")]
+        CloudPlatform,
+
+        /// <summary>
+        /// Local Platform (1)
+        /// </summary>
+        [EnumMember(Value = "local")]
+        LocalPlatform
+    }
+
+    /// <summary>
+    /// Represents the deployment modes of an algorithm
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum AlgorithmMode
+    {
+        /// <summary>
+        /// Live (0)
+        /// </summary>
+        [EnumMember(Value = "live")]
+        Live,
+
+        /// <summary>
+        /// Optimization (1)
+        /// </summary>
+        [EnumMember(Value = "optimization")]
+        Optimization,
+
+        /// <summary>
+        /// Backtesting (2)
+        /// </summary>
+        [EnumMember(Value = "backtesting")]
+        Backtesting,
+
+        /// <summary>
+        /// Research (1)
+        /// </summary>
+        [EnumMember(Value = "research")]
+        Research
     }
 }
