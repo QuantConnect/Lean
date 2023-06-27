@@ -28,6 +28,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         self.symbol = "SPY"
+        self.symbol2 = "GOOG"
         self.customSymbol = "IBM"
         self.price = None
 
@@ -37,6 +38,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         # Find more symbols here: http://quantconnect.com/data
 
         self.AddEquity(self.symbol, Resolution.Daily)
+        self.AddEquity(self.symbol2, Resolution.Daily)
         self.AddData(CustomData, self.customSymbol, Resolution.Daily)
 
         # Set up default Indicators, these indicators are defined on the Value property of incoming data (except ATR and AROON which use the full TradeBar object)
@@ -54,7 +56,8 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
                             # by default if the symbol is a tradebar type then it will be the max of the high property
                             'MAX' : self.MAX(self.symbol, 14, Resolution.Daily),
                             'ATR' : self.ATR(self.symbol, 14, MovingAverageType.Simple, Resolution.Daily),
-                            'AROON' : self.AROON(self.symbol, 20, Resolution.Daily)
+                            'AROON' : self.AROON(self.symbol, 20, Resolution.Daily),
+                            'B' : self.B(self.symbol, self.symbol2, 14)
                           }
 
         #  Here we're going to define indicators using 'selector' functions. These 'selector' functions will define what data gets sent into the indicator

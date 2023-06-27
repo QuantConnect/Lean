@@ -318,7 +318,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public Beta B(Symbol target, Symbol reference, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(QuantConnect.Symbol.None, "B", resolution);
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"B({period})", resolution);
             var beta = new Beta(name, period, target, reference);
             InitializeIndicator(target, beta, resolution, selector);
             InitializeIndicator(reference, beta, resolution, selector);
@@ -2131,7 +2131,9 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public string CreateIndicatorName(Symbol symbol, string type, Resolution? resolution)
         {
-            if (!resolution.HasValue)
+            var symbolIsNotEmpty = symbol != QuantConnect.Symbol.None && symbol != QuantConnect.Symbol.Empty;
+
+            if (!resolution.HasValue && symbolIsNotEmpty)
             {
                 resolution = GetSubscription(symbol).Resolution;
             }
@@ -2168,7 +2170,7 @@ namespace QuantConnect.Algorithm
 
             var parts = new List<string>();
 
-            if (symbol != QuantConnect.Symbol.None && symbol != QuantConnect.Symbol.Empty)
+            if (symbolIsNotEmpty)
             {
                 parts.Add(symbol.ToString());
             }
