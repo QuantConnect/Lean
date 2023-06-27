@@ -33,9 +33,11 @@ namespace QuantConnect.Algorithm.CSharp
     public class IndicatorSuiteAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private string _ticker = "SPY";
+        private string _ticker2 = "GOOG";
         private string _customTicker = "IBM";
 
         private Symbol _symbol;
+        private Symbol _symbol2;
         private Symbol _customSymbol;
 
         private Indicators _indicators;
@@ -61,6 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             //Add as many securities as you like. All the data will be passed into the event handler:
             _symbol = AddSecurity(SecurityType.Equity, _ticker, Resolution.Daily).Symbol;
+            _symbol2 = AddSecurity(SecurityType.Equity, _ticker2, Resolution.Daily).Symbol;
 
             //Add the Custom Data:
             _customSymbol = AddData<CustomData>(_customTicker, Resolution.Daily).Symbol;
@@ -79,7 +82,8 @@ namespace QuantConnect.Algorithm.CSharp
                 MOMP = MOMP(_symbol, 20, Resolution.Daily),
                 STD = STD(_symbol, 20, Resolution.Daily),
                 MIN = MIN(_symbol, 14, Resolution.Daily), // by default if the symbol is a tradebar type then it will be the min of the low property
-                MAX = MAX(_symbol, 14, Resolution.Daily)  // by default if the symbol is a tradebar type then it will be the max of the high property
+                MAX = MAX(_symbol, 14, Resolution.Daily),  // by default if the symbol is a tradebar type then it will be the max of the high property
+                B = B(_symbol, _symbol2, 14),
             };
 
             // Here we're going to define indicators using 'selector' functions. These 'selector' functions will define what data gets sent into the indicator
@@ -204,6 +208,7 @@ namespace QuantConnect.Algorithm.CSharp
             public MovingAverageConvergenceDivergence MACD;
             public Minimum MIN;
             public Maximum MAX;
+            public Beta B;
         }
 
         /// <summary>
@@ -240,7 +245,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4537;
+        public long DataPoints => 4733;
 
         /// <summary>
         /// Data Points count of the algorithm history

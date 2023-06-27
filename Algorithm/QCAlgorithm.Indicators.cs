@@ -2131,7 +2131,9 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public string CreateIndicatorName(Symbol symbol, string type, Resolution? resolution)
         {
-            if (!resolution.HasValue)
+            var symbolIsNotEmpty = symbol != QuantConnect.Symbol.None && symbol != QuantConnect.Symbol.Empty;
+
+            if (!resolution.HasValue && symbolIsNotEmpty)
             {
                 resolution = GetSubscription(symbol).Resolution;
             }
@@ -2168,7 +2170,7 @@ namespace QuantConnect.Algorithm
 
             var parts = new List<string>();
 
-            if (symbol != QuantConnect.Symbol.None && symbol != QuantConnect.Symbol.Empty)
+            if (symbolIsNotEmpty)
             {
                 parts.Add(symbol.ToString());
             }
