@@ -86,17 +86,17 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ResetsVolumeWeightedAveragePriceProperly()
         {
-            var ind = new TestVolumeWeightedAveragePriceIndicator(50);
+            var indicator = new TestVolumeWeightedAveragePriceIndicator(50);
 
             foreach (var data in TestHelper.GetTradeBarStream(TestFileName))
             {
-                ind.Update(data);
+                indicator.Update(data);
             }
-            Assert.IsTrue(ind.IsReady);
+            Assert.IsTrue(indicator.IsReady);
 
-            var lastVWAP = ind.GetVolumeWeightedAveragePrice();
-            ind.Reset();
-            var newVWAP = ind.GetVolumeWeightedAveragePrice();
+            var lastVWAP = indicator.GetVolumeWeightedAveragePrice();
+            indicator.Reset();
+            var newVWAP = indicator.GetVolumeWeightedAveragePrice();
             Assert.IsTrue(Object.ReferenceEquals(lastVWAP, newVWAP));
         }
     }
