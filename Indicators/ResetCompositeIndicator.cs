@@ -63,23 +63,7 @@ namespace QuantConnect.Indicators
         /// <param name="obj">The object to compare with the current object. </param>
         public override bool Equals(object obj)
         {
-            if (_compositeIndicator.Equals(obj))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Get Hash Code for this Object
-        /// </summary>
-        /// <returns>Integer Hash Code</returns>
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
+            return _compositeIndicator.Equals(obj);
         }
 
         /// <summary>

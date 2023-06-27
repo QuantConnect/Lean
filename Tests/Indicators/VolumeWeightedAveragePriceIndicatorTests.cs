@@ -82,5 +82,34 @@ namespace QuantConnect.Tests.Indicators
             ind.Update(new TradeBar(DateTime.UtcNow, Symbols.SPY, 2m, 2m, 2m, 2m, 1));
             Assert.AreEqual(ind.Current.Value, 2m);
         }
+
+        [Test]
+        public void ResetsVolumeWeightedAveragePriceProperly()
+        {
+            var ind = new TestVolumeWeightedAveragePriceIndicator(50);
+
+            foreach (var data in TestHelper.GetTradeBarStream(TestFileName))
+            {
+                ind.Update(data);
+            }
+            Assert.IsTrue(ind.IsReady);
+
+            var lastVWAP = ind.GetVolumeWeightedAveragePrice();
+            ind.Reset();
+            var newVWAP = ind.GetVolumeWeightedAveragePrice();
+            Assert.IsTrue(Object.ReferenceEquals(lastVWAP, newVWAP));
+        }
+    }
+
+    public class TestVolumeWeightedAveragePriceIndicator : VolumeWeightedAveragePriceIndicator
+    {
+        public TestVolumeWeightedAveragePriceIndicator(int period) : base(period)
+        {
+        }
+
+        public ResetCompositeIndicator GetVolumeWeightedAveragePrice()
+        {
+            return _vwap;
+        }
     }
 }
