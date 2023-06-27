@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.Indicators
 
         public ResetCompositeIndicator GetVolumeWeightedAveragePrice()
         {
-            return _vwap;
+            return VWAP;
         }
     }
 }
