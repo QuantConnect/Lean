@@ -31,7 +31,7 @@ namespace QuantConnect.Indicators
         private readonly int _period;
         private readonly Identity _price;
         private readonly Identity _volume;
-        private ResetCompositeIndicator _vwap;
+        protected ResetCompositeIndicator VWAP;
 
         /// <summary>
         /// Initializes a new instance of the VWAP class with the default name and period
@@ -56,13 +56,13 @@ namespace QuantConnect.Indicators
             _volume = new Identity("Volume");
 
             // This class will be using WeightedBy indicator extension
-            _vwap = _price.WeightedBy(_volume, period);
+            VWAP = _price.WeightedBy(_volume, period);
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _vwap.IsReady;
+        public override bool IsReady => VWAP.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -76,7 +76,7 @@ namespace QuantConnect.Indicators
         {
             _price.Reset();
             _volume.Reset();
-            _vwap.Reset();
+            VWAP.Reset();
             base.Reset();
         }
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Indicators
         {
             _price.Update(input.EndTime, GetTimeWeightedAveragePrice(input));
             _volume.Update(input.EndTime, input.Volume);
-            return _vwap.Current.Value;
+            return VWAP.Current.Value;
         }
 
         /// <summary>
