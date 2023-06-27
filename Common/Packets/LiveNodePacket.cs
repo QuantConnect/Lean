@@ -80,6 +80,18 @@ namespace QuantConnect.Packets
         public HashSet<string> LiveDataTypes;
 
         /// <summary>
+        /// Algorithm running mode.
+        /// </summary>
+        [JsonProperty(PropertyName = "eAlgorithmMode")]
+        public override AlgorithmMode AlgorithmMode
+        {
+            get
+            {
+                return AlgorithmMode.Live;
+            }
+        }
+
+        /// <summary>
         /// Default constructor for JSON of the Live Task Packet
         /// </summary>
         public LiveNodePacket()
@@ -92,7 +104,6 @@ namespace QuantConnect.Packets
                 TickLimit = 25,
                 RamAllocation = 512
             };
-            AlgorithmMode = AlgorithmMode.Live;
         }
     }
 }

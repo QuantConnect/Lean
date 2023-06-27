@@ -149,7 +149,6 @@ namespace QuantConnect.Queues
                     Language = Language,
                     Controls = controls,
                     PythonVirtualEnvironment = Config.Get("python-venv"),
-                    AlgorithmMode = AlgorithmMode.Live,
                     DeploymentTarget = DeploymentTarget.LocalPlatform,
                 };
 
@@ -217,14 +216,12 @@ namespace QuantConnect.Queues
                 Parameters = parameters,
                 Controls = controls,
                 PythonVirtualEnvironment = Config.Get("python-venv"),
-                AlgorithmMode = AlgorithmMode.Backtesting,
                 DeploymentTarget = DeploymentTarget.LocalPlatform,
             };
             // Only set optimization id when backtest is for optimization
             if (!optimizationId.IsNullOrEmpty())
             {
                 backtestJob.OptimizationId = optimizationId;
-                backtestJob.AlgorithmMode = AlgorithmMode.Optimization;
             }
 
             return backtestJob;

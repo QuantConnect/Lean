@@ -160,7 +160,7 @@ namespace QuantConnect.Packets
         /// Algorithm running mode.
         /// </summary>
         [JsonProperty(PropertyName = "eAlgorithmMode")]
-        public AlgorithmMode AlgorithmMode;
+        public virtual AlgorithmMode AlgorithmMode { get; } = AlgorithmMode.Backtesting;
 
         /// <summary>
         /// Deployment target, either local or cloud.

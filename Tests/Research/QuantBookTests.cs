@@ -14,15 +14,9 @@
 */
 
 using NUnit.Framework;
-using Python.Runtime;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.Market;
-using QuantConnect.Logging;
 using QuantConnect.Research;
-using QuantConnect.Securities;
+using QuantConnect.Configuration;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Tests.Research
 {
@@ -34,7 +28,25 @@ namespace QuantConnect.Tests.Research
         {
             var qb = new QuantBook();
             Assert.AreEqual(AlgorithmMode.Research, qb.AlgorithmMode);
-            Assert.AreEqual(DeploymentTarget.LocalPlatform, qb.DeploymentTarget);
+        }
+
+        [TestCase(DeploymentTarget.CloudPlatform)]
+        [TestCase(DeploymentTarget.LocalPlatform)]
+        [TestCase(null)]
+        public void SetsDeploymentTarget(DeploymentTarget? deploymentTarget)
+        {
+            if (deploymentTarget.HasValue)
+            {
+                Config.Set("deployment-target", JToken.FromObject(deploymentTarget));
+            }
+            else
+            {
+                // The default value for deploymentTarget = DeploymentTarget.LocalPlatform
+                deploymentTarget = DeploymentTarget.LocalPlatform;
+            }
+
+            var qb = new QuantBook();
+            Assert.AreEqual(deploymentTarget, qb.DeploymentTarget);
         }
     }
 }

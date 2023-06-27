@@ -163,7 +163,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     algorithm.SetAvailableDataTypes(BaseSetupHandler.GetConfiguredDataFeeds());
 
                     //Algorithm is backtesting, not live:
-                    algorithm.SetLiveMode(false);
                     algorithm.SetAlgorithmMode(job.AlgorithmMode);
                     algorithm.SetDeploymentTarget(job.DeploymentTarget);
 

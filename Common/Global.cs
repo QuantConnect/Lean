@@ -1230,13 +1230,11 @@ namespace QuantConnect
         /// <summary>
         /// Cloud Platform (0)
         /// </summary>
-        [EnumMember(Value = "cloud")]
         CloudPlatform,
 
         /// <summary>
         /// Local Platform (1)
         /// </summary>
-        [EnumMember(Value = "local")]
         LocalPlatform
     }
 
@@ -1249,25 +1247,21 @@ namespace QuantConnect
         /// <summary>
         /// Live (0)
         /// </summary>
-        [EnumMember(Value = "live")]
         Live,
 
         /// <summary>
         /// Optimization (1)
         /// </summary>
-        [EnumMember(Value = "optimization")]
         Optimization,
 
         /// <summary>
         /// Backtesting (2)
         /// </summary>
-        [EnumMember(Value = "backtesting")]
         Backtesting,
 
         /// <summary>
         /// Research (1)
         /// </summary>
-        [EnumMember(Value = "research")]
         Research
     }
 }
