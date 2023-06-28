@@ -98,7 +98,7 @@ namespace QuantConnect.Indicators
                 denominator.Update(consolidated);
             };
 
-            var resetCompositeIndicator = numerator.Over(denominator, () => {
+            var resetCompositeIndicator = new ResetCompositeIndicator(numerator, denominator, GetOverIndicatorComposer(), () => {
                 x.Reset();
                 y.Reset();
                 numerator.Reset();
@@ -219,18 +219,10 @@ namespace QuantConnect.Indicators
         /// </remarks>
         /// <param name="left">The left indicator</param>
         /// <param name="right">The right indicator</param>
-        /// <param name="extraResetAction">Optional aciton to execute once the composite indicator is reset</param>
         /// <returns>The ratio of the left to the right indicator</returns>
-        public static CompositeIndicator Over(this IndicatorBase left, IndicatorBase right, Action extraResetAction = null)
+        public static CompositeIndicator Over(this IndicatorBase left, IndicatorBase right)
         {
-            if (extraResetAction == null)
-            {
-                return new(left, right, (l, r) => r.Current.Value == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l.Current.Value / r.Current.Value));
-            }
-            else
-            {
-                return new ResetCompositeIndicator(left, right, (l, r) => r.Current.Value == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l.Current.Value / r.Current.Value), extraResetAction);
-            }
+            return new(left, right, GetOverIndicatorComposer());
         }
 
         /// <summary>
@@ -245,7 +237,7 @@ namespace QuantConnect.Indicators
         /// <returns>The ratio of the left to the right indicator</returns>
         public static CompositeIndicator Over(this IndicatorBase left, IndicatorBase right, string name)
         {
-            return new (name, left, right, (l, r) => r.Current.Value == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l.Current.Value / r.Current.Value));
+            return new (name, left, right, GetOverIndicatorComposer());
         }
 
         /// <summary>
@@ -581,6 +573,11 @@ namespace QuantConnect.Indicators
             }
 
             return indicator.SafeAsManagedObject();
+        }
+
+        private static CompositeIndicator.IndicatorComposer GetOverIndicatorComposer()
+        {
+            return (l, r) => r.Current.Value == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l.Current.Value / r.Current.Value);
         }
     }
 }
