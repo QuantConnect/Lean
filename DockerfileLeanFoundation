@@ -23,10 +23,10 @@ RUN apt-get update && apt-get -y install wget curl unzip \
 
 # Install IB Gateway: Installs to /root/ibgateway
 RUN mkdir -p /root/ibgateway && \
-    wget -q https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v10.20.1f.sh && \
-    chmod 777 ibgateway-latest-standalone-linux-x64.v10.20.1f.sh && \
-    ./ibgateway-latest-standalone-linux-x64.v10.20.1f.sh -q -dir /root/ibgateway && \
-    rm ibgateway-latest-standalone-linux-x64.v10.20.1f.sh
+    wget -q https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v10.23.2a.sh && \
+    chmod 777 ibgateway-latest-standalone-linux-x64.v10.23.2a.sh && \
+    ./ibgateway-latest-standalone-linux-x64.v10.23.2a.sh -q -dir /root/ibgateway && \
+    rm ibgateway-latest-standalone-linux-x64.v10.23.2a.sh
 
 # Install dotnet 6 sdk & runtime
 RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
