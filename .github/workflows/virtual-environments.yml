@@ -33,8 +33,8 @@ jobs:
       - name: Run Python Package Tests
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests" --blame-hang-timeout 120seconds --blame-crash
 
-      - name: Run Pomegranate & Tigramite Python Package Test
-        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.PomegranateTest|Tigramite" --blame-hang-timeout 120seconds --blame-crash
+      - name: Run Pomegranate & Neuralprophet Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.PomegranateTest|Neuralprophet" --blame-hang-timeout 120seconds --blame-crash
 
       - name: Run StableBaselines Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.StableBaselinesTest" --blame-hang-timeout 120seconds --blame-crash
@@ -60,11 +60,14 @@ jobs:
       - name: Run Hvplot Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.HvplotTest" --blame-hang-timeout 120seconds --blame-crash
 
-      - name: Run Hvplot Python Package Test
+      - name: Run Stellargraph Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.StellargraphTest" --blame-hang-timeout 120seconds --blame-crash
 
       - name: Run Keras Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.KerasTest" --blame-hang-timeout 120seconds --blame-crash
 
-      - name: Run Keras Python Package Test
+      - name: Run Scikeras Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.ScikerasTest" --blame-hang-timeout 120seconds --blame-crash
+
+      - name: Run Transformers
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Transformers" --blame-hang-timeout 120seconds --blame-crash
