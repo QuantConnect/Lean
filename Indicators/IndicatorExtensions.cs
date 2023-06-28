@@ -70,7 +70,7 @@ namespace QuantConnect.Indicators
         /// <param name="weight">Indicator that provides the average weights</param>
         /// <param name="period">Average period</param>
         /// <returns>Indicator that results of the average of first by weights given by second</returns>
-        public static ResetCompositeIndicator WeightedBy<T, TWeight>(this IndicatorBase<T> value, TWeight weight, int period)
+        public static CompositeIndicator WeightedBy<T, TWeight>(this IndicatorBase<T> value, TWeight weight, int period)
             where T : IBaseData
             where TWeight : IndicatorBase<IndicatorDataPoint>
         {
@@ -98,8 +98,7 @@ namespace QuantConnect.Indicators
                 denominator.Update(consolidated);
             };
 
-            var compositeIndicator = numerator.Over(denominator);
-            var resetCompositeIndicator = new ResetCompositeIndicator(compositeIndicator, () => {
+            var resetCompositeIndicator = numerator.Over(denominator, () => {
                 x.Reset();
                 y.Reset();
                 numerator.Reset();
@@ -220,10 +219,18 @@ namespace QuantConnect.Indicators
         /// </remarks>
         /// <param name="left">The left indicator</param>
         /// <param name="right">The right indicator</param>
+        /// <param name="extraResetAction">Optional aciton to execute once the composite indicator is reset</param>
         /// <returns>The ratio of the left to the right indicator</returns>
-        public static CompositeIndicator Over(this IndicatorBase left, IndicatorBase right)
+        public static CompositeIndicator Over(this IndicatorBase left, IndicatorBase right, Action extraResetAction = null)
         {
-            return new (left, right, (l, r) => r.Current.Value == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l.Current.Value / r.Current.Value));
+            if (extraResetAction == null)
+            {
+                return new(left, right, (l, r) => r.Current.Value == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l.Current.Value / r.Current.Value));
+            }
+            else
+            {
+                return new ResetCompositeIndicator(left, right, (l, r) => r.Current.Value == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l.Current.Value / r.Current.Value), extraResetAction);
+            }
         }
 
         /// <summary>

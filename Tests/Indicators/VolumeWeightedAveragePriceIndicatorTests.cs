@@ -98,6 +98,10 @@ namespace QuantConnect.Tests.Indicators
             indicator.Reset();
             var newVWAP = indicator.GetVolumeWeightedAveragePrice();
             Assert.IsTrue(Object.ReferenceEquals(lastVWAP, newVWAP));
+            Assert.AreEqual(0, newVWAP.Left.Samples);
+            Assert.AreEqual(0, newVWAP.Right.Samples);
+            Assert.IsFalse(newVWAP.Left.IsReady);
+            Assert.IsFalse(newVWAP.Right.IsReady);
         }
     }
 
@@ -107,7 +111,7 @@ namespace QuantConnect.Tests.Indicators
         {
         }
 
-        public ResetCompositeIndicator GetVolumeWeightedAveragePrice()
+        public CompositeIndicator GetVolumeWeightedAveragePrice()
         {
             return VWAP;
         }

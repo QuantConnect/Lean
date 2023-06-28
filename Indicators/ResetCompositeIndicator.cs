@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
 using System;
 
 namespace QuantConnect.Indicators
@@ -21,7 +20,7 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// Class that extends CompositeIndicator to execute a given action once is reset
     /// </summary>
-    public class ResetCompositeIndicator : IndicatorBase
+    public class ResetCompositeIndicator : CompositeIndicator
     {
         /// <summary>
         /// Action to execute once the given CompositeIndicator is reset
@@ -29,41 +28,29 @@ namespace QuantConnect.Indicators
         private Action _extraResetAction;
 
         /// <summary>
-        /// The CompositeIndicator that will fire the given action once is reset
+        /// Creates a new ResetCompositeIndicator capable of taking the output from the left and right indicators
+        /// and producing a new value via the composer delegate specified
         /// </summary>
-        private CompositeIndicator _compositeIndicator;
+        /// <param name="left">The left indicator for the 'composer'</param>
+        /// <param name="right">The right indidcator for the 'composoer'</param>
+        /// <param name="composer">Function used to compose the left and right indicators</param>
+        /// <param name="extraResetAction">Action to execute once the composite indicator is reset</param>
+        public ResetCompositeIndicator(IndicatorBase left, IndicatorBase right, IndicatorComposer composer, Action extraResetAction)
+            : this($"RESET_COMPOSE({left.Name},{right.Name})", left, right, composer, extraResetAction)
+        { }
 
         /// <summary>
-        /// Gets current value of the given CompositeIndicator
+        /// Creates a new CompositeIndicator capable of taking the output from the left and right indicators
+        /// and producing a new value via the composer delegate specified
         /// </summary>
-        public IndicatorDataPoint Current => _compositeIndicator.Current;
-
-        /// <summary>
-        /// Gets a flag indicating when the given CompositeIndicator is ready
-        /// </summary>
-        public override bool IsReady => _compositeIndicator.IsReady;
-
-        /// <summary>
-        /// Creates a new ResetCompositeIndicator with the given CompositeIndicator and Action
-        /// </summary>
-        /// <param name="compositeIndicator">The CompositeIndicator that will fire the given action once is reset</param>
-        /// <param name="extraResetAction">Action to be executed once the given CompositeIndicator is reset</param>
-        public ResetCompositeIndicator(CompositeIndicator compositeIndicator, Action extraResetAction)
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="left">The left indicator for the 'composer'</param>
+        /// <param name="right">The right indidcator for the 'composoer'</param>
+        /// <param name="composer">Function used to compose the left and right indicators</param>
+        /// <param name="extraResetAction">Action to execute once the indicator is reset</param>
+        public ResetCompositeIndicator(string name, IndicatorBase left, IndicatorBase right, IndicatorComposer composer, Action extraResetAction) : base(name, left, right, composer)
         {
             _extraResetAction = extraResetAction;
-            _compositeIndicator = compositeIndicator;
-        }
-
-        /// <summary>
-        /// Determines whether the specified object is equal to the current object.
-        /// </summary>
-        /// <returns>
-        /// true if the specified object  is equal to the current object; otherwise, false.
-        /// </returns>
-        /// <param name="obj">The object to compare with the current object. </param>
-        public override bool Equals(object obj)
-        {
-            return _compositeIndicator.Equals(obj);
         }
 
         /// <summary>
@@ -71,18 +58,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _compositeIndicator.Reset();
+            base.Reset();
             _extraResetAction.Invoke();
-        }
-
-        /// <summary>
-        /// Updates the given CompositeIndicator
-        /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
-        public override bool Update(IBaseData input)
-        {
-            return _compositeIndicator.Update(input);
         }
     }
 }

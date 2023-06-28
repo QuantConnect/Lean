@@ -31,7 +31,7 @@ namespace QuantConnect.Indicators
         private readonly int _period;
         private readonly Identity _price;
         private readonly Identity _volume;
-        protected ResetCompositeIndicator VWAP;
+        protected CompositeIndicator VWAP;
 
         /// <summary>
         /// Initializes a new instance of the VWAP class with the default name and period
@@ -74,8 +74,6 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _price.Reset();
-            _volume.Reset();
             VWAP.Reset();
             base.Reset();
         }
