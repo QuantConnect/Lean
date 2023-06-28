@@ -15,12 +15,12 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Algorithm asserting the correct values for the deployment target and algorithm mode.
     /// </summary>
     public class AlgorithmModeAndDeploymentTargetAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm

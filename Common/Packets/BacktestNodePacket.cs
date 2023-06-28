@@ -81,7 +81,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Algorithm running mode.
         /// </summary>
-        [JsonProperty(PropertyName = "eAlgorithmMode")]
+        [JsonIgnore]
         public override AlgorithmMode AlgorithmMode
         {
             get
