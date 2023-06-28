@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     public class ResetCompositeIndicator : CompositeIndicator
     {
         /// <summary>
-        /// Action to execute once the given CompositeIndicator is reset
+        /// Action to execute once this indicator is reset
         /// </summary>
         private Action _extraResetAction;
 
@@ -32,12 +32,13 @@ namespace QuantConnect.Indicators
         /// and producing a new value via the composer delegate specified
         /// </summary>
         /// <param name="left">The left indicator for the 'composer'</param>
-        /// <param name="right">The right indidcator for the 'composoer'</param>
+        /// <param name="right">The right indicator for the 'composer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
         /// <param name="extraResetAction">Action to execute once the composite indicator is reset</param>
         public ResetCompositeIndicator(IndicatorBase left, IndicatorBase right, IndicatorComposer composer, Action extraResetAction)
             : this($"RESET_COMPOSE({left.Name},{right.Name})", left, right, composer, extraResetAction)
-        { }
+        {
+        }
 
         /// <summary>
         /// Creates a new CompositeIndicator capable of taking the output from the left and right indicators
@@ -45,16 +46,17 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="left">The left indicator for the 'composer'</param>
-        /// <param name="right">The right indidcator for the 'composoer'</param>
+        /// <param name="right">The right indicator for the 'composer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
         /// <param name="extraResetAction">Action to execute once the indicator is reset</param>
-        public ResetCompositeIndicator(string name, IndicatorBase left, IndicatorBase right, IndicatorComposer composer, Action extraResetAction) : base(name, left, right, composer)
+        public ResetCompositeIndicator(string name, IndicatorBase left, IndicatorBase right, IndicatorComposer composer, Action extraResetAction)
+            : base(name, left, right, composer)
         {
             _extraResetAction = extraResetAction;
         }
 
         /// <summary>
-        /// Resets the given CompositeIndicator and invokes the given action
+        /// Resets this indicator and invokes the given reset action
         /// </summary>
         public override void Reset()
         {

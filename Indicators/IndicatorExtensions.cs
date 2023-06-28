@@ -222,7 +222,7 @@ namespace QuantConnect.Indicators
         /// <returns>The ratio of the left to the right indicator</returns>
         public static CompositeIndicator Over(this IndicatorBase left, IndicatorBase right)
         {
-            return new(left, right, GetOverIndicatorComposer());
+            return new (left, right, GetOverIndicatorComposer());
         }
 
         /// <summary>
@@ -575,6 +575,10 @@ namespace QuantConnect.Indicators
             return indicator.SafeAsManagedObject();
         }
 
+        /// <summary>
+        /// Gets the IndicatorComposer for a CompositeIndicator whose result is the ratio of the left to the right
+        /// </summary>
+        /// <returns>The IndicatorComposer for a CompositeIndicator whose result is the ratio of the left to the right</returns>
         private static CompositeIndicator.IndicatorComposer GetOverIndicatorComposer()
         {
             return (l, r) => r.Current.Value == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l.Current.Value / r.Current.Value);
