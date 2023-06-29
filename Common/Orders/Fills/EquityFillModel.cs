@@ -59,7 +59,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Fill only if open or extended
-            if (!IsExchangeOpen(asset,
+            if (!asset.IsMarketOpen(
                 Parameters.ConfigProvider
                     .GetSubscriptionDataConfigs(asset.Symbol)
                     .IsExtendedMarketHours()))
@@ -130,7 +130,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, false)) return fill;
+            if (!asset.IsMarketOpen(false)) return fill;
 
             // Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
@@ -187,7 +187,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, false)) return fill;
+            if (!asset.IsMarketOpen(false)) return fill;
 
             // Get the trade bar that closes after the order time
             var tradeBar = GetBestEffortTradeBar(asset, order.Time);
@@ -265,8 +265,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(
-                asset,
+            if (!asset.IsMarketOpen(
                 Parameters.ConfigProvider
                     .GetSubscriptionDataConfigs(asset.Symbol)
                     .IsExtendedMarketHours()))
@@ -363,7 +362,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(asset,
+            if (!asset.IsMarketOpen(
                 Parameters.ConfigProvider
                     .GetSubscriptionDataConfigs(asset.Symbol)
                     .IsExtendedMarketHours()))
@@ -527,7 +526,7 @@ namespace QuantConnect.Orders.Fills
 
             // wait until market open
             // make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, false)) return fill;
+            if (!asset.IsMarketOpen(false)) return fill;
 
             // assume the order completely filled
             fill.FillQuantity = order.Quantity;
@@ -635,7 +634,7 @@ namespace QuantConnect.Orders.Fills
             }
             // make sure the exchange is open/normal market hours before filling
             // It will return true if the last bar opens before the market closes
-            else if (!IsExchangeOpen(asset, false))
+            else if (!asset.IsMarketOpen(false))
             {
                 return fill;
             }
@@ -1038,25 +1037,6 @@ namespace QuantConnect.Orders.Fills
             }
 
             return new Prices(endTime, current, open, high, low, close);
-        }
-
-        /// <summary>
-        /// Determines if the exchange is open using the current time of the asset
-        /// </summary>
-        protected static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
-        {
-            if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
-            {
-                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
-                var currentBar = asset.GetLastData();
-                if (currentBar == null
-                    || asset.LocalTime.Date != currentBar.EndTime.Date
-                    || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours))
-                {
-                    return false;
-                }
-            }
-            return true;
         }
     }
 }

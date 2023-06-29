@@ -294,6 +294,122 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(tradeBars[0].Volume, fromDynamicSecurityData.Volume);
         }
 
+        private static TestCaseData[] IsMarketOpenTestCases => new[]
+        {
+            // With extended market hours
+            new TestCaseData(new TimeSpan(3, 59, 59), false, false),
+            new TestCaseData(new TimeSpan(4, 0, 0), false, false),
+            new TestCaseData(new TimeSpan(4, 0, 1), false, false),
+            new TestCaseData(new TimeSpan(9, 29, 59), false, false),
+            new TestCaseData(new TimeSpan(9, 30, 0), false, true),
+            new TestCaseData(new TimeSpan(12, 0, 0), false, true),
+            new TestCaseData(new TimeSpan(16, 0, 0), false, false),
+            new TestCaseData(new TimeSpan(16, 0, 1), false, false),
+            new TestCaseData(new TimeSpan(20, 0, 0), false, false),
+            new TestCaseData(new TimeSpan(20, 0, 1), false, false),
+            // Without extended market hours
+            new TestCaseData(new TimeSpan(3, 59, 59), true, false),
+            new TestCaseData(new TimeSpan(4, 0, 0), true, true),
+            new TestCaseData(new TimeSpan(4, 0, 1), true, true),
+            new TestCaseData(new TimeSpan(9, 29, 59), true, true),
+            new TestCaseData(new TimeSpan(9, 30, 0), true, true),
+            new TestCaseData(new TimeSpan(12, 0, 0), true, true),
+            new TestCaseData(new TimeSpan(16, 0, 0), true, true),
+            new TestCaseData(new TimeSpan(16, 0, 1), true, true),
+            new TestCaseData(new TimeSpan(20, 0, 0), true, false),
+            new TestCaseData(new TimeSpan(20, 0, 1), true, false),
+        };
+
+        [TestCaseSource(nameof(IsMarketOpenTestCases))]
+        public void IsMarketOpenIsAccurate(TimeSpan timeOfDay, bool extendedMarketHours, bool expected)
+        {
+            var security = GetSecurity(isMarketAlwaysOpen: false);
+
+            var dateTime = new DateTime(2023, 6, 26) + timeOfDay;
+            var timeKeeper = new LocalTimeKeeper(dateTime.ConvertToUtc(security.Exchange.TimeZone), security.Exchange.TimeZone);
+            security.SetLocalTimeKeeper(timeKeeper);
+
+            Assert.AreEqual(expected, security.IsMarketOpen(extendedMarketHours));
+        }
+
+        private static TestCaseData[] IsMarketOpenWithMarketDataTestCases => new[]
+        {
+            // With extended market hours
+            new TestCaseData(Resolution.Second, false),
+            new TestCaseData(Resolution.Minute, false),
+            new TestCaseData(Resolution.Hour, false),
+            new TestCaseData(Resolution.Daily, false),
+            // Without extended market hours
+            new TestCaseData(Resolution.Second, true),
+            new TestCaseData(Resolution.Minute, true),
+            new TestCaseData(Resolution.Hour, true),
+            new TestCaseData(Resolution.Daily, true),
+        };
+
+        [TestCaseSource(nameof(IsMarketOpenWithMarketDataTestCases))]
+        public void IsMarketOpenIsFalseWhenOutsideOfLastBar(Resolution resolution, bool extendedMarketHours)
+        {
+            var security = GetSecurity(isMarketAlwaysOpen: false);
+
+            BaseData marketData = null;
+            DateTime testDateTime = extendedMarketHours ? new DateTime(2023, 6, 26, 20, 0, 0) : new DateTime(2023, 6, 26, 16, 0, 0);
+            switch (resolution)
+            {
+                case Resolution.Second:
+                    marketData = new TradeBar(new DateTime(2023, 6, 26, 15, 59, 59), security.Symbol, 100, 100, 100, 100, 100, TimeSpan.FromSeconds(1));
+                    break;
+                case Resolution.Minute:
+                    marketData = new TradeBar(new DateTime(2023, 6, 26, 15, 59, 0), security.Symbol, 100, 100, 100, 100, 100, TimeSpan.FromMinutes(1));
+                    break;
+                case Resolution.Hour:
+                    marketData = new TradeBar(new DateTime(2023, 6, 26, 15, 0, 0), security.Symbol, 100, 100, 100, 100, 100, TimeSpan.FromHours(1));
+                    break;
+                case Resolution.Daily:
+                    marketData = new TradeBar(new DateTime(2023, 6, 26, 0, 0, 0), security.Symbol, 100, 100, 100, 100, 100, TimeSpan.FromDays(1));
+                    testDateTime = new DateTime(2023, 6, 27, 0, 0, 0);
+                    break;
+                default:
+                    Assert.Fail($"Invalid resolution for test");
+                    return;
+            }
+            security.SetMarketPrice(marketData);
+
+            var timeKeeper = new LocalTimeKeeper(testDateTime.ConvertToUtc(security.Exchange.TimeZone), security.Exchange.TimeZone);
+            security.SetLocalTimeKeeper(timeKeeper);
+
+            Assert.IsFalse(security.IsMarketOpen(extendedMarketHours));
+        }
+
+        [TestCase(Resolution.Hour)]
+        [TestCase(Resolution.Daily)]
+        public void IsMarketOpenIsTrueWhenInsideOfLastBar(Resolution resolution)
+        {
+            var security = GetSecurity(isMarketAlwaysOpen: false);
+
+            BaseData marketData = null;
+            DateTime testDateTime;
+            switch (resolution)
+            {
+                case Resolution.Hour:
+                    marketData = new TradeBar(new DateTime(2023, 6, 26, 9, 0, 0), security.Symbol, 100, 100, 100, 100, 100, TimeSpan.FromHours(1));
+                    testDateTime = new DateTime(2023, 6, 26, 9, 29, 59);
+                    break;
+                case Resolution.Daily:
+                    marketData = new TradeBar(new DateTime(2023, 6, 26, 0, 0, 0), security.Symbol, 100, 100, 100, 100, 100, TimeSpan.FromDays(1));
+                    testDateTime = new DateTime(2023, 6, 26, 23, 59, 59);
+                    break;
+                default:
+                    Assert.Fail($"Invalid resolution for test");
+                    return;
+            }
+            security.SetMarketPrice(marketData);
+
+            var timeKeeper = new LocalTimeKeeper(testDateTime.ConvertToUtc(security.Exchange.TimeZone), security.Exchange.TimeZone);
+            security.SetLocalTimeKeeper(timeKeeper);
+
+            Assert.IsTrue(security.IsMarketOpen(false));
+        }
+
         #region Custom properties tests
 
         [Test]
