@@ -25,6 +25,44 @@ namespace QuantConnect.Tests.Python
     public class PythonPackagesTests
     {
         [Test]
+        public void Langchain()
+        {
+            AssertCode(
+                @"
+from langchain.prompts import PromptTemplate
+
+def RunTest():
+    prompt = PromptTemplate.from_template(""What is a good name for a company that makes {product}?"")
+    prompt.format(product=""colorful socks"")");
+        }
+
+        [Test]
+        public void Rbeast()
+        {
+            AssertCode(
+                @"
+import Rbeast as rb
+
+def RunTest():
+    (Nile, Year) = rb.load_example('nile')
+    o = rb.beast(Nile, season = 'none')
+    rb.plot(o)");
+        }
+
+        [Test, Explicit("Needs to be run by itself to avoid hanging")]
+        public void Transformers()
+        {
+            AssertCode(
+                @"
+from transformers import pipeline
+
+def RunTest():
+    classifier = pipeline('sentiment-analysis')
+
+    classifier('We are very happy to introduce pipeline to the transformers repository.')");
+        }
+
+        [Test]
         public void Tick()
         {
             AssertCode(
@@ -504,7 +542,7 @@ def RunTest():
 import ignite
 
 def RunTest():
-    assert(ignite.__version__ == '0.4.11')"
+    assert(ignite.__version__ == '0.4.12')"
             );
         }
 
@@ -1136,9 +1174,10 @@ def RunTest():
 	print('Number of variables =', solver.NumVariables())");
         }
 
-        [Test]
+        [Test, Explicit("Installed in specific environment. Requires older torch")]
         public void Neuralprophet()
         {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Pomegranate");
             AssertCode(
                 @"
 from neuralprophet import NeuralProphet
@@ -1954,14 +1993,13 @@ def RunTest():
             );
         }
 
-        [Test, Explicit("Installed in specific environment. Requires older dependencies")]
+        [Test]
         public void Tigramite()
         {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Pomegranate");
             AssertCode(@"
 import numpy as np
 from tigramite.pcmci import PCMCI
-from tigramite.independence_tests import ParCorr
+from tigramite.independence_tests.parcorr import ParCorr
 import tigramite.data_processing as pp
 from tigramite.toymodels import structural_causal_processes as toys
 
@@ -1991,6 +2029,7 @@ def RunTest():
         [Test, Explicit("Sometimes crashes when run along side the other tests")]
         public void NBeatsTest()
         {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Pomegranate");
             AssertCode(@"
 import warnings
 import numpy as np
@@ -2120,36 +2159,38 @@ def RunTest():
         /// <param name="module">The module we are testing</param>
         /// <param name="version">The module version</param>
         [TestCase("pulp", "2.7.0", "VERSION")]
-        [TestCase("pymc", "5.0.2", "__version__")]
+        [TestCase("pymc", "5.5.0", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
         [TestCase("wrapt", "1.14.1", "__version__")]
         [TestCase("tslearn", "0.5.3.2", "__version__")]
-        [TestCase("tweepy", "4.10.0", "__version__")]
+        [TestCase("tweepy", "4.14.0", "__version__")]
         [TestCase("pywt", "1.4.1", "__version__")]
         [TestCase("umap", "0.5.3", "__version__")]
         [TestCase("dtw", "1.3.0", "__version__")]
         [TestCase("mplfinance", "0.12.9b7", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
-        [TestCase("ipywidgets", "8.0.4", "__version__")]
-        [TestCase("astropy", "5.2.1", "__version__")]
-        [TestCase("gluonts", "0.12.3", "__version__")]
+        [TestCase("ipywidgets", "8.0.6", "__version__")]
+        [TestCase("astropy", "5.2.2", "__version__")]
+        [TestCase("gluonts", "0.13.2", "__version__")]
         [TestCase("gplearn", "0.4.2", "__version__")]
-        [TestCase("h2o", "3.40.0.1", "__version__")]
-        [TestCase("featuretools", "0.23.1", "__version__")]
-        [TestCase("pennylane", "0.29.0", "version()")]
+        [TestCase("h2o", "3.40.0.4", "__version__")]
+        [TestCase("featuretools", "1.26.0", "__version__")]
+        [TestCase("pennylane", "0.30.0", "version()")]
         [TestCase("pyfolio", "0.9.2", "__version__")]
-        [TestCase("altair", "4.2.2", "__version__")]
-        [TestCase("modin", "0.18.1", "__version__")]
+        [TestCase("altair", "5.0.1", "__version__")]
+        [TestCase("modin", "0.22.2", "__version__")]
         [TestCase("persim", "0.3.1", "__version__")]
-        [TestCase("pydmd", "0.4.0.post2301", "__version__")]
+        [TestCase("pydmd", "0.4.1.post2306", "__version__")]
         [TestCase("pandas_ta", "0.3.14b0", "__version__")]
         [TestCase("finrl", "finrl", "__package__")]
         [TestCase("tensortrade", "1.0.3", "__version__")]
-        [TestCase("quantstats", "0.0.59", "__version__")]
+        [TestCase("quantstats", "0.0.61", "__version__")]
         [TestCase("autokeras", "1.1.0", "__version__")]
-        [TestCase("panel", "0.14.3", "__version__")]
+        [TestCase("panel", "1.1.1", "__version__")]
         [TestCase("pyheat", "pyheat", "__name__")]
-        [TestCase("tensorflow_decision_forests", "1.2.0", "__version__")]
+        [TestCase("tensorflow_decision_forests", "1.3.0", "__version__")]
+        [TestCase("tensorflow_ranking", "0.5.1.dev", "__version__")]
+        [TestCase("pomegranate", "1.0.0", "__version__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssertCode(
