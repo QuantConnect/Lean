@@ -101,8 +101,6 @@ namespace QuantConnect.Indicators
             var resetCompositeIndicator = new ResetCompositeIndicator(numerator, denominator, GetOverIndicatorComposer(), () => {
                 x.Reset();
                 y.Reset();
-                numerator.Reset();
-                denominator.Reset();
             });
 
             return resetCompositeIndicator;

@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ResetsVolumeWeightedAveragePriceProperly()
+        public void ResetsInnerVolumeWeightedAveragePriceIndicatorProperly()
         {
             var indicator = new TestVolumeWeightedAveragePriceIndicator(50);
 
@@ -92,16 +92,74 @@ namespace QuantConnect.Tests.Indicators
             {
                 indicator.Update(data);
             }
+
             Assert.IsTrue(indicator.IsReady);
 
-            var lastVWAP = indicator.GetVolumeWeightedAveragePrice();
+            var lastVWAPIndicator = indicator.GetInnerVolumeWeightedAveragePriceIndicator();
+
+            Assert.AreNotEqual(0, lastVWAPIndicator.Samples);
+            Assert.AreNotEqual(0, lastVWAPIndicator.Left.Samples);
+            Assert.AreNotEqual(0, lastVWAPIndicator.Right.Samples);
+            Assert.IsTrue(lastVWAPIndicator.IsReady);
+            Assert.IsTrue(lastVWAPIndicator.Left.IsReady);
+            Assert.IsTrue(lastVWAPIndicator.Right.IsReady);
+
             indicator.Reset();
-            var newVWAP = indicator.GetVolumeWeightedAveragePrice();
-            Assert.IsTrue(Object.ReferenceEquals(lastVWAP, newVWAP));
-            Assert.AreEqual(0, newVWAP.Left.Samples);
-            Assert.AreEqual(0, newVWAP.Right.Samples);
-            Assert.IsFalse(newVWAP.Left.IsReady);
-            Assert.IsFalse(newVWAP.Right.IsReady);
+            var newVWAPIndicator = indicator.GetInnerVolumeWeightedAveragePriceIndicator();
+
+            Assert.IsTrue(Object.ReferenceEquals(lastVWAPIndicator, newVWAPIndicator));
+            Assert.AreEqual(0, newVWAPIndicator.Samples);
+            Assert.AreEqual(0, newVWAPIndicator.Left.Samples);
+            Assert.AreEqual(0, newVWAPIndicator.Right.Samples);
+            Assert.IsFalse(newVWAPIndicator.IsReady);
+            Assert.IsFalse(newVWAPIndicator.Left.IsReady);
+            Assert.IsFalse(newVWAPIndicator.Right.IsReady);
+        }
+
+        [Test]
+        public void ResetsInnerPriceIndicatorProperly()
+        {
+            var indicator = new TestVolumeWeightedAveragePriceIndicator(50);
+
+            foreach (var data in TestHelper.GetTradeBarStream(TestFileName))
+            {
+                indicator.Update(data);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            var lastPriceIndicator = indicator.GetInnerPriceIndicator();
+            Assert.AreNotEqual(0, lastPriceIndicator.Samples);
+            Assert.IsTrue(lastPriceIndicator.IsReady);
+
+            indicator.Reset();
+
+            var newPriceIndicator = indicator.GetInnerPriceIndicator();
+            Assert.AreEqual(0, newPriceIndicator.Samples);
+            Assert.IsFalse(newPriceIndicator.IsReady);
+        }
+
+        [Test]
+        public void ResetsInnerVolumeIndicatorProperly()
+        {
+            var indicator = new TestVolumeWeightedAveragePriceIndicator(50);
+
+            foreach (var data in TestHelper.GetTradeBarStream(TestFileName))
+            {
+                indicator.Update(data);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            var lastVolumeIndicator = indicator.GetInnerVolumeIndicator();
+            Assert.AreNotEqual(0, lastVolumeIndicator.Samples);
+            Assert.IsTrue(lastVolumeIndicator.IsReady);
+
+            indicator.Reset();
+
+            var newVolumeIndicator = indicator.GetInnerVolumeIndicator();
+            Assert.AreEqual(0, newVolumeIndicator.Samples);
+            Assert.IsFalse(newVolumeIndicator.IsReady);
         }
     }
 
@@ -111,9 +169,19 @@ namespace QuantConnect.Tests.Indicators
         {
         }
 
-        public CompositeIndicator GetVolumeWeightedAveragePrice()
+        public CompositeIndicator GetInnerVolumeWeightedAveragePriceIndicator()
         {
             return VWAP;
+        }
+
+        public IndicatorBase GetInnerPriceIndicator()
+        {
+            return Price;
+        }
+
+        public IndicatorBase GetInnerVolumeIndicator()
+        {
+            return Volume;
         }
     }
 }

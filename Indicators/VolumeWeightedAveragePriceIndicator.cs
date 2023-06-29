@@ -29,8 +29,8 @@ namespace QuantConnect.Indicators
         /// In this VWAP calculation, typical price is defined by (O + H + L + C) / 4
         /// </summary>
         private readonly int _period;
-        private readonly Identity _price;
-        private readonly Identity _volume;
+        protected readonly Identity Price;
+        protected readonly Identity Volume;
         protected CompositeIndicator VWAP;
 
         /// <summary>
@@ -52,11 +52,11 @@ namespace QuantConnect.Indicators
         {
             _period = period;
 
-            _price = new Identity("Price");
-            _volume = new Identity("Volume");
+            Price = new Identity("Price");
+            Volume = new Identity("Volume");
 
             // This class will be using WeightedBy indicator extension
-            VWAP = _price.WeightedBy(_volume, period);
+            VWAP = Price.WeightedBy(Volume, period);
         }
 
         /// <summary>
@@ -74,6 +74,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
+            Price.Reset();
+            Volume.Reset();
             VWAP.Reset();
             base.Reset();
         }
@@ -85,8 +87,8 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            _price.Update(input.EndTime, GetTimeWeightedAveragePrice(input));
-            _volume.Update(input.EndTime, input.Volume);
+            Price.Update(input.EndTime, GetTimeWeightedAveragePrice(input));
+            Volume.Update(input.EndTime, input.Volume);
             return VWAP.Current.Value;
         }
 
