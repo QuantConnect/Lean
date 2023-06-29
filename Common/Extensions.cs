@@ -1599,7 +1599,7 @@ namespace QuantConnect
                 var currentBar = security.GetLastData();
                 if (currentBar == null
                     || security.LocalTime < currentBar.Time
-                    || security.LocalTime >= currentBar.EndTime
+                    || security.LocalTime > currentBar.EndTime
                     || !security.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, extendedMarketHours))
                 {
                     return false;

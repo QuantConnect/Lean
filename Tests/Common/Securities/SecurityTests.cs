@@ -352,7 +352,7 @@ namespace QuantConnect.Tests.Common.Securities
             var security = GetSecurity(isMarketAlwaysOpen: false);
 
             BaseData marketData = null;
-            DateTime testDateTime = extendedMarketHours ? new DateTime(2023, 6, 26, 20, 0, 0) : new DateTime(2023, 6, 26, 16, 0, 0);
+            DateTime testDateTime = extendedMarketHours ? new DateTime(2023, 6, 26, 20, 0, 0) : new DateTime(2023, 6, 26, 16, 0, 1);
             switch (resolution)
             {
                 case Resolution.Second:
@@ -366,7 +366,7 @@ namespace QuantConnect.Tests.Common.Securities
                     break;
                 case Resolution.Daily:
                     marketData = new TradeBar(new DateTime(2023, 6, 26, 0, 0, 0), security.Symbol, 100, 100, 100, 100, 100, TimeSpan.FromDays(1));
-                    testDateTime = new DateTime(2023, 6, 27, 0, 0, 0);
+                    testDateTime = new DateTime(2023, 6, 27, 0, 0, 1);
                     break;
                 default:
                     Assert.Fail($"Invalid resolution for test");
@@ -396,7 +396,7 @@ namespace QuantConnect.Tests.Common.Securities
                     break;
                 case Resolution.Daily:
                     marketData = new TradeBar(new DateTime(2023, 6, 26, 0, 0, 0), security.Symbol, 100, 100, 100, 100, 100, TimeSpan.FromDays(1));
-                    testDateTime = new DateTime(2023, 6, 26, 23, 59, 59);
+                    testDateTime = new DateTime(2023, 6, 27, 0, 0, 0);
                     break;
                 default:
                     Assert.Fail($"Invalid resolution for test");

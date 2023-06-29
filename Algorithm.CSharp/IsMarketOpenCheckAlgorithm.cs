@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
             Schedule.On(
                 DateRules.EveryDay(_symbol),
                 TimeRules.At(16, 0, 0),
-                () => AssertIsMarketOpen(expected: false));
+                () => AssertIsMarketOpen(expected: true));
 
             Schedule.On(
                 DateRules.EveryDay(_symbol),
