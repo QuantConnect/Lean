@@ -114,6 +114,10 @@ namespace QuantConnect
         /// <returns>The sanitized error</returns>
         public static string ClearLeanPaths(string error)
         {
+            if (string.IsNullOrEmpty(error))
+            {
+                return error;
+            }
             return LeanPathRegex.Replace(error, string.Empty);
         }
 
