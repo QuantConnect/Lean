@@ -76,7 +76,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="left">The left indicator for the 'composer'</param>
-        /// <param name="right">The right indidcator for the 'composoer'</param>
+        /// <param name="right">The right indicator for the 'composer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
         public CompositeIndicator(string name, IndicatorBase left, IndicatorBase right, IndicatorComposer composer)
             : base(name)
@@ -92,7 +92,7 @@ namespace QuantConnect.Indicators
         /// and producing a new value via the composer delegate specified
         /// </summary>
         /// <param name="left">The left indicator for the 'composer'</param>
-        /// <param name="right">The right indidcator for the 'composoer'</param>
+        /// <param name="right">The right indicator for the 'composer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
         public CompositeIndicator(IndicatorBase left, IndicatorBase right, IndicatorComposer composer)
             : this($"COMPOSE({left.Name},{right.Name})", left, right, composer)
