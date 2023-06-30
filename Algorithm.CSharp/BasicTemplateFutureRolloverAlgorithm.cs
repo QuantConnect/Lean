@@ -206,12 +206,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0"},
             {"Information Ratio", "-4.774"},
             {"Tracking Error", "0.084"},
-            {"Treynor Ratio", "-4.853"},
+            {"Treynor Ratio", "-4.811"},
             {"Total Fees", "$4.30"},
             {"Estimated Strategy Capacity", "$5900000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Portfolio Turnover", "0.27%"},
-            {"OrderListHash", "40e4b91ec89383f6501d9ba324e50eb9"}
+            {"OrderListHash", "f25ba922089b0a8fc51d192fa9f7d28a"}
         };
     }  
 }

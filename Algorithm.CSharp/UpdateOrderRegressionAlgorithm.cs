@@ -207,28 +207,28 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "21"},
             {"Average Win", "0%"},
-            {"Average Loss", "-1.52%"},
-            {"Compounding Annual Return", "-7.370%"},
-            {"Drawdown", "14.900%"},
+            {"Average Loss", "-1.51%"},
+            {"Compounding Annual Return", "-7.337%"},
+            {"Drawdown", "15.000%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-14.198%"},
-            {"Sharpe Ratio", "-1.097"},
-            {"Probabilistic Sharpe Ratio", "0.025%"},
+            {"Net Profit", "-14.135%"},
+            {"Sharpe Ratio", "-1.092"},
+            {"Probabilistic Sharpe Ratio", "0.026%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.014"},
+            {"Alpha", "0.015"},
             {"Beta", "-0.417"},
             {"Annual Standard Deviation", "0.046"},
             {"Annual Variance", "0.002"},
-            {"Information Ratio", "-1.527"},
+            {"Information Ratio", "-1.525"},
             {"Tracking Error", "0.135"},
             {"Treynor Ratio", "0.121"},
             {"Total Fees", "$21.00"},
             {"Estimated Strategy Capacity", "$3000000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.51%"},
-            {"OrderListHash", "42f1bd0f07a2b9de382202681aa7af81"}
+            {"OrderListHash", "7601626d70ec06969356ec2c3b9082ad"}
         };
     }
 }

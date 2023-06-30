@@ -59,7 +59,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Fill only if open or extended
-            if (!asset.IsMarketOpen(
+            if (!IsExchangeOpen(asset,
                 Parameters.ConfigProvider
                     .GetSubscriptionDataConfigs(asset.Symbol)
                     .IsExtendedMarketHours()))
@@ -130,7 +130,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Make sure the exchange is open/normal market hours before filling
-            if (!asset.IsMarketOpen(false)) return fill;
+            if (!IsExchangeOpen(asset, false)) return fill;
 
             // Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
@@ -187,7 +187,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Make sure the exchange is open/normal market hours before filling
-            if (!asset.IsMarketOpen(false)) return fill;
+            if (!IsExchangeOpen(asset, false)) return fill;
 
             // Get the trade bar that closes after the order time
             var tradeBar = GetBestEffortTradeBar(asset, order.Time);
@@ -265,7 +265,8 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!asset.IsMarketOpen(
+            if (!IsExchangeOpen(
+                asset,
                 Parameters.ConfigProvider
                     .GetSubscriptionDataConfigs(asset.Symbol)
                     .IsExtendedMarketHours()))
@@ -362,7 +363,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!asset.IsMarketOpen(
+            if (!IsExchangeOpen(asset,
                 Parameters.ConfigProvider
                     .GetSubscriptionDataConfigs(asset.Symbol)
                     .IsExtendedMarketHours()))
@@ -526,7 +527,7 @@ namespace QuantConnect.Orders.Fills
 
             // wait until market open
             // make sure the exchange is open/normal market hours before filling
-            if (!asset.IsMarketOpen(false)) return fill;
+            if (!IsExchangeOpen(asset, false)) return fill;
 
             // assume the order completely filled
             fill.FillQuantity = order.Quantity;
@@ -634,7 +635,7 @@ namespace QuantConnect.Orders.Fills
             }
             // make sure the exchange is open/normal market hours before filling
             // It will return true if the last bar opens before the market closes
-            else if (!asset.IsMarketOpen(false))
+            else if (!IsExchangeOpen(asset, false))
             {
                 return fill;
             }

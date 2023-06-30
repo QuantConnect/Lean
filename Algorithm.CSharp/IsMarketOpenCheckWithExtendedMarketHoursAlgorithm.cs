@@ -13,51 +13,33 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Algorithm asserting that IsMarketOpen is working as expected
     /// </summary>
-    public class IsMarketOpenCheckAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class IsMarketOpenCheckWithExtendedMarketHoursAlgorithm : IsMarketOpenCheckAlgorithm
     {
-        protected Symbol Symbol;
+        protected override bool ExtendedMarketHours { get; } = true;
 
-        protected virtual bool ExtendedMarketHours { get; }
-
-        public override void Initialize()
-        {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
-            SetCash(100000);
-
-            Symbol = AddEquity("SPY", Resolution.Minute, extendedMarketHours: ExtendedMarketHours).Symbol;
-        }
-
-        protected void AssertIsMarketOpen(bool expected)
-        {
-            var isMarketOpen = IsMarketOpen(Symbol);
-            Log($"IsMarketOpen at {Time}?: {isMarketOpen}");
-            if (isMarketOpen != expected)
-            {
-                throw new Exception($"Expected IsMarketOpen to be {expected} at {Time}.");
-            }
-        }
-
-        protected virtual void ScheduleMarketOpenChecks()
+        protected override void ScheduleMarketOpenChecks()
         {
             Schedule.On(
                 DateRules.EveryDay(Symbol),
-                TimeRules.At(4, 0, 0),
+                TimeRules.At(3, 59, 59),
                 () => AssertIsMarketOpen(expected: false));
+
+            Schedule.On(
+                DateRules.EveryDay(Symbol),
+                TimeRules.At(4, 0, 0),
+                () => AssertIsMarketOpen(expected: true));
 
             Schedule.On(
                 DateRules.EveryDay(Symbol),
                 TimeRules.At(9, 29, 59),
-                () => AssertIsMarketOpen(expected: false));
+                () => AssertIsMarketOpen(expected: true));
 
             Schedule.On(
                 DateRules.EveryDay(Symbol),
@@ -72,6 +54,16 @@ namespace QuantConnect.Algorithm.CSharp
             Schedule.On(
                 DateRules.EveryDay(Symbol),
                 TimeRules.At(16, 0, 0),
+                () => AssertIsMarketOpen(expected: true));
+
+            Schedule.On(
+                DateRules.EveryDay(Symbol),
+                TimeRules.At(19, 59, 59),
+                () => AssertIsMarketOpen(expected: true));
+
+            Schedule.On(
+                DateRules.EveryDay(Symbol),
+                TimeRules.At(20, 0, 0),
                 () => AssertIsMarketOpen(expected: false));
 
             Schedule.On(
@@ -84,27 +76,27 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public virtual bool CanRunLocally { get; } = true;
+        public override bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual Language[] Languages { get; } = { Language.CSharp };
+        public override Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 3943;
+        public override long DataPoints => 9643;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 0;
+        public override int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "0"},
             {"Average Win", "0%"},
