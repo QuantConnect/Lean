@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -76,6 +76,11 @@ namespace QuantConnect.Statistics
         /// The Maximum Favorable Excursion (as account currency)
         /// </summary>
         public decimal MFE { get; set; }
+
+        /// <summary>
+        /// Whether the option is in the money.
+        /// </summary>
+        public bool IsInTheMoney { get; set; }
 
         /// <summary>
         /// Returns the duration of the trade

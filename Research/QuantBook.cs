@@ -646,7 +646,8 @@ namespace QuantConnect.Research
                 var startingCapital = Convert.ToDecimal(dictEquity.FirstOrDefault().Value);
 
                 // Compute portfolio statistics
-                var stats = new PortfolioStatistics(profitLoss, equity, new(), listPerformance, listBenchmark, startingCapital);
+                // TODO: What should the trades list be?
+                var stats = new PortfolioStatistics(new List<Trade>(), profitLoss, equity, new(), listPerformance, listBenchmark, startingCapital);
 
                 result.SetItem("Average Win (%)", Convert.ToDouble(stats.AverageWinRate * 100).ToPython());
                 result.SetItem("Average Loss (%)", Convert.ToDouble(stats.AverageLossRate * 100).ToPython());

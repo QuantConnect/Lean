@@ -221,7 +221,8 @@ namespace QuantConnect.Statistics
                             EntryPrice = fill.FillPrice,
                             Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short,
                             Quantity = fill.AbsoluteFillQuantity,
-                            TotalFees = orderFee
+                            TotalFees = orderFee,
+                            IsInTheMoney = fill.IsInTheMoney
                         }
                     },
                     MinPrice = fill.FillPrice,
@@ -244,7 +245,8 @@ namespace QuantConnect.Statistics
                     EntryPrice = fill.FillPrice,
                     Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short,
                     Quantity = fill.AbsoluteFillQuantity,
-                    TotalFees = orderFee
+                    TotalFees = orderFee,
+                    IsInTheMoney = fill.IsInTheMoney
                 });
             }
             else
@@ -271,6 +273,7 @@ namespace QuantConnect.Statistics
                         trade.TotalFees += orderFeeAssigned ? 0 : orderFee;
                         trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * trade.Quantity * conversionRate * multiplier, 2);
                         trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * trade.Quantity * conversionRate * multiplier, 2);
+                        trade.IsInTheMoney = fill.IsInTheMoney;
 
                         AddNewTrade(trade);
                     }
@@ -291,7 +294,8 @@ namespace QuantConnect.Statistics
                             ProfitLoss = Math.Round((fill.FillPrice - trade.EntryPrice) * absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2),
                             TotalFees = trade.TotalFees + (orderFeeAssigned ? 0 : orderFee),
                             MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
-                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2)
+                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
+                            IsInTheMoney = fill.IsInTheMoney
                         });
 
                         trade.TotalFees = 0;
@@ -317,7 +321,8 @@ namespace QuantConnect.Statistics
                             EntryPrice = fill.FillPrice,
                             Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short,
                             Quantity = fill.AbsoluteFillQuantity,
-                            TotalFees = 0
+                            TotalFees = 0,
+                            IsInTheMoney = fill.IsInTheMoney
                         }
                     };
                     position.MinPrice = fill.FillPrice;
@@ -402,7 +407,8 @@ namespace QuantConnect.Statistics
                         ProfitLoss = Math.Round((exitAveragePrice - entryAveragePrice) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity) * conversionRate * multiplier, 2),
                         TotalFees = position.TotalFees,
                         MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryAveragePrice : entryAveragePrice - position.MaxPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
-                        MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryAveragePrice : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2)
+                        MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryAveragePrice : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
+                        IsInTheMoney = fill.IsInTheMoney
                     });
 
                     _positions.Remove(fill.Symbol);
@@ -500,7 +506,8 @@ namespace QuantConnect.Statistics
                     ProfitLoss = Math.Round((fill.FillPrice - entryPrice) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity) * conversionRate * multiplier, 2),
                     TotalFees = position.TotalFees,
                     MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryPrice : entryPrice - position.MaxPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
-                    MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2)
+                    MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
+                    IsInTheMoney = fill.IsInTheMoney
                 });
 
                 if (Math.Abs(totalExecutedQuantity) < fill.AbsoluteFillQuantity)

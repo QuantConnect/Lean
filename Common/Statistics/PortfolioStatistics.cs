@@ -163,6 +163,7 @@ namespace QuantConnect.Statistics
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         public PortfolioStatistics(
+            List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
             SortedDictionary<DateTime, decimal> portfolioTurnover,
@@ -189,6 +190,7 @@ namespace QuantConnect.Statistics
             var totalLoss = 0m;
             var totalWins = 0;
             var totalLosses = 0;
+            var totalITMOptionsWins = 0;
             foreach (var pair in profitLoss)
             {
                 var tradeProfitLoss = pair.Value;
@@ -202,6 +204,12 @@ namespace QuantConnect.Statistics
                 {
                     totalLoss += tradeProfitLoss / runningCapital;
                     totalLosses++;
+
+                    var trade = trades.FirstOrDefault(x => x.ExitTime == pair.Key);
+                    if (trade != null && trade.IsInTheMoney)
+                    {
+                        totalITMOptionsWins++;
+                    }
                 }
 
                 runningCapital += tradeProfitLoss;
@@ -210,6 +218,11 @@ namespace QuantConnect.Statistics
             AverageWinRate = totalWins == 0 ? 0 : totalProfit / totalWins;
             AverageLossRate = totalLosses == 0 ? 0 : totalLoss / totalLosses;
             ProfitLossRatio = AverageLossRate == 0 ? 0 : AverageWinRate / Math.Abs(AverageLossRate);
+
+            // Adjust number of winning and losing trades: ITM options assignment loss counts as a loss for profit and loss calculations,
+            // but adds a win to the wins count since this is an actual win even though premium paid is a loss.
+            totalWins += totalITMOptionsWins;
+            totalLosses -= totalITMOptionsWins;
 
             WinRate = profitLoss.Count == 0 ? 0 : (decimal) totalWins / profitLoss.Count;
             LossRate = profitLoss.Count == 0 ? 0 : (decimal) totalLosses / profitLoss.Count;
@@ -308,6 +321,6 @@ namespace QuantConnect.Statistics
         {
             var variance = performance.Variance();
             return variance.IsNaNOrZero() ? 0 : (decimal)variance * tradingDaysPerYear;
-        }        
+        }
     }
 }
