@@ -181,5 +181,11 @@ namespace QuantConnect.Packets
 
         /// Language model code analysis
         LanguageModelCodeAnalysis,
+
+        /// Language model chat work
+        LanguageModelChatWork,
+
+        /// Language model chat response
+        LanguageModelChatResponse,
     }
 }
