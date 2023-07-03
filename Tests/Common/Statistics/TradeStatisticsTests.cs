@@ -602,7 +602,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             return new List<Trade>
             {
-                new Trade
+                new OptionTrade
                 {
                     Symbol = Symbols.SPY_C_192_Feb19_2016,
                     EntryTime = time,

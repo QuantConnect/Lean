@@ -67,14 +67,6 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
-        {
-            if (orderEvent.Status == OrderStatus.Filled)
-            {
-
-            }
-        }
-
         public override void OnEndOfAlgorithm()
         {
             var trades = TradeBuilder.ClosedTrades;

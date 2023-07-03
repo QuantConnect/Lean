@@ -78,11 +78,6 @@ namespace QuantConnect.Statistics
         public decimal MFE { get; set; }
 
         /// <summary>
-        /// Whether the option is in the money.
-        /// </summary>
-        public bool IsInTheMoney { get; set; }
-
-        /// <summary>
         /// Returns the duration of the trade
         /// </summary>
         public TimeSpan Duration
@@ -98,5 +93,13 @@ namespace QuantConnect.Statistics
             get { return ProfitLoss - MFE; }
         }
 
+        /// <summary>
+        /// Returns whether the trade was profitable (is a win) or not (a loss)
+        /// </summary>
+        /// <returns>True if the trade was profitable</returns>
+        public virtual bool IsWin()
+        {
+            return ProfitLoss > 0;
+        }
     }
 }

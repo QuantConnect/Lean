@@ -206,7 +206,9 @@ namespace QuantConnect.Statistics
                     totalLosses++;
 
                     var trade = trades.FirstOrDefault(x => x.ExitTime == pair.Key);
-                    if (trade != null && trade.IsInTheMoney)
+                    // even though losing money, an ITM option trade is a winning trade,
+                    // so IsWin for an ITM OptionTrade will return true even if the trade was not profitable.
+                    if (trade != null && trade.IsWin())
                     {
                         totalITMOptionsWins++;
                     }

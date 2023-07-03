@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
@@ -212,19 +213,7 @@ namespace QuantConnect.Statistics
                 // no pending trades for symbol
                 _positions[fill.Symbol] = new Position
                 {
-                    PendingTrades = new List<Trade>
-                    {
-                        new Trade
-                        {
-                            Symbol = fill.Symbol,
-                            EntryTime = fill.UtcTime,
-                            EntryPrice = fill.FillPrice,
-                            Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short,
-                            Quantity = fill.AbsoluteFillQuantity,
-                            TotalFees = orderFee,
-                            IsInTheMoney = fill.IsInTheMoney
-                        }
-                    },
+                    PendingTrades = new List<Trade> { CreateTrade(fill, orderFee) },
                     MinPrice = fill.FillPrice,
                     MaxPrice = fill.FillPrice
                 };
@@ -238,16 +227,7 @@ namespace QuantConnect.Statistics
             if (Math.Sign(fill.FillQuantity) == (position.PendingTrades[index].Direction == TradeDirection.Long ? +1 : -1))
             {
                 // execution has same direction of trade
-                position.PendingTrades.Add(new Trade
-                {
-                    Symbol = fill.Symbol,
-                    EntryTime = fill.UtcTime,
-                    EntryPrice = fill.FillPrice,
-                    Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short,
-                    Quantity = fill.AbsoluteFillQuantity,
-                    TotalFees = orderFee,
-                    IsInTheMoney = fill.IsInTheMoney
-                });
+                position.PendingTrades.Add(CreateTrade(fill, orderFee));
             }
             else
             {
@@ -273,7 +253,12 @@ namespace QuantConnect.Statistics
                         trade.TotalFees += orderFeeAssigned ? 0 : orderFee;
                         trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * trade.Quantity * conversionRate * multiplier, 2);
                         trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * trade.Quantity * conversionRate * multiplier, 2);
-                        trade.IsInTheMoney = fill.IsInTheMoney;
+
+                        var optionTrade = trade as OptionTrade;
+                        if (optionTrade != null)
+                        {
+                            optionTrade.IsInTheMoney = fill.IsInTheMoney;
+                        }
 
                         AddNewTrade(trade);
                     }
@@ -282,21 +267,30 @@ namespace QuantConnect.Statistics
                         totalExecutedQuantity += absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? -1 : +1);
                         trade.Quantity -= absoluteUnexecutedQuantity;
 
-                        AddNewTrade(new Trade
+                        var isOption = trade.Symbol.SecurityType.IsOption();
+                        var newTrade = CreateTrade(isOption);
+                        newTrade.Symbol = trade.Symbol;
+                        newTrade.EntryTime = trade.EntryTime;
+                        newTrade.EntryPrice = trade.EntryPrice;
+                        newTrade.Direction = trade.Direction;
+                        newTrade.Quantity = absoluteUnexecutedQuantity;
+                        newTrade.ExitTime = fill.UtcTime;
+                        newTrade.ExitPrice = fill.FillPrice;
+                        newTrade.ProfitLoss = Math.Round((fill.FillPrice - trade.EntryPrice) * absoluteUnexecutedQuantity
+                            * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2);
+                        newTrade.TotalFees = trade.TotalFees + (orderFeeAssigned ? 0 : orderFee);
+                        newTrade.MAE = Math.Round((trade.Direction == TradeDirection.Long
+                            ? position.MinPrice - trade.EntryPrice
+                            : trade.EntryPrice - position.MaxPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2);
+                        newTrade.MFE = Math.Round((trade.Direction == TradeDirection.Long
+                            ? position.MaxPrice - trade.EntryPrice
+                            : trade.EntryPrice - position.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2);
+                        if (isOption)
                         {
-                            Symbol = trade.Symbol,
-                            EntryTime = trade.EntryTime,
-                            EntryPrice = trade.EntryPrice,
-                            Direction = trade.Direction,
-                            Quantity = absoluteUnexecutedQuantity,
-                            ExitTime = fill.UtcTime,
-                            ExitPrice = fill.FillPrice,
-                            ProfitLoss = Math.Round((fill.FillPrice - trade.EntryPrice) * absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2),
-                            TotalFees = trade.TotalFees + (orderFeeAssigned ? 0 : orderFee),
-                            MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
-                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
-                            IsInTheMoney = fill.IsInTheMoney
-                        });
+                            (newTrade as OptionTrade).IsInTheMoney = fill.IsInTheMoney;
+                        }
+
+                        AddNewTrade(newTrade);
 
                         trade.TotalFees = 0;
                     }
@@ -312,19 +306,7 @@ namespace QuantConnect.Statistics
                 {
                     // direction reversal
                     fill.FillQuantity -= totalExecutedQuantity;
-                    position.PendingTrades = new List<Trade>
-                    {
-                        new Trade
-                        {
-                            Symbol = fill.Symbol,
-                            EntryTime = fill.UtcTime,
-                            EntryPrice = fill.FillPrice,
-                            Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short,
-                            Quantity = fill.AbsoluteFillQuantity,
-                            TotalFees = 0,
-                            IsInTheMoney = fill.IsInTheMoney
-                        }
-                    };
+                    position.PendingTrades = new List<Trade> { CreateTrade(fill, 0) };
                     position.MinPrice = fill.FillPrice;
                     position.MaxPrice = fill.FillPrice;
                 }
@@ -395,21 +377,30 @@ namespace QuantConnect.Statistics
 
                     var direction = Math.Sign(fill.FillQuantity) < 0 ? TradeDirection.Long : TradeDirection.Short;
 
-                    AddNewTrade(new Trade
+                    var isOption = fill.Symbol.SecurityType.IsOption();
+                    var trade = CreateTrade(isOption);
+                    trade.Symbol = fill.Symbol;
+                    trade.EntryTime = entryTime;
+                    trade.EntryPrice = entryAveragePrice;
+                    trade.Direction = direction;
+                    trade.Quantity = Math.Abs(totalEntryQuantity);
+                    trade.ExitTime = fill.UtcTime;
+                    trade.ExitPrice = exitAveragePrice;
+                    trade.ProfitLoss = Math.Round((exitAveragePrice - entryAveragePrice) * Math.Abs(totalEntryQuantity)
+                        * Math.Sign(totalEntryQuantity) * conversionRate * multiplier, 2);
+                    trade.TotalFees = position.TotalFees;
+                    trade.MAE = Math.Round((direction == TradeDirection.Long
+                        ? position.MinPrice - entryAveragePrice
+                        : entryAveragePrice - position.MaxPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2);
+                    trade.MFE = Math.Round((direction == TradeDirection.Long
+                        ? position.MaxPrice - entryAveragePrice
+                        : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2);
+                    if (isOption)
                     {
-                        Symbol = fill.Symbol,
-                        EntryTime = entryTime,
-                        EntryPrice = entryAveragePrice,
-                        Direction = direction,
-                        Quantity = Math.Abs(totalEntryQuantity),
-                        ExitTime = fill.UtcTime,
-                        ExitPrice = exitAveragePrice,
-                        ProfitLoss = Math.Round((exitAveragePrice - entryAveragePrice) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity) * conversionRate * multiplier, 2),
-                        TotalFees = position.TotalFees,
-                        MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryAveragePrice : entryAveragePrice - position.MaxPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
-                        MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryAveragePrice : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
-                        IsInTheMoney = fill.IsInTheMoney
-                    });
+                        (trade as OptionTrade).IsInTheMoney = fill.IsInTheMoney;
+                    }
+
+                    AddNewTrade(trade);
 
                     _positions.Remove(fill.Symbol);
 
@@ -494,21 +485,31 @@ namespace QuantConnect.Statistics
 
                 var direction = totalExecutedQuantity < 0 ? TradeDirection.Long : TradeDirection.Short;
 
-                AddNewTrade(new Trade
+                var isOption = fill.Symbol.SecurityType.IsOption();
+                var trade = CreateTrade(isOption);
+
+                trade.Symbol = fill.Symbol;
+                trade.EntryTime = entryTime;
+                trade.EntryPrice = entryPrice;
+                trade.Direction = direction;
+                trade.Quantity = Math.Abs(totalExecutedQuantity);
+                trade.ExitTime = fill.UtcTime;
+                trade.ExitPrice = fill.FillPrice;
+                trade.ProfitLoss = Math.Round((fill.FillPrice - entryPrice) * Math.Abs(totalExecutedQuantity)
+                    * Math.Sign(-totalExecutedQuantity) * conversionRate * multiplier, 2);
+                trade.TotalFees = position.TotalFees;
+                trade.MAE = Math.Round((direction == TradeDirection.Long
+                    ? position.MinPrice - entryPrice
+                    : entryPrice - position.MaxPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2);
+                trade.MFE = Math.Round((direction == TradeDirection.Long
+                    ? position.MaxPrice - entryPrice
+                    : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2);
+                if (isOption)
                 {
-                    Symbol = fill.Symbol,
-                    EntryTime = entryTime,
-                    EntryPrice = entryPrice,
-                    Direction = direction,
-                    Quantity = Math.Abs(totalExecutedQuantity),
-                    ExitTime = fill.UtcTime,
-                    ExitPrice = fill.FillPrice,
-                    ProfitLoss = Math.Round((fill.FillPrice - entryPrice) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity) * conversionRate * multiplier, 2),
-                    TotalFees = position.TotalFees,
-                    MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryPrice : entryPrice - position.MaxPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
-                    MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
-                    IsInTheMoney = fill.IsInTheMoney
-                });
+                    (trade as OptionTrade).IsInTheMoney = fill.IsInTheMoney;
+                }
+
+                AddNewTrade(trade);
 
                 if (Math.Abs(totalExecutedQuantity) < fill.AbsoluteFillQuantity)
                 {
@@ -554,6 +555,33 @@ namespace QuantConnect.Statistics
                     _closedTrades.RemoveAt(0);
                 }
             }
+        }
+
+        private static Trade CreateTrade(bool isOption = false)
+        {
+            return isOption ? new OptionTrade() : new Trade();
+        }
+
+        private static Trade CreateTrade(OrderEvent fill, decimal orderFee)
+        {
+            Trade trade;
+            if (fill.Symbol.SecurityType.IsOption())
+            {
+                trade = new OptionTrade() { IsInTheMoney = fill.IsInTheMoney };
+            }
+            else
+            {
+                trade = new Trade();
+            }
+
+            trade.Symbol = fill.Symbol;
+            trade.EntryTime = fill.UtcTime;
+            trade.EntryPrice = fill.FillPrice;
+            trade.Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short;
+            trade.Quantity = fill.AbsoluteFillQuantity;
+            trade.TotalFees = orderFee;
+
+            return trade;
         }
     }
 }
