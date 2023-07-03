@@ -746,10 +746,6 @@ namespace QuantConnect.Lean.Engine.Results
             runtimeStatistics["Equity"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalPortfolioValue.ToStringInvariant("N2");
             runtimeStatistics["Holdings"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalHoldingsValue.ToStringInvariant("N2");
             runtimeStatistics["Volume"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
-            if (capacityEstimate != null)
-            {
-                runtimeStatistics["Capacity"] = AlgorithmCurrencySymbol + capacityEstimate.Capacity.RoundToSignificantDigits(2).ToFinancialFigures();
-            }
 
             return runtimeStatistics;
         }
