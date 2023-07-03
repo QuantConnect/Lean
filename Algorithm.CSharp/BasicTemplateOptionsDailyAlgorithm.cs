@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var contractsByExpiration = chain.Where(x => x.Expiry != Time.Date).OrderBy(x => x.Expiry);
                     var contract = contractsByExpiration.FirstOrDefault();
 
-                    if (contract != null && IsMarketOpen(contract.Symbol))
+                    if (contract != null)
                     {
                         // if found, trade it
                         MarketOrder(contract.Symbol, 1);

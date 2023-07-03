@@ -1597,18 +1597,7 @@ namespace QuantConnect
         /// <returns>True if the market is open</returns>
         public static bool IsMarketOpen(this Security security, bool extendedMarketHours)
         {
-            if (!security.Exchange.Hours.IsOpen(security.LocalTime, extendedMarketHours))
-            {
-                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
-                var currentBar = security.GetLastData();
-                if (currentBar == null
-                    || security.LocalTime.Date != currentBar.EndTime.Date
-                    || !security.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, extendedMarketHours))
-                {
-                    return false;
-                }
-            }
-            return true;
+            return security.Exchange.Hours.IsOpen(security.LocalTime, extendedMarketHours);
         }
 
         /// <summary>
