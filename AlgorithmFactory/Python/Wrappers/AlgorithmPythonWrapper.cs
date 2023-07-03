@@ -229,6 +229,16 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public bool LiveMode => _baseAlgorithm.LiveMode;
 
         /// <summary>
+        /// Algorithm running mode.
+        /// </summary>
+        public AlgorithmMode AlgorithmMode => _baseAlgorithm.AlgorithmMode;
+
+        /// <summary>
+        /// Deployment target, either local or cloud.
+        /// </summary>
+        public DeploymentTarget DeploymentTarget => _baseAlgorithm.DeploymentTarget;
+
+        /// <summary>
         /// Log messages from the strategy:
         /// </summary>
         public ConcurrentQueue<string> LogMessages => _baseAlgorithm.LogMessages;
@@ -997,6 +1007,18 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="live">Bool live mode flag</param>
         public void SetLiveMode(bool live) => _baseAlgorithm.SetLiveMode(live);
+
+        /// <summary>
+        /// Sets the algorithm running mode
+        /// </summary>
+        /// <param name="algorithmMode">Algorithm mode</param>
+        public void SetAlgorithmMode(AlgorithmMode algorithmMode) => _baseAlgorithm.SetAlgorithmMode(algorithmMode);
+
+        /// <summary>
+        /// Sets the algorithm deployment target
+        /// </summary>
+        /// <param name="deploymentTarget">Deployment target</param>
+        public void SetDeploymentTarget(DeploymentTarget deploymentTarget) => _baseAlgorithm.SetDeploymentTarget(deploymentTarget);
 
         /// <summary>
         /// Set the algorithm as initialized and locked. No more cash or security changes.

@@ -193,6 +193,9 @@ namespace QuantConnect.Research
 
                 SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider(_dataCacheProvider, mapFileProvider)));
                 SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider(_dataCacheProvider)));
+
+                SetAlgorithmMode(AlgorithmMode.Research);
+                SetDeploymentTarget(Config.GetValue("deployment-target", DeploymentTarget.LocalPlatform));
             }
             catch (Exception exception)
             {
