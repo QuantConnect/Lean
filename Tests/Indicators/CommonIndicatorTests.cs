@@ -131,28 +131,38 @@ namespace QuantConnect.Tests.Indicators
         protected virtual void RunTestIndicator(IndicatorBase<T> indicator)
         {
             if (indicator is IndicatorBase<IndicatorDataPoint>)
+            {
                 TestHelper.TestIndicator(
                     indicator as IndicatorBase<IndicatorDataPoint>,
                     TestFileName,
                     TestColumnName,
                     Assertion as Action<IndicatorBase<IndicatorDataPoint>, double>
                 );
+            }
             else if (indicator is IndicatorBase<IBaseDataBar>)
+            {
                 TestHelper.TestIndicator(
                     indicator as IndicatorBase<IBaseDataBar>,
                     TestFileName,
                     TestColumnName,
                     Assertion as Action<IndicatorBase<IBaseDataBar>, double>
                 );
+            }
             else if (indicator is IndicatorBase<TradeBar>)
+            {
                 TestHelper.TestIndicator(
                     indicator as IndicatorBase<TradeBar>,
                     TestFileName,
                     TestColumnName,
-                    Assertion as Action<IndicatorBase<TradeBar>, double>
-                );
+                    Assertion as Action<IndicatorBase<TradeBar>, double>);
+                TestHelper.RenkoTestIndicator(
+                    indicator as IndicatorBase<TradeBar>,
+                    TestFileName);
+            }
             else
+            {
                 throw new NotSupportedException("RunTestIndicator: Unsupported indicator data type: " + typeof(T));
+            }
         }
 
         /// <summary>

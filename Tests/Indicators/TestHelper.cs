@@ -202,6 +202,22 @@ namespace QuantConnect.Tests.Indicators
         }
 
         /// <summary>
+        /// Assert the indicator accepts RenkoBar's as input. The RenkoBar's are obtained from an external
+        /// CSV file.
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
+        public static void RenkoTestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename)
+        {
+            foreach (var parts in GetCsvFileStream(externalDataFilename))
+            {
+                var tradebar = parts.GetRenkoBar(1);
+
+                Assert.DoesNotThrow(() => indicator.Update(tradebar));
+            }
+        }
+
+        /// <summary>
         /// Tests a reset of the specified indicator after processing external data using the specified comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
@@ -392,6 +408,28 @@ namespace QuantConnect.Tests.Indicators
                 Close = dictionary.GetCsvValue("close").ToDecimal(),
                 Volume = forceVolumeColumn || dictionary.ContainsKey("volume") ? Parse.Long(dictionary.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
             };
+        }
+
+        /// <summary>
+        /// Grabs the RenkoBar values from the set of keys
+        /// </summary>
+        private static RenkoBar GetRenkoBar(this IReadOnlyDictionary<string, string> dictionary, decimal barSize)
+        {
+            var sid = (dictionary.ContainsKey("symbol") || dictionary.ContainsKey("ticker"))
+                ? SecurityIdentifier.GenerateEquity(dictionary.GetCsvValue("symbol", "ticker"), Market.USA)
+                : SecurityIdentifier.Empty;
+
+            return new RenkoBar(symbol : sid != SecurityIdentifier.Empty
+                    ? new Symbol(sid, dictionary.GetCsvValue("symbol", "ticker"))
+                    : Symbol.Empty,
+                start : Time.ParseDate(dictionary.GetCsvValue("date", "time")),
+                endTime : Time.ParseDate(dictionary.GetCsvValue("date", "time")),
+                brickSize : barSize,
+                open : dictionary.GetCsvValue("open").ToDecimal(),
+                high : dictionary.GetCsvValue("high").ToDecimal(),
+                low : dictionary.GetCsvValue("low").ToDecimal(),
+                close : dictionary.GetCsvValue("close").ToDecimal()
+            );
         }
     }
 }
