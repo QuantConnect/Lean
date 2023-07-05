@@ -27,12 +27,18 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm asserting final trade statistics for options assignment
+    ///
+    /// Expected win/loss rate statistics for the regression algorithm:
+    ///     Loss Rate 25%
+    ///     Win Rate 75%
     /// </summary>
     public class OptionAssignmentStatisticsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Security _stock;
-        private Security _callOption;
-        private Symbol _callOptionSymbol;
+        private Security _goog;
+        private Security _googCall600;
+        private Symbol _googCall600Symbol;
+        private Security _googCall650;
+        private Symbol _googCall650Symbol;
 
         public override void Initialize()
         {
@@ -40,72 +46,192 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2015, 12, 28);
             SetCash(100000);
 
-            _stock = AddEquity("GOOG", Resolution.Minute);
+            _goog = AddEquity("GOOG", Resolution.Minute);
 
-            var contracts = OptionChainProvider.GetOptionContractList(_stock.Symbol, UtcTime).ToList();
+            var contracts = OptionChainProvider.GetOptionContractList(_goog.Symbol, UtcTime).ToList();
 
-            _callOptionSymbol = contracts
+            _googCall600Symbol = contracts
                 .Where(c => c.ID.OptionRight == OptionRight.Call)
                 .OrderBy(c => c.ID.Date)
                 .First(c => c.ID.StrikePrice == 600m);
+            _googCall600 = AddOptionContract(_googCall600Symbol);
+            _googCall600["closed"] = false;
 
-            _callOption = AddOptionContract(_callOptionSymbol);
+            _googCall650Symbol = contracts
+                .Where(c => c.ID.OptionRight == OptionRight.Call)
+                .OrderBy(c => c.ID.Date)
+                .First(c => c.ID.StrikePrice == 650m);
+            _googCall650 = AddOptionContract(_googCall650Symbol);
+            _googCall650["closed"] = false;
+            _googCall650["bought"] = false;
         }
 
         public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested && _stock.Price != 0 && _callOption.Price != 0)
+            if (_goog.Price == 0 || _googCall600.Price == 0 || _googCall650.Price == 0)
             {
-                if (Time < _callOptionSymbol.ID.Date)
+                return;
+            }
+
+            if (!Portfolio.Invested)
+            {
+                if (Time < _googCall600Symbol.ID.Date)
                 {
-                    MarketOrder(_callOptionSymbol, 1);
+                    // This option assignment is expected to be a losing trade. The option is ITM but the premium paid is higher than the pay off
+                    MarketOrder(_googCall600Symbol, 1);
+                }
+
+                if (Time < _googCall650Symbol.ID.Date && !(bool)_googCall650["bought"])
+                {
+                    // This option assignment is expected to be a winning trade
+                    LimitOrder(_googCall650Symbol, 1, 0.95m * _googCall650.Price);
+                    // This is to avoid placing another order for this option
+                    _googCall650["bought"] = true;
                 }
             }
-            else if (_stock.Invested)
+            else if (_goog.Invested && (bool)_googCall600["closed"] && (bool)_googCall650["closed"])
             {
-                Liquidate(_stock.Symbol);
+                Liquidate(_goog.Symbol);
+            }
+        }
+
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            if (orderEvent.Status == OrderStatus.Filled && orderEvent.Symbol.SecurityType.IsOption())
+            {
+                Securities[orderEvent.Symbol]["closed"] = true;
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
+            AssertTradeStatistics();
+            AssertPortfolioStatistics();
+        }
+
+        private void AssertTradeStatistics()
+        {
             var trades = TradeBuilder.ClosedTrades;
 
-            if (trades.Count != 2)
+            if (trades.Count != 4)
             {
-                throw new Exception($"Expected 2 closed trades: 1 for the option, 1 for the underlying. Actual: {trades.Count}");
+                throw new Exception($@"AssertTradeStatistics(): Expected 4 closed trades: 2 for the options, 2 for the underlying. Actual: {
+                    trades.Count}");
             }
 
             var statistics = new TradeStatistics(trades);
 
-            if (statistics.TotalNumberOfTrades != 2)
+            if (statistics.TotalNumberOfTrades != 4)
             {
-                throw new Exception($"Expected 2 total trades: 1 for the option, 1 for the underlying. Actual: {statistics.TotalNumberOfTrades}");
+                throw new Exception($@"AssertTradeStatistics(): Expected 4 total trades: 2 for the options, 2 for the underlying. Actual: {
+                    statistics.TotalNumberOfTrades}");
             }
 
-            if (statistics.NumberOfWinningTrades != 2)
+            if (statistics.NumberOfWinningTrades != 3)
             {
-                throw new Exception($"Expected 2 winning trades (the ITM option and the underlying trades). Actual {statistics.NumberOfWinningTrades}");
+                throw new Exception($@"AssertTradeStatistics(): Expected 3 winning trades (the ITM 650 strike option and the underlying trades). Actual {
+                    statistics.NumberOfWinningTrades}");
             }
 
-            if (statistics.NumberOfLosingTrades != 0)
+            if (statistics.NumberOfLosingTrades != 1)
             {
-                throw new Exception($"Expected no losing trades. Actual {statistics.NumberOfLosingTrades}");
+                throw new Exception($@"AssertTradeStatistics(): Expected 1 losing trade (the 600 strike option). Actual {
+                    statistics.NumberOfLosingTrades}");
             }
 
-            if (statistics.WinRate != 1)
+            if (statistics.WinRate != 0.75m)
             {
-                throw new Exception($"Expected win rate to be 1. Actual {statistics.WinRate}");
+                throw new Exception($"AssertTradeStatistics(): Expected win rate to be 0.75. Actual {statistics.WinRate}");
             }
 
-            if (statistics.LossRate != 0)
+            if (statistics.LossRate != 0.25m)
             {
-                throw new Exception($"Expected loss rate to be 0. Actual {statistics.LossRate}");
+                throw new Exception($"AssertTradeStatistics(): Expected loss rate to be 0.25. Actual {statistics.LossRate}");
             }
 
-            if (statistics.WinLossRatio != 10)
+            if (statistics.WinLossRatio != 3)
             {
-                throw new Exception($"Expected win-loss ratio to be 10 (give there are no losing trades). Actual {statistics.WinLossRatio}");
+                throw new Exception($"AssertTradeStatistics(): Expected win-loss ratio to be 3. Actual {statistics.WinLossRatio}");
+            }
+
+            // Let's assert the trades per symbol just to be sure
+
+            // We expect the first option (600 strike) to be a losing trade
+            var googCall600Trade = trades.Where(t => t.Symbol == _googCall600Symbol).FirstOrDefault();
+            if (googCall600Trade == null)
+            {
+                throw new Exception("AssertTradeStatistics(): Expected a closed trade for the 600 strike option");
+            }
+            if (googCall600Trade.IsWin)
+            {
+                throw new Exception("AssertTradeStatistics(): Expected the 600 strike option to be a losing trade");
+            }
+
+            // We expect the second option (650 strike) to be a winning trade
+            var googCall650Trade = trades.Where(t => t.Symbol == _googCall650Symbol).FirstOrDefault();
+            if (googCall650Trade == null)
+            {
+                throw new Exception("AssertTradeStatistics(): Expected a closed trade for the 650 strike option");
+            }
+            if (!googCall650Trade.IsWin)
+            {
+                throw new Exception("AssertTradeStatistics(): Expected the 650 strike option to be a winning trade");
+            }
+
+            // We expect the both underlying trades to be winning trades
+            var googTrades = trades.Where(t => t.Symbol == _goog.Symbol).ToList();
+            if (googTrades.Count != 2)
+            {
+                throw new Exception(
+                    $@"AssertTradeStatistics(): Expected 2 closed trades for the underlying, one for each option assignment. Actual: {
+                        googTrades.Count}");
+            }
+            if (googTrades.Any(x => !x.IsWin || x.ProfitLoss < 0))
+            {
+                throw new Exception("AssertTradeStatistics(): Expected both underlying trades to be winning trades");
+            }
+        }
+
+        private void AssertPortfolioStatistics()
+        {
+            var portfolioStatistics = Statistics.TotalPerformance.PortfolioStatistics;
+
+            if (portfolioStatistics.WinRate != 0.75m)
+            {
+                throw new Exception($"AssertPortfolioStatistics(): Expected win rate to be 0.75. Actual {portfolioStatistics.WinRate}");
+            }
+
+            if (portfolioStatistics.LossRate != 0.25m)
+            {
+                throw new Exception($"AssertPortfolioStatistics(): Expected loss rate to be 0.25. Actual {portfolioStatistics.LossRate}");
+            }
+
+            var expectedAverageWinRate = 0.3296200091047853680743378947m;
+            if (portfolioStatistics.AverageWinRate != 0.3296200091047853680743378947m)
+            {
+                throw new Exception($@"AssertPortfolioStatistics(): Expected average win rate to be {expectedAverageWinRate}. Actual {
+                    portfolioStatistics.AverageWinRate}");
+            }
+
+            var expectedAverageLossRate = -0.1355663825757575757575757576m;
+            if (portfolioStatistics.AverageLossRate != expectedAverageLossRate)
+            {
+                throw new Exception($@"AssertPortfolioStatistics(): Expected average loss rate to be {expectedAverageLossRate}. Actual {
+                    portfolioStatistics.AverageLossRate}");
+            }
+
+            var expectedProfitLossRatio = 2.4314288162154523473453532615m;
+            if (portfolioStatistics.ProfitLossRatio != expectedProfitLossRatio)
+            {
+                throw new Exception($@"AssertPortfolioStatistics(): Expected profit loss ratio to be {expectedProfitLossRatio}. Actual {
+                    portfolioStatistics.ProfitLossRatio}");
+            }
+
+            var totalNetProfit = -0.00697m;
+            if (portfolioStatistics.TotalNetProfit != totalNetProfit)
+            {
+                throw new Exception($@"AssertPortfolioStatistics(): Expected total net profit to be {totalNetProfit}. Actual {
+                    portfolioStatistics.TotalNetProfit}");
             }
         }
 
@@ -122,7 +248,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 2821;
+        public long DataPoints => 4358;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -134,30 +260,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "3"},
-            {"Average Win", "17.53%"},
-            {"Average Loss", "-15.52%"},
-            {"Compounding Annual Return", "-36.888%"},
-            {"Drawdown", "1.100%"},
-            {"Expectancy", "1.129"},
-            {"Net Profit", "-0.712%"},
-            {"Sharpe Ratio", "-8.332"},
-            {"Probabilistic Sharpe Ratio", "0.017%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "1.13"},
+            {"Total Trades", "5"},
+            {"Average Win", "32.96%"},
+            {"Average Loss", "-13.56%"},
+            {"Compounding Annual Return", "-36.270%"},
+            {"Drawdown", "1.400%"},
+            {"Expectancy", "1.574"},
+            {"Net Profit", "-0.697%"},
+            {"Sharpe Ratio", "-8.167"},
+            {"Probabilistic Sharpe Ratio", "0.012%"},
+            {"Loss Rate", "25%"},
+            {"Win Rate", "75%"},
+            {"Profit-Loss Ratio", "2.43"},
             {"Alpha", "-0.009"},
-            {"Beta", "0.455"},
-            {"Annual Standard Deviation", "0.011"},
+            {"Beta", "0.825"},
+            {"Annual Standard Deviation", "0.02"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "7.483"},
-            {"Tracking Error", "0.012"},
-            {"Treynor Ratio", "-0.203"},
-            {"Total Fees", "$2.00"},
+            {"Information Ratio", "1.705"},
+            {"Tracking Error", "0.014"},
+            {"Treynor Ratio", "-0.195"},
+            {"Total Fees", "$3.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "25.23%"},
-            {"OrderListHash", "5fdcbc7d934bfe55c523a857c8d58eb0"}
+            {"Portfolio Turnover", "50.31%"},
+            {"OrderListHash", "47aec48fca66a6a63eda7dafb0bcb844"}
         };
     }
 }

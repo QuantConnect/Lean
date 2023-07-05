@@ -62,7 +62,7 @@ namespace QuantConnect.Statistics
             var winCount = trades.Count(x => x.IsWin);
             var lossCount = trades.Count - winCount;
             PortfolioStatistics = new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital,
-                winCount, lossCount);
+                winCount: winCount, lossCount: lossCount);
             ClosedTrades = trades;
         }
 

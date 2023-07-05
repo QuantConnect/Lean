@@ -226,8 +226,9 @@ namespace QuantConnect.Statistics
                 totalLosses = lossCount.Value;
             }
 
-            WinRate = profitLoss.Count == 0 ? 0 : (decimal) totalWins / profitLoss.Count;
-            LossRate = profitLoss.Count == 0 ? 0 : (decimal) totalLosses / profitLoss.Count;
+            var totalTrades = totalWins + totalLosses;
+            WinRate = totalTrades == 0 ? 0 : (decimal) totalWins / totalTrades;
+            LossRate = totalTrades == 0 ? 0 : (decimal) totalLosses / totalTrades;
             Expectancy = WinRate * ProfitLossRatio - LossRate;
 
             if (startingCapital != 0)
