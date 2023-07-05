@@ -21,5 +21,9 @@ namespace QuantConnect.Orders
     /// </summary>
     public class WolverineOrderProperties : OrderProperties
     {
+        /// <summary>
+        /// The exchange post fix to apply if any
+        /// </summary>
+        public string ExchangePostFix { get; set; }
     }
 }
