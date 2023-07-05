@@ -29,6 +29,7 @@ namespace QuantConnect.Tests.Indicators
             adr.Add(Symbols.AAPL);
             adr.Add(Symbols.IBM);
             adr.Add(Symbols.GOOG);
+            RenkoBarSize = 5000000;
             return adr;
         }
 

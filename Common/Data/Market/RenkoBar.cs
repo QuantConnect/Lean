@@ -23,12 +23,6 @@ namespace QuantConnect.Data.Market
     public class RenkoBar : BaseRenkoBar
     {
         /// <summary>
-        /// Throws an exception when accessed, since RenkoBar's do not have Volume.
-        /// If you want to use Volume in a BaseRenkoBar see <see cref="VolumeRenkoBar"></see>
-        /// </summary>
-        public override decimal Volume => throw new Exception("RenkoBar's don't have Volume");
-
-        /// <summary>
         /// Gets the end time of this renko bar or the most recent update time if it <see cref="BaseRenkoBar.IsClosed"/>
         /// </summary>
         [Obsolete("RenkoBar.End is obsolete. Please use RenkoBar.EndTime property instead.")]

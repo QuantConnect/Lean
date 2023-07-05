@@ -17,6 +17,7 @@ using System;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
@@ -95,14 +96,36 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void AcceptsRenkoBarsAsInput()
+        public virtual void AcceptsRenkoBarsAsInput()
         {
             var indicator = CreateIndicator();
-            var startDate = new DateTime(2019, 1, 1);
             if (indicator is IndicatorBase<TradeBar>)
             {
-                var renkoBar = new RenkoBar(Ticker, startDate, startDate.AddMinutes(1), 0.9m, 1, 1, 1, 1);
-                Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+                var renkoConsolidator = new RenkoConsolidator(RenkoBarSize);
+                renkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+                {
+                    Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+                };
+
+                TestHelper.RunRenkoTestIndicator(indicator as IndicatorBase<TradeBar>, renkoConsolidator, TestFileName);
+                renkoConsolidator.Dispose();
+            }
+        }
+
+        [Test]
+        public virtual void AcceptsVolumeRenkoBarsAsInput()
+        {
+            var indicator = CreateIndicator();
+            if (indicator is IndicatorBase<TradeBar>)
+            {
+                var renkoConsolidator = new VolumeRenkoConsolidator(RenkoBarSize);
+                renkoConsolidator.DataConsolidated += (sender, volumeRenkoBar) =>
+                {
+                    Assert.DoesNotThrow(() => indicator.Update(volumeRenkoBar));
+                };
+
+                TestHelper.RunRenkoTestIndicator(indicator as IndicatorBase<TradeBar>, renkoConsolidator, TestFileName);
+                renkoConsolidator.Dispose();
             }
         }
 
@@ -190,8 +213,8 @@ namespace QuantConnect.Tests.Indicators
         protected abstract string TestColumnName { get; }
 
         /// <summary>
-        /// Returns the name of the symbol used in the indicator
+        /// Returns the BarSize for the RenkoBar tests, namely, AcceptsVolumeRenkoBarsAsInput() and AcceptsRenkoBarsAsInput()
         /// </summary>
-        protected string Ticker = "";
+        protected decimal RenkoBarSize = 10m;
     }
 }

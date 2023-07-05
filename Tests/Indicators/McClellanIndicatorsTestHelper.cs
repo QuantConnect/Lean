@@ -15,6 +15,7 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
@@ -53,6 +54,25 @@ namespace QuantConnect.Tests.Indicators
 
                 // Source data has only 2 decimal places
                 Assert.AreEqual(Parse.Double(expected), (double)indicator.Current.Value, 0.02d);
+            }
+        }
+
+        /// <summary>
+        /// Run test for McClellan Indicator asserting it can receive BaseRenkoBar's as input
+        /// </summary>
+        /// <param name="indicator">McClellan Indicator instance</param>
+        /// <param name="renkoConsolidator">RenkoConsoliadtor instance</param>
+        /// <param name="fileName">External source file name</param>
+        public static void RunRenkoTestIndicator<T>(T indicator, IDataConsolidator renkoConsolidator, string fileName)
+            where T : TradeBarIndicator, ITestMcClellanOscillator
+        {
+            foreach (var parts in TestHelper.GetCsvFileStream(fileName))
+            {
+                parts.TryGetValue("a/d difference", out var adDifference);
+                parts.TryGetValue("date", out var date);
+
+                var data = new IndicatorDataPoint(Parse.DateTimeExact(date, "yyyyMMdd"), adDifference.ToDecimal());
+                renkoConsolidator.Update(data);
             }
         }
 

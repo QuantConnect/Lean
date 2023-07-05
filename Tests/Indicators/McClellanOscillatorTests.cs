@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
@@ -86,6 +87,34 @@ namespace QuantConnect.Tests.Indicators
             McClellanIndicatorTestHelper.RunTestIndicator(indicator, TestFileName, TestColumnName);
             indicator.Reset();
             McClellanIndicatorTestHelper.RunTestIndicator(indicator, TestFileName, TestColumnName);
+        }
+
+        [Test]
+        public override void AcceptsRenkoBarsAsInput()
+        {
+            var indicator = new TestMcClellanOscillator();
+            var renkoConsolidator = new RenkoConsolidator(RenkoBarSize);
+            renkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+            {
+                Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+            };
+
+            McClellanIndicatorTestHelper.RunRenkoTestIndicator(indicator, renkoConsolidator, TestFileName);
+            renkoConsolidator.Dispose();
+        }
+
+        [Test]
+        public override void AcceptsVolumeRenkoBarsAsInput()
+        {
+            var indicator = new TestMcClellanOscillator();
+            var volumeRenkoConsolidator = new VolumeRenkoConsolidator(RenkoBarSize);
+            volumeRenkoConsolidator.DataConsolidated += (sender, volumeRenkoBar) =>
+            {
+                Assert.DoesNotThrow(() => indicator.Update(volumeRenkoBar));
+            };
+
+            McClellanIndicatorTestHelper.RunRenkoTestIndicator(indicator, volumeRenkoConsolidator, TestFileName);
+            volumeRenkoConsolidator.Dispose();
         }
 
         protected override string TestFileName => "mcclellan_data.csv";

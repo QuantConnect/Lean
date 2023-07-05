@@ -28,6 +28,7 @@ namespace QuantConnect.Tests.Indicators
             adDifference.AddStock(Symbols.AAPL);
             adDifference.AddStock(Symbols.IBM);
             adDifference.AddStock(Symbols.GOOG);
+            RenkoBarSize = 5000000;
             return adDifference;
         }
 
