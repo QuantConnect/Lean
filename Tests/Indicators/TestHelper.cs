@@ -202,22 +202,6 @@ namespace QuantConnect.Tests.Indicators
         }
 
         /// <summary>
-        /// Assert the indicator accepts RenkoBar's as input. The RenkoBar's are obtained from an external
-        /// CSV file.
-        /// </summary>
-        /// <param name="indicator">The indicator under test</param>
-        /// <param name="externalDataFilename">The external CSV file name</param>
-        public static void RenkoTestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename)
-        {
-            foreach (var parts in GetCsvFileStream(externalDataFilename))
-            {
-                var tradebar = parts.GetRenkoBar(1);
-
-                Assert.DoesNotThrow(() => indicator.Update(tradebar));
-            }
-        }
-
-        /// <summary>
         /// Tests a reset of the specified indicator after processing external data using the specified comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>

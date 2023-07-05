@@ -38,11 +38,6 @@ namespace QuantConnect.Data.Market
         public decimal BrickSize  { get; protected set; }
 
         /// <summary>
-        /// Gets the volume of trades during the bar.
-        /// </summary>
-        public decimal Volume { get; protected set; }
-
-        /// <summary>
         /// Gets the end time of this renko bar or the most recent update time if it <see cref="IsClosed"/>
         /// </summary>
         public override DateTime EndTime { get; set; }

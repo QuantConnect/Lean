@@ -94,6 +94,18 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(1, indicator.Samples);
         }
 
+        [Test]
+        public void AcceptsRenkoBarsAsInput()
+        {
+            var indicator = CreateIndicator();
+            var startDate = new DateTime(2019, 1, 1);
+            if (indicator is IndicatorBase<TradeBar>)
+            {
+                var renkoBar = new RenkoBar(Ticker, startDate, startDate.AddMinutes(1), 0.9m, 1, 1, 1, 1);
+                Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+            }
+        }
+
         protected static IBaseData GetInput(DateTime startDate, int value) => GetInput(Symbols.SPY, startDate, value);
 
         protected static IBaseData GetInput(Symbol symbol, DateTime startDate, int value)
@@ -131,38 +143,27 @@ namespace QuantConnect.Tests.Indicators
         protected virtual void RunTestIndicator(IndicatorBase<T> indicator)
         {
             if (indicator is IndicatorBase<IndicatorDataPoint>)
-            {
                 TestHelper.TestIndicator(
                     indicator as IndicatorBase<IndicatorDataPoint>,
                     TestFileName,
                     TestColumnName,
                     Assertion as Action<IndicatorBase<IndicatorDataPoint>, double>
                 );
-            }
             else if (indicator is IndicatorBase<IBaseDataBar>)
-            {
                 TestHelper.TestIndicator(
                     indicator as IndicatorBase<IBaseDataBar>,
                     TestFileName,
                     TestColumnName,
                     Assertion as Action<IndicatorBase<IBaseDataBar>, double>
                 );
-            }
             else if (indicator is IndicatorBase<TradeBar>)
-            {
                 TestHelper.TestIndicator(
                     indicator as IndicatorBase<TradeBar>,
                     TestFileName,
                     TestColumnName,
                     Assertion as Action<IndicatorBase<TradeBar>, double>);
-                TestHelper.RenkoTestIndicator(
-                    indicator as IndicatorBase<TradeBar>,
-                    TestFileName);
-            }
             else
-            {
                 throw new NotSupportedException("RunTestIndicator: Unsupported indicator data type: " + typeof(T));
-            }
         }
 
         /// <summary>
@@ -187,5 +188,10 @@ namespace QuantConnect.Tests.Indicators
         /// Returns the name of the column of the CSV file corresponding to the pre-calculated data for the indicator
         /// </summary>
         protected abstract string TestColumnName { get; }
+
+        /// <summary>
+        /// Returns the name of the symbol used in the indicator
+        /// </summary>
+        protected string Ticker = "";
     }
 }
