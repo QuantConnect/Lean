@@ -561,14 +561,14 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(2, statistics.TotalNumberOfTrades);
             Assert.AreEqual(2, statistics.NumberOfWinningTrades);
             Assert.AreEqual(0, statistics.NumberOfLosingTrades);
-            Assert.AreEqual(2800m, statistics.TotalProfitLoss);
-            Assert.AreEqual(10800m, statistics.TotalProfit);
-            Assert.AreEqual(-8000m, statistics.TotalLoss);
-            Assert.AreEqual(10800m, statistics.LargestProfit);
-            Assert.AreEqual(-8000m, statistics.LargestLoss);
-            Assert.AreEqual(1400m, statistics.AverageProfitLoss);
-            Assert.AreEqual(10800m, statistics.AverageProfit);
-            Assert.AreEqual(-8000m, statistics.AverageLoss);
+            Assert.AreEqual(28000m, statistics.TotalProfitLoss);
+            Assert.AreEqual(108000m, statistics.TotalProfit);
+            Assert.AreEqual(-80000m, statistics.TotalLoss);
+            Assert.AreEqual(108000m, statistics.LargestProfit);
+            Assert.AreEqual(-80000m, statistics.LargestLoss);
+            Assert.AreEqual(14000m, statistics.AverageProfitLoss);
+            Assert.AreEqual(108000m, statistics.AverageProfit);
+            Assert.AreEqual(-80000m, statistics.AverageLoss);
             Assert.AreEqual(TimeSpan.FromMinutes(15), statistics.AverageTradeDuration);
             Assert.AreEqual(TimeSpan.FromMinutes(10), statistics.AverageWinningTradeDuration);
             Assert.AreEqual(TimeSpan.FromMinutes(20), statistics.AverageLosingTradeDuration);
@@ -578,20 +578,20 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(10, statistics.WinLossRatio);
             Assert.AreEqual(1m, statistics.WinRate);
             Assert.AreEqual(0m, statistics.LossRate);
-            Assert.AreEqual(-4000m, statistics.AverageMAE);
-            Assert.AreEqual(5400m, statistics.AverageMFE);
-            Assert.AreEqual(-8000, statistics.LargestMAE);
-            Assert.AreEqual(10800, statistics.LargestMFE);
-            Assert.AreEqual(-8000, statistics.MaximumClosedTradeDrawdown);
-            Assert.AreEqual(-10800, statistics.MaximumIntraTradeDrawdown);
-            Assert.AreEqual(13293.6074863071m, statistics.ProfitLossStandardDeviation);
+            Assert.AreEqual(-40000m, statistics.AverageMAE);
+            Assert.AreEqual(54000m, statistics.AverageMFE);
+            Assert.AreEqual(-80000, statistics.LargestMAE);
+            Assert.AreEqual(108000, statistics.LargestMFE);
+            Assert.AreEqual(-80000, statistics.MaximumClosedTradeDrawdown);
+            Assert.AreEqual(-108000, statistics.MaximumIntraTradeDrawdown);
+            Assert.AreEqual(132936.074863071m, statistics.ProfitLossStandardDeviation);
             Assert.AreEqual(0m, statistics.ProfitLossDownsideDeviation);
             Assert.AreEqual(1.35m, statistics.ProfitFactor);
             Assert.AreEqual(0.1053137759214006433027413265m, statistics.SharpeRatio);
             Assert.AreEqual(0m, statistics.SortinoRatio);
             Assert.AreEqual(0.35m, statistics.ProfitToMaxDrawdownRatio);
-            Assert.AreEqual(-8000, statistics.MaximumEndTradeDrawdown);
-            Assert.AreEqual(-4000m, statistics.AverageEndTradeDrawdown);
+            Assert.AreEqual(-80000, statistics.MaximumEndTradeDrawdown);
+            Assert.AreEqual(-40000m, statistics.AverageEndTradeDrawdown);
             Assert.AreEqual(TimeSpan.FromMinutes(30), statistics.MaximumDrawdownDuration);
             Assert.AreEqual(4, statistics.TotalFees);
         }
@@ -611,9 +611,9 @@ namespace QuantConnect.Tests.Common.Statistics
                     Quantity = 10,
                     ExitTime = time.AddMinutes(20),
                     ExitPrice = 0m,
-                    ProfitLoss = -8000m,
+                    ProfitLoss = -80000m,
                     TotalFees = TradeFee,
-                    MAE = -8000m,
+                    MAE = -80000m,
                     MFE = 0,
                     IsInTheMoney = true,
                 },
@@ -626,10 +626,10 @@ namespace QuantConnect.Tests.Common.Statistics
                     Quantity = 1000,
                     ExitTime = time.AddMinutes(30),
                     ExitPrice = 300m,
-                    ProfitLoss = 10800m,
+                    ProfitLoss = 108000m,
                     TotalFees = TradeFee,
                     MAE = 0,
-                    MFE = 10800m
+                    MFE = 108000m
                 },
             };
         }
