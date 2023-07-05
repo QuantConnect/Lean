@@ -97,9 +97,6 @@ namespace QuantConnect.Statistics
         /// Returns whether the trade was profitable (is a win) or not (a loss)
         /// </summary>
         /// <returns>True if the trade was profitable</returns>
-        public virtual bool IsWin()
-        {
-            return ProfitLoss > 0;
-        }
+        public bool IsWin { get; set; }
     }
 }

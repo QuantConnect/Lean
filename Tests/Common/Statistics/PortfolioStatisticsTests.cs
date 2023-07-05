@@ -28,30 +28,39 @@ namespace QuantConnect.Tests.Common.Statistics
         private readonly DateTime _startTime = new DateTime(2015, 08, 06, 15, 30, 0);
 
         [Test]
-        public void ITMOptionAssignment()
+        public void ITMOptionAssignment([Values] bool win)
         {
-            var trades = CreateITMOptionAssignment();
+            var trades = CreateITMOptionAssignment(win);
             var profitLoss = new SortedDictionary<DateTime, decimal>(trades.ToDictionary(x => x.ExitTime, x => x.ProfitLoss));
-            var winCount = trades.Count(x => x.IsWin());
+            var winCount = trades.Count(x => x.IsWin);
             var lossCount = trades.Count - winCount;
             var statistics = new PortfolioStatistics(profitLoss, new SortedDictionary<DateTime, decimal>(),
                 new SortedDictionary<DateTime, decimal>(), new List<double> { 0, 0 }, new List<double> { 0, 0 }, 100000,
                 winCount: winCount, lossCount: lossCount);
 
-            Assert.AreEqual(1m, statistics.WinRate);
-            Assert.AreEqual(0m, statistics.LossRate);
+            if (win)
+            {
+                Assert.AreEqual(1m, statistics.WinRate);
+                Assert.AreEqual(0m, statistics.LossRate);
+            }
+            else
+            {
+                Assert.AreEqual(0.5m, statistics.WinRate);
+                Assert.AreEqual(0.5m, statistics.LossRate);
+            }
+
             Assert.AreEqual(0.1173913043478260869565217391m, statistics.AverageWinRate);
             Assert.AreEqual(-0.08m, statistics.AverageLossRate);
             Assert.AreEqual(1.4673913043478260869565217388m, statistics.ProfitLossRatio);
         }
 
-        private List<Trade> CreateITMOptionAssignment()
+        private List<Trade> CreateITMOptionAssignment(bool win)
         {
             var time = _startTime;
 
             return new List<Trade>
             {
-                new OptionTrade
+                new Trade
                 {
                     Symbol = Symbols.SPY_C_192_Feb19_2016,
                     EntryTime = time,
@@ -64,7 +73,7 @@ namespace QuantConnect.Tests.Common.Statistics
                     TotalFees = TradeFee,
                     MAE = -8000m,
                     MFE = 0,
-                    IsInTheMoney = true,
+                    IsWin = win
                 },
                 new Trade
                 {
@@ -78,7 +87,8 @@ namespace QuantConnect.Tests.Common.Statistics
                     ProfitLoss = 10800m,
                     TotalFees = TradeFee,
                     MAE = 0,
-                    MFE = 10800m
+                    MFE = 10800m,
+                    IsWin = true
                 },
             };
         }

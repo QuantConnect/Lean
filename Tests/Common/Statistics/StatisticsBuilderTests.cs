@@ -71,9 +71,7 @@ namespace QuantConnect.Tests.Common.Statistics
                     0m,
                     1,
                     null,
-                    "$",
-                    0,
-                    0);
+                    "$");
             }, "Misaligned values provided, but we still generate statistics");
         }
     }

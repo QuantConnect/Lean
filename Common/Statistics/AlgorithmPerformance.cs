@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Statistics
 {
@@ -48,8 +49,6 @@ namespace QuantConnect.Statistics
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="listBenchmark">The list of benchmark values</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
-        /// <param name="winCount">The number of wins, including ITM options with profitLoss less than 0</param>
-        /// <param name="lossCount">The number of losses</param>
         public AlgorithmPerformance(
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
@@ -57,13 +56,13 @@ namespace QuantConnect.Statistics
             SortedDictionary<DateTime, decimal> portfolioTurnover,
             List<double> listPerformance,
             List<double> listBenchmark,
-            decimal startingCapital,
-            int winCount,
-            int lossCount)
+            decimal startingCapital)
         {
             TradeStatistics = new TradeStatistics(trades);
+            var winCount = trades.Count(x => x.IsWin);
+            var lossCount = trades.Count - winCount;
             PortfolioStatistics = new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital,
-                winCount: winCount, lossCount: lossCount);
+                winCount, lossCount);
             ClosedTrades = trades;
         }
 

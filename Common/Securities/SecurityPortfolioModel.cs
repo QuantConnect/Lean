@@ -107,18 +107,9 @@ namespace QuantConnect.Securities
                     //Update Vehicle Profit Tracking:
                     security.Holdings.AddNewProfit(lastTradeProfitInAccountCurrency);
                     security.Holdings.SetLastTradeProfit(lastTradeProfitInAccountCurrency);
-
-                    var isWin = lastTradeProfitInAccountCurrency > 0;
-                    if (!isWin && security.Type.IsOption() && fill.IsInTheMoney)
-                    {
-                        var option = security as Option.Option;
-                        var itmAmount = option.Holdings.GetQuantityValue(absoluteQuantityClosed, option.GetPayOff(option.Underlying.Price)).Amount;
-                        isWin = Math.Abs(lastTradeProfit) < itmAmount;
-                    }
-
-                    portfolio.AddTransactionRecord(security.LocalTime.ConvertToUtc(security.Exchange.TimeZone),
-                        lastTradeProfitInAccountCurrency - 2 * feeInAccountCurrency,
-                        isWin);
+                    portfolio.AddTransactionRecord(security.LocalTime.ConvertToUtc(
+                        security.Exchange.TimeZone),
+                        lastTradeProfitInAccountCurrency - 2 * feeInAccountCurrency);
                 }
 
                 //UPDATE HOLDINGS QUANTITY, AVG PRICE:

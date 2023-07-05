@@ -846,10 +846,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="time">Time of order processed </param>
         /// <param name="transactionProfitLoss">Profit Loss.</param>
-        /// <param name="isWin">Whether the transaction is a win</param>
-        public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss, bool isWin)
+        public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss)
         {
-            Transactions.AddTransactionRecord(time, transactionProfitLoss, isWin);
+            Transactions.AddTransactionRecord(time, transactionProfitLoss);
         }
 
         /// <summary>

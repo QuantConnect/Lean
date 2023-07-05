@@ -24,52 +24,12 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Future;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Securities
 {
     [TestFixture]
     public class SecurityPortfolioModelTests
     {
-        [Test]
-        public void ITMOptionWinCount([Values] bool win)
-        {
-            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
-            var option = InitializeTestWithOption(reference, out var portfolio);
-            var underlying = option.Underlying;
-
-            option.SetMarketPrice(new Tick { Value = 100m });
-            underlying.SetMarketPrice(new Tick { Value = win ? 300m : 290m });
-
-            var orderProcessor = new FakeOrderProcessor();
-            var order = Order.CreateOrder(new SubmitOrderRequest(OrderType.Market, option.Type, option.Symbol, 10, 0, 0, reference, ""));
-            order.Id = 1;
-            orderProcessor.AddOrder(order);
-            portfolio.Transactions.SetOrderProcessor(orderProcessor);
-
-            var fillPrice = 100m;
-            var fillQuantity = 10;
-            var orderFee = new OrderFee(new CashAmount(1m, Currencies.USD));
-            var orderDirection = OrderDirection.Buy;
-            var fill = new OrderEvent(1, option.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            fill.IsInTheMoney = true;
-            portfolio.ProcessFills(new List<OrderEvent> { fill });
-
-            Assert.AreEqual(0, portfolio.Transactions.WinCount);
-            Assert.AreEqual(0, portfolio.Transactions.LossCount);
-
-            // Now close the option position simulating an assignment on expiration
-            fillPrice = 0;
-            fillQuantity = -10;
-            orderDirection = OrderDirection.Sell;
-            fill = new OrderEvent(1, option.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
-            fill.IsInTheMoney = true;
-            portfolio.ProcessFills(new List<OrderEvent> { fill });
-
-            Assert.AreEqual(win ? 1 : 0, portfolio.Transactions.WinCount);
-            Assert.AreEqual(win ? 0 : 1, portfolio.Transactions.LossCount);
-        }
-
         [Test]
         public void LastTradeProfit_FlatToLong()
         {
@@ -695,27 +655,6 @@ namespace QuantConnect.Tests.Common.Securities
 
             portfolio.SetCash(security.QuoteCurrency.Symbol, 0, 1m);
             return security;
-        }
-
-        private Option InitializeTestWithOption(DateTime reference,
-            out SecurityPortfolioManager portfolio,
-            string accountCurrency = "USD")
-        {
-            var underlying = InitializeTest(reference, out portfolio, accountCurrency);
-            var option = new Option(
-                Symbols.SPY_C_192_Feb19_2016,
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache(),
-                underlying
-            );
-
-            portfolio.Securities.Add(option);
-
-            return option;
         }
 
         private static SubscriptionDataConfig CreateTradeBarConfig()

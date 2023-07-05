@@ -552,15 +552,34 @@ namespace QuantConnect.Tests.Common.Statistics
         }
 
         [Test]
-        public void ITMOptionAssignment()
+        public void ITMOptionAssignment([Values] bool win)
         {
-            var statistics = new TradeStatistics(CreateITMOptionAssignment());
+            var statistics = new TradeStatistics(CreateITMOptionAssignment(win));
+
+            if (win)
+            {
+                Assert.AreEqual(2, statistics.NumberOfWinningTrades);
+                Assert.AreEqual(0, statistics.NumberOfLosingTrades);
+                Assert.AreEqual(2, statistics.MaxConsecutiveWinningTrades);
+                Assert.AreEqual(0, statistics.MaxConsecutiveLosingTrades);
+                Assert.AreEqual(10, statistics.WinLossRatio);
+                Assert.AreEqual(1m, statistics.WinRate);
+                Assert.AreEqual(0m, statistics.LossRate);
+            }
+            else
+            {
+                Assert.AreEqual(1, statistics.NumberOfWinningTrades);
+                Assert.AreEqual(1, statistics.NumberOfLosingTrades);
+                Assert.AreEqual(1, statistics.MaxConsecutiveWinningTrades);
+                Assert.AreEqual(1, statistics.MaxConsecutiveLosingTrades);
+                Assert.AreEqual(1m, statistics.WinLossRatio);
+                Assert.AreEqual(0.5m, statistics.WinRate);
+                Assert.AreEqual(0.5m, statistics.LossRate);
+            }
 
             Assert.AreEqual(_startTime, statistics.StartDateTime);
             Assert.AreEqual(_startTime.AddMinutes(30), statistics.EndDateTime);
             Assert.AreEqual(2, statistics.TotalNumberOfTrades);
-            Assert.AreEqual(2, statistics.NumberOfWinningTrades);
-            Assert.AreEqual(0, statistics.NumberOfLosingTrades);
             Assert.AreEqual(28000m, statistics.TotalProfitLoss);
             Assert.AreEqual(108000m, statistics.TotalProfit);
             Assert.AreEqual(-80000m, statistics.TotalLoss);
@@ -572,12 +591,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(TimeSpan.FromMinutes(15), statistics.AverageTradeDuration);
             Assert.AreEqual(TimeSpan.FromMinutes(10), statistics.AverageWinningTradeDuration);
             Assert.AreEqual(TimeSpan.FromMinutes(20), statistics.AverageLosingTradeDuration);
-            Assert.AreEqual(2, statistics.MaxConsecutiveWinningTrades);
-            Assert.AreEqual(0, statistics.MaxConsecutiveLosingTrades);
             Assert.AreEqual(1.35m, statistics.ProfitLossRatio);
-            Assert.AreEqual(10, statistics.WinLossRatio);
-            Assert.AreEqual(1m, statistics.WinRate);
-            Assert.AreEqual(0m, statistics.LossRate);
             Assert.AreEqual(-40000m, statistics.AverageMAE);
             Assert.AreEqual(54000m, statistics.AverageMFE);
             Assert.AreEqual(-80000, statistics.LargestMAE);
@@ -596,13 +610,13 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(4, statistics.TotalFees);
         }
 
-        private IEnumerable<Trade> CreateITMOptionAssignment()
+        private IEnumerable<Trade> CreateITMOptionAssignment(bool win)
         {
             var time = _startTime;
 
             return new List<Trade>
             {
-                new OptionTrade
+                new Trade
                 {
                     Symbol = Symbols.SPY_C_192_Feb19_2016,
                     EntryTime = time,
@@ -615,7 +629,7 @@ namespace QuantConnect.Tests.Common.Statistics
                     TotalFees = TradeFee,
                     MAE = -80000m,
                     MFE = 0,
-                    IsInTheMoney = true,
+                    IsWin = win,
                 },
                 new Trade
                 {
@@ -629,7 +643,8 @@ namespace QuantConnect.Tests.Common.Statistics
                     ProfitLoss = 108000m,
                     TotalFees = TradeFee,
                     MAE = 0,
-                    MFE = 108000m
+                    MFE = 108000m,
+                    IsWin = true,
                 },
             };
         }

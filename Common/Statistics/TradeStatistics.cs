@@ -362,7 +362,7 @@ namespace QuantConnect.Statistics
 
                     // even though losing money, an ITM option trade is a winning trade,
                     // so IsWin for an ITM OptionTrade will return true even if the trade was not profitable.
-                    if (trade.IsWin())
+                    if (trade.IsWin)
                     {
                         numberOfITMOptionsWinningTrades++;
                         maxConsecutiveLosers = 0;
