@@ -13,7 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
@@ -30,20 +33,42 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
+        StreamWriter sw;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
             SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
+            SetEndDate(2013, 10, 14);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            AddEquity("SPY", Resolution.Minute);
+            var symbol = AddEquity("SPY", Resolution.Minute).Symbol;
+
+            try
+            {
+                //Open the File
+                sw = new StreamWriter("isMarketOpen.csv", false, Encoding.ASCII);
+
+                //close the file
+                //sw.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception: " + e.Message);
+            }
+
+            Schedule.On(DateRules.EveryDay(symbol), TimeRules.Every(TimeSpan.FromMinutes(30)),
+                () =>
+                {
+                    Log($"IsMarketOpen? {Time}, {IsMarketOpen(symbol)}");
+                    sw.Write($"{Time},{(IsMarketOpen(symbol) ? 1 : 0)}\n");
+                });
 
             // There are other assets with similar methods. See "Selecting Options" etc for more details.
             // AddFuture, AddForex, AddCfd, AddOption
@@ -62,6 +87,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnEndOfAlgorithm()
+        {
+            sw.Close();
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -75,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 3943;
+        public long DataPoints => 4730;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -90,26 +120,26 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "271.453%"},
+            {"Compounding Annual Return", "122.279%"},
             {"Drawdown", "2.200%"},
             {"Expectancy", "0"},
             {"Net Profit", "1.692%"},
-            {"Sharpe Ratio", "8.888"},
-            {"Probabilistic Sharpe Ratio", "67.609%"},
+            {"Sharpe Ratio", "5.366"},
+            {"Probabilistic Sharpe Ratio", "69.368%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.005"},
-            {"Beta", "0.996"},
-            {"Annual Standard Deviation", "0.222"},
-            {"Annual Variance", "0.049"},
-            {"Information Ratio", "-14.565"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "1.978"},
+            {"Alpha", "-0.305"},
+            {"Beta", "0.987"},
+            {"Annual Standard Deviation", "0.161"},
+            {"Annual Variance", "0.026"},
+            {"Information Ratio", "-12.301"},
+            {"Tracking Error", "0.026"},
+            {"Treynor Ratio", "0.875"},
             {"Total Fees", "$3.44"},
             {"Estimated Strategy Capacity", "$56000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "19.93%"},
+            {"Portfolio Turnover", "12.45%"},
             {"OrderListHash", "9e4bfd2eb0b81ee5bc1b197a87ccedbe"}
         };
     }
