@@ -38,7 +38,6 @@ namespace QuantConnect.Statistics
         /// <param name="totalFees">The total fees</param>
         /// <param name="totalTransactions">The total number of transactions</param>
         /// <param name="estimatedStrategyCapacity">The estimated capacity of this strategy</param>
-        /// <param name="accountCurrencySymbol">The account currency symbol</param>
         /// <returns>Returns a <see cref="StatisticsResults"/> object</returns>
         public static StatisticsResults Generate(
             List<Trade> trades,

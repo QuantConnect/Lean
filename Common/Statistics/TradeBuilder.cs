@@ -510,7 +510,7 @@ namespace QuantConnect.Statistics
                     ProfitLoss = Math.Round((fill.FillPrice - entryPrice) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity) * conversionRate * multiplier, 2),
                     TotalFees = position.TotalFees,
                     MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryPrice : entryPrice - position.MaxPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
-                    MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
+                    MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2)
                 };
                 SetIsWin(trade, fill);
 
@@ -562,17 +562,42 @@ namespace QuantConnect.Statistics
             }
         }
 
+        /// <summary>
+        /// Sets the <see cref="Trade.IsWin"/> property based on the <see cref="Trade.ProfitLoss"/>
+        /// and <see cref="OrderEvent.IsInTheMoney"/> properties.
+        /// </summary>
         private void SetIsWin(Trade trade, OrderEvent fill)
         {
-            var isWin = trade.ProfitLoss > 0;
-            if (!isWin && fill.IsInTheMoney && _securities.TryGetValue(trade.Symbol, out var security))
+            if (!trade.Symbol.SecurityType.IsOption())
             {
-                var option = security as Option;
-                var itmAmount = option.Holdings.GetQuantityValue(Math.Abs(trade.Quantity), option.GetPayOff(option.Underlying.Price)).Amount;
-                isWin = Math.Abs(trade.ProfitLoss) < itmAmount;
+                trade.IsWin = trade.ProfitLoss > 0;
+                return;
             }
 
-            trade.IsWin = isWin;
+            if (_securities.TryGetValue(trade.Symbol, out var security))
+            {
+                var option = security as Option;
+                if (option == null)
+                {
+                    return;
+                }
+
+                if (fill.Direction == OrderDirection.Sell)
+                {
+                    // If the option is ITM, the trade is a win only if the profit is greater than the ITM amount
+                    trade.IsWin = fill.IsInTheMoney && Math.Abs(trade.ProfitLoss) < GetInTheMoneyAmount(option, trade.Quantity);
+                }
+                else
+                {
+                    // It is a win if the buyer paid more than what they saved (the ITM amount)
+                    trade.IsWin = !fill.IsInTheMoney || Math.Abs(trade.ProfitLoss) > GetInTheMoneyAmount(option, trade.Quantity);
+                }
+            }
+        }
+
+        private static decimal GetInTheMoneyAmount(Option option, decimal quantity)
+        {
+            return option.Holdings.GetQuantityValue(Math.Abs(quantity), option.GetPayOff(option.Underlying.Price)).Amount;
         }
     }
 }
