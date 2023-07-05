@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Statistics
 {
     /// <summary>
@@ -32,6 +34,15 @@ namespace QuantConnect.Statistics
         /// <returns>True if the option trade is a win</returns>
         public override bool IsWin()
         {
+            // TODO: How can we access the underlying price in order to check if the premium is less than the ITM amount?
+            //var isWin = ProfitLoss > 0;
+            //if (!isWin && IsInTheMoney)
+            //{
+            //    var option = security as Option.Option;
+            //    var itmAmount = option.Holdings.GetQuantityValue(absoluteQuantityClosed, option.GetPayOff(option.Underlying.Price)).Amount;
+            //    isWin = Math.Abs(lastTradeProfit) < itmAmount;
+            //}
+
             return ProfitLoss > 0 || IsInTheMoney;
         }
     }

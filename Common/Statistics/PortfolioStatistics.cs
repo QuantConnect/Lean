@@ -162,15 +162,21 @@ namespace QuantConnect.Statistics
         /// <param name="listBenchmark">The list of benchmark values</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
+        /// <param name="winCount">
+        /// The number of wins, including ITM options with profitLoss less than 0.
+        /// If this and <paramref name="lossCount"/> are null, they will be calculated from <paramref name="profitLoss"/>
+        /// </param>
+        /// <param name="lossCount">The number of losses</param>
         public PortfolioStatistics(
-            List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
             SortedDictionary<DateTime, decimal> portfolioTurnover,
             List<double> listPerformance,
             List<double> listBenchmark,
             decimal startingCapital,
-            int tradingDaysPerYear = 252)
+            int tradingDaysPerYear = 252,
+            int? winCount = null,
+            int? lossCount = null)
         {
             if (portfolioTurnover.Count > 0)
             {
@@ -190,7 +196,6 @@ namespace QuantConnect.Statistics
             var totalLoss = 0m;
             var totalWins = 0;
             var totalLosses = 0;
-            var totalITMOptionsWins = 0;
             foreach (var pair in profitLoss)
             {
                 var tradeProfitLoss = pair.Value;
@@ -204,14 +209,6 @@ namespace QuantConnect.Statistics
                 {
                     totalLoss += tradeProfitLoss / runningCapital;
                     totalLosses++;
-
-                    var trade = trades.FirstOrDefault(x => x.ExitTime == pair.Key);
-                    // even though losing money, an ITM option trade is a winning trade,
-                    // so IsWin for an ITM OptionTrade will return true even if the trade was not profitable.
-                    if (trade != null && trade.IsWin())
-                    {
-                        totalITMOptionsWins++;
-                    }
                 }
 
                 runningCapital += tradeProfitLoss;
@@ -221,10 +218,13 @@ namespace QuantConnect.Statistics
             AverageLossRate = totalLosses == 0 ? 0 : totalLoss / totalLosses;
             ProfitLossRatio = AverageLossRate == 0 ? 0 : AverageWinRate / Math.Abs(AverageLossRate);
 
-            // Adjust number of winning and losing trades: ITM options assignment loss counts as a loss for profit and loss calculations,
-            // but adds a win to the wins count since this is an actual win even though premium paid is a loss.
-            totalWins += totalITMOptionsWins;
-            totalLosses -= totalITMOptionsWins;
+            // Set the actual total wins and losses count.
+            // Some options assignments (ITM) count as wins even though they are losses.
+            if (winCount.HasValue && lossCount.HasValue)
+            {
+                totalWins = winCount.Value;
+                totalLosses = lossCount.Value;
+            }
 
             WinRate = profitLoss.Count == 0 ? 0 : (decimal) totalWins / profitLoss.Count;
             LossRate = profitLoss.Count == 0 ? 0 : (decimal) totalLosses / profitLoss.Count;

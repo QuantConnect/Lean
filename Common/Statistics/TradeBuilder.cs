@@ -19,7 +19,6 @@ using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Util;
 
 namespace QuantConnect.Statistics

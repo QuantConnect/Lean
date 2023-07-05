@@ -32,8 +32,11 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             var trades = CreateITMOptionAssignment();
             var profitLoss = new SortedDictionary<DateTime, decimal>(trades.ToDictionary(x => x.ExitTime, x => x.ProfitLoss));
-            var statistics = new PortfolioStatistics(trades, profitLoss, new SortedDictionary<DateTime, decimal>(),
-                new SortedDictionary<DateTime, decimal>(), new List<double> { 0, 0 }, new List<double> { 0, 0 }, 100000);
+            var winCount = trades.Count(x => x.IsWin());
+            var lossCount = trades.Count - winCount;
+            var statistics = new PortfolioStatistics(profitLoss, new SortedDictionary<DateTime, decimal>(),
+                new SortedDictionary<DateTime, decimal>(), new List<double> { 0, 0 }, new List<double> { 0, 0 }, 100000,
+                winCount: winCount, lossCount: lossCount);
 
             Assert.AreEqual(1m, statistics.WinRate);
             Assert.AreEqual(0m, statistics.LossRate);

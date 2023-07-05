@@ -30,6 +30,8 @@ namespace QuantConnect.Securities
     public class SecurityTransactionManager : IOrderProvider
     {
         private readonly Dictionary<DateTime, decimal> _transactionRecord;
+        private int _winCount;
+        private int _lossCount;
         private readonly IAlgorithm _algorithm;
         private int _orderId;
         private int _groupOrderManagerId;
@@ -74,6 +76,16 @@ namespace QuantConnect.Securities
                     return new Dictionary<DateTime, decimal>(_transactionRecord);
                 }
             }
+        }
+
+        public int WinCount
+        {
+            get { return _winCount; }
+        }
+
+        public int LossCount
+        {
+            get { return _lossCount; }
         }
 
         /// <summary>
@@ -499,7 +511,8 @@ namespace QuantConnect.Securities
         /// </remarks>
         /// <param name="time">Time of order processed </param>
         /// <param name="transactionProfitLoss">Profit Loss.</param>
-        public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss)
+        /// <param name="isWin">Whether the transaction is a win</param>
+        public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss, bool isWin)
         {
             lock (_transactionRecord)
             {
@@ -509,6 +522,15 @@ namespace QuantConnect.Securities
                     clone = clone.AddMilliseconds(1);
                 }
                 _transactionRecord.Add(clone, transactionProfitLoss);
+
+                if (isWin)
+                {
+                    _winCount++;
+                }
+                else
+                {
+                    _lossCount++;
+                }
             }
         }
 
