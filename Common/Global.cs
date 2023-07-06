@@ -98,6 +98,10 @@ namespace QuantConnect
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal UnrealizedPnL;
 
+        /// Current unrealized P/L % of the holding
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal UnrealizedPnLPercent;
+
         /// Create a new default holding:
         public Holding()
         {
@@ -124,6 +128,7 @@ namespace QuantConnect
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
             MarketPrice = Math.Round(holding.Price, rounding);
             UnrealizedPnL = Math.Round(holding.UnrealizedProfit, 2);
+            UnrealizedPnLPercent = Math.Round(holding.UnrealizedProfitPercent * 100, 2);
         }
 
         /// <summary>
@@ -140,6 +145,7 @@ namespace QuantConnect
                 MarketPrice = MarketPrice,
                 MarketValue = MarketValue,
                 UnrealizedPnL = UnrealizedPnL,
+                UnrealizedPnLPercent = UnrealizedPnLPercent,
                 ConversionRate = ConversionRate,
                 CurrencySymbol = CurrencySymbol
             };
