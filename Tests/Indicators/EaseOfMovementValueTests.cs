@@ -25,6 +25,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
+            RenkoBarSize = 0.5m;
             return new EaseOfMovementValue();
         }
 

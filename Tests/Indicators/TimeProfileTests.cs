@@ -29,6 +29,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
+            RenkoBarSize = 1m;
             return new TimeProfile(3);
         }
         protected override Action<IndicatorBase<TradeBar>, double> Assertion

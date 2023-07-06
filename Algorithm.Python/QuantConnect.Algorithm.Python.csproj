@@ -37,6 +37,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+    <Compile Include="IndicatorWithRenkoBarsRegressionAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.20" />

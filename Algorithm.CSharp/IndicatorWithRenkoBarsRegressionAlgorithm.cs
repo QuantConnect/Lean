@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 09);
 
-            var spy = AddEquity("SPY").Symbol;
+            AddEquity("SPY");
 
             var renkoBarConsolidator = new RenkoConsolidator<TradeBar>(0.1m);
             renkoBarConsolidator.DataConsolidated += OnDataConsolidated;
@@ -59,29 +59,29 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_mi.IsReady)
             {
-                throw new Exception($"Mass Index indicator should be ready");
+                throw new Exception("Mass Index indicator should be ready");
             }
             else if (_mi.Current.Value == 0)
             {
-                throw new Exception($"The current value of the Mass Index indicator should be different than zero");
+                throw new Exception("The current value of the Mass Index indicator should be different than zero");
             }
 
             if (!_wasi.IsReady)
             {
-                throw new Exception($"WilderAccumulativeSwingIndex indicator should be ready");
+                throw new Exception("WilderAccumulativeSwingIndex indicator should be ready");
             }
             else if (_wasi.Current.Value == 0)
             {
-                throw new Exception($"The current value of the WilderAccumulativeSwingIndex indicator should be different than zero");
+                throw new Exception("The current value of the WilderAccumulativeSwingIndex indicator should be different than zero");
             }
 
             if (!_wsi.IsReady)
             {
-                throw new Exception($"WilderSwingIndex indicator should be ready");
+                throw new Exception("WilderSwingIndex indicator should be ready");
             }
             else if (_wsi.Current.Value == 0)
             {
-                throw new Exception($"The current value of the WilderSwingIndex indicator should be different than zeros");
+                throw new Exception("The current value of the WilderSwingIndex indicator should be different than zeros");
             }
         }
 
@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp};
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python};
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm

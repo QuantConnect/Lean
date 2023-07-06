@@ -93,13 +93,14 @@ namespace QuantConnect.Tests.Indicators
         public override void AcceptsRenkoBarsAsInput()
         {
             var indicator = new TestMcClellanSummationIndex();
-            var renkoConsolidator = new RenkoConsolidator(RenkoBarSize);
+            var renkoConsolidator = new RenkoConsolidator(0.5m);
             renkoConsolidator.DataConsolidated += (sender, renkoBar) =>
             {
                 Assert.DoesNotThrow(() => indicator.Update(renkoBar));
             };
 
-            McClellanIndicatorTestHelper.RunRenkoTestIndicator(indicator, renkoConsolidator, TestFileName);
+            McClellanIndicatorTestHelper.UpdateRenkoConsolidator(renkoConsolidator, TestFileName);
+            Assert.AreNotEqual(0, indicator.Samples);
             renkoConsolidator.Dispose();
         }
 
@@ -107,13 +108,14 @@ namespace QuantConnect.Tests.Indicators
         public override void AcceptsVolumeRenkoBarsAsInput()
         {
             var indicator = new TestMcClellanSummationIndex();
-            var volumeRenkoConsolidator = new VolumeRenkoConsolidator(RenkoBarSize);
+            var volumeRenkoConsolidator = new VolumeRenkoConsolidator(0.5m);
             volumeRenkoConsolidator.DataConsolidated += (sender, volumeRenkoBar) =>
             {
                 Assert.DoesNotThrow(() => indicator.Update(volumeRenkoBar));
             };
 
-            McClellanIndicatorTestHelper.RunRenkoTestIndicator(indicator, volumeRenkoConsolidator, TestFileName);
+            McClellanIndicatorTestHelper.UpdateRenkoConsolidator(volumeRenkoConsolidator, TestFileName);
+            Assert.AreNotEqual(0, indicator.Samples);
             volumeRenkoConsolidator.Dispose();
         }
 

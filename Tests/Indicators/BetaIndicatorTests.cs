@@ -31,6 +31,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
+            VolumeRenkoBarSize = 100000;
             var indicator = new Beta("testBetaIndicator", 5, "AMZN 2T", "SPX 2T");
             return indicator;
         }

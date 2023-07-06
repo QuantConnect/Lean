@@ -107,7 +107,8 @@ namespace QuantConnect.Tests.Indicators
                     Assert.DoesNotThrow(() => indicator.Update(renkoBar));
                 };
 
-                TestHelper.RunRenkoTestIndicator(indicator as IndicatorBase<TradeBar>, renkoConsolidator, TestFileName);
+                TestHelper.UpdateRenkoConsolidator(renkoConsolidator, TestFileName);
+                Assert.AreNotEqual(0, indicator.Samples);
                 renkoConsolidator.Dispose();
             }
         }
@@ -118,14 +119,15 @@ namespace QuantConnect.Tests.Indicators
             var indicator = CreateIndicator();
             if (indicator is IndicatorBase<TradeBar>)
             {
-                var renkoConsolidator = new VolumeRenkoConsolidator(RenkoBarSize);
-                renkoConsolidator.DataConsolidated += (sender, volumeRenkoBar) =>
+                var volumeRenkoConsolidator = new VolumeRenkoConsolidator(VolumeRenkoBarSize);
+                volumeRenkoConsolidator.DataConsolidated += (sender, volumeRenkoBar) =>
                 {
                     Assert.DoesNotThrow(() => indicator.Update(volumeRenkoBar));
                 };
 
-                TestHelper.RunRenkoTestIndicator(indicator as IndicatorBase<TradeBar>, renkoConsolidator, TestFileName);
-                renkoConsolidator.Dispose();
+                TestHelper.UpdateRenkoConsolidator(volumeRenkoConsolidator, TestFileName);
+                Assert.AreNotEqual(0, indicator.Samples);
+                volumeRenkoConsolidator.Dispose();
             }
         }
 
@@ -213,8 +215,13 @@ namespace QuantConnect.Tests.Indicators
         protected abstract string TestColumnName { get; }
 
         /// <summary>
-        /// Returns the BarSize for the RenkoBar tests, namely, AcceptsVolumeRenkoBarsAsInput() and AcceptsRenkoBarsAsInput()
+        /// Returns the BarSize for the RenkoBar test, namely, AcceptsRenkoBarsAsInput()
         /// </summary>
         protected decimal RenkoBarSize = 10m;
+
+        /// <summary>
+        /// Returns the BarSize for the VolumeRenkoBar test, namely, AcceptsVolumeRenkoBarsAsInput()
+        /// </summary>
+        protected decimal VolumeRenkoBarSize = 500000m;
     }
 }

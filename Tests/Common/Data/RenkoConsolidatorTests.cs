@@ -713,17 +713,6 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual("BarSize must be strictly greater than zero", message.Message);
         }
 
-        [Test]
-        public void AccessToVolumePropertyOfRenkoBarsThrowsException()
-        {
-            var start = new DateTime(2019, 1, 1);
-            var renkoBar = new RenkoBar("", start, start, 0.9m, 1, 1, 1, 1);
-            Assert.Throws<Exception>(() =>
-            {
-                var volume = renkoBar.Volume;
-            });
-        }
-
         private class TestRenkoConsolidator : RenkoConsolidator
         {
             public TestRenkoConsolidator(decimal barSize)

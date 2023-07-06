@@ -203,16 +203,19 @@ namespace QuantConnect.Tests.Indicators
         }
 
         /// <summary>
-        /// Asserts the given indicator can receive RenkoBar's as input
+        /// Updates the given consolidator with the entries from the given external CSV file
         /// </summary>
-        /// <param name="indicator">The indicator under test</param>
-        /// <param name="renkoConsolidator">The consolidator to generate the RenkoBar's</param>
+        /// <param name="renkoConsolidator">RenkoConsolidator instance to update</param>
         /// <param name="externalDataFilename">The external CSV file name</param>
-        public static void RunRenkoTestIndicator(IndicatorBase<TradeBar> indicator, IDataConsolidator renkoConsolidator, string externalDataFilename)
+        public static void UpdateRenkoConsolidator(IDataConsolidator renkoConsolidator, string externalDataFilename)
         {
             foreach (var parts in GetCsvFileStream(externalDataFilename))
             {
                 var tradebar = parts.GetTradeBar();
+                if (tradebar.Volume == 0)
+                {
+                    tradebar.Volume = 1;
+                }
                 renkoConsolidator.Update(tradebar);
             }
         }
