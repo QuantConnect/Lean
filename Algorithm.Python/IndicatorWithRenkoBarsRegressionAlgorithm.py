@@ -25,33 +25,36 @@ class IndicatorWithRenkoBarsRegressionAlgorithm(QCAlgorithm):
         self.SetStartDate(2013, 10, 7)
         self.SetEndDate(2013, 10, 9)
 
-        self.AddEquity("SPY");
+        self.AddEquity("SPY")
+        self.AddEquity("AIG")
 
-        renkoConsolidator = RenkoConsolidator(0.1)
-        renkoConsolidator.DataConsolidated += self.OnDataConsolidated;
+        spyRenkoConsolidator = RenkoConsolidator(0.1)
+        spyRenkoConsolidator.DataConsolidated += self.OnSPYDataConsolidated
 
-        self.SubscriptionManager.AddConsolidator("SPY", renkoConsolidator)
-        self.mi = MassIndex("MI", 9, 25)
-        self.wasi = WilderAccumulativeSwingIndex(8)
-        self.wsi = WilderSwingIndex(8)
+        aigRenkoConsolidator = RenkoConsolidator(0.05)
+        aigRenkoConsolidator.DataConsolidated += self.OnAIGDataConsolidated
 
-    def OnDataConsolidated(self, sender, renkoBar):
+        self.SubscriptionManager.AddConsolidator("SPY", spyRenkoConsolidator)
+        self.SubscriptionManager.AddConsolidator("AIG", aigRenkoConsolidator)
+
+        self.mi = MassIndex("MassIndex", 9, 25)
+        self.wasi = WilderAccumulativeSwingIndex("WilderAccumulativeSwingIndex", 8)
+        self.wsi = WilderSwingIndex("WilderSwingIndex", 8)
+        self.b = Beta("Beta", 3, "AIG", "SPY")
+        self.indicators = [self.mi, self.wasi, self.wsi, self.b]
+
+    def OnSPYDataConsolidated(self, sender, renkoBar):
         self.mi.Update(renkoBar)
         self.wasi.Update(renkoBar)
         self.wsi.Update(renkoBar)
+        self.b.Update(renkoBar)
+
+    def OnAIGDataConsolidated(self, sender, renkoBar):
+        self.b.Update(renkoBar)
 
     def OnEndOfAlgorithm(self):
-        if not self.mi.IsReady:
-            raise Exception("Mass Index indicator should be ready")
-        elif self.mi.Current.Value == 0:
-            raise Exception("The current value of the Mass Index indicator should be different than zero")
-
-        if not self.wasi.IsReady:
-            raise Exception("WilderAccumulativeSwingIndex indicator should be ready")
-        elif self.wasi.Current.Value == 0:
-            raise Exception("The current value of the WilderAccumulativeSwingIndex indicator should be different than zero")
-
-        if not self.wsi.IsReady:
-            raise Exception("WilderSwingIndex indicator should be ready")
-        if self.wsi.Current.Value == 0:
-            raise Exception("The current value of the WilderSwingIndex indicator should be different than zeros")
+        for indicator in self.indicators:
+            if not indicator.IsReady:
+                raise Exception(f"{indicator.Name} indicator should be ready")
+            elif indicator.Current.Value == 0:
+                raise Exception(f"The current value of the {indicator.Name} indicator should be different than zero")

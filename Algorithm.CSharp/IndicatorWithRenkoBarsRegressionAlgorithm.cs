@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -31,6 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
         private MassIndex _mi;
         private WilderAccumulativeSwingIndex _wasi;
         private WilderSwingIndex _wsi;
+        private Beta _b;
+        private List<IIndicator> _indicators;
 
         public override void Initialize()
         {
@@ -38,50 +39,49 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 09);
 
             AddEquity("SPY");
+            AddEquity("AIG");
 
-            var renkoBarConsolidator = new RenkoConsolidator<TradeBar>(0.1m);
-            renkoBarConsolidator.DataConsolidated += OnDataConsolidated;
+            var spyRenkoBarConsolidator = new RenkoConsolidator<TradeBar>(0.1m);
+            spyRenkoBarConsolidator.DataConsolidated += OnSPYDataConsolidated;
 
-            SubscriptionManager.AddConsolidator("SPY", renkoBarConsolidator);
-            _mi = new MassIndex("MI", 9, 25);
-            _wasi = new WilderAccumulativeSwingIndex(8);
-            _wsi = new WilderSwingIndex(8);
+            var aigRenkoBarConsolidator = new RenkoConsolidator<TradeBar>(0.05m);
+            aigRenkoBarConsolidator.DataConsolidated += OnAIGDataConsolidated;
+
+            SubscriptionManager.AddConsolidator("SPY", spyRenkoBarConsolidator);
+            SubscriptionManager.AddConsolidator("AIG", aigRenkoBarConsolidator);
+
+            _mi = new MassIndex("MassIndex", 9, 25);
+            _wasi = new WilderAccumulativeSwingIndex("WilderAccumulativeSwingIndex", 8);
+            _wsi = new WilderSwingIndex("WilderSwingIndex", 8);
+            _b = new Beta("Beta", 3, "AIG", "SPY");
+            _indicators = new List<IIndicator>() { _mi, _wasi, _wsi, _b };
         }
 
-        public void OnDataConsolidated(object sender, RenkoBar renkoBar)
+        public void OnSPYDataConsolidated(object sender, RenkoBar renkoBar)
         {
             _mi.Update(renkoBar);
             _wasi.Update(renkoBar);
             _wsi.Update(renkoBar);
+            _b.Update(renkoBar);
+        }
+
+        public void OnAIGDataConsolidated(object sender, RenkoBar renkoBar)
+        {
+            _b.Update(renkoBar);
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_mi.IsReady)
+            foreach (var indicator in _indicators)
             {
-                throw new Exception("Mass Index indicator should be ready");
-            }
-            else if (_mi.Current.Value == 0)
-            {
-                throw new Exception("The current value of the Mass Index indicator should be different than zero");
-            }
-
-            if (!_wasi.IsReady)
-            {
-                throw new Exception("WilderAccumulativeSwingIndex indicator should be ready");
-            }
-            else if (_wasi.Current.Value == 0)
-            {
-                throw new Exception("The current value of the WilderAccumulativeSwingIndex indicator should be different than zero");
-            }
-
-            if (!_wsi.IsReady)
-            {
-                throw new Exception("WilderSwingIndex indicator should be ready");
-            }
-            else if (_wsi.Current.Value == 0)
-            {
-                throw new Exception("The current value of the WilderSwingIndex indicator should be different than zeros");
+                if (!indicator.IsReady)
+                {
+                    throw new Exception($"{indicator.Name} indicator should be ready");
+                }
+                else if (indicator.Current.Value == 0)
+                {
+                    throw new Exception($"The current value of {indicator.Name} indicator should be different than zero");
+                }
             }
         }
 
@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 2369;
+        public long DataPoints => 4709;
 
         /// <summary>
         /// Data Points count of the algorithm history

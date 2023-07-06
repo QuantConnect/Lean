@@ -108,6 +108,7 @@ namespace QuantConnect.Tests.Indicators
                 };
 
                 TestHelper.UpdateRenkoConsolidator(renkoConsolidator, TestFileName);
+                Assert.IsTrue(indicator.IsReady);
                 Assert.AreNotEqual(0, indicator.Samples);
                 renkoConsolidator.Dispose();
             }
@@ -126,6 +127,7 @@ namespace QuantConnect.Tests.Indicators
                 };
 
                 TestHelper.UpdateRenkoConsolidator(volumeRenkoConsolidator, TestFileName);
+                Assert.IsTrue(indicator.IsReady);
                 Assert.AreNotEqual(0, indicator.Samples);
                 volumeRenkoConsolidator.Dispose();
             }

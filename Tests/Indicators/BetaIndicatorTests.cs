@@ -14,9 +14,11 @@
 */
 
 using NUnit.Framework;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
+using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -31,7 +33,6 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            VolumeRenkoBarSize = 100000;
             var indicator = new Beta("testBetaIndicator", 5, "AMZN 2T", "SPX 2T");
             return indicator;
         }
@@ -69,6 +70,76 @@ namespace QuantConnect.Tests.Indicators
             }
 
             Assert.AreEqual(2*period.Value, indicator.Samples);
+        }
+
+        [Test]
+        public override void AcceptsRenkoBarsAsInput()
+        {
+            var indicator = CreateIndicator();
+            var firstRenkoConsolidator = new RenkoConsolidator(10m);
+            var secondRenkoConsolidator = new RenkoConsolidator(10m);
+            firstRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+            {
+                Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+            };
+
+            secondRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+            {
+                Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+            };
+
+            foreach (var parts in GetCsvFileStream(TestFileName))
+            {
+                var tradebar = parts.GetTradeBar();
+                if (tradebar.Symbol.Value == "AMZN")
+                {
+                    firstRenkoConsolidator.Update(tradebar);
+                }
+                else
+                {
+                    secondRenkoConsolidator.Update(tradebar);
+                }
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreNotEqual(0, indicator.Samples);
+            firstRenkoConsolidator.Dispose();
+            secondRenkoConsolidator.Dispose();
+        }
+
+        [Test]
+        public override void AcceptsVolumeRenkoBarsAsInput()
+        {
+            var indicator = CreateIndicator();
+            var firstVolumeRenkoConsolidator = new VolumeRenkoConsolidator(1000000);
+            var secondVolumeRenkoConsolidator = new VolumeRenkoConsolidator(1000000000);
+            firstVolumeRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+            {
+                Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+            };
+
+            secondVolumeRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+            {
+                Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+            };
+
+            foreach (var parts in GetCsvFileStream(TestFileName))
+            {
+                var tradebar = parts.GetTradeBar();
+                if (tradebar.Symbol.Value == "AMZN")
+                {
+                    firstVolumeRenkoConsolidator.Update(tradebar);
+                }
+                else
+                {
+                    secondVolumeRenkoConsolidator.Update(tradebar);
+                }
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreNotEqual(0, indicator.Samples);
+            firstVolumeRenkoConsolidator.Dispose();
+            secondVolumeRenkoConsolidator.Dispose();
         }
 
         [Test]

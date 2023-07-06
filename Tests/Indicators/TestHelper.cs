@@ -393,7 +393,7 @@ namespace QuantConnect.Tests.Indicators
         /// <summary>
         /// Grabs the TradeBar values from the set of keys
         /// </summary>
-        private static TradeBar GetTradeBar(this IReadOnlyDictionary<string, string> dictionary, bool forceVolumeColumn = false)
+        public static TradeBar GetTradeBar(this IReadOnlyDictionary<string, string> dictionary, bool forceVolumeColumn = false)
         {
             var sid = (dictionary.ContainsKey("symbol") || dictionary.ContainsKey("ticker"))
                 ? SecurityIdentifier.GenerateEquity(dictionary.GetCsvValue("symbol", "ticker"), Market.USA)
