@@ -2450,9 +2450,13 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.IsTrue(builder.HasOpenPosition(option.Symbol));
 
             var closingOrderDirection = orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
+            var ticket = new OrderTicket(null, new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0, 0, time, ""));
             builder.ProcessFill(
                 new OrderEvent(1, option.Symbol, time.AddMinutes(10), OrderStatus.Filled, closingOrderDirection, 0m, -quantity, _orderFee)
-                { IsInTheMoney = true },
+                {
+                    IsInTheMoney = true,
+                    Ticket = ticket
+                },
                 ConversionRate,
                 _orderFee.Value.Amount,
                 100m);
@@ -2500,9 +2504,13 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.IsTrue(builder.HasOpenPosition(option.Symbol));
 
             var closingOrderDirection = orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
+            var ticket = new OrderTicket(null, new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0, 0, time, ""));
             builder.ProcessFill(
                 new OrderEvent(1, option.Symbol, time.AddMinutes(10), OrderStatus.Filled, closingOrderDirection, 0m, -quantity, _orderFee)
-                { IsInTheMoney = true },
+                {
+                    IsInTheMoney = true,
+                    Ticket = ticket
+                },
                 ConversionRate,
                 _orderFee.Value.Amount,
                 100m);
@@ -2525,6 +2533,74 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(1m, trade.TotalFees);
             Assert.AreEqual(orderDirection == OrderDirection.Buy ? -100000m : 0m, trade.MAE);
             Assert.AreEqual(orderDirection == OrderDirection.Buy ? 0m : 100000m, trade.MFE);
+        }
+
+        [Test]
+        public void OptionPositionCloseWithoutExercise(
+            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection,
+            [Values] bool win)
+        {
+            var time = _startTime;
+            var option = GetOption();
+            var underlying = option.Underlying;
+
+            underlying.SetMarketPrice(new Tick { Value = 300m });
+
+            var builder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO, _securityManager);
+
+            var initialOptionPrice = 100m;
+            option.SetMarketPrice(new Tick { Value = initialOptionPrice });
+
+            var quantity = orderDirection == OrderDirection.Buy ? 10 : -10;
+            builder.ProcessFill(
+                new OrderEvent(1, option.Symbol, time, OrderStatus.Filled, orderDirection, 100m, quantity, _orderFee) { IsInTheMoney = true },
+                ConversionRate,
+                _orderFee.Value.Amount,
+                100m);
+
+            Assert.IsTrue(builder.HasOpenPosition(option.Symbol));
+
+            // Before closing, update option market price
+            var finalOptionPrice = 0m;
+            if (win)
+            {
+                finalOptionPrice = orderDirection == OrderDirection.Buy ? 150m : 50m;
+            }
+            else
+            {
+                finalOptionPrice = orderDirection == OrderDirection.Buy ? 50m : 150m;
+            }
+            option.SetMarketPrice(new Tick { Value = finalOptionPrice });
+
+            var closingOrderDirection = orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
+            var ticket = new OrderTicket(null, new SubmitOrderRequest(OrderType.Market, option.Type, option.Symbol, -quantity, 0, 0, time, ""));
+            builder.ProcessFill(
+                new OrderEvent(1, option.Symbol, time.AddMinutes(10), OrderStatus.Filled, closingOrderDirection, finalOptionPrice, -quantity, _orderFee)
+                {
+                    IsInTheMoney = true,
+                    Ticket = ticket,
+                },
+                ConversionRate,
+                _orderFee.Value.Amount,
+                100m);
+
+            Assert.IsFalse(builder.HasOpenPosition(option.Symbol));
+
+            Assert.AreEqual(1, builder.ClosedTrades.Count);
+
+            var trade = builder.ClosedTrades[0];
+
+            var expectedProfitLoss = (finalOptionPrice - initialOptionPrice) * quantity * 100m;
+
+            Assert.AreEqual(option.Symbol, trade.Symbol);
+            Assert.AreEqual(win, trade.IsWin);
+            Assert.AreEqual(time, trade.EntryTime);
+            Assert.AreEqual(initialOptionPrice, trade.EntryPrice);
+            Assert.AreEqual(orderDirection == OrderDirection.Buy ? TradeDirection.Long : TradeDirection.Short, trade.Direction);
+            Assert.AreEqual(10, trade.Quantity);
+            Assert.AreEqual(time.AddMinutes(10), trade.ExitTime);
+            Assert.AreEqual(finalOptionPrice, trade.ExitPrice);
+            Assert.AreEqual(expectedProfitLoss, trade.ProfitLoss);
         }
 
         private Option GetOption()

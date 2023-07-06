@@ -568,7 +568,7 @@ namespace QuantConnect.Statistics
         /// </summary>
         private void SetIsWin(Trade trade, OrderEvent fill)
         {
-            if (!trade.Symbol.SecurityType.IsOption())
+            if (!trade.Symbol.SecurityType.IsOption() || fill.Ticket.OrderType != OrderType.OptionExercise)
             {
                 trade.IsWin = trade.ProfitLoss > 0;
                 return;
