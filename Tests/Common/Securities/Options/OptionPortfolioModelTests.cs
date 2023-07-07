@@ -106,6 +106,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
