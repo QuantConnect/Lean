@@ -36,7 +36,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
     public partial class EquityFillModelTests
     {
         private static readonly DateTime Noon = new DateTime(2014, 6, 24, 12, 0, 0);
-        private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+        private TimeKeeper TimeKeeper;
+
+        [SetUp]
+        public void Setup()
+        {
+            TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+        }
 
         [TestCase(11, 11,  11, "")]
         [TestCase(12, 11, 11,"")]
@@ -1275,6 +1281,57 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var result = testFillModel.GetPricesPublic(security, orderDirection);
 
             Assert.AreEqual(expected, result.Close);
+        }
+
+        [TestCase(Resolution.Tick, false)]
+        [TestCase(Resolution.Second, false)]
+        [TestCase(Resolution.Minute, false)]
+        [TestCase(Resolution.Hour, false)]
+        [TestCase(Resolution.Daily, true)]
+        public void PerformFillOutsideRegularAndExtendedHours(Resolution resolution, bool shouldFill)
+        {
+            var configTradeBar = CreateTradeBarConfig(Symbols.SPY, resolution: resolution);
+            var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar), resolution: resolution);
+            var configProvider = new MockSubscriptionDataConfigProvider(configQuoteBar);
+            configProvider.SubscriptionDataConfigs.Add(configTradeBar);
+            var equity = CreateEquity(configTradeBar);
+
+            var orderTime = new DateTime(2014, 6, 24, 12, 0, 0).ConvertToUtc(equity.Exchange.TimeZone);
+            var quoteBarTime = new DateTime(2014, 6, 24, 12, 0, 0).AddMinutes(-1);
+            var tradeBarTime = new DateTime(2014, 6, 24, 12, 0, 0).AddMinutes(-1);
+
+            var model = (EquityFillModel)equity.FillModel;
+            var order = new MarketOrder(Symbols.SPY, 100, orderTime);
+
+            var parameters = new FillModelParameters(equity, order, configProvider, Time.OneHour, null);
+
+            var timeKeeper = TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
+            // 11pm, shouldn't be able to fill for resolutions < daily
+            timeKeeper.UpdateTime(new DateTime(2014, 6, 24, 23, 0, 0).ConvertToUtc(TimeZones.NewYork));
+            equity.SetLocalTimeKeeper(timeKeeper);
+
+            const decimal close = 101.234m;
+            var bidBar = new Bar(101.123m, 101.123m, 101.123m, 101.123m);
+            var askBar = new Bar(101.234m, 101.234m, 101.234m, close);
+            var tradeBar = new TradeBar(tradeBarTime, Symbols.SPY, 101.123m, 101.123m, 101.123m, close, 100);
+            equity.SetMarketPrice(new QuoteBar(quoteBarTime, Symbols.SPY, bidBar, 0, askBar, 0));
+            equity.SetMarketPrice(tradeBar);
+
+            var fill = model.Fill(parameters).Single();
+
+            if (shouldFill)
+            {
+                Assert.AreEqual(OrderStatus.Filled, fill.Status);
+                Assert.AreEqual(order.Quantity, fill.FillQuantity);
+                Assert.AreEqual(close, fill.FillPrice);
+            }
+            else
+            {
+                Assert.AreNotEqual(OrderStatus.Filled, fill.Status);
+                Assert.AreNotEqual(OrderStatus.PartiallyFilled, fill.Status);
+                Assert.AreEqual(0, fill.FillQuantity);
+                Assert.AreEqual(0, fill.FillPrice);
+            }
         }
 
         private Equity CreateEquity(SubscriptionDataConfig config)

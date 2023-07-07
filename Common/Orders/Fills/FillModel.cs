@@ -998,13 +998,19 @@ namespace QuantConnect.Orders.Fills
             {
                 // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
                 var currentBar = asset.GetLastData();
-                if (currentBar == null
-                    || asset.LocalTime.Date != currentBar.EndTime.Date
-                    || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours))
+                if (currentBar == null)
                 {
                     return false;
                 }
+
+                var resolution = asset.Subscriptions.First().Resolution;
+                var isOnCurrentBar = resolution == Resolution.Daily
+                    ? asset.LocalTime.Date == currentBar.EndTime.Date
+                    : asset.LocalTime >= currentBar.Time && asset.LocalTime <= currentBar.EndTime;
+
+                return isOnCurrentBar && asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours);
             }
+
             return true;
         }
 
