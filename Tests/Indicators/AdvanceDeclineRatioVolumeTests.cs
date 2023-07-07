@@ -14,8 +14,10 @@
 */
 
 using NUnit.Framework;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -156,8 +158,68 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(6m, indicator.Current.Value);
         }
 
+        [Test]
+        public override void AcceptsVolumeRenkoBarsAsInput()
+        {
+            var indicator = CreateIndicator();
+            if (indicator is IndicatorBase<TradeBar>)
+            {
+                var aaplRenkoConsolidator = new VolumeRenkoConsolidator(10000000m);
+                aaplRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+                {
+                    Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+                };
+
+                var googRenkoConsolidator = new VolumeRenkoConsolidator(500000m);
+                googRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+                {
+                    Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+                };
+
+                var ibmRenkoConsolidator = new VolumeRenkoConsolidator(500000m);
+                ibmRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+                {
+                    Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+                };
+
+                foreach (var parts in GetCsvFileStream(TestFileName))
+                {
+                    var tradebar = parts.GetTradeBar();
+                    if (tradebar.Symbol.Value == "AAPL")
+                    {
+                        aaplRenkoConsolidator.Update(tradebar);
+                    }
+                    else if (tradebar.Symbol.Value == "GOOG")
+                    {
+                        googRenkoConsolidator.Update(tradebar);
+                    }
+                    else
+                    {
+                        ibmRenkoConsolidator.Update(tradebar);
+                    }
+                }
+
+                Assert.IsTrue(indicator.IsReady);
+                Assert.AreNotEqual(0, indicator.Samples);
+                IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(indicator);
+                aaplRenkoConsolidator.Dispose();
+                googRenkoConsolidator.Dispose();
+                ibmRenkoConsolidator.Dispose();
+            }
+        }
+
         protected override string TestFileName => "arms_data.txt";
 
         protected override string TestColumnName => "A/D Volume Ratio";
+
+        /// <summary>
+        /// The final value of this indicator is zero because it uses the Volume of the bars it receives.
+        /// Since RenkoBar's don't always have Volume, the final current value is zero. Therefore we
+        /// skip this test
+        /// </summary>
+        /// <param name="indicator"></param>
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
+        {
+        }
     }
 }

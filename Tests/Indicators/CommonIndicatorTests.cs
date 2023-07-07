@@ -110,6 +110,7 @@ namespace QuantConnect.Tests.Indicators
                 TestHelper.UpdateRenkoConsolidator(renkoConsolidator, TestFileName);
                 Assert.IsTrue(indicator.IsReady);
                 Assert.AreNotEqual(0, indicator.Samples);
+                IndicatorValueIsNotZeroAfterReceiveRenkoBars(indicator);
                 renkoConsolidator.Dispose();
             }
         }
@@ -129,8 +130,19 @@ namespace QuantConnect.Tests.Indicators
                 TestHelper.UpdateRenkoConsolidator(volumeRenkoConsolidator, TestFileName);
                 Assert.IsTrue(indicator.IsReady);
                 Assert.AreNotEqual(0, indicator.Samples);
+                IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(indicator);
                 volumeRenkoConsolidator.Dispose();
             }
+        }
+
+        protected virtual void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
+        {
+            Assert.AreNotEqual(0, indicator.Current.Value);
+        }
+
+        protected virtual void IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(IndicatorBase indicator)
+        {
+            Assert.AreNotEqual(0, indicator.Current.Value);
         }
 
         protected static IBaseData GetInput(DateTime startDate, int value) => GetInput(Symbols.SPY, startDate, value);
