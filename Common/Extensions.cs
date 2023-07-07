@@ -3835,20 +3835,16 @@ namespace QuantConnect
             }
 
             var option = security as Option;
-            if (option == null)
-            {
-                return false;
-            }
 
             // If the fill is a sell, the original transaction was a buy
             if (fill.Direction == OrderDirection.Sell)
             {
                 // If the option is ITM, the trade is a win only if the profit is greater than the ITM amount
-                return fill.IsInTheMoney && Math.Abs(profitLoss) < option.InTheMoneyAmount(fill.AbsoluteFillQuantity);
+                return fill.IsInTheMoney && Math.Abs(profitLoss) < option.InTheMoneyAmount(fill.FillQuantity);
             }
 
             // It is a win if the buyer paid more than what they saved (the ITM amount)
-            return !fill.IsInTheMoney || Math.Abs(profitLoss) > option.InTheMoneyAmount(fill.AbsoluteFillQuantity);
+            return !fill.IsInTheMoney || Math.Abs(profitLoss) > option.InTheMoneyAmount(fill.FillQuantity);
         }
 
         /// <summary>
@@ -3856,7 +3852,8 @@ namespace QuantConnect
         /// </summary>
         /// <param name="option">The option security</param>
         /// <param name="quantity">The quantity</param>
-        /// <returns>The ITM amount</returns>
+        /// <returns>The ITM amount for the absolute quantity</returns>
+        /// <remarks>The returned value can be negative, which would mean the option is actually OTM.</remarks>
         public static ConvertibleCashAmount InTheMoneyAmount(this Option option, decimal quantity)
         {
             return option.Holdings.GetQuantityValue(Math.Abs(quantity), option.GetPayOff(option.Underlying.Price));
