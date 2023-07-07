@@ -114,5 +114,20 @@ namespace QuantConnect.Tests.Indicators
                 Assert.IsTrue(lowPivotPoint.Any(point => point.Value == 0));
             }
         }
+
+        /// <summary>
+        /// The expected value for this indicator is always zero
+        /// </summary>
+        /// <param name="indicator"></param>
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
+        {
+        }
+
+        /// <summary>
+        /// The expected value for this indicator is always zero
+        /// </summary>
+        protected override void IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(IndicatorBase indicator)
+        {
+        }
     }
 }

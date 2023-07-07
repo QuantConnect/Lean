@@ -24,6 +24,8 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            RenkoBarSize = 1m;
+            VolumeRenkoBarSize = 0.5m;
             return new AverageDirectionalIndex(14);
         }
 

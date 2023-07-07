@@ -99,7 +99,10 @@ namespace QuantConnect.Tests.Indicators
         public virtual void AcceptsRenkoBarsAsInput()
         {
             var indicator = CreateIndicator();
-            if (indicator is IndicatorBase<TradeBar>)
+            if (indicator is IndicatorBase<TradeBar> ||
+                indicator is IndicatorBase<IBaseData> ||
+                indicator is BarIndicator ||
+                indicator is IndicatorBase<IBaseDataBar>)
             {
                 var renkoConsolidator = new RenkoConsolidator(RenkoBarSize);
                 renkoConsolidator.DataConsolidated += (sender, renkoBar) =>
@@ -119,7 +122,10 @@ namespace QuantConnect.Tests.Indicators
         public virtual void AcceptsVolumeRenkoBarsAsInput()
         {
             var indicator = CreateIndicator();
-            if (indicator is IndicatorBase<TradeBar>)
+            if (indicator is IndicatorBase<TradeBar> ||
+                indicator is IndicatorBase<IBaseData> ||
+                indicator is BarIndicator ||
+                indicator is IndicatorBase<IBaseDataBar>)
             {
                 var volumeRenkoConsolidator = new VolumeRenkoConsolidator(VolumeRenkoBarSize);
                 volumeRenkoConsolidator.DataConsolidated += (sender, volumeRenkoBar) =>

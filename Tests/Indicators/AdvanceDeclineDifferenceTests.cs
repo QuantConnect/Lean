@@ -138,7 +138,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void WarmsUpOrdered()
+        public virtual void WarmsUpOrdered()
         {
             var indicator = CreateIndicator();
             var reference = System.DateTime.Today;
@@ -201,7 +201,7 @@ namespace QuantConnect.Tests.Indicators
 
                 Assert.IsTrue(indicator.IsReady);
                 Assert.AreNotEqual(0, indicator.Samples);
-                IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(indicator);
+                IndicatorValueIsNotZeroAfterReceiveRenkoBars(indicator);
                 aaplRenkoConsolidator.Dispose();
                 googRenkoConsolidator.Dispose();
                 ibmRenkoConsolidator.Dispose();
