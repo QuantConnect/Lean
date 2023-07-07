@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -78,6 +78,18 @@ namespace QuantConnect.Packets
         /// </summary>
         [JsonProperty(PropertyName = "aLiveDataTypes")]
         public HashSet<string> LiveDataTypes;
+
+        /// <summary>
+        /// Algorithm running mode.
+        /// </summary>
+        [JsonIgnore]
+        public override AlgorithmMode AlgorithmMode
+        {
+            get
+            {
+                return AlgorithmMode.Live;
+            }
+        }
 
         /// <summary>
         /// Default constructor for JSON of the Live Task Packet

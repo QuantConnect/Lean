@@ -29,9 +29,9 @@ namespace QuantConnect.Indicators
         /// In this VWAP calculation, typical price is defined by (O + H + L + C) / 4
         /// </summary>
         private readonly int _period;
-        private readonly Identity _price;
-        private readonly Identity _volume;
-        private CompositeIndicator _vwap;
+        protected readonly Identity Price;
+        protected readonly Identity Volume;
+        protected CompositeIndicator VWAP;
 
         /// <summary>
         /// Initializes a new instance of the VWAP class with the default name and period
@@ -52,17 +52,17 @@ namespace QuantConnect.Indicators
         {
             _period = period;
 
-            _price = new Identity("Price");
-            _volume = new Identity("Volume");
+            Price = new Identity("Price");
+            Volume = new Identity("Volume");
 
             // This class will be using WeightedBy indicator extension
-            _vwap = _price.WeightedBy(_volume, period);
+            VWAP = Price.WeightedBy(Volume, period);
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _vwap.IsReady;
+        public override bool IsReady => VWAP.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -74,9 +74,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _price.Reset();
-            _volume.Reset();
-            _vwap = _price.WeightedBy(_volume, _period);
+            Price.Reset();
+            Volume.Reset();
+            VWAP.Reset();
             base.Reset();
         }
 
@@ -87,9 +87,9 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            _price.Update(input.EndTime, GetTimeWeightedAveragePrice(input));
-            _volume.Update(input.EndTime, input.Volume);
-            return _vwap.Current.Value;
+            Price.Update(input.EndTime, GetTimeWeightedAveragePrice(input));
+            Volume.Update(input.EndTime, input.Volume);
+            return VWAP.Current.Value;
         }
 
         /// <summary>

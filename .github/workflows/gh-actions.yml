@@ -24,6 +24,7 @@ jobs:
       - name: Generate & Publish python stubs
         if: startsWith(github.ref, 'refs/tags/')
         run: |
+          rm -rf ./Data
           chmod +x ci_build_stubs.sh
           ./ci_build_stubs.sh -t -g -p
         env:

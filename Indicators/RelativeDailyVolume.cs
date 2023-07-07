@@ -26,22 +26,18 @@ namespace QuantConnect.Indicators
     /// 
     /// Current volume from open to current time of day / Average over the past x days from open to current time of day
     /// </summary>
-    public class RelativeDailyVolume : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public class RelativeDailyVolume : TradeBarIndicator
     {
         private readonly SortedDictionary<TimeSpan, SimpleMovingAverage> _relativeData;
         private readonly Dictionary<DateTime, decimal> _currentData;
         private int _previousDay;
         private int _days;
+        private int _period;
 
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _days >= WarmUpPeriod;
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod { get; }
+        public override bool IsReady => _days >= _period;
 
         /// <summary>
         /// Initializes a new instance of the RelativeDailyVolume class using the specified period
@@ -62,7 +58,7 @@ namespace QuantConnect.Indicators
         {
             _relativeData = new SortedDictionary<TimeSpan, SimpleMovingAverage>();
             _currentData = new Dictionary<DateTime, decimal>();
-            WarmUpPeriod = period;
+            _period = period;
             _previousDay = -1; // No calendar day can be -1, thus default is not a calendar day
             _days = -1; // Will increment by one after first TradeBar, then will increment by one every new day
         }
@@ -84,7 +80,7 @@ namespace QuantConnect.Indicators
                     cumulativeVolume += pair.Value;
                     if (!_relativeData.TryGetValue(timeBar, out daysAverage))
                     {
-                        daysAverage = _relativeData[timeBar] = new SimpleMovingAverage(WarmUpPeriod);
+                        daysAverage = _relativeData[timeBar] = new SimpleMovingAverage(_period);
                     }
                     daysAverage.Update(pair.Key, cumulativeVolume);
                 }

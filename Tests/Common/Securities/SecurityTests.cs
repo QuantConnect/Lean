@@ -294,6 +294,42 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(tradeBars[0].Volume, fromDynamicSecurityData.Volume);
         }
 
+        private static TestCaseData[] IsMarketOpenWithMarketDataTestCases => new[]
+        {
+            // Without extended market hours
+            new TestCaseData(new TimeSpan(3, 59, 59), false, false),
+            new TestCaseData(new TimeSpan(4, 0, 0), false, false),
+            new TestCaseData(new TimeSpan(9, 29, 59), false, false),
+            new TestCaseData(new TimeSpan(9, 30, 0), false, true),
+            new TestCaseData(new TimeSpan(15, 59, 59), false, true),
+            new TestCaseData(new TimeSpan(16, 0, 0), false, false),
+            new TestCaseData(new TimeSpan(19, 59, 59), false, false),
+            new TestCaseData(new TimeSpan(20, 0, 0), false, false),
+            new TestCaseData(new TimeSpan(21, 0, 0), false, false),
+            // With extended market hours
+            new TestCaseData(new TimeSpan(3, 59, 59), true, false),
+            new TestCaseData(new TimeSpan(4, 0, 0), true, true),
+            new TestCaseData(new TimeSpan(9, 29, 59), true, true),
+            new TestCaseData(new TimeSpan(9, 30, 0), true, true),
+            new TestCaseData(new TimeSpan(15, 59, 59), true, true),
+            new TestCaseData(new TimeSpan(16, 0, 0), true, true),
+            new TestCaseData(new TimeSpan(19, 59, 59), true, true),
+            new TestCaseData(new TimeSpan(20, 0, 0), true, false),
+            new TestCaseData(new TimeSpan(21, 0, 0), true, false),
+        };
+
+        [TestCaseSource(nameof(IsMarketOpenWithMarketDataTestCases))]
+        public void IsMarketOpenIsAccurate(TimeSpan time, bool extendedMarketHours, bool expected)
+        {
+            var security = GetSecurity(isMarketAlwaysOpen: false);
+
+            var dateTime = new DateTime(2023, 6, 26) + time;
+            var timeKeeper = new LocalTimeKeeper(dateTime.ConvertToUtc(security.Exchange.TimeZone), security.Exchange.TimeZone);
+            security.SetLocalTimeKeeper(timeKeeper);
+
+            Assert.AreEqual(expected, security.IsMarketOpen(extendedMarketHours));
+        }
+
         #region Custom properties tests
 
         [Test]

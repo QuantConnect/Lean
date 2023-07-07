@@ -992,9 +992,20 @@ namespace QuantConnect.Orders.Fills
         /// <summary>
         /// Determines if the exchange is open using the current time of the asset
         /// </summary>
-        protected static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
+        protected virtual bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
         {
-            return asset.IsMarketOpen(isExtendedMarketHours);
+            if (!asset.Exchange.Hours.IsOpen(asset.LocalTime, isExtendedMarketHours))
+            {
+                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
+                var currentBar = asset.GetLastData();
+                if (currentBar == null
+                    || asset.LocalTime.Date != currentBar.EndTime.Date
+                    || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private class ComboLimitOrderLegParameters

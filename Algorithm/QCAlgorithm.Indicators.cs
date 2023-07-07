@@ -1452,7 +1452,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, $"RDV({period})", resolution);
             var relativeDailyVolume = new RelativeDailyVolume(name, period);
-            InitializeIndicator(symbol, relativeDailyVolume, resolution, selector);
+            RegisterIndicator(symbol, relativeDailyVolume, resolution, selector);
 
             return relativeDailyVolume;
         }

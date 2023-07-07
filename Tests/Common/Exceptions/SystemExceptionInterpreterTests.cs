@@ -51,6 +51,16 @@ namespace QuantConnect.Tests.Common.Exceptions
                 "hronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationToken token) in Engine\\AlgorithmManager.cs:line 525", result.InnerException.StackTrace);
         }
 
+        [TestCase("")]
+        [TestCase(null)]
+        public void CleanupStackTraceHandles(string stackTrace)
+        {
+            var interpreter = new SystemExceptionInterpreter();
+            var result = interpreter.Interpret(new TestException("Message", stackTrace), null);
+
+            Assert.IsNull(result.InnerException);
+        }
+
         private class TestException : Exception
         {
             private readonly string _message;

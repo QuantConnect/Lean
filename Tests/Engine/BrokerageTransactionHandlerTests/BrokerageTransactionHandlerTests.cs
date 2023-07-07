@@ -507,6 +507,53 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
+        public void InvalidUpdateOrderRequestShouldNotInvalidateFilledOrder()
+        {
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new NoSubmitTestBrokerage(_algorithm);
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.11m, DateTime.Now, "");
+
+            _algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+            var orderTicket = transactionHandler.Process(orderRequest);
+            transactionHandler.HandleOrderRequest(orderRequest);
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+
+            brokerage.PublishOrderEvent(new OrderEvent(_algorithm.Transactions.GetOrders().Single(), _algorithm.UtcTime, OrderFee.Zero)
+            { Status = OrderStatus.Submitted });
+            Assert.AreEqual(OrderStatus.Submitted, orderTicket.Status);
+
+            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderTicket.OrderId, new UpdateOrderFields() { Quantity = 10000 });
+            var updateTicket = transactionHandler.Process(updateRequest);
+            transactionHandler.HandleOrderRequest(updateRequest);
+            Assert.AreEqual(OrderRequestStatus.Processed, updateRequest.Status);
+            Assert.IsTrue(updateRequest.Response.IsSuccess);
+
+            // filled!
+            brokerage.PublishOrderEvent(new OrderEvent(_algorithm.Transactions.GetOrders().Single(), _algorithm.UtcTime, OrderFee.Zero)
+            { Status = OrderStatus.Filled, FillQuantity = 1000, FillPrice = price });
+
+            Assert.AreEqual(1000, security.Holdings.Quantity);
+            Assert.AreEqual(price, security.Holdings.AveragePrice);
+            Assert.AreEqual(OrderStatus.Filled, orderTicket.Status);
+
+            // update failed!
+            brokerage.PublishOrderEvent(new OrderEvent(_algorithm.Transactions.GetOrders().Single(), _algorithm.UtcTime, OrderFee.Zero)
+            { Status = OrderStatus.Invalid });
+
+            // nothing should change
+            Assert.AreEqual(1000, security.Holdings.Quantity);
+            Assert.AreEqual(price, security.Holdings.AveragePrice);
+            Assert.AreEqual(OrderStatus.Filled, orderTicket.Status);
+        }
+
+        [Test]
         public void InvalidUpdateOrderRequestShouldNotInvalidateOrder()
         {
             // Initializes the transaction handler
@@ -1933,6 +1980,10 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             {
             }
             public override bool PlaceOrder(Order order)
+            {
+                return true;
+            }
+            public override bool UpdateOrder(Order order)
             {
                 return true;
             }

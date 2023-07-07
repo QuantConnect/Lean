@@ -1043,7 +1043,12 @@ namespace QuantConnect.Orders.Fills
         /// <summary>
         /// Determines if the exchange is open using the current time of the asset
         /// </summary>
-        protected static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
+        /// <remarks>
+        /// This method is overridden in order to avoid behavior changes.
+        /// The base one uses <see cref="SecurityExchangeHours.IsOpen(DateTime, bool)"/> passing the extended market hours flag.
+        /// This one is not passing the flag, so it will return false if the current time is not exactly open.
+        /// </remarks>
+        protected override bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
         {
             if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
             {

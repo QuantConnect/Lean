@@ -51,7 +51,7 @@ class BasicTemplateOptionsDailyAlgorithm(QCAlgorithm):
         contracts = sorted(chain, key = lambda x: x.Expiry)
 
         # if found, trade it
-        if len(contracts) == 0 or not self.IsMarketOpen(contracts[0].Symbol): return
+        if len(contracts) == 0: return
         symbol = contracts[0].Symbol
         self.MarketOrder(symbol, 1)
 
