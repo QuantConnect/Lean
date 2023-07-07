@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Statistics
 {
@@ -49,6 +49,9 @@ namespace QuantConnect.Statistics
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="listBenchmark">The list of benchmark values</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
+        /// <param name="transactions">
+        /// The transaction manager to get number of winning and losing transactions
+        /// </param>
         public AlgorithmPerformance(
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
@@ -56,13 +59,13 @@ namespace QuantConnect.Statistics
             SortedDictionary<DateTime, decimal> portfolioTurnover,
             List<double> listPerformance,
             List<double> listBenchmark,
-            decimal startingCapital)
+            decimal startingCapital,
+            SecurityTransactionManager transactions)
         {
+
             TradeStatistics = new TradeStatistics(trades);
-            var winCount = trades.Count(x => x.IsWin);
-            var lossCount = trades.Count - winCount;
             PortfolioStatistics = new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital,
-                winCount: winCount, lossCount: lossCount);
+                winCount: transactions.WinCount, lossCount: transactions.LossCount);
             ClosedTrades = trades;
         }
 

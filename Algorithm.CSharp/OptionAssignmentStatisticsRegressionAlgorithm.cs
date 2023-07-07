@@ -194,16 +194,29 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void AssertPortfolioStatistics()
         {
-            var portfolioStatistics = Statistics.TotalPerformance.PortfolioStatistics;
+            // First, let's check the transactions, which are used to build the portfolio statistics
 
-            if (portfolioStatistics.WinRate != 0.75m)
+            // We expected 2 winning transactions (one of the options assignment and the underlying liquidation)
+            // and 1 losing transaction (the other option assignment)
+            if (Transactions.WinCount != 2)
             {
-                throw new Exception($"AssertPortfolioStatistics(): Expected win rate to be 0.75. Actual {portfolioStatistics.WinRate}");
+                throw new Exception($"AssertPortfolioStatistics(): Expected 2 winning transactions. Actual {Transactions.WinCount}");
+            }
+            if (Transactions.LossCount != 1)
+            {
+                throw new Exception($"AssertPortfolioStatistics(): Expected 1 losing transaction. Actual {Transactions.LossCount}");
             }
 
-            if (portfolioStatistics.LossRate != 0.25m)
+            var portfolioStatistics = Statistics.TotalPerformance.PortfolioStatistics;
+
+            if (portfolioStatistics.WinRate != 2m / 3m)
             {
-                throw new Exception($"AssertPortfolioStatistics(): Expected loss rate to be 0.25. Actual {portfolioStatistics.LossRate}");
+                throw new Exception($"AssertPortfolioStatistics(): Expected win rate to be 2/3. Actual {portfolioStatistics.WinRate}");
+            }
+
+            if (portfolioStatistics.LossRate != 1m / 3m)
+            {
+                throw new Exception($"AssertPortfolioStatistics(): Expected loss rate to be 1/3. Actual {portfolioStatistics.LossRate}");
             }
 
             var expectedAverageWinRate = 0.3296200091047853680743378947m;
@@ -265,12 +278,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Average Loss", "-13.56%"},
             {"Compounding Annual Return", "-36.270%"},
             {"Drawdown", "1.400%"},
-            {"Expectancy", "1.574"},
+            {"Expectancy", "1.288"},
             {"Net Profit", "-0.697%"},
             {"Sharpe Ratio", "-8.167"},
             {"Probabilistic Sharpe Ratio", "0.012%"},
-            {"Loss Rate", "25%"},
-            {"Win Rate", "75%"},
+            {"Loss Rate", "33%"},
+            {"Win Rate", "67%"},
             {"Profit-Loss Ratio", "2.43"},
             {"Alpha", "-0.009"},
             {"Beta", "0.825"},

@@ -71,7 +71,10 @@ namespace QuantConnect.Tests.Common.Statistics
                     0m,
                     1,
                     null,
-                    "$");
+                    "$",
+                    new QuantConnect.Securities.SecurityTransactionManager(
+                        null,
+                        new QuantConnect.Securities.SecurityManager(new TimeKeeper(DateTime.UtcNow))));
             }, "Misaligned values provided, but we still generate statistics");
         }
     }

@@ -77,6 +77,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the number or winning transactions
+        /// </summary>
+        public int WinCount { get; private set; }
+
+        /// <summary>
+        /// Gets the number of losing transactions
+        /// </summary>
+        public int LossCount { get; private set; }
+
+        /// <summary>
         /// Configurable minimum order value to ignore bad orders, or orders with unrealistic sizes
         /// </summary>
         /// <remarks>Default minimum order size is $0 value</remarks>
@@ -499,7 +509,11 @@ namespace QuantConnect.Securities
         /// </remarks>
         /// <param name="time">Time of order processed </param>
         /// <param name="transactionProfitLoss">Profit Loss.</param>
-        public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss)
+        /// <param name="isWin">
+        /// Whether the transaction is a win.
+        /// For options exercise, this might not depend only on the profit/loss value
+        /// </param>
+        public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss, bool isWin)
         {
             lock (_transactionRecord)
             {
@@ -509,6 +523,14 @@ namespace QuantConnect.Securities
                     clone = clone.AddMilliseconds(1);
                 }
                 _transactionRecord.Add(clone, transactionProfitLoss);
+                if (isWin)
+                {
+                    WinCount++;
+                }
+                else
+                {
+                    LossCount++;
+                }
             }
         }
 

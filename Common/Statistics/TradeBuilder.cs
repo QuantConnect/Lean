@@ -276,9 +276,7 @@ namespace QuantConnect.Statistics
                         trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * trade.Quantity * conversionRate * multiplier, 2);
                         trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * trade.Quantity * conversionRate * multiplier, 2);
 
-                        SetIsWin(trade, fill);
-
-                        AddNewTrade(trade);
+                        AddNewTrade(trade, fill);
                     }
                     else
                     {
@@ -299,9 +297,8 @@ namespace QuantConnect.Statistics
                             MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
                             MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2)
                         };
-                        SetIsWin(trade, fill);
 
-                        AddNewTrade(newTrade);
+                        AddNewTrade(newTrade, fill);
 
                         trade.TotalFees = 0;
                     }
@@ -412,9 +409,8 @@ namespace QuantConnect.Statistics
                         MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryAveragePrice : entryAveragePrice - position.MaxPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
                         MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryAveragePrice : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
                     };
-                    SetIsWin(trade, fill);
 
-                    AddNewTrade(trade);
+                    AddNewTrade(trade, fill);
 
                     _positions.Remove(fill.Symbol);
 
@@ -512,9 +508,8 @@ namespace QuantConnect.Statistics
                     MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryPrice : entryPrice - position.MaxPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
                     MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2)
                 };
-                SetIsWin(trade, fill);
 
-                AddNewTrade(trade);
+                AddNewTrade(trade, fill);
 
                 if (Math.Abs(totalExecutedQuantity) < fill.AbsoluteFillQuantity)
                 {
@@ -538,10 +533,11 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Adds a trade to the list of closed trades, capping the total number only in live mode
         /// </summary>
-        private void AddNewTrade(Trade trade)
+        private void AddNewTrade(Trade trade, OrderEvent fill)
         {
             lock (_closedTrades)
             {
+                trade.IsWin = _securities.TryGetValue(trade.Symbol, out var security) && fill.IsWin(security, trade.ProfitLoss);
                 _closedTrades.Add(trade);
 
                 // Due to memory constraints in live mode, we cap the number of trades
@@ -560,44 +556,6 @@ namespace QuantConnect.Statistics
                     _closedTrades.RemoveAt(0);
                 }
             }
-        }
-
-        /// <summary>
-        /// Sets the <see cref="Trade.IsWin"/> property based on the <see cref="Trade.ProfitLoss"/>
-        /// and <see cref="OrderEvent.IsInTheMoney"/> properties.
-        /// </summary>
-        private void SetIsWin(Trade trade, OrderEvent fill)
-        {
-            if (!trade.Symbol.SecurityType.IsOption() || fill.Ticket.OrderType != OrderType.OptionExercise)
-            {
-                trade.IsWin = trade.ProfitLoss > 0;
-                return;
-            }
-
-            if (_securities.TryGetValue(trade.Symbol, out var security))
-            {
-                var option = security as Option;
-                if (option == null)
-                {
-                    return;
-                }
-
-                if (fill.Direction == OrderDirection.Sell)
-                {
-                    // If the option is ITM, the trade is a win only if the profit is greater than the ITM amount
-                    trade.IsWin = fill.IsInTheMoney && Math.Abs(trade.ProfitLoss) < GetInTheMoneyAmount(option, trade.Quantity);
-                }
-                else
-                {
-                    // It is a win if the buyer paid more than what they saved (the ITM amount)
-                    trade.IsWin = !fill.IsInTheMoney || Math.Abs(trade.ProfitLoss) > GetInTheMoneyAmount(option, trade.Quantity);
-                }
-            }
-        }
-
-        private static decimal GetInTheMoneyAmount(Option option, decimal quantity)
-        {
-            return option.Holdings.GetQuantityValue(Math.Abs(quantity), option.GetPayOff(option.Underlying.Price)).Amount;
         }
     }
 }
