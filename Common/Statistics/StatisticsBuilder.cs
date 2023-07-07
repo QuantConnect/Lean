@@ -110,6 +110,8 @@ namespace QuantConnect.Statistics
 
             var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
             var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
+            var periodWinCount = transactions.WinningTransactions.Count(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1));
+            var periodLossCount = transactions.LosingTransactions.Count(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1));
 
             // Convert our charts to dictionaries
             // NOTE: Day 0 refers to sample taken at 12AM on StartDate, performance[0] always = 0, benchmark[0] is benchmark value preceding start date.
@@ -133,7 +135,7 @@ namespace QuantConnect.Statistics
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
 
             return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, portfolioTurnover, listPerformance, listBenchmark,
-                runningCapital, transactions);
+                runningCapital, periodWinCount, periodLossCount);
         }
 
         /// <summary>

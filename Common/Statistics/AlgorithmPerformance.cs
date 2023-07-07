@@ -49,9 +49,8 @@ namespace QuantConnect.Statistics
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="listBenchmark">The list of benchmark values</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
-        /// <param name="transactions">
-        /// The transaction manager to get number of winning and losing transactions
-        /// </param>
+        /// <param name="winningTransactions">Number of winning transactions</param>
+        /// <param name="losingTransactions">Number of losing transactions</param>
         public AlgorithmPerformance(
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
@@ -60,12 +59,13 @@ namespace QuantConnect.Statistics
             List<double> listPerformance,
             List<double> listBenchmark,
             decimal startingCapital,
-            SecurityTransactionManager transactions)
+            int winningTransactions,
+            int losingTransactions)
         {
 
             TradeStatistics = new TradeStatistics(trades);
             PortfolioStatistics = new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital,
-                winCount: transactions.WinCount, lossCount: transactions.LossCount);
+                winCount: winningTransactions, lossCount: losingTransactions);
             ClosedTrades = trades;
         }
 
