@@ -20,7 +20,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
@@ -537,7 +536,10 @@ namespace QuantConnect.Statistics
         {
             lock (_closedTrades)
             {
-                trade.IsWin = _securities.TryGetValue(trade.Symbol, out var security) && fill.IsWin(security, trade.ProfitLoss);
+                trade.IsWin = _securities.TryGetValue(trade.Symbol, out var security)
+                    ? fill.IsWin(security, trade.ProfitLoss)
+                    : trade.ProfitLoss > 0;
+
                 _closedTrades.Add(trade);
 
                 // Due to memory constraints in live mode, we cap the number of trades

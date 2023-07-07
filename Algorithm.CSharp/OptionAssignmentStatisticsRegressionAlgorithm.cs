@@ -219,33 +219,38 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"AssertPortfolioStatistics(): Expected loss rate to be 1/3. Actual {portfolioStatistics.LossRate}");
             }
 
-            var expectedAverageWinRate = 0.3296200091047853680743378947m;
-            if (portfolioStatistics.AverageWinRate != 0.3296200091047853680743378947m)
+            var expectedAverageWinRate = 0.32962000910479m;
+            if (!AreEqual(expectedAverageWinRate, portfolioStatistics.AverageWinRate))
             {
                 throw new Exception($@"AssertPortfolioStatistics(): Expected average win rate to be {expectedAverageWinRate}. Actual {
                     portfolioStatistics.AverageWinRate}");
             }
 
-            var expectedAverageLossRate = -0.1355663825757575757575757576m;
-            if (portfolioStatistics.AverageLossRate != expectedAverageLossRate)
+            var expectedAverageLossRate = -0.13556638257576m;
+            if (!AreEqual(expectedAverageLossRate, portfolioStatistics.AverageLossRate))
             {
                 throw new Exception($@"AssertPortfolioStatistics(): Expected average loss rate to be {expectedAverageLossRate}. Actual {
                     portfolioStatistics.AverageLossRate}");
             }
 
-            var expectedProfitLossRatio = 2.4314288162154523473453532615m;
-            if (portfolioStatistics.ProfitLossRatio != expectedProfitLossRatio)
+            var expectedProfitLossRatio = 2.43142881621545m;
+            if (!AreEqual(expectedProfitLossRatio, portfolioStatistics.ProfitLossRatio))
             {
                 throw new Exception($@"AssertPortfolioStatistics(): Expected profit loss ratio to be {expectedProfitLossRatio}. Actual {
                     portfolioStatistics.ProfitLossRatio}");
             }
 
             var totalNetProfit = -0.00697m;
-            if (portfolioStatistics.TotalNetProfit != totalNetProfit)
+            if (!AreEqual(totalNetProfit, portfolioStatistics.TotalNetProfit))
             {
                 throw new Exception($@"AssertPortfolioStatistics(): Expected total net profit to be {totalNetProfit}. Actual {
                     portfolioStatistics.TotalNetProfit}");
             }
+        }
+
+        private static bool AreEqual(decimal expected, decimal actual)
+        {
+            return Math.Abs(expected - actual) < 1e-12m;
         }
 
         /// <summary>

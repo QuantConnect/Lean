@@ -3829,12 +3829,13 @@ namespace QuantConnect
         /// </returns>
         public static bool IsWin(this OrderEvent fill, Security security, decimal profitLoss)
         {
+            // For non-options or non-exercise orders, the trade is a win if the profit-loss is positive
             if (!fill.Symbol.SecurityType.IsOption() || fill.Ticket.OrderType != OrderType.OptionExercise)
             {
                 return profitLoss > 0;
             }
 
-            var option = security as Option;
+            var option = (Option)security;
 
             // If the fill is a sell, the original transaction was a buy
             if (fill.Direction == OrderDirection.Sell)
