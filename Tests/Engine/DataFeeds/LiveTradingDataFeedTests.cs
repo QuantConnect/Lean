@@ -294,7 +294,75 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         [TestCase(false)]
         [TestCase(true)]
-        public void WarmupExpiredAsset(bool useWarmupResolution)
+        public void WarmupExpiredContinuousFuture(bool useWarmupResolution)
+        {
+            _startDate = new DateTime(2014, 12, 1);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
+            var endDate = _startDate.AddDays(30);
+            _algorithm.SetFutureChainProvider(new BacktestingFutureChainProvider(TestGlobals.DataCacheProvider));
+            _algorithm.UniverseSettings.Resolution = Resolution.Daily;
+            if (useWarmupResolution)
+            {
+                _algorithm.SetWarmup(365, Resolution.Daily);
+            }
+            else
+            {
+                _algorithm.SetWarmup(TimeSpan.FromDays(365));
+            }
+            var feed = RunDataFeed();
+
+            var continuousContract = _algorithm.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily,
+                dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
+                dataMappingMode: DataMappingMode.LastTradingDay,
+                contractDepthOffset: 0
+            );
+            // the expiration of this option contract is before the start date of the algorithm but we should still get some data during warmup
+            continuousContract.SetFilter(0, 182);
+
+            var emittedChainData = false;
+            var emittedContinuousData = false;
+            var assertedSubscriptions = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                if (_algorithm.IsWarmingUp)
+                {
+                    Assert.IsFalse(_dataQueueHandler.SubscriptionDataConfigs.Any(
+                        // the data queue handler shouldn't of seen the expired subscription at any point
+                        x => !x.Symbol.IsCanonical() && x.Symbol.SecurityType == SecurityType.Future && x.Symbol.ID.Date < _algorithm.StartDate));
+
+                    if (ts.Slice.HasData)
+                    {
+                        emittedContinuousData |= ts.Slice.Keys.Any(s => s == continuousContract.Symbol
+                            // let's assert that during warmup the continuous future got data of expired future
+                            && continuousContract.Mapped.ID.Date < _algorithm.StartDate);
+                        emittedChainData |= ts.Slice.Keys.Any(s => !s.IsCanonical() && s.SecurityType == SecurityType.Future
+                            // let's assert that during warmup we got chain data of expired futures
+                            && s.ID.Date < _algorithm.StartDate);
+                    }
+                }
+                else
+                {
+                    Assert.IsTrue(_dataQueueHandler.SubscriptionDataConfigs.Any(
+                        // the data queue handler should of seen the Non expired subscription at any point
+                        x => !x.Symbol.IsCanonical() && x.Symbol.SecurityType == SecurityType.Future && x.Symbol.ID.Date >= _algorithm.StartDate));
+
+                    assertedSubscriptions = true;
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60);
+
+            Assert.IsTrue(assertedSubscriptions);
+            Assert.IsTrue(emittedContinuousData);
+            Assert.IsTrue(emittedChainData);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WarmupExpiredOption(bool useWarmupResolution)
         {
             _startDate = new DateTime(2014, 6, 14);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
@@ -311,8 +379,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _algorithm.SetWarmup(TimeSpan.FromDays(10));
             }
             var feed = RunDataFeed();
-            // after algorithm initialization let's set the time provider time to reflect warmup window
-            _manualTimeProvider.SetCurrentTimeUtc(_algorithm.UtcTime);
 
             var aapl = _algorithm.AddEquity("AAPL");
             // the expiration of this option contract is before the start date of the algorithm but we should still get some data during warmup
@@ -322,6 +388,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var emittedData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
+                // the data queue handler shouldn't of seen the expired option subscription at any point
+                Assert.IsFalse(_dataQueueHandler.SubscriptionDataConfigs.Any(x => !x.Symbol.IsCanonical() && x.Symbol.SecurityType.IsOption()));
+
                 if (ts.Slice.HasData)
                 {
                     if (_algorithm.IsWarmingUp && ts.Slice.Keys.Any(s => s == option))

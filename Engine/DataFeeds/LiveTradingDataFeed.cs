@@ -193,79 +193,71 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
                 IEnumerator<BaseData> enumerator = null;
-                // during warmup we might get requested to add some asset which has already expired in which case the live enumerator will be empty
-                if (!IsExpired(request.Configuration))
+                if (!_channelProvider.ShouldStreamSubscription(request.Configuration))
                 {
-                    if (!_channelProvider.ShouldStreamSubscription(request.Configuration))
+                    if (!Tiingo.IsAuthCodeSet)
                     {
-                        if (!Tiingo.IsAuthCodeSet)
-                        {
-                            // we're not using the SubscriptionDataReader, so be sure to set the auth token here
-                            Tiingo.SetAuthCode(Config.Get("tiingo-auth-token"));
-                        }
-
-                        var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
-                        var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
-
-                        var enqueable = new EnqueueableEnumerator<BaseData>();
-                        _customExchange.AddEnumerator(request.Configuration.Symbol, enumeratorStack, handleData: data =>
-                        {
-                            enqueable.Enqueue(data);
-
-                            subscription?.OnNewDataAvailable();
-                        });
-
-                        enumerator = enqueable;
-                    }
-                    else
-                    {
-                        var auxEnumerators = new List<IEnumerator<BaseData>>();
-
-                        if (LiveAuxiliaryDataEnumerator.TryCreate(request.Configuration, _timeProvider, _dataQueueHandler,
-                            request.Security.Cache, _mapFileProvider, _factorFileProvider, request.StartTimeLocal, out var auxDataEnumator))
-                        {
-                            auxEnumerators.Add(auxDataEnumator);
-                        }
-
-                        EventHandler handler = (_, _) => subscription?.OnNewDataAvailable();
-                        enumerator = Subscribe(request.Configuration, handler);
-
-                        if (auxEnumerators.Count > 0)
-                        {
-                            enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators);
-                        }
+                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
+                        Tiingo.SetAuthCode(Config.Get("tiingo-auth-token"));
                     }
 
-                    // scale prices before 'SubscriptionFilterEnumerator' since it updates securities realtime price
-                    // and before fill forwarding so we don't happen to apply twice the factor
-                    if (request.Configuration.PricesShouldBeScaled(liveMode: true))
+                    var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
+                    var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
+
+                    var enqueable = new EnqueueableEnumerator<BaseData>();
+                    _customExchange.AddEnumerator(request.Configuration.Symbol, enumeratorStack, handleData: data =>
                     {
-                        enumerator = new PriceScaleFactorEnumerator(
-                            enumerator,
-                            request.Configuration,
-                            _factorFileProvider,
-                            liveMode: true);
-                    }
+                        enqueable.Enqueue(data);
 
-                    if (request.Configuration.FillDataForward)
-                    {
-                        var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
+                        subscription?.OnNewDataAvailable();
+                    });
 
-                        enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone);
-                    }
-
-                    // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
-                    enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
-
-                    // define market hours and user filters to incoming data after the frontier enumerator so during warmup we avoid any realtime data making it's way into the securities
-                    if (request.Configuration.IsFilteredSubscription)
-                    {
-                        enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime, request.Configuration.ExtendedMarketHours, true, request.ExchangeHours);
-                    }
+                    enumerator = enqueable;
                 }
                 else
                 {
-                    enumerator = Enumerable.Empty<BaseData>().GetEnumerator();
+                    var auxEnumerators = new List<IEnumerator<BaseData>>();
+
+                    if (LiveAuxiliaryDataEnumerator.TryCreate(request.Configuration, _timeProvider, _dataQueueHandler,
+                        request.Security.Cache, _mapFileProvider, _factorFileProvider, request.StartTimeLocal, out var auxDataEnumator))
+                    {
+                        auxEnumerators.Add(auxDataEnumator);
+                    }
+
+                    EventHandler handler = (_, _) => subscription?.OnNewDataAvailable();
+                    enumerator = Subscribe(request.Configuration, handler, IsExpired);
+
+                    if (auxEnumerators.Count > 0)
+                    {
+                        enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators);
+                    }
+                }
+
+                // scale prices before 'SubscriptionFilterEnumerator' since it updates securities realtime price
+                // and before fill forwarding so we don't happen to apply twice the factor
+                if (request.Configuration.PricesShouldBeScaled(liveMode: true))
+                {
+                    enumerator = new PriceScaleFactorEnumerator(
+                        enumerator,
+                        request.Configuration,
+                        _factorFileProvider,
+                        liveMode: true);
+                }
+
+                if (request.Configuration.FillDataForward)
+                {
+                    var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
+
+                    enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone);
+                }
+
+                // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
+                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
+
+                // define market hours and user filters to incoming data after the frontier enumerator so during warmup we avoid any realtime data making it's way into the securities
+                if (request.Configuration.IsFilteredSubscription)
+                {
+                    enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime, request.Configuration.ExtendedMarketHours, true, request.ExchangeHours);
                 }
 
                 enumerator = GetWarmupEnumerator(request, enumerator);
@@ -293,9 +285,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return _timeProvider.GetUtcNow().Date > delistingDate.ConvertToUtc(dataConfig.ExchangeTimeZone);
         }
 
-        private IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+        private IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler, Func<SubscriptionDataConfig, bool> isExpired)
         {
-            return new LiveSubscriptionEnumerator(dataConfig, _dataQueueHandler, newDataAvailableHandler);
+            return new LiveSubscriptionEnumerator(dataConfig, _dataQueueHandler, newDataAvailableHandler, isExpired);
         }
 
         /// <summary>
@@ -363,7 +355,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Func<SubscriptionRequest, IEnumerator<BaseData>> configure = (subRequest) =>
                 {
                     var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
-                    var input = Subscribe(subRequest.Configuration, (sender, args) => subscription?.OnNewDataAvailable());
+                    var input = Subscribe(subRequest.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), IsExpired);
                     return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours, localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone);
                 };
 
@@ -405,7 +397,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // send the subscription for the new symbol through to the data queuehandler
             if (_channelProvider.ShouldStreamSubscription(subscription.Configuration))
             {
-                Subscribe(request.Configuration, (sender, args) => subscription?.OnNewDataAvailable());
+                Subscribe(request.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), IsExpired);
             }
 
             return subscription;

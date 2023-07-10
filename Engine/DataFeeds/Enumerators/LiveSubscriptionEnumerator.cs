@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -48,10 +48,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public LiveSubscriptionEnumerator(SubscriptionDataConfig dataConfig, IDataQueueHandler dataQueueHandler, EventHandler handler)
+        public LiveSubscriptionEnumerator(SubscriptionDataConfig dataConfig, IDataQueueHandler dataQueueHandler, EventHandler handler, Func<SubscriptionDataConfig, bool> isExpired)
         {
             _requestedSymbol = dataConfig.Symbol;
-            _underlyingEnumerator = dataQueueHandler.SubscribeWithMapping(dataConfig, handler, out _currentConfig);
+            _underlyingEnumerator = dataQueueHandler.SubscribeWithMapping(dataConfig, handler, isExpired, out _currentConfig);
 
             // for any mapping event we will re subscribe
             dataConfig.NewSymbol += (_, _) =>
@@ -60,7 +60,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 _previousEnumerator = _underlyingEnumerator;
 
                 var oldSymbol = _currentConfig.Symbol;
-                _underlyingEnumerator = dataQueueHandler.SubscribeWithMapping(dataConfig, handler, out _currentConfig);
+                _underlyingEnumerator = dataQueueHandler.SubscribeWithMapping(dataConfig, handler, isExpired, out _currentConfig);
 
                 Log.Trace($"LiveSubscriptionEnumerator({_requestedSymbol}): " +
                     $"resubscribing old: '{oldSymbol.Value}' new '{_currentConfig.Symbol.Value}'");
