@@ -1274,6 +1274,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
@@ -1344,6 +1345,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
             // now we have long position in SPY with average price equal to strike
@@ -1413,6 +1415,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
@@ -1482,6 +1485,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
@@ -1555,6 +1559,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
@@ -1627,6 +1632,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolioModel.ProcessFill(portfolio, option, fill);
             }
 
@@ -1702,6 +1708,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolioModel.ProcessFill(portfolio, option, fill);
             }
 
@@ -1776,6 +1783,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolioModel.ProcessFill(portfolio, option, fill);
             }
 
@@ -1848,6 +1856,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
@@ -1919,6 +1928,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
@@ -1987,6 +1997,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
@@ -2183,6 +2194,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
@@ -2254,6 +2266,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolioModel.ProcessFill(portfolio, option, fill);
             }
 
@@ -2328,6 +2341,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolioModel.ProcessFill(portfolio, option, fill);
             }
 
@@ -2401,6 +2415,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolioModel.ProcessFill(portfolio, option, fill);
             }
 
@@ -2473,6 +2488,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolioModel.ProcessFill(portfolio, option, fill);
             }
 

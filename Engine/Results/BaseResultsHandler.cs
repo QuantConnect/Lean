@@ -820,8 +820,9 @@ namespace QuantConnect.Lean.Engine.Results
                         portfolioTurnover = new();
                     }
 
-                    statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performance.Values, benchmark.Values, portfolioTurnover.Values,
-                        StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions, estimatedStrategyCapacity, AlgorithmCurrencySymbol);
+                    statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performance.Values, benchmark.Values,
+                        portfolioTurnover.Values, StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions,
+                        estimatedStrategyCapacity, AlgorithmCurrencySymbol, Algorithm.Transactions);
                 }
 
                 statisticsResults.AddCustomSummaryStatistics(_customSummaryStatistics);

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
@@ -38,6 +39,10 @@ namespace QuantConnect.Statistics
         /// <param name="totalFees">The total fees</param>
         /// <param name="totalTransactions">The total number of transactions</param>
         /// <param name="estimatedStrategyCapacity">The estimated capacity of this strategy</param>
+        /// <param name="accountCurrencySymbol">The account currency symbol</param>
+        /// <param name="transactions">
+        /// The transaction manager to get number of winning and losing transactions
+        /// </param>
         /// <returns>Returns a <see cref="StatisticsResults"/> object</returns>
         public static StatisticsResults Generate(
             List<Trade> trades,
@@ -50,15 +55,18 @@ namespace QuantConnect.Statistics
             decimal totalFees,
             int totalTransactions,
             CapacityEstimate estimatedStrategyCapacity,
-            string accountCurrencySymbol)
+            string accountCurrencySymbol,
+            SecurityTransactionManager transactions)
         {
             var equity = ChartPointToDictionary(pointsEquity);
 
             var firstDate = equity.Keys.FirstOrDefault().Date;
             var lastDate = equity.Keys.LastOrDefault().Date;
 
-            var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, pointsPortfolioTurnover, startingCapital);
-            var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, pointsPortfolioTurnover, startingCapital);
+            var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark,
+                pointsPortfolioTurnover, startingCapital, transactions);
+            var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark,
+                pointsPortfolioTurnover, startingCapital, transactions);
             var summary = GetSummary(totalPerformance, estimatedStrategyCapacity, totalFees, totalTransactions, accountCurrencySymbol);
 
             return new StatisticsResults(totalPerformance, rollingPerformances, summary);
@@ -76,6 +84,9 @@ namespace QuantConnect.Statistics
         /// <param name="pointsBenchmark">The list of benchmark values</param>
         /// <param name="pointsPortfolioTurnover">The list of portfolio turnover daily samples</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
+        /// <param name="transactions">
+        /// The transaction manager to get number of winning and losing transactions
+        /// </param>
         /// <returns>The algorithm performance</returns>
         private static AlgorithmPerformance GetAlgorithmPerformance(
             DateTime fromDate,
@@ -86,7 +97,8 @@ namespace QuantConnect.Statistics
             List<ChartPoint> pointsPerformance,
             List<ChartPoint> pointsBenchmark,
             List<ChartPoint> pointsPortfolioTurnover,
-            decimal startingCapital)
+            decimal startingCapital,
+            SecurityTransactionManager transactions)
         {
             var periodEquity = new SortedDictionary<DateTime, decimal>(equity.Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
 
@@ -98,6 +110,8 @@ namespace QuantConnect.Statistics
 
             var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
             var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
+            var periodWinCount = transactions.WinningTransactions.Count(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1));
+            var periodLossCount = transactions.LosingTransactions.Count(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1));
 
             // Convert our charts to dictionaries
             // NOTE: Day 0 refers to sample taken at 12AM on StartDate, performance[0] always = 0, benchmark[0] is benchmark value preceding start date.
@@ -120,7 +134,8 @@ namespace QuantConnect.Statistics
 
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
 
-            return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, portfolioTurnover, listPerformance, listBenchmark, runningCapital);
+            return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, portfolioTurnover, listPerformance, listBenchmark,
+                runningCapital, periodWinCount, periodLossCount);
         }
 
         /// <summary>
@@ -135,6 +150,9 @@ namespace QuantConnect.Statistics
         /// <param name="pointsBenchmark">The list of benchmark values</param>
         /// <param name="pointsPortfolioTurnover">The list of portfolio turnover daily samples</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
+        /// <param name="transactions">
+        /// The transaction manager to get number of winning and losing transactions
+        /// </param>
         /// <returns>A dictionary with the rolling performances</returns>
         private static Dictionary<string, AlgorithmPerformance> GetRollingPerformances(
             DateTime firstDate,
@@ -145,7 +163,8 @@ namespace QuantConnect.Statistics
             List<ChartPoint> pointsPerformance,
             List<ChartPoint> pointsBenchmark,
             List<ChartPoint> pointsPortfolioTurnover,
-            decimal startingCapital)
+            decimal startingCapital,
+            SecurityTransactionManager transactions)
         {
             var rollingPerformances = new Dictionary<string, AlgorithmPerformance>();
 
@@ -157,7 +176,8 @@ namespace QuantConnect.Statistics
                 foreach (var period in ranges)
                 {
                     var key = $"M{monthPeriod}_{period.EndDate.ToStringInvariant("yyyyMMdd")}";
-                    var periodPerformance = GetAlgorithmPerformance(period.StartDate, period.EndDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, pointsPortfolioTurnover, startingCapital);
+                    var periodPerformance = GetAlgorithmPerformance(period.StartDate, period.EndDate, trades, profitLoss, equity, pointsPerformance,
+                        pointsBenchmark, pointsPortfolioTurnover, startingCapital, transactions);
                     rollingPerformances[key] = periodPerformance;
                 }
             }

@@ -162,6 +162,11 @@ namespace QuantConnect.Statistics
         /// <param name="listBenchmark">The list of benchmark values</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
+        /// <param name="winCount">
+        /// The number of wins, including ITM options with profitLoss less than 0.
+        /// If this and <paramref name="lossCount"/> are null, they will be calculated from <paramref name="profitLoss"/>
+        /// </param>
+        /// <param name="lossCount">The number of losses</param>
         public PortfolioStatistics(
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
@@ -169,7 +174,9 @@ namespace QuantConnect.Statistics
             List<double> listPerformance,
             List<double> listBenchmark,
             decimal startingCapital,
-            int tradingDaysPerYear = 252)
+            int tradingDaysPerYear = 252,
+            int? winCount = null,
+            int? lossCount = null)
         {
             if (portfolioTurnover.Count > 0)
             {
@@ -211,8 +218,17 @@ namespace QuantConnect.Statistics
             AverageLossRate = totalLosses == 0 ? 0 : totalLoss / totalLosses;
             ProfitLossRatio = AverageLossRate == 0 ? 0 : AverageWinRate / Math.Abs(AverageLossRate);
 
-            WinRate = profitLoss.Count == 0 ? 0 : (decimal) totalWins / profitLoss.Count;
-            LossRate = profitLoss.Count == 0 ? 0 : (decimal) totalLosses / profitLoss.Count;
+            // Set the actual total wins and losses count.
+            // Some options assignments (ITM) count as wins even though they are losses.
+            if (winCount.HasValue && lossCount.HasValue)
+            {
+                totalWins = winCount.Value;
+                totalLosses = lossCount.Value;
+            }
+
+            var totalTrades = totalWins + totalLosses;
+            WinRate = totalTrades == 0 ? 0 : (decimal) totalWins / totalTrades;
+            LossRate = totalTrades == 0 ? 0 : (decimal) totalLosses / totalTrades;
             Expectancy = WinRate * ProfitLossRatio - LossRate;
 
             if (startingCapital != 0)
@@ -308,6 +324,6 @@ namespace QuantConnect.Statistics
         {
             var variance = performance.Variance();
             return variance.IsNaNOrZero() ? 0 : (decimal)variance * tradingDaysPerYear;
-        }        
+        }
     }
 }

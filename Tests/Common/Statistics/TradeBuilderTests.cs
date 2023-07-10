@@ -15,10 +15,12 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Common.Statistics
@@ -29,6 +31,13 @@ namespace QuantConnect.Tests.Common.Statistics
         private readonly OrderFee _orderFee = new OrderFee(new CashAmount(1, Currencies.USD));
         private const decimal ConversionRate = 1;
         private readonly DateTime _startTime = new DateTime(2015, 08, 06, 15, 30, 0);
+        private SecurityManager _securityManager;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _securityManager = new SecurityManager(new TimeKeeper(_startTime));
+        }
 
         [Test]
         public void AllInAllOutLong(
@@ -39,7 +48,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Sell 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -95,7 +104,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Buy 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -151,7 +160,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Buy 1k, Sell 2k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -252,7 +261,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Sell 1k, Buy 2k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -353,7 +362,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 2k, Sell 1k, Sell 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Buy 2k
@@ -455,7 +464,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 2k, Buy 1k, Buy 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Sell 2k
@@ -557,7 +566,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Sell 2k, Buy 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -638,7 +647,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Buy 2k, Sell 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -719,7 +728,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Buy 1k, Sell 1k, Buy 1k, Sell 2k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -918,7 +927,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Sell 1k, Buy 1k, Sell 1k, Buy 2k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -1109,7 +1118,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Buy 2k, Sell 1k, Buy 1k, Sell 3k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -1341,7 +1350,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Sell 2k, Buy 1k, Sell 1k, Buy 3k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -1588,7 +1597,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Buy 1k, Buy 1k, Sell 2k, Buy 1k, Sell 2k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -1783,7 +1792,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Sell 1k, Sell 1k, Buy 2k, Sell 1k, Buy 2k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -1996,7 +2005,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Buy 1k, Sell 1.5k, Sell 0.5k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -2177,7 +2186,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Sell 1k, Buy 1.5k, Buy 0.5k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -2360,7 +2369,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             // Buy 1k, Sell 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -2405,6 +2414,229 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(2, trade.TotalFees);
             Assert.AreEqual(-5 * multiplier, trade.MAE);
             Assert.AreEqual(20m * multiplier, trade.MFE);
+        }
+
+        [Test]
+        public void ITMOptionAssignment(
+            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection,
+            [Values] bool win)
+        {
+            var time = _startTime;
+            var option = GetOption();
+            var underlying = option.Underlying;
+
+            option.SetMarketPrice(new Tick { Value = 100m });
+
+            var underlyingPrice = 0m;
+            if (win)
+            {
+                underlyingPrice = orderDirection == OrderDirection.Buy ? 300m : 290m;
+            }
+            else
+            {
+                underlyingPrice = orderDirection == OrderDirection.Buy ? 290m : 300m;
+            }
+            underlying.SetMarketPrice(new Tick { Value = underlyingPrice });
+
+            var builder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO, _securityManager);
+
+            var quantity = orderDirection == OrderDirection.Buy ? 10 : -10;
+            builder.ProcessFill(
+                new OrderEvent(1, option.Symbol, time, OrderStatus.Filled, orderDirection, 100m, quantity, _orderFee) { IsInTheMoney = true },
+                ConversionRate,
+                _orderFee.Value.Amount,
+                100m);
+
+            Assert.IsTrue(builder.HasOpenPosition(option.Symbol));
+
+            var closingOrderDirection = orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
+            var ticket = new OrderTicket(null, new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0, 0, time, ""));
+            builder.ProcessFill(
+                new OrderEvent(1, option.Symbol, time.AddMinutes(10), OrderStatus.Filled, closingOrderDirection, 0m, -quantity, _orderFee)
+                {
+                    IsInTheMoney = true,
+                    Ticket = ticket
+                },
+                ConversionRate,
+                _orderFee.Value.Amount,
+                100m);
+
+            Assert.IsFalse(builder.HasOpenPosition(option.Symbol));
+
+            Assert.AreEqual(1, builder.ClosedTrades.Count);
+
+            var trade = builder.ClosedTrades[0];
+
+            Assert.AreEqual(option.Symbol, trade.Symbol);
+            Assert.AreEqual(win, trade.IsWin);
+            Assert.AreEqual(time, trade.EntryTime);
+            Assert.AreEqual(100m, trade.EntryPrice);
+            Assert.AreEqual(orderDirection == OrderDirection.Buy ? TradeDirection.Long : TradeDirection.Short, trade.Direction);
+            Assert.AreEqual(10, trade.Quantity);
+            Assert.AreEqual(time.AddMinutes(10), trade.ExitTime);
+            Assert.AreEqual(0, trade.ExitPrice);
+            Assert.AreEqual(Math.Sign(quantity) * -100000m, trade.ProfitLoss);
+            Assert.AreEqual(1m, trade.TotalFees);
+            Assert.AreEqual(orderDirection == OrderDirection.Buy ? -100000m : 0m, trade.MAE);
+            Assert.AreEqual(orderDirection == OrderDirection.Buy ? 0m : 100000m, trade.MFE);
+        }
+
+        [TestCase(OrderDirection.Buy)]
+        [TestCase(OrderDirection.Sell)]
+        public void OTMOptionAssignment(OrderDirection orderDirection)
+        {
+            var time = _startTime;
+            var option = GetOption();
+            var underlying = option.Underlying;
+
+            option.SetMarketPrice(new Tick { Value = 100m });
+            underlying.SetMarketPrice(new Tick { Value = 150 });
+
+            var builder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO, _securityManager);
+
+            var quantity = orderDirection == OrderDirection.Buy ? 10 : -10;
+            builder.ProcessFill(
+                new OrderEvent(1, option.Symbol, time, OrderStatus.Filled, orderDirection, 100m, quantity, _orderFee) { IsInTheMoney = true },
+                ConversionRate,
+                _orderFee.Value.Amount,
+                100m);
+
+            Assert.IsTrue(builder.HasOpenPosition(option.Symbol));
+
+            var closingOrderDirection = orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
+            var ticket = new OrderTicket(null, new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0, 0, time, ""));
+            builder.ProcessFill(
+                new OrderEvent(1, option.Symbol, time.AddMinutes(10), OrderStatus.Filled, closingOrderDirection, 0m, -quantity, _orderFee)
+                {
+                    IsInTheMoney = true,
+                    Ticket = ticket
+                },
+                ConversionRate,
+                _orderFee.Value.Amount,
+                100m);
+
+            Assert.IsFalse(builder.HasOpenPosition(option.Symbol));
+
+            Assert.AreEqual(1, builder.ClosedTrades.Count);
+
+            var trade = builder.ClosedTrades[0];
+
+            Assert.AreEqual(option.Symbol, trade.Symbol);
+            Assert.AreEqual(orderDirection == OrderDirection.Buy ? false : true, trade.IsWin);
+            Assert.AreEqual(time, trade.EntryTime);
+            Assert.AreEqual(100m, trade.EntryPrice);
+            Assert.AreEqual(orderDirection == OrderDirection.Buy ? TradeDirection.Long : TradeDirection.Short, trade.Direction);
+            Assert.AreEqual(10, trade.Quantity);
+            Assert.AreEqual(time.AddMinutes(10), trade.ExitTime);
+            Assert.AreEqual(0, trade.ExitPrice);
+            Assert.AreEqual(Math.Sign(quantity) * -100000m, trade.ProfitLoss);
+            Assert.AreEqual(1m, trade.TotalFees);
+            Assert.AreEqual(orderDirection == OrderDirection.Buy ? -100000m : 0m, trade.MAE);
+            Assert.AreEqual(orderDirection == OrderDirection.Buy ? 0m : 100000m, trade.MFE);
+        }
+
+        [Test]
+        public void OptionPositionCloseWithoutExercise(
+            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection,
+            [Values] bool win)
+        {
+            var time = _startTime;
+            var option = GetOption();
+            var underlying = option.Underlying;
+
+            underlying.SetMarketPrice(new Tick { Value = 300m });
+
+            var builder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO, _securityManager);
+
+            var initialOptionPrice = 100m;
+            option.SetMarketPrice(new Tick { Value = initialOptionPrice });
+
+            var quantity = orderDirection == OrderDirection.Buy ? 10 : -10;
+            builder.ProcessFill(
+                new OrderEvent(1, option.Symbol, time, OrderStatus.Filled, orderDirection, 100m, quantity, _orderFee) { IsInTheMoney = true },
+                ConversionRate,
+                _orderFee.Value.Amount,
+                100m);
+
+            Assert.IsTrue(builder.HasOpenPosition(option.Symbol));
+
+            // Before closing, update option market price
+            var finalOptionPrice = 0m;
+            if (win)
+            {
+                finalOptionPrice = orderDirection == OrderDirection.Buy ? 150m : 50m;
+            }
+            else
+            {
+                finalOptionPrice = orderDirection == OrderDirection.Buy ? 50m : 150m;
+            }
+            option.SetMarketPrice(new Tick { Value = finalOptionPrice });
+
+            var closingOrderDirection = orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
+            var ticket = new OrderTicket(null, new SubmitOrderRequest(OrderType.Market, option.Type, option.Symbol, -quantity, 0, 0, time, ""));
+            builder.ProcessFill(
+                new OrderEvent(1, option.Symbol, time.AddMinutes(10), OrderStatus.Filled, closingOrderDirection, finalOptionPrice, -quantity, _orderFee)
+                {
+                    IsInTheMoney = true,
+                    Ticket = ticket,
+                },
+                ConversionRate,
+                _orderFee.Value.Amount,
+                100m);
+
+            Assert.IsFalse(builder.HasOpenPosition(option.Symbol));
+
+            Assert.AreEqual(1, builder.ClosedTrades.Count);
+
+            var trade = builder.ClosedTrades[0];
+
+            var expectedProfitLoss = (finalOptionPrice - initialOptionPrice) * quantity * 100m;
+
+            Assert.AreEqual(option.Symbol, trade.Symbol);
+            Assert.AreEqual(win, trade.IsWin);
+            Assert.AreEqual(time, trade.EntryTime);
+            Assert.AreEqual(initialOptionPrice, trade.EntryPrice);
+            Assert.AreEqual(orderDirection == OrderDirection.Buy ? TradeDirection.Long : TradeDirection.Short, trade.Direction);
+            Assert.AreEqual(10, trade.Quantity);
+            Assert.AreEqual(time.AddMinutes(10), trade.ExitTime);
+            Assert.AreEqual(finalOptionPrice, trade.ExitPrice);
+            Assert.AreEqual(expectedProfitLoss, trade.ProfitLoss);
+        }
+
+        private Option GetOption()
+        {
+            var underlying = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.SPY,
+                    Resolution.Minute,
+                    TimeZones.NewYork,
+                    TimeZones.NewYork,
+                    true,
+                    true,
+                    false),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            var option = new Option(
+                Symbols.SPY_C_192_Feb19_2016,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache(),
+                underlying
+            );
+
+            _securityManager.Add(underlying);
+            _securityManager.Add(option);
+
+            return option;
         }
 
         private static decimal AdjustQuantityToSplit(decimal quantity, Split split)

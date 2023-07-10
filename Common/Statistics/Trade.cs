@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -93,5 +93,17 @@ namespace QuantConnect.Statistics
             get { return ProfitLoss - MFE; }
         }
 
+        /// <summary>
+        /// Returns whether the trade was profitable (is a win) or not (a loss)
+        /// </summary>
+        /// <returns>True if the trade was profitable</returns>
+        /// <remarks>
+        /// Even when a trade is not profitable, it may still be a win:
+        ///     - For an ITM option buyer, an option assignment trade is not profitable (money was paid),
+        ///       but it might count as a win if the ITM amount is greater than the amount paid for the option.
+        ///     - For an ITM option seller, an option assignment trade is profitable (money was received),
+        ///       but it might count as a loss if the ITM amount is less than the amount received for the option.
+        /// </remarks>
+        public bool IsWin { get; set; }
     }
 }
