@@ -1039,29 +1039,5 @@ namespace QuantConnect.Orders.Fills
 
             return new Prices(endTime, current, open, high, low, close);
         }
-
-        /// <summary>
-        /// Determines if the exchange is open using the current time of the asset
-        /// </summary>
-        /// <remarks>
-        /// This method is overridden in order to avoid behavior changes.
-        /// The base one uses <see cref="SecurityExchangeHours.IsOpen(DateTime, bool)"/> passing the extended market hours flag.
-        /// This one is not passing the flag, so it will return false if the current time is not exactly open.
-        /// </remarks>
-        protected override bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
-        {
-            if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
-            {
-                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
-                var currentBar = asset.GetLastData();
-                if (currentBar == null
-                    || asset.LocalTime.Date != currentBar.EndTime.Date
-                    || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
     }
 }
