@@ -1003,7 +1003,7 @@ namespace QuantConnect.Orders.Fills
                     return false;
                 }
 
-                var resolution = (currentBar.EndTime - currentBar.Time).ToHigherResolutionEquivalent(true);
+                var resolution = (currentBar.EndTime - currentBar.Time).ToHigherResolutionEquivalent(false);
                 var isOnCurrentBar = resolution == Resolution.Daily
                     // for fill purposes we consider the market open for daily bars if we are in the same day
                     ? asset.LocalTime.Date == currentBar.EndTime.Date
