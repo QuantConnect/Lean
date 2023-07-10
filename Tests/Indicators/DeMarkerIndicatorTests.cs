@@ -24,6 +24,8 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            RenkoBarSize = 0.001m;
+            VolumeRenkoBarSize = 1000m;
             return new DeMarkerIndicator("DEM", 14);
         }
         

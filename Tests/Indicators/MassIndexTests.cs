@@ -24,6 +24,8 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
+            RenkoBarSize = 0.1m;
+            VolumeRenkoBarSize = 0.5m;
             return new MassIndex();
         }
 

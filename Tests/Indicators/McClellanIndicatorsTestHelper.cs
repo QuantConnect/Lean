@@ -15,7 +15,9 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Indicators;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -53,6 +55,25 @@ namespace QuantConnect.Tests.Indicators
 
                 // Source data has only 2 decimal places
                 Assert.AreEqual(Parse.Double(expected), (double)indicator.Current.Value, 0.02d);
+            }
+        }
+
+        /// <summary>
+        /// Updates the given consolidator with the entries from the given external CSV file
+        /// </summary>
+        /// <param name="renkoConsolidator">RenkoConsoliadtor instance</param>
+        /// <param name="fileName">External source file name</param>
+        public static void UpdateRenkoConsolidator(IDataConsolidator renkoConsolidator, string fileName)
+        {
+            var closeValue = 1m;
+            foreach (var parts in TestHelper.GetCsvFileStream(fileName))
+            {
+                parts.TryGetValue("a/d difference", out var adDifference);
+                parts.TryGetValue("date", out var date);
+
+                var data = new TradeBar() { Symbol = Symbols.SPY, Close = closeValue, Open = closeValue - 1, Volume = 1, Time = Parse.DateTimeExact(date, "yyyyMMdd") };
+                closeValue++;
+                renkoConsolidator.Update(data);
             }
         }
 

@@ -21,7 +21,7 @@ using System;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class ArmsIndexTests : CommonIndicatorTests<TradeBar>
+    public class ArmsIndexTests : AdvanceDeclineDifferenceTests
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
@@ -29,11 +29,12 @@ namespace QuantConnect.Tests.Indicators
             indicator.Add(Symbols.AAPL);
             indicator.Add(Symbols.IBM);
             indicator.Add(Symbols.GOOG);
+            RenkoBarSize = 5000000;
             return indicator;
         }
 
         [Test]
-        public virtual void ShouldIgnoreRemovedStocks()
+        public override void ShouldIgnoreRemovedStocks()
         {
             var trin = (ArmsIndex) CreateIndicator();
             var reference = System.DateTime.Today;
@@ -68,7 +69,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public virtual void IgnorePeriodIfAnyStockMissed()
+        public override void IgnorePeriodIfAnyStockMissed()
         {
             var adr = (ArmsIndex)CreateIndicator();
             adr.Add(Symbols.MSFT);
@@ -136,7 +137,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void WarmsUpOrdered()
+        public override void WarmsUpOrdered()
         {
             var indicator = CreateIndicator();
             var reference = System.DateTime.Today;
@@ -216,5 +217,15 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "arms_data.txt";
 
         protected override string TestColumnName => "TRIN";
+
+        /// <summary>
+        /// The final value of this indicator is zero because it uses the Volume of the bars it receives.
+        /// Since RenkoBar's don't always have Volume, the final current value is zero. Therefore we
+        /// skip this test
+        /// </summary>
+        /// <param name="indicator"></param>
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
+        {
+        }
     }
 }

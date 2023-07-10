@@ -16,12 +16,11 @@
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using System;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class AdvanceDeclineRatioTests : CommonIndicatorTests<TradeBar>
+    public class AdvanceDeclineRatioTests : AdvanceDeclineDifferenceTests
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
@@ -29,11 +28,12 @@ namespace QuantConnect.Tests.Indicators
             adr.Add(Symbols.AAPL);
             adr.Add(Symbols.IBM);
             adr.Add(Symbols.GOOG);
+            RenkoBarSize = 5000000;
             return adr;
         }
 
         [Test]
-        public virtual void ShouldIgnoreRemovedStocks()
+        public override void ShouldIgnoreRemovedStocks()
         {
             var adr = (AdvanceDeclineRatio)CreateIndicator();
             var reference = System.DateTime.Today;
@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public virtual void IgnorePeriodIfAnyStockMissed()
+        public override void IgnorePeriodIfAnyStockMissed()
         {
             var adr = (AdvanceDeclineRatio)CreateIndicator();
             adr.Add(Symbols.MSFT);
@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void WarmsUpOrdered()
+        public override void WarmsUpOrdered()
         {
             var indicator = CreateIndicator();
             var reference = System.DateTime.Today;

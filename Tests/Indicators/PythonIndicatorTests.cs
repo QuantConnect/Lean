@@ -474,5 +474,23 @@ class CustomSimpleMovingAverage(PythonIndicator):
                 parameter.Language,
                 parameter.ExpectedFinalStatus);
         }
+
+        /// <summary>
+        /// The external test file of this indicator does not define market data. Therefore
+        /// we skip the test
+        /// </summary>
+        [Test]
+        public override void AcceptsRenkoBarsAsInput()
+        {
+        }
+
+        /// <summary>
+        /// The external test file of this indicator does not define market data. Therefore
+        /// we skip the test
+        /// </summary>
+        [Test]
+        public override void AcceptsVolumeRenkoBarsAsInput()
+        {
+        }
     }
 }

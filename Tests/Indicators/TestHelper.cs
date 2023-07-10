@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
@@ -202,6 +203,24 @@ namespace QuantConnect.Tests.Indicators
         }
 
         /// <summary>
+        /// Updates the given consolidator with the entries from the given external CSV file
+        /// </summary>
+        /// <param name="renkoConsolidator">RenkoConsolidator instance to update</param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
+        public static void UpdateRenkoConsolidator(IDataConsolidator renkoConsolidator, string externalDataFilename)
+        {
+            foreach (var parts in GetCsvFileStream(externalDataFilename))
+            {
+                var tradebar = parts.GetTradeBar();
+                if (tradebar.Volume == 0)
+                {
+                    tradebar.Volume = 1;
+                }
+                renkoConsolidator.Update(tradebar);
+            }
+        }
+
+        /// <summary>
         /// Tests a reset of the specified indicator after processing external data using the specified comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
@@ -374,7 +393,7 @@ namespace QuantConnect.Tests.Indicators
         /// <summary>
         /// Grabs the TradeBar values from the set of keys
         /// </summary>
-        private static TradeBar GetTradeBar(this IReadOnlyDictionary<string, string> dictionary, bool forceVolumeColumn = false)
+        public static TradeBar GetTradeBar(this IReadOnlyDictionary<string, string> dictionary, bool forceVolumeColumn = false)
         {
             var sid = (dictionary.ContainsKey("symbol") || dictionary.ContainsKey("ticker"))
                 ? SecurityIdentifier.GenerateEquity(dictionary.GetCsvValue("symbol", "ticker"), Market.USA)

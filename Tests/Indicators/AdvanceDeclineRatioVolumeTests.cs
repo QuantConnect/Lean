@@ -20,7 +20,7 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class AdvanceDeclineVolumeRatioTests : CommonIndicatorTests<TradeBar>
+    public class AdvanceDeclineVolumeRatioTests : AdvanceDeclineDifferenceTests
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
@@ -28,11 +28,12 @@ namespace QuantConnect.Tests.Indicators
             advr.Add(Symbols.AAPL);
             advr.Add(Symbols.IBM);
             advr.Add(Symbols.GOOG);
+            RenkoBarSize = 5000000;
             return advr;
         }
 
         [Test]
-        public virtual void ShouldIgnoreRemovedStocks()
+        public override void ShouldIgnoreRemovedStocks()
         {
             var advr = (AdvanceDeclineVolumeRatio)CreateIndicator();
             var reference = System.DateTime.Today;
@@ -67,7 +68,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public virtual void IgnorePeriodIfAnyStockMissed()
+        public override void IgnorePeriodIfAnyStockMissed()
         {
             var adr = (AdvanceDeclineVolumeRatio)CreateIndicator();
             adr.Add(Symbols.MSFT);
@@ -135,7 +136,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void WarmsUpOrdered()
+        public override void WarmsUpOrdered()
         {
             var indicator = CreateIndicator();
             var reference = System.DateTime.Today;
@@ -158,5 +159,15 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "arms_data.txt";
 
         protected override string TestColumnName => "A/D Volume Ratio";
+
+        /// <summary>
+        /// The final value of this indicator is zero because it uses the Volume of the bars it receives.
+        /// Since RenkoBar's don't always have Volume, the final current value is zero. Therefore we
+        /// skip this test
+        /// </summary>
+        /// <param name="indicator"></param>
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
+        {
+        }
     }
 }

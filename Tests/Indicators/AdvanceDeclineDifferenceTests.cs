@@ -14,8 +14,10 @@
 */
 
 using NUnit.Framework;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -28,6 +30,7 @@ namespace QuantConnect.Tests.Indicators
             adDifference.AddStock(Symbols.AAPL);
             adDifference.AddStock(Symbols.IBM);
             adDifference.AddStock(Symbols.GOOG);
+            RenkoBarSize = 5000000;
             return adDifference;
         }
 
@@ -135,7 +138,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void WarmsUpOrdered()
+        public virtual void WarmsUpOrdered()
         {
             var indicator = CreateIndicator();
             var reference = System.DateTime.Today;
@@ -153,6 +156,106 @@ namespace QuantConnect.Tests.Indicators
 
             Assert.IsTrue(indicator.IsReady);
             Assert.AreEqual(1m, indicator.Current.Value);
+        }
+
+        [Test]
+        public override void AcceptsRenkoBarsAsInput()
+        {
+            var indicator = CreateIndicator();
+            if (indicator is IndicatorBase<TradeBar>)
+            {
+                var aaplRenkoConsolidator = new RenkoConsolidator(10000m);
+                aaplRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+                {
+                    Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+                };
+
+                var googRenkoConsolidator = new RenkoConsolidator(100000m);
+                googRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+                {
+                    Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+                };
+
+                var ibmRenkoConsolidator = new RenkoConsolidator(10000m);
+                ibmRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+                {
+                    Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+                };
+
+                foreach (var parts in GetCsvFileStream(TestFileName))
+                {
+                    var tradebar = parts.GetTradeBar();
+                    if (tradebar.Symbol.Value == "AAPL")
+                    {
+                        aaplRenkoConsolidator.Update(tradebar);
+                    }
+                    else if (tradebar.Symbol.Value == "GOOG")
+                    {
+                        googRenkoConsolidator.Update(tradebar);
+                    }
+                    else
+                    {
+                        ibmRenkoConsolidator.Update(tradebar);
+                    }
+                }
+
+                Assert.IsTrue(indicator.IsReady);
+                Assert.AreNotEqual(0, indicator.Samples);
+                IndicatorValueIsNotZeroAfterReceiveRenkoBars(indicator);
+                aaplRenkoConsolidator.Dispose();
+                googRenkoConsolidator.Dispose();
+                ibmRenkoConsolidator.Dispose();
+            }
+        }
+
+        [Test]
+        public override void AcceptsVolumeRenkoBarsAsInput()
+        {
+            var indicator = CreateIndicator();
+            if (indicator is IndicatorBase<TradeBar>)
+            {
+                var aaplRenkoConsolidator = new VolumeRenkoConsolidator(10000000m);
+                aaplRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+                {
+                    Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+                };
+
+                var googRenkoConsolidator = new VolumeRenkoConsolidator(500000m);
+                googRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+                {
+                    Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+                };
+
+                var ibmRenkoConsolidator = new VolumeRenkoConsolidator(500000m);
+                ibmRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
+                {
+                    Assert.DoesNotThrow(() => indicator.Update(renkoBar));
+                };
+
+                foreach (var parts in GetCsvFileStream(TestFileName))
+                {
+                    var tradebar = parts.GetTradeBar();
+                    if (tradebar.Symbol.Value == "AAPL")
+                    {
+                        aaplRenkoConsolidator.Update(tradebar);
+                    }
+                    else if (tradebar.Symbol.Value == "GOOG")
+                    {
+                        googRenkoConsolidator.Update(tradebar);
+                    }
+                    else
+                    {
+                        ibmRenkoConsolidator.Update(tradebar);
+                    }
+                }
+
+                Assert.IsTrue(indicator.IsReady);
+                Assert.AreNotEqual(0, indicator.Samples);
+                IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(indicator);
+                aaplRenkoConsolidator.Dispose();
+                googRenkoConsolidator.Dispose();
+                ibmRenkoConsolidator.Dispose();
+            }
         }
 
         protected override string TestFileName => "arms_data.txt";

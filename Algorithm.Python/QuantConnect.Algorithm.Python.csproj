@@ -55,6 +55,7 @@
     <Content Include="CustomPartialFillModelAlgorithm.py" />
     <Content Include="AddRiskManagementAlgorithm.py" />
     <Content Include="AddUniverseSelectionModelAlgorithm.py" />
+    <Compile Include="IndicatorWithRenkoBarsRegressionAlgorithm.py" />
     <Content Include="Alphas\ContingentClaimsAnalysisDefaultPredictionAlpha.py" />
     <Content Include="Alphas\GasAndCrudeOilEnergyCorrelationAlpha.py" />
     <Content Include="Alphas\GlobalEquityMeanReversionIBSAlpha.py" />
