@@ -1290,15 +1290,15 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         [TestCase(Resolution.Daily, true)]
         public void PerformFillOutsideRegularAndExtendedHours(Resolution resolution, bool shouldFill)
         {
-            var configTradeBar = CreateTradeBarConfig(Symbols.SPY, resolution: resolution);
-            var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar), resolution: resolution);
-            var configProvider = new MockSubscriptionDataConfigProvider(configQuoteBar);
-            configProvider.SubscriptionDataConfigs.Add(configTradeBar);
-            var equity = CreateEquity(configTradeBar);
+            var config = CreateTradeBarConfig(Symbols.SPY, resolution: resolution);
+            var configProvider = new MockSubscriptionDataConfigProvider(config);
+            configProvider.SubscriptionDataConfigs.Add(config);
+            var equity = CreateEquity(config);
 
-            var orderTime = new DateTime(2014, 6, 24, 12, 0, 0).ConvertToUtc(equity.Exchange.TimeZone);
-            var quoteBarTime = new DateTime(2014, 6, 24, 12, 0, 0).AddMinutes(-1);
-            var tradeBarTime = new DateTime(2014, 6, 24, 12, 0, 0).AddMinutes(-1);
+            var baseTime = resolution == Resolution.Daily ? new DateTime(2014, 6, 25) : new DateTime(2014, 6, 24, 12, 0, 0);
+            var orderTime = baseTime.ConvertToUtc(equity.Exchange.TimeZone);
+            var resolutionTimeSpan = resolution.ToTimeSpan();
+            var tradeBarTime = baseTime.Subtract(resolutionTimeSpan);
 
             var model = (EquityFillModel)equity.FillModel;
             var order = new MarketOrder(Symbols.SPY, 100, orderTime);
@@ -1306,16 +1306,12 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var parameters = new FillModelParameters(equity, order, configProvider, Time.OneHour, null);
 
             var timeKeeper = TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
-            // 11pm, shouldn't be able to fill for resolutions < daily
-            timeKeeper.UpdateTime(new DateTime(2014, 6, 24, 23, 0, 0).ConvertToUtc(TimeZones.NewYork));
+            // midnight, shouldn't be able to fill for resolutions < daily
+            timeKeeper.UpdateTime(new DateTime(2014, 6, 25).ConvertToUtc(TimeZones.NewYork));
             equity.SetLocalTimeKeeper(timeKeeper);
 
             const decimal close = 101.234m;
-            var bidBar = new Bar(101.123m, 101.123m, 101.123m, 101.123m);
-            var askBar = new Bar(101.234m, 101.234m, 101.234m, close);
-            var tradeBar = new TradeBar(tradeBarTime, Symbols.SPY, 101.123m, 101.123m, 101.123m, close, 100);
-            equity.SetMarketPrice(new QuoteBar(quoteBarTime, Symbols.SPY, bidBar, 0, askBar, 0));
-            equity.SetMarketPrice(tradeBar);
+            equity.SetMarketPrice(new TradeBar(tradeBarTime, Symbols.SPY, 101.123m, 101.123m, 101.123m, close, 100, resolutionTimeSpan));
 
             var fill = model.Fill(parameters).Single();
 

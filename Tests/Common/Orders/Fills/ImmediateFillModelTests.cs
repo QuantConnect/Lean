@@ -1163,9 +1163,58 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.Filled, aaplFillEvent.Status);
         }
 
-        private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, bool isInternal = false, bool extendedMarketHours = true)
+        [TestCase(Resolution.Tick, false)]
+        [TestCase(Resolution.Second, false)]
+        [TestCase(Resolution.Minute, false)]
+        [TestCase(Resolution.Hour, false)]
+        [TestCase(Resolution.Daily, true)]
+        public void PerformFillOutsideRegularAndExtendedHours(Resolution resolution, bool shouldFill)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, extendedMarketHours, isInternal);
+            var config = CreateTradeBarConfig(Symbols.SPY, resolution: resolution);
+            var configProvider = new MockSubscriptionDataConfigProvider(config);
+            configProvider.SubscriptionDataConfigs.Add(config);
+            var security = GetSecurity(config);
+            security.SetFillModel(new ImmediateFillModel());
+
+            var baseTime = resolution == Resolution.Daily ? new DateTime(2014, 6, 25) : new DateTime(2014, 6, 24, 12, 0, 0);
+            var orderTime = baseTime.ConvertToUtc(security.Exchange.TimeZone);
+            var resolutionTimeSpan = resolution.ToTimeSpan();
+            var tradeBarTime = baseTime.Subtract(resolutionTimeSpan);
+
+            var model = (ImmediateFillModel)security.FillModel;
+            var order = new MarketOrder(Symbols.SPY, 100, orderTime);
+
+            var parameters = new FillModelParameters(security, order, configProvider, Time.OneHour, null);
+
+            var timeKeeper = TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
+            // midnight, shouldn't be able to fill for resolutions < daily
+            timeKeeper.UpdateTime(new DateTime(2014, 6, 25).ConvertToUtc(TimeZones.NewYork));
+            security.SetLocalTimeKeeper(timeKeeper);
+
+            const decimal close = 101.234m;
+            security.SetMarketPrice(new TradeBar(tradeBarTime, Symbols.SPY, 101.123m, 101.123m, 101.123m, close, 100, resolutionTimeSpan));
+
+            var fill = model.Fill(parameters).Single();
+
+            if (shouldFill)
+            {
+                Assert.AreEqual(OrderStatus.Filled, fill.Status);
+                Assert.AreEqual(order.Quantity, fill.FillQuantity);
+                Assert.AreEqual(close, fill.FillPrice);
+            }
+            else
+            {
+                Assert.AreNotEqual(OrderStatus.Filled, fill.Status);
+                Assert.AreNotEqual(OrderStatus.PartiallyFilled, fill.Status);
+                Assert.AreEqual(0, fill.FillQuantity);
+                Assert.AreEqual(0, fill.FillPrice);
+            }
+        }
+
+        private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, bool isInternal = false, bool extendedMarketHours = true,
+            Resolution resolution = Resolution.Minute)
+        {
+            return new SubscriptionDataConfig(typeof(TradeBar), symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, extendedMarketHours, isInternal);
         }
 
         private Security GetSecurity(SubscriptionDataConfig config)
