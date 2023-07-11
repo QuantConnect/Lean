@@ -140,8 +140,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var canonicalConfig = GetConfig(canonicalSymbol);
             var contractConfig = GetConfig(Symbols.Future_ESZ18_Dec2018);
 
-            var enumerator = new LiveSubscriptionEnumerator(canonicalConfig, compositeDataQueueHandler, (_, _) => {});
-            var enumerator2 = new LiveSubscriptionEnumerator(contractConfig, compositeDataQueueHandler, (_, _) => {});
+            var enumerator = new LiveSubscriptionEnumerator(canonicalConfig, compositeDataQueueHandler, (_, _) => {}, (_) => false);
+            var enumerator2 = new LiveSubscriptionEnumerator(contractConfig, compositeDataQueueHandler, (_, _) => {}, (_) => false);
 
             var firstUnsubscribe = canonicalUnsubscribeFirst ? canonicalConfig : contractConfig;
             var secondUnsubscribe = canonicalUnsubscribeFirst ? contractConfig : canonicalConfig;

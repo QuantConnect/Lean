@@ -3113,6 +3113,7 @@ namespace QuantConnect
         public static IEnumerator<BaseData> SubscribeWithMapping(this IDataQueueHandler dataQueueHandler,
             SubscriptionDataConfig dataConfig,
             EventHandler newDataAvailableHandler,
+            Func<SubscriptionDataConfig, bool> isExpired,
             out SubscriptionDataConfig subscribedConfig)
         {
             subscribedConfig = dataConfig;
@@ -3120,8 +3121,18 @@ namespace QuantConnect
             {
                 subscribedConfig = new SubscriptionDataConfig(dataConfig, symbol: mappedSymbol, mappedConfig: true);
             }
-            var enumerator = dataQueueHandler.Subscribe(subscribedConfig, newDataAvailableHandler);
-            return enumerator ?? Enumerable.Empty<BaseData>().GetEnumerator();
+
+            // during warmup we might get requested to add some asset which has already expired in which case the live enumerator will be empty
+            IEnumerator<BaseData> result = null;
+            if (!isExpired(subscribedConfig))
+            {
+                result = dataQueueHandler.Subscribe(subscribedConfig, newDataAvailableHandler);
+            }
+            else
+            {
+                Log.Trace($"SubscribeWithMapping(): skip live subscription for expired asset {subscribedConfig}");
+            }
+            return result ?? Enumerable.Empty<BaseData>().GetEnumerator();
         }
 
         /// <summary>
