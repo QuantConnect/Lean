@@ -26,10 +26,11 @@ class SecurityDynamicPropertyPythonClassAlgorithm(QCAlgorithm):
         self.spy = self.AddEquity("SPY", Resolution.Minute)
 
         customSMA = CustomSimpleMovingAverage('custom', 60)
-        self.RegisterIndicator(self.spy.Symbol, customSMA,  Resolution.Minute)
-
         self.spy.CustomSMA = customSMA
         customSMA.Security = self.spy
+
+        self.RegisterIndicator(self.spy.Symbol, self.spy.CustomSMA,  Resolution.Minute)
+
 
     def OnWarmupFinished(self) -> None:
         if type(self.spy.CustomSMA) != CustomSimpleMovingAverage:
