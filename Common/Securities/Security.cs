@@ -1000,7 +1000,7 @@ namespace QuantConnect.Securities
             var result = Cache.Properties.Remove(key, out object objectValue);
             if (result)
             {
-                value = (T)objectValue;
+                value = CastDynamicPropertyValue<T>(objectValue);
             }
             return result;
         }
