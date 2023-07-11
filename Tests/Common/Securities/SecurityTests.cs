@@ -27,6 +27,7 @@ using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Option;
 using QuantConnect.Indicators;
 using Microsoft.CSharp.RuntimeBinder;
+using Python.Runtime;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -508,6 +509,97 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new ExponentialMovingAverage(10, 0.5m), dynamicSecurity.MakeEma(10, 0.5m));
         }
 
+        [Test]
+        public void KeepsPythonClassDerivedFromCSharpClassObjectReference()
+        {
+            var expectedCSharpPropertyValue = "C# property";
+            var expectedPythonPropertyValue = "Python property";
+
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("testModule",
+                    $@"
+from AlgorithmImports import *
+from QuantConnect.Tests.Common.Securities import SecurityTests
+
+class PythonTestClass(SecurityTests.CSharpTestClass):
+    def __init__(self):
+        super().__init__()
+
+def SetSecurityDynamicProperty(security: Security) -> None:
+    obj = PythonTestClass()
+    obj.CSharpProperty = '{expectedCSharpPropertyValue}'
+    obj.PythonProperty = '{expectedPythonPropertyValue}'
+    security.PythonClassObject = obj
+
+def AssertPythonClassObjectType(security: Security) -> None:
+    if type(security.PythonClassObject) != PythonTestClass:
+        raise Exception('PythonClassObject is not of type PythonTestClass')
+
+def AccessCSharpProperty(security: Security) -> str:
+    return security.PythonClassObject.CSharpProperty
+
+def AccessPythonProperty(security: Security) -> str:
+    return security.PythonClassObject.PythonProperty
+        ");
+
+                var security = GetSecurity();
+                dynamic dynamicSecurity = security;
+
+                dynamic SetSecurityDynamicProperty = testModule.GetAttr("SetSecurityDynamicProperty");
+                SetSecurityDynamicProperty(security);
+
+                dynamic AssertPythonClassObjectType = testModule.GetAttr("AssertPythonClassObjectType");
+                Assert.DoesNotThrow(() => AssertPythonClassObjectType(security));
+
+                // Access the C# class property
+                dynamic AccessCSharpProperty = testModule.GetAttr("AccessCSharpProperty");
+                Assert.AreEqual(expectedCSharpPropertyValue, AccessCSharpProperty(security).As<string>());
+                Assert.AreEqual(expectedCSharpPropertyValue, dynamicSecurity.PythonClassObject.CSharpProperty.As<string>());
+
+                // Access the Python class property
+                dynamic AccessPythonProperty = testModule.GetAttr("AccessPythonProperty");
+                Assert.AreEqual(expectedPythonPropertyValue, AccessPythonProperty(security).As<string>());
+                Assert.AreEqual(expectedPythonPropertyValue, dynamicSecurity.PythonClassObject.PythonProperty.As<string>());
+            }
+        }
+
+        [Test]
+        public void RunSecurityDynamicPropertyPythonObjectReferenceRegressionAlgorithm()
+        {
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("SecurityDynamicPropertyPythonClassAlgorithm",
+                new Dictionary<string, string> {
+                    {"Total Trades", "0"},
+                    {"Average Win", "0%"},
+                    {"Average Loss", "0%"},
+                    {"Compounding Annual Return", "0%"},
+                    {"Drawdown", "0%"},
+                    {"Expectancy", "0"},
+                    {"Net Profit", "0%"},
+                    {"Sharpe Ratio", "0"},
+                    {"Probabilistic Sharpe Ratio", "0%"},
+                    {"Loss Rate", "0%"},
+                    {"Win Rate", "0%"},
+                    {"Profit-Loss Ratio", "0"},
+                    {"Alpha", "0"},
+                    {"Beta", "0"},
+                    {"Annual Standard Deviation", "0"},
+                    {"Annual Variance", "0"},
+                    {"Information Ratio", "0"},
+                    {"Tracking Error", "0"},
+                    {"Treynor Ratio", "0"},
+                    {"Total Fees", "$0.00"},
+                    {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+                },
+                Language.Python,
+                AlgorithmStatus.Completed);
+
+            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus);
+        }
+
         #endregion
 
         internal static Security GetSecurity(bool isMarketAlwaysOpen = true)
@@ -537,6 +629,11 @@ namespace QuantConnect.Tests.Common.Securities
         internal static SubscriptionDataConfig CreateTradeBarConfig(Resolution resolution = Resolution.Minute)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, resolution, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+        }
+
+        public class CSharpTestClass
+        {
+            public string CSharpProperty { get; set; }
         }
     }
 }

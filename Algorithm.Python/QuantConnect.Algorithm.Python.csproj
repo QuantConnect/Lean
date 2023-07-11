@@ -39,7 +39,7 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.20" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.21" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AccumulativeInsightPortfolioRegressionAlgorithm.py" />
