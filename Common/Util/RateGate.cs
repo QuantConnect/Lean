@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace QuantConnect.Util
 {
@@ -44,7 +44,7 @@ namespace QuantConnect.Util
         private readonly SemaphoreSlim _semaphore;
 
         // Times (in millisecond ticks) at which the semaphore should be exited.
-        private readonly ConcurrentQueue<int> _exitTimes;
+        private readonly Queue<int> _exitTimes;
 
         // Timer used to trigger exiting the semaphore.
         private readonly Timer _exitTimer;
@@ -102,7 +102,7 @@ namespace QuantConnect.Util
             _semaphore = new SemaphoreSlim(Occurrences, Occurrences);
 
             // Create a queue to hold the semaphore exit times.
-            _exitTimes = new ConcurrentQueue<int>();
+            _exitTimes = new ();
 
             // Create a timer to exit the semaphore. Use the time unit as the original
             // interval length because that's the earliest we will need to exit the semaphore.
@@ -120,21 +120,26 @@ namespace QuantConnect.Util
                 // While there are exit times that are passed due still in the queue,
                 // exit the semaphore and dequeue the exit time.
                 var exitTime = 0;
-                var exitTimeValid = _exitTimes.TryPeek(out exitTime);
-                while (exitTimeValid)
+                var exitTimeValid = false;
+                var tickCount = Environment.TickCount;
+                lock (_exitTimes)
                 {
-                    if (unchecked(exitTime - Environment.TickCount) > 0)
-                    {
-                        break;
-                    }
-                    _semaphore.Release();
-                    _exitTimes.TryDequeue(out exitTime);
                     exitTimeValid = _exitTimes.TryPeek(out exitTime);
+                    while (exitTimeValid)
+                    {
+                        if (unchecked(exitTime - tickCount) > 0)
+                        {
+                            break;
+                        }
+                        _semaphore.Release();
+                        _exitTimes.Dequeue();
+                        exitTimeValid = _exitTimes.TryPeek(out exitTime);
+                    }
                 }
                 // we are already holding the next item from the queue, do not peek again
                 // although this exit time may have already pass by this stmt.
                 var timeUntilNextCheck = exitTimeValid
-                    ? Math.Min(TimeUnitMilliseconds, Math.Max(0, exitTime - Environment.TickCount))
+                    ? Math.Min(TimeUnitMilliseconds, Math.Max(0, exitTime - tickCount))
                     : TimeUnitMilliseconds;
 
                 _exitTimer.Change(timeUntilNextCheck, -1);
@@ -167,7 +172,10 @@ namespace QuantConnect.Util
             if (entered)
             {
                 var timeToExit = unchecked(Environment.TickCount + TimeUnitMilliseconds);
-                _exitTimes.Enqueue(timeToExit);
+                lock(_exitTimes)
+                {
+                    _exitTimes.Enqueue(timeToExit);
+                }
             }
 
             return entered;
