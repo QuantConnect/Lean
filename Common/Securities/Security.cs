@@ -960,8 +960,7 @@ namespace QuantConnect.Securities
         {
             if (Cache.Properties.TryGetValue(key, out var obj))
             {
-                // TODO: Throw when type mismatch or return false?
-                value = (T)obj;
+                value = CastDynamicPropertyValue<T>(obj);
                 return true;
             }
             value = default;
@@ -976,7 +975,7 @@ namespace QuantConnect.Securities
         /// <exception cref="KeyNotFoundException">If the property is not found</exception>
         public T Get<T>(string key)
         {
-            return (T)Cache.Properties[key];
+            return CastDynamicPropertyValue<T>(Cache.Properties[key]);
         }
 
         /// <summary>
@@ -1121,6 +1120,29 @@ namespace QuantConnect.Securities
             {
                 UpdateConsumersMarketPrice(data);
             }
+        }
+
+        /// <summary>
+        /// Casts a dynamic property value to the specified type.
+        /// Useful for cases where the property value is a PyObject and we want to cast it to the underlying type.
+        /// </summary>
+        private static T CastDynamicPropertyValue<T>(object obj)
+        {
+            T value;
+            var pyObj = obj as PyObject;
+            if (pyObj != null)
+            {
+                using (Py.GIL())
+                {
+                    value = pyObj.As<T>();
+                }
+            }
+            else
+            {
+                value = (T)obj;
+            }
+
+            return value;
         }
     }
 }
