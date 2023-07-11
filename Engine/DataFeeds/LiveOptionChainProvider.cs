@@ -39,7 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private static readonly HttpClient _client;
         private static readonly DateTime _epoch = new DateTime(1970, 1, 1);
 
-        private static readonly RateGate _rateGate = new RateGate(1, TimeSpan.FromSeconds(0.5));
+        private static RateGate _cmeRateGate;
 
         private const string CMESymbolReplace = "{{SYMBOL}}";
         private const string CMEProductCodeReplace = "{{PRODUCT_CODE}}";
@@ -81,30 +81,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="symbol">The option or the underlying symbol to get the option chain for.
         /// Providing the option allows targetting an option ticker different than the default e.g. SPXW</param>
-        /// <param name="date">Unused</param>
+        /// <param name="date">The date to ask for the option contract list for</param>
         /// <returns>Option chain</returns>
         /// <exception cref="ArgumentException">Option underlying Symbol is not Future or Equity</exception>
         public override IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
         {
-            var result = Enumerable.Empty<Symbol>();
+            HashSet<Symbol> result = null;
             try
             {
-                result = base.GetOptionContractList(symbol, date);
+                result = base.GetOptionContractList(symbol, date).ToHashSet();
             }
             catch (Exception ex)
             {
+                result = new();
                 // this shouldn't happen but just in case let's log it
                 Log.Error(ex);
             }
 
-            bool yielded = false;
-            foreach (var optionSymbol in result)
-            {
-                yielded = true;
-                yield return optionSymbol;
-            }
-
-            if (!yielded)
+            // during warmup we rely on the backtesting provider, but as we get closer to current time let's join the data with our live chain sources
+            if (date.Date >= DateTime.UtcNow.Date.AddDays(-5) || result.Count == 0)
             {
                 var underlyingSymbol = symbol;
                 if (symbol.SecurityType.IsOption())
@@ -116,7 +111,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (underlyingSymbol.SecurityType == SecurityType.Equity || underlyingSymbol.SecurityType == SecurityType.Index)
                 {
                     var expectedOptionTicker = underlyingSymbol.Value;
-                    if(underlyingSymbol.SecurityType == SecurityType.Index)
+                    if (underlyingSymbol.SecurityType == SecurityType.Index)
                     {
                         expectedOptionTicker = symbol.ID.Symbol;
                     }
@@ -124,7 +119,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // Source data from TheOCC if we're trading equity or index options
                     foreach (var optionSymbol in GetEquityIndexOptionContractList(underlyingSymbol, expectedOptionTicker).Where(symbol => !IsContractExpired(symbol, date)))
                     {
-                        yield return optionSymbol;
+                        result.Add(optionSymbol);
                     }
                 }
                 else if (underlyingSymbol.SecurityType == SecurityType.Future)
@@ -132,13 +127,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // We get our data from CME if we're trading future options
                     foreach (var optionSymbol in GetFutureOptionContractList(underlyingSymbol, date).Where(symbol => !IsContractExpired(symbol, date)))
                     {
-                        yield return optionSymbol;
+                        result.Add(optionSymbol);
                     }
                 }
                 else
                 {
                     throw new ArgumentException("Option Underlying SecurityType is not supported. Supported types are: Equity, Index, Future");
                 }
+            }
+
+            foreach (var optionSymbol in result)
+            {
+                yield return optionSymbol;
             }
         }
 
@@ -148,11 +148,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var retries = 0;
             var maxRetries = 5;
 
+            // rate gate will start a timer in the background, so let's avoid it we if don't need it
+            _cmeRateGate ??= new RateGate(1, TimeSpan.FromSeconds(0.5));
+
             while (++retries <= maxRetries)
             {
                 try
                 {
-                    _rateGate.WaitToProceed();
+                    _cmeRateGate.WaitToProceed();
 
                     var productResponse = _client.GetAsync(CMEProductSlateURL.Replace(CMESymbolReplace, futureContractSymbol.ID.Symbol))
                         .SynchronouslyAwaitTaskResult();
@@ -173,7 +176,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     var optionsTradesAndExpiries = CMEOptionsTradeDateAndExpirations.Replace(CMEProductCodeReplace, futureProductId.ToStringInvariant());
 
-                    _rateGate.WaitToProceed();
+                    _cmeRateGate.WaitToProceed();
 
                     var optionsTradesAndExpiriesResponse = _client.GetAsync(optionsTradesAndExpiries).SynchronouslyAwaitTaskResult();
                     optionsTradesAndExpiriesResponse.EnsureSuccessStatusCode();
@@ -211,7 +214,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     var futureContractMonthCode = futureContractExpiration.Expiration.Code;
 
-                    _rateGate.WaitToProceed();
+                    _cmeRateGate.WaitToProceed();
 
                     // Subtract one day from now for settlement API since settlement may not be available for today yet
                     var optionChainQuotesResponseResult = _client.GetAsync(CMEOptionChainQuotesURL
@@ -331,7 +334,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var url = "https://www.quantconnect.com/api/v2/theocc/series-search?symbolType=U&symbol=" + underlyingSymbol.Value;
 
             // download the text file
-            var fileContent = url.DownloadData();
+            var fileContent = _client.DownloadData(url);
 
             // read the lines, skipping the headers
             var lines = fileContent.Split(new[] { "\r\n" }, StringSplitOptions.None).Skip(7);

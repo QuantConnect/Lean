@@ -206,35 +206,44 @@ namespace QuantConnect
         /// <summary>
         /// Helper method to download a provided url as a string
         /// </summary>
+        /// <param name="client">The http client to use</param>
+        /// <param name="url">The url to download data from</param>
+        /// <param name="headers">Add custom headers for the request</param>
+        public static string DownloadData(this HttpClient client, string url, Dictionary<string, string> headers = null)
+        {
+            if (headers != null)
+            {
+                foreach (var kvp in headers)
+                {
+                    client.DefaultRequestHeaders.Add(kvp.Key, kvp.Value);
+                }
+            }
+            try
+            {
+                using (var response = client.GetAsync(url).Result)
+                {
+                    using (var content = response.Content)
+                    {
+                        return content.ReadAsStringAsync().Result;
+                    }
+                }
+            }
+            catch (WebException ex)
+            {
+                Log.Error(ex, $"DownloadData(): {Messages.Extensions.DownloadDataFailed(url)}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to download a provided url as a string
+        /// </summary>
         /// <param name="url">The url to download data from</param>
         /// <param name="headers">Add custom headers for the request</param>
         public static string DownloadData(this string url, Dictionary<string, string> headers = null)
         {
-            using (var client = new HttpClient())
-            {
-                if (headers != null)
-                {
-                    foreach (var kvp in headers)
-                    {
-                        client.DefaultRequestHeaders.Add(kvp.Key, kvp.Value);
-                    }
-                }
-                try
-                {
-                    using (var response = client.GetAsync(url).Result)
-                    {
-                        using (var content = response.Content)
-                        {
-                            return content.ReadAsStringAsync().Result;
-                        }
-                    }
-                }
-                catch (WebException ex)
-                {
-                    Log.Error(ex, $"DownloadData(): {Messages.Extensions.DownloadDataFailed(url)}");
-                    return null;
-                }
-            }
+            using var client = new HttpClient();
+            return client.DownloadData(url, headers);
         }
 
         /// <summary>
