@@ -48,7 +48,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Sell 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -104,7 +105,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Buy 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -160,7 +162,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Buy 1k, Sell 2k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -261,7 +264,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Sell 1k, Buy 2k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -362,7 +366,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 2k, Sell 1k, Sell 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Buy 2k
@@ -464,7 +469,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 2k, Buy 1k, Buy 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Sell 2k
@@ -566,7 +572,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Sell 2k, Buy 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -647,7 +654,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Buy 2k, Sell 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -728,7 +736,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Buy 1k, Sell 1k, Buy 1k, Sell 2k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -927,7 +936,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Sell 1k, Buy 1k, Sell 1k, Buy 2k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -1118,7 +1128,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Buy 2k, Sell 1k, Buy 1k, Sell 3k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -1350,7 +1361,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Sell 2k, Buy 1k, Sell 1k, Buy 3k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -1597,7 +1609,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Buy 1k, Buy 1k, Sell 2k, Buy 1k, Sell 2k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -1792,7 +1805,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Sell 1k, Sell 1k, Buy 2k, Sell 1k, Buy 2k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -2005,7 +2019,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Buy 1k, Buy 1k, Sell 1.5k, Sell 0.5k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -2186,7 +2201,8 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             // Sell 1k, Sell 1k, Buy 1.5k, Buy 0.5k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Sell 1k
@@ -2369,7 +2385,8 @@ namespace QuantConnect.Tests.Common.Statistics
 
             // Buy 1k, Sell 1k
 
-            var builder = new TradeBuilder(groupingMethod, matchingMethod, _securityManager);
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
             var time = _startTime;
 
             // Buy 1k
@@ -2438,7 +2455,8 @@ namespace QuantConnect.Tests.Common.Statistics
             }
             underlying.SetMarketPrice(new Tick { Value = underlyingPrice });
 
-            var builder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO, _securityManager);
+            var builder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
+            builder.SetSecurityManager(_securityManager);
 
             var quantity = orderDirection == OrderDirection.Buy ? 10 : -10;
             builder.ProcessFill(
@@ -2492,7 +2510,8 @@ namespace QuantConnect.Tests.Common.Statistics
             option.SetMarketPrice(new Tick { Value = 100m });
             underlying.SetMarketPrice(new Tick { Value = 150 });
 
-            var builder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO, _securityManager);
+            var builder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
+            builder.SetSecurityManager(_securityManager);
 
             var quantity = orderDirection == OrderDirection.Buy ? 10 : -10;
             builder.ProcessFill(
@@ -2546,7 +2565,8 @@ namespace QuantConnect.Tests.Common.Statistics
 
             underlying.SetMarketPrice(new Tick { Value = 300m });
 
-            var builder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO, _securityManager);
+            var builder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
+            builder.SetSecurityManager(_securityManager);
 
             var initialOptionPrice = 100m;
             option.SetMarketPrice(new Tick { Value = initialOptionPrice });
