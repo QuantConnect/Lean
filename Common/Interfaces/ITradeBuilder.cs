@@ -16,6 +16,7 @@
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Interfaces
@@ -25,6 +26,12 @@ namespace QuantConnect.Interfaces
     /// </summary>
     public interface ITradeBuilder
     {
+        /// <summary>
+        /// Sets the security manager instance
+        /// </summary>
+        /// <param name="securities">The security manager</param>
+        void SetSecurityManager(SecurityManager securities);
+
         /// <summary>
         /// Sets the live mode flag
         /// </summary>

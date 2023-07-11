@@ -56,17 +56,16 @@ namespace QuantConnect.Statistics
         private readonly FixedSizeHashQueue<int> _ordersWithFeesAssigned = new FixedSizeHashQueue<int>(MaxOrderIdCacheSize);
         private readonly FillGroupingMethod _groupingMethod;
         private readonly FillMatchingMethod _matchingMethod;
-        private readonly SecurityManager _securities;
+        private SecurityManager _securities;
         private bool _liveMode;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TradeBuilder"/> class
         /// </summary>
-        public TradeBuilder(FillGroupingMethod groupingMethod, FillMatchingMethod matchingMethod, SecurityManager securities)
+        public TradeBuilder(FillGroupingMethod groupingMethod, FillMatchingMethod matchingMethod)
         {
             _groupingMethod = groupingMethod;
             _matchingMethod = matchingMethod;
-            _securities = securities;
         }
 
         /// <summary>
@@ -76,6 +75,15 @@ namespace QuantConnect.Statistics
         public void SetLiveMode(bool live)
         {
             _liveMode = live;
+        }
+
+        /// <summary>
+        /// Sets the security manager instance
+        /// </summary>
+        /// <param name="securities">The security manager</param>
+        public void SetSecurityManager(SecurityManager securities)
+        {
+            _securities = securities;
         }
 
         /// <summary>
@@ -536,7 +544,7 @@ namespace QuantConnect.Statistics
         {
             lock (_closedTrades)
             {
-                trade.IsWin = _securities.TryGetValue(trade.Symbol, out var security)
+                trade.IsWin = _securities != null && _securities.TryGetValue(trade.Symbol, out var security)
                     ? fill.IsWin(security, trade.ProfitLoss)
                     : trade.ProfitLoss > 0;
 
