@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
@@ -110,6 +112,93 @@ namespace QuantConnect.Tests.Common.Securities
             var date = new DateTime(2016, 11, 25);
             var earlyCloseTime = new TimeSpan(13, 0, 0);
             Assert.AreEqual(earlyCloseTime, equityHours.EarlyCloses[date]);
+        }
+
+        [TestCase("AUP", Market.COMEX, true)]
+        [TestCase("AA6", Market.NYMEX, true)]
+        [TestCase("6A", Market.CME, false)]
+        [TestCase("30Y", Market.CBOT, false)]
+        [TestCase("HE", Market.CME, true)]
+        [TestCase("AW", Market.CBOT, true)]
+        [TestCase("HE", Market.CME, true)]
+        [TestCase("AW", Market.CBOT, true)]
+        [TestCase("LE", Market.CME, true)]
+        [TestCase("BCF", Market.CBOT, true)]
+        [TestCase("GD", Market.CME, true)]
+        [TestCase("BWF", Market.CBOT, true)]
+        [TestCase("CSC", Market.CME, true)]
+        [TestCase("GNF", Market.CME, true)]
+        [TestCase("GDK", Market.CME, true)]
+        public void CorrectlyReadsCMEGroupFutureHolidayGoodFridaySchedule(string futureTicker, string market, bool isHoliday)
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var ticker= OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
+            var future = Symbol.Create(ticker, SecurityType.Future, market);
+
+            var futureEntry = provider.GetEntry(market, ticker, future.SecurityType);
+            var holidays = futureEntry.ExchangeHours.Holidays;
+            var holidayDate = DateTime.Parse("4/7/2023", CultureInfo.InvariantCulture);
+            Assert.AreEqual(isHoliday, holidays.Contains(holidayDate));
+        }
+
+        [TestCase("2YY", Market.CBOT, "4/7/2023", true)]
+        [TestCase("MYM", Market.CBOT, "4/7/2023", true)]
+        [TestCase("YM", Market.CBOT, "4/7/2023", true)]
+        [TestCase("TN", Market.CBOT, "4/7/2023", true)]
+        [TestCase("6A", Market.CME, "4/7/2023", true)]
+        [TestCase("6Z", Market.CME, "4/7/2023", true)]
+        [TestCase("M6A", Market.CME, "4/7/2023", true)]
+        [TestCase("MCD", Market.CME, "4/7/2023", true)]
+        [TestCase("AW", Market.CBOT, "4/6/2023", false)]
+        [TestCase("BCF", Market.CBOT, "4/6/2023", false)]
+        [TestCase("BWF", Market.CBOT, "4/6/2023", false)]
+        [TestCase("ZC", Market.CBOT, "4/6/2023", false)]
+        [TestCase("DC", Market.CME, "4/7/2023", false)]
+        [TestCase("DY", Market.CME, "4/7/2023", false)]
+        [TestCase("GNF", Market.CME, "4/6/2023", true)]
+        [TestCase("GDK", Market.CME, "4/6/2023", true)]
+        public void CorrectlyReadsCMEGroupFutureGoodFridayEarlyCloses(string futureTicker, string market, string date, bool isEarlyClose)
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
+            var future = Symbol.Create(ticker, SecurityType.Future, market);
+
+            var futureEntry = provider.GetEntry(market, ticker, future.SecurityType);
+            var earlyCloses = futureEntry.ExchangeHours.EarlyCloses;
+            var earlyCloseDate = DateTime.Parse(date, CultureInfo.InvariantCulture);
+            Assert.AreEqual(isEarlyClose, earlyCloses.Keys.Contains(earlyCloseDate));
+        }
+
+        [TestCase("2YY", Market.CBOT, true)]
+        [TestCase("MYM", Market.CBOT, true)]
+        [TestCase("YM", Market.CBOT, true)]
+        [TestCase("TN", Market.CBOT, true)]
+        [TestCase("6A", Market.CME, true)]
+        [TestCase("6Z", Market.CME, true)]
+        [TestCase("M6A", Market.CME, true)]
+        [TestCase("MCD", Market.CME, true)]
+        [TestCase("AW", Market.CBOT, false)]
+        [TestCase("BCF", Market.CBOT, false)]
+        [TestCase("BWF", Market.CBOT, false)]
+        [TestCase("ZC", Market.CBOT, false)]
+        [TestCase("DC", Market.CME, false)]
+        [TestCase("DY", Market.CME, false)]
+        [TestCase("GNF", Market.CME, false)]
+        [TestCase("GDK", Market.CME, false)]
+        public void CheckJustEarlyClosesOrJustHolidaysForCMEGroupFuturesOnGoodFriday(string futureTicker, string market, bool isEarlyClose)
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
+            var future = Symbol.Create(ticker, SecurityType.Future, market);
+
+            var futureEntry = provider.GetEntry(market, ticker, future.SecurityType);
+            var earlyCloses = futureEntry.ExchangeHours.EarlyCloses;
+            var holidays = futureEntry.ExchangeHours.Holidays;
+
+            var goodFriday = DateTime.Parse("4/7/2023", CultureInfo.InvariantCulture);
+
+            Assert.AreEqual(isEarlyClose, earlyCloses.Keys.Contains(goodFriday));
+            Assert.AreEqual(!isEarlyClose, holidays.Contains(goodFriday));
         }
 
         [Test]
