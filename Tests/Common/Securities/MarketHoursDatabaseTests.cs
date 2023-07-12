@@ -139,22 +139,22 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(isHoliday, holidays.Contains(holidayDate));
         }
 
-        [TestCase("2YY", Market.CBOT, "4/6/2023", true)]
+        [TestCase("2YY", Market.CBOT, "4/7/2023", true)]
         [TestCase("MYM", Market.CBOT, "4/7/2023", true)]
         [TestCase("YM", Market.CBOT, "4/7/2023", true)]
-        [TestCase("TN", Market.CBOT, "4/6/2023", true)]
-        [TestCase("6A", Market.CME, "4/6/2023", true)]
-        [TestCase("6Z", Market.CME, "4/6/2023", true)]
-        [TestCase("M6A", Market.CME, "4/6/2023", true)]
-        [TestCase("MCD", Market.CME, "4/6/2023", true)]
+        [TestCase("TN", Market.CBOT, "4/7/2023", true)]
+        [TestCase("6A", Market.CME, "4/7/2023", true)]
+        [TestCase("6Z", Market.CME, "4/7/2023", true)]
+        [TestCase("M6A", Market.CME, "4/7/2023", true)]
+        [TestCase("MCD", Market.CME, "4/7/2023", true)]
         [TestCase("AW", Market.CBOT, "4/6/2023", false)]
         [TestCase("BCF", Market.CBOT, "4/6/2023", false)]
         [TestCase("BWF", Market.CBOT, "4/6/2023", false)]
         [TestCase("ZC", Market.CBOT, "4/6/2023", false)]
-        [TestCase("DC", Market.CME, "4/6/2023", false)]
-        [TestCase("DY", Market.CME, "4/6/2023", false)]
-        [TestCase("GNF", Market.CME, "4/6/2023", false)]
-        [TestCase("GDK", Market.CME, "4/6/2023", false)]
+        [TestCase("DC", Market.CME, "4/7/2023", false)]
+        [TestCase("DY", Market.CME, "4/7/2023", false)]
+        [TestCase("GNF", Market.CME, "4/7/2023", false)]
+        [TestCase("GDK", Market.CME, "4/7/2023", false)]
         public void CorrectlyReadsCMEGroupFutureGoodFridayEarlyCloses(string futureTicker, string market, string date, bool isEarlyClose)
         {
             var provider = MarketHoursDatabase.FromDataFolder();
