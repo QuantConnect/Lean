@@ -88,7 +88,7 @@ namespace QuantConnect.Data.UniverseSelection
             // if results are not dynamic, we cache them and won't call filtering till the end of the day
             if (!results.IsDynamic)
             {
-                _cacheDate = data.Time.ConvertFromUtc(Option.Exchange.TimeZone).Date;
+                _cacheDate = exchangeDate;
             }
 
             // always prepend the underlying symbol

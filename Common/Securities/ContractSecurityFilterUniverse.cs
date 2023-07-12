@@ -256,11 +256,11 @@ namespace QuantConnect.Securities
 
             if (maxExpiry > Time.MaxTimeSpan) maxExpiry = Time.MaxTimeSpan;
 
-            var minExpiryToDate = UnderlyingInternal.Time.Date + minExpiry;
-            var maxExpiryToDate = UnderlyingInternal.Time.Date + maxExpiry;
+            var minExpiryToDate = UnderlyingInternal.EndTime.Date + minExpiry;
+            var maxExpiryToDate = UnderlyingInternal.EndTime.Date + maxExpiry;
 
             AllSymbols = AllSymbols
-                .Where(symbol => symbol.ID.Date >= minExpiryToDate && symbol.ID.Date <= maxExpiryToDate)
+                .Where(symbol => symbol.ID.Date.Date >= minExpiryToDate && symbol.ID.Date.Date <= maxExpiryToDate)
                 .ToList();
 
             return (T) this;

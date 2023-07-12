@@ -83,6 +83,46 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler?.DisposeSafely();
         }
 
+        [Test]
+        public void DailyOptionSelection()
+        {
+            _startDate = new DateTime(2014, 6, 9);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            var endDate = _startDate.AddDays(5);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var feed = RunDataFeed();
+
+            var es = _algorithm.AddOption("AAPL", Resolution.Daily);
+            var selectionHappened = 0;
+            es.SetFilter(x =>
+            {
+                selectionHappened++;
+                var symbols = x.Expiration(0, 0)
+                    .IncludeWeeklys()
+                    .OnlyApplyFilterAtMarketOpen().
+                    ToList();
+
+                Assert.AreEqual(1, symbols.Count);
+                return x;
+            });
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts => {
+                if (selectionHappened == 2)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60 * 60 * 6);
+
+            Assert.AreEqual(2, selectionHappened);
+        }
+
         [TestCase(false)]
         [TestCase(true)]
         public void WarmupOptionSelection(bool useWarmupResolution)
@@ -2007,12 +2047,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction,
                 lookupSymbolsFunction ?? ((symbol, _, _) =>
                 {
-                    return new List<Symbol> { Symbol.CreateOption(symbol.Underlying ?? symbol,
-                        symbol.ID.Market,
-                        symbol.SecurityType.DefaultOptionStyle(),
-                        OptionRight.Call,
-                        1,
-                        _manualTimeProvider.GetUtcNow().AddDays(10))};
+                    var date = _manualTimeProvider.GetUtcNow().Date;
+                    var symbols = new List<Symbol>();
+                    for (var i = 0; i < 10; i++)
+                    {
+                        symbols.Add(Symbol.CreateOption(symbol.Underlying ?? symbol,
+                            symbol.ID.Market,
+                            symbol.SecurityType.DefaultOptionStyle(),
+                            OptionRight.Call,
+                            1,
+                            date.AddDays(i)));
+                    }
+                    return symbols;
                 }),
                 canPerformSelection ?? (() => true), _manualTimeProvider);
 
