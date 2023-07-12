@@ -278,6 +278,8 @@ namespace QuantConnect
         {
             public static string UnsupportedSecurityType = "This model only supports equities and options.";
 
+            public static string UnsupportedTimeInForceType = "This model only supports orders with the following time in force types: DayTimeInForce and GoodTilCanceledTimeInForce";
+
             public static string ExtendedMarketHoursTradingNotSupported =
                 "Tradier does not support extended market hours trading. Your order will be processed at market open.";
 
