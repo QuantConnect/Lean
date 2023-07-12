@@ -104,19 +104,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
         {
             var remoteReader = new RemoteFileSubscriptionStreamReader(
                 new SingleEntryDataCacheProvider(new DefaultDataProvider()),
-                @"http://helloworld.com",
+                @"http://quantconnect.com",
                 Globals.Cache,
                 null);
 
             Assert.IsFalse(remoteReader.EndOfStream);
 
-            // Fails to get helloworld.com, missing http://
+            // Fails to get quantconnect.com, missing http://
             Assert.Throws<WebException>(() => new RemoteFileSubscriptionStreamReader(
                     new SingleEntryDataCacheProvider(new DefaultDataProvider()),
-                    @"helloworld.com",
+                    @"quantconnect.com",
                     Globals.Cache,
                     null),
-                "Api.Download(): Failed to download data from helloworld.com. Please verify the source for missing http:// or https://"
+                "Api.Download(): Failed to download data from quantconnect.com. Please verify the source for missing http:// or https://"
             );
 
             remoteReader.DisposeSafely();
