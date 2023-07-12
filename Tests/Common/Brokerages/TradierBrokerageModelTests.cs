@@ -21,6 +21,7 @@ using QuantConnect.Orders;
 using QuantConnect.Tests.Brokerages;
 using QuantConnect.Data.Market;
 using System;
+using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -64,7 +65,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             order.Quantity = 101;
             order.Properties.TimeInForce = TimeInForce.GoodTilDate(new DateTime());
             Assert.IsFalse(_tradierBrokerageModel.CanSubmitOrder(_security, order, out var message));
-            var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", "This model only supports orders with the following time in force types: DayTimeInForce and GoodTilCanceledTimeInForce");
+            var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", $"This model only supports orders with the following time in force types: {typeof(DayTimeInForce)} and {typeof(GoodTilCanceledTimeInForce)}");
             Assert.AreEqual(expectedMessage.Message, message.Message);
         }
 
