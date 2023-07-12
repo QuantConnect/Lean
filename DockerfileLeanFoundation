@@ -309,7 +309,7 @@ RUN wget -q https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q founda
 
 # Install IB Gateway: Installs to /root/ibgateway
 RUN mkdir -p /root/ibgateway && \
-    wget -q https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v10.19.2a.sh && \
-    chmod 777 ibgateway-latest-standalone-linux-x64.v10.19.2a.sh && \
-    ./ibgateway-latest-standalone-linux-x64.v10.19.2a.sh -q -dir /root/ibgateway && \
-    rm ibgateway-latest-standalone-linux-x64.v10.19.2a.sh
+    wget -q https://cdn.quantconnect.com/interactive/ibgateway-stable-standalone-linux-x64.v10.19.2a.sh && \
+    chmod 777 ibgateway-stable-standalone-linux-x64.v10.19.2a.sh && \
+    ./ibgateway-stable-standalone-linux-x64.v10.19.2a.sh -q -dir /root/ibgateway && \
+    rm ibgateway-stable-standalone-linux-x64.v10.19.2a.sh
