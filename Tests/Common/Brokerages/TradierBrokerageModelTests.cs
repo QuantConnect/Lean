@@ -57,6 +57,17 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(expectedMessage.Message, message.Message);
         }
 
+        [Test]
+        public void CanSubmitOrderReturnsFalseWhenTimeInForceIsGoodTilDate()
+        {
+            var order = GetOrder();
+            order.Quantity = 101;
+            order.Properties.TimeInForce = TimeInForce.GoodTilDate(new DateTime());
+            Assert.IsFalse(_tradierBrokerageModel.CanSubmitOrder(_security, order, out var message));
+            var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", "This model only supports orders with the following time in force types: DayTimeInForce and GoodTilCanceledTimeInForce");
+            Assert.AreEqual(expectedMessage.Message, message.Message);
+        }
+
         [TestCase(0.5)]
         [TestCase(10000001)]
         public void CanSubmitOrderReturnsFalseWhenIncorrectOrderQuantity(decimal quantity)
