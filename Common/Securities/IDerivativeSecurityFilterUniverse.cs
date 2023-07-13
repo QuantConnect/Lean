@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Securities
@@ -24,11 +23,6 @@ namespace QuantConnect.Securities
     /// </summary>
     public interface IDerivativeSecurityFilterUniverse : IEnumerable<Symbol>
     {
-        /// <summary>
-        /// The current local time
-        /// </summary>
-        DateTime LocalTime { get; }
-
         /// <summary>
         /// True if the universe is dynamic and filter needs to be reapplied during trading day
         /// </summary>

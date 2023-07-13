@@ -129,7 +129,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 };
 
                 Log.Trace($"DataQueueOptionChainUniverseDataCollectionEnumerator({_currentData.Symbol}): Emitting data point: {_currentData.EndTime}. " +
-                    $"Count: {_currentData.Data.Count}. Underlying: {_currentData.Underlying}");
+                    $"Count: {_currentData.Data.Count}. Underlying: {_currentData.Underlying} Underlying.EndTime: {_currentData.Underlying.EndTime}");
 
                 _lastEmitTime = localTime;
 
