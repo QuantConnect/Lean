@@ -82,6 +82,14 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (order.TimeInForce is not GoodTilCanceledTimeInForce && order.TimeInForce is not DayTimeInForce)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.TradierBrokerageModel.UnsupportedTimeInForceType);
+
+                return false;
+            }
+
             if (security.Holdings.Quantity + order.Quantity < 0)
             {
                 if (order.TimeInForce is GoodTilCanceledTimeInForce)

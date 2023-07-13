@@ -21,6 +21,7 @@ using QuantConnect.Orders;
 using QuantConnect.Tests.Brokerages;
 using QuantConnect.Data.Market;
 using System;
+using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -54,6 +55,17 @@ namespace QuantConnect.Tests.Common.Brokerages
             order.Properties.TimeInForce = TimeInForce.Day;
             Assert.IsFalse(_tradierBrokerageModel.CanSubmitOrder(_security, order, out var message));
             var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, "SellShortOrderLastPriceBelow5", "Sell Short order cannot be placed for stock priced below $5");
+            Assert.AreEqual(expectedMessage.Message, message.Message);
+        }
+
+        [Test]
+        public void CanSubmitOrderReturnsFalseWhenTimeInForceIsGoodTilDate()
+        {
+            var order = GetOrder();
+            order.Quantity = 101;
+            order.Properties.TimeInForce = TimeInForce.GoodTilDate(new DateTime());
+            Assert.IsFalse(_tradierBrokerageModel.CanSubmitOrder(_security, order, out var message));
+            var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", $"This model only supports orders with the following time in force types: {typeof(DayTimeInForce)} and {typeof(GoodTilCanceledTimeInForce)}");
             Assert.AreEqual(expectedMessage.Message, message.Message);
         }
 

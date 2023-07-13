@@ -22,6 +22,7 @@ using QuantConnect.Orders;
 
 using static QuantConnect.StringExtensions;
 using System.Collections.Generic;
+using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect
 {
@@ -277,6 +278,8 @@ namespace QuantConnect
         public static class TradierBrokerageModel
         {
             public static string UnsupportedSecurityType = "This model only supports equities and options.";
+
+            public static string UnsupportedTimeInForceType = $"This model only supports orders with the following time in force types: {typeof(DayTimeInForce)} and {typeof(GoodTilCanceledTimeInForce)}";
 
             public static string ExtendedMarketHoursTradingNotSupported =
                 "Tradier does not support extended market hours trading. Your order will be processed at market open.";
