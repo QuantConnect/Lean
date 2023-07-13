@@ -403,7 +403,7 @@ namespace QuantConnect.Research
                     .SelectMany(x =>
                     {
                         // the option chain symbols wont change so we can set 'exchangeDateChange' to false always
-                        optionFilterUniverse.Refresh(distinctSymbols, x, exchangeDateChange:false);
+                        optionFilterUniverse.Refresh(distinctSymbols, x, x.EndTime);
                         return option.ContractFilter.Filter(optionFilterUniverse);
                     })
                     .Distinct().Concat(new[] { symbol.Underlying });
@@ -445,10 +445,9 @@ namespace QuantConnect.Research
                 {
                     if (future.Exchange.DateIsOpen(date))
                     {
-                        var underlying = new Tick { Time = date };
                         var allList = FutureChainProvider.GetFutureContractList(future.Symbol, date);
 
-                        allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(allList, underlying)));
+                        allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(allList, date)));
                     }
                 }
             }
