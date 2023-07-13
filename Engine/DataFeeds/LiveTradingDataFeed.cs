@@ -355,7 +355,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Func<SubscriptionRequest, IEnumerator<BaseData>> configure = (subRequest) =>
                 {
                     var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
-                    var input = Subscribe(subRequest.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), IsExpired);
+                    var input = Subscribe(subRequest.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), (_) => false);
                     return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours, localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone);
                 };
 
@@ -397,7 +397,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // send the subscription for the new symbol through to the data queuehandler
             if (_channelProvider.ShouldStreamSubscription(subscription.Configuration))
             {
-                Subscribe(request.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), IsExpired);
+                Subscribe(request.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), (_) => false);
             }
 
             return subscription;
