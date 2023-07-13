@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -15,7 +15,6 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Data;
 
 namespace QuantConnect.Securities
 {
@@ -24,11 +23,6 @@ namespace QuantConnect.Securities
     /// </summary>
     public interface IDerivativeSecurityFilterUniverse : IEnumerable<Symbol>
     {
-        /// <summary>
-        /// The underlying price data
-        /// </summary>
-        BaseData Underlying { get; }
-
         /// <summary>
         /// True if the universe is dynamic and filter needs to be reapplied during trading day
         /// </summary>

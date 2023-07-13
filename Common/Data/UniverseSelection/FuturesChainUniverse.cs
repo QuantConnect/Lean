@@ -66,21 +66,21 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>The data that passes the filter</returns>
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
-            var underlying = new Tick { Time = utcTime };
-
             // date change detection needs to be done in exchange time zone
-            if (_cacheDate == data.Time.ConvertFromUtc(Future.Exchange.TimeZone).Date)
+            var localEndTime = data.EndTime.ConvertFromUtc(Future.Exchange.TimeZone);
+            var exchangeDate = localEndTime.Date;
+            if (_cacheDate == exchangeDate)
             {
                 return Unchanged;
             }
 
             var availableContracts = data.Data.Select(x => x.Symbol);
-            var results = Future.ContractFilter.Filter(new FutureFilterUniverse(availableContracts, underlying));
+            var results = Future.ContractFilter.Filter(new FutureFilterUniverse(availableContracts, localEndTime));
 
             // if results are not dynamic, we cache them and won't call filtering till the end of the day
             if (!results.IsDynamic)
             {
-                _cacheDate = data.Time.ConvertFromUtc(Future.Exchange.TimeZone).Date;
+                _cacheDate = exchangeDate;
             }
 
             return results;

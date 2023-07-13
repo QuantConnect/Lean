@@ -83,8 +83,27 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler?.DisposeSafely();
         }
 
-        [Test]
-        public void DailyOptionSelection()
+        [TestCase(SecurityType.Option, Resolution.Daily, 0)]
+        [TestCase(SecurityType.Future, Resolution.Daily, 0)]
+        [TestCase(SecurityType.Option, Resolution.Hour, 0)]
+        [TestCase(SecurityType.Future, Resolution.Hour, 0)]
+        [TestCase(SecurityType.Option, Resolution.Minute, 0)]
+        [TestCase(SecurityType.Future, Resolution.Minute, 0)]
+        [TestCase(SecurityType.Option, Resolution.Second, 0)]
+        [TestCase(SecurityType.Future, Resolution.Second, 0)]
+        [TestCase(SecurityType.Option, Resolution.Tick, 0)]
+        [TestCase(SecurityType.Future, Resolution.Tick, 0)]
+        [TestCase(SecurityType.Option, Resolution.Daily, 1)]
+        [TestCase(SecurityType.Future, Resolution.Daily, 1)]
+        [TestCase(SecurityType.Option, Resolution.Hour, 1)]
+        [TestCase(SecurityType.Future, Resolution.Hour, 1)]
+        [TestCase(SecurityType.Option, Resolution.Minute, 1)]
+        [TestCase(SecurityType.Future, Resolution.Minute, 1)]
+        [TestCase(SecurityType.Option, Resolution.Second, 1)]
+        [TestCase(SecurityType.Future, Resolution.Second, 1)]
+        [TestCase(SecurityType.Option, Resolution.Tick, 1)]
+        [TestCase(SecurityType.Future, Resolution.Tick, 1)]
+        public void LiveChainSelection(SecurityType securityType, Resolution resolution, int expirationDatesFilter)
         {
             _startDate = new DateTime(2014, 6, 9);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
@@ -94,19 +113,40 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var feed = RunDataFeed();
 
-            var es = _algorithm.AddOption("AAPL", Resolution.Daily);
             var selectionHappened = 0;
-            es.SetFilter(x =>
+            if (securityType == SecurityType.Option)
             {
-                selectionHappened++;
-                var symbols = x.Expiration(0, 0)
-                    .IncludeWeeklys()
-                    .OnlyApplyFilterAtMarketOpen().
-                    ToList();
+                var chainAsset = _algorithm.AddOption("AAPL", resolution);
+                chainAsset.SetFilter(x =>
+                {
+                    selectionHappened++;
+                    var symbols = x.Expiration(0, expirationDatesFilter).IncludeWeeklys().OnlyApplyFilterAtMarketOpen().ToList();
 
-                Assert.AreEqual(1, symbols.Count);
-                return x;
-            });
+                    Assert.AreEqual(expirationDatesFilter + 1, symbols.Count(s => s.ID.OptionRight == OptionRight.Call));
+                    Assert.AreEqual(expirationDatesFilter + 1, symbols.Count(s => s.ID.OptionRight == OptionRight.Put));
+                    for (var i = 0; i < expirationDatesFilter; i++)
+                    {
+                        Assert.AreEqual(2, symbols.Count(s => s.ID.Date.Date == x.LocalTime.Date.AddDays(i)));
+                    }
+                    return x;
+                });
+            }
+            else
+            {
+                var chainAsset = _algorithm.AddFuture("ES", resolution);
+                chainAsset.SetFilter(x =>
+                {
+                    selectionHappened++;
+                    var symbols = x.Expiration(0, expirationDatesFilter).IncludeWeeklys().OnlyApplyFilterAtMarketOpen().ToList();
+
+                    Assert.AreEqual(expirationDatesFilter + 1, symbols.Count);
+                    for (var i = 0; i < expirationDatesFilter; i++)
+                    {
+                        Assert.AreEqual(1, symbols.Count(s => s.ID.Date.Date == x.LocalTime.Date.AddDays(i)));
+                    }
+                    return x;
+                });
+            }
 
             // allow time for the exchange to pick up the selection point
             Thread.Sleep(50);
@@ -2049,14 +2089,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     var date = _manualTimeProvider.GetUtcNow().Date;
                     var symbols = new List<Symbol>();
-                    for (var i = 0; i < 10; i++)
+                    for (var i = 0; i < 4; i++)
                     {
-                        symbols.Add(Symbol.CreateOption(symbol.Underlying ?? symbol,
-                            symbol.ID.Market,
-                            symbol.SecurityType.DefaultOptionStyle(),
-                            OptionRight.Call,
-                            1,
-                            date.AddDays(i)));
+                        if (symbol.SecurityType.IsOption())
+                        {
+                            foreach (var optionRight in new[] { OptionRight.Call, OptionRight.Put })
+                            {
+                                symbols.Add(Symbol.CreateOption(symbol.Underlying ?? symbol,
+                                    symbol.ID.Market,
+                                    symbol.SecurityType.DefaultOptionStyle(),
+                                    optionRight,
+                                    i,
+                                    date.AddDays(i)));
+                            }
+                        }
+                        else
+                        {
+                            symbols.Add(Symbol.CreateFuture(symbol.ID.Symbol, symbol.ID.Market, date.AddDays(i)));
+                        }
                     }
                     return symbols;
                 }),
