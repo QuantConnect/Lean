@@ -141,13 +141,6 @@ namespace QuantConnect.Data.UniverseSelection
                 return true;
             }
 
-            // if we haven't begun receiving data for this security then it's safe to remove
-            var lastData = security.Cache.GetData();
-            if (lastData == null)
-            {
-                return true;
-            }
-
             Member member;
             if (Securities.TryGetValue(security.Symbol, out member))
             {
