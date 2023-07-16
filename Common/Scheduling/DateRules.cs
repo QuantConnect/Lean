@@ -242,7 +242,7 @@ namespace QuantConnect.Scheduling
             // Check that our offset is allowed
             if (daysOffset < 0 || 6 < daysOffset)
             {
-                throw new ArgumentOutOfRangeException("daysOffset", "DateRules.WeekEnd() : Offset must be between 0 and 6");
+                throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.WeekEnd() : Offset must be between 0 and 6");
             }
 
             return new FuncDateRule(GetName(null, "WeekEnd", -daysOffset), (start, end) => WeekIterator(null, start, end, daysOffset, false));

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -92,7 +92,7 @@ namespace QuantConnect.ToolBox.IQFeed
             {
                 throw new ArgumentException("Unable to retrieve address from specified host name.", host);
             }
-
+            
             return ipAddresses[0];
         }
 
@@ -191,4 +191,3 @@ namespace QuantConnect.ToolBox.IQFeed
         #endregion
     }
 }
- 

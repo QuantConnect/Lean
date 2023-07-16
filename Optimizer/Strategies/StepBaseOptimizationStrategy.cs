@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -91,7 +91,7 @@ namespace QuantConnect.Optimizer.Strategies
                     var stepSettings = Settings as StepBaseOptimizationStrategySettings;
                     if (stepSettings == null)
                     {
-                        throw new ArgumentException(nameof(settings), $"OptimizationStrategySettings is not of {nameof(StepBaseOptimizationStrategySettings)} type");
+                        throw new ArgumentException($"OptimizationStrategySettings is not of {nameof(StepBaseOptimizationStrategySettings)} type", nameof(settings));
                     }
                     CalculateStep(optimizationParameter, stepSettings.DefaultSegmentAmount);
                 }
@@ -192,7 +192,7 @@ namespace QuantConnect.Optimizer.Strategies
         {
             if (defaultSegmentAmount < 1)
             {
-                throw new ArgumentException(nameof(defaultSegmentAmount), $"Number of segments should be positive number, but specified '{defaultSegmentAmount}'");
+                throw new ArgumentException($"Number of segments should be positive number, but specified '{defaultSegmentAmount}'", nameof(defaultSegmentAmount));
             }
 
             parameter.Step = Math.Abs(parameter.MaxValue - parameter.MinValue) / defaultSegmentAmount;

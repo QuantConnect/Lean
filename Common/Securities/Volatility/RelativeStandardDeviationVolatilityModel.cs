@@ -77,7 +77,7 @@ namespace QuantConnect.Securities
             TimeSpan periodSpan,
             int periods)
         {
-            if (periods < 2) throw new ArgumentOutOfRangeException("periods", "'periods' must be greater than or equal to 2.");
+            if (periods < 2) throw new ArgumentOutOfRangeException(nameof(periods), "'periods' must be greater than or equal to 2.");
             _periodSpan = periodSpan;
             _window = new RollingWindow<double>(periods);
             _lastUpdate = GetLastUpdateInitialValue(periodSpan, periods);

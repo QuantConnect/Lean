@@ -676,7 +676,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
                 if (insight.GeneratedTimeUtc > insight.CloseTimeUtc)
                 {
-                    throw new ArgumentOutOfRangeException("closeTimeLocal", $"Insight closeTimeLocal must not be in the past.");
+                    throw new ArgumentOutOfRangeException(nameof(closeTimeLocal), $"Insight closeTimeLocal must not be in the past.");
                 }
 
                 insight.Period = insight.CloseTimeUtc - insight.GeneratedTimeUtc;

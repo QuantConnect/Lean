@@ -144,7 +144,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             if (brokerage == null)
             {
-                throw new ArgumentNullException("brokerage");
+                throw new ArgumentNullException(nameof(brokerage));
             }
             // multi threaded queue, used for live deployments
             _orderRequestQueue = new BusyBlockingCollection<OrderRequest>();
