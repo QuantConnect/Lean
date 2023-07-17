@@ -78,17 +78,17 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         ///Initializes a new instance of the <see cref="RangeConsolidator" /> class.
         /// </summary>
-        /// <param name="rangeSize">The constant value size of each bar</param>
+        /// <param name="range">The constant value size of each bar, where the unit is the minimum price variation of the RangeBar's symbol</param>
         /// /// <param name="allowPhantomBars">If set to true, allows the indicator to create phantom/intermediate bars if needed</param>
-        public RangeConsolidator(decimal rangeSize, bool allowPhantomBars = false)
-            : this(rangeSize, x => x.Value, allowPhantomBars: allowPhantomBars)
+        public RangeConsolidator(decimal range, bool allowPhantomBars = false)
+            : this(range, x => x.Value, allowPhantomBars: allowPhantomBars)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RangeConsolidator" /> class.
         /// </summary>
-        /// <param name="range">The size of each bar in units of the value produced by <paramref name="selector"/></param>
+        /// <param name="range">The constant value size of each bar, where the unit is the minimum price variation of the RangeBar's symbol</param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RangeBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
@@ -109,19 +109,19 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Initializes a new instance of the <see cref="RangeConsolidator" /> class.
         /// </summary>
-        /// <param name="rangeSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
+        /// <param name="range">The constant value size of each bar, where the unit is the minimum price variation of the RangeBar's symbol</param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RangeBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         /// <param name="allowPhantomBars">If set to true, allows the indicator to create phantom/intermediate bars if needed</param>
-        public RangeConsolidator(decimal rangeSize,
+        public RangeConsolidator(decimal range,
             PyObject selector,
             PyObject volumeSelector = null,
             bool allowPhantomBars = false)
             : base(selector, volumeSelector)
         {
-            Range = rangeSize;
+            Range = range;
             _allowPhantomBars = allowPhantomBars;
             _firstTick = true;
         }
