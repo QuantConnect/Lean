@@ -20,7 +20,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
-    /// This consolidator can transform a stream of <see cref="BaseData"/> instances into a stream of <see cref="RenkoBar"/>
+    /// This consolidator can transform a stream of <see cref="IBaseData"/> instances into a stream of <see cref="RenkoBar"/>
     /// </summary>
     public class ClassicRenkoConsolidator : BaseTimelessConsolidator
     {
@@ -33,7 +33,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Bar being created
         /// </summary>
-        protected override BaseData CurrentBar
+        protected override TradeBar CurrentBar
         {
             get
             {

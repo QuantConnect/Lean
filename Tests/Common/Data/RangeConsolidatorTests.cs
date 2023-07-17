@@ -26,14 +26,14 @@ namespace QuantConnect.Tests.Common.Data
     public class RangeConsolidatorTests
     {
         [TestCaseSource(nameof(RangeBarConsolidatorReturnsExpectedValuesCases))]
-        public void RangeConsolidatorReturnsExpectedValues(decimal[] inputValues, decimal[][] expectedValues)
+        public void RangeConsolidatorReturnsExpectedValues(decimal[][] expectedValues, bool allowPhantomBars)
         {
             var time = new DateTime(2016, 1, 1);
-            var testValues = new List<decimal>(inputValues);
+            var testValues = new List<decimal>() { 90m, 94.5m, 94m, 89.5m, 89m, 90.5m, 90m, 91.5m, 90m, 90.5m, 92.5m };
 
             var returnedBars = new List<RangeBar>();
 
-            using var consolidator = new RangeConsolidator(1m);
+            using var consolidator = new RangeConsolidator(100m, x => x.Value, x => 10m, allowPhantomBars);
             consolidator.DataConsolidated += (sender, rangeBar) =>
             {
                 returnedBars.Add(rangeBar);
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Data
 
             for (int i = 0; i < testValues.Count; i++)
             {
-                var data = new IndicatorDataPoint(time.AddSeconds(i), testValues[i]);
+                var data = new IndicatorDataPoint(Symbols.IBM, time.AddSeconds(i), testValues[i]);
                 consolidator.Update(data);
             }
 
@@ -51,18 +51,41 @@ namespace QuantConnect.Tests.Common.Data
                 var low = expectedValues[index][1];
                 var high = expectedValues[index][2];
                 var close = expectedValues[index][3];
+                var volume = expectedValues[index][4];
 
                 Assert.AreEqual(open, returnedBars[index].Open);
                 Assert.AreEqual(low, returnedBars[index].Low);
                 Assert.AreEqual(high, returnedBars[index].High);
                 Assert.AreEqual(close, returnedBars[index].Close);
+                Assert.AreEqual(volume, returnedBars[index].Volume);
             }
         }
 
         public static object[] RangeBarConsolidatorReturnsExpectedValuesCases =
         {
-            new object[] { new decimal[] { 8175.0m, 8175.5m, 8174.5m, 8174.0m, 8173.5m, 8173.9m, 8176m, 8176m, 8176m, 8176m, 8176.5m, 8170m },
-                new decimal[][] { new decimal[]{ 8175, 8174.5m, 8175.5m, 8174.5m }, new decimal[]{ 8174m, 8173.5m, 8174.5m, 8174.5m }, new decimal[]{ 8176m, 8175.5m, 8176.5m, 8175.5m }} }
+            new object[] { new decimal[][] {
+                    new decimal[]{ 90m, 90m, 91m, 91m, 10m },
+                    new decimal[]{ 94.5m, 93.5m, 94.5m, 93.5m, 20m},
+                    new decimal[]{ 89.5m, 89m, 90m, 90m, 20m},
+                    new decimal[]{ 90.5m, 90m, 91m, 91m, 20m},
+                    new decimal[]{ 91.5m, 90.5m, 91.5m, 90.5m, 10m},
+                    new decimal[]{ 90m, 90m, 91m, 91m, 20m},
+                }, false },
+            new object[] { new decimal[][] {
+                    new decimal[]{ 90m, 90m, 91m, 91m, 10m },
+                    new decimal[]{ 91.01m, 91.01m, 92.01m, 92.01m, 0m },
+                    new decimal[]{ 92.02m, 92.02m, 93.02m, 93.02m, 0m },
+                    new decimal[]{ 93.03m, 93.03m, 94.03m, 94.03m, 0m },
+                    new decimal[]{ 94.5m, 93.5m, 94.5m, 93.5m, 20m},
+                    new decimal[]{ 93.49m, 92.49m, 93.49m, 92.49m, 0m},
+                    new decimal[]{ 92.48m, 91.48m, 92.48m, 91.48m, 0m},
+                    new decimal[]{ 91.47m, 90.47m, 91.47m, 90.47m, 0m},
+                    new decimal[]{ 89.5m, 89m, 90m, 90m, 20m},
+                    new decimal[]{ 90.5m, 90m, 91m, 91m, 20m},
+                    new decimal[]{ 91.5m, 90.5m, 91.5m, 90.5m, 10m},
+                    new decimal[]{ 90m, 90m, 91m, 91m, 20m},
+                    new decimal[]{ 91.01m, 91.01m, 92.01m, 92.01m, 0m }
+                }, true }
         };
     }
 }

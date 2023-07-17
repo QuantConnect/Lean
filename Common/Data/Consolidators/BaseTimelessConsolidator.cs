@@ -15,6 +15,7 @@
 
 using Python.Runtime;
 using System;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -30,7 +31,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Bar being created
         /// </summary>
-        protected virtual BaseData CurrentBar {  get; set; }
+        protected virtual TradeBar CurrentBar {  get; set; }
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
@@ -49,9 +50,9 @@ namespace QuantConnect.Data.Consolidators
         public Type InputType => typeof(IBaseData);
 
         /// <summary>
-        /// Gets <see cref="BaseData"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
+        /// Gets <see cref="TradeBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
-        public virtual Type OutputType => typeof(BaseData);
+        public virtual Type OutputType => typeof(TradeBar);
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
@@ -70,7 +71,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTimelessConsolidator" /> class.
         /// </summary>
-        /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="BaseData"/>. The default
+        /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="TradeBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
@@ -83,7 +84,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTimelessConsolidator" /> class.
         /// </summary>
-        /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="BaseData"/>. The default
+        /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="TradeBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
@@ -132,8 +133,6 @@ namespace QuantConnect.Data.Consolidators
             if (CurrentBar != null)
             {
                 UpdateBar(data.Time, currentValue, volume);
-
-                // if the update caused this bar to close, fire the event and reset the bar
                 CheckIfBarIsClosed();
             }
 

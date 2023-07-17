@@ -33,15 +33,6 @@ namespace QuantConnect.Data.Market
         public bool IsClosed { get; private set; }
 
         /// <summary>
-        /// Gets the time this bar started
-        /// </summary>
-        public DateTime Start
-        {
-            get { return Time; }
-            protected set { Time = value; }
-        }
-
-        /// <summary>
         /// Initialize a new default instance of <see cref="RangeBar"/> class.
         /// </summary>
         public RangeBar()
@@ -80,11 +71,10 @@ namespace QuantConnect.Data.Market
         /// <param name="high">The high price for the new bar</param>
         /// <param name="low">The low price for the new bar</param>
         /// <param name="close">The closing price for the new bar</param>
-        public RangeBar(Symbol symbol, DateTime start, DateTime endTime,
+        public RangeBar(Symbol symbol, DateTime endTime,
             decimal rangeSize, decimal open, decimal high, decimal low, decimal close)
         {
             Symbol = symbol;
-            Start = start;
             EndTime = endTime;
             RangeSize = rangeSize;
             Open = open;
