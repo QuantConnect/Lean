@@ -92,7 +92,7 @@ namespace QuantConnect.ToolBox.IQFeed
             {
                 throw new ArgumentException("Unable to retrieve address from specified host name.", host);
             }
-            
+
             return ipAddresses[0];
         }
 
