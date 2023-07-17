@@ -836,7 +836,7 @@ namespace QuantConnect.ToolBox.IQFeed
                 case Resolution.Tick:
                 case Resolution.Daily:
                 default:
-                    throw new ArgumentOutOfRangeException("resolution", resolution, null);
+                    throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
             }
         }
     }

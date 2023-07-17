@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -67,7 +67,7 @@ namespace QuantConnect.Indicators
                     return new ArnaudLegouxMovingAverage(period);
 
                 default:
-                    throw new ArgumentOutOfRangeException("movingAverageType");
+                    throw new ArgumentOutOfRangeException(nameof(movingAverageType));
             }
         }
 
@@ -117,7 +117,7 @@ namespace QuantConnect.Indicators
                     return new ArnaudLegouxMovingAverage(name, period);
 
                 default:
-                    throw new ArgumentOutOfRangeException("movingAverageType");
+                    throw new ArgumentOutOfRangeException(nameof(movingAverageType));
             }
         }
     }

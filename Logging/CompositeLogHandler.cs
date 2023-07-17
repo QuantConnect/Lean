@@ -40,7 +40,7 @@ namespace QuantConnect.Logging
         {
             if (handlers == null || handlers.Length == 0)
             {
-                throw new ArgumentNullException("handlers");
+                throw new ArgumentNullException(nameof(handlers));
             }
 
             _handlers = handlers;

@@ -1054,11 +1054,11 @@ namespace QuantConnect.Securities
             {
                 if (subscription.Symbol != Symbol)
                 {
-                    throw new ArgumentException(Messages.Security.UnmatchingSymbols, "subscription.Symbol");
+                    throw new ArgumentException(Messages.Security.UnmatchingSymbols, $"{nameof(subscription)}.{nameof(subscription.Symbol)}");
                 }
                 if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone))
                 {
-                    throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, "subscription.ExchangeTimeZone");
+                    throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, $"{nameof(subscription)}.{nameof(subscription.ExchangeTimeZone)}");
                 }
                 _subscriptionsBag.Add(subscription);
                 UpdateSubscriptionProperties();
@@ -1077,11 +1077,11 @@ namespace QuantConnect.Securities
                 {
                     if (subscription.Symbol != Symbol)
                     {
-                        throw new ArgumentException(Messages.Security.UnmatchingSymbols, "subscription.Symbol");
+                        throw new ArgumentException(Messages.Security.UnmatchingSymbols, $"{nameof(subscription)}.{nameof(subscription.Symbol)}");
                     }
                     if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone))
                     {
-                         throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, "subscription.ExchangeTimeZone");
+                         throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, $"{nameof(subscription)}.{nameof(subscription.ExchangeTimeZone)}");
                     }
                     _subscriptionsBag.Add(subscription);
                 }

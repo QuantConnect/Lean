@@ -78,19 +78,19 @@ namespace QuantConnect.Lean.Engine
         {
             if (jobQueue == null)
             {
-                throw new ArgumentNullException("jobQueue");
+                throw new ArgumentNullException(nameof(jobQueue));
             }
             if (api == null)
             {
-                throw new ArgumentNullException("api");
+                throw new ArgumentNullException(nameof(api));
             }
             if (notify == null)
             {
-                throw new ArgumentNullException("notify");
+                throw new ArgumentNullException(nameof(notify));
             }
             if (leanManager == null)
             {
-                throw new ArgumentNullException("leanManager");
+                throw new ArgumentNullException(nameof(leanManager));
             }
             _api = api;
             _jobQueue = jobQueue;

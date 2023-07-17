@@ -67,7 +67,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             if (endOfDayDelta >= Time.OneDay)
             {
-                throw new ArgumentException("Delta must be less than a day", "endOfDayDelta");
+                throw new ArgumentException("Delta must be less than a day", nameof(endOfDayDelta));
             }
 
             // set up an event to fire every tradeable date for the algorithm as a whole
@@ -117,7 +117,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             if (endOfDayDelta >= Time.OneDay)
             {
-                throw new ArgumentException("Delta must be less than a day", "endOfDayDelta");
+                throw new ArgumentException("Delta must be less than a day", nameof(endOfDayDelta));
             }
 
             var isMarketAlwaysOpen = security.Exchange.Hours.IsMarketAlwaysOpen;

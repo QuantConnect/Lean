@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -50,7 +50,7 @@ namespace QuantConnect.Indicators
         {
             if (minPeriod < 4)
             {
-                throw new ArgumentException("The minimum period should be 4.", "minPeriod");
+                throw new ArgumentException("The minimum period should be 4.", nameof(minPeriod));
             }
             _minPeriod = minPeriod;
             _multipliedDiffWindow = new RollingWindow<decimal>(fullPeriod);

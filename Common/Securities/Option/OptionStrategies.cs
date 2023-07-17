@@ -210,7 +210,7 @@ namespace QuantConnect.Securities.Option
 
             if (leg1Strike >= leg2Strike)
             {
-                throw new ArgumentException("BearCallSpread: leg1Strike must be less than leg2Strike", "leg1Strike, leg2Strike");
+                throw new ArgumentException("BearCallSpread: leg1Strike must be less than leg2Strike", $"{nameof(leg1Strike)}, {nameof(leg2Strike)}");
             }
 
             return new OptionStrategy
@@ -253,7 +253,7 @@ namespace QuantConnect.Securities.Option
 
             if (leg1Strike <= leg2Strike)
             {
-                throw new ArgumentException("BearPutSpread: leg1Strike must be greater than leg2Strike", "leg1Strike, leg2Strike");
+                throw new ArgumentException("BearPutSpread: leg1Strike must be greater than leg2Strike", $"{nameof(leg1Strike)}, {nameof(leg2Strike)}");
             }
 
             return new OptionStrategy
@@ -297,7 +297,7 @@ namespace QuantConnect.Securities.Option
 
             if (leg1Strike >= leg2Strike)
             {
-                throw new ArgumentException("BullCallSpread: leg1Strike must be less than leg2Strike", "leg1Strike, leg2Strike");
+                throw new ArgumentException("BullCallSpread: leg1Strike must be less than leg2Strike", $"{nameof(leg1Strike)}, {nameof(leg2Strike)}");
             }
 
             return new OptionStrategy
@@ -340,7 +340,7 @@ namespace QuantConnect.Securities.Option
 
             if (leg1Strike <= leg2Strike)
             {
-                throw new ArgumentException("BullPutSpread: leg1Strike must be greater than leg2Strike", "leg1Strike, leg2Strike");
+                throw new ArgumentException("BullPutSpread: leg1Strike must be greater than leg2Strike", $"{nameof(leg1Strike)}, {nameof(leg2Strike)}");
             }
 
             return new OptionStrategy

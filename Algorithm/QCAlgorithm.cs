@@ -1195,7 +1195,7 @@ namespace QuantConnect.Algorithm
                 throw new InvalidOperationException("Algorithm.SetTimeZone(): Cannot change time zone after algorithm running.");
             }
 
-            if (timeZone == null) throw new ArgumentNullException("timeZone");
+            if (timeZone == null) throw new ArgumentNullException(nameof(timeZone));
             _timeKeeper.AddTimeZone(timeZone);
             _localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(timeZone);
 

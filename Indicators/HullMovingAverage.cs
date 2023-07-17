@@ -35,7 +35,7 @@ namespace QuantConnect.Indicators
         public HullMovingAverage(string name, int period)
             : base(name)
         {
-            if (period < 2) throw new ArgumentException("The Hull Moving Average period should be greater or equal to 2", "period");
+            if (period < 2) throw new ArgumentException("The Hull Moving Average period should be greater or equal to 2", nameof(period));
             _slowWma = new LinearWeightedMovingAverage(period);
             _fastWma = new LinearWeightedMovingAverage((int) Math.Round(period * 1d / 2));
             var k = (int)Math.Round(Math.Sqrt(period));
