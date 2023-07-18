@@ -39,36 +39,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <returns>An enumerator reading the subscription request</returns>
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
-            using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
+            using var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
+
+            var configuration = request.Configuration;
+            var sourceFactory = (BaseData)Activator.CreateInstance(request.Configuration.Type);
+
+            // we want the first selection to happen on the start time
+            // so we need the previous tradable day time, since coarse
+            // files are for each tradable date but emitted with next day time
+            var previousTradableDay = Time.GetStartTimeForTradeBars(
+                request.Security.Exchange.Hours,
+                request.StartTimeLocal,
+                Time.OneDay,
+                1,
+                false,
+                configuration.DataTimeZone);
+            var tradableDays = new[] { previousTradableDay }.Concat(request.TradableDaysInDataTimeZone);
+
+            // Behaves in the same way as in live trading
+            // (i.e. only emit coarse data on dates following a trading day)
+            // The shifting of dates is needed to ensure we never emit coarse data on the same date,
+            // because it would enable look-ahead bias.
+
+            foreach (var date in tradableDays)
             {
-                var configuration = request.Configuration;
-                var sourceFactory = (BaseData)Activator.CreateInstance(request.Configuration.Type);
-
-                // we want the first selection to happen on the start time
-                // so we need the previous tradable day time, since coarse
-                // files are for each tradable date but emitted with next day time
-                var previousTradableDay = Time.GetStartTimeForTradeBars(
-                    request.Security.Exchange.Hours,
-                    request.StartTimeLocal,
-                    Time.OneDay,
-                    1,
-                    false,
-                    configuration.DataTimeZone);
-                var tradableDays = new[] { previousTradableDay }.Concat(request.TradableDaysInDataTimeZone);
-
-                // Behaves in the same way as in live trading
-                // (i.e. only emit coarse data on dates following a trading day)
-                // The shifting of dates is needed to ensure we never emit coarse data on the same date,
-                // because it would enable look-ahead bias.
-
-                foreach (var date in tradableDays)
-                {
-                    var source = sourceFactory.GetSource(configuration, date, false);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date, false, sourceFactory, dataProvider);
-                    var coarseFundamentalForDate = factory.Read(source);
-                    //  shift all date of emitting the file forward one day to model emitting coarse midnight the next day.
-                    yield return new BaseDataCollection(date.AddDays(1), configuration.Symbol, coarseFundamentalForDate);
-                }
+                var source = sourceFactory.GetSource(configuration, date, false);
+                var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date, false, sourceFactory, dataProvider);
+                var coarseFundamentalForDate = factory.Read(source);
+                //  shift all date of emitting the file forward one day to model emitting coarse midnight the next day.
+                yield return new BaseDataCollection(date.AddDays(1), configuration.Symbol, coarseFundamentalForDate);
             }
         }
     }

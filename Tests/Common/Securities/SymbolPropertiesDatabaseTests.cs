@@ -183,37 +183,36 @@ namespace QuantConnect.Tests.Common.Securities
 
             var sb = new StringBuilder();
 
-            using (var wc = new WebClient())
+            using var wc = new WebClient();
+
+            var jsonCurrencies = wc.DownloadString(urlCurrencies);
+            var rowsCurrencies = JsonConvert.DeserializeObject<List<GdaxCurrency>>(jsonCurrencies);
+            var currencyDescriptions = rowsCurrencies.ToDictionary(x => x.Id, x => x.Name);
+
+            var jsonProducts = wc.DownloadString(urlProducts);
+
+            var rowsProducts = JsonConvert.DeserializeObject<List<GdaxProduct>>(jsonProducts);
+            foreach (var row in rowsProducts.OrderBy(x => x.Id))
             {
-                var jsonCurrencies = wc.DownloadString(urlCurrencies);
-                var rowsCurrencies = JsonConvert.DeserializeObject<List<GdaxCurrency>>(jsonCurrencies);
-                var currencyDescriptions = rowsCurrencies.ToDictionary(x => x.Id, x => x.Name);
-
-                var jsonProducts = wc.DownloadString(urlProducts);
-
-                var rowsProducts = JsonConvert.DeserializeObject<List<GdaxProduct>>(jsonProducts);
-                foreach (var row in rowsProducts.OrderBy(x => x.Id))
+                string baseDescription, quoteDescription;
+                if (!currencyDescriptions.TryGetValue(row.BaseCurrency, out baseDescription))
                 {
-                    string baseDescription, quoteDescription;
-                    if (!currencyDescriptions.TryGetValue(row.BaseCurrency, out baseDescription))
-                    {
-                        baseDescription = row.BaseCurrency;
-                    }
-                    if (!currencyDescriptions.TryGetValue(row.QuoteCurrency, out quoteDescription))
-                    {
-                        quoteDescription = row.QuoteCurrency;
-                    }
-
-                    sb.AppendLine("gdax," +
-                                  $"{row.BaseCurrency}{row.QuoteCurrency}," +
-                                  "crypto," +
-                                  $"{baseDescription}-{quoteDescription}," +
-                                  $"{row.QuoteCurrency}," +
-                                  "1," +
-                                  $"{row.QuoteIncrement.NormalizeToStr()}," +
-                                  $"{row.BaseIncrement.NormalizeToStr()}," +
-                                  $"{row.Id}");
+                    baseDescription = row.BaseCurrency;
                 }
+                if (!currencyDescriptions.TryGetValue(row.QuoteCurrency, out quoteDescription))
+                {
+                    quoteDescription = row.QuoteCurrency;
+                }
+
+                sb.AppendLine("gdax," +
+                                $"{row.BaseCurrency}{row.QuoteCurrency}," +
+                                "crypto," +
+                                $"{baseDescription}-{quoteDescription}," +
+                                $"{row.QuoteCurrency}," +
+                                "1," +
+                                $"{row.QuoteIncrement.NormalizeToStr()}," +
+                                $"{row.BaseIncrement.NormalizeToStr()}," +
+                                $"{row.Id}");
             }
 
             Log.Trace(sb.ToString());
@@ -300,100 +299,99 @@ namespace QuantConnect.Tests.Common.Securities
 
             var sb = new StringBuilder();
 
-            using (var wc = new WebClient())
+            using var wc = new WebClient();
+
+            var jsonExchangePairs = wc.DownloadString(urlExchangePairs);
+            var exchangePairs = JsonConvert.DeserializeObject<List<List<string>>>(jsonExchangePairs)[0];
+
+            var jsonMarginPairs = wc.DownloadString(urlMarginPairs);
+            var marginPairs = JsonConvert.DeserializeObject<List<List<string>>>(jsonMarginPairs)[0];
+
+            var jsonCurrencyMap = wc.DownloadString(urlCurrencyMap);
+            var rowsCurrencyMap = JsonConvert.DeserializeObject<List<List<List<string>>>>(jsonCurrencyMap)[0];
+            var currencyMap = rowsCurrencyMap
+                .ToDictionary(row => row[0], row => row[1].ToUpperInvariant());
+
+            var jsonCurrencyLabels = wc.DownloadString(urlCurrencyLabels);
+            var rowsCurrencyLabels = JsonConvert.DeserializeObject<List<List<List<string>>>>(jsonCurrencyLabels)[0];
+            var currencyLabels = rowsCurrencyLabels
+                .ToDictionary(row => row[0], row => row[1]);
+
+            var jsonSymbolDetails = wc.DownloadString(urlSymbolDetails);
+            var symbolDetails = JsonConvert.DeserializeObject<List<BitfinexSymbolDetails>>(jsonSymbolDetails);
+            var minimumPriceIncrements = symbolDetails
+                .ToDictionary(x => x.Pair.ToUpperInvariant(), x => (decimal)Math.Pow(10, -x.PricePrecision));
+
+            foreach (var pair in exchangePairs.Union(marginPairs).OrderBy(x => x))
             {
-                var jsonExchangePairs = wc.DownloadString(urlExchangePairs);
-                var exchangePairs = JsonConvert.DeserializeObject<List<List<string>>>(jsonExchangePairs)[0];
-
-                var jsonMarginPairs = wc.DownloadString(urlMarginPairs);
-                var marginPairs = JsonConvert.DeserializeObject<List<List<string>>>(jsonMarginPairs)[0];
-
-                var jsonCurrencyMap = wc.DownloadString(urlCurrencyMap);
-                var rowsCurrencyMap = JsonConvert.DeserializeObject<List<List<List<string>>>>(jsonCurrencyMap)[0];
-                var currencyMap = rowsCurrencyMap
-                    .ToDictionary(row => row[0], row => row[1].ToUpperInvariant());
-
-                var jsonCurrencyLabels = wc.DownloadString(urlCurrencyLabels);
-                var rowsCurrencyLabels = JsonConvert.DeserializeObject<List<List<List<string>>>>(jsonCurrencyLabels)[0];
-                var currencyLabels = rowsCurrencyLabels
-                    .ToDictionary(row => row[0], row => row[1]);
-
-                var jsonSymbolDetails = wc.DownloadString(urlSymbolDetails);
-                var symbolDetails = JsonConvert.DeserializeObject<List<BitfinexSymbolDetails>>(jsonSymbolDetails);
-                var minimumPriceIncrements = symbolDetails
-                    .ToDictionary(x => x.Pair.ToUpperInvariant(), x => (decimal)Math.Pow(10, -x.PricePrecision));
-
-                foreach (var pair in exchangePairs.Union(marginPairs).OrderBy(x => x))
+                string baseCurrency, quoteCurrency;
+                if (pair.Contains(":"))
                 {
-                    string baseCurrency, quoteCurrency;
-                    if (pair.Contains(":"))
-                    {
-                        var parts = pair.Split(':');
-                        baseCurrency = parts[0];
-                        quoteCurrency = parts[1];
-                    }
-                    else if (pair.Length == 6)
-                    {
-                        baseCurrency = pair.Substring(0, 3);
-                        quoteCurrency = pair.Substring(3);
-                    }
-                    else
-                    {
-                        // should never happen
-                        Log.Trace($"Skipping pair with unknown format: {pair}");
-                        continue;
-                    }
-
-                    string baseDescription, quoteDescription;
-                    if (!currencyLabels.TryGetValue(baseCurrency, out baseDescription))
-                    {
-                        Log.Trace($"Base currency description not found: {baseCurrency}");
-                        baseDescription = baseCurrency;
-                    }
-                    if (!currencyLabels.TryGetValue(quoteCurrency, out quoteDescription))
-                    {
-                        Log.Trace($"Quote currency description not found: {quoteCurrency}");
-                        quoteDescription = quoteCurrency;
-                    }
-
-                    var description = baseDescription + "-" + quoteDescription;
-
-                    string newBaseCurrency, newQuoteCurrency;
-                    if (currencyMap.TryGetValue(baseCurrency, out newBaseCurrency))
-                    {
-                        baseCurrency = newBaseCurrency;
-                    }
-                    if (currencyMap.TryGetValue(quoteCurrency, out newQuoteCurrency))
-                    {
-                        quoteCurrency = newQuoteCurrency;
-                    }
-
-                    // skip test symbols
-                    if (quoteCurrency.StartsWith("TEST"))
-                    {
-                        continue;
-                    }
-
-                    var leanTicker = $"{baseCurrency}{quoteCurrency}";
-
-                    decimal minimumPriceIncrement;
-                    if (!minimumPriceIncrements.TryGetValue(pair, out minimumPriceIncrement))
-                    {
-                        minimumPriceIncrement = 0.00001m;
-                    }
-
-                    const decimal lotSize = 0.00000001m;
-
-                    sb.AppendLine("bitfinex," +
-                                  $"{leanTicker}," +
-                                  "crypto," +
-                                  $"{description}," +
-                                  $"{quoteCurrency}," +
-                                  "1," +
-                                  $"{minimumPriceIncrement.NormalizeToStr()}," +
-                                  $"{lotSize.NormalizeToStr()}," +
-                                  $"t{pair}");
+                    var parts = pair.Split(':');
+                    baseCurrency = parts[0];
+                    quoteCurrency = parts[1];
                 }
+                else if (pair.Length == 6)
+                {
+                    baseCurrency = pair.Substring(0, 3);
+                    quoteCurrency = pair.Substring(3);
+                }
+                else
+                {
+                    // should never happen
+                    Log.Trace($"Skipping pair with unknown format: {pair}");
+                    continue;
+                }
+
+                string baseDescription, quoteDescription;
+                if (!currencyLabels.TryGetValue(baseCurrency, out baseDescription))
+                {
+                    Log.Trace($"Base currency description not found: {baseCurrency}");
+                    baseDescription = baseCurrency;
+                }
+                if (!currencyLabels.TryGetValue(quoteCurrency, out quoteDescription))
+                {
+                    Log.Trace($"Quote currency description not found: {quoteCurrency}");
+                    quoteDescription = quoteCurrency;
+                }
+
+                var description = baseDescription + "-" + quoteDescription;
+
+                string newBaseCurrency, newQuoteCurrency;
+                if (currencyMap.TryGetValue(baseCurrency, out newBaseCurrency))
+                {
+                    baseCurrency = newBaseCurrency;
+                }
+                if (currencyMap.TryGetValue(quoteCurrency, out newQuoteCurrency))
+                {
+                    quoteCurrency = newQuoteCurrency;
+                }
+
+                // skip test symbols
+                if (quoteCurrency.StartsWith("TEST"))
+                {
+                    continue;
+                }
+
+                var leanTicker = $"{baseCurrency}{quoteCurrency}";
+
+                decimal minimumPriceIncrement;
+                if (!minimumPriceIncrements.TryGetValue(pair, out minimumPriceIncrement))
+                {
+                    minimumPriceIncrement = 0.00001m;
+                }
+
+                const decimal lotSize = 0.00000001m;
+
+                sb.AppendLine("bitfinex," +
+                                $"{leanTicker}," +
+                                "crypto," +
+                                $"{description}," +
+                                $"{quoteCurrency}," +
+                                "1," +
+                                $"{minimumPriceIncrement.NormalizeToStr()}," +
+                                $"{lotSize.NormalizeToStr()}," +
+                                $"t{pair}");
             }
 
             Log.Trace(sb.ToString());

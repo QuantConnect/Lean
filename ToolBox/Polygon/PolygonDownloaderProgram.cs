@@ -64,30 +64,28 @@ namespace QuantConnect.ToolBox.Polygon
                 var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
                 // Create an instance of the downloader
-                using (var downloader = new PolygonDataDownloader())
+                using var downloader = new PolygonDataDownloader();
+                foreach (var ticker in tickers)
                 {
-                    foreach (var ticker in tickers)
+                    var symbol = Symbol.Create(ticker, securityType, market);
+
+                    var exchangeTimeZone = marketHoursDatabase.GetExchangeHours(market, symbol, securityType).TimeZone;
+                    var dataTimeZone = marketHoursDatabase.GetDataTimeZone(market, symbol, securityType);
+
+                    foreach (var tickType in tickTypes)
                     {
-                        var symbol = Symbol.Create(ticker, securityType, market);
+                        // Download the data
+                        var data = downloader.Get(new DataDownloaderGetParameters(symbol, resolution, startDate, endDate, tickType))
+                            .Select(x =>
+                                {
+                                    x.Time = x.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
+                                    return x;
+                                }
+                            );
 
-                        var exchangeTimeZone = marketHoursDatabase.GetExchangeHours(market, symbol, securityType).TimeZone;
-                        var dataTimeZone = marketHoursDatabase.GetDataTimeZone(market, symbol, securityType);
-
-                        foreach (var tickType in tickTypes)
-                        {
-                            // Download the data
-                            var data = downloader.Get(new DataDownloaderGetParameters(symbol, resolution, startDate, endDate, tickType))
-                                .Select(x =>
-                                    {
-                                        x.Time = x.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
-                                        return x;
-                                    }
-                                );
-
-                            // Save the data
-                            var writer = new LeanDataWriter(resolution, symbol, dataDirectory, tickType);
-                            writer.Write(data);
-                        }
+                        // Save the data
+                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory, tickType);
+                        writer.Write(data);
                     }
                 }
             }

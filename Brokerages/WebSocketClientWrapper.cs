@@ -221,52 +221,50 @@ namespace QuantConnect.Brokerages
                 const int maximumWaitTimeOnError = 120 * 1000;
                 const int minimumWaitTimeOnError = 2 * 1000;
                 var waitTimeOnError = minimumWaitTimeOnError;
-                using (var connectionCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token))
+                using var connectionCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
+                try
                 {
-                    try
+                    lock (_locker)
                     {
-                        lock (_locker)
+                        _client.DisposeSafely();
+                        _client = new ClientWebSocket();
+                        if (_sessionToken != null)
                         {
-                            _client.DisposeSafely();
-                            _client = new ClientWebSocket();
-                            if (_sessionToken != null)
-                            {
-                                _client.Options.SetRequestHeader("x-session-token", _sessionToken);
-                            }
-                            _client.ConnectAsync(new Uri(_url), connectionCts.Token).SynchronouslyAwaitTask();
+                            _client.Options.SetRequestHeader("x-session-token", _sessionToken);
                         }
-                        OnOpen();
+                        _client.ConnectAsync(new Uri(_url), connectionCts.Token).SynchronouslyAwaitTask();
+                    }
+                    OnOpen();
 
-                        while ((_client.State == WebSocketState.Open || _client.State == WebSocketState.CloseSent) &&
-                            !connectionCts.IsCancellationRequested)
+                    while ((_client.State == WebSocketState.Open || _client.State == WebSocketState.CloseSent) &&
+                        !connectionCts.IsCancellationRequested)
+                    {
+                        var messageData = ReceiveMessage(_client, connectionCts.Token, receiveBuffer);
+
+                        if (messageData == null)
                         {
-                            var messageData = ReceiveMessage(_client, connectionCts.Token, receiveBuffer);
-
-                            if (messageData == null)
-                            {
-                                break;
-                            }
-
-                            // reset wait time
-                            waitTimeOnError = minimumWaitTimeOnError;
-                            OnMessage(new WebSocketMessage(this, messageData));
+                            break;
                         }
-                    }
-                    catch (OperationCanceledException) { }
-                    catch (WebSocketException ex)
-                    {
-                        OnError(new WebSocketError(ex.Message, ex));
-                        connectionCts.Token.WaitHandle.WaitOne(waitTimeOnError);
 
-                        // increase wait time until a maximum value. This is useful during brokerage down times
-                        waitTimeOnError += Math.Min(maximumWaitTimeOnError, waitTimeOnError);
+                        // reset wait time
+                        waitTimeOnError = minimumWaitTimeOnError;
+                        OnMessage(new WebSocketMessage(this, messageData));
                     }
-                    catch (Exception ex)
-                    {
-                        OnError(new WebSocketError(ex.Message, ex));
-                    }
-                    connectionCts.Cancel();
                 }
+                catch (OperationCanceledException) { }
+                catch (WebSocketException ex)
+                {
+                    OnError(new WebSocketError(ex.Message, ex));
+                    connectionCts.Token.WaitHandle.WaitOne(waitTimeOnError);
+
+                    // increase wait time until a maximum value. This is useful during brokerage down times
+                    waitTimeOnError += Math.Min(maximumWaitTimeOnError, waitTimeOnError);
+                }
+                catch (Exception ex)
+                {
+                    OnError(new WebSocketError(ex.Message, ex));
+                }
+                connectionCts.Cancel();
             }
         }
 
@@ -278,41 +276,39 @@ namespace QuantConnect.Brokerages
         {
             var buffer = new ArraySegment<byte>(receiveBuffer);
 
-            using (var ms = new MemoryStream())
+            using var ms = new MemoryStream();
+
+            WebSocketReceiveResult result;
+            do
             {
-                WebSocketReceiveResult result;
+                result = webSocket.ReceiveAsync(buffer, ct).SynchronouslyAwaitTask();
+                ms.Write(buffer.Array, buffer.Offset, result.Count);
+                if (ms.Length > maxSize)
+                {
+                    throw new InvalidOperationException($"Maximum size of the message was exceeded: {_url}");
+                }
+            }
+            while (!result.EndOfMessage);
 
-                do
+            if (result.MessageType == WebSocketMessageType.Binary)
+            {
+                return new BinaryMessage
                 {
-                    result = webSocket.ReceiveAsync(buffer, ct).SynchronouslyAwaitTask();
-                    ms.Write(buffer.Array, buffer.Offset, result.Count);
-                    if (ms.Length > maxSize)
-                    {
-                        throw new InvalidOperationException($"Maximum size of the message was exceeded: {_url}");
-                    }
-                }
-                while (!result.EndOfMessage);
-
-                if (result.MessageType == WebSocketMessageType.Binary)
+                    Data = ms.ToArray(),
+                    Count = result.Count,
+                };
+            }
+            else if (result.MessageType == WebSocketMessageType.Text)
+            {
+                return new TextMessage
                 {
-                    return new BinaryMessage
-                    {
-                        Data = ms.ToArray(),
-                        Count = result.Count,
-                    };
-                }
-                else if (result.MessageType == WebSocketMessageType.Text)
-                {
-                    return new TextMessage
-                    {
-                        Message = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length),
-                    };
-                }
-                else if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): WebSocketMessageType.Close - Data: {Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length)}");
-                    return null;
-                }
+                    Message = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length),
+                };
+            }
+            else if (result.MessageType == WebSocketMessageType.Close)
+            {
+                Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): WebSocketMessageType.Close - Data: {Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length)}");
+                return null;
             }
             return null;
         }

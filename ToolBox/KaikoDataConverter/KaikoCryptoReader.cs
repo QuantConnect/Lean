@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -64,15 +64,13 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// <returns>IEnumerable with the zip entry content.</returns>
         private IEnumerable<string> GetRawDataStreamFromEntry(ZipEntry zipEntry)
         {
-            using (var outerStream = new StreamReader(zipEntry.OpenReader()))
-            using (var innerStream = new GZipStream(outerStream.BaseStream, CompressionMode.Decompress))
-            using (var outputStream = new StreamReader(innerStream))
+            using var outerStream = new StreamReader(zipEntry.OpenReader());
+            using var innerStream = new GZipStream(outerStream.BaseStream, CompressionMode.Decompress);
+            using var outputStream = new StreamReader(innerStream);
+            string line;
+            while ((line = outputStream.ReadLine()) != null)
             {
-                string line;
-                while ((line = outputStream.ReadLine()) != null)
-                {
-                    yield return line;
-                }
+                yield return line;
             }
         }
 

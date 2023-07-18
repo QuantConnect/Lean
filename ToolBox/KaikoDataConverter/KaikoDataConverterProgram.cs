@@ -57,73 +57,71 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                 if (exchange != string.Empty && !filePath.Name.ToLowerInvariant().Contains(exchange.ToLowerInvariant())) continue;
 
                 Log.Trace($"KaikoDataConverter(): Starting data conversion from source {filePath.Name} for date {processingDate:yyyy_MM_dd}... ");
-                using (var zip = new ZipFile(filePath.FullName))
+                using var zip = new ZipFile(filePath.FullName);
+                var targetDayEntries = zip.Entries.Where(e => e.FileName.Contains($"{processingDate.ToStringInvariant("yyyy_MM_dd")}")).ToList();
+
+                if (!targetDayEntries.Any())
                 {
-                    var targetDayEntries = zip.Entries.Where(e => e.FileName.Contains($"{processingDate.ToStringInvariant("yyyy_MM_dd")}")).ToList();
+                    Log.Error($"KaikoDataConverter(): Date {processingDate:yyyy_MM_dd} not found in source file {filePath.FullName}.");
+                }
 
-                    if (!targetDayEntries.Any())
+                foreach (var zipEntry in targetDayEntries)
+                {
+                    var nameParts = zipEntry.FileName.Split(new char[] { '/' }).Last().Split(new char[] { '_' });
+                    var market = nameParts[0] == "Coinbase" ? "GDAX" : nameParts[0];
+                    var ticker = nameParts[1];
+                    var tickType = nameParts[2] == "trades" ? TickType.Trade : TickType.Quote;
+                    var symbol = Symbol.Create(ticker, SecurityType.Crypto, market);
+
+                    Log.Trace($"KaikoDataConverter(): Processing {symbol.Value} {tickType}");
+
+                    // Generate ticks from raw data and write them to disk
+
+                    var reader = new KaikoDataReader(symbol, tickType);
+                    var ticks = reader.GetTicksFromZipEntry(zipEntry);
+
+                    var writer = new LeanDataWriter(Resolution.Tick, symbol, Globals.DataFolder, tickType);
+                    writer.Write(ticks);
+
+                    try
                     {
-                        Log.Error($"KaikoDataConverter(): Date {processingDate:yyyy_MM_dd} not found in source file {filePath.FullName}.");
-                    }
+                        Log.Trace($"KaikoDataConverter(): Starting consolidation for {symbol.Value} {tickType}");
+                        List<TickAggregator> consolidators = new List<TickAggregator>();
 
-                    foreach (var zipEntry in targetDayEntries)
-                    {
-                        var nameParts = zipEntry.FileName.Split(new char[] { '/' }).Last().Split(new char[] { '_' });
-                        var market = nameParts[0] == "Coinbase" ? "GDAX" : nameParts[0];
-                        var ticker = nameParts[1];
-                        var tickType = nameParts[2] == "trades" ? TickType.Trade : TickType.Quote;
-                        var symbol = Symbol.Create(ticker, SecurityType.Crypto, market);
-
-                        Log.Trace($"KaikoDataConverter(): Processing {symbol.Value} {tickType}");
-
-                        // Generate ticks from raw data and write them to disk
-
-                        var reader = new KaikoDataReader(symbol, tickType);
-                        var ticks = reader.GetTicksFromZipEntry(zipEntry);
-
-                        var writer = new LeanDataWriter(Resolution.Tick, symbol, Globals.DataFolder, tickType);
-                        writer.Write(ticks);
-
-                        try
+                        if (tickType == TickType.Trade)
                         {
-                            Log.Trace($"KaikoDataConverter(): Starting consolidation for {symbol.Value} {tickType}");
-                            List<TickAggregator> consolidators = new List<TickAggregator>();
-
-                            if (tickType == TickType.Trade)
+                            consolidators.AddRange(new[]
                             {
-                                consolidators.AddRange(new[]
-                                {
                                     new TradeTickAggregator(Resolution.Second),
                                     new TradeTickAggregator(Resolution.Minute),
                                 });
-                            }
-                            else
+                        }
+                        else
+                        {
+                            consolidators.AddRange(new[]
                             {
-                                consolidators.AddRange(new[]
-                                {
                                     new QuoteTickAggregator(Resolution.Second),
                                     new QuoteTickAggregator(Resolution.Minute),
                                 });
-                            }
+                        }
 
-                            foreach (var tick in ticks)
-                            {
-                                foreach (var consolidator in consolidators)
-                                {
-                                    consolidator.Update(tick);
-                                }
-                            }
-
+                        foreach (var tick in ticks)
+                        {
                             foreach (var consolidator in consolidators)
                             {
-                                writer = new LeanDataWriter(consolidator.Resolution, symbol, Globals.DataFolder, tickType);
-                                writer.Write(consolidator.Flush());
+                                consolidator.Update(tick);
                             }
                         }
-                        catch (Exception e)
+
+                        foreach (var consolidator in consolidators)
                         {
-                            Log.Error($"KaikoDataConverter(): Error processing entry {zipEntry.FileName}. Exception {e}");
+                            writer = new LeanDataWriter(consolidator.Resolution, symbol, Globals.DataFolder, tickType);
+                            writer.Write(consolidator.Flush());
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error($"KaikoDataConverter(): Error processing entry {zipEntry.FileName}. Exception {e}");
                     }
                 }
             }

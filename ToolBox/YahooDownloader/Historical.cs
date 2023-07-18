@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -80,11 +80,10 @@ namespace QuantConnect.ToolBox.YahooDownloader
                    $"&period2={Math.Round(Time.DateTimeToUnixTimeStamp(end), 0).ToStringInvariant()}" +
                    $"&interval=1d&events={eventCode}&crumb={Token.Crumb}";
 
-                using (var wc = new WebClient())
-                {
-                    wc.Headers.Add(HttpRequestHeader.Cookie, Token.Cookie);
-                    csvData = wc.DownloadString(url);
-                }
+                using var wc = new WebClient();
+
+                wc.Headers.Add(HttpRequestHeader.Cookie, Token.Cookie);
+                csvData = wc.DownloadString(url);
 
             }
             catch (WebException webEx)

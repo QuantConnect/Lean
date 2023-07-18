@@ -866,40 +866,38 @@ namespace QuantConnect.Tests.Common.Securities
 
         private void SubmitLimitOrder(Symbol symbol, decimal quantity, decimal limitPrice)
         {
-            using (var resetEvent = new ManualResetEvent(false))
+            using var resetEvent = new ManualResetEvent(false);
+
+            EventHandler<List<OrderEvent>> handler = (s, e) => { resetEvent.Set(); };
+
+            _brokerage.OrdersStatusChanged += handler;
+
+            _algorithm.LimitOrder(symbol, quantity, limitPrice);
+
+            if (!resetEvent.WaitOne(5000))
             {
-                EventHandler<List<OrderEvent>> handler = (s, e) => { resetEvent.Set(); };
-
-                _brokerage.OrdersStatusChanged += handler;
-
-                _algorithm.LimitOrder(symbol, quantity, limitPrice);
-
-                if (!resetEvent.WaitOne(5000))
-                {
-                    throw new TimeoutException("SubmitLimitOrder");
-                }
-
-                _brokerage.OrdersStatusChanged -= handler;
+                throw new TimeoutException("SubmitLimitOrder");
             }
+
+            _brokerage.OrdersStatusChanged -= handler;
         }
 
         private void SubmitStopMarketOrder(Symbol symbol, decimal quantity, decimal stopPrice)
         {
-            using (var resetEvent = new ManualResetEvent(false))
+            using var resetEvent = new ManualResetEvent(false);
+
+            EventHandler<List<OrderEvent>> handler = (s, e) => { resetEvent.Set(); };
+
+            _brokerage.OrdersStatusChanged += handler;
+
+            _algorithm.StopMarketOrder(symbol, quantity, stopPrice);
+
+            if (!resetEvent.WaitOne(5000))
             {
-                EventHandler<List<OrderEvent>> handler = (s, e) => { resetEvent.Set(); };
-
-                _brokerage.OrdersStatusChanged += handler;
-
-                _algorithm.StopMarketOrder(symbol, quantity, stopPrice);
-
-                if (!resetEvent.WaitOne(5000))
-                {
-                    throw new TimeoutException("SubmitStopMarketOrder");
-                }
-
-                _brokerage.OrdersStatusChanged -= handler;
+                throw new TimeoutException("SubmitStopMarketOrder");
             }
+
+            _brokerage.OrdersStatusChanged -= handler;
         }
 
         internal class NonAccountCurrencyCustomFeeModel : FeeModel

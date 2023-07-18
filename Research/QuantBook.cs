@@ -806,24 +806,22 @@ namespace QuantConnect.Research
                     );
                 var security = Securities.CreateSecurity(symbol, config);
                 var request = new SubscriptionRequest(false, null, security, config, startTime.ConvertToUtc(TimeZones.NewYork), endTime.ConvertToUtc(TimeZones.NewYork));
-                using (var enumerator = factory.CreateEnumerator(request, _dataProvider))
+                using var enumerator = factory.CreateEnumerator(request, _dataProvider);
+                while (enumerator.MoveNext())
                 {
-                    while (enumerator.MoveNext())
-                    {
-                        var currentData = enumerator.Current;
-                        var time = currentData.EndTime;
-                        var dataPoint = string.IsNullOrWhiteSpace(selector)
-                            ? currentData
-                            : GetPropertyValue(currentData, selector);
+                    var currentData = enumerator.Current;
+                    var time = currentData.EndTime;
+                    var dataPoint = string.IsNullOrWhiteSpace(selector)
+                        ? currentData
+                        : GetPropertyValue(currentData, selector);
 
-                        lock (data)
+                    lock (data)
+                    {
+                        if (!data.TryGetValue(time, out var dataAtTime))
                         {
-                            if (!data.TryGetValue(time, out var dataAtTime))
-                            {
-                                dataAtTime = data[time] = new DataDictionary<dynamic>(time);
-                            }
-                            dataAtTime.Add(currentData.Symbol, dataPoint);
+                            dataAtTime = data[time] = new DataDictionary<dynamic>(time);
                         }
+                        dataAtTime.Add(currentData.Symbol, dataPoint);
                     }
                 }
             });

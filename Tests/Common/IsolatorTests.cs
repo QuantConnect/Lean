@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,22 +27,21 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void WorksCorrectlyUsingWorker()
         {
-            using (var worker = new TestWorkerThread())
-            {
-                var isolator = new Isolator();
-                var executed = false;
-                var result = isolator.ExecuteWithTimeLimit(
-                    TimeSpan.FromMilliseconds(100),
-                    () =>
-                    {
-                        executed = true;
-                    },
-                    5000,
-                    workerThread:worker
-                );
-                Assert.IsTrue(result);
-                Assert.IsTrue(executed);
-            }
+            using var worker = new TestWorkerThread();
+
+            var isolator = new Isolator();
+            var executed = false;
+            var result = isolator.ExecuteWithTimeLimit(
+                TimeSpan.FromMilliseconds(100),
+                () =>
+                {
+                    executed = true;
+                },
+                5000,
+                workerThread: worker
+            );
+            Assert.IsTrue(result);
+            Assert.IsTrue(executed);
         }
 
         [TestCase(Language.Python, true)]

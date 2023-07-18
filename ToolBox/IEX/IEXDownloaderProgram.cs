@@ -52,23 +52,22 @@ namespace QuantConnect.ToolBox.IEX
                 const string market = Market.USA;
                 var securityType = SecurityType.Equity;
 
-                using (var downloader = new IEXDataDownloader())
+                using var downloader = new IEXDataDownloader();
+
+                foreach (var ticker in tickers)
                 {
-                    foreach (var ticker in tickers)
+                    // Download the data
+                    var symbolObject = Symbol.Create(ticker, securityType, market);
+                    var data = downloader.Get(new DataDownloaderGetParameters(symbolObject, castResolution, startDate, endDate)).ToArray();
+
+                    if (data.Length == 0)
                     {
-                        // Download the data
-                        var symbolObject = Symbol.Create(ticker, securityType, market);
-                        var data = downloader.Get(new DataDownloaderGetParameters(symbolObject, castResolution, startDate, endDate)).ToArray();
-
-                        if (data.Length == 0)
-                        {
-                            continue;
-                        }
-
-                        // Save the data
-                        var writer = new LeanDataWriter(castResolution, symbolObject, dataDirectory);
-                        writer.Write(data);
+                        continue;
                     }
+
+                    // Save the data
+                    var writer = new LeanDataWriter(castResolution, symbolObject, dataDirectory);
+                    writer.Write(data);
                 }
             }
             catch (Exception err)

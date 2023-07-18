@@ -62,39 +62,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <returns>An enumerator reading the subscription request</returns>
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
-            using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
+            using var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
+
+            var tradableDays = _tradableDaysProvider(request);
+
+            var fineFundamentalConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(FineFundamental), request.Security.Symbol);
+
+            foreach (var date in tradableDays)
             {
-                var tradableDays = _tradableDaysProvider(request);
+                var fineFundamentalSource = GetSource(FineFundamental, fineFundamentalConfiguration, date);
+                var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode, FineFundamental, dataProvider);
+                var fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault();
 
-                var fineFundamentalConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(FineFundamental), request.Security.Symbol);
-
-                foreach (var date in tradableDays)
+                // directly do not emit null points. Null points won't happen when used with Coarse data since we are pre filtering based on Coarse.HasFundamentalData
+                // but could happen when fine filtering custom universes
+                if (fineFundamentalForDate == null) continue;
+                
+                yield return new FineFundamental
                 {
-                    var fineFundamentalSource = GetSource(FineFundamental, fineFundamentalConfiguration, date);
-                    var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode, FineFundamental, dataProvider);
-                    var fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault();
-
-                    // directly do not emit null points. Null points won't happen when used with Coarse data since we are pre filtering based on Coarse.HasFundamentalData
-                    // but could happen when fine filtering custom universes
-                    if (fineFundamentalForDate != null)
-                    {
-                        yield return new FineFundamental
-                        {
-                            DataType = MarketDataType.Auxiliary,
-                            Symbol = request.Configuration.Symbol,
-                            Time = date,
-                            CompanyReference = fineFundamentalForDate.CompanyReference,
-                            SecurityReference = fineFundamentalForDate.SecurityReference,
-                            FinancialStatements = fineFundamentalForDate.FinancialStatements,
-                            EarningReports = fineFundamentalForDate.EarningReports,
-                            OperationRatios = fineFundamentalForDate.OperationRatios,
-                            EarningRatios = fineFundamentalForDate.EarningRatios,
-                            ValuationRatios = fineFundamentalForDate.ValuationRatios,
-                            AssetClassification = fineFundamentalForDate.AssetClassification,
-                            CompanyProfile = fineFundamentalForDate.CompanyProfile
-                        };
-                    }
-                }
+                    DataType = MarketDataType.Auxiliary,
+                    Symbol = request.Configuration.Symbol,
+                    Time = date,
+                    CompanyReference = fineFundamentalForDate.CompanyReference,
+                    SecurityReference = fineFundamentalForDate.SecurityReference,
+                    FinancialStatements = fineFundamentalForDate.FinancialStatements,
+                    EarningReports = fineFundamentalForDate.EarningReports,
+                    OperationRatios = fineFundamentalForDate.OperationRatios,
+                    EarningRatios = fineFundamentalForDate.EarningRatios,
+                    ValuationRatios = fineFundamentalForDate.ValuationRatios,
+                    AssetClassification = fineFundamentalForDate.AssetClassification,
+                    CompanyProfile = fineFundamentalForDate.CompanyProfile
+                };
             }
         }
 

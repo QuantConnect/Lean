@@ -220,16 +220,10 @@ namespace QuantConnect
                 var pyList = new PyList();
                 foreach (var key in GetKeys)
                 {
-                    using (var pyKey = key.ToPython())
-                    {
-                        using (var pyValue = this[key].ToPython())
-                        {
-                            using (var pyObject = new PyTuple(new PyObject[] { pyKey, pyValue }))
-                            {
-                                pyList.Append(pyObject);
-                            }
-                        }
-                    }
+                    using var pyKey = key.ToPython();
+                    using var pyValue = this[key].ToPython();
+                    using var pyObject = new PyTuple(new PyObject[] { pyKey, pyValue });
+                    pyList.Append(pyObject);
                 }
                 return pyList;
             }

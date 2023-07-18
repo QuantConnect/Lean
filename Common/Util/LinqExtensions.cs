@@ -274,27 +274,25 @@ namespace QuantConnect.Util
         /// and are only grouped by being emitted separately from this enumerable</returns>
         public static IEnumerable<IEnumerable<T>> GroupAdjacentBy<T>(this IEnumerable<T> enumerable, Func<T, T, bool> grouper)
         {
-            using (var e = enumerable.GetEnumerator())
+            using var e = enumerable.GetEnumerator();
+            if (e.MoveNext())
             {
-                if (e.MoveNext())
+                var list = new List<T> { e.Current };
+                var pred = e.Current;
+                while (e.MoveNext())
                 {
-                    var list = new List<T> {e.Current};
-                    var pred = e.Current;
-                    while (e.MoveNext())
+                    if (grouper(pred, e.Current))
                     {
-                        if (grouper(pred, e.Current))
-                        {
-                            list.Add(e.Current);
-                        }
-                        else
-                        {
-                            yield return list;
-                            list = new List<T> {e.Current};
-                        }
-                        pred = e.Current;
+                        list.Add(e.Current);
                     }
-                    yield return list;
+                    else
+                    {
+                        yield return list;
+                        list = new List<T> { e.Current };
+                    }
+                    pred = e.Current;
                 }
+                yield return list;
             }
         }
 

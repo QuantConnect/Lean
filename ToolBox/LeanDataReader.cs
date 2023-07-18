@@ -118,25 +118,24 @@ namespace QuantConnect.ToolBox
 
             if (_config.Type.ImplementsStreamReader())
             {
-                using (var zip = new ZipFile(_zipPath))
+                using var zip = new ZipFile(_zipPath);
+
+                foreach (var zipEntry in zip.Where(x => _zipentry == null || string.Equals(x.FileName, _zipentry, StringComparison.OrdinalIgnoreCase)))
                 {
-                    foreach (var zipEntry in zip.Where(x => _zipentry == null || string.Equals(x.FileName, _zipentry, StringComparison.OrdinalIgnoreCase)))
+                    // we get the contract symbol from the zip entry if not already provided with the zip entry
+                    var symbol = _config.Symbol;
+                    if (_zipentry == null && (_config.SecurityType == SecurityType.Future || _config.SecurityType.IsOption()))
                     {
-                        // we get the contract symbol from the zip entry if not already provided with the zip entry
-                        var symbol = _config.Symbol;
-                        if(_zipentry == null && (_config.SecurityType == SecurityType.Future || _config.SecurityType.IsOption()))
-                        {
-                            symbol = LeanData.ReadSymbolFromZipEntry(_config.Symbol, _config.Resolution, zipEntry.FileName);
-                        }
-                        using (var entryReader = new StreamReader(zipEntry.OpenReader()))
-                        {
-                            while (!entryReader.EndOfStream)
-                            {
-                                var dataPoint = factory.Reader(_config, entryReader, _date, false);
-                                dataPoint.Symbol = symbol;
-                                yield return dataPoint;
-                            }
-                        }
+                        symbol = LeanData.ReadSymbolFromZipEntry(_config.Symbol, _config.Resolution, zipEntry.FileName);
+                    }
+
+                    using var entryReader = new StreamReader(zipEntry.OpenReader());
+
+                    while (!entryReader.EndOfStream)
+                    {
+                        var dataPoint = factory.Reader(_config, entryReader, _date, false);
+                        dataPoint.Symbol = symbol;
+                        yield return dataPoint;
                     }
                 }
             }

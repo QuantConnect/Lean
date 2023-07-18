@@ -82,25 +82,24 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                       $"for {entryData.Date:yyyy-MM-dd}");
 
 
-            using (var stream = new GZipStream(file.OpenRead(), CompressionMode.Decompress))
-            using (var reader = new StreamReader(stream))
+            using var stream = new GZipStream(file.OpenRead(), CompressionMode.Decompress);
+            using var reader = new StreamReader(stream);
+
+            var headerLine = reader.ReadLine();
+            if (headerLine == null)
             {
-                var headerLine = reader.ReadLine();
-                if (headerLine == null)
-                {
-                    throw new Exception($"CoinApiDataReader.ProcessCoinApiEntry(): CSV header not found for entry name: {entryData.Name}");
-                }
+                throw new Exception($"CoinApiDataReader.ProcessCoinApiEntry(): CSV header not found for entry name: {entryData.Name}");
+            }
 
-                var headerParts = headerLine.Split(';').ToList();
+            var headerParts = headerLine.Split(';').ToList();
 
-                var tickList = entryData.TickType == TickType.Trade
-                    ? ParseTradeData(entryData.Symbol, reader, headerParts)
-                    : ParseQuoteData(entryData.Symbol, reader, headerParts);
+            var tickList = entryData.TickType == TickType.Trade
+                ? ParseTradeData(entryData.Symbol, reader, headerParts)
+                : ParseQuoteData(entryData.Symbol, reader, headerParts);
 
-                foreach (var tick in tickList)
-                {
-                    yield return tick;
-                }
+            foreach (var tick in tickList)
+            {
+                yield return tick;
             }
         }
 

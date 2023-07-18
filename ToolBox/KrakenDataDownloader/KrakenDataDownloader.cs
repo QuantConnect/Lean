@@ -64,26 +64,74 @@ namespace QuantConnect.ToolBox.KrakenDownloader
             var url = string.Format(CultureInfo.InvariantCulture, UrlPrototype, symbol.Value, startUnixTime);
             List<List<string>> data;
 
-            using (var client = new WebClient())
+            using var client = new WebClient();
+
+            var rateGate = new RateGate(10, TimeSpan.FromMinutes(1)); // 10 calls per minute for Kraken API
+
+            rateGate.WaitToProceed();
+            var response = client.DownloadString(url);
+            dynamic result = JsonConvert.DeserializeObject<dynamic>(response);
+            if (result.error.Count != 0)
             {
-                var rateGate = new RateGate(10, TimeSpan.FromMinutes(1)); // 10 calls per minute for Kraken API
+                throw new Exception("Error in Kraken API: " + result.error[0]);
+            }
+
+            if (result.result.ContainsKey(symbol.Value))
+            {
+                data = result.result[symbol.Value].ToObject<List<List<string>>>();
+            }
+            else
+            {
+                throw new NotSupportedException("Asset pair was not found in the response. Make sure you use the correct model (XBTUSD -> XXBTZUSD).");
+            }
+
+            foreach (var i in data)
+            {
+                var time = Time.UnixTimeStampToDateTime(Parse.Double(i[2].Split('.')[0]));
+                if (time > endUtc)
+                {
+                    break;
+                }
+
+                var value = Parse.Decimal(i[0]);
+                var volume = Parse.Decimal(i[1]);
+
+                yield return new Tick
+                {
+                    Value = value,
+                    Time = time,
+                    DataType = MarketDataType.Tick,
+                    Symbol = symbol,
+                    TickType = TickType.Trade,
+                    Quantity = volume,
+                    Exchange = "kraken"
+                };
+            }
+
+            var last = Convert.ToInt64(result.result.last);
+            while (last < endUnixTime)
+            {
+                url = string.Format(UrlPrototype, symbol.Value, last);
 
                 rateGate.WaitToProceed();
-                var response = client.DownloadString(url);
-                dynamic result = JsonConvert.DeserializeObject<dynamic>(response);
-                if (result.error.Count != 0)
+                response = client.DownloadString(url);
+                result = JsonConvert.DeserializeObject<dynamic>(response);
+
+                var errorCount = 0;
+                while (result.error.Count != 0 && errorCount < 10)
+                {
+                    errorCount++;
+                    rateGate.WaitToProceed();
+                    response = client.DownloadString(url);
+                    result = JsonConvert.DeserializeObject<dynamic>(response);
+                }
+
+                if (result.error.Count != 0 && errorCount >= 10)
                 {
                     throw new Exception("Error in Kraken API: " + result.error[0]);
                 }
 
-                if (result.result.ContainsKey(symbol.Value))
-                {
-                    data = result.result[symbol.Value].ToObject<List<List<string>>>();
-                }
-                else
-                {
-                    throw new NotSupportedException("Asset pair was not found in the response. Make sure you use the correct model (XBTUSD -> XXBTZUSD).");
-                }
+                data = result.result[symbol.Value].ToObject<List<List<string>>>();
 
                 foreach (var i in data)
                 {
@@ -108,56 +156,7 @@ namespace QuantConnect.ToolBox.KrakenDownloader
                     };
                 }
 
-                var last = Convert.ToInt64(result.result.last);
-                while (last < endUnixTime)
-                {
-                    url = string.Format(UrlPrototype, symbol.Value, last);
-
-                    rateGate.WaitToProceed();
-                    response = client.DownloadString(url);
-                    result = JsonConvert.DeserializeObject<dynamic>(response);
-
-                    var errorCount = 0;
-                    while (result.error.Count != 0 && errorCount < 10)
-                    {
-                        errorCount++;
-                        rateGate.WaitToProceed();
-                        response = client.DownloadString(url);
-                        result = JsonConvert.DeserializeObject<dynamic>(response);
-                    }
-
-                    if (result.error.Count != 0 && errorCount >= 10)
-                    {
-                        throw new Exception("Error in Kraken API: " + result.error[0]);
-                    }
-
-                    data = result.result[symbol.Value].ToObject<List<List<string>>>();
-
-                    foreach (var i in data)
-                    {
-                        var time = Time.UnixTimeStampToDateTime(Parse.Double(i[2].Split('.')[0]));
-                        if (time > endUtc)
-                        {
-                            break;
-                        }
-
-                        var value = Parse.Decimal(i[0]);
-                        var volume = Parse.Decimal(i[1]);
-
-                        yield return new Tick
-                        {
-                            Value = value,
-                            Time = time,
-                            DataType = MarketDataType.Tick,
-                            Symbol = symbol,
-                            TickType = TickType.Trade,
-                            Quantity = volume,
-                            Exchange = "kraken"
-                        };
-                    }
-
-                    last = Convert.ToInt64(result.result.last);
-                }
+                last = Convert.ToInt64(result.result.last);
             }
         }
     }

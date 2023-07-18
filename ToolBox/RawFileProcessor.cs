@@ -57,19 +57,17 @@ namespace QuantConnect.ToolBox
         /// <returns>True if the operation completed without error, otherwise false</returns>
         public static bool Run(string name, IEnumerable<string> sources, IStreamProvider streamProvider, IStreamParser streamParser, params IDataProcessor[] processors)
         {
-            using (var processor = new RawFileProcessor(streamProvider, streamParser, processors) { Name = name })
+            using var processor = new RawFileProcessor(streamProvider, streamParser, processors) { Name = name };
+            foreach (var zip in sources)
             {
-                foreach (var zip in sources)
+                try
                 {
-                    try
-                    {
-                        processor.Process(zip);
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error(err);
-                        return false;
-                    }
+                    processor.Process(zip);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    return false;
                 }
             }
             return true;

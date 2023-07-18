@@ -56,28 +56,27 @@ namespace QuantConnect.ToolBox
             // Dispose off enumerator to free up resource
             var fileLines = File.ReadLines(file).ToList();
 
-            using (var writer = new StreamWriter(tmp))
-            {
-                var fetch = false;
-                var filter = $"{_eidl.Market},";
-                foreach (var line in fileLines)
-                {
-                    if (!line.StartsWithInvariant(filter, true))
-                    {
-                        writer.WriteLine(line);
-                    }
-                    else if (!fetch)
-                    {
-                        WriteData(writer);
-                        fetch = true;
-                    }
-                }
+            using var writer = new StreamWriter(tmp);
 
-                if (!fetch)
+            var fetch = false;
+            var filter = $"{_eidl.Market},";
+            foreach (var line in fileLines)
+            {
+                if (!line.StartsWithInvariant(filter, true))
                 {
-                    writer.WriteLine(Environment.NewLine);
-                    WriteData(writer);
+                    writer.WriteLine(line);
                 }
+                else if (!fetch)
+                {
+                    WriteData(writer);
+                    fetch = true;
+                }
+            }
+
+            if (!fetch)
+            {
+                writer.WriteLine(Environment.NewLine);
+                WriteData(writer);
             }
         }
 

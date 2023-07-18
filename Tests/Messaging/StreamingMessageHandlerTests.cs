@@ -44,22 +44,21 @@ namespace QuantConnect.Tests.Messaging
         [Test]
         public void MessageHandler_WillSend_MultipartMessage()
         {
-            using (var pullSocket = new PullSocket(">tcp://localhost:" + _port))
+            using var pullSocket = new PullSocket(">tcp://localhost:" + _port);
+
+            var logPacket = new LogPacket
             {
-                var logPacket = new LogPacket
-                {
-                    Message = "1"
-                };
+                Message = "1"
+            };
 
-                var tx = JsonConvert.SerializeObject(logPacket);
+            var tx = JsonConvert.SerializeObject(logPacket);
 
-                _messageHandler.Transmit(logPacket);
+            _messageHandler.Transmit(logPacket);
 
-                var message = pullSocket.ReceiveMultipartMessage();
+            var message = pullSocket.ReceiveMultipartMessage();
 
-                Assert.IsTrue(message.FrameCount == 1);
-                Assert.IsTrue(message[0].ConvertToString() == tx);
-            }
+            Assert.IsTrue(message.FrameCount == 1);
+            Assert.IsTrue(message[0].ConvertToString() == tx);
         }
 
         [Test]
@@ -86,37 +85,36 @@ namespace QuantConnect.Tests.Messaging
                     error
                 };
 
-            using (var pullSocket = new PullSocket(">tcp://localhost:" + _port))
+            using var pullSocket = new PullSocket(">tcp://localhost:" + _port);
+
+            var count = 0;
+            while (count < packetList.Count)
             {
-                var count = 0;
-                while (count < packetList.Count)
-                {
-                    _messageHandler.Send(packetList[count]);
+                _messageHandler.Send(packetList[count]);
 
-                    var message = pullSocket.ReceiveMultipartMessage();
+                var message = pullSocket.ReceiveMultipartMessage();
 
-                    var payload = message[0].ConvertToString();
-                    var packet = JsonConvert.DeserializeObject<Packet>(payload);
+                var payload = message[0].ConvertToString();
+                var packet = JsonConvert.DeserializeObject<Packet>(payload);
 
-                    Assert.IsTrue(message.FrameCount == 1);
+                Assert.IsTrue(message.FrameCount == 1);
 
-                    if (PacketType.Debug == packet.Type)
-                        Assert.IsTrue(payload == JsonConvert.SerializeObject(debug));
+                if (PacketType.Debug == packet.Type)
+                    Assert.IsTrue(payload == JsonConvert.SerializeObject(debug));
 
-                    if (PacketType.HandledError == packet.Type)
-                        Assert.IsTrue(payload == JsonConvert.SerializeObject(handled));
+                if (PacketType.HandledError == packet.Type)
+                    Assert.IsTrue(payload == JsonConvert.SerializeObject(handled));
 
-                    if (PacketType.BacktestResult == packet.Type)
-                        Assert.IsTrue(payload == JsonConvert.SerializeObject(backtest));
+                if (PacketType.BacktestResult == packet.Type)
+                    Assert.IsTrue(payload == JsonConvert.SerializeObject(backtest));
 
-                    if (PacketType.RuntimeError == packet.Type)
-                        Assert.IsTrue(payload == JsonConvert.SerializeObject(error));
+                if (PacketType.RuntimeError == packet.Type)
+                    Assert.IsTrue(payload == JsonConvert.SerializeObject(error));
 
-                    if (PacketType.Log == packet.Type)
-                        Assert.IsTrue(payload == JsonConvert.SerializeObject(log));
+                if (PacketType.Log == packet.Type)
+                    Assert.IsTrue(payload == JsonConvert.SerializeObject(log));
 
-                    count++;
-                }
+                count++;
             }
         }
 
@@ -125,37 +123,35 @@ namespace QuantConnect.Tests.Messaging
         {
             var backtest = new BacktestNodePacket();
 
-            using (var pullSocket = new PullSocket(">tcp://localhost:" + _port))
-            {
-                _messageHandler.SetAuthentication(backtest);
+            using var pullSocket = new PullSocket(">tcp://localhost:" + _port);
 
-                var message = pullSocket.ReceiveMultipartMessage();
+            _messageHandler.SetAuthentication(backtest);
 
-                var payload = message[0].ConvertToString();
-                var packet = JsonConvert.DeserializeObject<Packet>(payload);
+            var message = pullSocket.ReceiveMultipartMessage();
 
-                Assert.IsTrue(message.FrameCount == 1);
-                Assert.IsTrue(PacketType.BacktestNode == packet.Type);
-                Assert.IsTrue(payload == JsonConvert.SerializeObject(backtest));
-            }
+            var payload = message[0].ConvertToString();
+            var packet = JsonConvert.DeserializeObject<Packet>(payload);
+
+            Assert.IsTrue(message.FrameCount == 1);
+            Assert.IsTrue(PacketType.BacktestNode == packet.Type);
+            Assert.IsTrue(payload == JsonConvert.SerializeObject(backtest));
         }
 
         [Test]
         public void MessageHandler_WillSend_NewLiveJob_ToCorrectRoute()
         {
-            using (var pullSocket = new PullSocket(">tcp://localhost:" + _port))
-            {
-                _messageHandler.SetAuthentication(new LiveNodePacket());
+            using var pullSocket = new PullSocket(">tcp://localhost:" + _port);
 
-                var message = pullSocket.ReceiveMultipartMessage();
+            _messageHandler.SetAuthentication(new LiveNodePacket());
 
-                var payload = message[0].ConvertToString();
-                var packet = JsonConvert.DeserializeObject<Packet>(payload);
+            var message = pullSocket.ReceiveMultipartMessage();
 
-                Assert.IsTrue(message.FrameCount == 1);
-                Assert.IsTrue(PacketType.LiveNode == packet.Type);
-                Assert.IsTrue(payload == JsonConvert.SerializeObject(new LiveNodePacket()));
-            }
+            var payload = message[0].ConvertToString();
+            var packet = JsonConvert.DeserializeObject<Packet>(payload);
+
+            Assert.IsTrue(message.FrameCount == 1);
+            Assert.IsTrue(PacketType.LiveNode == packet.Type);
+            Assert.IsTrue(payload == JsonConvert.SerializeObject(new LiveNodePacket()));
         }
     }
 }

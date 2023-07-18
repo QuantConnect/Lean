@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -115,20 +115,16 @@ namespace QuantConnect.Algorithm.CSharp
                 File.Delete(path);
                 if (_currentSelection.Count == 0)
                 {
-                    using (StreamWriter constituentsUniverseFile = new StreamWriter(path, append:true))
-                    {
-                        constituentsUniverseFile.WriteLine(
-                            $"{QuantConnect.Symbol.None.Value},{QuantConnect.Symbol.None.ID.ToString()}");
-                    }
+                    using StreamWriter constituentsUniverseFile = new StreamWriter(path, append: true);
+                    constituentsUniverseFile.WriteLine(
+                        $"{QuantConnect.Symbol.None.Value},{QuantConnect.Symbol.None.ID.ToString()}");
                 }
                 else
                 {
                     foreach (var symbol in _currentSelection)
                     {
-                        using (StreamWriter constituentsUniverseFile = new StreamWriter(path, append: true))
-                        {
-                            constituentsUniverseFile.WriteLine($"{symbol.Value},{symbol.ID.ToString()}");
-                        }
+                        using StreamWriter constituentsUniverseFile = new StreamWriter(path, append: true);
+                        constituentsUniverseFile.WriteLine($"{symbol.Value},{symbol.ID.ToString()}");
                     }
                 }
             }

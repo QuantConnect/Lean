@@ -132,25 +132,24 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                           $"{date.Year.ToStringInvariant("D4")}/{(date.Month - 1).ToStringInvariant("D2")}/" +
                           $"{date.Day.ToStringInvariant("D2")}/{hour.ToStringInvariant("D2")}h_ticks.bi5";
 
-                using (var client = new WebClient())
+                using var client = new WebClient();
+
+                byte[] bytes;
+                try
                 {
-                    byte[] bytes;
-                    try
+                    bytes = client.DownloadData(url);
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+                    yield break;
+                }
+                if (bytes != null && bytes.Length > 0)
+                {
+                    var ticks = AppendTicksToList(symbol, bytes, date, timeOffset, pointValue);
+                    foreach (var tick in ticks)
                     {
-                        bytes = client.DownloadData(url);
-                    }
-                    catch (Exception exception)
-                    {
-                        Log.Error(exception);
-                        yield break;
-                    }
-                    if (bytes != null && bytes.Length > 0)
-                    {
-                        var ticks = AppendTicksToList(symbol, bytes, date, timeOffset, pointValue);
-                        foreach (var tick in ticks)
-                        {
-                            yield return tick;
-                        }
+                        yield return tick;
                     }
                 }
             }

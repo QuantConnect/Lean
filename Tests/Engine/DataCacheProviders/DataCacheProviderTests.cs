@@ -46,11 +46,9 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
         [TestCase("../../../Data/equity/usa/daily/aapl.zip")]
         public void CanFetchDataThatExists(string dataPath)
         {
-            using(var stream = DataCacheProvider.Fetch(dataPath))
-            using (var reader = new StreamReader(stream))
-            {
-                Assert.IsFalse(string.IsNullOrEmpty(reader.ReadLine()));
-            }
+            using var stream = DataCacheProvider.Fetch(dataPath);
+            using var reader = new StreamReader(stream);
+            Assert.IsFalse(string.IsNullOrEmpty(reader.ReadLine()));
         }
 
         [Test]

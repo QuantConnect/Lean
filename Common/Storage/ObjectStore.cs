@@ -172,14 +172,10 @@ namespace QuantConnect.Storage
         public T ReadXml<T>(string path, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
-
             var xml = Read(path, encoding);
-
             var serializer = new XmlSerializer(typeof(T));
-            using (var reader = new StringReader(xml))
-            {
-                return (T)serializer.Deserialize(reader);
-            }
+            using var reader = new StringReader(xml);
+            return (T)serializer.Deserialize(reader);
         }
 
         /// <summary>
@@ -254,15 +250,11 @@ namespace QuantConnect.Storage
         public bool SaveXml<T>(string path, T obj, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
-
-            using (var writer = new StringWriter())
-            {
-                var serializer = new XmlSerializer(typeof(T));
-                serializer.Serialize(writer, obj);
-
-                var xml = writer.ToString();
-                return SaveString(path, xml, encoding);
-            }
+            using var writer = new StringWriter();
+            var serializer = new XmlSerializer(typeof(T));
+            serializer.Serialize(writer, obj);
+            var xml = writer.ToString();
+            return SaveString(path, xml, encoding);
         }
 
         /// <summary>Returns an enumerator that iterates through the collection.</summary>

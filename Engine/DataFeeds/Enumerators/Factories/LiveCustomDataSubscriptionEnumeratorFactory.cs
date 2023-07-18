@@ -135,46 +135,45 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
         private IEnumerator<BaseData> EnumerateDataSourceReader(SubscriptionDataConfig config, IDataProvider dataProvider, Ref<DateTime> localFrontier, SubscriptionDataSource source, DateTime localDate, BaseData baseDataInstance)
         {
-            using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
+            using var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
+
+            var newLocalFrontier = localFrontier.Value;
+            var dataSourceReader = GetSubscriptionDataSourceReader(source, dataCacheProvider, config, localDate, baseDataInstance, dataProvider);
+            foreach (var datum in dataSourceReader.Read(source))
             {
-                var newLocalFrontier = localFrontier.Value;
-                var dataSourceReader = GetSubscriptionDataSourceReader(source, dataCacheProvider, config, localDate, baseDataInstance, dataProvider);
-                foreach (var datum in dataSourceReader.Read(source))
+                // always skip past all times emitted on the previous invocation of this enumerator
+                // this allows data at the same time from the same refresh of the source while excluding
+                // data from different refreshes of the source
+                if (datum != null && datum.EndTime > localFrontier.Value)
                 {
-                    // always skip past all times emitted on the previous invocation of this enumerator
-                    // this allows data at the same time from the same refresh of the source while excluding
-                    // data from different refreshes of the source
-                    if (datum != null && datum.EndTime > localFrontier.Value)
-                    {
-                        yield return datum;
-                    }
-                    else if (!SourceRequiresFastForward(source))
-                    {
-                        // if the 'source' is Rest and there is no new value,
-                        // we *break*, else we will be caught in a tight loop
-                        // because Rest source never ends!
-                        // edit: we 'break' vs 'return null' so that the source is refreshed
-                        // allowing date changes to impact the source value
-                        // note it will respect 'minimumTimeBetweenCalls'
-                        break;
-                    }
-
-                    if (datum != null)
-                    {
-                        newLocalFrontier = Time.Max(datum.EndTime, newLocalFrontier);
-
-                        if (!SourceRequiresFastForward(source))
-                        {
-                            // if the 'source' is Rest we need to update the localFrontier here
-                            // because Rest source never ends!
-                            // Should be advance frontier for all source types here?
-                            localFrontier.Value = newLocalFrontier;
-                        }
-                    }
+                    yield return datum;
+                }
+                else if (!SourceRequiresFastForward(source))
+                {
+                    // if the 'source' is Rest and there is no new value,
+                    // we *break*, else we will be caught in a tight loop
+                    // because Rest source never ends!
+                    // edit: we 'break' vs 'return null' so that the source is refreshed
+                    // allowing date changes to impact the source value
+                    // note it will respect 'minimumTimeBetweenCalls'
+                    break;
                 }
 
-                localFrontier.Value = newLocalFrontier;
+                if (datum != null)
+                {
+                    newLocalFrontier = Time.Max(datum.EndTime, newLocalFrontier);
+
+                    if (!SourceRequiresFastForward(source))
+                    {
+                        // if the 'source' is Rest we need to update the localFrontier here
+                        // because Rest source never ends!
+                        // Should be advance frontier for all source types here?
+                        localFrontier.Value = newLocalFrontier;
+                    }
+                }
             }
+
+            localFrontier.Value = newLocalFrontier;
         }
 
         /// <summary>

@@ -64,54 +64,53 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public override IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
             // handles zip or text files
-            using (var reader = CreateStreamReader(source))
+            using var reader = CreateStreamReader(source);
+
+            // if the reader doesn't have data then we're done with this subscription
+            if (reader == null || reader.EndOfStream)
             {
-                // if the reader doesn't have data then we're done with this subscription
-                if (reader == null || reader.EndOfStream)
+                OnInvalidSource(source, new Exception($"The reader was empty for source: ${source.Source}"));
+                yield break;
+            }
+
+            // while the reader has data
+            while (!reader.EndOfStream)
+            {
+                // read a line and pass it to the base data factory
+                var line = reader.ReadLine();
+                if (line.IsNullOrEmpty())
                 {
-                    OnInvalidSource(source, new Exception($"The reader was empty for source: ${source.Source}"));
+                    continue;
+                }
+
+                SubscriptionDataSource dataSource;
+                try
+                {
+                    dataSource = _factory.GetSourceForAnIndex(_config, _date, line, IsLiveMode);
+                }
+                catch
+                {
+                    OnInvalidSource(source, new Exception("Factory.GetSourceForAnIndex() failed to return a valid source"));
                     yield break;
                 }
 
-                // while the reader has data
-                while (!reader.EndOfStream)
+                if (dataSource != null)
                 {
-                    // read a line and pass it to the base data factory
-                    var line = reader.ReadLine();
-                    if (line.IsNullOrEmpty())
-                    {
-                        continue;
-                    }
+                    var dataReader = SubscriptionDataSourceReader.ForSource(
+                        dataSource,
+                        DataCacheProvider,
+                        _config,
+                        _date,
+                        IsLiveMode,
+                        _factory,
+                        _dataProvider);
 
-                    SubscriptionDataSource dataSource;
-                    try
+                    var enumerator = dataReader.Read(dataSource).GetEnumerator();
+                    while (enumerator.MoveNext())
                     {
-                        dataSource = _factory.GetSourceForAnIndex(_config, _date, line, IsLiveMode);
+                        yield return enumerator.Current;
                     }
-                    catch
-                    {
-                        OnInvalidSource(source, new Exception("Factory.GetSourceForAnIndex() failed to return a valid source"));
-                        yield break;
-                    }
-
-                    if (dataSource != null)
-                    {
-                        var dataReader = SubscriptionDataSourceReader.ForSource(
-                            dataSource,
-                            DataCacheProvider,
-                            _config,
-                            _date,
-                            IsLiveMode,
-                            _factory,
-                            _dataProvider);
-
-                        var enumerator = dataReader.Read(dataSource).GetEnumerator();
-                        while (enumerator.MoveNext())
-                        {
-                            yield return enumerator.Current;
-                        }
-                        enumerator.DisposeSafely();
-                    }
+                    enumerator.DisposeSafely();
                 }
             }
         }

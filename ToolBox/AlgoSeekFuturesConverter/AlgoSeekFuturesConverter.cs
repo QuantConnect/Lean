@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -198,22 +198,20 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 WorkingDirectory = _remote.FullName
             };
 
-            using (var process = new Process())
+            using var process = new Process();
+
+            process.StartInfo = processStartInfo;
+            process.Start();
+
+            while (!process.StandardOutput.EndOfStream)
             {
-
-                process.StartInfo = processStartInfo;
-                process.Start();
-
-                while (!process.StandardOutput.EndOfStream)
+                var line = process.StandardOutput.ReadLine();
+                if (line != null)
                 {
-                    var line = process.StandardOutput.ReadLine();
-                    if (line != null)
-                    {
-                        files.Add(new FileInfo(Path.Combine(_remote.FullName, line)));
-                    }
+                    files.Add(new FileInfo(Path.Combine(_remote.FullName, line)));
                 }
-                process.WaitForExit();
             }
+            process.WaitForExit();
 
             return files;
 

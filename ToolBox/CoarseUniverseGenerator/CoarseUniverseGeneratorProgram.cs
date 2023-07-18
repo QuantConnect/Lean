@@ -323,26 +323,22 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         private static List<TradeBar> ParseDailyFile(FileInfo dailyFile)
         {
             var scaleFactor = 1 / 10000m;
-
             var output = new List<TradeBar>();
-            using (var fileStream = dailyFile.OpenRead())
-            using (var stream = Compression.UnzipStreamToStreamReader(fileStream))
+            using var fileStream = dailyFile.OpenRead();
+            using var stream = Compression.UnzipStreamToStreamReader(fileStream);
+            while (!stream.EndOfStream)
             {
-                while (!stream.EndOfStream)
+                var tradeBar = new TradeBar
                 {
-                    var tradeBar = new TradeBar
-                    {
-                        Time = stream.GetDateTime(),
-                        Open = stream.GetDecimal() * scaleFactor,
-                        High = stream.GetDecimal() * scaleFactor,
-                        Low = stream.GetDecimal() * scaleFactor,
-                        Close = stream.GetDecimal() * scaleFactor,
-                        Volume = stream.GetDecimal()
-                    };
-                    output.Add(tradeBar);
-                }
+                    Time = stream.GetDateTime(),
+                    Open = stream.GetDecimal() * scaleFactor,
+                    High = stream.GetDecimal() * scaleFactor,
+                    Low = stream.GetDecimal() * scaleFactor,
+                    Close = stream.GetDecimal() * scaleFactor,
+                    Volume = stream.GetDecimal()
+                };
+                output.Add(tradeBar);
             }
-
             return output;
         }
 

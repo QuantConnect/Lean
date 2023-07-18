@@ -61,24 +61,22 @@ namespace QuantConnect
             try
             {
                 //Create our output
-                using (var stream = new ZipOutputStream(File.Create(zipPath)))
+                using var stream = new ZipOutputStream(File.Create(zipPath));
+                stream.SetLevel(0);
+                foreach (var filename in filenamesAndData.Keys)
                 {
-                    stream.SetLevel(0);
-                    foreach (var filename in filenamesAndData.Keys)
-                    {
-                        //Create the space in the zip file:
-                        var entry = new ZipEntry(filename);
-                        var data = filenamesAndData[filename];
-                        var bytes = Encoding.Default.GetBytes(data);
-                        stream.PutNextEntry(entry);
-                        stream.Write(bytes, 0, bytes.Length);
-                        stream.CloseEntry();
-                    } // End For Each File.
+                    //Create the space in the zip file:
+                    var entry = new ZipEntry(filename);
+                    var data = filenamesAndData[filename];
+                    var bytes = Encoding.Default.GetBytes(data);
+                    stream.PutNextEntry(entry);
+                    stream.Write(bytes, 0, bytes.Length);
+                    stream.CloseEntry();
+                } // End For Each File.
 
-                    //Close stream:
-                    stream.Finish();
-                    stream.Close();
-                } // End Using
+                //Close stream:
+                stream.Finish();
+                stream.Close();
             }
             catch (Exception err)
             {
@@ -102,31 +100,28 @@ namespace QuantConnect
             try
             {
                 //Create our output
-                using (var stream = new ZipOutputStream(File.Create(zipPath)))
+                using var stream = new ZipOutputStream(File.Create(zipPath));
+                foreach (var file in filenamesAndData)
                 {
-                    foreach (var file in filenamesAndData)
+                    //Create the space in the zip file:
+                    var entry = new ZipEntry(file.Key);
+
+                    //Get a Byte[] of the file data:
+                    stream.PutNextEntry(entry);
+
+                    using var ms = new MemoryStream(file.Value);
+                    int sourceBytes;
+                    do
                     {
-                        //Create the space in the zip file:
-                        var entry = new ZipEntry(file.Key);
-                        //Get a Byte[] of the file data:
-                        stream.PutNextEntry(entry);
+                        sourceBytes = ms.Read(buffer, 0, buffer.Length);
+                        stream.Write(buffer, 0, sourceBytes);
+                    }
+                    while (sourceBytes > 0);
+                } // End For Each File.
 
-                        using (var ms = new MemoryStream(file.Value))
-                        {
-                            int sourceBytes;
-                            do
-                            {
-                                sourceBytes = ms.Read(buffer, 0, buffer.Length);
-                                stream.Write(buffer, 0, sourceBytes);
-                            }
-                            while (sourceBytes > 0);
-                        }
-                    } // End For Each File.
-
-                    //Close stream:
-                    stream.Finish();
-                    stream.Close();
-                } // End Using
+                //Close stream:
+                stream.Finish();
+                stream.Close();
             }
             catch (Exception err)
             {
@@ -147,15 +142,13 @@ namespace QuantConnect
         {
             try
             {
-                using (var stream = new ZipOutputStream(File.Create(zipPath)))
-                using (var writer = new StreamWriter(stream))
+                using var stream = new ZipOutputStream(File.Create(zipPath));
+                using var writer = new StreamWriter(stream);
+                var entry = new ZipEntry(zipEntry);
+                stream.PutNextEntry(entry);
+                foreach (var line in lines)
                 {
-                    var entry = new ZipEntry(zipEntry);
-                    stream.PutNextEntry(entry);
-                    foreach (var line in lines)
-                    {
-                        writer.WriteLine(line);
-                    }
+                    writer.WriteLine(line);
                 }
                 return true;
             }
@@ -178,17 +171,14 @@ namespace QuantConnect
         {
             try
             {
-                using (var zip = File.Exists(path) ? ZipFile.Read(path) : new ZipFile(path))
+                using var zip = File.Exists(path) ? ZipFile.Read(path) : new ZipFile(path);
+                if (zip.ContainsEntry(entry) && overrideEntry)
                 {
-                    if (zip.ContainsEntry(entry) && overrideEntry)
-                    {
-                        zip.RemoveEntry(entry);
-                    }
-
-                    zip.AddEntry(entry, data);
-                    zip.UseZip64WhenSaving = Zip64Option.Always;
-                    zip.Save();
+                    zip.RemoveEntry(entry);
                 }
+                zip.AddEntry(entry, data);
+                zip.UseZip64WhenSaving = Zip64Option.Always;
+                zip.Save();
             }
             catch (Exception err)
             {
@@ -210,17 +200,14 @@ namespace QuantConnect
         {
             try
             {
-                using (var zip = File.Exists(path) ? ZipFile.Read(path) : new ZipFile(path))
+                using var zip = File.Exists(path) ? ZipFile.Read(path) : new ZipFile(path);
+                if (overrideEntry && zip.ContainsEntry(entry))
                 {
-                    if (overrideEntry && zip.ContainsEntry(entry))
-                    {
-                        zip.RemoveEntry(entry);
-                    }
-
-                    zip.AddEntry(entry, data);
-                    zip.UseZip64WhenSaving = Zip64Option.Always;
-                    zip.Save();
+                    zip.RemoveEntry(entry);
                 }
+                zip.AddEntry(entry, data);
+                zip.UseZip64WhenSaving = Zip64Option.Always;
+                zip.Save();
             }
             catch (Exception err)
             {
@@ -243,33 +230,29 @@ namespace QuantConnect
 
             try
             {
-                using (var ms = new MemoryStream(zipData))
+                using var ms = new MemoryStream(zipData);
+                //Read out the zipped data into a string, save in array:
+                using var zipStream = new ZipInputStream(ms);
+                while (true)
                 {
-                    //Read out the zipped data into a string, save in array:
-                    using (var zipStream = new ZipInputStream(ms))
+                    //Get the next file
+                    var entry = zipStream.GetNextEntry();
+
+                    if (entry != null)
                     {
-                        while (true)
-                        {
-                            //Get the next file
-                            var entry = zipStream.GetNextEntry();
+                        //Read the file into buffer:
+                        var buffer = new byte[entry.Size];
+                        zipStream.Read(buffer, 0, (int)entry.Size);
 
-                            if (entry != null)
-                            {
-                                //Read the file into buffer:
-                                var buffer = new byte[entry.Size];
-                                zipStream.Read(buffer, 0, (int)entry.Size);
-
-                                //Save into array:
-                                var str = (encoding ?? Encoding.ASCII).GetString(buffer);
-                                data.Add(entry.Name, str);
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                    } // End Zip Stream.
-                } // End Using Memory Stream
+                        //Save into array:
+                        var str = (encoding ?? Encoding.ASCII).GetString(buffer);
+                        data.Add(entry.Name, str);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
 
             }
             catch (Exception err)
@@ -287,19 +270,15 @@ namespace QuantConnect
         /// <returns>The zipped file as a byte array</returns>
         public static byte[] ZipBytes(byte[] bytes, string zipEntryName)
         {
-            using (var memoryStream = new MemoryStream())
+            using var memoryStream = new MemoryStream();
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
             {
-                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
-                {
-                    var entry = archive.CreateEntry(zipEntryName);
-                    using (var entryStream = entry.Open())
-                    {
-                        entryStream.Write(bytes, 0, bytes.Length);
-                    }
-                }
-                // 'ToArray' after disposing of 'ZipArchive' since it finishes writing all the data
-                return memoryStream.ToArray();
+                var entry = archive.CreateEntry(zipEntryName);
+                using var entryStream = entry.Open();
+                entryStream.Write(bytes, 0, bytes.Length);
             }
+            // 'ToArray' after disposing of 'ZipArchive' since it finishes writing all the data
+            return memoryStream.ToArray();
         }
 
         /// <summary>
@@ -312,12 +291,10 @@ namespace QuantConnect
             // Use a 4K buffer. Any larger is a waste.
             var dataBuffer = new byte[4096];
             var newFileOutput = Path.Combine(targetDirectory, Path.GetFileNameWithoutExtension(gzipFileName));
-            using (Stream fileStream = new FileStream(gzipFileName, FileMode.Open, FileAccess.Read))
-            using (var gzipStream = new GZipInputStream(fileStream))
-            using (var fileOutput = File.Create(newFileOutput))
-            {
-                StreamUtils.Copy(gzipStream, fileOutput, dataBuffer);
-            }
+            using FileStream fileStream = new (gzipFileName, FileMode.Open, FileAccess.Read);
+            using GZipInputStream gzipStream = new (fileStream);
+            using var fileOutput = File.Create(newFileOutput);
+            StreamUtils.Copy(gzipStream, fileOutput, dataBuffer);
             return newFileOutput;
         }
 
@@ -352,17 +329,14 @@ namespace QuantConnect
                     //Zip the text file.
                     var entry = new ZipEntry(zipEntryName);
                     stream.PutNextEntry(entry);
-
-                    using (var fs = File.OpenRead(source))
+                    using var fs = File.OpenRead(source);
+                    int sourceBytes;
+                    do
                     {
-                        int sourceBytes;
-                        do
-                        {
-                            sourceBytes = fs.Read(buffer, 0, buffer.Length);
-                            stream.Write(buffer, 0, sourceBytes);
-                        }
-                        while (sourceBytes > 0);
+                        sourceBytes = fs.Read(buffer, 0, buffer.Length);
+                        stream.Write(buffer, 0, sourceBytes);
                     }
+                    while (sourceBytes > 0);
                 }
 
                 //Delete the old text file:
@@ -396,22 +370,18 @@ namespace QuantConnect
         /// <param name="zipEntry">Entry to save the data as</param>
         public static void Zip(string data, string zipPath, string zipEntry)
         {
-            using (var stream = new ZipOutputStream(File.Create(zipPath)))
+            using var stream = new ZipOutputStream(File.Create(zipPath));
+            var entry = new ZipEntry(zipEntry);
+            stream.PutNextEntry(entry);
+            var buffer = new byte[4096];
+            using var dataReader = new MemoryStream(Encoding.Default.GetBytes(data));
+            int sourceBytes;
+            do
             {
-                var entry = new ZipEntry(zipEntry);
-                stream.PutNextEntry(entry);
-                var buffer = new byte[4096];
-                using (var dataReader = new MemoryStream(Encoding.Default.GetBytes(data)))
-                {
-                    int sourceBytes;
-                    do
-                    {
-                        sourceBytes = dataReader.Read(buffer, 0, buffer.Length);
-                        stream.Write(buffer, 0, sourceBytes);
-                    }
-                    while (sourceBytes > 0);
-                }
+                sourceBytes = dataReader.Read(buffer, 0, buffer.Length);
+                stream.Write(buffer, 0, sourceBytes);
             }
+            while (sourceBytes > 0);
         }
 
         /// <summary>
@@ -500,24 +470,19 @@ namespace QuantConnect
         {
             try
             {
-                using (var zipStream = new ZipOutputStream(File.Create(destination)))
+                using var zipStream = new ZipOutputStream(File.Create(destination));
+                var buffer = new byte[4096];
+                foreach (var file in files)
                 {
-                    var buffer = new byte[4096];
-                    foreach (var file in files)
+                    if (!File.Exists(file))
                     {
-                        if (!File.Exists(file))
-                        {
-                            Log.Trace($"ZipFiles(): File does not exist: {file}");
-                            continue;
-                        }
-
-                        var entry = new ZipEntry(Path.GetFileName(file));
-                        zipStream.PutNextEntry(entry);
-                        using (var fstream = File.OpenRead(file))
-                        {
-                            StreamUtils.Copy(fstream, zipStream, buffer);
-                        }
+                        Log.Trace($"ZipFiles(): File does not exist: {file}");
+                        continue;
                     }
+                    var entry = new ZipEntry(Path.GetFileName(file));
+                    zipStream.PutNextEntry(entry);
+                    using var fstream = File.OpenRead(file);
+                    StreamUtils.Copy(fstream, zipStream, buffer);
                 }
             }
             catch (Exception err)
@@ -624,12 +589,10 @@ namespace QuantConnect
         /// a key of the zip entry name and the value of the zip entry's file lines</returns>
         public static IEnumerable<KeyValuePair<string, List<string>>> Unzip(Stream stream)
         {
-            using (var zip = ZipFile.Read(stream))
+            using var zip = ZipFile.Read(stream);
+            foreach (var entry in zip)
             {
-                foreach (var entry in zip)
-                {
-                    yield return new KeyValuePair<string, List<string>>(entry.FileName, ReadZipEntry(entry));
-                }
+                yield return new KeyValuePair<string, List<string>>(entry.FileName, ReadZipEntry(entry));
             }
         }
 
@@ -659,16 +622,14 @@ namespace QuantConnect
 
         private static IEnumerable<KeyValuePair<string, List<string>>> ReadLinesImpl(string filename, bool firstEntryOnly = false)
         {
-            using (var zip = ZipFile.Read(filename))
+            using var zip = ZipFile.Read(filename);
+            for (var i = 0; i < zip.Count; i++)
             {
-                for (var i = 0; i < zip.Count; i++)
+                var entry = zip[i];
+                yield return new KeyValuePair<string, List<string>>(entry.FileName, ReadZipEntry(entry));
+                if (firstEntryOnly)
                 {
-                    var entry = zip[i];
-                    yield return new KeyValuePair<string, List<string>>(entry.FileName, ReadZipEntry(entry));
-                    if (firstEntryOnly)
-                    {
-                        yield break;
-                    }
+                    yield break;
                 }
             }
         }
@@ -823,10 +784,8 @@ namespace QuantConnect
                     files.Add(fullZipToPath);
 
                     //Copy the data in buffer chunks
-                    using (var streamWriter = File.Create(fullZipToPath))
-                    {
-                        StreamUtils.Copy(zipStream, streamWriter, buffer);
-                    }
+                    using var streamWriter = File.Create(fullZipToPath);
+                    StreamUtils.Copy(zipStream, streamWriter, buffer);
                 }
             }
             catch
@@ -884,19 +843,14 @@ namespace QuantConnect
         /// <returns>An enumerable containing each tar entry and it's contents</returns>
         public static IEnumerable<KeyValuePair<string, byte[]>> UnTar(Stream stream, bool isTarGz)
         {
-            using (var tar = new TarInputStream(isTarGz ? (Stream)new GZipInputStream(stream) : stream))
+            using var tar = new TarInputStream(isTarGz ? (Stream)new GZipInputStream(stream) : stream);
+            TarEntry entry;
+            while ((entry = tar.GetNextEntry()) != null)
             {
-                TarEntry entry;
-                while ((entry = tar.GetNextEntry()) != null)
-                {
-                    if (entry.IsDirectory) continue;
-
-                    using (var output = new MemoryStream())
-                    {
-                        tar.CopyEntryContents(output);
-                        yield return new KeyValuePair<string, byte[]>(entry.Name, output.ToArray());
-                    }
-                }
+                if (entry.IsDirectory) continue;
+                using var output = new MemoryStream();
+                tar.CopyEntryContents(output);
+                yield return new KeyValuePair<string, byte[]>(entry.Name, output.ToArray());
             }
         }
 
@@ -910,29 +864,25 @@ namespace QuantConnect
             //This is a tar.gz file.
             var gzip = (source.Substring(Math.Max(0, source.Length - 6)) == "tar.gz");
 
-            using (var file = File.OpenRead(source))
+            using var file = File.OpenRead(source);
+
+            var tarIn = new TarInputStream(file);
+
+            if (gzip)
             {
-                var tarIn = new TarInputStream(file);
-
-                if (gzip)
-                {
-                    var gzipStream = new GZipInputStream(file);
-                    tarIn = new TarInputStream(gzipStream);
-                }
-
-                TarEntry tarEntry;
-                while ((tarEntry = tarIn.GetNextEntry()) != null)
-                {
-                    if (tarEntry.IsDirectory) continue;
-
-                    using (var stream = new MemoryStream())
-                    {
-                        tarIn.CopyEntryContents(stream);
-                        yield return new KeyValuePair<string, byte[]>(tarEntry.Name, stream.ToArray());
-                    }
-                }
-                tarIn.Close();
+                var gzipStream = new GZipInputStream(file);
+                tarIn = new TarInputStream(gzipStream);
             }
+
+            TarEntry tarEntry;
+            while ((tarEntry = tarIn.GetNextEntry()) != null)
+            {
+                if (tarEntry.IsDirectory) continue;
+                using var stream = new MemoryStream();
+                tarIn.CopyEntryContents(stream);
+                yield return new KeyValuePair<string, byte[]>(tarEntry.Name, stream.ToArray());
+            }
+            tarIn.Close();
         }
 
         /// <summary>
@@ -942,10 +892,8 @@ namespace QuantConnect
         /// <returns>true if archive tests ok; false otherwise.</returns>
         public static bool ValidateZip(string path)
         {
-            using (var zip = new ICSharpCode.SharpZipLib.Zip.ZipFile(path))
-            {
-                return zip.TestArchive(true);
-            }
+            using var zip = new ICSharpCode.SharpZipLib.Zip.ZipFile(path);
+            return zip.TestArchive(true);
         }
 
         /// <summary>
@@ -955,10 +903,8 @@ namespace QuantConnect
         /// <returns>An IEnumerable of entry file names</returns>
         public static IEnumerable<string> GetZipEntryFileNames(string zipFileName)
         {
-            using (var zip = ZipFile.Read(zipFileName))
-            {
-                return zip.EntryFileNames;
-            }
+            using var zip = ZipFile.Read(zipFileName);
+            return zip.EntryFileNames;
         }
 
         /// <summary>
@@ -968,10 +914,8 @@ namespace QuantConnect
         /// <returns>IEnumerable of entry file names</returns>
         public static IEnumerable<string> GetZipEntryFileNames(Stream zipFileStream)
         {
-            using (var zip = ZipFile.Read(zipFileStream))
-            {
-                return zip.EntryFileNames;
-            }
+            using var zip = ZipFile.Read(zipFileStream);
+            return zip.EntryFileNames;
         }
 
         /// <summary>

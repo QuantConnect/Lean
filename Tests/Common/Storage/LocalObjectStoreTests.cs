@@ -70,32 +70,31 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void ExistingFilesLoadedCorretly()
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
-            {
-                var dir = Path.Combine(TestStorageRoot, "location-pepe", "test");
-                Directory.CreateDirectory(dir);
+            using var store = new ObjectStore(new LocalObjectStore());
 
-                var filename = "Jose";
-                var filename2 = "rootFile";
-                File.WriteAllText(Path.Combine(dir, filename), "pinocho the movie");
-                File.WriteAllText(Path.Combine(TestStorageRoot, filename2), "jiji");
+            var dir = Path.Combine(TestStorageRoot, "location-pepe", "test");
+            Directory.CreateDirectory(dir);
 
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            var filename = "Jose";
+            var filename2 = "rootFile";
+            File.WriteAllText(Path.Combine(dir, filename), "pinocho the movie");
+            File.WriteAllText(Path.Combine(TestStorageRoot, filename2), "jiji");
 
-                var storeContent = store.ToList();
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
 
-                Assert.IsTrue(storeContent.All(kvp => kvp.Value != null));
+            var storeContent = store.ToList();
 
-                Assert.AreEqual(2, storeContent.Count);
-                Assert.AreEqual("location-pepe/test/Jose", storeContent.Single(s => s.Key.Contains("location")).Key.Replace('\\', '/'));
-                Assert.AreEqual("rootFile", storeContent.Single(s => s.Key.Contains("rootFile")).Key);
+            Assert.IsTrue(storeContent.All(kvp => kvp.Value != null));
 
-                Assert.IsTrue(File.Exists(store.GetFilePath("location-pepe/test/Jose")));
-                Assert.IsTrue(File.Exists(store.GetFilePath("rootFile")));
+            Assert.AreEqual(2, storeContent.Count);
+            Assert.AreEqual("location-pepe/test/Jose", storeContent.Single(s => s.Key.Contains("location")).Key.Replace('\\', '/'));
+            Assert.AreEqual("rootFile", storeContent.Single(s => s.Key.Contains("rootFile")).Key);
 
-                Assert.IsTrue(store.Delete("location-pepe/test/Jose"));
-                Assert.IsTrue(store.Delete("rootFile"));
-            }
+            Assert.IsTrue(File.Exists(store.GetFilePath("location-pepe/test/Jose")));
+            Assert.IsTrue(File.Exists(store.GetFilePath("rootFile")));
+
+            Assert.IsTrue(store.Delete("location-pepe/test/Jose"));
+            Assert.IsTrue(store.Delete("rootFile"));
         }
 
         [TestCase(FileAccess.Read, true)]
@@ -105,6 +104,7 @@ namespace QuantConnect.Tests.Common.Storage
         public void GetFilePathPermissions(FileAccess permissions, bool shouldThrow)
         {
             using var store = new TestLocalObjectStore();
+
             store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
 
             if (shouldThrow)
@@ -179,30 +179,25 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("..\\prefix/")]
         public void InvalidCustomPathsStore(string path)
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
-            {
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
-                Assert.AreEqual(0, store.Count());
-
-                Assert.Throws<ArgumentException>(() => store.SaveString($"{path}ILove", "Pizza"));
-            }
+            using var store = new ObjectStore(new LocalObjectStore());
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            Assert.AreEqual(0, store.Count());
+            Assert.Throws<ArgumentException>(() => store.SaveString($"{path}ILove", "Pizza"));
         }
 
         [Test]
         public void ValidPaths()
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
-            {
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            using var store = new ObjectStore(new LocalObjectStore());
 
-                store.SaveString("jose-something/pepe/ILove", "Pizza");
-                Assert.AreEqual(1, store.Count());
-                Assert.AreEqual(1, Directory.EnumerateFiles(Path.Combine(TestStorageRoot, "jose-something", "pepe")).Count());
-
-                store.Delete("jose-something/pepe/ILove");
-                Assert.AreEqual(0, store.Count());
-                Assert.AreEqual(0, Directory.EnumerateFiles(TestStorageRoot, "*", SearchOption.AllDirectories).Count());
-            }
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            store.SaveString("jose-something/pepe/ILove", "Pizza");
+            Assert.AreEqual(1, store.Count());
+            Assert.AreEqual(1, Directory.EnumerateFiles(Path.Combine(TestStorageRoot, "jose-something", "pepe")).Count());
+            
+            store.Delete("jose-something/pepe/ILove");
+            Assert.AreEqual(0, store.Count());
+            Assert.AreEqual(0, Directory.EnumerateFiles(TestStorageRoot, "*", SearchOption.AllDirectories).Count());
         }
 
         [TestCase("prefix/")]
@@ -220,29 +215,27 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("./a/su-p_er\\pr x=")]
         public void CustomPrefixStore(string prefix)
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using var store = new ObjectStore(new LocalObjectStore());
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            Assert.AreEqual(0, store.Count());
+
+            var key = "ILove";
+            if (prefix != null)
             {
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
-                Assert.AreEqual(0, store.Count());
-
-                var key = "ILove";
-                if (prefix != null)
-                {
-                    key = Path.Combine(prefix, key);
-                }
-                store.SaveString(key, "Pizza");
-                Assert.AreEqual(1, store.Count());
-                Assert.AreEqual(1, Directory.EnumerateFiles(TestStorageRoot, "*", SearchOption.AllDirectories).Count());
-
-                var data = store.Read(key);
-                Assert.AreEqual("Pizza", data);
-
-                var path = store.GetFilePath(key);
-
-                Assert.IsTrue(File.Exists(path));
-                Assert.IsTrue(store.Delete(key));
-                Assert.IsFalse(File.Exists(path));
+                key = Path.Combine(prefix, key);
             }
+            store.SaveString(key, "Pizza");
+            Assert.AreEqual(1, store.Count());
+            Assert.AreEqual(1, Directory.EnumerateFiles(TestStorageRoot, "*", SearchOption.AllDirectories).Count());
+
+            var data = store.Read(key);
+            Assert.AreEqual("Pizza", data);
+
+            var path = store.GetFilePath(key);
+
+            Assert.IsTrue(File.Exists(path));
+            Assert.IsTrue(store.Delete(key));
+            Assert.IsFalse(File.Exists(path));
         }
 
         [TestCase(2)]
@@ -250,42 +243,41 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase(0)]
         public void KeysBehavior(int useCase)
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using var store = new ObjectStore(new LocalObjectStore());
+
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            var key = "ILove";
+            store.SaveString(key, "Pizza");
+            var path = store.GetFilePath(key);
+
+            if (useCase == 0)
             {
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
-                var key = "ILove";
-                store.SaveString(key, "Pizza");
-                var path = store.GetFilePath(key);
+                // delete
+                Assert.IsTrue(store.Delete(key));
+                Assert.IsFalse(File.Exists(path));
+                Assert.AreEqual(0, store.Keys.Count);
+            }
+            else if (useCase == 1)
+            {
+                // read
+                Assert.AreEqual(key, store.Keys.Single());
+            }
+            else if (useCase == 2)
+            {
+                // new file
+                File.WriteAllText(Path.Combine(Path.GetDirectoryName(path), "some other-file"), "Pepe");
 
-                if (useCase == 0)
-                {
-                    // delete
-                    Assert.IsTrue(store.Delete(key));
-                    Assert.IsFalse(File.Exists(path));
-                    Assert.AreEqual(0, store.Keys.Count);
-                }
-                else if (useCase == 1)
-                {
-                    // read
-                    Assert.AreEqual(key, store.Keys.Single());
-                }
-                else if (useCase == 2)
-                {
-                    // new file
-                    File.WriteAllText(Path.Combine(Path.GetDirectoryName(path), "some other-file"), "Pepe");
+                Assert.AreEqual(2, store.Keys.Count);
+                Assert.AreEqual(1, store.Keys.Count(k => k == key));
+                Assert.AreEqual(1, store.Keys.Count(k => k == "some other-file"));
 
-                    Assert.AreEqual(2, store.Keys.Count);
-                    Assert.AreEqual(1, store.Keys.Count(k => k == key));
-                    Assert.AreEqual(1, store.Keys.Count(k => k == "some other-file"));
+                Assert.IsTrue(store.Delete("some other-file"));
+            }
 
-                    Assert.IsTrue(store.Delete("some other-file"));
-                }
-
-                // clean up
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                }
+            // clean up
+            if (File.Exists(path))
+            {
+                File.Delete(path);
             }
         }
 
@@ -297,76 +289,74 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase(0)]
         public void AfterClearState(int useCase)
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using var store = new ObjectStore(new LocalObjectStore());
+
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            var key = "ILove";
+            store.SaveString(key, "Pizza");
+            var path = store.GetFilePath(key);
+            // CLEAR the state
+            store.Clear();
+
+            if (useCase == 0)
             {
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
-                var key = "ILove";
-                store.SaveString(key, "Pizza");
-                var path = store.GetFilePath(key);
-                // CLEAR the state
-                store.Clear();
+                // delete
+                Assert.IsTrue(store.Delete(key));
+                Assert.IsFalse(File.Exists(path));
+            }
+            else if (useCase == 1)
+            {
+                // read
+                Assert.AreEqual("Pizza", store.ReadString(key));
+            }
+            else if (useCase == 2)
+            {
+                // enumeration
+                Assert.AreEqual("Pizza", store.Single().Value);
+            }
+            else if (useCase == 3)
+            {
+                // keys
+                Assert.AreEqual(key, store.Keys.Single());
+            }
+            else if (useCase == 4)
+            {
+                // get file path
+                Assert.AreEqual(path, store.GetFilePath(key));
+            }
+            else if (useCase == 5)
+            {
+                // new file
+                File.WriteAllText(Path.Combine(Path.GetDirectoryName(path), "some other-file"), "Pepe");
 
-                if(useCase == 0)
-                {
-                    // delete
-                    Assert.IsTrue(store.Delete(key));
-                    Assert.IsFalse(File.Exists(path));
-                }
-                else if (useCase == 1)
-                {
-                    // read
-                    Assert.AreEqual("Pizza", store.ReadString(key));
-                }
-                else if (useCase == 2)
-                {
-                    // enumeration
-                    Assert.AreEqual("Pizza", store.Single().Value);
-                }
-                else if (useCase == 3)
-                {
-                    // keys
-                    Assert.AreEqual(key, store.Keys.Single());
-                }
-                else if (useCase == 4)
-                {
-                    // get file path
-                    Assert.AreEqual(path, store.GetFilePath(key));
-                }
-                else if (useCase == 5)
-                {
-                    // new file
-                    File.WriteAllText(Path.Combine(Path.GetDirectoryName(path), "some other-file"), "Pepe");
+                // read new file
+                Assert.AreEqual("Pepe", store.ReadString("some other-file"));
+                Assert.IsTrue(store.Delete("some other-file"));
+            }
 
-                    // read new file
-                    Assert.AreEqual("Pepe", store.ReadString("some other-file"));
-                    Assert.IsTrue(store.Delete("some other-file"));
-                }
-
-                // clean up
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                }
+            // clean up
+            if (File.Exists(path))
+            {
+                File.Delete(path);
             }
         }
 
         [Test]
         public void GetFilePathAndDelete()
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
-            {
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
-                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
+            using var store = new ObjectStore(new LocalObjectStore());
 
-                var key = "ILove";
-                store.SaveString(key, "Pizza");
-                var path = store.GetFilePath(key);
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
 
-                Assert.IsTrue(File.Exists(path));
-                store.Delete(key);
+            var key = "ILove";
+            store.SaveString(key, "Pizza");
+            var path = store.GetFilePath(key);
 
-                Assert.IsFalse(File.Exists(path));
-            }
+            Assert.IsTrue(File.Exists(path));
+            store.Delete(key);
+
+            Assert.IsFalse(File.Exists(path));
         }
 
         [TestCase(FileAccess.Read, false)]

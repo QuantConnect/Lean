@@ -45,13 +45,11 @@ namespace QuantConnect.ToolBox
 
             // ignore time zones here, i.e, we're going to emit data in the data time zone
             var config = new SubscriptionDataConfig(dataType, pathComponents.Symbol, pathComponents.Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false);
-            using (var reader = new StreamReader(stream))
+            using var reader = new StreamReader(stream);
+            string line;
+            while ((line = reader.ReadLine()) != null)
             {
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    yield return factory.Reader(config, line, pathComponents.Date, false);
-                }
+                yield return factory.Reader(config, line, pathComponents.Date, false);
             }
         }
 

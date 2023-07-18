@@ -63,11 +63,9 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         public void Init()
         {
             var path = Path.Combine("TestData", "FuturesExpiryFunctionsTestData.xml");
-            using (var reader = XmlReader.Create(path))
-            {
-                var serializer = new XmlSerializer(typeof(Item[]));
-                _data = ((Item[])serializer.Deserialize(reader)).ToDictionary(i=>i.Symbol,i=>i.SymbolDates);
-            }
+            using var reader = XmlReader.Create(path);
+            var serializer = new XmlSerializer(typeof(Item[]));
+            _data = ((Item[])serializer.Deserialize(reader)).ToDictionary(i => i.Symbol, i => i.SymbolDates);
         }
 
         [Test]

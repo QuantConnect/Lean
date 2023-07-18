@@ -71,31 +71,29 @@ namespace QuantConnect.Data
 
                 try
                 {
-                    using (var zip = ZipFile.Read(filePath))
+                    using var zip = ZipFile.Read(filePath);
+                    ZipEntry entry;
+                    if (entryName.IsNullOrEmpty())
                     {
-                        ZipEntry entry;
-                        if (entryName.IsNullOrEmpty())
-                        {
-                            // Return the first entry
-                            entry = zip[0];
-                        }
-                        else
-                        {
-                            // Attempt to find our specific entry
-                            if (!zip.ContainsEntry(entryName))
-                            {
-                                return null;
-                            }
-
-                            entry = zip[entryName];
-                        }
-
-                        // Extract our entry and return it
-                        var stream = new MemoryStream();
-                        entry.Extract(stream);
-                        stream.Position = 0;
-                        return stream;
+                        // Return the first entry
+                        entry = zip[0];
                     }
+                    else
+                    {
+                        // Attempt to find our specific entry
+                        if (!zip.ContainsEntry(entryName))
+                        {
+                            return null;
+                        }
+
+                        entry = zip[entryName];
+                    }
+
+                    // Extract our entry and return it
+                    var stream = new MemoryStream();
+                    entry.Extract(stream);
+                    stream.Position = 0;
+                    return stream;
                 }
                 catch (ZipException exception)
                 {

@@ -52,34 +52,32 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 request.CookieContainer = new CookieContainer();
                 request.Method = "GET";
 
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using var response = (HttpWebResponse)request.GetResponse();
+
+                var cookie = response.GetResponseHeader("Set-Cookie").Split(';')[0];
+
+                var html = "";
+
+                using (var stream = response.GetResponseStream())
                 {
-                    var cookie = response.GetResponseHeader("Set-Cookie").Split(';')[0];
-
-                    var html = "";
-
-                    using (var stream = response.GetResponseStream())
+                    if (stream != null)
                     {
-                        if (stream != null)
-                        {
-                            html = new StreamReader(stream).ReadToEnd();
-                        }
+                        html = new StreamReader(stream).ReadToEnd();
                     }
+                }
 
-                    if (html.Length < 5000)
-                    {
-                        return false;
-                    }
-                    var crumb = GetCrumb(html);
+                if (html.Length < 5000)
+                {
+                    return false;
+                }
+                var crumb = GetCrumb(html);
 
-                    if (crumb != null)
-                    {
-                        Cookie = cookie;
-                        Crumb = crumb;
-                        Log.Debug($"Crumb: '{crumb}', Cookie: '{cookie}'");
-                        return true;
-                    }
-
+                if (crumb != null)
+                {
+                    Cookie = cookie;
+                    Crumb = crumb;
+                    Log.Debug($"Crumb: '{crumb}', Cookie: '{cookie}'");
+                    return true;
                 }
 
             }

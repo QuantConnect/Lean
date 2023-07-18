@@ -68,26 +68,25 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
             {
                 while (hour < 24)
                 {
-                    using (var cl = new WebClient())
-                    {
-                        var request = $"http://cryptoiq.io/api/marketdata/ticker/{_exchange}/{symbol.Value}/{counter.ToStringInvariant("yyyy-MM-dd")}/{hour}";
-                        var data = cl.DownloadString(request);
+                    using var cl = new WebClient();
 
-                        var mbtc = JsonConvert.DeserializeObject<List<CryptoiqBitcoin>>(data);
-                        foreach (var item in mbtc.OrderBy(x => x.Time))
+                    var request = $"http://cryptoiq.io/api/marketdata/ticker/{_exchange}/{symbol.Value}/{counter.ToStringInvariant("yyyy-MM-dd")}/{hour}";
+                    var data = cl.DownloadString(request);
+
+                    var mbtc = JsonConvert.DeserializeObject<List<CryptoiqBitcoin>>(data);
+                    foreach (var item in mbtc.OrderBy(x => x.Time))
+                    {
+                        yield return new Tick
                         {
-                            yield return new Tick
-                            {
-                                Time = item.Time,
-                                Symbol = symbol,
-                                Value = item.Last,
-                                AskPrice = item.Ask,
-                                BidPrice = item.Bid,
-                                TickType = TickType.Quote
-                            };
-                        }
-                        hour++;
+                            Time = item.Time,
+                            Symbol = symbol,
+                            Value = item.Last,
+                            AskPrice = item.Ask,
+                            BidPrice = item.Bid,
+                            TickType = TickType.Quote
+                        };
                     }
+                    hour++;
                 }
                 counter = counter.AddDays(1);
                 hour = 0;

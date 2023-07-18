@@ -511,14 +511,12 @@ namespace QuantConnect.Lean.Engine
             if (path != null && !Directory.Exists(path))
                 Directory.CreateDirectory(path);
 
-            using (var writer = new StreamWriter(csvFileName))
+            using var writer = new StreamWriter(csvFileName);
+            foreach (var order in orders)
             {
-                foreach (var order in orders)
-                {
-                    var line = Invariant($"{order.Time.ToStringInvariant("yyyy-MM-dd HH:mm:ss")},") +
-                               Invariant($"{order.Symbol.Value},{order.Direction},{order.Quantity},{order.Price}");
-                    writer.WriteLine(line);
-                }
+                var line = Invariant($"{order.Time.ToStringInvariant("yyyy-MM-dd HH:mm:ss")},") +
+                           Invariant($"{order.Symbol.Value},{order.Direction},{order.Quantity},{order.Price}");
+                writer.WriteLine(line);
             }
         }
 

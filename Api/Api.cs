@@ -1069,33 +1069,31 @@ namespace QuantConnect.Api
         /// <returns></returns>
         public virtual string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
         {
-            using (var client = new WebClient { Credentials = new NetworkCredential(userName, password) })
+            using var client = new WebClient { Credentials = new NetworkCredential(userName, password) };
+            client.Proxy = WebRequest.GetSystemWebProxy();
+            if (headers != null)
             {
-                client.Proxy = WebRequest.GetSystemWebProxy();
-                if (headers != null)
+                foreach (var header in headers)
                 {
-                    foreach (var header in headers)
-                    {
-                        client.Headers.Add(header.Key, header.Value);
-                    }
+                    client.Headers.Add(header.Key, header.Value);
                 }
-                // Add a user agent header in case the requested URI contains a query.
-                client.Headers.Add("user-agent", "QCAlgorithm.Download(): User Agent Header");
+            }
+            // Add a user agent header in case the requested URI contains a query.
+            client.Headers.Add("user-agent", "QCAlgorithm.Download(): User Agent Header");
 
-                try
+            try
+            {
+                return client.DownloadString(address);
+            }
+            catch (WebException exception)
+            {
+                var message = $"Api.Download(): Failed to download data from {address}";
+                if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
                 {
-                    return client.DownloadString(address);
+                    message += $" with username: {userName} and password {password}";
                 }
-                catch (WebException exception)
-                {
-                    var message = $"Api.Download(): Failed to download data from {address}";
-                    if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
-                    {
-                        message += $" with username: {userName} and password {password}";
-                    }
 
-                    throw new WebException($"{message}. Please verify the source for missing http:// or https://", exception);
-                }
+                throw new WebException($"{message}. Please verify the source for missing http:// or https://", exception);
             }
         }
 

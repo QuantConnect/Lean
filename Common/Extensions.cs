@@ -220,13 +220,9 @@ namespace QuantConnect
             }
             try
             {
-                using (var response = client.GetAsync(url).Result)
-                {
-                    using (var content = response.Content)
-                    {
-                        return content.ReadAsStringAsync().Result;
-                    }
-                }
+                using var response = client.GetAsync(url).Result;
+                using var content = response.Content;
+                return content.ReadAsStringAsync().Result;
             }
             catch (WebException ex)
             {
@@ -252,17 +248,15 @@ namespace QuantConnect
         /// <param name="url">The url to download data from</param>
         public static byte[] DownloadByteArray(this string url)
         {
-            using (var wc = new HttpClient())
+            using var wc = new HttpClient();
+            try
             {
-                try
-                {
-                    return wc.GetByteArrayAsync(url).Result;
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, $"DownloadByteArray(): {Messages.Extensions.DownloadDataFailed(url)}");
-                    return null;
-                }
+                return wc.GetByteArrayAsync(url).Result;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"DownloadByteArray(): {Messages.Extensions.DownloadDataFailed(url)}");
+                return null;
             }
         }
 
@@ -297,13 +291,9 @@ namespace QuantConnect
         /// <returns>The resulting byte array</returns>
         public static byte[] ProtobufSerialize(this List<Tick> ticks, Guid guid)
         {
-            byte[] result;
-            using (var stream = GetMemoryStream(guid))
-            {
-                Serializer.Serialize(stream, ticks);
-                result = stream.ToArray();
-            }
-            return result;
+            using var stream = GetMemoryStream(guid);
+            Serializer.Serialize(stream, ticks);
+            return stream.ToArray();
         }
 
         /// <summary>
@@ -314,28 +304,23 @@ namespace QuantConnect
         /// <returns>The resulting byte array</returns>
         public static byte[] ProtobufSerialize(this IBaseData baseData, Guid guid)
         {
-            byte[] result;
-            using (var stream = GetMemoryStream(guid))
+            using var stream = GetMemoryStream(guid);
+            switch (baseData.DataType)
             {
-                switch (baseData.DataType)
-                {
-                    case MarketDataType.Tick:
-                        Serializer.SerializeWithLengthPrefix(stream, baseData as Tick, PrefixStyle.Base128, 1);
-                        break;
-                    case MarketDataType.QuoteBar:
-                        Serializer.SerializeWithLengthPrefix(stream, baseData as QuoteBar, PrefixStyle.Base128, 1);
-                        break;
-                    case MarketDataType.TradeBar:
-                        Serializer.SerializeWithLengthPrefix(stream, baseData as TradeBar, PrefixStyle.Base128, 1);
-                        break;
-                    default:
-                        Serializer.SerializeWithLengthPrefix(stream, baseData as BaseData, PrefixStyle.Base128, 1);
-                        break;
-                }
-                result = stream.ToArray();
+                case MarketDataType.Tick:
+                    Serializer.SerializeWithLengthPrefix(stream, baseData as Tick, PrefixStyle.Base128, 1);
+                    break;
+                case MarketDataType.QuoteBar:
+                    Serializer.SerializeWithLengthPrefix(stream, baseData as QuoteBar, PrefixStyle.Base128, 1);
+                    break;
+                case MarketDataType.TradeBar:
+                    Serializer.SerializeWithLengthPrefix(stream, baseData as TradeBar, PrefixStyle.Base128, 1);
+                    break;
+                default:
+                    Serializer.SerializeWithLengthPrefix(stream, baseData as BaseData, PrefixStyle.Base128, 1);
+                    break;
             }
-
-            return result;
+            return stream.ToArray();
         }
 
         /// <summary>
@@ -766,13 +751,11 @@ namespace QuantConnect
         public static string ToMD5(this string str)
         {
             var builder = new StringBuilder(32);
-            using (var md5Hash = MD5.Create())
+            using var md5Hash = MD5.Create();
+            var data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(str));
+            for (var i = 0; i < 16; i++)
             {
-                var data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(str));
-                for (var i = 0; i < 16; i++)
-                {
-                    builder.Append(data[i].ToStringInvariant("x2"));
-                }
+                builder.Append(data[i].ToStringInvariant("x2"));
             }
             return builder.ToString();
         }
@@ -1984,10 +1967,8 @@ namespace QuantConnect
         /// <returns>The MD5 hash</returns>
         public static byte[] GetMD5Hash(this Stream stream)
         {
-            using (var md5 = MD5.Create())
-            {
-                return md5.ComputeHash(stream);
-            }
+            using var md5 = MD5.Create();
+            return md5.ComputeHash(stream);
         }
 
         /// <summary>
@@ -2734,19 +2715,14 @@ namespace QuantConnect
 
                 try
                 {
-                    using (var pyDict = new PyDict(pyObject))
+                    using var pyDict = new PyDict(pyObject);
+                    targetType = $"{typeof(TKey).Name}: {typeof(TValue).Name}";
+                    foreach (PyObject item in pyDict.Items())
                     {
-                        targetType = $"{typeof(TKey).Name}: {typeof(TValue).Name}";
-
-                        foreach (PyObject item in pyDict.Items())
-                        {
-                            inputType = $"{item[0].GetPythonType()}: {item[1].GetPythonType()}";
-
-                            var key = item[0].As<TKey>();
-                            var value = item[1].As<TValue>();
-
-                            result.Add(new KeyValuePair<TKey, TValue>(key, value));
-                        }
+                        inputType = $"{item[0].GetPythonType()}: {item[1].GetPythonType()}";
+                        var key = item[0].As<TKey>();
+                        var value = item[1].As<TValue>();
+                        result.Add(new KeyValuePair<TKey, TValue>(key, value));
                     }
                 }
                 catch (Exception e)
@@ -2821,12 +2797,9 @@ namespace QuantConnect
             var pyList = new PyList();
             foreach (var item in enumerable)
             {
-                using (var pyObject = item.ToPython())
-                {
-                    pyList.Append(pyObject);
-                }
+                using var pyObject = item.ToPython();
+                pyList.Append(pyObject);
             }
-
             return pyList;
         }
 
@@ -2907,30 +2880,27 @@ namespace QuantConnect
         /// <returns>An enumerable of lists</returns>
         public static IEnumerable<List<T>> BatchBy<T>(this IEnumerable<T> enumerable, int batchSize)
         {
-            using (var enumerator = enumerable.GetEnumerator())
+            using var enumerator = enumerable.GetEnumerator();
+            List<T> list = null;
+            while (enumerator.MoveNext())
             {
-                List<T> list = null;
-                while (enumerator.MoveNext())
+                if (list == null)
                 {
-                    if (list == null)
-                    {
-                        list = new List<T> {enumerator.Current};
-                    }
-                    else if (list.Count < batchSize)
-                    {
-                        list.Add(enumerator.Current);
-                    }
-                    else
-                    {
-                        yield return list;
-                        list = new List<T> {enumerator.Current};
-                    }
+                    list = new List<T> { enumerator.Current };
                 }
-
-                if (list?.Count > 0)
+                else if (list.Count < batchSize)
+                {
+                    list.Add(enumerator.Current);
+                }
+                else
                 {
                     yield return list;
+                    list = new List<T> { enumerator.Current };
                 }
+            }
+            if (list?.Count > 0)
+            {
+                yield return list;
             }
         }
 
@@ -3152,20 +3122,17 @@ namespace QuantConnect
             {
                 yield break;
             }
-
-            using (var streamReader = new StreamReader(stream))
+            using var streamReader = new StreamReader(stream);
+            string line;
+            do
             {
-                string line;
-                do
+                line = streamReader.ReadLine();
+                if (line != null)
                 {
-                    line = streamReader.ReadLine();
-                    if (line != null)
-                    {
-                        yield return line;
-                    }
+                    yield return line;
                 }
-                while (line != null);
             }
+            while (line != null);
         }
 
         /// <summary>

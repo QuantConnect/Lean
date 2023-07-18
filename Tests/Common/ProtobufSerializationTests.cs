@@ -62,12 +62,11 @@ namespace QuantConnect.Tests.Common
         {
             var item = CreateNewInstance(baseDataType, hasUnderlyingSymbol);
             var serialized = item.ProtobufSerialize(new Guid());
-            
-            using (var stream = new MemoryStream(serialized))
-            {
-                var deserialized = Serializer.Deserialize<IEnumerable<BaseData>>(stream).Single();
-                AssertAreEqual(item, deserialized);
-            }
+
+            using var stream = new MemoryStream(serialized);
+
+            var deserialized = Serializer.Deserialize<IEnumerable<BaseData>>(stream).Single();
+            AssertAreEqual(item, deserialized);
         }
         
         [Test]
@@ -75,17 +74,16 @@ namespace QuantConnect.Tests.Common
         {
             var symbol = Symbols.AAPL;
 
-            using (var stream = new MemoryStream())
-            {
-                Serializer.Serialize(stream, symbol);
+            using var stream = new MemoryStream();
 
-                stream.Position = 0;
+            Serializer.Serialize(stream, symbol);
 
-                var result = Serializer.Deserialize<Symbol>(stream);
+            stream.Position = 0;
 
-                Assert.AreEqual(symbol, result);
-                Assert.AreEqual(symbol.GetHashCode(), result.GetHashCode());
-            }
+            var result = Serializer.Deserialize<Symbol>(stream);
+
+            Assert.AreEqual(symbol, result);
+            Assert.AreEqual(symbol.GetHashCode(), result.GetHashCode());
         }
 
         [TestCase(10)]
@@ -123,29 +121,28 @@ namespace QuantConnect.Tests.Common
             Log.Trace($"Took {stopwatch.ElapsedMilliseconds}ms. TickCount : {tickCount}.");
 
             // verify its correct
-            using (var stream = new MemoryStream(serializedTick))
+            using var stream = new MemoryStream(serializedTick);
+
+            var results = Serializer.Deserialize<List<Tick>>(stream);
+
+            Assert.AreEqual(tickCount, results.Count);
+
+            for (int i = 0; i < tickCount; i++)
             {
-                var results = Serializer.Deserialize<List<Tick>>(stream);
-
-                Assert.AreEqual(tickCount, results.Count);
-
-                for (int i = 0; i < tickCount; i++)
-                {
-                    var result = results[i];
-                    Assert.AreEqual(i, result.AskPrice);
-                    Assert.AreEqual(i, result.AskSize);
-                    Assert.AreEqual(time + TimeSpan.FromMilliseconds(i), result.Time);
-                    Assert.AreEqual(i, result.Quantity);
-                    Assert.AreEqual(MarketDataType.Tick, result.DataType);
-                    Assert.AreEqual("NASDAQ", result.Exchange);
-                    Assert.IsNull(result.SaleCondition);
-                    Assert.AreEqual(TickType.Quote, result.TickType);
-                    Assert.AreEqual(time + TimeSpan.FromMilliseconds(i), result.EndTime);
-                    Assert.AreEqual(i, result.Value);
-                    Assert.AreEqual(i, result.BidPrice);
-                    Assert.AreEqual(i, result.BidSize);
-                    Assert.IsNull(result.Symbol);
-                }
+                var result = results[i];
+                Assert.AreEqual(i, result.AskPrice);
+                Assert.AreEqual(i, result.AskSize);
+                Assert.AreEqual(time + TimeSpan.FromMilliseconds(i), result.Time);
+                Assert.AreEqual(i, result.Quantity);
+                Assert.AreEqual(MarketDataType.Tick, result.DataType);
+                Assert.AreEqual("NASDAQ", result.Exchange);
+                Assert.IsNull(result.SaleCondition);
+                Assert.AreEqual(TickType.Quote, result.TickType);
+                Assert.AreEqual(time + TimeSpan.FromMilliseconds(i), result.EndTime);
+                Assert.AreEqual(i, result.Value);
+                Assert.AreEqual(i, result.BidPrice);
+                Assert.AreEqual(i, result.BidSize);
+                Assert.IsNull(result.Symbol);
             }
         }
 
@@ -157,15 +154,14 @@ namespace QuantConnect.Tests.Common
             var serializedTick = openInterest.ProtobufSerialize(new Guid());
 
             // verify its correct
-            using (var stream = new MemoryStream(serializedTick))
-            {
-                var result = (Tick)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+            using var stream = new MemoryStream(serializedTick);
 
-                Assert.IsNull(result.Symbol);
-                Assert.AreEqual(openInterest.Time, result.Time);
-                Assert.AreEqual(openInterest.EndTime, result.EndTime);
-                Assert.AreEqual(openInterest.Value, result.Value);
-            }
+            var result = (Tick)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+
+            Assert.IsNull(result.Symbol);
+            Assert.AreEqual(openInterest.Time, result.Time);
+            Assert.AreEqual(openInterest.EndTime, result.EndTime);
+            Assert.AreEqual(openInterest.Value, result.Value);
         }
 
         [Test]
@@ -191,23 +187,22 @@ namespace QuantConnect.Tests.Common
             var serializedTick = tick.ProtobufSerialize(new Guid());
 
             // verify its correct
-            using (var stream = new MemoryStream(serializedTick))
-            {
-                var result = (Tick) Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+            using var stream = new MemoryStream(serializedTick);
 
-                Assert.AreEqual(tick.AskPrice, result.AskPrice);
-                Assert.AreEqual(tick.AskSize, result.AskSize);
-                Assert.AreEqual(tick.Time, result.Time);
-                Assert.AreEqual(tick.Quantity, result.Quantity);
-                Assert.AreEqual(tick.DataType, result.DataType);
-                Assert.AreEqual("NASDAQ", result.Exchange);
-                Assert.IsNull(result.SaleCondition);
-                Assert.AreEqual(tick.TickType, result.TickType);
-                Assert.AreEqual(tick.EndTime, result.EndTime);
-                Assert.AreEqual(tick.Value, result.Value);
-                Assert.AreEqual(tick.BidPrice, result.BidPrice);
-                Assert.AreEqual(tick.BidSize, result.BidSize);
-            }
+            var result = (Tick)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+
+            Assert.AreEqual(tick.AskPrice, result.AskPrice);
+            Assert.AreEqual(tick.AskSize, result.AskSize);
+            Assert.AreEqual(tick.Time, result.Time);
+            Assert.AreEqual(tick.Quantity, result.Quantity);
+            Assert.AreEqual(tick.DataType, result.DataType);
+            Assert.AreEqual("NASDAQ", result.Exchange);
+            Assert.IsNull(result.SaleCondition);
+            Assert.AreEqual(tick.TickType, result.TickType);
+            Assert.AreEqual(tick.EndTime, result.EndTime);
+            Assert.AreEqual(tick.Value, result.Value);
+            Assert.AreEqual(tick.BidPrice, result.BidPrice);
+            Assert.AreEqual(tick.BidSize, result.BidSize);
         }
 
         [Test]
@@ -226,24 +221,23 @@ namespace QuantConnect.Tests.Common
                 Open = 100,
                 Period = TimeSpan.FromMinutes(1)
             };
-
             var serializedTradeBar = tradeBar.ProtobufSerialize(new Guid());
-            using (var stream = new MemoryStream(serializedTradeBar))
-            {
-                // verify its correct
-                var result = (TradeBar) Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+            
+            using var stream = new MemoryStream(serializedTradeBar);
 
-                Assert.AreEqual(tradeBar.Time, result.Time);
-                Assert.AreEqual(tradeBar.DataType, result.DataType);
-                Assert.AreEqual(tradeBar.EndTime, result.EndTime);
-                Assert.AreEqual(tradeBar.Value, result.Value);
-                Assert.AreEqual(tradeBar.Volume, result.Volume);
-                Assert.AreEqual(tradeBar.Close, result.Close);
-                Assert.AreEqual(tradeBar.High, result.High);
-                Assert.AreEqual(tradeBar.Low, result.Low);
-                Assert.AreEqual(tradeBar.Open, result.Open);
-                Assert.AreEqual(tradeBar.Period, result.Period);
-            }
+            // verify its correct
+            var result = (TradeBar)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+
+            Assert.AreEqual(tradeBar.Time, result.Time);
+            Assert.AreEqual(tradeBar.DataType, result.DataType);
+            Assert.AreEqual(tradeBar.EndTime, result.EndTime);
+            Assert.AreEqual(tradeBar.Value, result.Value);
+            Assert.AreEqual(tradeBar.Volume, result.Volume);
+            Assert.AreEqual(tradeBar.Close, result.Close);
+            Assert.AreEqual(tradeBar.High, result.High);
+            Assert.AreEqual(tradeBar.Low, result.Low);
+            Assert.AreEqual(tradeBar.Open, result.Open);
+            Assert.AreEqual(tradeBar.Period, result.Period);
         }
 
         [Test]
@@ -263,31 +257,31 @@ namespace QuantConnect.Tests.Common
             };
 
             var serializedQuoteBar = quoteBar.ProtobufSerialize(new Guid());
-            using (var stream = new MemoryStream(serializedQuoteBar))
-            {
-                // verify its correct
-                var result = (QuoteBar)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
-                Assert.AreEqual(quoteBar.Time, result.Time);
-                Assert.AreEqual(quoteBar.DataType, result.DataType);
-                Assert.AreEqual(quoteBar.EndTime, result.EndTime);
-                Assert.AreEqual(quoteBar.Value, result.Value);
-                Assert.AreEqual(quoteBar.Close, result.Close);
-                Assert.AreEqual(quoteBar.High, result.High);
-                Assert.AreEqual(quoteBar.Low, result.Low);
-                Assert.AreEqual(quoteBar.Open, result.Open);
-                Assert.AreEqual(quoteBar.Period, result.Period);
+            using var stream = new MemoryStream(serializedQuoteBar);
 
-                Assert.AreEqual(quoteBar.Ask.Close, result.Ask.Close);
-                Assert.AreEqual(quoteBar.Ask.High, result.Ask.High);
-                Assert.AreEqual(quoteBar.Ask.Low, result.Ask.Low);
-                Assert.AreEqual(quoteBar.Ask.Open, result.Ask.Open);
+            // verify its correct
+            var result = (QuoteBar)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
-                Assert.AreEqual(quoteBar.Bid.Close, result.Bid.Close);
-                Assert.AreEqual(quoteBar.Bid.High, result.Bid.High);
-                Assert.AreEqual(quoteBar.Bid.Low, result.Bid.Low);
-                Assert.AreEqual(quoteBar.Bid.Open, result.Bid.Open);
-            }
+            Assert.AreEqual(quoteBar.Time, result.Time);
+            Assert.AreEqual(quoteBar.DataType, result.DataType);
+            Assert.AreEqual(quoteBar.EndTime, result.EndTime);
+            Assert.AreEqual(quoteBar.Value, result.Value);
+            Assert.AreEqual(quoteBar.Close, result.Close);
+            Assert.AreEqual(quoteBar.High, result.High);
+            Assert.AreEqual(quoteBar.Low, result.Low);
+            Assert.AreEqual(quoteBar.Open, result.Open);
+            Assert.AreEqual(quoteBar.Period, result.Period);
+
+            Assert.AreEqual(quoteBar.Ask.Close, result.Ask.Close);
+            Assert.AreEqual(quoteBar.Ask.High, result.Ask.High);
+            Assert.AreEqual(quoteBar.Ask.Low, result.Ask.Low);
+            Assert.AreEqual(quoteBar.Ask.Open, result.Ask.Open);
+
+            Assert.AreEqual(quoteBar.Bid.Close, result.Bid.Close);
+            Assert.AreEqual(quoteBar.Bid.High, result.Bid.High);
+            Assert.AreEqual(quoteBar.Bid.Low, result.Bid.Low);
+            Assert.AreEqual(quoteBar.Bid.Open, result.Bid.Open);
         }
 
         [Test]
@@ -305,17 +299,17 @@ namespace QuantConnect.Tests.Common
             };
 
             var serializedDividend = dividend.ProtobufSerialize(new Guid());
-            using (var stream = new MemoryStream(serializedDividend))
-            {
-                var result = (Dividend)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
-                Assert.AreEqual(dividend.DataType, result.DataType);
-                Assert.AreEqual(dividend.Distribution, result.Distribution);
-                Assert.AreEqual(dividend.ReferencePrice, result.ReferencePrice);
-                Assert.AreEqual(dividend.Time, result.Time);
-                Assert.AreEqual(dividend.EndTime, result.EndTime);
-                Assert.AreEqual(dividend.Value, result.Value);
-            }
+            using var stream = new MemoryStream(serializedDividend);
+            
+            var result = (Dividend)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+
+            Assert.AreEqual(dividend.DataType, result.DataType);
+            Assert.AreEqual(dividend.Distribution, result.Distribution);
+            Assert.AreEqual(dividend.ReferencePrice, result.ReferencePrice);
+            Assert.AreEqual(dividend.Time, result.Time);
+            Assert.AreEqual(dividend.EndTime, result.EndTime);
+            Assert.AreEqual(dividend.Value, result.Value);
         }
 
         [Test]
@@ -324,18 +318,18 @@ namespace QuantConnect.Tests.Common
             var split = new Split(Symbols.AAPL, DateTime.UtcNow, decimal.MaxValue, decimal.MinValue, SplitType.SplitOccurred);
 
             var serializedSplit = split.ProtobufSerialize(new Guid());
-            using (var stream = new MemoryStream(serializedSplit))
-            {
-                var result = (Split)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
-                Assert.AreEqual(split.Type, result.Type);
-                Assert.AreEqual(split.DataType, result.DataType);
-                Assert.AreEqual(split.SplitFactor, result.SplitFactor);
-                Assert.AreEqual(split.ReferencePrice, result.ReferencePrice);
-                Assert.AreEqual(split.Time, result.Time);
-                Assert.AreEqual(split.EndTime, result.EndTime);
-                Assert.AreEqual(split.Value, result.Value);
-            }
+            using var stream = new MemoryStream(serializedSplit);
+            
+            var result = (Split)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+
+            Assert.AreEqual(split.Type, result.Type);
+            Assert.AreEqual(split.DataType, result.DataType);
+            Assert.AreEqual(split.SplitFactor, result.SplitFactor);
+            Assert.AreEqual(split.ReferencePrice, result.ReferencePrice);
+            Assert.AreEqual(split.Time, result.Time);
+            Assert.AreEqual(split.EndTime, result.EndTime);
+            Assert.AreEqual(split.Value, result.Value);
         }
 
         [Test]
@@ -357,12 +351,12 @@ namespace QuantConnect.Tests.Common
             };
 
             var serializedOrderEvent = orderEvent.ProtobufSerialize(new Guid());
-            using (var stream = new MemoryStream(serializedOrderEvent))
-            {
-                var result = (AlphaStreamsOrderEvent)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
-                AssertAreEqual(orderEvent, result);
-            }
+            using var stream = new MemoryStream(serializedOrderEvent);
+            
+            var result = (AlphaStreamsOrderEvent)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+
+            AssertAreEqual(orderEvent, result);
         }
 
         [Test]
@@ -411,12 +405,12 @@ namespace QuantConnect.Tests.Common
             };
 
             var serializedState = state.ProtobufSerialize(new Guid());
-            using (var stream = new MemoryStream(serializedState))
-            {
-                var result = (AlphaStreamsPortfolioState)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
-                AssertAreEqual(state, result);
-            }
+            using var stream = new MemoryStream(serializedState);
+
+            var result = (AlphaStreamsPortfolioState)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+
+            AssertAreEqual(state, result);
         }
 
         [Test, Ignore("Performance test")]

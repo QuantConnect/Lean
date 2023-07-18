@@ -449,10 +449,8 @@ namespace QuantConnect.ToolBox.IEX
             {
                 requests.Add(Task.Run(async () =>
                 {
-                    using (var client = new WebClient())
-                    {
-                        return await client.DownloadStringTaskAsync(new Uri(url)).ConfigureAwait(false);
-                    }
+                    using var client = new WebClient();
+                    return await client.DownloadStringTaskAsync(new Uri(url)).ConfigureAwait(false);
                 }));
             });
 

@@ -50,27 +50,25 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice data)
         {
-            using (var enumerator = data.GetEnumerator())
+            using var enumerator = data.GetEnumerator();
+            while (enumerator.MoveNext())
             {
-                while (enumerator.MoveNext())
+                var current = enumerator.Current;
+                var symbol = current.Key;
+                _received.Add(symbol);
+
+                List<BaseData> history;
+
+                if (current.Value.DataType == MarketDataType.QuoteBar)
                 {
-                    var current = enumerator.Current;
-                    var symbol = current.Key;
-                    _received.Add(symbol);
-
-                    List<BaseData> history;
-
-                    if (current.Value.DataType == MarketDataType.QuoteBar)
-                    {
-                        history = History(1, Resolution.Daily).Get<QuoteBar>(symbol).Cast<BaseData>().ToList();
-                    }
-                    else
-                    {
-                        history = History(1, Resolution.Daily).Get<TradeBar>(symbol).Cast<BaseData>().ToList();
-                    }
-
-                    if (!history.Any()) throw new Exception($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
+                    history = History(1, Resolution.Daily).Get<QuoteBar>(symbol).Cast<BaseData>().ToList();
                 }
+                else
+                {
+                    history = History(1, Resolution.Daily).Get<TradeBar>(symbol).Cast<BaseData>().ToList();
+                }
+
+                if (!history.Any()) throw new Exception($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
             }
         }
 

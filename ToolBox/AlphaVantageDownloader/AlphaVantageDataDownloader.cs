@@ -180,15 +180,12 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
                 throw new FormatException($"Unexpected content received from API.\n{response.Content}");
             }
 
-            using (var reader = new StringReader(response.Content))
-            {
-                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-                {
-                    return csv.GetRecords<TimeSeries>()
-                              .OrderBy(t => t.Time)
-                              .ToList(); // Execute query before readers are disposed.
-                }
-            }
+            using var reader = new StringReader(response.Content);
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            var result = csv.GetRecords<TimeSeries>()
+                      .OrderBy(t => t.Time)
+                      .ToList(); // Execute query before readers are disposed.
+            return result;
         }
 
         /// <summary>

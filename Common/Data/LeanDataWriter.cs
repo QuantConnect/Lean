@@ -261,24 +261,19 @@ namespace QuantConnect.Data
         {
             rows = new SortedDictionary<DateTime, string>();
 
-            using (var stream = _dataCacheProvider.Fetch($"{fileName}#{entryName}"))
+            using var stream = _dataCacheProvider.Fetch($"{fileName}#{entryName}");
+
+            if (stream == null) return false;
+
+            using var reader = new StreamReader(stream);
+
+            string line;
+            while ((line = reader.ReadLine()) != null)
             {
-                if (stream == null)
-                {
-                    return false;
-                }
-
-                using (var reader = new StreamReader(stream))
-                {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        rows[LeanData.ParseTime(line, date, _resolution)] = line;
-                    }
-                }
-
-                return true;
+                rows[LeanData.ParseTime(line, date, _resolution)] = line;
             }
+
+            return true;
         }
 
         /// <summary>

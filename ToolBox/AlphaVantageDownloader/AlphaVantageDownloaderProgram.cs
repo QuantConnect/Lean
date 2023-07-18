@@ -44,18 +44,16 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
                 // fix end date
                 endDate = new DateTime(Math.Min(endDate.Ticks, DateTime.Now.AddDays(-1).Ticks));
 
-                using (var downloader = new AlphaVantageDataDownloader(apiKey))
+                using var downloader = new AlphaVantageDataDownloader(apiKey);
+                foreach (var ticker in tickers)
                 {
-                    foreach (var ticker in tickers)
-                    {
-                        // Download the data
-                        var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
-                        var data = downloader.Get(new DataDownloaderGetParameters(symbol, castResolution, startDate, endDate));
+                    // Download the data
+                    var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+                    var data = downloader.Get(new DataDownloaderGetParameters(symbol, castResolution, startDate, endDate));
 
-                        // Save the data
-                        var writer = new LeanDataWriter(castResolution, symbol, Globals.DataFolder);
-                        writer.Write(data);
-                    }
+                    // Save the data
+                    var writer = new LeanDataWriter(castResolution, symbol, Globals.DataFolder);
+                    writer.Write(data);
                 }
             }
             catch (Exception err)
