@@ -669,6 +669,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void AddOpenOrder(Order order, IAlgorithm algorithm)
         {
+            if (order.Status == OrderStatus.New || order.Status == OrderStatus.None)
+            {
+                // make sure we have a valid order status
+                order.Status = OrderStatus.Submitted;
+            }
+
             order.Id = algorithm.Transactions.GetIncrementOrderId();
 
             var orderTicket = order.ToOrderTicket(algorithm.Transactions);
@@ -1048,10 +1054,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     var ticket = orderEvent.Ticket;
 
                     _cancelPendingOrders.UpdateOrRemove(order.Id, orderEvent.Status);
-                    // set the status of our order object based on the fill event except if the order status is filled and the event is invalid
+                    // set the status of our order object based on the fill event except if the order status is filled/cancelled and the event is invalid
                     // in live trading it can happen that we submit an update which get's rejected by the brokerage because the order is already filled
                     // so we don't want the invalid update event to set the order status to invalid if it's already filled
-                    if (order.Status != OrderStatus.Filled || orderEvent.Status != OrderStatus.Invalid)
+                    if (order.Status != OrderStatus.Filled && order.Status != OrderStatus.Canceled || orderEvent.Status != OrderStatus.Invalid)
                     {
                         order.Status = orderEvent.Status;
                     }
