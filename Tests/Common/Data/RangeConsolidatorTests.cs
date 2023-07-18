@@ -25,15 +25,15 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class RangeConsolidatorTests
     {
-        [TestCaseSource(nameof(RangeBarConsolidatorReturnsExpectedValuesCases))]
-        public void RangeConsolidatorReturnsExpectedValues(decimal[][] expectedValues, bool allowPhantomBars)
+        [Test]
+        public void RangeConsolidatorReturnsExpectedValues()
         {
             var time = new DateTime(2016, 1, 1);
             var testValues = new List<decimal>() { 90m, 94.5m, 94m, 89.5m, 89m, 90.5m, 90m, 91.5m, 90m, 90.5m, 92.5m };
 
             var returnedBars = new List<RangeBar>();
 
-            using var consolidator = new RangeConsolidator(100m, x => x.Value, x => 10m, allowPhantomBars);
+            using var consolidator = CreateConsolidator();
             consolidator.DataConsolidated += (sender, rangeBar) =>
             {
                 returnedBars.Add(rangeBar);
@@ -45,6 +45,7 @@ namespace QuantConnect.Tests.Common.Data
                 consolidator.Update(data);
             }
 
+            var expectedValues = GetRangeConsolidatorExpectedValues();
             for (int index = 0; index < returnedBars.Count; index++)
             {
                 var open = expectedValues[index][0];
@@ -61,17 +62,14 @@ namespace QuantConnect.Tests.Common.Data
             }
         }
 
-        public static object[] RangeBarConsolidatorReturnsExpectedValuesCases =
+        protected virtual RangeConsolidator CreateConsolidator()
         {
-            new object[] { new decimal[][] {
-                    new decimal[]{ 90m, 90m, 91m, 91m, 10m },
-                    new decimal[]{ 94.5m, 93.5m, 94.5m, 93.5m, 20m},
-                    new decimal[]{ 89.5m, 89m, 90m, 90m, 20m},
-                    new decimal[]{ 90.5m, 90m, 91m, 91m, 20m},
-                    new decimal[]{ 91.5m, 90.5m, 91.5m, 90.5m, 10m},
-                    new decimal[]{ 90m, 90m, 91m, 91m, 20m},
-                }, false },
-            new object[] { new decimal[][] {
+            return new RangeConsolidator(100m, x => x.Value, x => 10m);
+        }
+
+        protected virtual decimal[][] GetRangeConsolidatorExpectedValues()
+        {
+            return new decimal[][] {
                     new decimal[]{ 90m, 90m, 91m, 91m, 10m },
                     new decimal[]{ 91.01m, 91.01m, 92.01m, 92.01m, 0m },
                     new decimal[]{ 92.02m, 92.02m, 93.02m, 93.02m, 0m },
@@ -85,7 +83,7 @@ namespace QuantConnect.Tests.Common.Data
                     new decimal[]{ 91.5m, 90.5m, 91.5m, 90.5m, 10m},
                     new decimal[]{ 90m, 90m, 91m, 91m, 20m},
                     new decimal[]{ 91.01m, 91.01m, 92.01m, 92.01m, 0m }
-                }, true }
-        };
+                };
+        }
     }
 }

@@ -25,9 +25,9 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     public class RangeConsolidator : BaseTimelessConsolidator
     {
-        private RangeBar _currentBar;
         private bool _firstTick;
-        private readonly bool _allowPhantomBars;
+        private decimal _minimumPriceVariation;
+        protected RangeBar CurrentRangeBar;
 
         /// <summary>
         /// Bar being created
@@ -36,11 +36,11 @@ namespace QuantConnect.Data.Consolidators
         {
             get
             {
-                return _currentBar;
+                return CurrentRangeBar;
             }
             set
             {
-                _currentBar = (RangeBar)value;
+                CurrentRangeBar = (RangeBar)value;
             }
         }
 
@@ -49,11 +49,6 @@ namespace QuantConnect.Data.Consolidators
         /// RangeBar
         /// </summary>
         public decimal RangeSize { get; private set; }
-
-        /// <summary>
-        /// Minimum Bar's Symbol price variation
-        /// </summary>
-        public decimal MinimumPriceVariation { get; private set; }
 
         /// <summary>
         /// Number of MinimumPriceVariation units
@@ -68,7 +63,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public override IBaseData WorkingData => _currentBar?.Clone();
+        public override IBaseData WorkingData => CurrentRangeBar?.Clone();
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
@@ -79,9 +74,8 @@ namespace QuantConnect.Data.Consolidators
         ///Initializes a new instance of the <see cref="RangeConsolidator" /> class.
         /// </summary>
         /// <param name="range">The constant value size of each bar, where the unit is the minimum price variation of the RangeBar's symbol</param>
-        /// /// <param name="allowPhantomBars">If set to true, allows the indicator to create phantom/intermediate bars if needed</param>
-        public RangeConsolidator(decimal range, bool allowPhantomBars = false)
-            : this(range, x => x.Value, allowPhantomBars: allowPhantomBars)
+        public RangeConsolidator(decimal range)
+            : this(range, x => x.Value)
         {
         }
 
@@ -93,16 +87,13 @@ namespace QuantConnect.Data.Consolidators
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
-        /// <param name="allowPhantomBars">If set to true, allows the indicator to create phantom/intermediate bars if needed</param>
         public RangeConsolidator(
             decimal range,
             Func<IBaseData, decimal> selector,
-            Func<IBaseData, decimal> volumeSelector = null,
-            bool allowPhantomBars = false)
+            Func<IBaseData, decimal> volumeSelector = null)
             : base(selector ?? (x => x.Value), volumeSelector ?? (x => 0))
         {
             Range = range;
-            _allowPhantomBars = allowPhantomBars;
             _firstTick = true;
         }
 
@@ -114,60 +105,49 @@ namespace QuantConnect.Data.Consolidators
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
-        /// <param name="allowPhantomBars">If set to true, allows the indicator to create phantom/intermediate bars if needed</param>
         public RangeConsolidator(decimal range,
             PyObject selector,
-            PyObject volumeSelector = null,
-            bool allowPhantomBars = false)
+            PyObject volumeSelector = null)
             : base(selector, volumeSelector)
         {
             Range = range;
-            _allowPhantomBars = allowPhantomBars;
             _firstTick = true;
         }
 
         /// <summary>
-        /// Update the current bar being created with the given data. If allowPhantomBars is
-        /// set to true, it also creates intermediate/phantom bars if needed
+        /// Update the current RangeBar being created with the given data.
         /// </summary>
         /// <param name="time">Time of the given data</param>
         /// <param name="currentValue">Value of the given data</param>
         /// <param name="volume">Volume of the given data</param>
         protected override void UpdateBar(DateTime time, decimal currentValue, decimal volume)
         {
-            if (_allowPhantomBars)
+            if (currentValue > CurrentRangeBar.Low + 2 * RangeSize)
             {
-                if (currentValue > _currentBar.Low + 2 * RangeSize)
-                {
-                    Rising(time, currentValue, volume);
-                }
-                else if (currentValue < _currentBar.High - (2 * RangeSize))
-                {
-                    Falling(time, currentValue, volume);
-                }
-                else
-                {
-                    _currentBar.Update(time, currentValue, volume);
-                }
+                Rising(time, currentValue, volume);
+            }
+            else if (currentValue < CurrentRangeBar.High - (2 * RangeSize))
+            {
+                Falling(time, currentValue, volume);
             }
             else
             {
-                _currentBar.Update(time, currentValue, volume);
+                CurrentRangeBar.Update(time, currentValue, volume);
             }
         }
 
         /// <summary>
-        /// Checks if the current bar being created has closed. If that is the case, it consolidates
-        /// the bar, resets the current bar and stores the needed information from the last bar to
-        /// create the next bar. If the current bar is null it means phantom bars were created on
+        /// Checks if the current RangeBar being created has closed. If that is the case, it consolidates
+        /// the bar, resets the current RangeBar and stores the needed information from the last bar to
+        /// create the next bar
         /// <see cref="UpdateBar(DateTime, decimal, decimal)"/>
         /// </summary>
         protected override void CheckIfBarIsClosed()
         {
-            if (_currentBar != null && _currentBar.IsClosed)
+            if (CurrentRangeBar != null && CurrentRangeBar.IsClosed)
             {
-                OnDataConsolidated(_currentBar);
-                _currentBar = null;
+                OnDataConsolidated(CurrentRangeBar);
+                CurrentRangeBar = null;
             }
         }
 
@@ -183,13 +163,13 @@ namespace QuantConnect.Data.Consolidators
 
             if (_firstTick)
             {
-                MinimumPriceVariation = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(data.Symbol.ID.Market, data.Symbol, data.Symbol.ID.SecurityType, "USD").MinimumPriceVariation;
-                RangeSize = MinimumPriceVariation * Range;
+                _minimumPriceVariation = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(data.Symbol.ID.Market, data.Symbol, data.Symbol.ID.SecurityType, "USD").MinimumPriceVariation;
+                RangeSize = _minimumPriceVariation * Range;
                 open = Math.Ceiling(open / RangeSize) * RangeSize;
                 _firstTick = false;
             }
 
-            _currentBar = new RangeBar(data.Symbol, data.Time, RangeSize, open, volume);
+            CurrentRangeBar = new RangeBar(data.Symbol, data.Time, RangeSize, open, volume);
         }
 
         /// <summary>
@@ -200,13 +180,13 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volume">Volume of the given data</param>
         private void Rising(DateTime time, decimal currentValue, decimal volume)
         {
-            while (currentValue - _currentBar.Low > RangeSize)
+            while (currentValue - CurrentRangeBar.Low > RangeSize)
             {
-                _currentBar.Update(time, currentValue, volume);
-                OnDataConsolidated(_currentBar);
-                _currentBar = new RangeBar(_currentBar.Symbol, _currentBar.EndTime, RangeSize, _currentBar.Close + MinimumPriceVariation, 0);
+                CurrentRangeBar.Update(time, currentValue, volume);
+                OnDataConsolidated(CurrentRangeBar);
+                CurrentRangeBar = new RangeBar(CurrentRangeBar.Symbol, CurrentRangeBar.EndTime, RangeSize, CurrentRangeBar.Close + _minimumPriceVariation, 0);
             }
-            _currentBar = null;
+            CurrentRangeBar = null;
         }
 
         /// <summary>
@@ -217,13 +197,13 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volume">Volume of the given data</param>
         private void Falling(DateTime time, decimal currentValue, decimal volume)
         {
-            while (_currentBar.High - currentValue > RangeSize)
+            while (CurrentRangeBar.High - currentValue > RangeSize)
             {
-                _currentBar.Update(time, currentValue, volume);
-                OnDataConsolidated(_currentBar);
-                _currentBar = new RangeBar(_currentBar.Symbol, _currentBar.EndTime, RangeSize, _currentBar.Close - MinimumPriceVariation, 0);
+                CurrentRangeBar.Update(time, currentValue, volume);
+                OnDataConsolidated(CurrentRangeBar);
+                CurrentRangeBar = new RangeBar(CurrentRangeBar.Symbol, CurrentRangeBar.EndTime, RangeSize, CurrentRangeBar.Close - _minimumPriceVariation, 0);
             }
-            _currentBar = null;
+            CurrentRangeBar = null;
         }
 
         /// <summary>
