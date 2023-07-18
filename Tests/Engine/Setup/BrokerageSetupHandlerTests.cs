@@ -86,6 +86,7 @@ namespace QuantConnect.Tests.Engine.Setup
             foreach (var order in _transactionHandler.Orders.Values)
             {
                 Assert.IsFalse(string.IsNullOrEmpty(order.PriceCurrency));
+                Assert.AreEqual(OrderStatus.Submitted, order.Status);
             }
 
             // Warn the user about each open order
