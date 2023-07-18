@@ -17,19 +17,29 @@ from AlgorithmImports import *
 ### Example algorithm of how to use RangeConsolidator
 ### </summary>
 class RangeConsolidatorAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2012, 1, 1)
-        self.SetEndDate(2013, 1, 1)
+    UniversalResolution = Resolution.Daily
 
-        self.AddEquity("SPY", Resolution.Daily)
+    def Initialize(self):
+        self.SetStartDate(2013, 10, 7)
+        self.SetEndDate(2013, 10, 11)
+        self.UniverseSettings.Resolution = self.UniversalResolution
+
+        self.AddEquity("SPY")
         rangeConsolidator = self.CreateRangeConsolidator()
         rangeConsolidator.DataConsolidated += self.OnDataConsolidated
+        self.firstDataConsolidated = None;
 
         self.SubscriptionManager.AddConsolidator("SPY", rangeConsolidator)
 
+    def OnEndOfAlgorithm(self):
+        if self.firstDataConsolidated == None:
+            raise Exception("The consolidator should have consolidated at least one RangeBar, but it did not consolidated any one")
     def CreateRangeConsolidator(self):
-        return RangeConsolidator(100, lambda x: x.Value, lambda x: x.Volume)
+        return RangeConsolidator(100)
 
     def OnDataConsolidated(self, sender, rangeBar):
+        if (self.firstDataConsolidated == None):
+            self.firstDataConsolidated = rangeBar
+
         if abs(rangeBar.Low - rangeBar.High) != 1:
             raise Exception(f"The difference between the High and Low for all RangeBar's should be 1, but for this RangeBar was {abs(rangeBar.Low - rangeBar.High)}")

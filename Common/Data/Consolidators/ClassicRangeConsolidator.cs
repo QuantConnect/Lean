@@ -39,12 +39,12 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RangeBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
-        /// not aggregate volume per bar.</param>
+        /// not aggregate volume per bar, except if the input is a TradeBar.</param>
         public ClassicRangeConsolidator(
             decimal range,
             Func<IBaseData, decimal> selector,
             Func<IBaseData, decimal> volumeSelector = null)
-            : base(range, selector ?? (x => x.Value), volumeSelector ?? (x => 0))
+            : base(range, selector ?? (x => x.Value), volumeSelector ?? (x => x is TradeBar bar ? bar.Volume : 0))
         {
         }
 

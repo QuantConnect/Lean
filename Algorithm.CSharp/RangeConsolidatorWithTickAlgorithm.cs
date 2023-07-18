@@ -13,30 +13,13 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
-
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Example algorithm of how to use the ClassicRangeConsolidator
+    /// Example algorithm of how to use RangeConsolidator with Tick resolution
     /// </summary>
-    public class ClassicRangeConsolidatorAlgorithm : RangeConsolidatorAlgorithm
+    public class RangeConsolidatorWithTickAlgorithm : RangeConsolidatorAlgorithm
     {
-        protected override RangeConsolidator CreateRangeConsolidator()
-        {
-            return new ClassicRangeConsolidator(100m);
-        }
-
-        protected override void OnDataConsolidated(Object sender, RangeBar rangeBar)
-        {
-            base.OnDataConsolidated(sender, rangeBar);
-
-            if (rangeBar.Volume == 0)
-            {
-                throw new Exception($"All RangeBar's should have non-zero volume, but this doesn't");
-            }
-        }
+        protected override Resolution UniversalResolution => Resolution.Tick;
     }
 }

@@ -26,20 +26,38 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class RangeConsolidatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        public override void Initialize()
-        {
-            SetStartDate(2012, 01, 01);
-            SetEndDate(2013, 01, 01);
+        private RangeBar _firstDataConsolidated;
+        protected virtual Resolution UniversalResolution => Resolution.Daily;
 
-            AddEquity("SPY", Resolution.Daily);
+        public override void Initialize()
+         {
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
+            UniverseSettings.Resolution = UniversalResolution;
+
+            AddEquity("SPY");
             var rangeConsolidator = CreateRangeConsolidator();
             rangeConsolidator.DataConsolidated += OnDataConsolidated;
+            _firstDataConsolidated = null;
 
             SubscriptionManager.AddConsolidator("SPY", rangeConsolidator);
         }
 
+        public override void OnEndOfAlgorithm()
+        {
+            if (_firstDataConsolidated == null)
+            {
+                throw new Exception("The consolidator should have consolidated at least one RangeBar, but it did not consolidated any one");
+            }
+        }
+
         protected virtual void OnDataConsolidated(Object sender, RangeBar rangeBar)
         {
+            if (_firstDataConsolidated == null)
+            {
+                _firstDataConsolidated = rangeBar;
+            }
+
             if (Math.Abs(rangeBar.Low - rangeBar.High) != 1m)
             {
                 throw new Exception($"The difference between the High and Low for all RangeBar's should be 1, but for this RangeBar was {Math.Abs(rangeBar.Low - rangeBar.High)}");
@@ -48,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected virtual RangeConsolidator CreateRangeConsolidator()
         {
-            return new RangeConsolidator(100m, x => x.Value, volumeSelector: x => x is TradeBar bar ? bar.Volume : 0);
+            return new RangeConsolidator(100m);
         }
 
         /// <summary>
@@ -64,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 2003;
+        public long DataPoints => 3943;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -92,8 +110,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.07"},
-            {"Tracking Error", "0.107"},
+            {"Information Ratio", "-8.91"},
+            {"Tracking Error", "0.223"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

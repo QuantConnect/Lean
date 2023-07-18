@@ -20,7 +20,7 @@ from RangeConsolidatorAlgorithm import RangeConsolidatorAlgorithm
 ### </summary>
 class ClassicRangeConsolidatorAlgorithm(RangeConsolidatorAlgorithm):
     def CreateRangeConsolidator(self):
-        return ClassicRangeConsolidator(100, lambda x: x.Value, lambda x: x.Volume)
+        return ClassicRangeConsolidator(100)
     
     def OnDataConsolidated(self, sender, rangeBar):
         super().OnDataConsolidated(sender, rangeBar)
