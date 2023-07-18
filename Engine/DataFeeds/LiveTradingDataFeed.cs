@@ -55,6 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private SubscriptionCollection _subscriptions;
         private IFactorFileProvider _factorFileProvider;
         private IDataChannelProvider _channelProvider;
+        private readonly HashSet<string> _unsupportedConfigurations = new();
 
         /// <summary>
         /// Public flag indicator that the thread is still busy.
@@ -135,11 +136,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 _dataQueueHandler.UnsubscribeWithMapping(subscription.Configuration);
-                if (subscription.Configuration.SecurityType == SecurityType.Equity && !subscription.Configuration.IsInternalFeed)
-                {
-                    _dataQueueHandler.UnsubscribeWithMapping(new SubscriptionDataConfig(subscription.Configuration, typeof(Dividend)));
-                    _dataQueueHandler.UnsubscribeWithMapping(new SubscriptionDataConfig(subscription.Configuration, typeof(Split)));
-                }
             }
         }
 
@@ -152,6 +148,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 IsActive = false;
                 Log.Trace("LiveTradingDataFeed.Exit(): Start. Setting cancellation token...");
+                if (_dataQueueHandler is DataQueueHandlerManager manager)
+                {
+                    manager.UnsupportedConfiguration -= HandleUnsupportedConfigurationEvent;
+                }
                 _customExchange?.Stop();
                 Log.Trace("LiveTradingDataFeed.Exit(): Exit Finished.");
 
@@ -166,7 +166,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The loaded <see cref="IDataQueueHandler"/></returns>
         protected virtual IDataQueueHandler GetDataQueueHandler()
         {
-            return new DataQueueHandlerManager();
+            var result = new DataQueueHandlerManager();
+            result.UnsupportedConfiguration += HandleUnsupportedConfigurationEvent;
+            return result;
         }
 
         /// <summary>
@@ -566,6 +568,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new NotSupportedException($"The DataQueueHandler does not support {securityType}.");
             }
             return (IDataQueueUniverseProvider)_dataQueueHandler;
+        }
+
+        private void HandleUnsupportedConfigurationEvent(object _, SubscriptionDataConfig config)
+        {
+            if (_algorithm != null)
+            {
+                lock (_unsupportedConfigurations)
+                {
+                    var key = $"{config.Type.Name} {config.Symbol.ID.Market} {config.Symbol.ID.SecurityType}";
+                    if (_unsupportedConfigurations.Add(key))
+                    {
+                        _algorithm.Debug($"Warning: {key} data not supported. Please consider reviewing the data providers selection.");
+                    }
+                }
+            }
         }
 
         /// <summary>

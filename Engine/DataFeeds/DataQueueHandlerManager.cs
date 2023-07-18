@@ -45,6 +45,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool HasUniverseProvider => DataHandlers.OfType<IDataQueueUniverseProvider>().Any();
 
         /// <summary>
+        /// Event triggered when an unsupported configuration is detected
+        /// </summary>
+        public event EventHandler<SubscriptionDataConfig> UnsupportedConfiguration;
+
+        /// <summary>
         /// Subscribe to the specified configuration
         /// </summary>
         /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
@@ -91,6 +96,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     );
                 }
             }
+
+            UnsupportedConfiguration?.Invoke(this, dataConfig);
             return null;
         }
 
