@@ -22,7 +22,6 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
@@ -576,9 +575,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 lock (_unsupportedConfigurations)
                 {
-                    var key = $"{config.Type.Name} {config.Symbol.ID.Market} {config.Symbol.ID.SecurityType}";
+                    var key = $"{config.Symbol.ID.Market} {config.Symbol.ID.SecurityType} {config.Type.Name}";
                     if (_unsupportedConfigurations.Add(key))
                     {
+                        Log.Trace($"LiveTradingDataFeed.HandleUnsupportedConfigurationEvent(): detected unsupported configuration: {config}");
+
                         _algorithm.Debug($"Warning: {key} data not supported. Please consider reviewing the data providers selection.");
                     }
                 }
