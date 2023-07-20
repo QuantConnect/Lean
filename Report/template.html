@@ -19,355 +19,345 @@
                 </style>
             </head>
             <body>
-                <div class="page">
-                    <div class="header">
-                        <div class="header-left">
-                            <img src="https://cdn.quantconnect.com/web/i/logo.png">
-                        </div>
-                        <div class="header-right">Strategy Report: {{$TEXT-STRATEGY-NAME}} {{$TEXT-STRATEGY-VERSION}}</div>
+            <div class="page">
+                <div class="header">
+                    <div class="header-left">
+                        <img src="https://cdn.quantconnect.com/web/i/logo.png">
                     </div>
-                    <div class="content">
-                        <div class="container-row">
-                            <div class="col-xs-12">
-                                <table id="description-box" class="table compact no-margin align-top">
-                                    <thead>
-                                        <tr>
-                                            <th>
-                                                <p>
-                                                    <span>|</span> Strategy Description
-                                                </p>
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>
-                                                <p id="strategy-description" class="text-justify">
-                                                    {{$TEXT-STRATEGY-DESCRIPTION}}
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                    <div class="header-right">Strategy Report: {{$TEXT-STRATEGY-NAME}} {{$TEXT-STRATEGY-VERSION}}</div>
+                </div>
+                <div class="content">
+                    <div class="container-row">
+                        <div class="col-xs-12">
+                            <table id="description-box" class="table compact no-margin align-top">
+                                <thead>
+                                <tr>
+                                    <th>
+                                        <p>
+                                            <span>|</span> Strategy Description
+                                        </p>
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>
+                                        <p id="strategy-description" class="text-justify">
+                                            {{$TEXT-STRATEGY-DESCRIPTION}}
+                                        </p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="container-row first-row">
-                            <div class="col-xs-8">
-                                <table id="key-characteristics" class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th class="title">Key Statistics</th>
-                                            <th class="kpi-live">Backtest</th>
-                                            <th class="kpi-live">Live</th>
-                                            <th class="title"></th>
-                                            <th class="kpi-live">Backtest</th>
-                                            <th class="kpi-live">Live</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td class="title">Runtime Days</td>
-                                            <td>{{$KPI-BACKTEST-DAYS}}</td>
-                                            <td class="kpi-live">{{$KPI-DAYS-LIVE}}</td>
-                                            <td class="title">Drawdown</td>
-                                            <td>{{$KPI-DRAWDOWN}}</td>
-                                            <td class="kpi-live">{{$KPI-LIVE-DRAWDOWN}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="title">Turnover</td>
-                                            <td>{{$KPI-TURNOVER}}</td>
-                                            <td class="kpi-live">{{$KPI-LIVE-TURNOVER}}</td>
-                                            <td class="title">Probabilistic SR</td>
-                                            <td>{{$KPI-PSR}}</td>
-                                            <td class="kpi-live">{{$KPI-LIVE-PSR}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="title">CAGR</td>
-                                            <td>{{$KPI-CAGR}}</td>
-                                            <td class="kpi-live">{{$KPI-LIVE-CAGR}}</td>
-                                            <td class="title">{{$LIVE-MARKER}}Sharpe Ratio</td>
-                                            <td>{{$KPI-SHARPE}}</td>
-                                            <td class="kpi-live">{{$KPI-LIVE-SHARPE}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="title">Markets</td>
-                                            <td class="kpi-backtest">{{$KPI-MARKETS}}</td>
-                                            <td class="kpi-live" colspan="2">{{$KPI-MARKETS}}</td>
-                                            <td class="title">Information Ratio</td>
-                                            <td>{{$KPI-INFORMATION-RATIO}}</td>
-                                            <td class="kpi-live">{{$KPI-LIVE-INFORMATION-RATIO}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="title">Trades per Day</td>
-                                            <td>{{$KPI-TRADES-PER-DAY}}</td>
-                                            <td class="kpi-live">{{$KPI-LIVE-TRADES-PER-DAY}}</td>
-                                            <td class="title">Strategy Capacity (USD)</td>
-                                            <td>{{$KPI-STRATEGY-CAPACITY}}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="col-xs-4">
-                                <table class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Monthly Returns</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding: 0;">
-                                                <img id="monthly-returns-plot" src="{{$PLOT-MONTHLY-RETURNS}}">
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                    </div>
+                    <div class="container-row first-row">
+                        <div class="col-xs-6">
+                            <table id="key-characteristics" class="table compact">
+                                <thead>
+                                    <tr>
+                                        <th class="title">Algorithm Configuration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="title">Account Currency</td>
+                                        <td>{{$KPI-ACCOUNT-CURRENCY}}</td>
+                                        <td class="kpi-live">{{$KPI-CURRENCY-LIVE}}</td>
+                                    <tr>
+                                        <td class="title">Brokerage</td>
+                                        <td>{{$KPI-BROKERAGE}}</td>
+                                        <td class="kpi-live">{{$KPI-BROKERAGE-LIVE}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title">Account Type</td>
+                                        <td>{{$KPI-ACCOUNT-TYPE}}</td>
+                                        <td class="kpi-live">{{$KPI-TYPE-LIVE}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="container-row">
-                            <div class="col-xs-12">
-                                <table class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Cumulative Returns</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding: 0;">
-                                                <img src="{{$PLOT-CUMULATIVE-RETURNS}}">
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="col-xs-6">
+                            <table id="key-characteristics" class="table compact">
+                                <thead>
+                                    <tr>
+                                        <th>Parameters</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="title">Intrinio Username</td>
+                                        <td>{{$KPI-INTRINIO-USERNAME}}</td>
+                                        <td class="kpi-live">{{$KPI-INTRINIO-USERNAME-LIVE}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title">Intrinio Password</td>
+                                        <td>{{$KPI-INTRINIO-PASSWORD}}</td>
+                                        <td class="kpi-live">{{$KPI-INTRINIO-PASSWORD-LIVE}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title">EMA Fast</td>
+                                        <td>{{$KPI-EMA-FAST}}</td>
+                                        <td class="kpi-live">{{$KPI-FAST-LIVE}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title">EMA Slow</td>
+                                        <td>{{$KPI-EMA-SLOW}}</td>
+                                        <td class="kpi-live">{{$KPI-SLOW-LIVE}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="container-row">
-                            <div class="col-xs-4">
-                                <table class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Annual Returns</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding:0;">
-                                                <img src="{{$PLOT-ANNUAL-RETURNS}}">
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="col-xs-4">
-                                <table class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Returns Per Trade</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding:0;">
-                                                <img src="{{$PLOT-RETURNS-PER-TRADE}}">
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="col-xs-4">
-                                <table class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Asset Allocation</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding:0;">
-                                                <img src="{{$PLOT-ASSET-ALLOCATION}}">
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                    </div>
+                    <div class="container-row">
+                        <div class="col-xs-8">
+                            <table id="key-characteristics" class="table compact">
+                                <thead>
+                                <tr>
+                                    <th class="title">Key Statistics</th><th class="kpi-live">Backtest</th><th class="kpi-live">Live</th><th class="title"></th><th class="kpi-live">Backtest</th><th class="kpi-live">Live</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="title">Runtime Days</td><td>{{$KPI-BACKTEST-DAYS}}</td><td class="kpi-live">{{$KPI-DAYS-LIVE}}</td>
+                                        <td class="title">Drawdown</td><td>{{$KPI-DRAWDOWN}}</td><td class="kpi-live">{{$KPI-LIVE-DRAWDOWN}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title">Turnover</td><td>{{$KPI-TURNOVER}}</td><td class="kpi-live">{{$KPI-LIVE-TURNOVER}}</td>
+                                        <td class="title">Probabilistic SR</td><td>{{$KPI-PSR}}</td><td class="kpi-live">{{$KPI-LIVE-PSR}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title">CAGR</td><td>{{$KPI-CAGR}}</td><td class="kpi-live">{{$KPI-LIVE-CAGR}}</td>
+                                        <td class="title">{{$LIVE-MARKER}}Sharpe Ratio</td><td>{{$KPI-SHARPE}}</td><td class="kpi-live">{{$KPI-LIVE-SHARPE}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title">Markets</td> <td class="kpi-backtest">{{$KPI-MARKETS}}</td><td class="kpi-live" colspan="2">{{$KPI-MARKETS}}</td>
+                                        <td class="title">Information Ratio</td><td>{{$KPI-INFORMATION-RATIO}}</td><td class="kpi-live">{{$KPI-LIVE-INFORMATION-RATIO}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title">Trades per Day</td><td>{{$KPI-TRADES-PER-DAY}}</td><td class="kpi-live">{{$KPI-LIVE-TRADES-PER-DAY}}</td>
+                                        <td class="title">Strategy Capacity (USD)</td><td>{{$KPI-STRATEGY-CAPACITY}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="container-row">
-                            <div class="col-xs-12">
-                                <table class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Drawdown</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding: 0;">
-                                                <img src="{{$PLOT-DRAWDOWN}}">
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="col-xs-4">
+                            <table class="table compact">
+                                <thead>
+                                <tr>
+                                    <th>Monthly Returns</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td style="padding: 0;">
+                                        <img id="monthly-returns-plot" src="{{$PLOT-MONTHLY-RETURNS}}">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="container-row">
+                        <div class="col-xs-12">
+                            <table class="table compact">
+                                <thead>
+                                <tr>
+                                    <th>Cumulative Returns</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td style="padding: 0;">
+                                        <img src="{{$PLOT-CUMULATIVE-RETURNS}}">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="container-row">
+                        <div class="col-xs-4">
+                            <table class="table compact">
+                                <thead>
+                                <tr>
+                                    <th>Annual Returns</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td style="padding:0;">
+                                        <img src="{{$PLOT-ANNUAL-RETURNS}}">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-xs-4">
+                            <table class="table compact">
+                                <thead>
+                                <tr>
+                                    <th>Returns Per Trade</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td style="padding:0;">
+                                        <img src="{{$PLOT-RETURNS-PER-TRADE}}">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-xs-4">
+                            <table class="table compact">
+                                <thead>
+                                <tr>
+                                    <th>Asset Allocation</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td style="padding:0;">
+                                        <img src="{{$PLOT-ASSET-ALLOCATION}}">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="container-row">
+                        <div class="col-xs-12">
+                            <table class="table compact">
+                                <thead>
+                                <tr>
+                                    <th>Drawdown</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 0;">
+                                            <img src="{{$PLOT-DRAWDOWN}}">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-                <div class="page">
-                    <div class="header">
-                        <div class="header-left">
-                            <img src="https://cdn.quantconnect.com/web/i/logo.png">
-                        </div>
-                        <div class="header-right">Strategy Report Summary: {{$TEXT-STRATEGY-NAME}} {{$TEXT-STRATEGY-VERSION}}</div>
+            </div>
+            <div class="page">
+                <div class="header">
+                    <div class="header-left">
+                        <img src="https://cdn.quantconnect.com/web/i/logo.png">
                     </div>
-                    <div class="content">
-                        <div class="container-row">
-                            <div class="col-xs-12">
-                                <table class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Daily Returns</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding: 0;">
-                                                <img src="{{$PLOT-DAILY-RETURNS}}">
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                    <div class="header-right">Strategy Report Summary: {{$TEXT-STRATEGY-NAME}} {{$TEXT-STRATEGY-VERSION}}</div>
+                </div>
+                <div class="content">
+                    <div class="container-row">
+                        <div class="col-xs-12">
+                            <table class="table compact">
+                                <thead>
+                                <tr>
+                                    <th>Daily Returns</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td style="padding: 0;">
+                                        <img src="{{$PLOT-DAILY-RETURNS}}">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="container-row">
-                            <div class="col-xs-12">
-                                <table class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Rolling Portfolio Beta</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding: 0;">
-                                                <img src="{{$PLOT-BETA}}">
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                    </div>
+                    <div class="container-row">
+                        <div class="col-xs-12">
+                            <table class="table compact">
+                                <thead>
+                                <tr>
+                                    <th>Rolling Portfolio Beta</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td style="padding: 0;">
+                                        <img src="{{$PLOT-BETA}}">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="container-row">
-                            <div class="col-xs-12">
-                                <table class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Rolling Sharpe Ratio</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding: 0;">
-                                                <img src="{{$PLOT-SHARPE}}">
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                    </div>
+                    <div class="container-row">
+                        <div class="col-xs-12">
+                            <table class="table compact">
+                                <thead>
+                                <tr>
+                                    <th>Rolling Sharpe Ratio</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td style="padding: 0;">
+                                        <img src="{{$PLOT-SHARPE}}">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="container-row">
-                            <div class="col-xs-12">
-                                <table class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Leverage</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding: 0;">
-                                                <img src="{{$PLOT-LEVERAGE}}">
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                    </div>
+                    <div class="container-row">
+                        <div class="col-xs-12">
+                            <table class="table compact">
+                                <thead>
+                                <tr>
+                                    <th>Leverage</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td style="padding: 0;">
+                                        <img src="{{$PLOT-LEVERAGE}}">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="container-row">
-                            <div class="col-xs-12">
-                                <table class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Long-Short Exposure</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding: 0;">
-                                                <img src="{{$PLOT-EXPOSURE}}">
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                    </div>
+                    <div class="container-row">
+                        <div class="col-xs-12">
+                            <table class="table compact">
+                                <thead>
+                                <tr>
+                                    <th>Long-Short Exposure</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td style="padding: 0;">
+                                        <img src="{{$PLOT-EXPOSURE}}">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-                <div class="page">
-                    <div class="header">
-                        <div class="header-left">
-                            <img src="https://cdn.quantconnect.com/web/i/logo.png">
-                        </div>
-                        <div class="header-right">Strategy Report Summary: {{$TEXT-STRATEGY-NAME}} {{$TEXT-STRATEGY-VERSION}}</div>
+            </div>
+            <div class="page" style="{{$CSS-CRISIS-PAGE-STYLE}}">
+                <div class="header">
+                    <div class="header-left">
+                        <img src="https://cdn.quantconnect.com/web/i/logo.png">
                     </div>
-                    <div class="content">
-                        <div class="container-row">
-                            <div class="col-xs-12">
-                                <table id="key-characteristics" class="table compact">
-                                    <thead>
-                                        <tr>
-                                            <th class="title">Parameters</th>
-                                            <th class="kpi-live">Backtest</th>
-                                            <th class="kpi-live">Live</th>
-                                            <th class="title"></th>
-                                            <th class="kpi-live">Backtest</th>
-                                            <th class="kpi-live">Live</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td class="title">Intrinio Username</td>
-                                            <td>{{$KPI-INTRINIO-USERNAME}}</td>
-                                            <td class="kpi-live">{{$KPI-INTRINIO-USERNAME-LIVE}}</td>
-                                            <td class="title">Intrinio Password</td>
-                                            <td>{{$KPI-INTRINIO-PASSWORD}}</td>
-                                            <td class="kpi-live">{{$KPI-INTRINIO-PASSWORD-LIVE}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="title">EMA Fast</td>
-                                            <td>{{$KPI-EMA-FAST}}</td>
-                                            <td class="kpi-live">{{$KPI-FAST-LIVE}}</td>
-                                            <td class="title">EMA Slow</td>
-                                            <td>{{$KPI-EMA-SLOW}}</td>
-                                            <td class="kpi-live">{{$KPI-SLOW-LIVE}}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                    <div class="header-right">Strategy Report Summary: {{$TEXT-STRATEGY-NAME}} {{$TEXT-STRATEGY-VERSION}}</div>
+                </div>
+                <div class="content">
+                    <div class="container-row">
+                        {{$HTML-CRISIS-PLOTS}}
                     </div>
                 </div>
-                <div class="page" style="{{$CSS-CRISIS-PAGE-STYLE}}">
-                    <div class="header">
-                        <div class="header-left">
-                            <img src="https://cdn.quantconnect.com/web/i/logo.png">
-                        </div>
-                        <div class="header-right">Strategy Report Summary: {{$TEXT-STRATEGY-NAME}} {{$TEXT-STRATEGY-VERSION}}</div>
-                    </div>
-                    <div class="content">
-                        <div class="container-row">
-                            {{$HTML-CRISIS-PLOTS}}
-                        </div>
-                    </div>
-                </div>
-            </body>
+            </div>
+    </body>
     </html>
