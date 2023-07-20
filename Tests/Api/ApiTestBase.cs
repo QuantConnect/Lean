@@ -35,6 +35,10 @@ namespace QuantConnect.Tests.API
         [OneTimeSetUp]
         public void Setup()
         {
+            Config.Set("job-user-id", "200374");
+            Config.Set("api-access-token", "f2d0a4af7ad8731c3e387475944e27c92566b78c32b709d835504ca00a6fb8e7");
+            Config.Set("job-organization-id", "d6d62db48592c72e67b534553413b691");
+
             TestAccount = Config.GetInt("job-user-id", 1);
             TestToken = Config.Get("api-access-token", "EnterTokenHere");
             TestOrganization = Config.Get("job-organization-id", "EnterOrgHere");
