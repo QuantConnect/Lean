@@ -63,7 +63,7 @@ namespace QuantConnect.ToolBox
                 = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
             var factorFileProvider
                 = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
-            
+
             mapFileProvider.Initialize(dataProvider);
             factorFileProvider.Initialize(mapFileProvider, dataProvider);
 
@@ -134,7 +134,7 @@ namespace QuantConnect.ToolBox
                         break;
                 }
             }
-            else     
+            else
             {
                 switch (targetApp)
                 {
@@ -185,7 +185,7 @@ namespace QuantConnect.ToolBox
                         RandomDataGeneratorProgram.RandomDataGenerator(
                             GetParameterOrExit(optionsObject, "start"),
                             GetParameterOrExit(optionsObject, "end"),
-                            GetParameterOrExit(optionsObject, "symbol-count"),
+                            GetParameterOrDefault(optionsObject, "symbol-count", null),
                             GetParameterOrDefault(optionsObject, "market", null),
                             GetParameterOrDefault(optionsObject, "security-type", "Equity"),
                             GetParameterOrDefault(optionsObject, "resolution", "Minute"),
