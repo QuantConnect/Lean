@@ -231,15 +231,39 @@ namespace QuantConnect.Tests.Common.Securities
             var equity = CreateEquity();
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
-            var putOption = CreateOption(equity, optionRight, strikePrice);
-            putOption.SetMarketPrice(new Tick { Value = optionPrice });
-            putOption.Holdings.SetHoldings(optionPrice, -1);
+            var option = CreateOption(equity, optionRight, strikePrice);
+            option.SetMarketPrice(new Tick { Value = optionPrice });
+            option.Holdings.SetHoldings(optionPrice, -1);
 
             var buyingPowerModel = new OptionMarginModel();
 
-            Assert.AreEqual(expectedUnitMargin, (double)buyingPowerModel.GetMaintenanceMargin(putOption), delta: 0.05 * expectedUnitMargin);
+            Assert.AreEqual(expectedUnitMargin, (double)buyingPowerModel.GetMaintenanceMargin(option), delta: 0.05 * expectedUnitMargin);
             Assert.AreEqual(10 * expectedUnitMargin,
-                (double)buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(putOption, -10)).Value,
+                (double)buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(option, -10)).Value,
+                delta: 0.05 * 10 * expectedUnitMargin);
+        }
+
+        // ITM
+        [TestCase(OptionRight.Call, 3800, 750, 4550, 143000)] // IB: 143275
+        [TestCase(OptionRight.Put, 3800, 0.05, 4550, 38000)] // IB: 38000
+        // OTM
+        [TestCase(OptionRight.Call, 5000, 0.05, 4550, 45500)] // IB: 45537
+        [TestCase(OptionRight.Put, 5000, 445, 4550, 112800)] // IB: 112876
+        public void ShortIndexOptionsMargin(OptionRight optionRight, decimal strikePrice, decimal optionPrice, decimal underlyingPrice,
+            double expectedUnitMargin)
+        {
+            var index = CreateIndex();
+            index.SetMarketPrice(new Tick { Value = underlyingPrice });
+
+            var indexOption = CreateOption(index, optionRight, strikePrice);
+            indexOption.SetMarketPrice(new Tick { Value = optionPrice });
+            indexOption.Holdings.SetHoldings(optionPrice, -1);
+
+            var buyingPowerModel = new OptionMarginModel();
+
+            Assert.AreEqual(expectedUnitMargin, (double)buyingPowerModel.GetMaintenanceMargin(indexOption), delta: 0.05 * expectedUnitMargin);
+            Assert.AreEqual(10 * expectedUnitMargin,
+                (double)buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(indexOption, -10)).Value,
                 delta: 0.05 * 10 * expectedUnitMargin);
         }
 
@@ -413,6 +437,19 @@ namespace QuantConnect.Tests.Common.Securities
             );
 
             return option;
+        }
+
+        private static QuantConnect.Securities.Index.Index CreateIndex()
+        {
+            var tz = TimeZones.NewYork;
+            return new QuantConnect.Securities.Index.Index(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new Cash(Currencies.USD, 0, 1m),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPX, Resolution.Minute, tz, tz, true, false, false),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
         }
     }
 }
