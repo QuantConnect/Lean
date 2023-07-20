@@ -25,6 +25,20 @@ namespace QuantConnect.Report
         public const string StrategyDescription = @"{{$TEXT-STRATEGY-DESCRIPTION}}";
         public const string StrategyVersion = @"{{$TEXT-STRATEGY-VERSION}}";
         public const string LiveMarker = @"{{$LIVE-MARKER}}";
+        public const string AccountCurrency = @"{{$KPI-ACCOUNT-CURRENCY}}";
+        public const string LiveAccountCurrency = @"{{$KPI-CURRENCY-LIVE}}";
+        public const string Brokerage = @"{{$KPI-BROKERAGE}}";
+        public const string LiveBrokerage = @"{{$KPI-BROKERAGE-LIVE}}";
+        public const string AccountType = @"{{$KPI-ACCOUNT-TYPE}}";
+        public const string LiveAccountType = @"{{$KPI-ACCOUNT-Live}}";
+        public const string IntrinioUsername = @"{{$KPI-INTRINIO-USERNAME}}";
+        public const string LiveIntrinioUsername = @"{{$KPI-INTRINIO-USERNAME-LIVE}}";
+        public const string IntrinioPassword = @"{{$KPI-INTRINIO-PASSWORD}}";
+        public const string LiveIntrinioPassword = @"{{$KPI-INTRINIO-PASSWORD-LIVE}}";
+        public const string EMAFast = @"{{$KPI-EMA-FAST}}";
+        public const string LiveEMAFast = @"{{$KPI-FAST-LIVE}}";
+        public const string EMASlow = @"{{$KPI-EMA-SLOW}}";
+        public const string LiveEMASlow = @"{{$KPI-SLOW-LIVE}}";
 
         public const string CAGR = @"{{$KPI-CAGR}}";
         public const string Turnover = @"{{$KPI-TURNOVER}}";
