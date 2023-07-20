@@ -33,7 +33,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Bar being created
         /// </summary>
-        protected override TradeBar CurrentBar
+        protected override IBaseData CurrentBar
         {
             get
             {
@@ -63,7 +63,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
-        public new event EventHandler<RenkoBar> DataConsolidated;
+        public event DataConsolidatedHandler DataConsolidated;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
@@ -136,13 +136,17 @@ namespace QuantConnect.Data.Consolidators
             _evenBars = evenBars;
         }
 
+        /// <summary>
+        /// Updates the current RangeBar being created with the given data.
+        /// Additionally, if it's the case, it consolidates the current RangeBar
+        /// </summary>
+        /// <param name="time">Time of the given data</param>
+        /// <param name="currentValue">Value of the given data</param>
+        /// <param name="volume">Volume of the given data</param>
         protected override void UpdateBar(DateTime time, decimal currentValue, decimal volume)
         {
             _currentBar.Update(time, currentValue, volume);
-        }
 
-        protected override void CheckIfBarIsClosed()
-        {
             if (_currentBar.IsClosed)
             {
                 _lastCloseValue = _currentBar.Close;
@@ -151,6 +155,10 @@ namespace QuantConnect.Data.Consolidators
             }
         }
 
+        /// <summary>
+        /// Creates a new bar with the given data
+        /// </summary>
+        /// <param name="data">The new data for the bar</param>
         protected override void CreateNewBar(IBaseData data)
         {
             var currentValue = Selector(data);

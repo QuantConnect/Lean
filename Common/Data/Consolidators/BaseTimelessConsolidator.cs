@@ -20,7 +20,8 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
-    /// Represents a timeless consolidator which depends on the given values
+    /// Represents a timeless consolidator which depends on the given values. This consolidator
+    /// is meant to consolidate data into bars that do not depend on time, e.g., RangeBar's.
     /// </summary>
     public abstract class BaseTimelessConsolidator : IDataConsolidator
     {
@@ -31,7 +32,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Bar being created
         /// </summary>
-        protected virtual TradeBar CurrentBar {  get; set; }
+        protected virtual IBaseData CurrentBar {  get; set; }
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
@@ -50,28 +51,19 @@ namespace QuantConnect.Data.Consolidators
         public Type InputType => typeof(IBaseData);
 
         /// <summary>
-        /// Gets <see cref="TradeBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
+        /// Gets <see cref="IBaseData"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
-        public virtual Type OutputType => typeof(TradeBar);
+        public virtual Type OutputType => typeof(IBaseData);
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
-        public event EventHandler<BaseData> DataConsolidated;
-
-        /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        event DataConsolidatedHandler IDataConsolidator.DataConsolidated
-        {
-            add { DataConsolidatedHandler += value; }
-            remove { DataConsolidatedHandler -= value; }
-        }
+        public event DataConsolidatedHandler DataConsolidated;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTimelessConsolidator" /> class.
         /// </summary>
-        /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="TradeBar"/>. The default
+        /// <param name="selector">Extracts the value from a data instance to be formed into a new bar which inherits from <see cref="IBaseData"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
@@ -84,39 +76,43 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTimelessConsolidator" /> class.
         /// </summary>
-        /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="TradeBar"/>. The default
+        /// <param name="valueSelector">Extracts the value from a data instance to be formed into a new bar which inherits from <see cref="IBaseData"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
-        protected BaseTimelessConsolidator(PyObject selector, PyObject volumeSelector = null)
+        protected BaseTimelessConsolidator(PyObject valueSelector, PyObject volumeSelector = null)
+        {
+            Selector = TryToConvertSelector(valueSelector, nameof(valueSelector)) ?? (x => x.Value);
+            VolumeSelector = TryToConvertSelector(volumeSelector, nameof(volumeSelector)) ?? (x => 0);
+        }
+
+        /// <summary>
+        /// Tries to convert the given python selector to a C# one. If the conversion is not
+        /// possible it returns null
+        /// </summary>
+        /// <param name="selector">The python selector to be converted</param>
+        /// <param name="selectorName">The name of the selector to be used in case an exception is thrown</param>
+        /// <exception cref="ArgumentException">This exception will be thrown if it's not possible to convert the
+        /// given python selector to C#</exception>
+        private Func<IBaseData, decimal> TryToConvertSelector(PyObject selector, string selectorName)
         {
             using (Py.GIL())
             {
+                Func<IBaseData, decimal> resultSelector;
                 if (selector != null && !selector.IsNone())
                 {
-                    if (!selector.TryConvertToDelegate(out Selector))
+                    if (!selector.TryConvertToDelegate(out resultSelector))
                     {
                         throw new ArgumentException(
-                            "Unable to convert parameter 'selector' to delegate type Func<IBaseData, decimal>");
+                            $"Unable to convert parameter {selectorName} to delegate type Func<IBaseData, decimal>");
                     }
                 }
                 else
                 {
-                    Selector = x => x.Value;
+                    resultSelector = null;
                 }
 
-                if (volumeSelector != null && !volumeSelector.IsNone())
-                {
-                    if (!volumeSelector.TryConvertToDelegate(out VolumeSelector))
-                    {
-                        throw new ArgumentException(
-                            "Unable to convert parameter 'volumeSelector' to delegate type Func<IBaseData, decimal>");
-                    }
-                }
-                else
-                {
-                    VolumeSelector = x => 0;
-                }
+                return resultSelector;
             }
         }
 
@@ -129,13 +125,14 @@ namespace QuantConnect.Data.Consolidators
             var currentValue = Selector(data);
             var volume = VolumeSelector(data);
 
-            // if we're already in a bar then update it
+            // If we're already in a bar then update it
             if (CurrentBar != null)
             {
                 UpdateBar(data.Time, currentValue, volume);
-                CheckIfBarIsClosed();
             }
 
+            // The state of the CurrentBar could have changed after UpdateBar(),
+            // then we might need to create a new bar
             if (CurrentBar == null)
             {
                 CreateNewBar(data);
@@ -143,19 +140,13 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Update the current bar being created with the given data
+        /// Updates the current RangeBar being created with the given data.
+        /// Additionally, if it's the case, it consolidates the current RangeBar
         /// </summary>
         /// <param name="time">Time of the given data</param>
         /// <param name="currentValue">Value of the given data</param>
         /// <param name="volume">Volume of the given data</param>
         protected abstract void UpdateBar(DateTime time, decimal currentValue, decimal volume);
-
-        /// <summary>
-        /// Checks if the current bar being created has closed. If that is the case, it consolidates
-        /// the bar, resets the current bar and stores the needed information from the last bar to
-        /// create the next bar
-        /// </summary>
-        protected abstract void CheckIfBarIsClosed();
 
         /// <summary>
         /// Creates a new bar with the given data

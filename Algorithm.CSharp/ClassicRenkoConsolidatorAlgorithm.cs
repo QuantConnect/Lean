@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             renkoClose.DataConsolidated += (sender, consolidated) =>
             {
                 // call our event handler for renko data
-                HandleRenkoClose(consolidated);
+                HandleRenkoClose(consolidated as RenkoBar);
             };
 
             // register the consolidator for updates
@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
             var renko7bar = new ClassicRenkoConsolidator<TradeBar>(2.5m, x => (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7m, x => x.Volume);
             renko7bar.DataConsolidated += (sender, consolidated) =>
             {
-                HandleRenko7Bar(consolidated);
+                HandleRenko7Bar(consolidated as RenkoBar);
             };
 
             // register the consolidator for updates

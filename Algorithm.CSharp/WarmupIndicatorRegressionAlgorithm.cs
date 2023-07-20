@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -42,12 +43,14 @@ namespace QuantConnect.Algorithm.CSharp
             var renkoConsolidator = new ClassicRenkoConsolidator(2m);
             renkoConsolidator.DataConsolidated += (sender, consolidated) =>
             {
+                var renkoBar = consolidated as RenkoBar;
+
                 if (IsWarmingUp) return;
                 if (!Portfolio.Invested)
                 {
                     SetHoldings(_spy, 1.0);
                 }
-                Log($"CLOSE - {consolidated.Time:o} - {consolidated.Open} {consolidated.Close}");
+                Log($"CLOSE - {renkoBar.Time:o} - {renkoBar.Open} {renkoBar.Close}");
             };
             var sma = new SimpleMovingAverage("SMA", 3);
             RegisterIndicator(_spy, sma, renkoConsolidator);

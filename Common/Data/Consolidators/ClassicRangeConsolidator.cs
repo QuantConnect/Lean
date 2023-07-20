@@ -20,14 +20,20 @@ using Python.Runtime;
 namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
-    /// This consolidator can transform a stream of <see cref="IBaseData"/> instances into a stream of <see cref="RangeBar"/>
+    /// This consolidator can transform a stream of <see cref="IBaseData"/> instances into a stream of <see cref="RangeBar"/>.
+    /// The difference between this consolidator and <see cref="RangeConsolidator"/>, is that this last one creates intermediate/
+    /// phantom RangeBar's (RangeBar's with zero volume) if the price rises up or falls down by above/below two times the range 
+    /// size. Therefore, <see cref="RangeConsolidator"/> leaves no space between two adyacent RangeBar's since it always start 
+    /// a new RangeBar one range above the last RangeBar's High value or one range below the last RangeBar's Low value, where 
+    /// one range equals to one minimum price change.
     /// </summary>
     public class ClassicRangeConsolidator : RangeConsolidator
     {
         /// <summary>
         ///Initializes a new instance of the <see cref="ClassicRangeConsolidator" /> class.
         /// </summary>
-        /// <param name="range">The constant value size of each bar, where the unit is the minimum price variation of the RangeBar's symbol</param>
+        /// <param name="range">The Range interval sets the range in which the price moves, which in turn initiates the formation of a new bar.
+        /// One range equals to one minimum price change, where this last value is defined depending of the RangeBar's symbol</param>
         public ClassicRangeConsolidator(decimal range) : base(range)
         {
         }
@@ -35,7 +41,8 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Initializes a new instance of the <see cref="ClassicRangeConsolidator" /> class.
         /// </summary>
-        /// <param name="range">The constant value size of each bar, where the unit is the minimum price variation of the RangeBar's symbol</param>
+        /// <param name="range">The Range interval sets the range in which the price moves, which in turn initiates the formation of a new bar.
+        /// One range equals to one minimum price change, where this last value is defined depending of the RangeBar's symbol</param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RangeBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
@@ -51,7 +58,8 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Initializes a new instance of the <see cref="RangeConsolidator" /> class.
         /// </summary>
-        /// <param name="range">The constant value size of each bar, where the unit is the minimum price variation of the RangeBar's symbol</param>
+        /// <param name="range">The Range interval sets the range in which the price moves, which in turn initiates the formation of a new bar.
+        /// One range equals to one minimum price change, where this last value is defined depending of the RangeBar's symbol</param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RangeBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
@@ -64,7 +72,8 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Update the current RangeBar being created with the given data.
+        /// Updates the current RangeBar being created with the given data.
+        /// Additionally, if it's the case, it consolidates the current RangeBar
         /// </summary>
         /// <param name="time">Time of the given data</param>
         /// <param name="currentValue">Value of the given data</param>
@@ -72,6 +81,12 @@ namespace QuantConnect.Data.Consolidators
         protected override void UpdateBar(DateTime time, decimal currentValue, decimal volume)
         {
             CurrentRangeBar.Update(time, currentValue, volume);
+
+            if (CurrentRangeBar.IsClosed)
+            {
+                OnDataConsolidated(CurrentRangeBar);
+                CurrentRangeBar = null;
+            }
         }
     }
 }

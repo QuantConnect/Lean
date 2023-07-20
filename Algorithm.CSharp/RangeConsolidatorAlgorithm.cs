@@ -27,15 +27,13 @@ namespace QuantConnect.Algorithm.CSharp
     public class RangeConsolidatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private RangeBar _firstDataConsolidated;
-        protected virtual Resolution UniversalResolution => Resolution.Daily;
+        protected virtual decimal Range => 100m;
+        protected virtual Resolution Resolution => Resolution.Daily;
 
         public override void Initialize()
          {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
-            UniverseSettings.Resolution = UniversalResolution;
-
-            AddEquity("SPY");
+            SetStartAndEndDates();
+            AddEquity("SPY", Resolution);
             var rangeConsolidator = CreateRangeConsolidator();
             rangeConsolidator.DataConsolidated += OnDataConsolidated;
             _firstDataConsolidated = null;
@@ -58,15 +56,21 @@ namespace QuantConnect.Algorithm.CSharp
                 _firstDataConsolidated = rangeBar;
             }
 
-            if (Math.Abs(rangeBar.Low - rangeBar.High) != 1m)
+            if ((rangeBar.High - rangeBar.Low) != (Range * 0.01m)) // The minimum price change for SPY is 0.01, therefore the range size of each bar equals Range * 0.01
             {
                 throw new Exception($"The difference between the High and Low for all RangeBar's should be 1, but for this RangeBar was {Math.Abs(rangeBar.Low - rangeBar.High)}");
             }
         }
 
+        protected virtual void SetStartAndEndDates()
+        {
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
+        }
+
         protected virtual RangeConsolidator CreateRangeConsolidator()
         {
-            return new RangeConsolidator(100m);
+            return new RangeConsolidator(Range);
         }
 
         /// <summary>
@@ -82,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 3943;
+        public virtual long DataPoints => 48;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -92,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "0"},
             {"Average Win", "0%"},

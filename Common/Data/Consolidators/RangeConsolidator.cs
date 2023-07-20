@@ -30,9 +30,14 @@ namespace QuantConnect.Data.Consolidators
         protected RangeBar CurrentRangeBar;
 
         /// <summary>
+        /// Symbol properties database to use to get the minimum price variation of certain symbol
+        /// </summary>
+        private static SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+
+        /// <summary>
         /// Bar being created
         /// </summary>
-        protected override TradeBar CurrentBar
+        protected override IBaseData CurrentBar
         {
             get
             {
@@ -73,7 +78,8 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         ///Initializes a new instance of the <see cref="RangeConsolidator" /> class.
         /// </summary>
-        /// <param name="range">The constant value size of each bar, where the unit is the minimum price variation of the RangeBar's symbol</param>
+        /// <param name="range">The Range interval sets the range in which the price moves, which in turn initiates the formation of a new bar.
+        /// One range equals to one minimum price change, where this last value is defined depending of the RangeBar's symbol</param>
         public RangeConsolidator(decimal range)
             : this(range, x => x.Value)
         {
@@ -82,7 +88,8 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Initializes a new instance of the <see cref="RangeConsolidator" /> class.
         /// </summary>
-        /// <param name="range">The constant value size of each bar, where the unit is the minimum price variation of the RangeBar's symbol</param>
+        /// <param name="range">The Range interval sets the range in which the price moves, which in turn initiates the formation of a new bar.
+        /// One range equals to one minimum price change, where this last value is defined depending of the RangeBar's symbol</param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RangeBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
@@ -100,7 +107,8 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Initializes a new instance of the <see cref="RangeConsolidator" /> class.
         /// </summary>
-        /// <param name="range">The constant value size of each bar, where the unit is the minimum price variation of the RangeBar's symbol</param>
+        /// <param name="range">The Range interval sets the range in which the price moves, which in turn initiates the formation of a new bar.
+        /// One range equals to one minimum price change, where this last value is defined depending of the RangeBar's symbol</param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RangeBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
@@ -115,39 +123,34 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Update the current RangeBar being created with the given data.
+        /// Updates the current RangeBar being created with the given data.
+        /// Additionally, if it's the case, it consolidates the current RangeBar
         /// </summary>
         /// <param name="time">Time of the given data</param>
         /// <param name="currentValue">Value of the given data</param>
         /// <param name="volume">Volume of the given data</param>
         protected override void UpdateBar(DateTime time, decimal currentValue, decimal volume)
         {
-            if (currentValue > CurrentRangeBar.Low + 2 * RangeSize)
+            bool isRising;
+            if (currentValue > CurrentRangeBar.High)
             {
-                Rising(time, currentValue, volume);
+                isRising = true;
             }
-            else if (currentValue < CurrentRangeBar.High - (2 * RangeSize))
+            else if (currentValue < CurrentRangeBar.Low)
             {
-                Falling(time, currentValue, volume);
+                isRising = false;
             }
             else
             {
-                CurrentRangeBar.Update(time, currentValue, volume);
+                return;
             }
-        }
 
-        /// <summary>
-        /// Checks if the current RangeBar being created has closed. If that is the case, it consolidates
-        /// the bar, resets the current RangeBar and stores the needed information from the last bar to
-        /// create the next bar
-        /// <see cref="UpdateBar(DateTime, decimal, decimal)"/>
-        /// </summary>
-        protected override void CheckIfBarIsClosed()
-        {
-            if (CurrentRangeBar != null && CurrentRangeBar.IsClosed)
+            CurrentRangeBar.Update(time, currentValue, volume);
+            while (CurrentRangeBar.IsClosed)
             {
                 OnDataConsolidated(CurrentRangeBar);
-                CurrentRangeBar = null;
+                CurrentRangeBar = new RangeBar(CurrentRangeBar.Symbol, CurrentRangeBar.EndTime, RangeSize, isRising ? CurrentRangeBar.High + _minimumPriceVariation : CurrentRangeBar.Low - _minimumPriceVariation, 0);
+                CurrentRangeBar.Update(time, currentValue, Math.Abs(CurrentRangeBar.Low - currentValue) > RangeSize ? 0 : volume); // Intermediate/phantom RangeBar's have zero volume
             }
         }
 
@@ -163,7 +166,7 @@ namespace QuantConnect.Data.Consolidators
 
             if (_firstTick)
             {
-                _minimumPriceVariation = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(data.Symbol.ID.Market, data.Symbol, data.Symbol.ID.SecurityType, "USD").MinimumPriceVariation;
+                _minimumPriceVariation = _symbolPropertiesDatabase.GetSymbolProperties(data.Symbol.ID.Market, data.Symbol, data.Symbol.ID.SecurityType, "USD").MinimumPriceVariation;
                 RangeSize = _minimumPriceVariation * Range;
                 open = Math.Ceiling(open / RangeSize) * RangeSize;
                 _firstTick = false;
@@ -173,45 +176,11 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Creates intermediate/phantom RangeBar's when the price is rising
-        /// </summary>
-        /// <param name="time">Time of the given data</param>
-        /// <param name="currentValue">Value of the given data</param>
-        /// <param name="volume">Volume of the given data</param>
-        private void Rising(DateTime time, decimal currentValue, decimal volume)
-        {
-            while (currentValue - CurrentRangeBar.Low > RangeSize)
-            {
-                CurrentRangeBar.Update(time, currentValue, volume);
-                OnDataConsolidated(CurrentRangeBar);
-                CurrentRangeBar = new RangeBar(CurrentRangeBar.Symbol, CurrentRangeBar.EndTime, RangeSize, CurrentRangeBar.Close + _minimumPriceVariation, 0);
-            }
-            CurrentRangeBar = null;
-        }
-
-        /// <summary>
-        /// Creates intermediate/phantom RangeBar's when the price is falling
-        /// </summary>
-        /// <param name="time">Time of the given data</param>
-        /// <param name="currentValue">Value of the given data</param>
-        /// <param name="volume">Volume of the given data</param>
-        private void Falling(DateTime time, decimal currentValue, decimal volume)
-        {
-            while (CurrentRangeBar.High - currentValue > RangeSize)
-            {
-                CurrentRangeBar.Update(time, currentValue, volume);
-                OnDataConsolidated(CurrentRangeBar);
-                CurrentRangeBar = new RangeBar(CurrentRangeBar.Symbol, CurrentRangeBar.EndTime, RangeSize, CurrentRangeBar.Close - _minimumPriceVariation, 0);
-            }
-            CurrentRangeBar = null;
-        }
-
-        /// <summary>
         /// Event invocator for the DataConsolidated event. This should be invoked
         /// by derived classes when they have consolidated a new piece of data.
         /// </summary>
         /// <param name="consolidated">The newly consolidated data</param>
-        private void OnDataConsolidated(RangeBar consolidated)
+        protected void OnDataConsolidated(RangeBar consolidated)
         {
             DataConsolidated?.Invoke(this, consolidated);
 

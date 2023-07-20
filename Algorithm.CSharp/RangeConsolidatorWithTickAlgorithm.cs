@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
+
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
@@ -20,6 +22,49 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class RangeConsolidatorWithTickAlgorithm : RangeConsolidatorAlgorithm
     {
-        protected override Resolution UniversalResolution => Resolution.Tick;
+        protected override Resolution Resolution => Resolution.Tick;
+        protected override decimal Range => 1m;
+
+        protected override void SetStartAndEndDates()
+        {
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 07);
+        }
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public override long DataPoints => 2857175;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "0"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
+            {"Portfolio Turnover", "0%"},
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+        };
     }
 }

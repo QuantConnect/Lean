@@ -17,29 +17,35 @@ from AlgorithmImports import *
 ### Example algorithm of how to use RangeConsolidator
 ### </summary>
 class RangeConsolidatorAlgorithm(QCAlgorithm):
-    UniversalResolution = Resolution.Daily
+    def GetResolution(self):
+        return Resolution.Daily
 
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 11)
-        self.UniverseSettings.Resolution = self.UniversalResolution
+    def GetRange(self):
+        return 100;
 
-        self.AddEquity("SPY")
+    def Initialize(self):        
+        self.SetStartAndEndDates();
+        self.AddEquity("SPY", self.GetResolution())
         rangeConsolidator = self.CreateRangeConsolidator()
         rangeConsolidator.DataConsolidated += self.OnDataConsolidated
         self.firstDataConsolidated = None;
 
         self.SubscriptionManager.AddConsolidator("SPY", rangeConsolidator)
 
+    def SetStartAndEndDates(self):
+        self.SetStartDate(2013, 10, 7)
+        self.SetEndDate(2013, 10, 11)
+
     def OnEndOfAlgorithm(self):
         if self.firstDataConsolidated == None:
             raise Exception("The consolidator should have consolidated at least one RangeBar, but it did not consolidated any one")
+
     def CreateRangeConsolidator(self):
-        return RangeConsolidator(100)
+        return RangeConsolidator(self.GetRange())
 
     def OnDataConsolidated(self, sender, rangeBar):
-        if (self.firstDataConsolidated == None):
+        if (self.firstDataConsolidated is None):
             self.firstDataConsolidated = rangeBar
 
-        if abs(rangeBar.Low - rangeBar.High) != 1:
-            raise Exception(f"The difference between the High and Low for all RangeBar's should be 1, but for this RangeBar was {abs(rangeBar.Low - rangeBar.High)}")
+        if round(rangeBar.High - rangeBar.Low, 2) != self.GetRange() * 0.01: # The minimum price change for SPY is 0.01, therefore the range size of each bar equals Range * 0.01
+            raise Exception(f"The difference between the High and Low for all RangeBar's should be {self.GetRange() * 0.01}, but for this RangeBar was {round(rangeBar.Low - rangeBar.High, 2)}")

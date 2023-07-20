@@ -74,14 +74,15 @@ namespace QuantConnect.Tests.Common.Data
                     new decimal[]{ 91.01m, 91.01m, 92.01m, 92.01m, 0m },
                     new decimal[]{ 92.02m, 92.02m, 93.02m, 93.02m, 0m },
                     new decimal[]{ 93.03m, 93.03m, 94.03m, 94.03m, 0m },
-                    new decimal[]{ 94.5m, 93.5m, 94.5m, 93.5m, 20m},
+                    new decimal[]{ 94.04m, 93.5m, 94.5m, 93.5m, 20m},
                     new decimal[]{ 93.49m, 92.49m, 93.49m, 92.49m, 0m},
                     new decimal[]{ 92.48m, 91.48m, 92.48m, 91.48m, 0m},
                     new decimal[]{ 91.47m, 90.47m, 91.47m, 90.47m, 0m},
-                    new decimal[]{ 89.5m, 89m, 90m, 90m, 20m},
-                    new decimal[]{ 90.5m, 90m, 91m, 91m, 20m},
-                    new decimal[]{ 91.5m, 90.5m, 91.5m, 90.5m, 10m},
-                    new decimal[]{ 90m, 90m, 91m, 91m, 20m},
+                    new decimal[]{ 90.46m, 89.46m, 90.46m, 89.46m, 10m},
+                    new decimal[]{ 89.45m, 89m, 90m, 90m, 10m},
+                    new decimal[]{ 90.01m, 90m, 91m, 91m, 20m},
+                    new decimal[]{ 91.01m, 90.5m, 91.5m, 90.5m, 10m},
+                    new decimal[]{ 90.49m, 90m, 91m, 91m, 20m},
                     new decimal[]{ 91.01m, 91.01m, 92.01m, 92.01m, 0m }
                 };
         }
