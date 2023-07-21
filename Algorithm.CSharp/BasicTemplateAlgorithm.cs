@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings(_spy, 1);
+                LimitOrder(_spy, 1, Securities[_spy].Price);
                 Debug("Purchased Stock");
             }
         }

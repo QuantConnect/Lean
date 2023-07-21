@@ -135,6 +135,13 @@ namespace QuantConnect
                     message += Invariant($" StopPrice: {orderEvent.StopPrice.Value.SmartRounding()}");
                 }
 
+                if (orderEvent.TrailingAmount.HasValue)
+                {
+                    var trailingAmountString = TrailingStopOrder.TrailingAmount(orderEvent.TrailingAmount.Value,
+                        orderEvent.TrailingAsPercentage ?? false, orderEvent.FillPriceCurrency);
+                    message += $" TrailingAmount: {trailingAmountString}";
+                }
+
                 if (orderEvent.TriggerPrice.HasValue)
                 {
                     message += Invariant($" TriggerPrice: {orderEvent.TriggerPrice.Value.SmartRounding()}");
@@ -177,6 +184,13 @@ namespace QuantConnect
                 if (orderEvent.StopPrice.HasValue)
                 {
                     message += Invariant($" SP:{orderEvent.StopPrice.Value.SmartRounding()}");
+                }
+
+                if (orderEvent.TrailingAmount.HasValue)
+                {
+                    var trailingAmountString = TrailingStopOrder.TrailingAmount(orderEvent.TrailingAmount.Value,
+                        orderEvent.TrailingAsPercentage ?? false, orderEvent.FillPriceCurrency);
+                    message += $" TA: {trailingAmountString}";
                 }
 
                 if (orderEvent.TriggerPrice.HasValue)
@@ -349,6 +363,37 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.TrailingStopOrder"/> class and its consumers or related classes
+        /// </summary>
+        public static class TrailingStopOrder
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string Tag(Orders.TrailingStopOrder order)
+            {
+                return Invariant($"Stop Price: {order.PriceCurrency}{order.StopPrice} Trailing Amount: {TrailingAmount(order)}");
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.TrailingStopOrder order)
+            {
+                return Invariant($@"{Messages.Order.ToString(order)} at stop {order.StopPrice.SmartRounding()}. Trailing amount: {
+                    TrailingAmount(order)}");
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string TrailingAmount(Orders.TrailingStopOrder order)
+            {
+                return TrailingAmount(order.TrailingAmount, order.TrailingAsPercentage, order.PriceCurrency);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string TrailingAmount(decimal trailingAmount, bool trailingAsPercentage, string priceCurrency)
+            {
+                return trailingAsPercentage ? Invariant($"{trailingAmount * 100}%") : Invariant($"{priceCurrency}{trailingAmount}");
+            }
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="Orders.SubmitOrderRequest"/> class and its consumers or related classes
         /// </summary>
         public static class SubmitOrderRequest
@@ -382,6 +427,10 @@ namespace QuantConnect
                 if (request.StopPrice.HasValue)
                 {
                     updates.Add(Invariant($"StopPrice: {request.StopPrice.Value.SmartRounding()}"));
+                }
+                if (request.TrailingAmount.HasValue)
+                {
+                    updates.Add(Invariant($"TrailingAmount: {request.TrailingAmount.Value.SmartRounding()}"));
                 }
                 if (request.TriggerPrice.HasValue)
                 {

@@ -47,6 +47,8 @@ namespace QuantConnect.Algorithm.CSharp
                 _tickets.Add(LimitIfTouchedOrder(_aapl, 10, 10, 10));
                 _tickets.Add(LimitOrder(_aapl, 10, 5));
                 _tickets.Add(StopLimitOrder(_aapl, 10, 15, 15));
+                _tickets.Add(TrailingStopOrder(_aapl, 10, 15, 1.5m, trailingAsPercentage: false));
+                _tickets.Add(TrailingStopOrder(_aapl, 10, 15, 0.1m, trailingAsPercentage: true));
             }
         }
 
@@ -58,6 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception($"The Quantity of order with ID: {ticket.OrderId} should be 69, but was {ticket.Quantity}");
                 }
+
                 switch (ticket.OrderType)
                 {
                     case OrderType.LimitIfTouched:
@@ -71,16 +74,38 @@ namespace QuantConnect.Algorithm.CSharp
                             throw new Exception($"Order with ID: {ticket.OrderId} should have a Limit Price equal to 1.43, but was {ticket.Get(OrderField.LimitPrice)}");
                         }
                         break;
+
                     case OrderType.Limit:
                         if (ticket.Get(OrderField.LimitPrice) != 0.7143m)
                         {
                             throw new Exception($"Order with ID: {ticket.OrderId} should have a Limit Price equal to 0.7143, but was {ticket.Get(OrderField.LimitPrice)}");
                         }
                         break;
+
                     case OrderType.StopLimit:
                         if (ticket.Get(OrderField.StopPrice) != 2.14m)
                         {
                             throw new Exception($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
+                        }
+                        break;
+
+                    case OrderType.TrailingStop:
+                        if (ticket.Get(OrderField.StopPrice) != 2.14m)
+                        {
+                            throw new Exception($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
+                        }
+
+                        if (ticket.Get<bool>(OrderField.TrailingAsPercentage))
+                        {
+                            // Trailing amount unchanged
+                            if (ticket.Get(OrderField.TrailingAmount) != 0.1m)
+                            {
+                                throw new Exception($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 0.214m, but was {ticket.Get(OrderField.TrailingAmount)}");
+                            }
+                        }
+                        else if (ticket.Get(OrderField.TrailingAmount) != 0.214m)
+                        {
+                            throw new Exception($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 0.214m, but was {ticket.Get(OrderField.TrailingAmount)}");
                         }
                         break;
                 }

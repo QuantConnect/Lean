@@ -51,6 +51,11 @@ namespace QuantConnect.Orders
         public decimal? TriggerPrice { get; private set; }
 
         /// <summary>
+        /// The trailing stop order trailing amount
+        /// </summary>
+        public decimal? TrailingAmount { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="UpdateOrderRequest"/> class
         /// </summary>
         /// <param name="time">The time the request was submitted</param>
@@ -63,6 +68,7 @@ namespace QuantConnect.Orders
             LimitPrice = fields.LimitPrice;
             StopPrice = fields.StopPrice;
             TriggerPrice = fields.TriggerPrice;
+            TrailingAmount = fields.TrailingAmount;
         }
 
         /// <summary>
@@ -84,7 +90,7 @@ namespace QuantConnect.Orders
         /// <returns>True if the update request is allowed for a closed order</returns>
         public bool IsAllowedForClosedOrder()
         {
-            return !Quantity.HasValue && !LimitPrice.HasValue && !StopPrice.HasValue && !TriggerPrice.HasValue;
+            return !Quantity.HasValue && !LimitPrice.HasValue && !StopPrice.HasValue && !TriggerPrice.HasValue & !TrailingAmount.HasValue;
         }
     }
 }

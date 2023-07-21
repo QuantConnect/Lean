@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Securities;
@@ -235,35 +236,56 @@ namespace QuantConnect.Orders
                 case OrderField.LimitPrice:
                     if (_submitRequest.OrderType == OrderType.ComboLimit)
                     {
-                        return AccessOrder<ComboLimitOrder>(this, field, o => o.GroupOrderManager.LimitPrice, r => r.LimitPrice);
+                        return AccessOrder<ComboLimitOrder, decimal>(this, field, o => o.GroupOrderManager.LimitPrice, r => r.LimitPrice);
                     }
                     if (_submitRequest.OrderType == OrderType.Limit || _submitRequest.OrderType == OrderType.ComboLegLimit)
                     {
-                        return AccessOrder<LimitOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        return AccessOrder<LimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }
                     if (_submitRequest.OrderType == OrderType.StopLimit)
                     {
-                        return AccessOrder<StopLimitOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        return AccessOrder<StopLimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }
                     if (_submitRequest.OrderType == OrderType.LimitIfTouched)
                     {
-                        return AccessOrder<LimitIfTouchedOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        return AccessOrder<LimitIfTouchedOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }
                     break;
 
                 case OrderField.StopPrice:
                     if (_submitRequest.OrderType == OrderType.StopLimit)
                     {
-                        return AccessOrder<StopLimitOrder>(this, field, o => o.StopPrice, r => r.StopPrice);
+                        return AccessOrder<StopLimitOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
                     }
                     if (_submitRequest.OrderType == OrderType.StopMarket)
                     {
-                        return AccessOrder<StopMarketOrder>(this, field, o => o.StopPrice, r => r.StopPrice);
+                        return AccessOrder<StopMarketOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
+                    }
+                    if (_submitRequest.OrderType == OrderType.TrailingStop)
+                    {
+                        return AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
                     }
                     break;
 
                 case OrderField.TriggerPrice:
-                    return AccessOrder<LimitIfTouchedOrder>(this, field, o => o.TriggerPrice, r => r.TriggerPrice);
+                    return AccessOrder<LimitIfTouchedOrder, decimal>(this, field, o => o.TriggerPrice, r => r.TriggerPrice);
+
+                case OrderField.TrailingAmount:
+                    return AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.TrailingAmount, r => r.TrailingAmount);
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(field), field, null);
+            }
+
+            throw new ArgumentException(Messages.OrderTicket.GetFieldError(this, field));
+        }
+
+        public T Get<T>(OrderField field)
+        {
+            switch (field)
+            {
+                case OrderField.TrailingAsPercentage:
+                    return (T)(object)AccessOrder<TrailingStopOrder, bool>(this, field, o => o.TrailingAsPercentage, r => r.TrailingAsPercentage);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(field), field, null);
@@ -620,8 +642,7 @@ namespace QuantConnect.Orders
             return ticket.OrderId;
         }
 
-
-        private static decimal AccessOrder<T>(OrderTicket ticket, OrderField field, Func<T, decimal> orderSelector, Func<SubmitOrderRequest, decimal> requestSelector)
+        private static P AccessOrder<T, P>(OrderTicket ticket, OrderField field, Func<T, P> orderSelector, Func<SubmitOrderRequest, P> requestSelector)
             where T : Order
         {
             var order = ticket._order;

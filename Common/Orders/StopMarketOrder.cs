@@ -27,7 +27,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Stop price for this stop market order.
         /// </summary>
-        public decimal StopPrice;
+        public decimal StopPrice { get; internal set; }
 
         /// <summary>
         /// StopMarket Order Type
