@@ -106,14 +106,6 @@ namespace QuantConnect.Report
                 new TextReportElement("version", ReportKey.StrategyVersion, version),
                 new TextReportElement("stylesheet", ReportKey.Stylesheet, File.ReadAllText("css/report.css")),
                 new TextReportElement("live marker key", ReportKey.LiveMarker, live == null ? string.Empty : "Live "),
-                new TextReportElement("intrinio username", ReportKey.IntrinioUsername, backtestConfiguration?.Parameters["intrinio-username"]),
-                new TextReportElement("live intrinio username", ReportKey.LiveIntrinioUsername, liveConfiguration?.Parameters["intrinio-username"]),
-                new TextReportElement("intrinio password", ReportKey.IntrinioPassword, backtestConfiguration?.Parameters["intrinio-password"]),
-                new TextReportElement("live intrinio password", ReportKey.LiveIntrinioPassword, liveConfiguration?.Parameters["intrinio-password"]),
-                new TextReportElement("ema fast", ReportKey.EMAFast, backtestConfiguration?.Parameters["ema-fast"]),
-                new TextReportElement("live ema fast", ReportKey.LiveEMAFast, liveConfiguration?.Parameters["ema-fast"]),
-                new TextReportElement("ema slow", ReportKey.EMASlow, backtestConfiguration?.Parameters["ema-slow"]),
-                new TextReportElement("live ema slow", ReportKey.LiveEMASlow, liveConfiguration?.Parameters["ema-slow"]),
 
                 //KPI's Backtest:
                 new RuntimeDaysReportElement("runtime days kpi", ReportKey.BacktestDays, backtest, live),
@@ -139,6 +131,9 @@ namespace QuantConnect.Report
                 new RollingSharpeReportElement("rolling sharpe ratio plot", ReportKey.RollingSharpe, backtest, live),
                 new LeverageUtilizationReportElement("leverage plot", ReportKey.LeverageUtilization, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
                 new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
+
+                //
+                new ParametersElement("parameters", ReportKey.Parameters, backtest, live),
 
                 // Array of Crisis Plots:
                 new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live),
