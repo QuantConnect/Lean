@@ -15,6 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: free space
+        run: df -h && rm -rf /__t/* && df -h
+
       - name: Build
         run: dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
 

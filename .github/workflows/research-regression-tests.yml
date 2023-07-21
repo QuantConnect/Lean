@@ -15,6 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: free space
+        run: df -h && rm -rf /__t/* && df -h
+
       - name: install dependencies
         run: |
           pip3 install papermill==2.4.0 clr-loader==0.1.6
