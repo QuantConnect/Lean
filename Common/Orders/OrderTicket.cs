@@ -390,6 +390,23 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
+        /// the ticker with stop trailing amount specified in <paramref name="trailingAmount"/> and with tag specified in <paramref name="tag"/>
+        /// </summary>
+        /// <param name="trailingAmount">The new trailing amount for this order ticket</param>
+        /// <param name="tag">The new tag for this order ticket</param>
+        /// <returns><see cref="OrderResponse"/> from updating the order</returns>
+        public OrderResponse UpdateStopTrailingAmount(decimal trailingAmount, string tag = null)
+        {
+            var fields = new UpdateOrderFields()
+            {
+                TrailingAmount = trailingAmount,
+                Tag = tag
+            };
+            return Update(fields);
+        }
+
+        /// <summary>
         /// Submits a new request to cancel this order
         /// </summary>
         public OrderResponse Cancel(string tag = null)
