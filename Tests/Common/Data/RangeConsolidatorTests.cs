@@ -28,24 +28,12 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void RangeConsolidatorReturnsExpectedValues()
         {
-            var time = new DateTime(2016, 1, 1);
+            using var consolidator = CreateConsolidator(100m);
             var testValues = new List<decimal>() { 90m, 94.5m, 94m, 89.5m, 89m, 90.5m, 90m, 91.5m, 90m, 90.5m, 92.5m };
-
-            var returnedBars = new List<RangeBar>();
-
-            using var consolidator = CreateConsolidator();
-            consolidator.DataConsolidated += (sender, rangeBar) =>
-            {
-                returnedBars.Add(rangeBar);
-            };
-
-            for (int i = 0; i < testValues.Count; i++)
-            {
-                var data = new IndicatorDataPoint(Symbols.IBM, time.AddSeconds(i), testValues[i]);
-                consolidator.Update(data);
-            }
+            var returnedBars = UpdateConsolidator(consolidator, testValues, "IBM");
 
             var expectedValues = GetRangeConsolidatorExpectedValues();
+            RangeBar lastRangeBar = null;
             for (int index = 0; index < returnedBars.Count; index++)
             {
                 var open = expectedValues[index][0];
@@ -54,18 +42,130 @@ namespace QuantConnect.Tests.Common.Data
                 var close = expectedValues[index][3];
                 var volume = expectedValues[index][4];
 
+                // Check RangeBar's values
                 Assert.AreEqual(open, returnedBars[index].Open);
                 Assert.AreEqual(low, returnedBars[index].Low);
                 Assert.AreEqual(high, returnedBars[index].High);
                 Assert.AreEqual(close, returnedBars[index].Close);
                 Assert.AreEqual(volume, returnedBars[index].Volume);
+
+                // Check the size of each RangeBar
+                Assert.AreEqual(1, Math.Round(returnedBars[index].High - returnedBars[index].Low, 2));
+
+                // Check the Open value of the current bar is outside last bar Low-High interval
+                if (lastRangeBar != null)
+                {
+                    Assert.IsTrue(returnedBars[index].Open < lastRangeBar.Low || returnedBars[index].Open > lastRangeBar.High);
+                }
+
+                lastRangeBar = returnedBars[index];
             }
         }
 
-        protected virtual RangeConsolidator CreateConsolidator()
+        [TestCaseSource(nameof(PriceGapBehaviorIsTheExpectedOneTestCases))]
+        public virtual void PriceGapBehaviorIsTheExpectedOne(Symbol symbol, double minimumPriceVariation, double range)
         {
-            return new RangeConsolidator(100m, x => x.Value, x => 10m);
+            using var consolidator = CreateConsolidator((decimal)range);
+            var testValues = new List<decimal>() { 90m, 94.5m, 94m, 89.5m, 89m, 90.5m, 90m, 91.5m, 90m, 90.5m, 92.5m };
+            var returnedBars = UpdateConsolidator(consolidator, testValues, symbol);
+            RangeBar lastRangeBar = null;
+            for (int index = 0; index < returnedBars.Count; index++)
+            {
+                // Check the gap between each bar is of the size of the minimum price variation
+                if (lastRangeBar != null)
+                {
+                    Assert.IsTrue(returnedBars[index].Open == (lastRangeBar.High + (decimal)minimumPriceVariation) || returnedBars[index].Open == (lastRangeBar.Low - (decimal)minimumPriceVariation));
+                }
+                lastRangeBar = returnedBars[index];
+            }
         }
+
+        [TestCaseSource(nameof(ConsolidatorCreatesExpectedBarsTestCases))]
+        public void ConsolidatorCreatesExpectedBarsInDifferentScenarios(List<decimal> testValues, RangeBar[] expectedBars)
+        {
+            using var consolidator = CreateConsolidator(100m);
+            var returnedBars = UpdateConsolidator(consolidator, testValues, Symbols.IBM);
+
+            Assert.IsNotEmpty(returnedBars);
+            for (int index = 0; index < returnedBars.Count; index++)
+            {
+                Assert.AreEqual(expectedBars[index].Open, returnedBars[index].Open);
+                Assert.AreEqual(expectedBars[index].Low, returnedBars[index].Low);
+                Assert.AreEqual(expectedBars[index].High, returnedBars[index].High);
+                Assert.AreEqual(expectedBars[index].Close, returnedBars[index].Close);
+                Assert.AreEqual(expectedBars[index].Volume, returnedBars[index].Volume);
+            }
+        }
+
+        protected virtual RangeConsolidator CreateConsolidator(decimal range)
+        {
+            return new RangeConsolidator(range, x => x.Value, x => 10m);
+        }
+
+        private List<RangeBar> UpdateConsolidator(RangeConsolidator rangeConsolidator, List<decimal> testValues, Symbol symbol)
+        {
+            var time = new DateTime(2016, 1, 1);
+            using var consolidator = rangeConsolidator;
+            var returnedBars = new List<RangeBar>();
+
+            consolidator.DataConsolidated += (sender, rangeBar) =>
+            {
+                returnedBars.Add(rangeBar);
+            };
+
+            for (int i = 0; i < testValues.Count; i++)
+            {
+                var data = new IndicatorDataPoint(symbol, time.AddSeconds(i), testValues[i]);
+                consolidator.Update(data);
+            }
+
+            return returnedBars;
+        }
+
+        private static object[] ConsolidatorCreatesExpectedBarsTestCases = new object[]
+        {
+            new object[] { new List<decimal>(){ 90m, 94.5m }, new RangeBar[] {
+                new RangeBar{ Open = 90m, Low = 90m, High = 91m, Close = 91m, Volume = 10m },
+                new RangeBar{ Open = 91.01m, Low = 91.01m, High = 92.01m, Close = 92.01m, Volume = 0m },
+                new RangeBar{ Open = 92.02m, Low = 92.02m, High = 93.02m, Close = 93.02m, Volume = 0m },
+                new RangeBar{ Open = 93.03m, Low = 93.03m, High = 94.03m, Close = 94.03m, Volume = 0m },
+            }},
+            new object[] { new List<decimal>(){ 94m, 89.5m }, new RangeBar[] {
+                new RangeBar { Open = 94m, Low = 93m, High = 94m, Close = 93m, Volume = 10m},
+                new RangeBar { Open = 92.99m, Low = 91.99m, High = 92.99m, Close = 91.99m, Volume = 0m },
+                new RangeBar { Open = 91.98m, Low = 90.98m, High = 91.98m, Close = 90.98m, Volume = 0m },
+                new RangeBar { Open = 90.97m, Low = 89.97m, High = 90.97m, Close = 89.97m, Volume = 0m }
+            }},
+            new object[] { new List<decimal>{ 90m, 94.5m, 89.5m }, new RangeBar[] {
+                new RangeBar { Open = 90m, Low = 90m, High = 91m, Close = 91m, Volume = 10m },
+                new RangeBar { Open = 91.01m, Low = 91.01m, High = 92.01m, Close = 92.01m, Volume = 0m },
+                new RangeBar { Open = 92.02m, Low = 92.02m, High = 93.02m, Close = 93.02m, Volume = 0m },
+                new RangeBar { Open = 93.03m, Low = 93.03m, High = 94.03m, Close = 94.03m, Volume = 0m },
+                new RangeBar { Open = 94.04m, Low = 93.50m, High = 94.50m, Close = 93.50m, Volume = 10m},
+                new RangeBar { Open = 93.49m, Low = 92.49m, High = 93.49m, Close = 92.49m, Volume = 0m },
+                new RangeBar { Open = 92.48m, Low = 91.48m, High = 92.48m, Close = 91.48m, Volume = 0m },
+                new RangeBar { Open = 91.47m, Low = 90.47m, High = 91.47m, Close = 90.47m, Volume = 0m }
+            }},
+            new object[] { new List<decimal>{ 94.5m, 89.5m, 94.5m }, new RangeBar[] {
+                new RangeBar { Open = 95m, Low = 94m, High = 95m, Close = 94m, Volume = 10m},
+                new RangeBar { Open = 93.99m, Low = 92.99m, High = 93.99m, Close = 92.99m, Volume = 0m },
+                new RangeBar { Open = 92.98m, Low = 91.98m, High = 92.98m, Close = 91.98m, Volume = 0m },
+                new RangeBar { Open = 91.97m, Low = 90.97m, High = 91.97m, Close = 90.97m, Volume = 0m },
+                new RangeBar { Open = 90.96m, Low = 89.96m, High = 90.96m, Close = 89.96m, Volume = 0m },
+                new RangeBar { Open = 89.95m, Low = 89.50m, High = 90.50m, Close = 90.50m, Volume = 10m },
+                new RangeBar { Open = 90.51m, Low = 90.51m, High = 91.51m, Close = 91.51m, Volume = 0m },
+                new RangeBar { Open = 91.52m, Low = 91.52m, High = 92.52m, Close = 92.52m, Volume = 0m },
+                new RangeBar { Open = 92.53m, Low = 92.53m, High = 93.53m, Close = 93.53m, Volume = 0m },
+            }},
+        };
+
+        protected static object[] PriceGapBehaviorIsTheExpectedOneTestCases = new object[]
+        {
+            new object[] { Symbols.XAUUSD, 0.001, 1000},
+            new object[] { Symbols.XAGUSD, 0.00001, 100000},
+            new object[] { Symbols.DE30EUR, 0.1, 10},
+            new object[] { Symbols.XAUJPY, 1, 1}
+        };
 
         protected virtual decimal[][] GetRangeConsolidatorExpectedValues()
         {

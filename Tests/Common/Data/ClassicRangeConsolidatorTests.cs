@@ -14,15 +14,45 @@
 */
 
 using QuantConnect.Data.Consolidators;
+using System.Collections.Generic;
+using QuantConnect.Data.Market;
+using NUnit.Framework;
 
 namespace QuantConnect.Tests.Common.Data
 {
     public class ClassicRangeConsolidatorTests : RangeConsolidatorTests
     {
-        protected override RangeConsolidator CreateConsolidator()
+        protected override RangeConsolidator CreateConsolidator(decimal range)
         {
-            return new ClassicRangeConsolidator(100m, x => x.Value, x => 10m);
+            return new ClassicRangeConsolidator(range, x => x.Value, x => 10m);
         }
+
+        /// <summary>
+        /// This test doesn't work for ClassicRangeConsolidator since this consolidator
+        /// doesn't create intermediate/phantom bars
+        /// </summary>
+        [TestCaseSource(nameof(PriceGapBehaviorIsTheExpectedOneTestCases))]
+        public override void PriceGapBehaviorIsTheExpectedOne(Symbol symbol, double minimumPriceVariation, double range)
+        {
+        }
+
+        private new static object[] ConsolidatorCreatesExpectedBarsTestCases = new object[]
+        {
+            new object[] { new List<decimal>(){ 90m, 94.5m }, new RangeBar[] {
+                new RangeBar{ Open = 90m, Low = 90m, High = 91m, Close = 91m, Volume = 10m }
+            }},
+            new object[] { new List<decimal>(){ 94m, 89.5m }, new RangeBar[] {
+                new RangeBar { Open = 94m, Low = 93m, High = 94m, Close = 93m, Volume = 10m}
+            }},
+            new object[] { new List<decimal>{ 90m, 94.5m, 89.5m }, new RangeBar[] {
+                new RangeBar { Open = 90m, Low = 90m, High = 91m, Close = 91m, Volume = 10m },
+                new RangeBar { Open = 94.5m, Low = 93.50m, High = 94.50m, Close = 93.50m, Volume = 10m}
+            }},
+            new object[] { new List<decimal>{ 94.5m, 89.5m, 94.5m }, new RangeBar[] {
+                new RangeBar { Open = 95m, Low = 94m, High = 95m, Close = 94m, Volume = 10m},
+                new RangeBar { Open = 89.50m, Low = 89.50m, High = 90.50m, Close = 90.50m, Volume = 10m }
+            }},
+        };
 
         protected override decimal[][] GetRangeConsolidatorExpectedValues()
         {

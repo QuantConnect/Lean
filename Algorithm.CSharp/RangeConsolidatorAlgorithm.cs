@@ -55,10 +55,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 _firstDataConsolidated = rangeBar;
             }
+            // Log($"{rangeBar.Open} {rangeBar.High} {rangeBar.Low} {rangeBar.Close}");
 
-            if ((rangeBar.High - rangeBar.Low) != (Range * 0.01m)) // The minimum price change for SPY is 0.01, therefore the range size of each bar equals Range * 0.01
+            if (Math.Round(rangeBar.High - rangeBar.Low, 2) != (Range * 0.01m)) // The minimum price change for SPY is 0.01, therefore the range size of each bar equals Range * 0.01
             {
-                throw new Exception($"The difference between the High and Low for all RangeBar's should be 1, but for this RangeBar was {Math.Abs(rangeBar.Low - rangeBar.High)}");
+                throw new Exception($"The difference between the High and Low for all RangeBar's should be {Range * 0.01m}, but for this RangeBar was {Math.Round(rangeBar.High - rangeBar.Low), 2}");
             }
         }
 

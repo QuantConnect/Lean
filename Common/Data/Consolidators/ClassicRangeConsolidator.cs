@@ -51,7 +51,7 @@ namespace QuantConnect.Data.Consolidators
             decimal range,
             Func<IBaseData, decimal> selector,
             Func<IBaseData, decimal> volumeSelector = null)
-            : base(range, selector ?? (x => x.Value), volumeSelector ?? (x => x is TradeBar bar ? bar.Volume : 0))
+            : base(range, selector, volumeSelector)
         {
         }
 
@@ -80,12 +80,12 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volume">Volume of the given data</param>
         protected override void UpdateBar(DateTime time, decimal currentValue, decimal volume)
         {
-            CurrentRangeBar.Update(time, currentValue, volume);
+            CurrentBar.Update(time, currentValue, volume);
 
-            if (CurrentRangeBar.IsClosed)
+            if (CurrentBar.IsClosed)
             {
-                OnDataConsolidated(CurrentRangeBar);
-                CurrentRangeBar = null;
+                OnDataConsolidated(CurrentBar);
+                CurrentBar = null;
             }
         }
     }

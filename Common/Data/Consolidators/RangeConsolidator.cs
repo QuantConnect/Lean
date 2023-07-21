@@ -23,11 +23,10 @@ namespace QuantConnect.Data.Consolidators
     /// <summary>
     /// This consolidator can transform a stream of <see cref="IBaseData"/> instances into a stream of <see cref="RangeBar"/>
     /// </summary>
-    public class RangeConsolidator : BaseTimelessConsolidator
+    public class RangeConsolidator : BaseTimelessConsolidator<RangeBar>
     {
         private bool _firstTick;
         private decimal _minimumPriceVariation;
-        protected RangeBar CurrentRangeBar;
 
         /// <summary>
         /// Symbol properties database to use to get the minimum price variation of certain symbol
@@ -37,17 +36,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Bar being created
         /// </summary>
-        protected override IBaseData CurrentBar
-        {
-            get
-            {
-                return CurrentRangeBar;
-            }
-            set
-            {
-                CurrentRangeBar = (RangeBar)value;
-            }
-        }
+        protected override RangeBar CurrentBar { get; set; }
 
         /// <summary>
         /// Range for each RangeBar, this is, the difference between the High and Low for each
@@ -68,12 +57,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public override IBaseData WorkingData => CurrentRangeBar?.Clone();
-
-        /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        public new event EventHandler<RangeBar> DataConsolidated;
+        public override IBaseData WorkingData => CurrentBar?.Clone();
 
         /// <summary>
         ///Initializes a new instance of the <see cref="RangeConsolidator" /> class.
@@ -98,7 +82,7 @@ namespace QuantConnect.Data.Consolidators
             decimal range,
             Func<IBaseData, decimal> selector,
             Func<IBaseData, decimal> volumeSelector = null)
-            : base(selector ?? (x => x.Value), volumeSelector ?? (x => x is TradeBar bar ? bar.Volume : 0))
+            : base(selector, volumeSelector)
         {
             Range = range;
             _firstTick = true;
@@ -132,11 +116,11 @@ namespace QuantConnect.Data.Consolidators
         protected override void UpdateBar(DateTime time, decimal currentValue, decimal volume)
         {
             bool isRising;
-            if (currentValue > CurrentRangeBar.High)
+            if (currentValue > CurrentBar.High)
             {
                 isRising = true;
             }
-            else if (currentValue < CurrentRangeBar.Low)
+            else if (currentValue < CurrentBar.Low)
             {
                 isRising = false;
             }
@@ -145,12 +129,12 @@ namespace QuantConnect.Data.Consolidators
                 return;
             }
 
-            CurrentRangeBar.Update(time, currentValue, volume);
-            while (CurrentRangeBar.IsClosed)
+            CurrentBar.Update(time, currentValue, volume);
+            while (CurrentBar.IsClosed)
             {
-                OnDataConsolidated(CurrentRangeBar);
-                CurrentRangeBar = new RangeBar(CurrentRangeBar.Symbol, CurrentRangeBar.EndTime, RangeSize, isRising ? CurrentRangeBar.High + _minimumPriceVariation : CurrentRangeBar.Low - _minimumPriceVariation, 0);
-                CurrentRangeBar.Update(time, currentValue, Math.Abs(CurrentRangeBar.Low - currentValue) > RangeSize ? 0 : volume); // Intermediate/phantom RangeBar's have zero volume
+                OnDataConsolidated(CurrentBar);
+                CurrentBar = new RangeBar(CurrentBar.Symbol, CurrentBar.EndTime, RangeSize, isRising ? CurrentBar.High + _minimumPriceVariation : CurrentBar.Low - _minimumPriceVariation, 0);
+                CurrentBar.Update(time, currentValue, Math.Abs(CurrentBar.Low - currentValue) > RangeSize ? 0 : volume); // Intermediate/phantom RangeBar's have zero volume
             }
         }
 
@@ -172,21 +156,7 @@ namespace QuantConnect.Data.Consolidators
                 _firstTick = false;
             }
 
-            CurrentRangeBar = new RangeBar(data.Symbol, data.Time, RangeSize, open, volume);
-        }
-
-        /// <summary>
-        /// Event invocator for the DataConsolidated event. This should be invoked
-        /// by derived classes when they have consolidated a new piece of data.
-        /// </summary>
-        /// <param name="consolidated">The newly consolidated data</param>
-        protected void OnDataConsolidated(RangeBar consolidated)
-        {
-            DataConsolidated?.Invoke(this, consolidated);
-
-            DataConsolidatedHandler?.Invoke(this, consolidated);
-
-            Consolidated = consolidated;
+            CurrentBar = new RangeBar(data.Symbol, data.Time, RangeSize, open, volume);
         }
     }
 }

@@ -23,16 +23,29 @@ namespace QuantConnect.Data.Consolidators
     /// Represents a timeless consolidator which depends on the given values. This consolidator
     /// is meant to consolidate data into bars that do not depend on time, e.g., RangeBar's.
     /// </summary>
-    public abstract class BaseTimelessConsolidator : IDataConsolidator
+    public abstract class BaseTimelessConsolidator<T> : IDataConsolidator
+        where T : IBaseData
     {
-        protected Func<IBaseData, decimal> Selector;
-        protected Func<IBaseData, decimal> VolumeSelector;
-        protected DataConsolidatedHandler DataConsolidatedHandler;
+        /// <summary>
+        /// Extracts the value from a data instance to be formed into a <see cref="T"/>.
+        /// </summary>
+        protected Func<IBaseData, decimal> Selector { get; set; }
+
+        /// <summary>
+        /// Extracts the volume from a data instance. The default value is null which does
+        /// not aggregate volume per bar.
+        /// </summary>
+        protected Func<IBaseData, decimal> VolumeSelector { get; set; }
+
+        /// <summary>
+        /// Event handler type for the IDataConsolidator.DataConsolidated event
+        /// </summary>
+        protected DataConsolidatedHandler DataConsolidatedHandler { get; set; }
 
         /// <summary>
         /// Bar being created
         /// </summary>
-        protected virtual IBaseData CurrentBar {  get; set; }
+        protected virtual T CurrentBar {  get; set; }
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
@@ -51,17 +64,26 @@ namespace QuantConnect.Data.Consolidators
         public Type InputType => typeof(IBaseData);
 
         /// <summary>
-        /// Gets <see cref="IBaseData"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
+        /// Gets <see cref="T"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
-        public virtual Type OutputType => typeof(IBaseData);
+        public virtual Type OutputType => typeof(T);
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
-        public event DataConsolidatedHandler DataConsolidated;
+        public event EventHandler<T> DataConsolidated;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseTimelessConsolidator" /> class.
+        /// Event handler that fires when a new piece of data is produced
+        /// </summary>
+        event DataConsolidatedHandler IDataConsolidator.DataConsolidated
+        {
+            add { DataConsolidatedHandler += value; }
+            remove { DataConsolidatedHandler -= value; }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseTimelessConsolidator{T}" /> class.
         /// </summary>
         /// <param name="selector">Extracts the value from a data instance to be formed into a new bar which inherits from <see cref="IBaseData"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
@@ -70,20 +92,19 @@ namespace QuantConnect.Data.Consolidators
         protected BaseTimelessConsolidator(Func<IBaseData, decimal> selector, Func<IBaseData, decimal> volumeSelector = null)
         {
             Selector = selector ?? (x => x.Value);
-            VolumeSelector = volumeSelector ?? (x => 0);
+            VolumeSelector = volumeSelector ?? (x => x is TradeBar bar ? bar.Volume : (x is Tick tick ? tick.Quantity : 0));
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseTimelessConsolidator" /> class.
+        /// Initializes a new instance of the <see cref="BaseTimelessConsolidator{T}" /> class.
         /// </summary>
         /// <param name="valueSelector">Extracts the value from a data instance to be formed into a new bar which inherits from <see cref="IBaseData"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         protected BaseTimelessConsolidator(PyObject valueSelector, PyObject volumeSelector = null)
+            : this (TryToConvertSelector(valueSelector, nameof(valueSelector)) ?? (x => x.Value), TryToConvertSelector(volumeSelector, nameof(volumeSelector)) ?? (x => 0))
         {
-            Selector = TryToConvertSelector(valueSelector, nameof(valueSelector)) ?? (x => x.Value);
-            VolumeSelector = TryToConvertSelector(volumeSelector, nameof(volumeSelector)) ?? (x => 0);
         }
 
         /// <summary>
@@ -94,7 +115,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="selectorName">The name of the selector to be used in case an exception is thrown</param>
         /// <exception cref="ArgumentException">This exception will be thrown if it's not possible to convert the
         /// given python selector to C#</exception>
-        private Func<IBaseData, decimal> TryToConvertSelector(PyObject selector, string selectorName)
+        private static Func<IBaseData, decimal> TryToConvertSelector(PyObject selector, string selectorName)
         {
             using (Py.GIL())
             {
@@ -153,6 +174,20 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="data">The new data for the bar</param>
         protected abstract void CreateNewBar(IBaseData data);
+
+        /// <summary>
+        /// Event invocator for the DataConsolidated event. This should be invoked
+        /// by derived classes when they have consolidated a new piece of data.
+        /// </summary>
+        /// <param name="consolidated">The newly consolidated data</param>
+        protected void OnDataConsolidated(T consolidated)
+        {
+            DataConsolidated?.Invoke(this, consolidated);
+
+            DataConsolidatedHandler?.Invoke(this, consolidated);
+
+            Consolidated = consolidated;
+        }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         /// <filterpriority>2</filterpriority>

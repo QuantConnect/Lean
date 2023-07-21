@@ -22,10 +22,8 @@ namespace QuantConnect.Data.Consolidators
     /// <summary>
     /// This consolidator can transform a stream of <see cref="IBaseData"/> instances into a stream of <see cref="RenkoBar"/>
     /// </summary>
-    public class ClassicRenkoConsolidator : BaseTimelessConsolidator
+    public class ClassicRenkoConsolidator : BaseTimelessConsolidator<RenkoBar>
     {
-        private RenkoBar _currentBar;
-        private DataConsolidatedHandler _dataConsolidatedHandler;
         private decimal _barSize;
         private bool _evenBars;
         private decimal? _lastCloseValue;
@@ -33,17 +31,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Bar being created
         /// </summary>
-        protected override IBaseData CurrentBar
-        {
-            get
-            {
-                return _currentBar;
-            }
-            set
-            {
-                _currentBar = (RenkoBar)value;
-            }
-        }
+        protected override RenkoBar CurrentBar { get; set; }
 
         /// <summary>
         /// Gets the kind of the bar
@@ -53,17 +41,12 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public override IBaseData WorkingData => _currentBar?.Clone();
+        public override IBaseData WorkingData => CurrentBar?.Clone();
 
         /// <summary>
         /// Gets <see cref="RenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
         public override Type OutputType => typeof(RenkoBar);
-
-        /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        public event DataConsolidatedHandler DataConsolidated;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
@@ -94,7 +77,7 @@ namespace QuantConnect.Data.Consolidators
             Func<IBaseData, decimal> selector,
             Func<IBaseData, decimal> volumeSelector = null,
             bool evenBars = true)
-            : base(selector ?? (x => x.Value), volumeSelector ?? (x => 0))
+            : base(selector, volumeSelector)
         {
             EpsilonCheck(barSize);
             _barSize = barSize;
@@ -145,13 +128,13 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volume">Volume of the given data</param>
         protected override void UpdateBar(DateTime time, decimal currentValue, decimal volume)
         {
-            _currentBar.Update(time, currentValue, volume);
+            CurrentBar.Update(time, currentValue, volume);
 
-            if (_currentBar.IsClosed)
+            if (CurrentBar.IsClosed)
             {
-                _lastCloseValue = _currentBar.Close;
-                OnDataConsolidated(_currentBar);
-                _currentBar = null;
+                _lastCloseValue = CurrentBar.Close;
+                OnDataConsolidated(CurrentBar);
+                CurrentBar = null;
             }
         }
 
@@ -170,7 +153,7 @@ namespace QuantConnect.Data.Consolidators
                 open = Math.Ceiling(open / _barSize) * _barSize;
             }
 
-            _currentBar = new RenkoBar(data.Symbol, data.Time, _barSize, open, volume);
+            CurrentBar = new RenkoBar(data.Symbol, data.Time, _barSize, open, volume);
         }
 
         private static void EpsilonCheck(decimal barSize)
@@ -180,20 +163,6 @@ namespace QuantConnect.Data.Consolidators
                 throw new ArgumentOutOfRangeException(nameof(barSize),
                     "RenkoConsolidator bar size must be positve and greater than 1e-28");
             }
-        }
-
-        /// <summary>
-        /// Event invocator for the DataConsolidated event. This should be invoked
-        /// by derived classes when they have consolidated a new piece of data.
-        /// </summary>
-        /// <param name="consolidated">The newly consolidated data</param>
-        private void OnDataConsolidated(RenkoBar consolidated)
-        {
-            DataConsolidated?.Invoke(this, consolidated);
-
-            _dataConsolidatedHandler?.Invoke(this, consolidated);
-
-            Consolidated = consolidated;
         }
     }
 

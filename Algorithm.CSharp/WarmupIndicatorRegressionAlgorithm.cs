@@ -43,14 +43,12 @@ namespace QuantConnect.Algorithm.CSharp
             var renkoConsolidator = new ClassicRenkoConsolidator(2m);
             renkoConsolidator.DataConsolidated += (sender, consolidated) =>
             {
-                var renkoBar = consolidated as RenkoBar;
-
                 if (IsWarmingUp) return;
                 if (!Portfolio.Invested)
                 {
                     SetHoldings(_spy, 1.0);
                 }
-                Log($"CLOSE - {renkoBar.Time:o} - {renkoBar.Open} {renkoBar.Close}");
+                Log($"CLOSE - {consolidated.Time:o} - {consolidated.Open} {consolidated.Close}");
             };
             var sma = new SimpleMovingAverage("SMA", 3);
             RegisterIndicator(_spy, sma, renkoConsolidator);

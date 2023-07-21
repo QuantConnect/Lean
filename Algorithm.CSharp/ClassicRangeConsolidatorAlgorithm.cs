@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         protected override RangeConsolidator CreateRangeConsolidator()
         {
-            return new ClassicRangeConsolidator(100m);
+            return new ClassicRangeConsolidator(Range);
         }
 
         protected override void OnDataConsolidated(Object sender, RangeBar rangeBar)
