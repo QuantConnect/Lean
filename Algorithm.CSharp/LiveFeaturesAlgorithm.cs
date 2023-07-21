@@ -16,6 +16,7 @@
 using System;
 using System.Globalization;
 using Newtonsoft.Json;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -32,6 +33,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="runtime statistics" />
     public class LiveTradingFeaturesAlgorithm : QCAlgorithm
     {
+        private bool _isConnected;
+
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data.
         /// </summary>
@@ -49,6 +52,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             //Custom/Bitcoin Live Data: 24/7
             AddData<Bitcoin>("BTC", Resolution.Second, TimeZones.Utc);
+
+            //if the algorithm is connected to the brokerage
+            _isConnected = true;
         }
 
         /// <summary>
@@ -87,6 +93,32 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug("Purchased IBM on " + Time.ToShortDateString());
                 Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
             }
+        }
+
+        /// <summary>
+        /// Brokerage message event handler. This method is called for all types of brokerage messages.
+        /// </summary>
+        public override void OnBrokerageMessage(BrokerageMessageEvent messageEvent)
+        {
+            Debug($"Brokerage meesage received - {messageEvent.ToString()}");
+        }
+
+        /// <summary>
+        /// Brokerage disconnected event handler. This method is called when the brokerage connection is lost.
+        /// </summary>
+        public override void OnBrokerageDisconnect()
+        {
+            _isConnected = false;
+            Debug($"Brokerage disconnected!");
+        }
+
+        /// <summary>
+        /// Brokerage reconnected event handler. This method is called when the brokerage connection is restored after a disconnection.
+        /// </summary>
+        public override void OnBrokerageReconnect()
+        {
+            _isConnected = true;
+            Debug($"Brokerage reconnected!");
         }
 
         /// <summary>

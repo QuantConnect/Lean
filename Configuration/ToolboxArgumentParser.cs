@@ -38,7 +38,7 @@ namespace QuantConnect.Configuration
                                                      + "/DukascopyDownloader or DDL/IEXDownloader or IEXDL"
                                                      + "/FxcmDownloader or FDL/FxcmVolumeDownload or FVDL/GoogleDownloader or GDL/IBDownloader or IBDL"
                                                      + "/KrakenDownloader or KDL/OandaDownloader or ODL/QuandlBitfinexDownloader or QBDL"
-                                                     + "/YahooDownloader or YDL/AlgoSeekFuturesConverter or ASFC/AlgoSeekOptionsConverter or ASOC"
+                                                     + "/YahooDownloader or YDL/AlgoSeekFuturesConverter or ASFC"
                                                      + "/IVolatilityEquityConverter or IVEC/KaikoDataConverter or KDC/NseMarketDataConverter or NMDC"
                                                      + "/QuantQuoteConverter or QQC/CoarseUniverseGenerator or CUG/\n"
                                                      + "RandomDataGenerator or RDG\n"

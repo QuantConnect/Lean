@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,6 +22,7 @@ using Newtonsoft.Json.Linq;
 using NodaTime;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Util
 {
@@ -97,25 +98,64 @@ namespace QuantConnect.Util
             /// <returns>A new instance of the <see cref="MarketHoursDatabase"/> class</returns>
             public MarketHoursDatabase Convert()
             {
-                var entries = new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>();
+                // first we parse the entries keys so that later we can sort by security type
+                var entries = new Dictionary<SecurityDatabaseKey, MarketHoursDatabaseEntryJson>(Entries.Count);
                 foreach (var entry in Entries)
                 {
                     try
                     {
                         var key = SecurityDatabaseKey.Parse(entry.Key);
-                        if (key == null)
+                        if (key != null)
                         {
-                            continue;
+                            entries[key] = entry.Value;
                         }
-
-                        entries[key] = entry.Value.Convert();
                     }
                     catch (Exception err)
                     {
                         Log.Error(err);
                     }
                 }
-                return new MarketHoursDatabase(entries);
+
+                var result = new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>(Entries.Count);
+                // we sort so we process generic entries and non options first
+                foreach (var entry in entries.OrderBy(kvp => kvp.Key.Symbol != null ? 1 : 0).ThenBy(kvp => kvp.Key.SecurityType.IsOption() ? 1 : 0))
+                {
+                    try
+                    {
+                        result.TryGetValue(entry.Key.CreateCommonKey(), out var marketEntry);
+                        var underlyingEntry = GetUnderlyingEntry(entry.Key, result);
+                        result[entry.Key] = entry.Value.Convert(underlyingEntry, marketEntry);
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
+                    }
+                }
+                return new MarketHoursDatabase(result);
+            }
+
+            /// <summary>
+            /// Helper method to get the already processed underlying entry for options
+            /// </summary>
+            private static MarketHoursDatabase.Entry GetUnderlyingEntry(SecurityDatabaseKey key, Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry> result)
+            {
+                MarketHoursDatabase.Entry underlyingEntry = null;
+                if (key.SecurityType.IsOption())
+                {
+                    // if option, let's get the underlyings entry
+                    var underlyingSecurityType = Symbol.GetUnderlyingFromOptionType(key.SecurityType);
+                    var underlying = OptionSymbol.MapToUnderlying(key.Symbol, key.SecurityType);
+                    var underlyingKey = new SecurityDatabaseKey(key.Market, underlying, underlyingSecurityType);
+
+                    if (!result.TryGetValue(underlyingKey, out underlyingEntry)
+                        // let's retry with the wildcard
+                        && underlying != SecurityDatabaseKey.Wildcard)
+                    {
+                        var underlyingKeyWildCard = new SecurityDatabaseKey(key.Market, SecurityDatabaseKey.Wildcard, underlyingSecurityType);
+                        result.TryGetValue(underlyingKeyWildCard, out underlyingEntry);
+                    }
+                }
+                return underlyingEntry;
             }
         }
 
@@ -183,7 +223,7 @@ namespace QuantConnect.Util
             /// Holiday date strings
             /// </summary>
             [JsonProperty("holidays")]
-            public List<string> Holidays;
+            public List<string> Holidays = new();
 
             /// <summary>
             /// Early closes by date
@@ -223,7 +263,7 @@ namespace QuantConnect.Util
             /// Converts this json representation to the <see cref="MarketHoursDatabase.Entry"/> type
             /// </summary>
             /// <returns>A new instance of the <see cref="MarketHoursDatabase.Entry"/> class</returns>
-            public MarketHoursDatabase.Entry Convert()
+            public MarketHoursDatabase.Entry Convert(MarketHoursDatabase.Entry underlyingEntry, MarketHoursDatabase.Entry marketEntry)
             {
                 var hours = new Dictionary<DayOfWeek, LocalMarketHours>
                 {
@@ -236,8 +276,44 @@ namespace QuantConnect.Util
                     { DayOfWeek.Saturday, new LocalMarketHours(DayOfWeek.Saturday, Saturday) }
                 };
                 var holidayDates = Holidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", CultureInfo.InvariantCulture)).ToHashSet();
-                var earlyCloses = EarlyCloses.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
-                var lateOpens = LateOpens.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
+                IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses = EarlyCloses.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
+                IReadOnlyDictionary<DateTime, TimeSpan> lateOpens = LateOpens.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
+
+                if(underlyingEntry != null)
+                {
+                    // If we have no entries but the underlying does, let's use the underlyings
+                    if (holidayDates.Count == 0)
+                    {
+                        holidayDates = underlyingEntry.ExchangeHours.Holidays;
+                    }
+                    if (earlyCloses.Count == 0)
+                    {
+                        earlyCloses = underlyingEntry.ExchangeHours.EarlyCloses;
+                    }
+                    if (lateOpens.Count == 0)
+                    {
+                        lateOpens = underlyingEntry.ExchangeHours.LateOpens;
+                    }
+                }
+
+                if(marketEntry != null)
+                {
+                    if (marketEntry.ExchangeHours.Holidays.Count > 0)
+                    {
+                        holidayDates.UnionWith(marketEntry.ExchangeHours.Holidays);
+                    }
+
+                    if (marketEntry.ExchangeHours.EarlyCloses.Count > 0 )
+                    {
+                        earlyCloses = earlyCloses.Union(marketEntry.ExchangeHours.EarlyCloses).ToDictionary();
+                    }
+
+                    if (marketEntry.ExchangeHours.LateOpens.Count > 0)
+                    {
+                        lateOpens = lateOpens.Union(marketEntry.ExchangeHours.LateOpens).ToDictionary();
+                    }
+                }
+
                 var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours, earlyCloses, lateOpens);
                 return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
             }

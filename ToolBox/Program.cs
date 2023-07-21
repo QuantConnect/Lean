@@ -16,7 +16,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
-using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
 using QuantConnect.ToolBox.AlphaVantageDownloader;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.CoinApiDataConverter;
@@ -64,7 +63,7 @@ namespace QuantConnect.ToolBox
                 = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
             var factorFileProvider
                 = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
-            
+
             mapFileProvider.Initialize(dataProvider);
             factorFileProvider.Initialize(mapFileProvider, dataProvider);
 
@@ -135,17 +134,13 @@ namespace QuantConnect.ToolBox
                         break;
                 }
             }
-            else     
+            else
             {
                 switch (targetApp)
                 {
                     case "asfc":
                     case "algoseekfuturesconverter":
                         AlgoSeekFuturesProgram.AlgoSeekFuturesConverter(GetParameterOrExit(optionsObject, "date"));
-                        break;
-                    case "asoc":
-                    case "algoseekoptionsconverter":
-                        AlgoSeekOptionsConverterProgram.AlgoSeekOptionsConverter(GetParameterOrExit(optionsObject, "date"));
                         break;
                     case "ivec":
                     case "ivolatilityequityconverter":
@@ -190,7 +185,7 @@ namespace QuantConnect.ToolBox
                         RandomDataGeneratorProgram.RandomDataGenerator(
                             GetParameterOrExit(optionsObject, "start"),
                             GetParameterOrExit(optionsObject, "end"),
-                            GetParameterOrExit(optionsObject, "symbol-count"),
+                            GetParameterOrDefault(optionsObject, "symbol-count", null),
                             GetParameterOrDefault(optionsObject, "market", null),
                             GetParameterOrDefault(optionsObject, "security-type", "Equity"),
                             GetParameterOrDefault(optionsObject, "resolution", "Minute"),

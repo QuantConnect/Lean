@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 536;
+        public int AlgorithmHistoryDataPoints => -1;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -85,45 +85,27 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "199"},
             {"Average Win", "0.04%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "1331.360%"},
+            {"Compounding Annual Return", "1331.217%"},
             {"Drawdown", "0.600%"},
-            {"Expectancy", "132.065"},
+            {"Expectancy", "132.060"},
             {"Net Profit", "3.461%"},
-            {"Sharpe Ratio", "38.704"},
+            {"Sharpe Ratio", "38.703"},
             {"Probabilistic Sharpe Ratio", "99.757%"},
             {"Loss Rate", "1%"},
             {"Win Rate", "99%"},
             {"Profit-Loss Ratio", "133.61"},
-            {"Alpha", "6.07"},
+            {"Alpha", "6.069"},
             {"Beta", "0.798"},
             {"Annual Standard Deviation", "0.198"},
             {"Annual Variance", "0.039"},
-            {"Information Ratio", "57.997"},
+            {"Information Ratio", "57.99"},
             {"Tracking Error", "0.098"},
             {"Treynor Ratio", "9.587"},
             {"Total Fees", "$260.38"},
             {"Estimated Strategy Capacity", "$400000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Fitness Score", "0.621"},
-            {"Kelly Criterion Estimate", "34.359"},
-            {"Kelly Criterion Probability Value", "0.442"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "30277.012"},
-            {"Portfolio Turnover", "0.621"},
-            {"Total Insights Generated", "5"},
-            {"Total Insights Closed", "3"},
-            {"Total Insights Analysis Completed", "3"},
-            {"Long Insight Count", "3"},
-            {"Short Insight Count", "2"},
-            {"Long/Short Ratio", "150.0%"},
-            {"Estimated Monthly Alpha Value", "$801912.7740"},
-            {"Total Accumulated Estimated Alpha Value", "$129197.0580"},
-            {"Mean Population Estimated Insight Value", "$43065.6860"},
-            {"Mean Population Direction", "100%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "100%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1cb6986aa4193a8722b0a9d502776ebb"}
+            {"Portfolio Turnover", "76.30%"},
+            {"OrderListHash", "f2bd9cbf64e927cf8d0435508260467e"}
         };
     }
 }

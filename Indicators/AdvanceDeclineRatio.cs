@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,6 +27,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the <see cref="AdvanceDeclineRatio"/> class
         /// </summary>
-        public AdvanceDeclineRatio(string name) : base(name, (entries) => entries.Count()) { }
+        public AdvanceDeclineRatio(string name)
+            : base(name, (entries) => entries.Count(), (advance, decline) => decline == 0m ? advance : advance / decline) { }
     }
 }

@@ -127,10 +127,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             int period = 63,
             Resolution resolution = Resolution.Daily,
             double targetReturn = 0.02,
-            IPortfolioOptimizer optimizer = null)
-            : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, period, resolution, targetReturn, optimizer)
+            PyObject optimizer = null)
+            : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, period, resolution, targetReturn, null)
         {
             SetRebalancingFunc(rebalance);
+
+            if (optimizer != null)
+            {
+                if (optimizer.TryConvert<IPortfolioOptimizer>(out var csharpOptimizer))
+                {
+                    _optimizer = csharpOptimizer;
+                }
+                else
+                {
+                    _optimizer = new PortfolioOptimizerPythonWrapper(optimizer);
+                }
+            }
         }
 
         /// <summary>
@@ -243,14 +255,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             var symbols = activeInsights.Select(x => x.Symbol).ToList();
 
-            // Get symbols' returns
+            // Get symbols' returns, we use simple return according to
+            // Meucci, Attilio, Quant Nugget 2: Linear vs. Compounded Returns – Common Pitfalls in Portfolio Management (May 1, 2010). 
+            // GARP Risk Professional, pp. 49-51, April 2010 , Available at SSRN: https://ssrn.com/abstract=1586656
             var returns = _symbolDataDict.FormReturnsMatrix(symbols);
 
-            // Calculate rate of returns
-            var rreturns = returns.Apply(e => Math.Pow(1.0 + e, 252.0) - 1.0);
-
             // The optimization method processes the data frame
-            var w = _optimizer.Optimize(rreturns);
+            var w = _optimizer.Optimize(returns);
 
             // process results
             if (w.Length > 0)

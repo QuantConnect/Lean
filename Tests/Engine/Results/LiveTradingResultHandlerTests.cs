@@ -26,12 +26,38 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
+using QuantConnect.Data.Custom.IconicTypes;
 
 namespace QuantConnect.Tests.Engine.Results
 {
     [TestFixture]
     public class LiveTradingResultHandlerTests
     {
+        [TestCase(true)]
+        [TestCase(false)]
+        public void CustomData(bool invested)
+        {
+            var algorithm = new AlgorithmStub();
+            var equity = algorithm.AddEquity("SPY");
+            var customData = algorithm.AddData<UnlinkedData>("SPY");
+            equity.Holdings.SetHoldings(1, 10);
+            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
+
+            if (invested)
+            {
+                Assert.AreEqual(1, result.Count);
+            }
+            else
+            {
+                Assert.AreEqual(2, result.Count);
+                Assert.IsTrue(result.TryGetValue(customData.Symbol.ID.ToString(), out var holding));
+                Assert.AreEqual(0, holding.Quantity);
+            }
+
+            Assert.IsTrue(result.TryGetValue(equity.Symbol.ID.ToString(), out var holding2));
+            Assert.AreEqual(10, holding2.Quantity);
+        }
+
         [Test]
         public void UninitializedAlgorithm()
         {
@@ -51,7 +77,7 @@ namespace QuantConnect.Tests.Engine.Results
         public void GetHoldingsPositions(bool invested)
         {
             var algorithm = new AlgorithmStub();
-            algorithm.AddFuture(Futures.Indices.SP500EMini);
+            var future = algorithm.AddFuture(Futures.Indices.SP500EMini);
             var equity = algorithm.AddEquity("SPY");
             equity.Holdings.SetHoldings(1, 10);
             var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
@@ -63,11 +89,11 @@ namespace QuantConnect.Tests.Engine.Results
             else
             {
                 Assert.AreEqual(2, result.Count);
-                Assert.IsTrue(result.TryGetValue("/ES", out var holding));
+                Assert.IsTrue(result.TryGetValue(future.Symbol.ID.ToString(), out var holding));
                 Assert.AreEqual(0, holding.Quantity);
             }
 
-            Assert.IsTrue(result.TryGetValue("SPY", out var holding2));
+            Assert.IsTrue(result.TryGetValue(equity.Symbol.ID.ToString(), out var holding2));
             Assert.AreEqual(10, holding2.Quantity);
         }
 
@@ -76,8 +102,8 @@ namespace QuantConnect.Tests.Engine.Results
         public void GetHoldingsNoPosition(bool invested)
         {
             var algorithm = new AlgorithmStub();
-            algorithm.AddFuture(Futures.Indices.SP500EMini);
-            algorithm.AddEquity("SPY");
+            var future = algorithm.AddFuture(Futures.Indices.SP500EMini);
+            var equity = algorithm.AddEquity("SPY");
             var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
 
             if (invested)
@@ -87,9 +113,9 @@ namespace QuantConnect.Tests.Engine.Results
             else
             {
                 Assert.AreEqual(2, result.Count);
-                Assert.IsTrue(result.TryGetValue("/ES", out var holding));
+                Assert.IsTrue(result.TryGetValue(future.Symbol.ID.ToString(), out var holding));
                 Assert.AreEqual(0, holding.Quantity);
-                Assert.IsTrue(result.TryGetValue("SPY", out var holding2));
+                Assert.IsTrue(result.TryGetValue(equity.Symbol.ID.ToString(), out var holding2));
                 Assert.AreEqual(0, holding2.Quantity);
             }
         }
@@ -99,7 +125,7 @@ namespace QuantConnect.Tests.Engine.Results
         public void GetHoldingsSkipCanonicalOption(bool invested)
         {
             var algorithm = new AlgorithmStub();
-            algorithm.AddEquity("SPY");
+            var equity = algorithm.AddEquity("SPY");
             algorithm.AddOption("SPY");
             var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
 
@@ -110,7 +136,7 @@ namespace QuantConnect.Tests.Engine.Results
             else
             {
                 Assert.AreEqual(1, result.Count);
-                Assert.IsTrue(result.TryGetValue("SPY", out var holding));
+                Assert.IsTrue(result.TryGetValue(equity.Symbol.ID.ToString(), out var holding));
                 Assert.AreEqual(0, holding.Quantity);
             }
         }

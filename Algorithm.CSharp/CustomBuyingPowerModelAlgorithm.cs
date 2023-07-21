@@ -80,6 +80,12 @@ namespace QuantConnect.Algorithm.CSharp
                 // this model never allows a lack of funds get in the way of buying securities
                 return parameters.Sufficient();
             }
+
+            // Let's always return 0 as the maintenance margin so we avoid margin call orders
+            public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
+            {
+                return new MaintenanceMargin(0);
+            }
         }
 
         /// <summary>
@@ -127,27 +133,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.844"},
             {"Treynor Ratio", "1.555"},
             {"Total Fees", "$30.00"},
-            {"Estimated Strategy Capacity", "$22000000.00"},
+            {"Estimated Strategy Capacity", "$150000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.395"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "98.148"},
-            {"Return Over Maximum Drawdown", "384.626"},
-            {"Portfolio Turnover", "0.395"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Portfolio Turnover", "26.62%"},
             {"OrderListHash", "eba70a03119f2e8fe526d1092fbc36d0"}
         };
     }

@@ -33,22 +33,29 @@
     </PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="CustomDataTypeHistoryAlgorithm.py" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.17" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.21" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AccumulativeInsightPortfolioRegressionAlgorithm.py" />
+    <Content Include="CustomDataTypeHistoryAlgorithm.py" />
     <Content Include="CorrectConsolidatedBarTypeForTickTypesAlgorithm.py" />
+    <Content Include="IndustryStandardSecurityIdentifiersRegressionAlgorithm.py" />
     <Content Include="AddAlphaModelAlgorithm.py" />
     <Content Include="AddFutureOptionContractDataStreamingRegressionAlgorithm.py" />
     <Content Include="AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm.py" />
     <Content Include="AddOptionContractExpiresRegressionAlgorithm.py" />
     <Content Include="AddOptionContractFromUniverseRegressionAlgorithm.py" />
     <Content Include="CustomMarginInterestRateModelAlgorithm.py" />
+    <Content Include="CustomPartialFillModelAlgorithm.py" />
     <Content Include="AddRiskManagementAlgorithm.py" />
     <Content Include="AddUniverseSelectionModelAlgorithm.py" />
+    <Compile Include="IndicatorWithRenkoBarsRegressionAlgorithm.py" />
     <Content Include="Alphas\ContingentClaimsAnalysisDefaultPredictionAlpha.py" />
     <Content Include="Alphas\GasAndCrudeOilEnergyCorrelationAlpha.py" />
     <Content Include="Alphas\GlobalEquityMeanReversionIBSAlpha.py" />
@@ -73,7 +80,6 @@
     <None Include="CustomDataIconicTypesAddDataRegressionAlgorithm.py" />
     <None Include="TrainingExampleAlgorithm.py" />
     <None Include="LongOnlyAlphaStreamAlgorithm.py" />
-    <None Include="CustomPartialFillModelAlgorithm.py" />
     <Content Include="BasicTemplateOptionsConsolidationAlgorithm.py" />
     <None Include="BasicTemplateOptionsPriceModel.py" />
     <Content Include="CoarseFineOptionUniverseChainRegressionAlgorithm.py" />
@@ -188,6 +194,7 @@
     <None Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
     <None Include="DropboxUniverseSelectionAlgorithm.py" />
     <None Include="DropboxCoarseFineAlgorithm.py" />
+    <None Include="EmaCrossAlphaModelFrameworkRegressionAlgorithm.py" />
     <None Include="EmaCrossFuturesFrontMonthAlgorithm.py" />
     <None Include="EmaCrossUniverseSelectionAlgorithm.py" />
     <None Include="EmaCrossUniverseSelectionFrameworkAlgorithm.py" />
@@ -207,7 +214,7 @@
     <None Include="MarginCallEventsAlgorithm.py" />
     <None Include="MarketOnOpenOnCloseAlgorithm.py" />
     <None Include="MarketOnCloseOrderBufferRegressionAlgorithm.py" />
-    <None Include="MaximumPortfolioDrawdownFrameworkAlgorithm.py" />
+    <None Include="MaximumDrawdownPercentPortfolioFrameworkRegressionAlgorithm.py" />
     <None Include="MeanVarianceOptimizationFrameworkAlgorithm.py" />
     <None Include="MovingAverageCrossAlgorithm.py" />
     <None Include="MultipleSymbolConsolidationAlgorithm.py" />
@@ -231,7 +238,7 @@
     <None Include="SectorExposureRiskFrameworkAlgorithm.py" />
     <None Include="StandardDeviationExecutionModelRegressionAlgorithm.py" />
     <None Include="TimeInForceAlgorithm.py" />
-    <None Include="TrailingStopRiskFrameworkAlgorithm.py" />
+    <None Include="TrailingStopRiskFrameworkRegressionAlgorithm.py" />
     <None Include="UncorrelatedUniverseSelectionFrameworkAlgorithm.py" />
     <None Include="UniverseSelectionRegressionAlgorithm.py" />
     <None Include="UpdateOrderRegressionAlgorithm.py" />

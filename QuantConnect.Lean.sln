@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30717.126
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 15.0.0.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Lean.Launcher", "Launcher\QuantConnect.Lean.Launcher.csproj", "{09E7B916-E58B-4021-BD8B-C10B4446E226}"
 EndProject
@@ -46,11 +46,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.ToolBox", "Too
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Research", "Research\QuantConnect.Research.csproj", "{9561D14A-467E-40AD-928E-EE9F758D7D98}"
 EndProject
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "QuantConnect.Algorithm.PythonTools", "Algorithm.Python\QuantConnect.Algorithm.PythonTools.pyproj", "{4A5DED1F-3E34-40E2-B1F2-9A8A02195508}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Algorithm.Framework", "Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj", "{75981418-7246-4B91-B136-482728E02901}"
-EndProject
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "QuantConnect.PythonToolbox", "PythonToolbox\QuantConnect.PythonToolbox.pyproj", "{1C47F4DB-2AFF-4FAE-9142-B33BE654A516}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Report", "Report\QuantConnect.Report.csproj", "{2431419F-8BC6-4F59-944E-9A1CD28982DF}"
 EndProject
@@ -134,14 +130,10 @@ Global
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4A5DED1F-3E34-40E2-B1F2-9A8A02195508}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4A5DED1F-3E34-40E2-B1F2-9A8A02195508}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{75981418-7246-4B91-B136-482728E02901}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{75981418-7246-4B91-B136-482728E02901}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{75981418-7246-4B91-B136-482728E02901}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{75981418-7246-4B91-B136-482728E02901}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1C47F4DB-2AFF-4FAE-9142-B33BE654A516}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1C47F4DB-2AFF-4FAE-9142-B33BE654A516}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2431419F-8BC6-4F59-944E-9A1CD28982DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2431419F-8BC6-4F59-944E-9A1CD28982DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2431419F-8BC6-4F59-944E-9A1CD28982DF}.Release|Any CPU.ActiveCfg = Release|Any CPU

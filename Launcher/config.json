@@ -39,7 +39,6 @@
   "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
   "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
   "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
-  "alpha-handler": "QuantConnect.Lean.Engine.Alphas.DefaultAlphaHandler",
   "data-channel-provider": "DataChannelProvider",
   "object-store": "QuantConnect.Lean.Engine.Storage.LocalObjectStore",
   "data-aggregator": "QuantConnect.Lean.Engine.DataFeeds.AggregationManager",
@@ -171,6 +170,15 @@
   "tdameritrade-account-number": "",
   "tdameritrade-api-key": "",
   "tdameritrade-access-token": "",
+
+  // RBI configuration
+  "rbi-host": "",
+  "rbi-port": "",
+  "rbi-account": "",
+  "rbi-sender-comp-id": "",
+  "rbi-target-comp-id": "",
+  "rbi-on-behalf-of-comp-id": "",
+  "rbi-log-fix-messages": false,
 
   // Trading Technologies configuration
   "tt-user-name": "",
@@ -598,6 +606,20 @@
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
       "data-queue-handler": [ "TDAmeritradeBrokerage" ]
+    },
+
+    "live-rbi": {
+      "live-mode": true,
+      
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "RBIBrokerage",
+      "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue" ],
+      "history-provider": [ "SubscriptionDataReaderHistoryProvider" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
     }
   }
 }

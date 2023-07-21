@@ -20,7 +20,6 @@ using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using static QuantConnect.StringExtensions;
 using Python.Runtime;
 
 namespace QuantConnect.Securities
@@ -30,12 +29,18 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityTransactionManager : IOrderProvider
     {
-        private readonly Dictionary<DateTime, decimal> _transactionRecord;
+        private class TransactionRecordEntry
+        {
+            public decimal ProfitLoss;
+            public bool IsWin;
+        }
+
+        private readonly Dictionary<DateTime, TransactionRecordEntry> _transactionRecord;
         private readonly IAlgorithm _algorithm;
         private int _orderId;
         private int _groupOrderManagerId;
         private readonly SecurityManager _securities;
-        private TimeSpan _marketOrderFillTimeout = TimeSpan.FromSeconds(5);
+        private TimeSpan _marketOrderFillTimeout = TimeSpan.MinValue;
 
         private IOrderProcessor _orderProcessor;
 
@@ -58,7 +63,7 @@ namespace QuantConnect.Securities
             _securities = security;
 
             //Internal storage for transaction records:
-            _transactionRecord = new Dictionary<DateTime, decimal>();
+            _transactionRecord = new Dictionary<DateTime, TransactionRecordEntry>();
         }
 
         /// <summary>
@@ -72,7 +77,63 @@ namespace QuantConnect.Securities
             {
                 lock (_transactionRecord)
                 {
-                    return new Dictionary<DateTime, decimal>(_transactionRecord);
+                    return _transactionRecord.ToDictionary(x => x.Key, x => x.Value.ProfitLoss);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the number or winning transactions
+        /// </summary>
+        public int WinCount
+        {
+            get
+            {
+                lock (_transactionRecord)
+                {
+                    return _transactionRecord.Values.Count(x => x.IsWin);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the number of losing transactions
+        /// </summary>
+        public int LossCount
+        {
+            get
+            {
+                lock (_transactionRecord)
+                {
+                    return _transactionRecord.Values.Count(x => !x.IsWin);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Trade record of profits and losses for each trade statistics calculations that are considered winning trades
+        /// </summary>
+        public Dictionary<DateTime, decimal> WinningTransactions
+        {
+            get
+            {
+                lock (_transactionRecord)
+                {
+                    return _transactionRecord.Where(x => x.Value.IsWin).ToDictionary(x => x.Key, x => x.Value.ProfitLoss);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Trade record of profits and losses for each trade statistics calculations that are considered losing trades
+        /// </summary>
+        public Dictionary<DateTime, decimal> LosingTransactions
+        {
+            get
+            {
+                lock (_transactionRecord)
+                {
+                    return _transactionRecord.Where(x => !x.Value.IsWin).ToDictionary(x => x.Key, x => x.Value.ProfitLoss);
                 }
             }
         }
@@ -190,13 +251,13 @@ namespace QuantConnect.Securities
         {
             if (_algorithm != null && _algorithm.IsWarmingUp)
             {
-                throw new InvalidOperationException("This operation is not allowed in Initialize or during warm up: CancelOpenOrders. Please move this code to the OnWarmupFinished() method.");
+                throw new InvalidOperationException(Messages.SecurityTransactionManager.CancelOpenOrdersNotAllowedOnInitializeOrWarmUp);
             }
 
             var cancelledOrders = new List<OrderTicket>();
             foreach (var ticket in GetOpenOrderTickets())
             {
-                ticket.Cancel($"Canceled by CancelOpenOrders() at {_algorithm.UtcTime:o}");
+                ticket.Cancel(Messages.SecurityTransactionManager.OrderCanceledByCancelOpenOrders(_algorithm.UtcTime));
                 cancelledOrders.Add(ticket);
             }
             return cancelledOrders;
@@ -212,7 +273,7 @@ namespace QuantConnect.Securities
         {
             if (_algorithm != null && _algorithm.IsWarmingUp)
             {
-                throw new InvalidOperationException("This operation is not allowed in Initialize or during warm up: CancelOpenOrders. Please move this code to the OnWarmupFinished() method.");
+                throw new InvalidOperationException(Messages.SecurityTransactionManager.CancelOpenOrdersNotAllowedOnInitializeOrWarmUp);
             }
 
             var cancelledOrders = new List<OrderTicket>();
@@ -355,18 +416,18 @@ namespace QuantConnect.Securities
             var orderTicket = GetOrderTicket(orderId);
             if (orderTicket == null)
             {
-                Log.Error(Invariant(
-                    $"SecurityTransactionManager.WaitForOrder(): Unable to locate ticket for order: {orderId}"
-                ));
+                Log.Error($@"SecurityTransactionManager.WaitForOrder(): {
+                    Messages.SecurityTransactionManager.UnableToLocateOrderTicket(orderId)}");
 
                 return false;
             }
 
             if (!orderTicket.OrderClosed.WaitOne(_marketOrderFillTimeout))
             {
-                Log.Error(Invariant(
-                    $"SecurityTransactionManager.WaitForOrder(): Order did not fill within {_marketOrderFillTimeout.TotalSeconds} seconds."
-                ));
+                if(_marketOrderFillTimeout > TimeSpan.Zero)
+                {
+                    Log.Error($@"SecurityTransactionManager.WaitForOrder(): {Messages.SecurityTransactionManager.OrderNotFilledWithinExpectedTime(_marketOrderFillTimeout)}");
+                }
 
                 return false;
             }
@@ -500,7 +561,11 @@ namespace QuantConnect.Securities
         /// </remarks>
         /// <param name="time">Time of order processed </param>
         /// <param name="transactionProfitLoss">Profit Loss.</param>
-        public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss)
+        /// <param name="isWin">
+        /// Whether the transaction is a win.
+        /// For options exercise, this might not depend only on the profit/loss value
+        /// </param>
+        public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss, bool isWin)
         {
             lock (_transactionRecord)
             {
@@ -509,7 +574,28 @@ namespace QuantConnect.Securities
                 {
                     clone = clone.AddMilliseconds(1);
                 }
-                _transactionRecord.Add(clone, transactionProfitLoss);
+                _transactionRecord.Add(clone, new TransactionRecordEntry { ProfitLoss = transactionProfitLoss, IsWin = isWin });
+            }
+        }
+
+        /// <summary>
+        /// Set live mode state of the algorithm
+        /// </summary>
+        /// <param name="isLiveMode">True, live mode is enabled</param>
+        public void SetLiveMode(bool isLiveMode)
+        {
+            if (isLiveMode)
+            {
+                if(MarketOrderFillTimeout == TimeSpan.MinValue)
+                {
+                    // set default value in live trading
+                    MarketOrderFillTimeout = TimeSpan.FromSeconds(5);
+                }
+            }
+            else
+            {
+                // always zero in backtesting, fills happen synchronously, there's no dedicated thread like in live
+                MarketOrderFillTimeout = TimeSpan.Zero;
             }
         }
     }

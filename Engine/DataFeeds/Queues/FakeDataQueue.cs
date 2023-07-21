@@ -36,6 +36,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
     {
         private int _count;
         private readonly Random _random = new Random();
+        private int _dataPointsPerSecondPerSymbol;
 
         private readonly Timer _timer;
         private readonly IDataCacheProvider _dataCacheProvider;
@@ -50,6 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// </summary>
         protected virtual ITimeProvider TimeProvider { get; } = RealTimeProvider.Instance;
 
+
         /// <summary>
         /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
         /// </summary>
@@ -62,9 +64,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <summary>
         /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
         /// </summary>
-        public FakeDataQueue(IDataAggregator dataAggregator)
+        public FakeDataQueue(IDataAggregator dataAggregator, int dataPointsPerSecondPerSymbol = 500000)
         {
             _aggregator = dataAggregator;
+            _dataPointsPerSecondPerSymbol = dataPointsPerSecondPerSymbol;
             _dataCacheProvider = new ZipDataCacheProvider(new DefaultDataProvider(), true);
             var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"), false);
             _optionChainProvider = new LiveOptionChainProvider(_dataCacheProvider, mapFileProvider);
@@ -73,12 +76,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += (s, t) => true;
             _subscriptionManager.UnsubscribeImpl += (s, t) => true;
-
-            // load it up to start
-            PopulateQueue();
-            PopulateQueue();
-            PopulateQueue();
-            PopulateQueue();
 
             _timer = new Timer
             {
@@ -175,17 +172,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 var quotes = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType].Contains(TickType.Quote);
 
                 // emits 500k per second
-                for (var i = 0; i < 500000; i++)
+                for (var i = 0; i < _dataPointsPerSecondPerSymbol; i++)
                 {
                     var now = TimeProvider.GetUtcNow();
+                    var exchangeTime = offsetProvider.ConvertFromUtc(now);
+                    var lastTrade = 100 + (decimal)Math.Abs(Math.Sin(now.TimeOfDay.TotalMilliseconds));
                     if (trades)
                     {
                         _count++;
                         _aggregator.Update(new Tick
                         {
-                            Time = offsetProvider.ConvertFromUtc(now),
+                            Time = exchangeTime,
                             Symbol = symbol,
-                            Value = 10 + (decimal)Math.Abs(Math.Sin(now.TimeOfDay.TotalMinutes)),
+                            Value = lastTrade,
                             TickType = TickType.Trade,
                             Quantity = _random.Next(10, (int)_timer.Interval)
                         });
@@ -194,11 +193,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                     if (quotes)
                     {
                         _count++;
-                        var bid = 10 + (decimal) Math.Abs(Math.Sin(now.TimeOfDay.TotalMinutes));
+                        var bidPrice = lastTrade * 0.95m;
+                        var askPrice = lastTrade * 1.05m;
                         var bidSize = _random.Next(10, (int) _timer.Interval);
                         var askSize = _random.Next(10, (int)_timer.Interval);
-                        var time = offsetProvider.ConvertFromUtc(now);
-                        _aggregator.Update(new Tick(time, symbol, "", "",bid, bidSize, bid * 1.01m, askSize));
+                        _aggregator.Update(new Tick(exchangeTime, symbol, "", "", bidSize: bidSize, bidPrice: bidPrice, askPrice: askPrice, askSize: askSize));
                     }
                 }
             }

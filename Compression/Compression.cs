@@ -224,7 +224,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error(err);
+                Log.Error(err, $"file: {path} entry: {entry}");
                 return false;
             }
             return true;
@@ -759,15 +759,39 @@ namespace QuantConnect
         } // End UnZip
 
         /// <summary>
-        /// Unzip a local file and return its contents via streamreader to a local the same location as the ZIP.
+        /// Unzip the given byte array and return the created file names.
+        /// </summary>
+        /// <param name="zipData">A byte array containing the zip</param>
+        /// <param name="outputFolder">The target output folder</param>
+        /// <returns>List of unzipped file names</returns>
+        public static List<string> UnzipToFolder(byte[] zipData, string outputFolder)
+        {
+            var stream = new MemoryStream(zipData);
+            return UnzipToFolder(stream, outputFolder);
+        }
+
+        /// <summary>
+        /// Unzip a local file and return the created file names
         /// </summary>
         /// <param name="zipFile">Location of the zip on the HD</param>
         /// <returns>List of unzipped file names</returns>
         public static List<string> UnzipToFolder(string zipFile)
         {
+            var outFolder = Path.GetDirectoryName(zipFile);
+            var stream = File.OpenRead(zipFile);
+            return UnzipToFolder(stream, outFolder);
+        }
+
+        /// <summary>
+        /// Unzip the given data stream into the target output folder and return the created file names
+        /// </summary>
+        /// <param name="dataStream">The zip data stream</param>
+        /// <param name="outFolder">The target output folder</param>
+        /// <returns>List of unzipped file names</returns>
+        private static List<string> UnzipToFolder(Stream dataStream, string outFolder)
+        {
             //1. Initialize:
             var files = new List<string>();
-            var outFolder = Path.GetDirectoryName(zipFile);
             if (string.IsNullOrEmpty(outFolder))
             {
                 outFolder = Directory.GetCurrentDirectory();
@@ -776,8 +800,7 @@ namespace QuantConnect
 
             try
             {
-                var fs = File.OpenRead(zipFile);
-                zf = new ICSharpCode.SharpZipLib.Zip.ZipFile(fs);
+                zf = new ICSharpCode.SharpZipLib.Zip.ZipFile(dataStream);
 
                 foreach (ZipEntry zipEntry in zf)
                 {
@@ -809,7 +832,7 @@ namespace QuantConnect
             catch
             {
                 // lets catch the exception just to log some information about the zip file
-                Log.Error($"Compression.UnzipToFolder(): Failure: zipFile: {zipFile} - outFolder: {outFolder} - files: {string.Join(",", files)}");
+                Log.Error($"Compression.UnzipToFolder(): Failure: outFolder: {outFolder} - files: {string.Join(",", files)}");
                 throw;
             }
             finally

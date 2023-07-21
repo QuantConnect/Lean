@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
@@ -66,45 +67,18 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
 
-            // Get the range of prices in the last bar:
-            var tradeHigh = 0m;
-            var tradeLow = 0m;
-            var endTimeUtc = DateTime.MinValue;
+            // Get the trade bar that closes after the order time
+            var tradeBar = GetBestEffortTradeBar(asset, order.Time);
 
-            var subscribedTypes = GetSubscribedTypes(asset);
-
-            if (subscribedTypes.Contains(typeof(Tick)))
-            {
-                var trade = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
-
-                if (trade != null)
-                {
-                    tradeHigh = trade.Price;
-                    tradeLow = trade.Price;
-                    endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
-                }
-            }
-            else if (subscribedTypes.Contains(typeof(TradeBar)))
-            {
-                var tradeBar = asset.Cache.GetData<TradeBar>();
-
-                if (tradeBar != null)
-                {
-                    tradeHigh = tradeBar.High;
-                    tradeLow = tradeBar.Low;
-                    endTimeUtc = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
-                }
-            }
-
-            // do not fill on stale data
-            if (endTimeUtc <= order.Time) return fill;
+            // Do not fill on stale data
+            if (tradeBar == null) return fill;
 
             //Check if the limit if touched order was filled:
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     //-> 1.2 Buy: If Price below Trigger, Buy:
-                    if (tradeLow <= order.TriggerPrice || order.TriggerTouched)
+                    if (tradeBar.Low <= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
                         var askCurrent = GetBestEffortAskPrice(asset, order.Time, out var fillMessage);
@@ -122,7 +96,7 @@ namespace QuantConnect.Orders.Fills
 
                 case OrderDirection.Sell:
                     //-> 1.2 Sell: If Price above Trigger, Sell:
-                    if (tradeHigh >= order.TriggerPrice || order.TriggerTouched)
+                    if (tradeBar.High >= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
                         var bidCurrent = GetBestEffortBidPrice(asset, order.Time, out var fillMessage);
@@ -183,58 +157,83 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// Default stop fill model implementation in base class security. (Stop Market Order Type)
+        /// Stop fill model implementation for Equity.
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <remarks>
+        /// A Stop order is an instruction to submit a buy or sell market order
+        /// if and when the user-specified stop trigger price is attained or penetrated.
+        ///
+        /// A Sell Stop order is always placed below the current market price.
+        /// We assume a fluid/continuous, high volume market. Therefore, it is filled at the stop trigger price
+        /// if the current low price of trades is less than or equal to this price.
+        ///
+        /// A Buy Stop order is always placed above the current market price.
+        /// We assume a fluid, high volume market. Therefore, it is filled at the stop trigger price
+        /// if the current high price of trades is greater or equal than this price.
+        ///
+        /// The continuous market assumption is not valid if the market opens with an unfavorable gap.
+        /// In this case, a new bar opens below/above the stop trigger price, and the order is filled with the opening price.
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
         public override OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
-            //Default order event to return.
+            // Default order event to return.
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
-            //If its cancelled don't need anymore checks:
+            // If cancelled, don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
 
-            // make sure the exchange is open/normal market hours before filling
+            // Make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            //Get the range of prices in the last bar:
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
-            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+            // Get the trade bar that closes after the order time
+            var tradeBar = GetBestEffortTradeBar(asset, order.Time);
 
-            // do not fill on stale data
-            if (pricesEndTime <= order.Time) return fill;
+            // Do not fill on stale data
+            if (tradeBar == null) return fill;
 
-            //Calculate the model slippage: e.g. 0.01c
-            var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
-
-            //Check if the Stop Order was filled: opposite to a limit order
             switch (order.Direction)
             {
                 case OrderDirection.Sell:
-                    //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                    if (prices.Low < order.StopPrice)
+                    if (tradeBar.Low <= order.StopPrice)
                     {
                         fill.Status = OrderStatus.Filled;
-                        // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
-                        fill.FillPrice = Math.Min(order.StopPrice, prices.Current - slip);
-                        // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
+
+                        var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
+
+                        // Unfavorable gap case: if the bar opens below the stop price, fill at open price
+                        if (tradeBar.Open <= order.StopPrice)
+                        {
+                            fill.FillPrice = tradeBar.Open - slip;
+                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToUnfavorableGap(asset, tradeBar);
+                            return fill;
+                        }
+
+                        fill.FillPrice = order.StopPrice - slip;
                     }
                     break;
 
                 case OrderDirection.Buy:
-                    //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                    if (prices.High > order.StopPrice)
+                    if (tradeBar.High >= order.StopPrice)
                     {
                         fill.Status = OrderStatus.Filled;
-                        // Assuming worse case scenario fill - fill at highest of the stop & asset price.
-                        fill.FillPrice = Math.Max(order.StopPrice, prices.Current + slip);
-                        // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
+
+                        var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
+
+                        // Unfavorable gap case: if the bar opens above the stop price, fill at open price
+                        if (tradeBar.Open >= order.StopPrice)
+                        {
+                            fill.FillPrice = tradeBar.Open + slip;
+                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToUnfavorableGap(asset, tradeBar);
+                            return fill;
+                        }
+
+                        fill.FillPrice = order.StopPrice + slip;
                     }
                     break;
             }
@@ -326,11 +325,32 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// Default limit order fill model in the base security class.
+        /// Limit fill model implementation for Equity.
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <remarks>
+        /// A Limit order is an order to buy or sell at a specified price or better.
+        /// The Limit order ensures that if the order fills, it will not fill at a price less favorable than your limit price,
+        /// but it does not guarantee a fill.
+        ///
+        /// A Buy Limit order is always placed above the current market price.
+        /// We assume a fluid/continuous, high volume market. Therefore, it is filled at the limit price
+        /// if the current low price of trades is less than this price.
+        ///
+        /// A Sell Limit order is always placed below the current market price.
+        /// We assume a fluid, high volume market. Therefore, it is filled at the limit price
+        /// if the current high price of trades is greater than this price.
+        ///
+        /// This model does not trigger the limit order when the limit is attained (equals to).
+        /// Since the order may not be filled in reality if it is not the top of the order book
+        /// (first come, first served), we assume our order is the last in the book with its limit price,
+        /// thus it will be filled when the limit price is penetrated.
+        ///
+        /// The continuous market assumption is not valid if the market opens with a favorable gap.
+        /// If the buy/sell limit order is placed below/above the current market price,
+        /// the order is filled with the opening price.
         /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
         public override OrderEvent LimitFill(Security asset, LimitOrder order)
@@ -350,39 +370,52 @@ namespace QuantConnect.Orders.Fills
             {
                 return fill;
             }
-            //Get the range of prices in the last bar:
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
-            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
-            // do not fill on stale data
-            if (pricesEndTime <= order.Time) return fill;
+            // Get the trade bar that closes after the order time
+            var tradeBar = GetBestEffortTradeBar(asset, order.Time);
+
+            // Do not fill on stale data
+            if (tradeBar == null) return fill;
 
             //-> Valid Live/Model Order:
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
-                    //Buy limit seeks lowest price
-                    if (prices.Low < order.LimitPrice)
+                    if (tradeBar.Low < order.LimitPrice)
                     {
-                        //Set order fill:
-                        fill.Status = OrderStatus.Filled;
-                        // fill at the worse price this bar or the limit price, this allows far out of the money limits
-                        // to be executed properly
-                        fill.FillPrice = Math.Min(prices.High, order.LimitPrice);
                         // assume the order completely filled
+                        // TODO: Add separate DepthLimited fill partial order quantities based on tick quantity / bar.Volume available.
                         fill.FillQuantity = order.Quantity;
+                        fill.Status = OrderStatus.Filled;
+
+                        fill.FillPrice = order.LimitPrice;
+
+                        // Favorable gap case: if the bar opens below the limit price, fill at open price
+                        if (tradeBar.Open < order.LimitPrice)
+                        {
+                            fill.FillPrice = tradeBar.Open;
+                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToFavorableGap(asset, tradeBar);
+                            return fill;
+                        }
                     }
                     break;
                 case OrderDirection.Sell:
-                    //Sell limit seeks highest price possible
-                    if (prices.High > order.LimitPrice)
+                    if (tradeBar.High > order.LimitPrice)
                     {
-                        fill.Status = OrderStatus.Filled;
-                        // fill at the worse price this bar or the limit price, this allows far out of the money limits
-                        // to be executed properly
-                        fill.FillPrice = Math.Max(prices.Low, order.LimitPrice);
-                        // assume the order completely filled
+                        // Assume the order completely filled
+                        // TODO: Add separate DepthLimited fill partial order quantities based on tick quantity / bar.Volume available.
                         fill.FillQuantity = order.Quantity;
+                        fill.Status = OrderStatus.Filled;
+
+                        fill.FillPrice = order.LimitPrice;
+
+                        // Favorable gap case: if the bar opens above the limit price, fill at open price
+                        if (tradeBar.Open > order.LimitPrice)
+                        {
+                            fill.FillPrice = tradeBar.Open;
+                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToFavorableGap(asset, tradeBar);
+                            return fill;
+                        }
                     }
                     break;
             }
@@ -417,19 +450,18 @@ namespace QuantConnect.Orders.Fills
             if (subscribedTypes.Contains(typeof(Tick)))
             {
                 var primaryExchangeCode = ((Equity)asset).PrimaryExchange.Code;
-                var officialOpen = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OfficialOpen);
-                var openingPrints = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OpeningPrints);
+                var openTradeTickFlags = (uint)(TradeConditionFlags.OfficialOpen | TradeConditionFlags.OpeningPrints);
 
                 var trades = asset.Cache.GetAll<Tick>()
-                    .Where(x => x.TickType == TickType.Trade && x.Price > 0 && asset.Exchange.DateTimeIsOpen(x.Time))
+                    .Where(x => x.TickType == TickType.Trade && asset.Exchange.DateTimeIsOpen(x.Time))
                     .OrderBy(x => x.EndTime).ToList();
 
                 // Get the first valid (non-zero) tick of trade type from an open market
                 var tick = trades
-                    .Where(x => !string.IsNullOrWhiteSpace(x.SaleCondition))
                     .FirstOrDefault(x =>
-                        x.TickType == TickType.Trade && x.Price > 0 && x.ExchangeCode == primaryExchangeCode &&
-                        (x.ParsedSaleCondition == officialOpen || x.ParsedSaleCondition == openingPrints) &&
+                        !string.IsNullOrWhiteSpace(x.SaleCondition) &&
+                        x.ExchangeCode == primaryExchangeCode &&
+                        (x.ParsedSaleCondition & openTradeTickFlags) != 0 &&
                         asset.Exchange.DateTimeIsOpen(x.Time));
 
                 // If there is no OfficialOpen or OpeningPrints in the current list of trades,
@@ -559,18 +591,18 @@ namespace QuantConnect.Orders.Fills
             if (subscribedTypes.Contains(typeof(Tick)))
             {
                 var primaryExchangeCode = ((Equity)asset).PrimaryExchange.Code;
-                var officialClose = (uint)(TradeConditionFlags.Regular | TradeConditionFlags.OfficialClose);
-                var closingPrints = (uint)(TradeConditionFlags.Regular | TradeConditionFlags.ClosingPrints);
+                var closeTradeTickFlags = (uint)(TradeConditionFlags.OfficialClose | TradeConditionFlags.ClosingPrints);
 
                 var trades = asset.Cache.GetAll<Tick>()
-                    .Where(x => x.TickType == TickType.Trade && x.Price > 0)
+                    .Where(x => x.TickType == TickType.Trade)
                     .OrderBy(x => x.EndTime).ToList();
 
                 // Get the last valid (non-zero) tick of trade type from an close market
                 var tick = trades
-                    .Where(x => !string.IsNullOrWhiteSpace(x.SaleCondition))
-                    .LastOrDefault(x => x.ExchangeCode == primaryExchangeCode &&
-                        (x.ParsedSaleCondition == officialClose || x.ParsedSaleCondition == closingPrints));
+                    .LastOrDefault(x =>
+                        !string.IsNullOrWhiteSpace(x.SaleCondition) &&
+                        x.ExchangeCode == primaryExchangeCode
+                        && (x.ParsedSaleCondition & closeTradeTickFlags) != 0);
 
                 // If there is no OfficialClose or ClosingPrints in the current list of trades,
                 // we will wait for the next up to 1 minute before accepting the last tick without flags
@@ -729,7 +761,7 @@ namespace QuantConnect.Orders.Fills
 
             if (isTickSubscribed)
             {
-                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade);
                 if (trade != null && (baseData == null || trade.EndTime > baseData.EndTime))
                 {
                     message = Messages.EquityFillModel.FilledWithTradeTickData(asset, trade);
@@ -828,7 +860,7 @@ namespace QuantConnect.Orders.Fills
 
             if (isTickSubscribed)
             {
-                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade);
                 if (trade != null && (baseData == null || trade.EndTime > baseData.EndTime))
                 {
                     message = Messages.EquityFillModel.FilledWithTradeTickData(asset, trade);
@@ -866,6 +898,70 @@ namespace QuantConnect.Orders.Fills
             }
 
             throw new InvalidOperationException(Messages.FillModel.NoMarketDataToGetBidPriceForFilling(asset, subscribedTypes));
+        }
+
+        /// <summary>
+        /// Get current trade bar for subscribed data
+        /// This method will try to get the most recent trade bar after the order time,
+        /// so it will try to get tick trades first to create a trade bar, then trade bar.
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        /// <param name="orderTime">Time the order was submitted</param>
+        /// <returns>
+        /// A TradeBar object with the most recent trade information after the order close.
+        /// If there is no trade information or it is older than the order, returns null.
+        /// </returns>
+        private TradeBar GetBestEffortTradeBar(Security asset, DateTime orderTime)
+        {
+            TradeBar bestEffortTradeBar = null;
+
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var tradeOpen = 0m;
+                var tradeHigh = decimal.MinValue;
+                var tradeLow = decimal.MaxValue;
+                var tradeClose = 0m;
+                var tradeVolume = 0m;
+                var startTimeUtc = DateTime.MinValue;
+                var endTimeUtc = DateTime.MinValue;
+
+                var trades = asset.Cache.GetAll<Tick>().Where(x => x.TickType == TickType.Trade).ToList();
+                if (trades.Any())
+                {
+                    foreach (var trade in trades)
+                    {
+                        if (tradeOpen == 0)
+                        {
+                            tradeOpen = trade.Price;
+                            startTimeUtc = trade.Time;
+                        }
+
+                        tradeHigh = Math.Max(tradeHigh, trade.Price);
+                        tradeLow = Math.Min(tradeLow, trade.Price);
+                        tradeClose = trade.Price;
+                        tradeVolume += trade.Quantity;
+                        endTimeUtc = trade.EndTime;
+                    }
+
+                    bestEffortTradeBar = new TradeBar(startTimeUtc, asset.Symbol,
+                        tradeOpen, tradeHigh, tradeLow, tradeClose, tradeVolume, endTimeUtc - startTimeUtc);
+                }
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                bestEffortTradeBar = asset.Cache.GetData<TradeBar>();
+            }
+
+            // Do not accept trade information older than the order
+            if (bestEffortTradeBar == null ||
+                bestEffortTradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone) <= orderTime)
+            {
+                return null;
+            }
+
+            return bestEffortTradeBar;
         }
 
         /// <summary>
@@ -942,25 +1038,6 @@ namespace QuantConnect.Orders.Fills
             }
 
             return new Prices(endTime, current, open, high, low, close);
-        }
-
-        /// <summary>
-        /// Determines if the exchange is open using the current time of the asset
-        /// </summary>
-        protected static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
-        {
-            if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
-            {
-                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
-                var currentBar = asset.GetLastData();
-                if (currentBar == null
-                    || asset.LocalTime.Date != currentBar.EndTime.Date
-                    || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours))
-                {
-                    return false;
-                }
-            }
-            return true;
         }
     }
 }

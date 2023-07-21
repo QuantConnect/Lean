@@ -21,20 +21,53 @@ namespace QuantConnect.Orders
     /// </summary>
     public class KrakenOrderProperties : OrderProperties
     {
+        private bool _feeInQuote;
+        private bool _feeInBase;
+
         /// <summary>
         /// Post-only order (available when ordertype = limit)
         /// </summary>
         public bool PostOnly { get; set; }
         
         /// <summary>
-        /// Prefer fee in base currency (default if selling)
+        /// If true or by default when selling, fees will be charged in base currency. If false will be ignored. Mutually exclusive with FeeInQuote.
         /// </summary>
-        public bool FeeInBase { get; set; }
-        
+        /// <remarks>See (https://support.kraken.com/hc/en-us/articles/202966956#howclosingtransactionswork) for more information about the currency selection.</remarks>
+        public bool FeeInBase
+        {
+            get
+            {
+                return _feeInBase;
+            }
+            set
+            {
+                if (value)
+                {
+                    _feeInBase = value;
+                    _feeInQuote = !_feeInBase;
+                }
+            }
+        }
+
         /// <summary>
-        /// Prefer fee in quote currency (default if buying, mutually exclusive with FeeInBase)
+        /// If true or by default when buying, fees will be charged in quote currency. If false will be ignored. Mutually exclusive with FeeInBase.
         /// </summary>
-        public bool FeeInQuote { get; set; }
+        /// <remarks>See (https://support.kraken.com/hc/en-us/articles/202966956#howclosingtransactionswork) for more information about the currency selection.</remarks>
+        public bool FeeInQuote
+        {
+            get
+            {
+                return _feeInQuote;
+            }
+            set
+            {
+                if (value)
+                {
+                    _feeInQuote = value;
+                    _feeInBase = !_feeInQuote;
+                }
+            }
+        }
         
         /// <summary>
         /// https://support.kraken.com/hc/en-us/articles/201648183-Market-Price-Protection

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -40,7 +41,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 DataFeed = dataManagerStub.DataFeed;
                 SubscriptionManager.SetDataManager(DataManager);
             }
-            Transactions.SetOrderProcessor(new FakeOrderProcessor());
+            var orderProcessor = new FakeOrderProcessor();
+            orderProcessor.TransactionManager = Transactions;
+            Transactions.SetOrderProcessor(orderProcessor);
+            SetPandasConverter();
         }
 
         public AlgorithmStub(IDataFeed dataFeed)
@@ -49,6 +53,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             DataManager = new DataManagerStub(dataFeed, this);
             SubscriptionManager.SetDataManager(DataManager);
             Transactions.SetOrderProcessor(new FakeOrderProcessor());
+            SetPandasConverter();
         }
 
         public void AddSecurities(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null)

@@ -37,8 +37,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [SetUp]
         public void Setup()
         {
-            var start = new DateTime(2020, 1, 1);
-            var end = new DateTime(2020, 1, 2);
+            var start = new DateTime(2020, 1, 6);
+            var end = new DateTime(2020, 1, 10);
 
             // initialize using a seed for deterministic tests
             _symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                     Start = start,
                     End = end
                 },
-                _tickTypesPerSecurityType[_symbol.SecurityType].ToArray(),
+                new TickType[3] { TickType.Trade, TickType.Quote, TickType.OpenInterest },
                 _security,
                 new RandomValueGenerator());
 
@@ -135,6 +135,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
             Assert.AreEqual(dateTime, tick.Time);
             Assert.AreEqual(TickType.OpenInterest, tick.TickType);
+            Assert.AreEqual(typeof(OpenInterest), tick.GetType());
             Assert.AreEqual(_symbol, tick.Symbol);
             Assert.GreaterOrEqual(tick.Quantity, 9000);
             Assert.LessOrEqual(tick.Quantity, 11000);
@@ -212,6 +213,26 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             var history = _tickGenerator.GenerateTicks().ToList();
             Assert.IsNotEmpty(history);
             Assert.That(history.Select(s => s.Symbol), Is.All.EqualTo(_symbol));
+        }
+
+        [Test]
+        public void HistoryIsBetweenStartAndEndDate()
+        {
+            var start = new DateTime(2020, 1, 6);
+            var end = new DateTime(2020, 1, 10);
+            var history = _tickGenerator.GenerateTicks().ToList();
+            Assert.IsNotEmpty(history);
+            Assert.That(history.All(s => start <= s.Time && s.Time <= end));
+        }
+
+        [Test]
+        public void HistoryGeneratesOpenInterestDataAsExpected()
+        {
+            var start = new DateTime(2020, 1, 6);
+            var end = new DateTime(2020, 1, 10);
+            var history = _tickGenerator.GenerateTicks().ToList();
+            Assert.IsNotEmpty(history);
+            Assert.AreEqual(3, history.Where(s => s.TickType == TickType.OpenInterest).Count());
         }
     }
 }

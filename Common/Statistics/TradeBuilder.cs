@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,8 +16,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
@@ -54,6 +56,7 @@ namespace QuantConnect.Statistics
         private readonly FixedSizeHashQueue<int> _ordersWithFeesAssigned = new FixedSizeHashQueue<int>(MaxOrderIdCacheSize);
         private readonly FillGroupingMethod _groupingMethod;
         private readonly FillMatchingMethod _matchingMethod;
+        private SecurityManager _securities;
         private bool _liveMode;
 
         /// <summary>
@@ -72,6 +75,15 @@ namespace QuantConnect.Statistics
         public void SetLiveMode(bool live)
         {
             _liveMode = live;
+        }
+
+        /// <summary>
+        /// Sets the security manager instance
+        /// </summary>
+        /// <param name="securities">The security manager</param>
+        public void SetSecurityManager(SecurityManager securities)
+        {
+            _securities = securities;
         }
 
         /// <summary>
@@ -118,6 +130,52 @@ namespace QuantConnect.Statistics
                 position.MaxPrice = price;
             else if (price < position.MinPrice)
                 position.MinPrice = price;
+        }
+
+        /// <summary>
+        /// Applies a split to the trade builder
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for this security</param>
+        public void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
+        {
+            // only apply splits to equities, in live or raw data mode, and for open positions
+            if (split.Symbol.SecurityType != SecurityType.Equity ||
+                (!liveMode && dataNormalizationMode != DataNormalizationMode.Raw) ||
+                !_positions.TryGetValue(split.Symbol, out var position))
+            {
+                return;
+            }
+
+            position.MinPrice *= split.SplitFactor;
+            position.MaxPrice *= split.SplitFactor;
+
+            foreach (var trade in position.PendingTrades)
+            {
+                trade.Quantity /= split.SplitFactor;
+                trade.EntryPrice *= split.SplitFactor;
+                trade.ExitPrice *= split.SplitFactor;
+            }
+
+            foreach (var pendingFill in position.PendingFills)
+            {
+                pendingFill.FillQuantity /= split.SplitFactor;
+                pendingFill.FillPrice *= split.SplitFactor;
+
+                if (pendingFill.LimitPrice.HasValue)
+                {
+                    pendingFill.LimitPrice *= split.SplitFactor;
+                }
+                if (pendingFill.StopPrice.HasValue)
+                {
+                    pendingFill.StopPrice *= split.SplitFactor;
+                }
+                if (pendingFill.TriggerPrice.HasValue)
+                {
+                    pendingFill.TriggerPrice *= split.SplitFactor;
+                }
+            }
         }
 
         /// <summary>
@@ -225,14 +283,14 @@ namespace QuantConnect.Statistics
                         trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * trade.Quantity * conversionRate * multiplier, 2);
                         trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * trade.Quantity * conversionRate * multiplier, 2);
 
-                        AddNewTrade(trade);
+                        AddNewTrade(trade, fill);
                     }
                     else
                     {
                         totalExecutedQuantity += absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? -1 : +1);
                         trade.Quantity -= absoluteUnexecutedQuantity;
 
-                        AddNewTrade(new Trade
+                        var newTrade = new Trade
                         {
                             Symbol = trade.Symbol,
                             EntryTime = trade.EntryTime,
@@ -245,7 +303,9 @@ namespace QuantConnect.Statistics
                             TotalFees = trade.TotalFees + (orderFeeAssigned ? 0 : orderFee),
                             MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
                             MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2)
-                        });
+                        };
+
+                        AddNewTrade(newTrade, fill);
 
                         trade.TotalFees = 0;
                     }
@@ -342,8 +402,7 @@ namespace QuantConnect.Statistics
                     }
 
                     var direction = Math.Sign(fill.FillQuantity) < 0 ? TradeDirection.Long : TradeDirection.Short;
-
-                    AddNewTrade(new Trade
+                    var trade = new Trade
                     {
                         Symbol = fill.Symbol,
                         EntryTime = entryTime,
@@ -355,8 +414,10 @@ namespace QuantConnect.Statistics
                         ProfitLoss = Math.Round((exitAveragePrice - entryAveragePrice) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity) * conversionRate * multiplier, 2),
                         TotalFees = position.TotalFees,
                         MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryAveragePrice : entryAveragePrice - position.MaxPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
-                        MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryAveragePrice : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2)
-                    });
+                        MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryAveragePrice : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
+                    };
+
+                    AddNewTrade(trade, fill);
 
                     _positions.Remove(fill.Symbol);
 
@@ -440,8 +501,7 @@ namespace QuantConnect.Statistics
                 }
 
                 var direction = totalExecutedQuantity < 0 ? TradeDirection.Long : TradeDirection.Short;
-
-                AddNewTrade(new Trade
+                var trade = new Trade
                 {
                     Symbol = fill.Symbol,
                     EntryTime = entryTime,
@@ -454,7 +514,9 @@ namespace QuantConnect.Statistics
                     TotalFees = position.TotalFees,
                     MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryPrice : entryPrice - position.MaxPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
                     MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2)
-                });
+                };
+
+                AddNewTrade(trade, fill);
 
                 if (Math.Abs(totalExecutedQuantity) < fill.AbsoluteFillQuantity)
                 {
@@ -478,10 +540,14 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Adds a trade to the list of closed trades, capping the total number only in live mode
         /// </summary>
-        private void AddNewTrade(Trade trade)
+        private void AddNewTrade(Trade trade, OrderEvent fill)
         {
             lock (_closedTrades)
             {
+                trade.IsWin = _securities != null && _securities.TryGetValue(trade.Symbol, out var security)
+                    ? fill.IsWin(security, trade.ProfitLoss)
+                    : trade.ProfitLoss > 0;
+
                 _closedTrades.Add(trade);
 
                 // Due to memory constraints in live mode, we cap the number of trades

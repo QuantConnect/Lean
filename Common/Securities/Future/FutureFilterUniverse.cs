@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -31,8 +31,8 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Constructs FutureFilterUniverse
         /// </summary>
-        public FutureFilterUniverse(IEnumerable<Symbol> allSymbols, BaseData underlying)
-            : base(allSymbols, underlying)
+        public FutureFilterUniverse(IEnumerable<Symbol> allSymbols, DateTime localTime)
+            : base(allSymbols, localTime)
         {
         }
 

@@ -120,7 +120,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1747803;
+        public long DataPoints => 1271643;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -137,12 +137,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Average Loss", "-0.32%"},
             {"Compounding Annual Return", "-24.104%"},
             {"Drawdown", "0.400%"},
-            {"Expectancy", "-0.359"},
+            {"Expectancy", "-1"},
             {"Net Profit", "-0.352%"},
             {"Sharpe Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "67%"},
-            {"Win Rate", "33%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0.92"},
             {"Alpha", "0"},
             {"Beta", "0"},
@@ -154,25 +154,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$2.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Fitness Score", "0.376"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-72.098"},
-            {"Portfolio Turnover", "0.752"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Portfolio Turnover", "30.10%"},
             {"OrderListHash", "37db18a52367260e326c8417c74ea691"}
         };
     }

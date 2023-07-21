@@ -34,7 +34,7 @@
     <DebugType>portable</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.17" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.21" />
     <PackageReference Include="Accord" Version="3.6.0" />
     <PackageReference Include="Accord.Fuzzy" Version="3.6.0" />
     <PackageReference Include="Accord.MachineLearning" Version="3.6.0" />
@@ -42,9 +42,8 @@
     <PackageReference Include="Accord.Statistics" Version="3.6.0" />
     <PackageReference Include="DynamicInterop" Version="0.9.1" />
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
-    <PackageReference Include="R.NET" Version="1.9.0" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />

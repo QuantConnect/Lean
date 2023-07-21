@@ -59,7 +59,7 @@ namespace QuantConnect.Interfaces
         /// Gets/sets the SetHoldings buffers value.
         /// The buffer is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
         /// </summary>
-        decimal FreePortfolioValue { get; set; }
+        decimal? FreePortfolioValue { get; set; }
 
         /// <summary>
         /// Gets/sets the SetHoldings buffers value percentage.

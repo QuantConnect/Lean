@@ -38,11 +38,12 @@ namespace QuantConnect.Tests.Indicators
                 tsi,
                 TestFileName,
                 "Signal_7",
-                (ind, expected) => Assert.AreEqual(
-                    expected,
-                    (double) ((TrueStrengthIndex) ind).Signal.Current.Value,
-                    delta: 1e-4
-                )
+                (ind, expected) =>
+                {
+                    var tsi = (TrueStrengthIndex)ind;
+                    if (!tsi.Signal.IsReady) return;
+                    Assert.AreEqual(expected, (double)tsi.Signal.Current.Value, delta: 1e-4);
+                }
             );
         }
     }

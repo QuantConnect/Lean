@@ -33,9 +33,11 @@ namespace QuantConnect.Algorithm.CSharp
     public class IndicatorSuiteAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private string _ticker = "SPY";
+        private string _ticker2 = "GOOG";
         private string _customTicker = "IBM";
 
         private Symbol _symbol;
+        private Symbol _symbol2;
         private Symbol _customSymbol;
 
         private Indicators _indicators;
@@ -61,6 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             //Add as many securities as you like. All the data will be passed into the event handler:
             _symbol = AddSecurity(SecurityType.Equity, _ticker, Resolution.Daily).Symbol;
+            _symbol2 = AddSecurity(SecurityType.Equity, _ticker2, Resolution.Daily).Symbol;
 
             //Add the Custom Data:
             _customSymbol = AddData<CustomData>(_customTicker, Resolution.Daily).Symbol;
@@ -79,7 +82,8 @@ namespace QuantConnect.Algorithm.CSharp
                 MOMP = MOMP(_symbol, 20, Resolution.Daily),
                 STD = STD(_symbol, 20, Resolution.Daily),
                 MIN = MIN(_symbol, 14, Resolution.Daily), // by default if the symbol is a tradebar type then it will be the min of the low property
-                MAX = MAX(_symbol, 14, Resolution.Daily)  // by default if the symbol is a tradebar type then it will be the max of the high property
+                MAX = MAX(_symbol, 14, Resolution.Daily),  // by default if the symbol is a tradebar type then it will be the max of the high property
+                B = B(_symbol, _symbol2, 14),
             };
 
             // Here we're going to define indicators using 'selector' functions. These 'selector' functions will define what data gets sent into the indicator
@@ -204,6 +208,7 @@ namespace QuantConnect.Algorithm.CSharp
             public MovingAverageConvergenceDivergence MACD;
             public Minimum MIN;
             public Maximum MAX;
+            public Beta B;
         }
 
         /// <summary>
@@ -240,7 +245,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4537;
+        public long DataPoints => 4733;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -274,25 +279,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$1.00"},
             {"Estimated Strategy Capacity", "$580000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.001"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "2.283"},
-            {"Return Over Maximum Drawdown", "2.627"},
-            {"Portfolio Turnover", "0.001"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Portfolio Turnover", "0.14%"},
             {"OrderListHash", "ee33b931de5b59dfa930cbcacdaa2c9b"}
         };
     }

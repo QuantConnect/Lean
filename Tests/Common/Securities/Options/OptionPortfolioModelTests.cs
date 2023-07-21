@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var securities = new SecurityManager(new TimeKeeper(DateTime.Now, TimeZones.NewYork));
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             var EUR = new Cash("EUR", 100*192, 10);
             portfolio.CashBook.Add("EUR", EUR);
@@ -106,6 +106,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             foreach (var fill in fills)
             {
+                fill.Ticket = order.ToOrderTicket(transactions);
                 portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 

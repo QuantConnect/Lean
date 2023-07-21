@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Util;
 using QuantConnect.Data;
 using System.Collections;
 using System.Globalization;
@@ -549,7 +550,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Dispose()
         {
-            _subscriptionFactoryEnumerator?.Dispose();
+            _subscriptionFactoryEnumerator.DisposeSafely();
+            _tradeableDates.DisposeSafely();
         }
 
         /// <summary>

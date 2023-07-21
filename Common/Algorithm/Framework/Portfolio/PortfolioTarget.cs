@@ -27,6 +27,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class PortfolioTarget : IPortfolioTarget
     {
+
+        /// <summary>
+        /// Flag to determine if the minimum order margin portfolio percentage warning should or has already been sent to the user algorithm
+        /// <see cref="IAlgorithmSettings.MinimumOrderMarginPortfolioPercentage"/>
+        /// </summary>
+        public static bool? MinimumOrderMarginPercentageWarningSent { get; set; }
+
         /// <summary>
         /// Gets the symbol of this target
         /// </summary>
@@ -97,8 +104,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             // Factoring in FreePortfolioValuePercentage.
-            var adjustedPercent = percent * (algorithm.Portfolio.TotalPortfolioValue - algorithm.Settings.FreePortfolioValue)
-                                  / algorithm.Portfolio.TotalPortfolioValue;
+            var adjustedPercent = percent * algorithm.Portfolio.TotalPortfolioValueLessFreeBuffer / algorithm.Portfolio.TotalPortfolioValue;
 
             // we normalize the target buying power by the leverage so we work in the land of margin
             var targetFinalMarginPercentage = adjustedPercent / security.BuyingPowerModel.GetLeverage(security);
@@ -113,6 +119,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 algorithm.Error(Messages.PortfolioTarget.UnableToComputeOrderQuantityDueToNullResult(symbol, result));
 
                 return null;
+            }
+
+            if (MinimumOrderMarginPercentageWarningSent.HasValue && !MinimumOrderMarginPercentageWarningSent.Value)
+            {
+                // we send the warning once
+                MinimumOrderMarginPercentageWarningSent = true;
+                algorithm.Debug(Messages.BuyingPowerModel.TargetOrderMarginNotAboveMinimum());
             }
 
             // be sure to back out existing holdings quantity since the buying power model yields

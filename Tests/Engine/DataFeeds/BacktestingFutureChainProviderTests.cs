@@ -71,18 +71,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsEmpty(result);
         }
 
-        [Test]
-        public void UsesMultipleResolutions()
+        [TestCase("20201007", 2)]
+        [TestCase("20131007", 5)]
+        public void UsesMultipleResolutions(string strDate, int expectedCount)
         {
             // we don't have minute data for this date
-            var date = new DateTime(2020, 10, 7);
+            var date = Time.ParseDate(strDate);
 
             var symbol = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, date);
             var futureChain = _provider.GetFutureContractList(symbol, date).ToList();
 
+            Assert.IsTrue(futureChain.All(x => x.ID.Date.Date >= date));
             Assert.IsTrue(futureChain.All(x => x.SecurityType == SecurityType.Future));
             Assert.IsTrue(futureChain.All(x => x.ID.Symbol == Futures.Indices.SP500EMini));
-            Assert.AreEqual(10, futureChain.Count);
+            Assert.AreEqual(expectedCount, futureChain.Count);
         }
     }
 }

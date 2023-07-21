@@ -17,8 +17,12 @@ using System;
 using NUnit.Framework;
 using Python.Runtime;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
+using QuantConnect.Algorithm;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Python
 {
@@ -153,33 +157,32 @@ namespace QuantConnect.Tests.Python
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("CustomConsolidatorRegressionAlgorithm",
                 new Dictionary<string, string> {
-                    {"Total Trades", "49"},
-                    {"Average Win", "0.25%"},
-                    {"Average Loss", "-0.01%"},
-                    {"Compounding Annual Return", "65.750%"},
+                    {"Total Trades", "30"},
+                    {"Average Win", "0.32%"},
+                    {"Average Loss", "-0.03%"},
+                    {"Compounding Annual Return", "67.341%"},
                     {"Drawdown", "0.300%"},
-                    {"Expectancy", "2.577"},
-                    {"Net Profit", "1.067%"},
-                    {"Sharpe Ratio", "6.873"},
-                    {"Probabilistic Sharpe Ratio", "89.382%"},
-                    {"Loss Rate", "80%"},
-                    {"Win Rate", "20%"},
-                    {"Profit-Loss Ratio", "16.88"},
-                    {"Alpha", "0.34"},
-                    {"Beta", "0.351"},
-                    {"Annual Standard Deviation", "0.068"},
+                    {"Expectancy", "2.471"},
+                    {"Net Profit", "1.087%"},
+                    {"Sharpe Ratio", "6.941"},
+                    {"Probabilistic Sharpe Ratio", "89.678%"},
+                    {"Loss Rate", "73%"},
+                    {"Win Rate", "27%"},
+                    {"Profit-Loss Ratio", "12.02"},
+                    {"Alpha", "0.349"},
+                    {"Beta", "0.355"},
+                    {"Annual Standard Deviation", "0.069"},
                     {"Annual Variance", "0.005"},
-                    {"Information Ratio", "0.865"},
-                    {"Tracking Error", "0.118"},
-                    {"Treynor Ratio", "1.336"},
-                    {"Total Fees", "$69.81"}
+                    {"Information Ratio", "0.961"},
+                    {"Tracking Error", "0.117"},
+                    {"Treynor Ratio", "1.349"},
+                    {"Total Fees", "$50.81"}
                 },
                 Language.Python,
                 AlgorithmStatus.Completed);
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus);
         }
@@ -231,5 +234,37 @@ namespace QuantConnect.Tests.Python
                 Assert.True(called);
             }
         }
+
+        [Test]
+        public void SubscriptionManagedDoesNotWrapCSharpConsolidators()
+        {
+            //Setup algorithm and Equity
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var spy = algorithm.AddEquity("SPY").Symbol;
+
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n" +
+                    "consolidator = QuoteBarConsolidator(timedelta(5))");
+
+                var pyConsolidator = module.GetAttr("consolidator");
+
+                algorithm.SubscriptionManager.AddConsolidator(spy, pyConsolidator);
+
+                pyConsolidator.TryConvert(out IDataConsolidator consolidator);
+                algorithm.SubscriptionManager.RemoveConsolidator(spy, consolidator);
+
+                var count = algorithm.SubscriptionManager
+                    .SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(spy)
+                    .Sum(x => x.Consolidators.Count);
+
+                Assert.AreEqual(0, count);
+            }
+
+        }
+
     }
 }

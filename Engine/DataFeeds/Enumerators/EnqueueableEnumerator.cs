@@ -15,10 +15,9 @@
 */
 
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -31,14 +30,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     public class EnqueueableEnumerator<T> : IEnumerator<T>
     {
         private T _current;
-        private T _lastEnqueued;
-        private volatile bool _end;
-        private volatile bool _disposed;
+        private bool _end;
 
         private readonly bool _isBlocking;
-        private readonly int _timeout;
+        private long _consumerCount;
+        private Queue<T> _consumer = new();
+        private Queue<T> _producer = new();
         private readonly object _lock = new object();
-        private readonly BlockingCollection<T> _blockingCollection;
+        private readonly ManualResetEventSlim _resetEvent = new(false);
 
         /// <summary>
         /// Gets the current number of items held in the internal queue
@@ -50,17 +49,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 lock (_lock)
                 {
                     if (_end) return 0;
-                    return _blockingCollection.Count;
+                    return _producer.Count + (int)Interlocked.Read(ref _consumerCount);
                 }
             }
-        }
-
-        /// <summary>
-        /// Gets the last item that was enqueued
-        /// </summary>
-        public T LastEnqueued
-        {
-            get { return _lastEnqueued; }
         }
 
         /// <summary>
@@ -68,7 +59,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public bool HasFinished
         {
-            get { return _end || _disposed; }
+            get { return _end; }
         }
 
         /// <summary>
@@ -77,9 +68,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="blocking">Specifies whether or not to use the blocking behavior</param>
         public EnqueueableEnumerator(bool blocking = false)
         {
-            _blockingCollection = new BlockingCollection<T>();
             _isBlocking = blocking;
-            _timeout = blocking ? Timeout.Infinite : 0;
         }
 
         /// <summary>
@@ -90,9 +79,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             lock (_lock)
             {
-                if (_end) return;
-                _blockingCollection.Add(data);
-                _lastEnqueued = data;
+                _producer.Enqueue(data);
+                // most of the time this will be set
+                if(!_resetEvent.IsSet)
+                {
+                    _resetEvent.Set();
+                }
             }
         }
 
@@ -105,9 +97,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             lock (_lock)
             {
                 if (_end) return;
-                // no more items can be added, so no need to wait anymore
-                _blockingCollection.CompleteAdding();
                 _end = true;
+
+                // no more items can be added, so no need to wait anymore
+                _resetEvent.Set();
+                _resetEvent.Dispose();
             }
         }
 
@@ -120,24 +114,55 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
-            T current;
-            if (!_blockingCollection.TryTake(out current, _timeout))
+            // we read with no lock most of the time
+            if (_consumer.TryDequeue(out _current))
             {
-                _current = default(T);
-
-                // if the enumerator has blocking behavior and there is no more data, it has ended
-                if (_isBlocking)
-                {
-                    lock (_lock)
-                    {
-                        _end = true;
-                    }
-                }
-
-                return !_end;
+                Interlocked.Decrement(ref _consumerCount);
+                return true;
             }
 
-            _current = current;
+            bool ended;
+            do
+            {
+                var producer = _producer;
+                lock (_lock)
+                {
+                    // swap queues
+                    ended = _end;
+                    _producer = _consumer;
+                }
+                _consumer = producer;
+                if(_consumer.Count > 0)
+                {
+                    _current = _consumer.Dequeue();
+                    Interlocked.Exchange(ref _consumerCount, _consumer.Count);
+                    break;
+                }
+
+                // if we are here no queue has data
+                if (ended)
+                {
+                    return false;
+                }
+
+                if (_isBlocking)
+                {
+                    try
+                    {
+                        _resetEvent.Wait(Timeout.Infinite);
+                        _resetEvent.Reset();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // can happen if disposed
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            while (!ended);
 
             // even if we don't have data to return, we haven't technically
             // passed the end of the collection, so always return true until
@@ -183,13 +208,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            lock (_lock)
-            {
-                if (_disposed) return;
-                Stop();
-                if (_blockingCollection != null) _blockingCollection.Dispose();
-                _disposed = true;
-            }
+            Stop();
         }
     }
 }

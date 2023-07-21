@@ -98,39 +98,6 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(1000 * expectedFee, fee.Value.Amount);
         }
 
-        [TestCase(false)]
-        [TestCase(true)]
-        public void HongKongFutureFee(bool canonical)
-        {
-            var symbol = Symbols.CreateFutureSymbol(Futures.Indices.HangSeng, SecurityIdentifier.DefaultDate);
-            if (!canonical)
-            {
-                symbol = Symbols.CreateFutureSymbol(Futures.Indices.HangSeng,
-                    FuturesExpiryFunctions.FuturesExpiryFunction(symbol)(new DateTime(2021, 12, 1)));
-            }
-            var entry = MarketHoursDatabase.FromDataFolder().GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
-            var properties = SymbolPropertiesDatabase.FromDataFolder()
-                .GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, null);
-            var security = new Future(symbol, entry.ExchangeHours,
-                new Cash(properties.QuoteCurrency, 0, 0),
-                properties,
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
-
-            var fee = _feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    security,
-                    new MarketOrder(security.Symbol, 1000, DateTime.UtcNow)
-                )
-            );
-
-            Assert.AreEqual(Currencies.HKD, fee.Value.Currency);
-            Assert.AreEqual(1000 * 40m, fee.Value.Amount);
-        }
-
         [Test]
         public void USAOptionFee()
         {

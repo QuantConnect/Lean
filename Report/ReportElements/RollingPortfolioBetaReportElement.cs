@@ -13,9 +13,7 @@
  * limitations under the License.
 */
 
-using System;
 using System.Linq;
-using Deedle;
 using Python.Runtime;
 using QuantConnect.Packets;
 
@@ -46,15 +44,10 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = ResultsUtil.EquityPoints(_backtest);
+            var backtestPoints = ResultsUtil.EquityPoints(_backtest, "Daily Performance");
             var backtestBenchmarkPoints = ResultsUtil.BenchmarkPoints(_backtest);
-            var livePoints = ResultsUtil.EquityPoints(_live);
+            var livePoints = ResultsUtil.EquityPoints(_live, "Daily Performance");
             var liveBenchmarkPoints = ResultsUtil.BenchmarkPoints(_live);
-
-            var backtestSeries = new Series<DateTime, double>(backtestPoints);
-            var backtestBenchmarkSeries = new Series<DateTime, double>(backtestBenchmarkPoints);
-            var liveSeries = new Series<DateTime, double>(livePoints);
-            var liveBenchmarkSeries = new Series<DateTime, double>(liveBenchmarkPoints);
 
             var base64 = "";
             using (Py.GIL())
@@ -62,16 +55,16 @@ namespace QuantConnect.Report.ReportElements
                 var backtestList = new PyList();
                 var liveList = new PyList();
 
-                var backtestRollingBetaSixMonths = Rolling.Beta(backtestSeries, backtestBenchmarkSeries, windowSize: 22 * 6);
-                var backtestRollingBetaTwelveMonths = Rolling.Beta(backtestSeries, backtestBenchmarkSeries, windowSize: 252);
+                var backtestRollingBetaSixMonths = Rolling.Beta(backtestPoints, backtestBenchmarkPoints, windowSize: 22 * 6);
+                var backtestRollingBetaTwelveMonths = Rolling.Beta(backtestPoints, backtestBenchmarkPoints, windowSize: 252);
 
                 backtestList.Append(backtestRollingBetaSixMonths.Keys.ToList().ToPython());
                 backtestList.Append(backtestRollingBetaSixMonths.Values.ToList().ToPython());
                 backtestList.Append(backtestRollingBetaTwelveMonths.Keys.ToList().ToPython());
                 backtestList.Append(backtestRollingBetaTwelveMonths.Values.ToList().ToPython());
 
-                var liveRollingBetaSixMonths = Rolling.Beta(liveSeries, liveBenchmarkSeries, windowSize: 22 * 6);
-                var liveRollingBetaTwelveMonths = Rolling.Beta(liveSeries, liveBenchmarkSeries, windowSize: 252);
+                var liveRollingBetaSixMonths = Rolling.Beta(livePoints, liveBenchmarkPoints, windowSize: 22 * 6);
+                var liveRollingBetaTwelveMonths = Rolling.Beta(livePoints, liveBenchmarkPoints, windowSize: 252);
 
                 liveList.Append(liveRollingBetaSixMonths.Keys.ToList().ToPython());
                 liveList.Append(liveRollingBetaSixMonths.Values.ToList().ToPython());

@@ -42,8 +42,14 @@ namespace QuantConnect.Configuration
                 // the result destination folder this algorithm should use for logging and result.json
                 new CommandLineOption("results-destination-folder", CommandOptionType.SingleValue),
 
+                // the algorithm name
+                new CommandLineOption("backtest-name", CommandOptionType.SingleValue),
+
                 // the unique algorithm id
                 new CommandLineOption("algorithm-id", CommandOptionType.SingleValue),
+
+                // the unique optimization id
+                new CommandLineOption("optimization-id", CommandOptionType.SingleValue),
 
                 // Options grabbed from json file
                 new CommandLineOption("environment", CommandOptionType.SingleValue),

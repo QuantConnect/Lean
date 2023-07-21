@@ -43,10 +43,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public virtual void SetUp()
         {
             _nowUtc = new DateTime(2021, 1, 10);
-            _algorithm = new QCAlgorithm();
+            _algorithm = new AlgorithmStub();
             _algorithm.SetFinishedWarmingUp();
-            _algorithm.SetPandasConverter();
-            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _algorithm.Settings.MinimumOrderMarginPortfolioPercentage = 0;
+            _algorithm.Settings.FreePortfolioValue = 250;
             _algorithm.SetDateTime(_nowUtc.ConvertToUtc(_algorithm.TimeZone));
             _algorithm.SetCash(1200);
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new BacktestNodePacket(),
                 null,
                 TestGlobals.DataProvider,
-                new SingleEntryDataCacheProvider(TestGlobals.DataProvider),
+                TestGlobals.DataCacheProvider,
                 TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
                 i => { },
@@ -72,15 +72,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python)]
         public void DoesNotReturnTargetsIfSecurityPriceIsZero(Language language)
         {
-            var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-            algorithm.AddEquity(Symbols.SPY.Value);
-            algorithm.SetDateTime(DateTime.MinValue.ConvertToUtc(algorithm.TimeZone));
+            _algorithm.AddEquity(Symbols.SPY.Value);
+            _algorithm.SetDateTime(DateTime.MinValue.ConvertToUtc(_algorithm.TimeZone));
 
             SetPortfolioConstruction(language, PortfolioBias.Long);
 
             var insights = new[] { new Insight(_nowUtc, Symbols.SPY, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null) };
-            var actualTargets = algorithm.PortfolioConstruction.CreateTargets(algorithm, insights);
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
 
             Assert.AreEqual(0, actualTargets.Count());
         }
@@ -133,7 +131,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             var targets = GeneratePortfolioTargets(language, direction1, direction2, magnitude1, magnitude2);
             var quantities = targets.ToDictionary(target => {
-                QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
+                QuantConnect.Logging.Log.Debug($"{target.Symbol}: {target.Quantity}");
                 return target.Symbol.Value;
             },
             target => target.Quantity);
@@ -344,6 +342,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, direction1, magnitude1, null),
                 new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, direction2, magnitude2, null),
             };
+            _algorithm.Insights.AddRange(insights);
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
 
             return _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);

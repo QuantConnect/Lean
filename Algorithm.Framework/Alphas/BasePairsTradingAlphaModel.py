@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,9 +71,8 @@ class BasePairsTradingAlphaModel(AlphaModel):
 
         for security in changes.RemovedSecurities:
             keys = [k for k in self.pairs.keys() if security.Symbol in k]
-
             for key in keys:
-                self.pairs.pop(key)
+                self.pairs.pop(key).dispose()
 
     def UpdatePairs(self, algorithm):
 
@@ -124,11 +123,26 @@ class BasePairsTradingAlphaModel(AlphaModel):
                 threshold: The percent [0, 100] deviation of the ratio from the mean before emitting an insight'''
             self.state = self.State.FlatRatio
 
+            self.algorithm = algorithm
             self.asset1 = asset1
             self.asset2 = asset2
 
-            self.asset1Price = algorithm.Identity(asset1)
-            self.asset2Price = algorithm.Identity(asset2)
+            # Created the Identity indicator for a given Symbol and
+            # the consolidator it is registered to. The consolidator reference 
+            # will be used to remove it from SubscriptionManager
+            def CreateIdentityIndicator(symbol: Symbol):
+                resolution = min([x.Resolution for x in algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol)])
+
+                name = algorithm.CreateIndicatorName(symbol, "close", resolution)
+                identity = Identity(name)
+
+                consolidator = algorithm.ResolveConsolidator(symbol, resolution)
+                algorithm.RegisterIndicator(symbol, identity, consolidator)
+
+                return identity, consolidator
+
+            self.asset1Price, self.identityConsolidator1 = CreateIdentityIndicator(asset1);
+            self.asset2Price, self.identityConsolidator2 = CreateIdentityIndicator(asset2);
 
             self.ratio = IndicatorExtensions.Over(self.asset1Price, self.asset2Price)
             self.mean = IndicatorExtensions.Of(ExponentialMovingAverage(500), self.ratio)
@@ -140,6 +154,13 @@ class BasePairsTradingAlphaModel(AlphaModel):
             self.lowerThreshold = IndicatorExtensions.Times(self.mean, lower)
 
             self.predictionInterval = predictionInterval
+
+        def dispose(self):
+            '''
+            On disposal, remove the consolidators from the subscription manager
+            '''
+            self.algorithm.SubscriptionManager.RemoveConsolidator(self.asset1, self.identityConsolidator1)
+            self.algorithm.SubscriptionManager.RemoveConsolidator(self.asset2, self.identityConsolidator2)
 
         def GetInsightGroup(self):
             '''Gets the insights group for the pair

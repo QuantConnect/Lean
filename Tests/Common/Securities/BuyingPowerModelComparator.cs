@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Common.Securities
             if (portfolio == null)
             {
                 var securities = new SecurityManager(timeKeeper ?? new TimeKeeper(DateTime.UtcNow));
-                Portfolio = new SecurityPortfolioManager(securities, new SecurityTransactionManager(null, securities));
+                Portfolio = new SecurityPortfolioManager(securities, new SecurityTransactionManager(null, securities), new AlgorithmSettings());
             }
             if (orderProcessor != null)
             {
@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             reentry = true;
             var actual = PositionGroupModel.GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(
-                Portfolio, new PositionGroup(PositionGroupModel, new Position(parameters.Security, parameters.Quantity))
+                Portfolio, new PositionGroup(PositionGroupModel, parameters.Quantity, new Position(parameters.Security, parameters.Quantity))
             ));
 
             Assert.AreEqual(expected.Value, actual.Value,
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             reentry = true;
             var actual = PositionGroupModel.GetInitialMarginRequirement(new PositionGroupInitialMarginParameters(
-                Portfolio, new PositionGroup(PositionGroupModel, new Position(parameters.Security, parameters.Quantity))
+                Portfolio, new PositionGroup(PositionGroupModel, parameters.Quantity, new Position(parameters.Security, parameters.Quantity))
             ));
 
             Assert.AreEqual(expected.Value, actual.Value,
@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             var actual = PositionGroupModel.GetInitialMarginRequiredForOrder(new PositionGroupInitialMarginForOrderParameters(
-                Portfolio, new PositionGroup(PositionGroupModel, new Position(parameters.Security, parameters.Order.Quantity)), parameters.Order
+                Portfolio, new PositionGroup(PositionGroupModel, parameters.Order.Quantity, new Position(parameters.Security, parameters.Order.Quantity)), parameters.Order
             ));
 
             Assert.AreEqual(expected.Value, actual.Value,
@@ -148,10 +148,11 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             reentry = true;
+            var position = new Position(parameters.Security, parameters.Order.Quantity);
             var actual = PositionGroupModel.HasSufficientBuyingPowerForOrder(
                 new HasSufficientPositionGroupBuyingPowerForOrderParameters(
                     Portfolio,
-                    new PositionGroup(PositionGroupModel, new Position(parameters.Security, parameters.Order.Quantity)),
+                    new PositionGroup(PositionGroupModel, position.GetGroupQuantity(), position),
                     new List<Order> { parameters.Order }
                 )
             );
@@ -204,7 +205,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we're not comparing group quantities, which is the number of position lots, but rather the implied
             // position quantities resulting from having that many lots.
-            var resizedPositionGroup = positionGroup.WithQuantity(actual.NumberOfLots);
+            var resizedPositionGroup = positionGroup.WithQuantity(
+                Math.Sign(positionGroup.Quantity) == -1 ? -actual.NumberOfLots : actual.NumberOfLots, Portfolio.Positions);
             var position = resizedPositionGroup.GetPosition(security.Symbol);
 
             var bpmOrder = new MarketOrder(security.Symbol, expected.Quantity, parameters.Portfolio.Securities.UtcTime);
@@ -269,7 +271,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we're not comparing group quantities, which is the number of position lots, but rather the implied
             // position quantities resulting from having that many lots.
-            var resizedPositionGroup = positionGroup.WithQuantity(actual.NumberOfLots);
+            var resizedPositionGroup = positionGroup.WithQuantity(
+                Math.Sign(positionGroup.Quantity) == -1 ? -actual.NumberOfLots : actual.NumberOfLots, Portfolio.Positions);
             var position = resizedPositionGroup.GetPosition(security.Symbol);
 
             var bpmOrder = new MarketOrder(security.Symbol, expected.Quantity, parameters.Portfolio.Securities.UtcTime);

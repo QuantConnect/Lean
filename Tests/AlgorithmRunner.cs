@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using NodaTime;
 using NUnit.Framework;
@@ -26,7 +25,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
-using QuantConnect.Lean.Engine.Alphas;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
@@ -35,7 +34,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -49,7 +47,6 @@ namespace QuantConnect.Tests
         public static AlgorithmRunnerResults RunLocalBacktest(
             string algorithm,
             Dictionary<string, string> expectedStatistics,
-            AlphaRuntimeStatistics expectedAlphaStatistics,
             Language language,
             AlgorithmStatus expectedFinalStatus,
             DateTime? startDate = null,
@@ -60,11 +57,11 @@ namespace QuantConnect.Tests
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
-            var alphaStatistics = new AlphaRuntimeStatistics(new TestAccountCurrencyProvider());
             BacktestingResultHandler results = null;
 
             Composer.Instance.Reset();
             SymbolCache.Clear();
+            TextSubscriptionDataSourceReader.ClearCache();
             MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
 
             // clean up object storage
@@ -174,9 +171,6 @@ namespace QuantConnect.Tests
                     {
                         Assert.Fail($"There was a runtime error running the algorithm");
                     }
-
-                    var defaultAlphaHandler = (DefaultAlphaHandler) algorithmHandlers.Alphas;
-                    alphaStatistics = defaultAlphaHandler.RuntimeStatistics;
                 }
 
                 // Reset settings to initial values
@@ -216,19 +210,6 @@ namespace QuantConnect.Tests
                 Assert.AreEqual(expected, result, "Failed on " + expectedStat.Key);
             }
 
-            if (expectedAlphaStatistics != null)
-            {
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.MeanPopulationScore.Direction);
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.MeanPopulationScore.Magnitude);
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.RollingAveragedPopulationScore.Direction);
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.RollingAveragedPopulationScore.Magnitude);
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.LongShortRatio);
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.TotalInsightsClosed);
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.TotalInsightsGenerated);
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.TotalAccumulatedEstimatedAlphaValue);
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.TotalInsightsAnalysisCompleted);
-            }
-
             if (!reducedDiskSize)
             {
                 // we successfully passed the regression test, copy the log file so we don't have to continually
@@ -245,25 +226,6 @@ namespace QuantConnect.Tests
 
             }
             return new AlgorithmRunnerResults(algorithm, language, algorithmManager, results);
-        }
-
-        private static void AssertAlphaStatistics(AlphaRuntimeStatistics expected, AlphaRuntimeStatistics actual, Expression<Func<AlphaRuntimeStatistics, object>> selector)
-        {
-            // extract field name from expression
-            var field = selector.AsEnumerable().OfType<MemberExpression>().First().ToString();
-            field = field.Substring(field.IndexOf('.') + 1);
-
-            var func = selector.Compile();
-            var expectedValue = func(expected);
-            var actualValue = func(actual);
-            if (expectedValue is double)
-            {
-                Assert.AreEqual((double)expectedValue, (double)actualValue, 1e-4, "Failed on alpha statistics " + field);
-            }
-            else
-            {
-                Assert.AreEqual(expectedValue, actualValue, "Failed on alpha statistics " + field);
-            }
         }
 
         /// <summary>

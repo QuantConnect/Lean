@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Linq;
 using QuantConnect.Util;
 using QuantConnect.Orders;
@@ -21,7 +20,6 @@ using QuantConnect.Benchmarks;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -97,7 +95,7 @@ namespace QuantConnect.Brokerages
         /// <returns>Binance does not support update of orders, so it will always return false</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead."); ;
+            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
             return false;
         }
 
@@ -119,33 +117,42 @@ namespace QuantConnect.Brokerages
             // Binance API provides minimum order size in quote currency
             // and hence we have to check current order size using available price and order quantity
             var quantityIsValid = true;
+            decimal price;
             switch (order)
             {
                 case LimitOrder limitOrder:
                     quantityIsValid &= IsOrderSizeLargeEnough(limitOrder.LimitPrice);
+                    price = limitOrder.LimitPrice;
                     break;
                 case MarketOrder:
                     if (!security.HasData)
                     {
                         message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                            "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point."
-                        );
+                            Messages.DefaultBrokerageModel.NoDataForSymbol);
 
                         return false;
                     }
 
-                    var price = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+                    price = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
                     quantityIsValid &= IsOrderSizeLargeEnough(price);
                     break;
                 case StopLimitOrder stopLimitOrder:
                     if (security.Symbol.SecurityType == SecurityType.CryptoFuture)
                     {
-                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Invariant($"{order.Type} orders are not supported for this symbol ${security.Symbol}"));
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                            Messages.BinanceBrokerageModel.UnsupportedOrderTypeForSecurityType(order, security));
                         return false;
                     }
+                    price = stopLimitOrder.LimitPrice;
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.LimitPrice);
+                    if (!quantityIsValid)
+                    {
+                        break;
+                    }
+
                     // Binance Trading UI requires this check too...
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.StopPrice);
+                    price = stopLimitOrder.StopPrice;
                     break;
                 case StopMarketOrder:
                     // despite Binance API allows you to post STOP_LOSS and TAKE_PROFIT order types
@@ -154,13 +161,11 @@ namespace QuantConnect.Brokerages
                     // currently no symbols supporting TAKE_PROFIT or STOP_LOSS orders
 
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        Invariant($"{order.Type} orders are not supported for this symbol. Please check 'https://api.binance.com/api/v3/exchangeInfo?symbol={security.SymbolProperties.MarketTicker}' to see supported order types.")
-                    );
+                        Messages.BinanceBrokerageModel.UnsupportedOrderTypeWithLinkToSupportedTypes(order, security));
                     return false;
                 default:
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        Invariant($"{order.Type} orders are not supported by Binance.")
-                    );
+                        Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, new [] { OrderType.StopMarket, OrderType.StopLimit, OrderType.Market, OrderType.Limit }));
                     return false;
             }
 
@@ -168,8 +173,7 @@ namespace QuantConnect.Brokerages
             if (!quantityIsValid)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The minimum order size (in quote currency) for {security.Symbol.Value} is {security.SymbolProperties.MinimumOrderSize}. Order quantity was {order.Quantity}.")
-                );
+                    Messages.DefaultBrokerageModel.InvalidOrderSize(security, order.Quantity, price));
 
                 return false;
             }
@@ -177,8 +181,7 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Crypto && security.Type != SecurityType.CryptoFuture)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(BinanceBrokerageModel)} does not support {security.Type} security type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
                 return false;
             }

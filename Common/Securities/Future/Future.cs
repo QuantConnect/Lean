@@ -84,7 +84,7 @@ namespace QuantConnect.Securities.Future
                 new FutureFillModel(),
                 new InteractiveBrokersFeeModel(),
                 new ConstantSlippageModel(0),
-                new ImmediateSettlementModel(),
+                new FutureSettlementModel(),
                 Securities.VolatilityModel.Null,
                 null,
                 new SecurityDataFilter(),
@@ -98,8 +98,7 @@ namespace QuantConnect.Securities.Future
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
             SettlementType = SettlementType.Cash;
             Holdings = new FutureHolding(this, currencyConverter);
-            _symbolProperties = symbolProperties;
-            SetFilter(TimeSpan.Zero, TimeSpan.Zero);
+            ContractFilter = new EmptyContractFilter();
         }
 
         /// <summary>
@@ -132,7 +131,7 @@ namespace QuantConnect.Securities.Future
                 new FutureFillModel(),
                 new InteractiveBrokersFeeModel(),
                 new ConstantSlippageModel(0),
-                new ImmediateSettlementModel(),
+                new FutureSettlementModel(),
                 Securities.VolatilityModel.Null,
                 null,
                 new SecurityDataFilter(),
@@ -146,13 +145,9 @@ namespace QuantConnect.Securities.Future
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
             SettlementType = SettlementType.Cash;
             Holdings = new FutureHolding(this, currencyConverter);
-            _symbolProperties = symbolProperties;
-            SetFilter(TimeSpan.Zero, TimeSpan.Zero);
+            ContractFilter = new EmptyContractFilter();
             Underlying = underlying;
         }
-
-        // save off a strongly typed version of symbol properties
-        private readonly SymbolProperties _symbolProperties;
 
         /// <summary>
         /// Returns true if this is the future chain security, false if it is a specific future contract
@@ -202,6 +197,22 @@ namespace QuantConnect.Securities.Future
         public IDerivativeSecurityFilter ContractFilter
         {
             get; set;
+        }
+
+        /// <summary>
+        /// Sets the <see cref="LocalTimeKeeper"/> to be used for this <see cref="Security"/>.
+        /// This is the source of this instance's time.
+        /// </summary>
+        /// <param name="localTimeKeeper">The source of this <see cref="Security"/>'s time.</param>
+        public override void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
+        {
+            base.SetLocalTimeKeeper(localTimeKeeper);
+
+            var model = SettlementModel as FutureSettlementModel;
+            if (model != null)
+            {
+                model.SetLocalDateTimeFrontier(LocalTime);
+            }
         }
 
         /// <summary>

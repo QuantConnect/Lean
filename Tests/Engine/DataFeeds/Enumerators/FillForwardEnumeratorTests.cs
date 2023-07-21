@@ -41,6 +41,33 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
     public class FillForwardEnumeratorTests
     {
         [Test]
+        public void FillForwardsUntilSubscriptionEnd()
+        {
+            var dataResolution = Time.OneHour;
+            var fillForwardResolution = Time.OneHour;
+
+            var time = new DateTime(2017, 7, 20, 0, 0, 0);
+            var subscriptionEndTime = time.AddDays(1);
+
+            var enumerator = new List<BaseData>
+            {
+                new TradeBar { Time = time, Value = 1, Period = dataResolution, Volume = 100},
+                new TradeBar { Time = time.AddDays(5), Value = 1, Period = dataResolution, Volume = 100},
+            }.GetEnumerator();
+
+            var exchange = new EquityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            using var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(fillForwardResolution), false, subscriptionEndTime, dataResolution, exchange.TimeZone);
+
+            var dataCount = 0;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                dataCount++;
+                Assert.IsFalse(fillForwardEnumerator.Current.EndTime > subscriptionEndTime);
+            }
+            Assert.AreEqual(24, dataCount);
+        }
+
+        [Test]
         public void DelistingEvents()
         {
             var dataResolution = Time.OneMinute;
@@ -1176,7 +1203,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 setupHandler: "FillForwardTestSetupHandler");
@@ -1949,7 +1975,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 setupHandler: "FillForwardDaylightMovementTestSetupHandler");

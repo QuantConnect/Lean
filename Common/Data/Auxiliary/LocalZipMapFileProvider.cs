@@ -35,7 +35,19 @@ namespace QuantConnect.Data.Auxiliary
         /// The cached refresh period for the map files
         /// </summary>
         /// <remarks>Exposed for testing</remarks>
-        protected virtual TimeSpan CacheRefreshPeriod => TimeSpan.FromDays(1);
+        protected virtual TimeSpan CacheRefreshPeriod
+        {
+            get
+            {
+                var dueTime = Time.GetNextLiveAuxiliaryDataDueTime();
+                if (dueTime > TimeSpan.FromMinutes(10))
+                {
+                    // Clear the cache before the auxiliary due time to avoid race conditions with consumers
+                    return dueTime - TimeSpan.FromMinutes(10);
+                }
+                return dueTime;
+            }
+        }
 
         /// <summary>
         /// Creates a new instance of the <see cref="LocalDiskFactorFileProvider"/>
@@ -123,7 +135,7 @@ namespace QuantConnect.Data.Auxiliary
                 // prevent infinite recursion if something is wrong
                 if (count++ > 30)
                 {
-                    throw new InvalidOperationException($"LocalZipMapFileProvider couldn't find any map files going all the way back to {date}");
+                    throw new InvalidOperationException($"LocalZipMapFileProvider couldn't find any map files going all the way back to {date} for {market}");
                 }
 
                 date = date.AddDays(-1);

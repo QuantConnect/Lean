@@ -35,11 +35,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2018, 04, 04);  //Set Start Date
             SetEndDate(2018, 04, 04);    //Set End Date
             SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
+            SetAccountCurrency();
+            _btcEur = AddCrypto("BTCEUR").Symbol;
+        }
+
+        public virtual void SetAccountCurrency()
+        {
             //Before setting any cash or adding a Security call SetAccountCurrency
             SetAccountCurrency("EUR");
             SetCash(100000);             //Set Strategy Cash
-
-            _btcEur = AddCrypto("BTCEUR").Symbol;
         }
 
         /// <summary>
@@ -68,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4324;
+        public long DataPoints => 4319;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -102,25 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "€298.35"},
             {"Estimated Strategy Capacity", "€85000.00"},
             {"Lowest Capacity Asset", "BTCEUR XJ"},
-            {"Fitness Score", "0.506"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-13.614"},
-            {"Portfolio Turnover", "1.073"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "€0"},
-            {"Total Accumulated Estimated Alpha Value", "€0"},
-            {"Mean Population Estimated Insight Value", "€0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Portfolio Turnover", "107.64%"},
             {"OrderListHash", "2ba443899dcccc79dc0f04441f797bf9"}
         };
     }

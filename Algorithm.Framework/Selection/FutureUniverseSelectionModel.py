@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from clr import GetClrType as typeof
 
 from Selection.UniverseSelectionModel import UniverseSelectionModel
 
@@ -53,53 +52,8 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
             # prevent creating duplicate future chains -- one per symbol
             if futureSymbol not in uniqueSymbols:
                 uniqueSymbols.add(futureSymbol)
-                yield self.CreateFutureChain(algorithm, futureSymbol)
-
-    def CreateFutureChain(self, algorithm, symbol):
-        '''Creates a FuturesChainUniverse for a given symbol
-        Args:
-            algorithm: The algorithm instance to create universes for
-            symbol: Symbol of the future
-        Returns:
-            FuturesChainUniverse for the given symbol'''
-        if symbol.SecurityType != SecurityType.Future:
-            raise ValueError("CreateFutureChain requires an future symbol.")
-
-        # rewrite non-canonical symbols to be canonical
-        market = symbol.ID.Market
-        if not symbol.IsCanonical():
-            symbol = Symbol.Create(symbol.Value, SecurityType.Future, market, f"/{symbol.Value}")
-
-        # resolve defaults if not specified
-        settings = self.universeSettings if self.universeSettings is not None else algorithm.UniverseSettings
-        # create canonical security object, but don't duplicate if it already exists
-        securities = [s for s in algorithm.Securities if s.Key == symbol]
-        if len(securities) == 0:
-            futureChain = self.CreateFutureChainSecurity(algorithm, symbol, settings)
-        else:
-            futureChain = securities[0]
-
-        # set the future chain contract filter function
-        futureChain.SetFilter(self.Filter)
-
-        return FuturesChainUniverse(futureChain, settings)
-
-    def CreateFutureChainSecurity(self, algorithm, symbol, settings):
-        '''Creates the canonical Future chain security for a given symbol
-        Args:
-            algorithm: The algorithm instance to create universes for
-            symbol: Symbol of the future
-            settings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed
-        Returns
-            Future for the given symbol'''
-        config = algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(typeof(ZipEntryName),
-                                                                                 symbol,
-                                                                                 settings.Resolution,
-                                                                                 settings.FillForward,
-                                                                                 settings.ExtendedMarketHours,
-                                                                                 False)
-
-        return algorithm.Securities.CreateSecurity(symbol, config, settings.Leverage, False)
+                for universe in Extensions.CreateFutureChain(algorithm, futureSymbol, self.Filter, self.universeSettings):
+                    yield universe
 
     def Filter(self, filter):
         '''Defines the future chain universe filter'''

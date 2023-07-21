@@ -124,6 +124,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 throw new ArgumentException("BrokerageSetupHandler.CreateBrokerage requires a live node packet");
             }
 
+            Log.Trace($"BrokerageSetupHandler.CreateBrokerage(): creating brokerage '{liveJob.Brokerage}'");
+
             // find the correct brokerage factory based on the specified brokerage in the live job packet
             _factory = Composer.Instance.Single<IBrokerageFactory>(brokerageFactory => brokerageFactory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
             factory = _factory;
@@ -241,7 +243,8 @@ namespace QuantConnect.Lean.Engine.Setup
                         algorithm.SetAvailableDataTypes(BaseSetupHandler.GetConfiguredDataFeeds());
 
                         //Algorithm is live, not backtesting:
-                        algorithm.SetLiveMode(true);
+                        algorithm.SetAlgorithmMode(liveJob.AlgorithmMode);
+                        algorithm.SetDeploymentTarget(liveJob.DeploymentTarget);
 
                         //Initialize the algorithm's starting date
                         algorithm.SetDateTime(DateTime.UtcNow);
@@ -346,10 +349,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                 StartingDate = DateTime.Now;
-
-                // we set the free portfolio value based on the initial total value and the free percentage value
-                algorithm.Settings.FreePortfolioValue =
-                    algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
             }
             catch (Exception err)
             {
@@ -526,13 +525,10 @@ namespace QuantConnect.Lean.Engine.Setup
             // add options first to ensure raw data normalization mode is set on the equity underlyings
             foreach (var order in openOrders.OrderByDescending(x => x.SecurityType))
             {
-                // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
-                order.Id = algorithm.Transactions.GetIncrementOrderId();
+                transactionHandler.AddOpenOrder(order, algorithm);
 
                 Log.Trace($"BrokerageSetupHandler.Setup(): Has open order: {order}");
                 resultHandler.DebugMessage($"BrokerageSetupHandler.Setup(): Open order detected.  Creating order tickets for open order {order.Symbol.Value} with quantity {order.Quantity}. Beware that this order ticket may not accurately reflect the quantity of the order if the open order is partially filled.");
-
-                transactionHandler.AddOpenOrder(order, order.ToOrderTicket(algorithm.Transactions));
 
                 // verify existing holding security type
                 if (!supportedSecurityTypes.Contains(order.SecurityType))

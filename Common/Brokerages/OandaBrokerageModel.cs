@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
@@ -20,7 +21,6 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -41,6 +41,13 @@ namespace QuantConnect.Brokerages
             {SecurityType.Cfd, Market.Oanda}
         }.ToReadOnlyDictionary();
 
+        private readonly HashSet<OrderType> _supportedOrderTypes = new()
+        {
+            OrderType.Limit,
+            OrderType.Market,
+            OrderType.StopMarket
+        };
+
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
@@ -54,6 +61,10 @@ namespace QuantConnect.Brokerages
         public OandaBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
+            if (accountType == AccountType.Cash)
+            {
+                throw new InvalidOperationException($"Oanda brokerage can only be used with a {AccountType.Margin} account type");
+            }
         }
 
         /// <summary>
@@ -75,18 +86,16 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Forex && security.Type != SecurityType.Cfd)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(OandaBrokerageModel)} does not support {security.Type} security type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
                 return false;
             }
 
             // validate order type
-            if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket)
+            if (!_supportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(OandaBrokerageModel)} does not support {order.Type} order type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
 
                 return false;
             }
@@ -95,8 +104,7 @@ namespace QuantConnect.Brokerages
             if (order.TimeInForce != TimeInForce.GoodTilCanceled)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(OandaBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));
 
                 return false;
             }

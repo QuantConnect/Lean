@@ -22,6 +22,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.OptionExercise;
 using QuantConnect.Orders.Slippage;
+using QuantConnect.Python;
 using QuantConnect.Securities.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -54,13 +55,14 @@ namespace QuantConnect.Securities.Option
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        /// <remarks>Used in testing</remarks>
         public Option(SecurityExchangeHours exchangeHours,
             SubscriptionDataConfig config,
             Cash quoteCurrency,
             OptionSymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes)
-            : base(config,
+            : this(config.Symbol,
                 quoteCurrency,
                 symbolProperties,
                 new OptionExchange(exchangeHours),
@@ -76,21 +78,10 @@ namespace QuantConnect.Securities.Option
                 new SecurityPriceVariationModel(),
                 currencyConverter,
                 registeredTypes,
-                Securities.MarginInterestRateModel.Null
-                )
+                null)
         {
-            ExerciseSettlement = SettlementType.PhysicalDelivery;
+            AddData(config);
             SetDataNormalizationMode(DataNormalizationMode.Raw);
-            OptionExerciseModel = new DefaultExerciseModel();
-            PriceModel = config.Symbol.ID.OptionStyle switch
-            {
-                OptionStyle.American => OptionPriceModels.BjerksundStensland(),
-                OptionStyle.European => OptionPriceModels.BlackScholes(),
-                _ => throw new ArgumentException("Invalid OptionStyle")
-            };
-            Holdings = new OptionHolding(this, currencyConverter);
-            _symbolProperties = symbolProperties;
-            SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));
         }
 
         /// <summary>
@@ -190,6 +181,7 @@ namespace QuantConnect.Securities.Option
             _symbolProperties = (OptionSymbolProperties)symbolProperties;
             SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));
             Underlying = underlying;
+            OptionAssignmentModel = new DefaultOptionAssignmentModel();
         }
 
         // save off a strongly typed version of symbol properties
@@ -332,6 +324,7 @@ namespace QuantConnect.Securities.Option
         {
             return Math.Max(0.0m, GetPayOff(underlyingPrice));
         }
+
         /// <summary>
         /// Option payoff function at expiration time
         /// </summary>
@@ -340,6 +333,16 @@ namespace QuantConnect.Securities.Option
         public decimal GetPayOff(decimal underlyingPrice)
         {
             return Right == OptionRight.Call ? underlyingPrice - StrikePrice : StrikePrice - underlyingPrice;
+        }
+
+        /// <summary>
+        /// Option out of the money function
+        /// </summary>
+        /// <param name="underlyingPrice">The price of the underlying</param>
+        /// <returns></returns>
+        public decimal OutOfTheMoneyAmount(decimal underlyingPrice)
+        {
+            return Math.Max(0, Right == OptionRight.Call ? StrikePrice - underlyingPrice : underlyingPrice - StrikePrice);
         }
 
         /// <summary>
@@ -394,6 +397,14 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// The automatic option assignment model
+        /// </summary>
+        public IOptionAssignmentModel OptionAssignmentModel
+        {
+            get; set;
+        }
+
+        /// <summary>
         /// When enabled, approximates Greeks if corresponding pricing model didn't calculate exact numbers
         /// </summary>
         [Obsolete("This property has been deprecated. Please use QLOptionPriceModel.EnableGreekApproximation instead.")]
@@ -425,6 +436,72 @@ namespace QuantConnect.Securities.Option
         public IDerivativeSecurityFilter ContractFilter
         {
             get; set;
+        }
+
+        /// <summary>
+        /// Sets the automatic option assignment model
+        /// </summary>
+        /// <param name="pyObject">The option assignment model to use</param>
+        public void SetOptionAssignmentModel(PyObject pyObject)
+        {
+            if (pyObject.TryConvert<IOptionAssignmentModel>(out var optionAssignmentModel))
+            {
+                // pure C# implementation
+                SetOptionAssignmentModel(optionAssignmentModel);
+            }
+            else if (Extensions.TryConvert<IOptionAssignmentModel>(pyObject, out _, allowPythonDerivative: true))
+            {
+                SetOptionAssignmentModel(new OptionAssignmentModelPythonWrapper(pyObject));
+            }
+            else
+            {
+                using(Py.GIL())
+                {
+                    throw new ArgumentException($"SetOptionAssignmentModel: {pyObject.Repr()} is not a valid argument.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the automatic option assignment model
+        /// </summary>
+        /// <param name="optionAssignmentModel">The option assignment model to use</param>
+        public void SetOptionAssignmentModel(IOptionAssignmentModel optionAssignmentModel)
+        {
+            OptionAssignmentModel = optionAssignmentModel;
+        }
+
+        /// <summary>
+        /// Sets the option exercise model
+        /// </summary>
+        /// <param name="pyObject">The option exercise model to use</param>
+        public void SetOptionExerciseModel(PyObject pyObject)
+        {
+            if (pyObject.TryConvert<IOptionExerciseModel>(out var optionExerciseModel))
+            {
+                // pure C# implementation
+                SetOptionExerciseModel(optionExerciseModel);
+            }
+            else if (Extensions.TryConvert<IOptionExerciseModel>(pyObject, out _, allowPythonDerivative: true))
+            {
+                SetOptionExerciseModel(new OptionExerciseModelPythonWrapper(pyObject));
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    throw new ArgumentException($"SetOptionExerciseModel: {pyObject.Repr()} is not a valid argument.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the option exercise model
+        /// </summary>
+        /// <param name="optionExerciseModel">The option exercise model to use</param>
+        public void SetOptionExerciseModel(IOptionExerciseModel optionExerciseModel)
+        {
+            OptionExerciseModel = optionExerciseModel;
         }
 
         /// <summary>

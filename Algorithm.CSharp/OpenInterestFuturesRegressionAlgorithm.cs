@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Transactions.OrdersCount == 0 && slice.HasData)
             {
-                var matched = slice.Keys.Where(s => !ExpectedExpiryDates.Contains(s.ID.Date)).ToList();
+                var matched = slice.Keys.Where(s => !s.IsCanonical() && !ExpectedExpiryDates.Contains(s.ID.Date)).ToList();
                 if (matched.Count != 0)
                 {
                     throw new Exception($"{matched.Count}/{slice.Keys.Count} were unexpected expiry date(s): " + string.Join(", ", matched.Select(x => x.ID.Date)));
@@ -87,12 +87,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         ///     This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = {Language.CSharp};
+        public Language[] Languages { get; } = {Language.CSharp, Language.Python};
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 2561853;
+        public long DataPoints => 2794075;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -126,25 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$9.88"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "GC VMRHKN2NLWV1"},
-            {"Fitness Score", "0.008"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-128.807"},
-            {"Portfolio Turnover", "0.017"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Portfolio Turnover", "1.32%"},
             {"OrderListHash", "7cd0ac939e3b54130734e111180e99ae"}
         };
     }

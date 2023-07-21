@@ -14,14 +14,13 @@
 */
 
 using System;
+using System.Collections.Generic;
+
 using MathNet.Numerics.Statistics;
+
 using QuantConnect.Data;
 using QuantConnect.Indicators;
-using QuantConnect.Data.Market;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Securities.Volatility;
-using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -157,11 +156,26 @@ namespace QuantConnect.Securities
         /// <returns>History request object list, or empty if no requirements</returns>
         public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
-            return base.GetHistoryRequirements(
+            // Let's reset the model since it will get warmed up again using these history requirements
+            Reset();
+
+            return GetHistoryRequirements(
                 security,
                 utcTime,
                 _resolution,
                 _window.Size + 1);
+        }
+
+        /// <summary>
+        /// Resets the model to its initial state
+        /// </summary>
+        private void Reset()
+        {
+            _needsUpdate = false;
+            _volatility = 0m;
+            _lastUpdate = DateTime.MinValue;
+            _lastPrice = 0m;
+            _window.Reset();
         }
 
         private static int PeriodsInResolution(Resolution resolution)

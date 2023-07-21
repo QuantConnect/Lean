@@ -492,13 +492,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (_dataManager.RemoveSubscription(subscription.Configuration, universe))
                     {
                         _internalSubscriptionManager.RemovedSubscriptionRequest(subscription);
-                        member.IsTradable = false;
 
-                        // We need to mark this security as untradeable while it has no data subscription
-                        // it is expected that this function is called while in sync with the algo thread,
-                        // so we can make direct edits to the security here.
-                        // We only clear the cache once the subscription is removed from the data stack
-                        member.Cache.Reset();
+                        // if not used by any universe
+                        if (!_algorithm.UniverseManager.ActiveSecurities.ContainsKey(subscription.Configuration.Symbol))
+                        {
+                            member.IsTradable = false;
+                            // We need to mark this security as untradeable while it has no data subscription
+                            // it is expected that this function is called while in sync with the algo thread,
+                            // so we can make direct edits to the security here.
+                            // We only clear the cache once the subscription is removed from the data stack
+                            member.Cache.Reset();
+                        }
                     }
                 }
             }

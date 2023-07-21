@@ -78,7 +78,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             self.SetRebalancingFunc(rebalancingFunc)
 
     def ShouldCreateTargetForInsight(self, insight):
-        return len(PortfolioConstructionModel.FilterInvalidInsightMagnitude(self.Algorithm, [ insight ])) != 0
+        return PortfolioConstructionModel.FilterInvalidInsightMagnitude(self.Algorithm, [ insight ])
 
     def DetermineTargetPercent(self, lastActiveInsights):
         targets = {}
@@ -123,7 +123,8 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
 
     def GetTargetInsights(self):
         # Get insight that haven't expired of each symbol that is still in the universe
-        activeInsights = self.InsightCollection.GetActiveInsights(self.Algorithm.UtcTime)
+        activeInsights = filter(self.ShouldCreateTargetForInsight,
+            self.Algorithm.Insights.GetActiveInsights(self.Algorithm.UtcTime))
 
         # Get the last generated active insight for each symbol
         lastActiveInsights = []

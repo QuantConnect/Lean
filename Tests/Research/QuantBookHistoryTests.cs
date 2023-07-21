@@ -327,7 +327,7 @@ namespace QuantConnect.Tests.Research
                 var future = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, expiry);
                 var start = new DateTime(2020, 1, 5);
                 var end = new DateTime(2020, 1, 6);
-                var history = qb.GetOptionHistory(future, start, end, Resolution.Minute, extendedMarket: true);
+                var history = qb.GetOptionHistory(future, start, end, Resolution.Minute, extendedMarketHours: true);
                 dynamic df = history.GetAllData();
 
                 Assert.IsNotNull(df);
@@ -356,7 +356,7 @@ namespace QuantConnect.Tests.Research
 
                 var start = new DateTime(2020, 1, 5);
                 var end = new DateTime(2020, 1, 6);
-                var history = qb.GetOptionHistory(futureOption, start, end, Resolution.Minute, extendedMarket: true);
+                var history = qb.GetOptionHistory(futureOption, start, end, Resolution.Minute, extendedMarketHours: true);
                 dynamic df = history.GetAllData();
 
                 Assert.IsNotNull(df);
@@ -381,7 +381,7 @@ namespace QuantConnect.Tests.Research
 
         [TestCase(true, true, 1920)]
         [TestCase(true, false, 780)]
-        [TestCase(false, true, 776)]
+        [TestCase(false, true, 898)]
         [TestCase(false, false, 390)]
         public void OptionHistorySpecifyingFillForwardAndExtendedMarket(bool fillForward, bool extendedMarket, int expectedCount)
         {
@@ -417,6 +417,84 @@ namespace QuantConnect.Tests.Research
 
                 Assert.AreEqual(expectedCount, historyCount);
             }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void OptionHistoryObjectIsIterable(Language language)
+        {
+            var qb = new QuantBook();
+            var start = new DateTime(2013, 10, 11);
+            var end = new DateTime(2013, 10, 15);
+
+            var spy = qb.AddEquity("SPY");
+            var history = qb.GetOptionHistory(spy.Symbol, start, end, Resolution.Minute);
+
+            Assert.DoesNotThrow(() =>
+            {
+                if (language == Language.CSharp)
+                {
+                    Assert.AreEqual(780, history.Count());
+                }
+                else
+                {
+                    using (Py.GIL())
+                    {
+                        var testModule = PyModule.FromString("testModule",
+                        @"
+def getOptionHistory(qb, symbol, start, end, resolution):
+    return qb.GetOptionHistory(symbol, start, end, resolution)
+
+def getHistoryCount(history):
+    return len(list(history))
+        ");
+
+                        dynamic getOptionHistory = testModule.GetAttr("getOptionHistory");
+                        dynamic getHistoryCount = testModule.GetAttr("getHistoryCount");
+                        var pyHistory = getOptionHistory(qb, spy.Symbol, start, end, Resolution.Minute);
+                        Assert.AreEqual(780, getHistoryCount(pyHistory).AsManagedObject(typeof(int)));
+                    }
+                }
+            });
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void FutureHistoryObjectIsIterable(Language language)
+        {
+            var qb = new QuantBook();
+            var start = new DateTime(2013, 10, 6);
+            var end = new DateTime(2013, 10, 15);
+
+            var futureSymbol = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2013, 12, 20));
+            var history = qb.GetFutureHistory(futureSymbol, start, end, Resolution.Minute);
+
+            Assert.DoesNotThrow(() =>
+            {
+                if (language == Language.CSharp)
+                {
+                    Assert.AreEqual(2700, history.Count());
+                }
+                else
+                {
+                    using (Py.GIL())
+                    {
+                        var testModule = PyModule.FromString("testModule",
+                        @"
+def getFutureHistory(qb, symbol, start, end, resolution):
+    return qb.GetFutureHistory(symbol, start, end, resolution)
+
+def getHistoryCount(history):
+    return len(list(history))
+        ");
+
+                        dynamic getFutureHistory = testModule.GetAttr("getFutureHistory");
+                        dynamic getHistoryCount = testModule.GetAttr("getHistoryCount");
+                        var pyHistory = getFutureHistory(qb, futureSymbol, start, end, Resolution.Minute);
+                        Assert.AreEqual(2700, getHistoryCount(pyHistory).AsManagedObject(typeof(int)));
+                    }
+                }
+            });
         }
     }
 }

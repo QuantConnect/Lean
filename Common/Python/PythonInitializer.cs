@@ -257,11 +257,11 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 using dynamic sys = Py.Import("sys");
+                using var locals = new PyDict();
+                locals.SetItem("sys", sys);
 
                 if (!IncludeSystemPackages)
                 {
-                    using var locals = new PyDict();
-                    locals.SetItem("sys", sys);
                     var currentPath = (List<string>)sys.path.As<List<string>>();
                     var toRemove = new List<string>(currentPath.Where(s => s.Contains("site-packages", StringComparison.InvariantCultureIgnoreCase)));
                     if (toRemove.Count > 0)
@@ -275,12 +275,18 @@ namespace QuantConnect.Python
                 sys.prefix = PathToVirtualEnv;
                 sys.exec_prefix = PathToVirtualEnv;
 
-
                 using dynamic site = Py.Import("site");
                 // This has to be overwritten because site module may already have been loaded by the interpreter (but not run yet)
                 site.PREFIXES = new List<PyObject> { sys.prefix, sys.exec_prefix };
                 // Run site path modification with tweaked prefixes
                 site.main();
+
+                if (IncludeSystemPackages)
+                {
+                    // let's make sure our site packages is at the start so that we support overriding system libraries with a version in the env
+                    PythonEngine.Exec(@$"if sys.path[-1].startswith('{PathToVirtualEnv}'):
+    sys.path.insert(0, sys.path.pop())", locals: locals);
+                }
 
                 if (Log.DebuggingEnabled)
                 {

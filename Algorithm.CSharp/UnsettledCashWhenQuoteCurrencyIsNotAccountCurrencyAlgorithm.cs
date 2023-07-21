@@ -19,6 +19,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Securities.CurrencyConversion;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -71,6 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderEvent.Status == OrderStatus.Filled && orderEvent.Direction == OrderDirection.Sell)
             {
                 Debug($"OrderEvent: {orderEvent}");
+                Debug($"CashBook:\n{Portfolio.CashBook}\n");
                 Debug($"UnsettledCashBook:\n{Portfolio.UnsettledCashBook}\n");
 
                 if (!Portfolio.UnsettledCashBook.TryGetValue(orderEvent.FillPriceCurrency, out var unsettledCash))
@@ -86,6 +88,56 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 _lastUnsettledCash = unsettledCash.Amount;
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            foreach (var kvp in Portfolio.CashBook)
+            {
+                var symbol = kvp.Key;
+                var cash = kvp.Value;
+                var unsettledCash = Portfolio.UnsettledCashBook[symbol];
+
+                if (unsettledCash.ConversionRate != cash.ConversionRate)
+                {
+                    throw new Exception($@"Unsettled cash conversion rate for {symbol} is {unsettledCash.ConversionRate} but should be {cash.ConversionRate}");
+                }
+
+                var accountCurrency = Portfolio.CashBook.AccountCurrency;
+
+                if (unsettledCash.Symbol == accountCurrency)
+                {
+                    if (unsettledCash.ConversionRate != 1)
+                    {
+                        throw new Exception($@"Conversion rate for {unsettledCash.Symbol} (the account currency) in the UnsettledCashBook should be 1 but was {unsettledCash.ConversionRate}.");
+                    }
+
+                    if (unsettledCash.CurrencyConversion.GetType() != typeof(ConstantCurrencyConversion) ||
+                        unsettledCash.CurrencyConversion.SourceCurrency != accountCurrency ||
+                        unsettledCash.CurrencyConversion.DestinationCurrency != accountCurrency)
+                    {
+                        throw new Exception($@"Currency conversion for {unsettledCash.Symbol} (the account currency) in the UnsettledCashBook should be an identity conversion of type {nameof(ConstantCurrencyConversion)}");
+                    }
+                }
+                else
+                {
+                    if (unsettledCash.CurrencyConversion.GetType() != typeof(SecurityCurrencyConversion))
+                    {
+                        throw new Exception($@"Currency conversion for {unsettledCash.Symbol} in the UnsettledCashBook should be of type {nameof(SecurityCurrencyConversion)}");
+                    }
+
+                    var sourceCurrency = unsettledCash.CurrencyConversion.SourceCurrency;
+                    var destinationCurrency = unsettledCash.CurrencyConversion.DestinationCurrency;
+
+                    if (!(
+                        (sourceCurrency == accountCurrency && destinationCurrency == unsettledCash.Symbol) ||
+                        (sourceCurrency == unsettledCash.Symbol && destinationCurrency == accountCurrency)
+                        ))
+                    {
+                        throw new Exception($@"Currency conversion for {unsettledCash.Symbol} in UnsettledCashBook is not correct. Source and destination currency should have been {accountCurrency} and {unsettledCash.Symbol} or vice versa but were {sourceCurrency} and {destinationCurrency}.");
+                    }
+                }
             }
         }
 
@@ -107,7 +159,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 7622;
+        public int AlgorithmHistoryDataPoints => 7594;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -136,26 +188,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "€10.32"},
             {"Estimated Strategy Capacity", "€7700000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.58"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-2.929"},
-            {"Portfolio Turnover", "1.036"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "€0"},
-            {"Total Accumulated Estimated Alpha Value", "€0"},
-            {"Mean Population Estimated Insight Value", "€0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "a08299c3ae9e54b878847fbf6f56e596"}
+            {"Portfolio Turnover", "69.61%"},
+            {"OrderListHash", "1cd26ea7fbdc73902f4d63d92929aa0e"}
         };
     }
 }

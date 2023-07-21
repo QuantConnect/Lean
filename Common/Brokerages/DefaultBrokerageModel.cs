@@ -29,7 +29,6 @@ using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -119,8 +118,8 @@ namespace QuantConnect.Brokerages
         {
             if ((security.Type == SecurityType.Future || security.Type == SecurityType.FutureOption) && order.Type == OrderType.MarketOnOpen)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NorSupported",
-                    "MarketOnOpen orders are not supported for futures and future options.");
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedMarketOnOpenOrdersForFuturesAndFutureOptions);
                 return false;
             }
 
@@ -173,7 +172,8 @@ namespace QuantConnect.Brokerages
             {
                 Quantity = (int?) (ticket.Quantity/splitFactor),
                 LimitPrice = ticket.OrderType.IsLimitOrder() ? ticket.Get(OrderField.LimitPrice)*splitFactor : (decimal?) null,
-                StopPrice = ticket.OrderType.IsStopOrder() ? ticket.Get(OrderField.StopPrice)*splitFactor : (decimal?) null
+                StopPrice = ticket.OrderType.IsStopOrder() ? ticket.Get(OrderField.StopPrice)*splitFactor : (decimal?) null,
+                TriggerPrice = ticket.OrderType == OrderType.LimitIfTouched ? ticket.Get(OrderField.TriggerPrice) * splitFactor : (decimal?) null
             }));
         }
 
@@ -253,7 +253,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.IndexOption:
                     return new ImmediateFillModel();
                 default:
-                    throw new ArgumentOutOfRangeException($"{GetType().Name}.GetFillModel: Invalid security type {security.Type}");
+                    throw new ArgumentOutOfRangeException(Messages.DefaultBrokerageModel.InvalidSecurityTypeToGetFillModel(this, security));
             }
         }
 
@@ -332,6 +332,11 @@ namespace QuantConnect.Brokerages
                     case SecurityType.Option:
                         return new DelayedSettlementModel(Option.DefaultSettlementDays, Option.DefaultSettlementTime);
                 }
+            }
+
+            if(security.Symbol.SecurityType == SecurityType.Future)
+            {
+                return new FutureSettlementModel();
             }
 
             return new ImmediateSettlementModel();
@@ -416,11 +421,10 @@ namespace QuantConnect.Brokerages
         public static bool IsValidOrderSize(Security security, decimal orderQuantity, out BrokerageMessageEvent message)
         {
             var minimumOrderSize = security.SymbolProperties.MinimumOrderSize;
-            if ( minimumOrderSize != null && Math.Abs(orderQuantity) < minimumOrderSize)
+            if (minimumOrderSize != null && Math.Abs(orderQuantity) < minimumOrderSize)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The minimum order quantity for {security.Symbol.Value} is {minimumOrderSize}. Order quantity was {orderQuantity}")
-                );
+                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, orderQuantity));
 
                 return false;
             }

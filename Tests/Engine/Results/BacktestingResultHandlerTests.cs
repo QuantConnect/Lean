@@ -44,7 +44,6 @@ namespace QuantConnect.Tests.Engine.Results
             // It defaults to the behavior of the `BacktestingResultHandler` class in `results.ProcessSynchronousEvents()`
             var backtestResults = AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 startDate: algoStart,

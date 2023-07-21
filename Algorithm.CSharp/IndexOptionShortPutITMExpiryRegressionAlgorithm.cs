@@ -16,11 +16,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -44,6 +44,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2021, 1, 4);
             SetEndDate(2021, 1, 31);
+            SetCash(1000000);
+
+            Portfolio.SetMarginCallModel(MarginCallModel.Null);
+
+            SetSecurityInitializer(new CompositeSecurityInitializer(SecurityInitializer,
+                new FuncSecurityInitializer((security) =>
+                {
+                    var option = security as Option;
+                    // avoid getting assigned
+                    option?.SetOptionAssignmentModel(new NullOptionAssignmentModel());
+                })));
 
             _spx = AddIndex("SPX", Resolution.Minute).Symbol;
 
@@ -175,7 +186,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 20425;
+        public long DataPoints => 19605;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -188,47 +199,29 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Average Win", "51.07%"},
+            {"Average Win", "4.98%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "319.986%"},
-            {"Drawdown", "2.400%"},
+            {"Compounding Annual Return", "14.302%"},
+            {"Drawdown", "0.300%"},
             {"Expectancy", "0"},
-            {"Net Profit", "10.624%"},
-            {"Sharpe Ratio", "5.415"},
-            {"Probabilistic Sharpe Ratio", "88.697%"},
+            {"Net Profit", "0.944%"},
+            {"Sharpe Ratio", "3.101"},
+            {"Probabilistic Sharpe Ratio", "87.326%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.938"},
-            {"Beta", "-0.235"},
-            {"Annual Standard Deviation", "0.356"},
-            {"Annual Variance", "0.127"},
-            {"Information Ratio", "4.787"},
-            {"Tracking Error", "0.393"},
-            {"Treynor Ratio", "-8.187"},
+            {"Alpha", "0.101"},
+            {"Beta", "-0.021"},
+            {"Annual Standard Deviation", "0.032"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "0.38"},
+            {"Tracking Error", "0.144"},
+            {"Treynor Ratio", "-4.672"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "SPX 31KC0UJHC75TA|SPX 31"},
-            {"Fitness Score", "0.025"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "634.943"},
-            {"Return Over Maximum Drawdown", "1184.633"},
-            {"Portfolio Turnover", "0.025"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "8a29080126f3a8111624fa8607b65fbb"}
+            {"Portfolio Turnover", "0.19%"},
+            {"OrderListHash", "535f4de122602f0cd69245f20731c5af"}
         };
     }
 }

@@ -157,6 +157,18 @@ namespace QuantConnect.Packets
         public string HistoryProvider = "";
 
         /// <summary>
+        /// Algorithm running mode.
+        /// </summary>
+        [JsonIgnore]
+        public virtual AlgorithmMode AlgorithmMode { get; } = AlgorithmMode.Backtesting;
+
+        /// <summary>
+        /// Deployment target, either local or cloud.
+        /// </summary>
+        [JsonIgnore]
+        public DeploymentTarget DeploymentTarget;
+
+        /// <summary>
         /// Gets a unique name for the algorithm defined by this packet
         /// </summary>
         public string GetAlgorithmName()

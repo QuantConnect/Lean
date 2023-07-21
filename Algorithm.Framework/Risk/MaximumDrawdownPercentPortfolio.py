@@ -46,7 +46,17 @@ class MaximumDrawdownPercentPortfolio(RiskManagementModel):
         pnl = self.GetTotalDrawdownPercent(currentValue)
         if pnl < self.maximumDrawdownPercent and len(targets) != 0:
             self.initialised = False # reset the trailing high value for restart investing on next rebalcing period
-            return [ PortfolioTarget(target.Symbol, 0) for target in targets ]
+
+            risk_adjusted_targets = []
+            for target in targets:
+                symbol = target.Symbol
+
+                # Cancel insights
+                algorithm.Insights.Cancel([symbol])
+
+                # liquidate
+                risk_adjusted_targets.append(PortfolioTarget(symbol, 0))
+            return risk_adjusted_targets
 
         return []
 

@@ -35,6 +35,12 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _aapl;
         private Symbol _twx;
 
+        private Dictionary<string, decimal> _rawPrices = new()
+        {
+            { "AOL", 70  },
+            { "AAPL", 650 }
+        };
+
         public override void Initialize()
         {
             _twx = QuantConnect.Symbol.Create("TWX", SecurityType.Equity, Market.USA);
@@ -106,6 +112,15 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception($"Was expecting DataNormalizationMode.Raw configurations for {security.Symbol}");
                 }
+
+                if (security.Symbol.SecurityType == SecurityType.Equity)
+                {
+                    var expectedPrice = _rawPrices[security.Symbol.ID.Symbol];
+                    if (Math.Abs(security.Price - expectedPrice) > expectedPrice * 0.1m)
+                    {
+                        throw new Exception($"Unexpected raw prices for symbol {security.Symbol}");
+                    }
+                }
             }
             _changes = SecurityChanges.None;
         }
@@ -154,26 +169,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Fitness Score", "0.12"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.12"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "2a6319d0d474f976e653dd1ebc42caac"}
+            {"Total Trades", "13"},
+            {"Average Win", "0.04%"},
+            {"Average Loss", "-0.05%"},
+            {"Compounding Annual Return", "-24.434%"},
+            {"Drawdown", "0.500%"},
+            {"Expectancy", "-0.683"},
+            {"Net Profit", "-0.230%"},
+            {"Sharpe Ratio", "-8.717"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "83%"},
+            {"Win Rate", "17%"},
+            {"Profit-Loss Ratio", "0.90"},
+            {"Alpha", "4.654"},
+            {"Beta", "-1.524"},
+            {"Annual Standard Deviation", "0.029"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-72.585"},
+            {"Tracking Error", "0.048"},
+            {"Treynor Ratio", "0.165"},
+            {"Total Fees", "$13.00"},
+            {"Estimated Strategy Capacity", "$3100000.00"},
+            {"Lowest Capacity Asset", "AOL VRKS95ENLBYE|AOL R735QTJ8XC9X"},
+            {"Portfolio Turnover", "17.64%"},
+            {"OrderListHash", "ad0539728c979e78a32749dda2e544ca"}
         };
     }
 }

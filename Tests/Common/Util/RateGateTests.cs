@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -25,70 +25,28 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class RateGateTests
     {
-        [Test, Ignore("Running multiple tests at once causes this test to fail")]
-        public void RateGate_200InstancesWaitOnAveragePlus150msMinus20ms()
+        [TestCase(5)]
+        [TestCase(10)]
+        public void RateGateWithTimeout(int count)
         {
-            var gates = new Dictionary<int, RateGate>();
+            var rate = TimeSpan.FromMilliseconds(500);
+            using var gate  = new RateGate(1, rate);
+            var timer = Stopwatch.StartNew();
 
-            for (var i = 300; i < 500; i++)
+            for (var i = 0; i <= count; i++)
             {
-                gates[i] = new RateGate(10, TimeSpan.FromMilliseconds(i));
+                Assert.IsTrue(gate.WaitToProceed(TimeSpan.FromSeconds(5)));
             }
 
-            foreach (var kvp in gates)
-            {
-                var gate = kvp.Value;
-                var timer = Stopwatch.StartNew();
+            timer.Stop();
 
-                for (var i = 0; i <= 10; i++)
-                {
-                    gate.WaitToProceed();
-                }
+            var elapsed = timer.Elapsed;
+            var expectedDelay = rate * count;
+            var lowerBound = expectedDelay - expectedDelay * 0.25;
+            var upperBound = expectedDelay + expectedDelay * 0.25;
 
-                timer.Stop();
-
-                var elapsed = timer.Elapsed;
-                var lowerBound = TimeSpan.FromMilliseconds(kvp.Key - 20);
-                var upperBound = TimeSpan.FromMilliseconds(kvp.Key + 150);
-
-                Assert.GreaterOrEqual(elapsed, lowerBound, $"RateGate was early: {lowerBound - elapsed}");
-                Assert.LessOrEqual(elapsed, upperBound, $"RateGate was late: {elapsed - upperBound}");
-
-                gate.Dispose();
-            }
-        }
-
-        [Test]
-        public void RateGate_400InstancesWaitOnAveragePlus150msMinus20msWithTimeout()
-        {
-            var gates = new Dictionary<int, RateGate>();
-
-            for (var i = 100; i < 500; i++)
-            {
-                gates[i] = new RateGate(10, TimeSpan.FromMilliseconds(i));
-            }
-
-            Parallel.ForEach(gates, kvp =>
-            {
-                var gate = kvp.Value;
-                var timer = Stopwatch.StartNew();
-
-                for (var i = 0; i <= 10; i++)
-                {
-                    gate.WaitToProceed(kvp.Key);
-                }
-
-                timer.Stop();
-
-                var elapsed = timer.Elapsed;
-                var lowerBound = TimeSpan.FromMilliseconds(kvp.Key - 20);
-                var upperBound = TimeSpan.FromMilliseconds(kvp.Key + 150);
-
-                Assert.GreaterOrEqual(elapsed, lowerBound, $"RateGate was early: {lowerBound - elapsed}");
-                Assert.LessOrEqual(elapsed, upperBound, $"RateGate was late: {elapsed - upperBound}");
-
-                gate.Dispose();
-            });
+            Assert.GreaterOrEqual(elapsed, lowerBound, $"RateGate was early: {lowerBound - elapsed}");
+            Assert.LessOrEqual(elapsed, upperBound, $"RateGate was late: {elapsed - upperBound}");
         }
 
         [Test]

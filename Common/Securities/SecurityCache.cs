@@ -23,12 +23,8 @@ using System.Runtime.CompilerServices;
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Base class caching caching spot for security data and any other temporary properties.
+    /// Base class caching spot for security data and any other temporary properties.
     /// </summary>
-    /// <remarks>
-    /// This class is virtually unused and will soon be made obsolete.
-    /// This comment made in a remark to prevent obsolete errors in all users algorithms
-    /// </remarks>
     public class SecurityCache
     {
         // let's share the empty readonly version, so we don't need null checks
@@ -43,6 +39,8 @@ namespace QuantConnect.Securities
         private IReadOnlyList<BaseData> _lastTickQuotes = _empty;
         private IReadOnlyList<BaseData> _lastTickTrades = _empty;
         private Dictionary<Type, IReadOnlyList<BaseData>> _dataByType;
+
+        private Dictionary<string, object> _properties;
 
         /// <summary>
         /// Gets the most recent price submitted to this cache
@@ -100,6 +98,21 @@ namespace QuantConnect.Securities
         public long OpenInterest { get; private set; }
 
         /// <summary>
+        /// Collection of keyed custom properties
+        /// </summary>
+        public Dictionary<string, object> Properties
+        {
+            get
+            {
+                if (_properties == null)
+                {
+                    _properties = new Dictionary<string, object>();
+                }
+                return _properties;
+            }
+        }
+
+        /// <summary>
         /// Add a list of market data points to the local security cache for the current market price.
         /// </summary>
         /// <remarks>Internally uses <see cref="AddData"/> using the last data point of the provided list
@@ -132,7 +145,7 @@ namespace QuantConnect.Securities
 
             var last = data[data.Count - 1];
 
-            AddDataImpl(last, cacheByType: false);
+            ProcessDataPoint(last, cacheByType: false);
         }
 
         /// <summary>
@@ -144,10 +157,15 @@ namespace QuantConnect.Securities
         /// </summary>
         public void AddData(BaseData data)
         {
-            AddDataImpl(data, cacheByType: true);
+            ProcessDataPoint(data, cacheByType: true);
         }
 
-        private void AddDataImpl(BaseData data, bool cacheByType)
+        /// <summary>
+        /// Will consume the given data point updating the cache state and it's properties
+        /// </summary>
+        /// <param name="data">The data point to process</param>
+        /// <param name="cacheByType">True if this data point should be cached by type</param>
+        protected virtual void ProcessDataPoint(BaseData data, bool cacheByType)
         {
             var tick = data as Tick;
             if (tick?.TickType == TickType.OpenInterest)

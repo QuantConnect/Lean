@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,16 +17,19 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// Represents the traditional exponential moving average indicator (EMA).
-    /// After the first sample, the value of the EMA indicator is a function 
-    /// of the previous EMA value. Therefore, depending on the number of samples 
-    /// you feed into the indicator, it can provide different EMA values for a single 
-    /// security and lookback period. To make the indicator values consistent 
+    /// When the indicator is ready, the first value of the EMA is equivalent to the simple moving average.
+    /// After the first EMA value, the EMA value is a function of the previous EMA value.
+    /// Therefore, depending on the number of samples
+    /// you feed into the indicator, it can provide different EMA values for a single
+    /// security and lookback period. To make the indicator values consistent
     /// across time, warm up the indicator with all the trailing security price history.
     /// </summary>
     public class ExponentialMovingAverage : Indicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly decimal _k;
         private readonly int _period;
+
+        private readonly SimpleMovingAverage _initialValueSMA;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -39,10 +42,8 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the EMA</param>
         public ExponentialMovingAverage(string name, int period)
-            : base(name)
+            : this(name, period, SmoothingFactorDefault(period))
         {
-            _period = period;
-            _k = SmoothingFactorDefault(period);
         }
 
         /// <summary>
@@ -56,6 +57,7 @@ namespace QuantConnect.Indicators
         {
             _period = period;
             _k = smoothingFactor;
+            _initialValueSMA = new SimpleMovingAverage(period);
         }
 
         /// <summary>
@@ -90,17 +92,38 @@ namespace QuantConnect.Indicators
         public override bool IsReady => Samples >= _period;
 
         /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            base.Reset();
+            _initialValueSMA.Reset();
+        }
+
+        /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            // our first data point just return identity
-            if (Samples == 1)
+            // we need to compute the initial value for the EMA, which is the SMA of the first N samples
+            if (Samples <= _period)
             {
-                return input.Value;
+                _initialValueSMA.Update(input);
             }
+
+            if (!IsReady)
+            {
+                return 0;
+            }
+
+            if (Samples == _period)
+            {
+                // first value is the SMA of the first period
+                return _initialValueSMA.Current.Value;
+            }
+
             return input.Value * _k + Current.Value * (1 - _k);
         }
     }

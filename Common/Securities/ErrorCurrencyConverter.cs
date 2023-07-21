@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,8 +30,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                throw new InvalidOperationException(
-                    "Unexpected usage of ErrorCurrencyConverter.AccountCurrency");
+                throw new InvalidOperationException(Messages.ErrorCurrencyConverter.AccountCurrencyUnexpectedUsage);
             }
         }
 
@@ -52,10 +51,7 @@ namespace QuantConnect.Securities
         /// <returns>A new <see cref="CashAmount"/> instance denominated in the account currency</returns>
         public CashAmount ConvertToAccountCurrency(CashAmount cashAmount)
         {
-            throw new InvalidOperationException($"This method purposefully throws as a proof that a " +
-                $"test does not depend on {nameof(ICurrencyConverter)}.If this exception is encountered, " +
-                $"it means the test DOES depend on {nameof(ICurrencyConverter)} and should be properly " +
-                $"updated to use a real implementation of {nameof(ICurrencyConverter)}.");
+            throw new InvalidOperationException(Messages.ErrorCurrencyConverter.ConvertToAccountCurrencyPurposefullyThrow);
         }
     }
 }

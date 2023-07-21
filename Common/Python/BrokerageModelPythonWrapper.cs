@@ -19,7 +19,6 @@ using Python.Runtime;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -83,8 +82,22 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    return (_model.DefaultMarkets as PyObject)
-                        .GetAndDispose<IReadOnlyDictionary<SecurityType, string>>();
+                    var markets = _model.DefaultMarkets;
+                    if ((markets as PyObject).TryConvert(out IReadOnlyDictionary<SecurityType, string> csharpDic))
+                    {
+                        return csharpDic;
+                    }
+
+                    var dic = new Dictionary<SecurityType, string>();
+                    foreach (var item in markets)
+                    {
+                        using var pyItem = item as PyObject;
+                        var market = pyItem.As<SecurityType>();
+                        dic[market] = markets[item];
+                    }
+
+                    (markets as PyObject).Dispose();
+                    return dic;
                 }
             }
         }
@@ -135,7 +148,16 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.CanSubmitOrder(security, order, out message) as PyObject).GetAndDispose<bool>();
+                using var result = _model.CanSubmitOrder(security, order, out message) as PyObject;
+                // Since pythonnet does not support out parameters, the methods return
+                // a tuple where the out parameter comes after the other returned values
+                if (!PyTuple.IsTupleType(result))
+                {
+                    throw new ArgumentException($@"{_model.__class__.__name__}.CanSubmitOrder(): Must return a tuple value where the first value is a bool and the second a BrokerageMessageEvent");
+                }
+
+                message = result[1].As<BrokerageMessageEvent>();
+                return result[0].As<bool>();
             }
         }
 
@@ -151,7 +173,16 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.CanUpdateOrder(security, order, out message) as PyObject).GetAndDispose<bool>();
+                using var result = _model.CanUpdateOrder(security,order, request, out message) as PyObject;
+                // Since pythonnet does not support out parameters, the methods return
+                // a tuple where the out parameter comes after the other returned values
+                if (!PyTuple.IsTupleType(result))
+                {
+                    throw new ArgumentException($@"{_model.__class__.__name__}.CanUpdateOrder(): Must return a tuple value where the first value is a bool and the second a BrokerageMessageEvent");
+                }
+
+                message = result[1].As<BrokerageMessageEvent>();
+                return result[0].As<bool>();
             }
         }
 

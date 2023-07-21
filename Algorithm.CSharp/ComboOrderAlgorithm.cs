@@ -49,10 +49,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
-            SetCash(10000);
+            SetCash(200000);
 
-            var equity = AddEquity("GOOG", leverage: 4, fillDataForward: true);
-            var option = AddOption(equity.Symbol, fillDataForward: true);
+            var equity = AddEquity("GOOG", leverage: 4, fillForward: true);
+            var option = AddOption(equity.Symbol, fillForward: true);
             _optionSymbol = option.Symbol;
 
             option.SetFilter(u => u.Strikes(-2, +2)
@@ -120,7 +120,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (FillOrderEvents.Zip(OrderLegs).Any(x => x.First.FillQuantity != x.Second.Quantity * ComboOrderQuantity))
             {
-                throw new Exception("Fill quantity does not match expected quantity for at least one order leg");
+                throw new Exception("Fill quantity does not match expected quantity for at least one order leg." +
+                    $"Expected: {string.Join(", ", OrderLegs.Select(x => x.Quantity * ComboOrderQuantity))}. " +
+                    $"Actual: {string.Join(", ", FillOrderEvents.Select(x => x.FillQuantity))}");
             }
         }
 

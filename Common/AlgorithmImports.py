@@ -68,6 +68,8 @@ from QuantConnect.Securities.Future import *
 from QuantConnect.Data.Consolidators import *
 from QuantConnect.Orders.TimeInForces import *
 from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Securities.Positions import *
+from QuantConnect.Orders.OptionExercise import *
 from QuantConnect.Securities.Volatility import *
 from QuantConnect.Securities.Interfaces import *
 from QuantConnect.Data.UniverseSelection import *
@@ -78,6 +80,7 @@ from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
+from QuantConnect.Algorithm.Framework.Portfolio.SignalExports import *
 from QuantConnect.Algorithm.Framework.Selection import *
 
 try:

@@ -168,6 +168,24 @@ namespace QuantConnect.Packets
         OptimizationResult,
 
         /// Aggregated packets
-        Aggregated
+        Aggregated,
+
+        /// Query the language model
+        LanguageModelQuery,
+
+        /// Send feedback to a language model response
+        LanguageModelFeedback,
+
+        /// The language models response
+        LanguageModelResponse,
+
+        /// Language model code analysis
+        LanguageModelCodeAnalysis,
+
+        /// Language model chat work
+        LanguageModelChatWork,
+
+        /// Language model chat response
+        LanguageModelChatResponse,
     }
 }

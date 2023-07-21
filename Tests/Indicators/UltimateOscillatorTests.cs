@@ -24,6 +24,8 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            RenkoBarSize = 0.1m;
+            VolumeRenkoBarSize = 10000000m;
             return new UltimateOscillator(7, 14, 28);
         }
 

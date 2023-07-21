@@ -60,7 +60,7 @@ namespace QuantConnect.Securities.IndexOption
                 Securities.VolatilityModel.Null,
                 new OptionMarginModel(),
                 new OptionDataFilter(),
-                new SecurityPriceVariationModel(),
+                new IndexOptionPriceVariationModel(),
                 currencyConverter,
                 registeredTypes,
                 underlying

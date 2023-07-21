@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using Accord.Math;
 using Accord.Math.Optimization;
 using Accord.Statistics;
@@ -24,6 +25,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// Provides an implementation of a minimum variance portfolio optimizer that calculate the optimal weights
     /// with the weight range from -1 to 1 and minimize the portfolio variance with a target return of 2%
     /// </summary>
+    /// <remarks>The budged constrain is scaled down/up to ensure that the sum of the absolute value of the weights is 1.</remarks>
     public class MinimumVariancePortfolioOptimizer : IPortfolioOptimizer
     {
         private double _lower;
@@ -65,17 +67,17 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>enumeration of linear constaraint objects</returns>
         protected IEnumerable<LinearConstraint> GetBoundaryConditions(int size)
         {
-            for (int i = 0; i < size; i++)
+            for (var i = 0; i < size; i++)
             {
                 yield return new LinearConstraint(1)
                 {
-                    VariablesAtIndices = new int[] { i },
+                    VariablesAtIndices = new[] { i },
                     ShouldBe = ConstraintType.GreaterThanOrEqualTo,
                     Value = _lower
                 };
                 yield return new LinearConstraint(1)
                 {
-                    VariablesAtIndices = new int[] { i },
+                    VariablesAtIndices = new[] { i },
                     ShouldBe = ConstraintType.LesserThanOrEqualTo,
                     Value = _upper
                 };
@@ -91,24 +93,23 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>
         public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null, double[,] covariance = null)
         {
-            covariance = covariance ?? historicalReturns.Covariance();
+            covariance ??=  historicalReturns.Covariance();
             var size = covariance.GetLength(0);
             var returns = expectedReturns ?? historicalReturns.Mean(0);
 
             var constraints = new List<LinearConstraint>
             {
                 // w^T µ ≥ β
-                new LinearConstraint(size)
+                new (size)
                 {
                     CombinedAs = returns,
                     ShouldBe = ConstraintType.EqualTo,
                     Value = _targetReturn
-                }
+                },
+                // Σw = 1
+                GetBudgetConstraint(size),
             };
-
-            // Σw = 1
-            constraints.Add(GetBudgetConstraint(size));
-
+            
             // lw ≤ w ≤ up
             constraints.AddRange(GetBoundaryConditions(size));
 
@@ -118,8 +119,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             // Solve problem
             var x0 = Vector.Create(size, 1.0 / size);
-            bool success = solver.Minimize(Vector.Copy(x0));
-            return success ? solver.Solution : x0;
+            var success = solver.Minimize(Vector.Copy(x0));
+            if (!success) return x0;
+
+            // We cannot accept NaN
+            var solution = solver.Solution
+                .Select(x => x.IsNaNOrInfinity() ? 0 : x).ToArray();
+
+            // Scale the solution to ensure that the sum of the absolute weights is 1
+            var sumOfAbsoluteWeights = solution.Abs().Sum();
+            if (sumOfAbsoluteWeights.IsNaNOrZero()) return x0;
+
+            return solution.Divide(sumOfAbsoluteWeights);
         }
     }
 }

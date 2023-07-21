@@ -50,16 +50,16 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var initialMargin = Portfolio.MarginRemaining;
 
-                    MarketOrder(shortCall.Symbol, -10);
+                    MarketOrder(shortCall.Symbol, -5);
 
-                    AssertDefaultGroup(shortCall.Symbol, -10);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name, 5);
 
-                    MarketOrder(longCall.Symbol, 10);
+                    MarketOrder(longCall.Symbol, 5);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
 
-                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BearCallSpread.Name, 10);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BearCallSpread.Name, 5);
 
-                    var expectedMarginUsage = (longCall.Strike - shortCall.Strike) * Securities[longCall.Symbol].SymbolProperties.ContractMultiplier * 10;
+                    var expectedMarginUsage = (longCall.Strike - shortCall.Strike) * Securities[longCall.Symbol].SymbolProperties.ContractMultiplier * 5;
 
                     if (expectedMarginUsage != Portfolio.TotalMarginUsed)
                     {
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 884208;
+        public override long DataPoints => 475788;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -110,29 +110,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$5.00"},
-            {"Estimated Strategy Capacity", "$2700000.00"},
+            {"Total Fees", "$2.50"},
+            {"Estimated Strategy Capacity", "$5500000.00"},
             {"Lowest Capacity Asset", "GOOCV WBGM95TAH2LI|GOOCV VP83T1ZUHROL"},
-            {"Fitness Score", "0"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0"},
-            {"Return Over Maximum Drawdown", "0"},
-            {"Portfolio Turnover", "0"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "54d92f54e9e61dda2013ec25487c204e"}
+            {"Portfolio Turnover", "28.44%"},
+            {"OrderListHash", "3b0ecccc6b34d2d64dc62ae02e1acc85"}
         };
     }
 }

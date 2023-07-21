@@ -21,14 +21,12 @@ using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Brokerages;
 using Moq;
-using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Orders.Fills;
 using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm
@@ -1454,6 +1452,34 @@ namespace QuantConnect.Tests.Algorithm
             Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
         }
 
+        [TestCase(OrderType.MarketOnOpen)]
+        [TestCase(OrderType.MarketOnClose)]
+        public void GoodTilDateTimeInForceNotSupportedForMOOAndMOCOrders(OrderType orderType)
+        {
+            var algorithm = GetAlgorithm(out var msft, 1, 0);
+            Update(msft, 25);
+
+            var orderProperties = new OrderProperties() { TimeInForce = TimeInForce.GoodTilDate(algorithm.Time.AddDays(1)) };
+
+            OrderTicket ticket;
+            switch (orderType)
+            {
+                case OrderType.MarketOnOpen:
+                    ticket = algorithm.MarketOnOpenOrder(msft.Symbol, 1, orderProperties: orderProperties);
+                    break;
+                case OrderType.MarketOnClose:
+                    ticket = algorithm.MarketOnCloseOrder(msft.Symbol, 1, orderProperties: orderProperties);
+                    break;
+                default:
+                    Assert.Fail("Unexpected order type");
+                    return;
+            }
+
+
+            Assert.AreEqual(OrderStatus.New, ticket.Status);
+            Assert.AreEqual(TimeInForce.GoodTilCanceled, ticket.SubmitRequest.OrderProperties.TimeInForce);
+        }
+
         [Test]
         public void EuropeanOptionsCannotBeExercisedBeforeExpiry()
         {
@@ -1476,6 +1502,42 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetDateTime(optionExpiry.AddHours(15));
             ticket = algo.ExerciseOption(europeanOptionContract.Symbol, 1);
             Assert.AreEqual(OrderStatus.New, ticket.Status);
+        }
+
+        [Test]
+        public void ComboOrderPreChecks()
+        {
+            var start = DateTime.UtcNow;
+            var algo = new AlgorithmStub();
+            algo.SetFinishedWarmingUp();
+            algo.AddEquity("SPY").SetMarketPrice(new TradeBar
+            {
+                Time = algo.Time,
+                Open = 10m,
+                High = 10,
+                Low = 10,
+                Close = 10,
+                Volume = 0,
+                Symbol = Symbols.SPY,
+                DataType = MarketDataType.TradeBar
+            });
+
+            algo.AddOptionContract(Symbols.SPY_C_192_Feb19_2016);
+            var legs = new List<Leg>
+            {
+                new Leg { Symbol = Symbols.SPY, Quantity = 1 },
+                new Leg { Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 },
+            };
+
+            // the underlying has a price but the option does not
+            var result = algo.ComboMarketOrder(legs, 1);
+
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(OrderStatus.Invalid, result.Single().Status);
+            Assert.IsTrue(result.Single().SubmitRequest.Response.IsError);
+            Assert.IsTrue(result.Single().SubmitRequest.Response.ErrorMessage.Contains("does not have an accurate price"));
+
+            Assert.IsTrue(DateTime.UtcNow - start < TimeSpan.FromMilliseconds(500));
         }
 
         [TestCase(new int[] { 1, 2 }, false)]
@@ -1515,19 +1577,35 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        private class TestShortableProvider : IShortableProvider
+        [Test]
+        public void MarketOnCloseOrdersSubmissionTimeCheck([Values] bool beforeLatestSubmissionTime)
         {
-            public Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime)
-            {
-                return new Dictionary<Symbol, long>
-                {
-                    { Symbols.MSFT, 1000 }
-                };
-            }
+            var algo = GetAlgorithm(out _, 1, 0);
+            algo.SetTimeZone(TimeZones.London);
+            algo.SetDateTime(new DateTime(2023, 02, 16));
 
-            public long? ShortableQuantity(Symbol symbol, DateTime localTime)
+            var es20h20 = algo.AddFutureContract(
+                Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
+                Resolution.Minute);
+            es20h20.SetMarketPrice(new Tick(algo.Time, es20h20.Symbol, 1, 1));
+
+            var dateTimeInExchangeTimeZone = algo.Time.Date + new TimeSpan(17, 0, 0) - MarketOnCloseOrder.SubmissionTimeBuffer;
+            if (!beforeLatestSubmissionTime)
             {
-                return 1000;
+                dateTimeInExchangeTimeZone += TimeSpan.FromSeconds(1);
+            }
+            algo.SetDateTime(dateTimeInExchangeTimeZone.ConvertTo(es20h20.Exchange.TimeZone, algo.TimeZone));
+
+            var ticket = algo.MarketOnCloseOrder(es20h20.Symbol, 1);
+
+            if (!beforeLatestSubmissionTime)
+            {
+                Assert.AreEqual(OrderStatus.Invalid, ticket.Status);
+                Assert.AreEqual(OrderResponseErrorCode.MarketOnCloseOrderTooLate, ticket.SubmitRequest.Response.ErrorCode);
+            }
+            else
+            {
+                Assert.AreNotEqual(OrderStatus.Invalid, ticket.Status, ticket.SubmitRequest.Response.ErrorMessage);
             }
         }
 
@@ -1535,11 +1613,13 @@ namespace QuantConnect.Tests.Algorithm
         {
             //Initialize algorithm
             var algo = new QCAlgorithm();
+            algo.Settings.MinimumOrderMarginPortfolioPercentage = 0;
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
             algo.AddSecurity(SecurityType.Equity, "MSFT");
             algo.SetCash(100000);
             algo.SetFinishedWarmingUp();
             algo.Securities[Symbols.MSFT].FeeModel = new ConstantFeeModel(fee);
+            algo.SetLiveMode(false);
             _fakeOrderProcessor = new FakeOrderProcessor();
             algo.Transactions.SetOrderProcessor(_fakeOrderProcessor);
             msft = algo.Securities[Symbols.MSFT];

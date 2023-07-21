@@ -58,6 +58,9 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
             drawdown = abs((trailingAbsoluteHoldingsValue - absoluteHoldingsValue) / trailingAbsoluteHoldingsValue)
 
             if self.maximumDrawdownPercent < drawdown:
+                # Cancel insights
+                algorithm.Insights.Cancel([ symbol ]);
+
                 self.trailingAbsoluteHoldingsState.pop(symbol, None)
                 # liquidate
                 riskAdjustedTargets.append(PortfolioTarget(symbol, 0))

@@ -317,12 +317,12 @@ namespace QuantConnect.ToolBox
             {
                 if (split == null)
                 {
-                    throw new ArgumentNullException("split");
+                    throw new ArgumentNullException(nameof(split));
                 }
 
                 if (dividend == null)
                 {
-                    throw new ArgumentNullException("dividend");
+                    throw new ArgumentNullException(nameof(dividend));
                 }
 
                 Split = split;

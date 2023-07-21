@@ -27,12 +27,12 @@ namespace QuantConnect.Brokerages
     public class TDAmeritradeBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
-        /// Array's TD Ameritrade supports security types 
+        /// Array's TD Ameritrade supports security types
         /// </summary>
         private readonly HashSet<SecurityType> _supportSecurityTypes = new (new [] { SecurityType.Equity });
 
         /// <summary>
-        /// Array's TD Ameritrade supports order types 
+        /// Array's TD Ameritrade supports order types
         /// </summary>
         private readonly HashSet<OrderType> _supportOrderTypes = new(new [] { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit });
 
@@ -68,8 +68,7 @@ namespace QuantConnect.Brokerages
             if (!_supportSecurityTypes.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"The {nameof(TDAmeritradeBrokerageModel)} does not support {security.Type} security type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
                 return false;
             }
@@ -77,8 +76,7 @@ namespace QuantConnect.Brokerages
             if (!_supportOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"The {nameof(TDAmeritradeBrokerageModel)} does not support {order.Type} order.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
 
                 return false;
             }

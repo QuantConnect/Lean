@@ -16,7 +16,6 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -60,11 +59,22 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="buyingPowerModel">The group's buying power model</param>
         /// <param name="positions">The positions comprising the group</param>
-        public PositionGroupKey(IPositionGroupBuyingPowerModel buyingPowerModel, IEnumerable<IPosition> positions)
+        public PositionGroupKey(IPositionGroupBuyingPowerModel buyingPowerModel, IReadOnlyCollection<IPosition> positions)
         {
             BuyingPowerModel = buyingPowerModel;
-            // these have to be sorted for determinism
-            UnitQuantities = positions.Select(p => Tuple.Create(p.Symbol, p.UnitQuantity)).ToImmutableSortedSet();
+            if(positions.Count == 1)
+            {
+                var position = positions.First();
+                UnitQuantities = new[]
+                {
+                    Tuple.Create(position.Symbol, position.UnitQuantity)
+                };
+            }
+            else
+            {
+                // these have to be sorted for determinism
+                UnitQuantities = positions.OrderBy(x => x.Symbol).Select(p => Tuple.Create(p.Symbol, p.UnitQuantity)).ToList();
+            }
             IsDefaultGroup = UnitQuantities.Count == 1 && BuyingPowerModel.GetType() == typeof(SecurityPositionGroupBuyingPowerModel);
         }
 
@@ -73,24 +83,13 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         public IPosition[] CreateEmptyPositions()
         {
-            return CreatePositions(0);
-        }
-
-        /// <summary>
-        /// Creates a new array of positions with each position quantity equaling its unit quantity
-        /// </summary>
-        public IPosition[] CreateUnitPositions()
-        {
-            return CreatePositions();
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="IPositionGroup"/> with each position's quantity equaling it's unit quantity
-        /// </summary>
-        /// <returns>A new position group with quantity equal to 1</returns>
-        public IPositionGroup CreateUnitGroup()
-        {
-            return new PositionGroup(this, CreateUnitPositions());
+            var positions = new IPosition[UnitQuantities.Count];
+            for (var i = 0; i < UnitQuantities.Count; i++)
+            {
+                var unitQuantity = UnitQuantities[i];
+                positions[i] = new Position(unitQuantity.Item1, 0m, unitQuantity.Item2);
+            }
+            return positions;
         }
 
         /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>
@@ -145,20 +144,6 @@ namespace QuantConnect.Securities.Positions
         public override string ToString()
         {
             return $"{string.Join("|", UnitQuantities.Select(x => $"{x.Item1}:{x.Item2.Normalize()}"))}";
-        }
-
-        /// <summary>
-        /// Creates positions with the provided quantity defaulting to the unit quantity
-        /// </summary>
-        private IPosition[] CreatePositions(decimal? quantity = null)
-        {
-            var positions = new IPosition[UnitQuantities.Count];
-            for (var i = 0; i < UnitQuantities.Count; i++)
-            {
-                var unitQuantity = UnitQuantities[i];
-                positions[i] = new Position(unitQuantity.Item1, quantity ?? unitQuantity.Item2, unitQuantity.Item2);
-            }
-            return positions;
         }
 
         /// <summary>

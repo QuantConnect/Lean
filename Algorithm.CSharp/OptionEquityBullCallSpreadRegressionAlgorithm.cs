@@ -50,13 +50,13 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var initialMargin = Portfolio.MarginRemaining;
 
-                    MarketOrder(shortCall.Symbol, -10);
-                    AssertDefaultGroup(shortCall.Symbol, -10);
-                    MarketOrder(longCall.Symbol, 10);
+                    MarketOrder(shortCall.Symbol, -5);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name, 5);
+                    MarketOrder(longCall.Symbol, 5);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
-                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BullCallSpread.Name, 10);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BullCallSpread.Name, 5);
 
-                    var expectedMarginUsage = Math.Max((longCall.Strike - shortCall.Strike) * Securities[longCall.Symbol].SymbolProperties.ContractMultiplier * 10, 0);
+                    var expectedMarginUsage = Math.Max((longCall.Strike - shortCall.Strike) * Securities[longCall.Symbol].SymbolProperties.ContractMultiplier * 5, 0);
                     if (expectedMarginUsage != Portfolio.TotalMarginUsed)
                     {
                         throw new Exception("Unexpect margin used!");
@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 884208;
+        public override long DataPoints => 475788;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -106,29 +106,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$5.00"},
-            {"Estimated Strategy Capacity", "$6900000.00"},
+            {"Total Fees", "$2.50"},
+            {"Estimated Strategy Capacity", "$5500000.00"},
             {"Lowest Capacity Asset", "GOOCV WBGM95TAH2LI|GOOCV VP83T1ZUHROL"},
-            {"Fitness Score", "0"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0"},
-            {"Return Over Maximum Drawdown", "0"},
-            {"Portfolio Turnover", "0"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "7c37850ecdf4ec1b4a409f9610bee53c"}
+            {"Portfolio Turnover", "28.20%"},
+            {"OrderListHash", "08b70d7179eef7e49cb2c94c01e4cde7"}
         };
     }
 }

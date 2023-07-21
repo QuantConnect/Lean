@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 17431;
+        public override long DataPoints => 16247;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -68,30 +68,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0"},
             {"Information Ratio", "-1.409"},
             {"Tracking Error", "0.089"},
-            {"Treynor Ratio", "3.618"},
+            {"Treynor Ratio", "3.76"},
             {"Total Fees", "$338.96"},
             {"Estimated Strategy Capacity", "$1000.00"},
             {"Lowest Capacity Asset", "ES VRJST036ZY0X"},
-            {"Fitness Score", "0.013"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-1.464"},
-            {"Return Over Maximum Drawdown", "-0.992"},
-            {"Portfolio Turnover", "0.04"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "48bfc4d255420cb589e00cf582554e0a"}
+            {"Portfolio Turnover", "4.07%"},
+            {"OrderListHash", "e2d7f858dcad2d760f776bec1065b2f1"}
         };
     }
 }

@@ -25,6 +25,146 @@ namespace QuantConnect.Tests.Python
     public class PythonPackagesTests
     {
         [Test]
+        public void Langchain()
+        {
+            AssertCode(
+                @"
+from langchain.prompts import PromptTemplate
+
+def RunTest():
+    prompt = PromptTemplate.from_template(""What is a good name for a company that makes {product}?"")
+    prompt.format(product=""colorful socks"")");
+        }
+
+        [Test]
+        public void Rbeast()
+        {
+            AssertCode(
+                @"
+import Rbeast as rb
+
+def RunTest():
+    (Nile, Year) = rb.load_example('nile')
+    o = rb.beast(Nile, season = 'none')
+    rb.plot(o)");
+        }
+
+        [Test, Explicit("Needs to be run by itself to avoid hanging")]
+        public void Transformers()
+        {
+            AssertCode(
+                @"
+from transformers import pipeline
+
+def RunTest():
+    classifier = pipeline('sentiment-analysis')
+
+    classifier('We are very happy to introduce pipeline to the transformers repository.')");
+        }
+
+        [Test]
+        public void Tick()
+        {
+            AssertCode(
+                @"
+import numpy as np
+
+from tick.dataset import fetch_hawkes_bund_data
+from tick.hawkes import HawkesConditionalLaw
+from tick.plot import plot_hawkes_kernel_norms
+
+def RunTest():
+    timestamps_list = fetch_hawkes_bund_data()
+
+    kernel_discretization = np.hstack((0, np.logspace(-5, 0, 50)))
+    hawkes_learner = HawkesConditionalLaw(
+        claw_method=""log"", delta_lag=0.1, min_lag=5e-4, max_lag=500,
+        quad_method=""log"", n_quad=10, min_support=1e-4, max_support=1, n_threads=4)
+
+    hawkes_learner.fit(timestamps_list)
+
+    plot_hawkes_kernel_norms(hawkes_learner,
+                             node_names=[""P_u"", ""P_d"", ""T_a"", ""T_b""])");
+        }
+
+        [Test]
+        public void FixedEffectModel()
+        {
+            AssertCode(
+                @"
+import numpy as np
+import pandas as pd
+
+from fixedeffect.iv import ivgmm
+from fixedeffect.utils.panel_dgp import gen_data
+
+def RunTest():
+    N = 100
+    T = 10
+    beta = [-3,1,2,3,4]
+    ate = 1
+    exp_date = 5
+    df = gen_data(N, T, beta, ate, exp_date)
+    formula = 'y ~ x_1|id+time|0|(x_2~x_3+x_4)'
+    model_iv2sls = ivgmm(data_df = df, formula = formula)
+    result = model_iv2sls.fit()
+    result");
+        }
+
+        [Test]
+        public void Iisignature()
+        {
+            AssertCode(
+                @"
+import iisignature
+import numpy as np
+
+def RunTest():
+    path = np . random . uniform ( size =(20 ,3) )
+    signature = iisignature . sig ( path ,4)
+    s = iisignature . prepare (3 ,4)
+    logsignature = iisignature . logsig ( path , s )");
+        }
+
+        [Test]
+        public void PyStan()
+        {
+            AssertCode(
+                @"
+import stan
+
+def RunTest():
+    schools_code = """"""
+    data {
+      int<lower=0> J;         // number of schools
+      real y[J];              // estimated treatment effects
+      real<lower=0> sigma[J]; // standard error of effect estimates
+    }
+    parameters {
+      real mu;                // population treatment effect
+      real<lower=0> tau;      // standard deviation in treatment effects
+      vector[J] eta;          // unscaled deviation from mu by school
+    }
+    transformed parameters {
+      vector[J] theta = mu + tau * eta;        // school treatment effects
+    }
+    model {
+      target += normal_lpdf(eta | 0, 1);       // prior log-density
+      target += normal_lpdf(y | theta, sigma); // log-likelihood
+    }
+    """"""
+
+    schools_data = {""J"": 8,
+                    ""y"": [28,  8, -3,  7, -1,  1, 18, 12],
+                    ""sigma"": [15, 10, 16, 11,  9, 11, 10, 18]}
+
+    posterior = stan.build(schools_code, data=schools_data)
+    fit = posterior.sample(num_chains=4, num_samples=1000)
+    eta = fit[""eta""]  # array with shape (8, 4000)
+    df = fit.to_frame()  # pandas `DataFrame, requires pandas");
+        }
+
+        [Test]
         public void PyvinecopulibTest()
         {
             AssertCode(
@@ -241,7 +381,7 @@ def RunTest():
     df.sort(""fruits"")");
         }
 
-        [Test]
+        [Test, Explicit("Hangs if run along side the rest")]
         public void TensorflowProbabilityTest()
         {
             AssertCode(
@@ -402,7 +542,19 @@ def RunTest():
 import ignite
 
 def RunTest():
-    assert(ignite.__version__ == '0.4.10')"
+    assert(ignite.__version__ == '0.4.12')"
+            );
+        }
+
+        [Test, Explicit("Hangs if run along side the rest")]
+        public void StellargraphTest()
+        {
+            AssertCode(
+                $@"
+import stellargraph
+
+def RunTest():
+    assert(stellargraph.__version__ == '1.2.1')"
             );
         }
 
@@ -689,7 +841,7 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit("Hangs if run along side the rest")]
         public void KerasTest()
         {
             AssertCode(
@@ -713,50 +865,7 @@ def RunTest():
             );
         }
 
-        [Test, Explicit("Installed in specific environment. Requires older tensorflow")]
-        public void TensorforceTests()
-        {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Tensorforce");
-
-            AssertCode(@"
-from tensorforce import Agent, Environment
-
-def RunTest():
-    # Pre-defined or custom environment
-    environment = Environment.create(
-        environment='gym', level='CartPole', max_episode_timesteps=500
-    )
-
-    # Instantiate a Tensorforce agent
-    agent = Agent.create(
-        agent='tensorforce',
-        environment=environment,  # alternatively: states, actions, (max_episode_timesteps)
-        memory=10000,
-        update=dict(unit='timesteps', batch_size=64),
-        optimizer=dict(type='adam', learning_rate=3e-4),
-        policy=dict(network='auto'),
-        objective='policy_gradient',
-        reward_estimation=dict(horizon=20)
-    )
-
-    # Train for 50 episodes
-    for _ in range(50):
-
-        # Initialize episode
-        states = environment.reset()
-        terminal = False
-
-        while not terminal:
-            # Episode timestep
-            actions = agent.act(states=states)
-            states, terminal, reward = environment.execute(actions=actions)
-            agent.observe(terminal=terminal, reward=reward)
-
-    agent.close()
-    environment.close()");
-        }
-
-        [Test]
+        [Test, Explicit("Hangs if run along side the rest")]
         public void TensorflowTest()
         {
             AssertCode(
@@ -828,13 +937,13 @@ def RunTest():
     ql.Settings.instance().evaluationDate = todaysDate
     spotDates = [ql.Date(15, 1, 2015), ql.Date(15, 7, 2015), ql.Date(15, 1, 2016)]
     spotRates = [0.0, 0.005, 0.007]
-    dayCount = ql.Thirty360()
-    calendar = ql.UnitedStates()
+    dayCount = ql.Thirty360(ql.Thirty360.BondBasis)
+    calendar = ql.UnitedStates(ql.UnitedStates.NYSE)
     interpolation = ql.Linear()
     compounding = ql.Compounded
     compoundingFrequency = ql.Annual
     spotCurve = ql.ZeroCurve(spotDates, spotRates, dayCount, calendar, interpolation,
-                             compounding, compoundingFrequency)
+                                compounding, compoundingFrequency)
     return ql.YieldTermStructureHandle(spotCurve)"
             );
         }
@@ -992,10 +1101,529 @@ def RunTest():
             );
         }
 
-        [Test, Explicit("Installed in specific environment. Requires older gym")]
+        [Test]
+        public void Ijson()
+        {
+            AssertCode(
+                @"
+import io
+import ijson
+
+def RunTest():
+    parse_events = ijson.parse(io.BytesIO(b'[""skip"", {""a"": 1}, {""b"": 2}, {""c"": 3}]'))
+    while True:
+        prefix, event, value = next(parse_events)
+        if value == ""skip"":
+            break
+    for obj in ijson.items(parse_events, 'item'):
+        print(obj)");
+        }
+
+        [Test]
+        public void MljarSupervised()
+        {
+            AssertCode(
+                @"
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from supervised.automl import AutoML
+
+def RunTest():
+    df = pd.read_csv(
+        ""https://raw.githubusercontent.com/pplonski/datasets-for-start/master/adult/data.csv"",
+        skipinitialspace=True,
+    )
+    X_train, X_test, y_train, y_test = train_test_split(
+        df[df.columns[:-1]], df[""income""], test_size=0.25
+    )
+
+    automl = AutoML()
+    automl.fit(X_train, y_train)
+
+    predictions = automl.predict(X_test)");
+        }
+
+        [Test]
+        public void DmTree()
+        {
+            AssertCode(
+                @"
+import tree
+
+def RunTest():
+    structure = [[1], [[[2, 3]]], [4]]
+    tree.flatten(structure)");
+        }
+
+        [Test]
+        public void Ortools()
+        {
+            AssertCode(
+                @"
+from ortools.linear_solver import pywraplp
+from ortools.init import pywrapinit
+
+def RunTest():
+	# Create the linear solver with the GLOP backend.
+	solver = pywraplp.Solver.CreateSolver('GLOP')
+
+	# Create the variables x and y.
+	x = solver.NumVar(0, 1, 'x')
+	y = solver.NumVar(0, 2, 'y')
+
+	print('Number of variables =', solver.NumVariables())");
+        }
+
+        [Test, Explicit("Installed in specific environment. Requires older torch")]
+        public void Neuralprophet()
+        {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Pomegranate");
+            AssertCode(
+                @"
+from neuralprophet import NeuralProphet
+
+def RunTest():
+    m = NeuralProphet()");
+        }
+
+        [Test]
+        public void TensorflowAddons()
+        {
+            AssertCode(
+                @"
+import tensorflow as tf
+import tensorflow_addons as tfa
+
+def RunTest():
+    train,test = tf.keras.datasets.mnist.load_data()
+    x_train, y_train = train
+    x_train = x_train[..., tf.newaxis] / 255.0");
+        }
+
+        [Test]
+        public void Yellowbrick()
+        {
+            AssertCode(
+                @"
+from yellowbrick.features import ParallelCoordinates
+from sklearn.datasets import make_classification
+
+def RunTest():
+    X, y = make_classification(n_samples=5000, n_features=2, n_informative=2,
+                               n_redundant=0, n_repeated=0, n_classes=3,
+                               n_clusters_per_class=1,
+                               weights=[0.01, 0.05, 0.94],
+                               class_sep=0.8, random_state=0)
+    visualizer = ParallelCoordinates()
+    visualizer.fit_transform(X, y)
+    visualizer.show()");
+        }
+
+        [Test]
+        public void Livelossplot()
+        {
+            AssertCode(
+                @"
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+
+import torch
+from torch import nn, optim
+from torch.utils.data import TensorDataset, DataLoader
+
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+
+from livelossplot import PlotLosses
+from livelossplot.outputs import matplotlib_subplots
+
+def RunTest():
+	# try with make_moons
+	X, y = datasets.make_circles(noise=0.2, factor=0.5, random_state=1)
+	X_train, X_test, y_train, y_test = \
+		train_test_split(X, y, test_size=.4, random_state=42)
+
+	# plot them
+	cm_bright = ListedColormap(['#FF0000', '#0000FF'])
+	plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright)
+	plt.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, alpha=0.3)");
+        }
+
+        [Test]
+        public void Gymnasium()
+        {
+            AssertCode(
+                @"
+import gymnasium as gym
+
+def RunTest():
+    env = gym.make(""CartPole-v1"")
+
+    observation, info = env.reset(seed=42)
+    action = env.action_space.sample()
+    observation, reward, terminated, truncated, info = env.step(action)
+
+    env.close()");
+        }
+
+        [Test]
+        public void Interpret()
+        {
+            AssertCode(
+                @"
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from interpret.glassbox import ExplainableBoostingClassifier
+from io import StringIO
+
+def RunTest():
+    csv = StringIO(""39, State-gov, 77516, Bachelors, 13, Never-married, Adm-clerical, Not-in-family, White, Male, 2174, 0, 40, United-States, <=50K\n""
+        + ""50, Self-emp-not-inc, 83311, Bachelors, 13, Married-civ-spouse, Exec-managerial, Husband, White, Male, 0, 0, 13, United-States, <=50K\n""
+        + ""38, Private, 215646, HS-grad, 9, Divorced, Handlers-cleaners, Not-in-family, White, Male, 0, 0, 40, United-States, <=50K\n""
+        + ""53, Private, 234721, 11th, 7, Married-civ-spouse, Handlers-cleaners, Husband, Black, Male, 0, 0, 40, United-States, <=50K\n""
+        + ""28, Private, 338409, Bachelors, 13, Married-civ-spouse, Prof-specialty, Wife, Black, Female, 0, 0, 40, Cuba, <=50K\n""
+        + ""37, Private, 284582, Masters, 14, Married-civ-spouse, Exec-managerial, Wife, White, Female, 0, 0, 40, United-States, <=50K\n""
+        + ""49, Private, 160187, 9th, 5, Married-spouse-absent, Other-service, Not-in-family, Black, Female, 0, 0, 16, Jamaica, <=50K\n""
+        + ""52, Self-emp-not-inc, 209642, HS-grad, 9, Married-civ-spouse, Exec-managerial, Husband, White, Male, 0, 0, 45, United-States, >50K\n""
+        + ""31, Private, 45781, Masters, 14, Never-married, Prof-specialty, Not-in-family, White, Female, 14084, 0, 50, United-States, >50K\n""
+        + ""42, Private, 159449, Bachelors, 13, Married-civ-spouse, Exec-managerial, Husband, White, Male, 5178, 0, 40, United-States, >50K\n""
+        + ""37, Private, 280464, Some-college, 10, Married-civ-spouse, Exec-managerial, Husband, Black, Male, 0, 0, 80, United-States, >50K\n""
+        + ""30, State-gov, 141297, Bachelors, 13, Married-civ-spouse, Prof-specialty, Husband, Asian-Pac-Islander, Male, 0, 0, 40, India, >50K\n""
+        + ""23, Private, 122272, Bachelors, 13, Never-married, Adm-clerical, Own-child, White, Female, 0, 0, 30, United-States, <=50K\n""
+        + ""32, Private, 205019, Assoc-acdm, 12, Never-married, Sales, Not-in-family, Black, Male, 0, 0, 50, United-States, <=50K\n""
+        + ""40, Private, 121772, Assoc-voc, 11, Married-civ-spouse, Craft-repair, Husband, Asian-Pac-Islander, Male, 0, 0, 40, ?, >50K\n""
+        + ""34, Private, 245487, 7th-8th, 4, Married-civ-spouse, Transport-moving, Husband, Amer-Indian-Eskimo, Male, 0, 0, 45, Mexico, <=50K\n""
+        + ""25, Self-emp-not-inc, 176756, HS-grad, 9, Never-married, Farming-fishing, Own-child, White, Male, 0, 0, 35, United-States, <=50K\n""
+        + ""32, Private, 186824, HS-grad, 9, Never-married, Machine-op-inspct, Unmarried, White, Male, 0, 0, 40, United-States, <=50K\n""
+        + ""38, Private, 28887, 11th, 7, Married-civ-spouse, Sales, Husband, White, Male, 0, 0, 50, United-States, <=50K\n""
+        + ""43, Self-emp-not-inc, 292175, Masters, 14, Divorced, Exec-managerial, Unmarried, White, Female, 0, 0, 45, United-States, >50K\n""
+        + ""40, Private, 193524, Doctorate, 16, Married-civ-spouse, Prof-specialty, Husband, White, Male, 0, 0, 60, United-States, >50K\n""
+        + ""54, Private, 302146, HS-grad, 9, Separated, Other-service, Unmarried, Black, Female, 0, 0, 20, United-States, <=50K\n""
+        + ""35, Federal-gov, 76845, 9th, 5, Married-civ-spouse, Farming-fishing, Husband, Black, Male, 0, 0, 40, United-States, <=50K\n""
+        + ""43, Private, 117037, 11th, 7, Married-civ-spouse, Transport-moving, Husband, White, Male, 0, 2042, 40, United-States, <=50K\n""
+        + ""59, Private, 109015, HS-grad, 9, Divorced, Tech-support, Unmarried, White, Female, 0, 0, 40, United-States, <=50K\n""
+        + ""56, Local-gov, 216851, Bachelors, 13, Married-civ-spouse, Tech-support, Husband, White, Male, 0, 0, 40, United-States, >50K\n""
+        + ""19, Private, 168294, HS-grad, 9, Never-married, Craft-repair, Own-child, White, Male, 0, 0, 40, United-States, <=50K\n""
+        + ""54, ?, 180211, Some-college, 10, Married-civ-spouse, ?, Husband, Asian-Pac-Islander, Male, 0, 0, 60, South, >50K\n""
+        + ""39, Private, 367260, HS-grad, 9, Divorced, Exec-managerial, Not-in-family, White, Male, 0, 0, 80, United-States, <=50K\n""
+        + ""49, Private, 193366, HS-grad, 9, Married-civ-spouse, Craft-repair, Husband, White, Male, 0, 0, 40, United-States, <=50K\n""
+        + ""23, Local-gov, 190709, Assoc-acdm, 12, Never-married, Protective-serv, Not-in-family, White, Male, 0, 0, 52, United-States, <=50K\n""
+        + ""20, Private, 266015, Some-college, 10, Never-married, Sales, Own-child, Black, Male, 0, 0, 44, United-States, <=50K\n""
+        + ""45, Private, 386940, Bachelors, 13, Divorced, Exec-managerial, Own-child, White, Male, 0, 1408, 40, United-States, <=50K\n""
+        + ""30, Federal-gov, 59951, Some-college, 10, Married-civ-spouse, Adm-clerical, Own-child, White, Male, 0, 0, 40, United-States, <=50K\n""
+        + ""22, State-gov, 311512, Some-college, 10, Married-civ-spouse, Other-service, Husband, Black, Male, 0, 0, 15, United-States, <=50K\n""
+        + ""48, Private, 242406, 11th, 7, Never-married, Machine-op-inspct, Unmarried, White, Male, 0, 0, 40, Puerto-Rico, <=50K\n""
+        + ""21, Private, 197200, Some-college, 10, Never-married, Machine-op-inspct, Own-child, White, Male, 0, 0, 40, United-States, <=50K\n""
+        + ""19, Private, 544091, HS-grad, 9, Married-AF-spouse, Adm-clerical, Wife, White, Female, 0, 0, 25, United-States, <=50K\n""
+        + ""31, Private, 84154, Some-college, 10, Married-civ-spouse, Sales, Husband, White, Male, 0, 0, 38, ?, >50K\n""
+        + ""48, Self-emp-not-inc, 265477, Assoc-acdm, 12, Married-civ-spouse, Prof-specialty, Husband, White, Male, 0, 0, 40, United-States, <=50K\n""
+        + ""31, Private, 507875, 9th, 5, Married-civ-spouse, Machine-op-inspct, Husband, White, Male, 0, 0, 43, United-States, <=50K\n""
+        + ""53, Self-emp-not-inc, 88506, Bachelors, 13, Married-civ-spouse, Prof-specialty, Husband, White, Male, 0, 0, 40, United-States, <=50K\n""
+        + ""24, Private, 172987, Bachelors, 13, Married-civ-spouse, Tech-support, Husband, White, Male, 0, 0, 50, United-States, <=50K\n""
+        + ""49, Private, 94638, HS-grad, 9, Separated, Adm-clerical, Unmarried, White, Female, 0, 0, 40, United-States, <=50K\n""
+        + ""25, Private, 289980, HS-grad, 9, Never-married, Handlers-cleaners, Not-in-family, White, Male, 0, 0, 35, United-States, <=50K\n""
+        + ""57, Federal-gov, 337895, Bachelors, 13, Married-civ-spouse, Prof-specialty, Husband, Black, Male, 0, 0, 40, United-States, >50K\n""
+        + ""53, Private, 144361, HS-grad, 9, Married-civ-spouse, Machine-op-inspct, Husband, White, Male, 0, 0, 38, United-States, <=50K\n""
+        + ""44, Private, 128354, Masters, 14, Divorced, Exec-managerial, Unmarried, White, Female, 0, 0, 40, United-States, <=50K\n""
+        + ""41, State-gov, 101603, Assoc-voc, 11, Married-civ-spouse, Craft-repair, Husband, White, Male, 0, 0, 40, United-States, <=50K\n""
+        + ""29, Private, 271466, Assoc-voc, 11, Never-married, Prof-specialty, Not-in-family, White, Male, 0, 0, 43, United-States, <=50K"")
+
+    df = pd.read_csv(csv, header=None)
+    df.columns = [
+        ""Age"", ""WorkClass"", ""fnlwgt"", ""Education"", ""EducationNum"",
+        ""MaritalStatus"", ""Occupation"", ""Relationship"", ""Race"", ""Gender"",
+        ""CapitalGain"", ""CapitalLoss"", ""HoursPerWeek"", ""NativeCountry"", ""Income""
+    ]
+    train_cols = df.columns[0:-1]
+    label = df.columns[-1]
+    X = df[train_cols]
+    y = df[label]
+
+    seed = 1
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=seed)
+
+    ebm = ExplainableBoostingClassifier(random_state=seed)
+    ebm.fit(X_train, y_train)");
+        }
+
+        [Test]
+        public void Doubleml()
+        {
+            AssertCode(
+                @"
+import numpy as np
+from doubleml.datasets import make_plr_CCDDHNR2018
+
+def RunTest():
+    np.random.seed(1234)
+
+    n_rep = 1000
+    n_obs = 500
+    n_vars = 20
+    alpha = 0.5
+    data = list()
+
+    for i_rep in range(n_rep):
+        (x, y, d) = make_plr_CCDDHNR2018(alpha=alpha, n_obs=n_obs, dim_x=n_vars, return_type='array')
+        data.append((x, y, d))");
+        }
+
+        [Test]
+        public void ImbalancedLearn()
+        {
+            AssertCode(
+                @"
+from sklearn.datasets import make_classification
+from imblearn.over_sampling import RandomOverSampler
+from collections import Counter
+
+def RunTest():
+    X, y = make_classification(n_samples=5000, n_features=2, n_informative=2,
+                                n_redundant=0, n_repeated=0, n_classes=3,
+                                n_clusters_per_class=1,
+                                weights=[0.01, 0.05, 0.94],
+                                class_sep=0.8, random_state=0)
+
+    ros = RandomOverSampler(random_state=0)
+
+    X_resampled, y_resampled = ros.fit_resample(X, y)
+
+    print(sorted(Counter(y_resampled).items()))");
+        }
+
+        [Test, Explicit("Has issues when run along side the other tests")]
+        public void ScikerasTest()
+        {
+            AssertCode(
+                @"
+import numpy as np
+from sklearn.datasets import make_classification
+from tensorflow import keras
+from scikeras.wrappers import KerasClassifier
+
+def RunTest():
+    X, y = make_classification(1000, 20, n_informative=10, random_state=0)
+    X = X.astype(np.float32)
+    y = y.astype(np.int64)
+
+    def get_model(hidden_layer_dim, meta):
+        # note that meta is a special argument that will be
+        # handed a dict containing input metadata
+        n_features_in_ = meta[""n_features_in_""]
+        X_shape_ = meta[""X_shape_""]
+        n_classes_ = meta[""n_classes_""]
+
+        model = keras.models.Sequential()
+        model.add(keras.layers.Dense(n_features_in_, input_shape=X_shape_[1:]))
+        model.add(keras.layers.Activation(""relu""))
+        model.add(keras.layers.Dense(hidden_layer_dim))
+        model.add(keras.layers.Activation(""relu""))
+        model.add(keras.layers.Dense(n_classes_))
+        model.add(keras.layers.Activation(""softmax""))
+        return model
+
+    clf = KerasClassifier(
+        get_model,
+        loss=""sparse_categorical_crossentropy"",
+        hidden_layer_dim=100,
+    )
+
+    clf.fit(X, y)
+    y_proba = clf.predict_proba(X)");
+        }
+
+        [Test]
+        public void Lazypredict()
+        {
+            AssertCode(
+                @"
+from lazypredict.Supervised import LazyClassifier
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+
+def RunTest():
+    data = load_breast_cancer()
+    X = data.data
+    y= data.target
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y,test_size=.5,random_state =123)
+
+    clf = LazyClassifier(verbose=0,ignore_warnings=True, custom_metric=None)
+    models,predictions = clf.fit(X_train, X_test, y_train, y_test)");
+        }
+
+        [Test]
+        public void Fracdiff()
+        {
+            AssertCode(
+                @"
+import numpy as np
+from fracdiff import fdiff
+
+def RunTest():
+    a = np.array([1, 2, 4, 7, 0])
+    fdiff(a, 0.5)
+    # array([ 1.       ,  1.5      ,  2.875    ,  4.6875   , -4.1640625])
+    np.array_equal(fdiff(a, n=1), np.diff(a, n=1))
+    # True");
+        }
+
+        [Test]
+        public void Darts()
+        {
+            AssertCode(
+                @"
+from darts.datasets import ETTh2Dataset
+from darts.ad import KMeansScorer
+
+def RunTest():
+    series = ETTh2Dataset().load()[:10000][[""MUFL"", ""LULL""]]
+    train, val = series.split_before(0.6)
+    scorer = KMeansScorer(k=2, window=5)
+    scorer.fit(train)
+    anom_score = scorer.score(val)");
+        }
+
+        [Test]
+        public void Fastparquet()
+        {
+            AssertCode(
+                @"
+from fastparquet import write
+import pandas as pd
+
+def RunTest():
+    d = {'date': [ '20220901', '20220902' ], 'open': [ 1, 2 ], 'close': [ 1, 2 ],'high': [ 1, 2], 'low': [ 1, 2 ], 'volume': [ 1, 2 ] }
+    df = pd.DataFrame(data=d)
+    write('outfile.parq', df)");
+        }
+
+        [Test]
+        public void Dimod()
+        {
+            AssertCode(
+                @"
+import dimod
+
+def RunTest():
+    bqm = dimod.BinaryQuadraticModel({0: -1, 1: 1}, {(0, 1): 2}, 0.0, dimod.BINARY)
+
+    sampleset = dimod.ExactSolver().sample(bqm)
+    return sampleset");
+        }
+
+        [Test]
+        public void DwaveSamplers()
+        {
+            AssertCode(
+                @"
+from dwave.samplers import PlanarGraphSolver
+
+def RunTest():
+    solver = PlanarGraphSolver()");
+        }
+
+        [Test]
+        public void Statemachine()
+        {
+            AssertCode(
+                @"
+from statemachine import StateMachine, State
+
+def RunTest():
+    class StateObject(StateMachine):
+        aState = State(""A"", initial = True)
+        bState = State(""B"")
+
+        transitionA = aState.to(bState)
+        transitionB = bState.to(aState)
+
+    instance = StateObject()");
+        }
+
+        [Test]
+        public void pymannkendall()
+        {
+            AssertCode(
+                @"
+import numpy as np
+import pymannkendall as mk
+
+def RunTest():
+    # Data generation for analysis
+    data = np.random.rand(360,1)
+
+    result = mk.original_test(data)
+    return result");
+        }
+
+        [Test]
+        public void Pyomo()
+        {
+            AssertCode(
+                @"
+from pyomo.environ import *
+
+def RunTest():
+	V = 40     # liters
+	kA = 0.5   # 1/min
+	kB = 0.1   # l/min
+	CAf = 2.0  # moles/liter
+
+	# create a model instance
+	model = ConcreteModel()
+
+	# create x and y variables in the model
+	model.q = Var()
+
+	# add a model objective
+	model.objective = Objective(expr = model.q*V*kA*CAf/(model.q + V*kB)/(model.q + V*kA), sense=maximize)
+
+	# compute a solution using ipopt for nonlinear optimization
+	results = SolverFactory('ipopt').solve(model)
+
+	# print solutions
+	qmax = model.q()
+	CBmax = model.objective()
+	print('\nFlowrate at maximum CB = ', qmax, 'liters per minute.')
+	print('\nMaximum CB =', CBmax, 'moles per liter.')
+	print('\nProductivity = ', qmax*CBmax, 'moles per minute.')");
+        }
+
+        [Test]
+        public void Gpflow()
+        {
+            AssertCode(
+                @"
+import gpflow
+import numpy as np
+import matplotlib
+
+def RunTest():
+    X = np.array(
+        [
+            [0.865], [0.666], [0.804], [0.771], [0.147], [0.866], [0.007], [0.026],
+            [0.171], [0.889], [0.243], [0.028],
+        ]
+    )
+    Y = np.array(
+        [
+            [1.57], [3.48], [3.12], [3.91], [3.07], [1.35], [3.80], [3.82], [3.49],
+            [1.30], [4.00], [3.82],
+        ]
+    )
+
+    model = gpflow.models.GPR((X, Y), kernel=gpflow.kernels.SquaredExponential())
+    opt = gpflow.optimizers.Scipy()
+    opt.minimize(model.training_loss, model.trainable_variables)
+
+    Xnew = np.array([[0.5]])
+    model.predict_f(Xnew)");
+        }
+
+        [Test, Explicit("Sometimes hangs when run along side the other tests")]
         public void StableBaselinesTest()
         {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Tensorforce");
             AssertCode(
                 @"
 from stable_baselines3 import PPO
@@ -1371,7 +1999,7 @@ def RunTest():
             AssertCode(@"
 import numpy as np
 from tigramite.pcmci import PCMCI
-from tigramite.independence_tests import ParCorr
+from tigramite.independence_tests.parcorr import ParCorr
 import tigramite.data_processing as pp
 from tigramite.toymodels import structural_causal_processes as toys
 
@@ -1401,6 +2029,7 @@ def RunTest():
         [Test, Explicit("Sometimes crashes when run along side the other tests")]
         public void NBeatsTest()
         {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Pomegranate");
             AssertCode(@"
 import warnings
 import numpy as np
@@ -1529,38 +2158,39 @@ def RunTest():
         /// </summary>
         /// <param name="module">The module we are testing</param>
         /// <param name="version">The module version</param>
-        [TestCase("pulp", "2.6.0", "VERSION")]
-        [TestCase("pymc", "4.1.4", "__version__")]
+        [TestCase("pulp", "2.7.0", "VERSION")]
+        [TestCase("pymc", "5.5.0", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
         [TestCase("wrapt", "1.14.1", "__version__")]
-        [TestCase("tslearn", "0.5.2", "__version__")]
-        [TestCase("tweepy", "4.10.0", "__version__")]
-        [TestCase("pywt", "1.3.0", "__version__")]
+        [TestCase("tslearn", "0.5.3.2", "__version__")]
+        [TestCase("tweepy", "4.14.0", "__version__")]
+        [TestCase("pywt", "1.4.1", "__version__")]
         [TestCase("umap", "0.5.3", "__version__")]
-        [TestCase("dtw", "1.2.2", "__version__")]
-        [TestCase("mplfinance", "0.12.9b1", "__version__")]
+        [TestCase("dtw", "1.3.0", "__version__")]
+        [TestCase("mplfinance", "0.12.9b7", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
-        [TestCase("ipywidgets", "8.0.0rc1", "__version__")]
-        [TestCase("astropy", "5.1", "__version__")]
-        [TestCase("gluonts", "0.7.7", "__version__")]
+        [TestCase("ipywidgets", "8.0.6", "__version__")]
+        [TestCase("astropy", "5.2.2", "__version__")]
+        [TestCase("gluonts", "0.13.2", "__version__")]
         [TestCase("gplearn", "0.4.2", "__version__")]
-        [TestCase("h2o", "3.36.1.4", "__version__")]
-        [TestCase("featuretools", "0.18.1", "__version__")]
-        [TestCase("pennylane", "0.25.1", "version()")]
+        [TestCase("h2o", "3.40.0.4", "__version__")]
+        [TestCase("featuretools", "1.26.0", "__version__")]
+        [TestCase("pennylane", "0.30.0", "version()")]
         [TestCase("pyfolio", "0.9.2", "__version__")]
-        [TestCase("altair", "4.2.0", "__version__")]
-        [TestCase("stellargraph", "1.2.1", "__version__")]
-        [TestCase("modin", "0.15.3", "__version__")]
+        [TestCase("altair", "5.0.1", "__version__")]
+        [TestCase("modin", "0.22.2", "__version__")]
         [TestCase("persim", "0.3.1", "__version__")]
-        [TestCase("pydmd", "0.4.0.post2209", "__version__")]
+        [TestCase("pydmd", "0.4.1.post2306", "__version__")]
         [TestCase("pandas_ta", "0.3.14b0", "__version__")]
         [TestCase("finrl", "finrl", "__package__")]
         [TestCase("tensortrade", "1.0.3", "__version__")]
-        [TestCase("quantstats", "0.0.59", "__version__")]
-        [TestCase("autokeras", "1.0.20", "__version__")]
-        [TestCase("panel", "0.14.0", "__version__")]
+        [TestCase("quantstats", "0.0.61", "__version__")]
+        [TestCase("autokeras", "1.1.0", "__version__")]
+        [TestCase("panel", "1.1.1", "__version__")]
         [TestCase("pyheat", "pyheat", "__name__")]
-        [TestCase("tensorflow_decision_forests", "1.0.1", "__version__")]
+        [TestCase("tensorflow_decision_forests", "1.3.0", "__version__")]
+        [TestCase("tensorflow_ranking", "0.5.1.dev", "__version__")]
+        [TestCase("pomegranate", "1.0.0", "__version__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssertCode(

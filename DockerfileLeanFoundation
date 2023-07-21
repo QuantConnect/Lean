@@ -12,27 +12,14 @@ MAINTAINER QuantConnect <contact@quantconnect.com>
 # Use baseimage-docker's init system.
 CMD ["/sbin/my_init"]
 
-# Have to add env TZ=UTC. See https://github.com/dotnet/coreclr/issues/602
-RUN env TZ=UTC
-
 # Install OS Packages:
 # Misc tools for running Python.NET and IB inside a headless container.
-RUN add-apt-repository ppa:ubuntu-toolchain-r/test \
-   && echo deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/ >> /etc/apt/sources.list \
-   && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
-   && add-apt-repository ppa:apt-fast/stable && apt-get update && apt-get -y install apt-fast \
-   && apt-fast install -y git bzip2 curl unzip wget python3-pip python-opengl zlib1g-dev \
+RUN apt-get update && apt-get -y install wget curl unzip \
+   && apt-get install -y git bzip2 zlib1g-dev \
    xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
-   pandoc libcurl4-openssl-dev libgtk2.0.0 r-base \
-   && apt-fast clean && apt-get remove -y apt-fast && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
+   pandoc libcurl4-openssl-dev libgtk2.0.0 build-essential \
+   && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
    && rm -rf /var/lib/apt/lists/*
-
-# Install IB Gateway: Installs to /root/ibgateway
-RUN mkdir -p /root/ibgateway && \
-    wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v10.20.1f.sh && \
-    chmod 777 ibgateway-latest-standalone-linux-x64.v10.20.1f.sh && \
-    ./ibgateway-latest-standalone-linux-x64.v10.20.1f.sh -q -dir /root/ibgateway && \
-    rm ibgateway-latest-standalone-linux-x64.v10.20.1f.sh
 
 # Install dotnet 6 sdk & runtime
 RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
@@ -48,199 +35,254 @@ RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-p
 ENV PYTHONNET_PYDLL="/opt/miniconda3/lib/libpython3.8.so"
 
 # Install miniconda
-ENV CONDA="Miniconda3-4.5.12-Linux-x86_64.sh"
+ENV CONDA="Miniconda3-py38_23.1.0-1-Linux-x86_64.sh"
 ENV PATH="/opt/miniconda3/bin:${PATH}"
-RUN wget https://cdn.quantconnect.com/miniconda/${CONDA} && \
-    bash ${CONDA} -b -p /opt/miniconda3 && rm -rf ${CONDA} && \
-    conda install -y conda=4.10.3 && \
-    pip install --upgrade --no-cache-dir pip==22.2.2 && \
-    conda install -y python=3.8.13 && conda install -y -c conda-forge pip=22.2.2 && conda clean -y --all
+RUN wget -q https://cdn.quantconnect.com/miniconda/${CONDA} && \
+    bash ${CONDA} -b -p /opt/miniconda3 && rm -rf ${CONDA}
 
 # Avoid pip install read timeouts
 ENV PIP_DEFAULT_TIMEOUT=120
 
 # Install all packages
 RUN pip install --no-cache-dir      \
-    cython==0.29.30                 \
-    pandas==1.4.4                   \
-    scipy==1.8.1                    \
-    numpy==1.22.4                   \
+    cython==0.29.35                 \
+    pandas==1.5.3                   \
+    scipy==1.10.1                   \
+    numpy==1.23.5                   \
     wrapt==1.14.1                   \
-    astropy==5.1                    \
-    beautifulsoup4==4.11.1          \
-    dill==0.3.5.1                   \
-    jsonschema==4.9.1               \
-    lxml==4.9.1                     \
-    msgpack==1.0.3                  \
-    numba==0.56.0                   \
-    xarray==2022.6.0                \
-    plotly==5.9.0                   \
+    astropy==5.2.2                  \
+    beautifulsoup4==4.12.2          \
+    dill==0.3.6                     \
+    jsonschema==4.17.3              \
+    lxml==4.9.2                     \
+    msgpack==1.0.5                  \
+    numba==0.56.4                   \
+    xarray==2023.1.0                \
+    plotly==5.15.0                  \
     jupyterlab==3.4.4               \
-    tensorflow==2.10.0              \
-    docutils==0.19                  \
-    cvxopt==1.3.0                   \
-    gensim==4.2.0                   \
-    keras==2.10.0                   \
-    lightgbm==3.3.2                 \
-    mpi4py==3.1.3                   \
-    nltk==3.7                       \
-    graphviz==0.8.4                 \
-    cmdstanpy==1.0.4                \
-    copulae==0.7.7                  \
-    featuretools==0.18.1            \
-    PuLP==2.6.0                     \
-    pymc==4.1.4                     \
+    tensorflow==2.12.0              \
+    docutils==0.20.1                \
+    cvxopt==1.3.1                   \
+    gensim==4.3.1                   \
+    keras==2.12.0                   \
+    lightgbm==3.3.5                 \
+    mpi4py==3.1.4                   \
+    nltk==3.8.1                     \
+    graphviz==0.20.1                \
+    cmdstanpy==1.1.0                \
+    copulae==0.7.8                  \
+    featuretools==1.26.0            \
+    PuLP==2.7.0                     \
+    pymc==5.5.0                     \
     rauth==0.7.3                    \
-    scikit-learn==1.0.2             \
+    scikit-learn==1.2.2             \
     scikit-multiflow==0.5.3         \
     scikit-optimize==0.9.0          \
-    aesara==2.7.9                   \
-    tsfresh==0.15.1                 \
-    tslearn==0.5.2                  \
-    tweepy==4.10.0                  \
-    PyWavelets==1.3.0               \
+    aesara==2.9.0                   \
+    tsfresh==0.20.1                 \
+    tslearn==0.5.3.2                \
+    tweepy==4.14.0                  \
+    PyWavelets==1.4.1               \
     umap-learn==0.5.3               \
-    fastai==2.7.7                   \
-    arch==5.3.1                     \
-    copulas==0.7.0                  \
+    fastai==2.7.12                  \
+    arch==5.6.0                     \
+    copulas==0.9.0                  \
     creme==0.6.1                    \
     cufflinks==0.17.3               \
-    gym==0.23.1                     \
-    ipywidgets==8.0.0rc1            \
+    gym==0.21                       \
+    ipywidgets==8.0.6               \
     deap==1.3.3                     \
-    cvxpy==1.2.1                    \
+    cvxpy==1.3.2                    \
     pykalman==0.9.5                 \
-    pyportfolioopt==1.5.1           \
-    pmdarima==1.8.5                 \
-    pyro-ppl==1.8.2                 \
-    riskparityportfolio==0.3        \
+    pyportfolioopt==1.5.5           \
+    pmdarima==2.0.3                 \
+    pyro-ppl==1.8.5                 \
+    riskparityportfolio==0.4        \
     sklearn-json==0.1.0             \
-    statsmodels==0.13.2             \
-    QuantLib==1.27                  \
-    xgboost==1.6.1                  \
-    dtw-python==1.2.2               \
-    mxnet==1.9.1                    \
-    gluonts==0.7.7                  \
+    statsmodels==0.13.5             \
+    QuantLib==1.30                  \
+    xgboost==1.7.6                  \
+    dtw-python==1.3.0               \
+    gluonts==0.13.2                 \
     gplearn==0.4.2                  \
-    jax==0.3.16                     \
-    jaxlib==0.3.15                  \
+    jax==0.4.13                     \
+    jaxlib==0.4.13                  \
     keras-rl==0.4.2                 \
-    pennylane==0.25.1               \
-    neural-tangents==0.6.0          \
-    mplfinance==0.12.9b1            \
-    hmmlearn==0.2.7                 \
-    catboost==1.0.6                 \
+    pennylane==0.30.0               \
+    PennyLane-Lightning==0.31.0     \
+    pennylane-qiskit==0.29.0        \
+    qiskit==0.43.2                  \
+    neural-tangents==0.6.2          \
+    mplfinance==0.12.9b7            \
+    hmmlearn==0.3.0                 \
+    catboost==1.2                   \
     fastai2==0.0.30                 \
     scikit-tda==1.0.0               \
-    ta==0.10.1                      \
-    seaborn==0.11.2                 \
-    optuna==2.10.1                  \
+    ta==0.10.2                      \
+    seaborn==0.12.2                 \
+    optuna==3.2.0                   \
     findiff==0.9.2                  \
-    sktime==0.13.1                  \
+    sktime==0.20.0                  \
     hyperopt==0.2.7                 \
-    bayesian-optimization==1.2.0    \
-    rpy2==3.5.3                     \
-    pingouin==0.5.2                 \
-    quantecon==0.5.3                \
-    matplotlib==3.5.3               \
+    bayesian-optimization==1.4.3    \
+    pingouin==0.5.3                 \
+    quantecon==0.7.1                \
+    matplotlib==3.7.1               \
     sdeint==0.3.0                   \
-    pandas_market_calendars==3.5    \
-    dgl==0.9.0                      \
-    ruptures==1.1.7                 \
+    pandas_market_calendars==4.1.4  \
+    dgl==1.1.1                      \
+    ruptures==1.1.8                 \
     simpy==4.0.1                    \
-    scikit-learn-extra==0.2.0       \
-    ray==2.0.0                      \
-    "ray[rllib]"==2.0.0             \
+    scikit-learn-extra==0.3.0       \
+    ray==2.5.1                      \
+    "ray[tune]"==2.5.1              \
+    "ray[rllib]"==2.5.1             \
     fastText==0.9.2                 \
-    tigramite==5.0.0.1              \
-    h2o==3.36.1.4                   \
-    prophet==1.1.1                  \
-    Riskfolio-Lib==3.3.0            \
-    nbeats-keras==1.7.0             \
-    nbeats-pytorch==1.6.0           \
-    torch==1.12.1                   \
-    torchvision==0.13.1             \
-    ax-platform==0.2.7.2            \
-    alphalens-reloaded==0.4.2       \
-    pyfolio-reloaded==0.9.4         \
-    altair==4.2.0                   \
+    h2o==3.40.0.4                   \
+    prophet==1.1.4                  \
+    torch==2.0.1                    \
+    torchvision==0.15.2             \
+    ax-platform==0.3.3              \
+    alphalens-reloaded==0.4.3       \
+    pyfolio-reloaded==0.9.5         \
+    altair==5.0.1                   \
     stellargraph==1.2.1             \
-    modin==0.15.3                   \
+    modin==0.22.2                   \
     persim==0.3.1                   \
     ripser==0.6.4                   \
-    pydmd==0.4.0.post2209           \
-    EMD-signal==1.2.3               \
-    spacy==3.4.1                    \
+    pydmd==0.4.1.post2306           \
+    EMD-signal==1.5.1               \
+    spacy==3.5.3                    \
     pandas-ta==0.3.14b              \
-    pytorch-ignite==0.4.10          \
+    pytorch-ignite==0.4.12          \
     finrl==0.3.1                    \
-    tensorly==0.7.0                 \
-    mlxtend==0.20.0                 \
+    tensorly==0.8.1                 \
+    mlxtend==0.22.0                 \
     shap==0.41.0                    \
     lime==0.2.0.1                   \
-    tensorflow-probability==0.18.0  \
-    mpmath==1.2.1                   \
+    tensorflow-probability==0.20.1  \
+    mpmath==1.3.0                   \
     tensortrade==1.0.3              \
-    polars==0.14.11                 \
-    stockstats==0.4.1               \
-    autokeras==1.0.20               \
-    QuantStats==0.0.59              \
+    polars==0.18.4                  \
+    stockstats==0.5.4               \
+    autokeras==1.1.0                \
+    QuantStats==0.0.61              \
     hurst==0.0.5                    \
-    numerapi==2.12.4                \
+    numerapi==2.14.0                \
     pymdptoolbox==4.0-b3            \
     fuzzy-c-means==1.6.3            \
-    panel==0.14.0                   \
-    hvplot==0.8.1                   \
-    line-profiler==3.5.1            \
+    panel==1.1.1                    \
+    hvplot==0.8.4                   \
+    line-profiler==4.0.3            \
     py-heat==0.0.6                  \
     py-heat-magic==0.0.2            \
-    bokeh==2.4.3                    \
-    tensorflow-decision-forests==1.0.1 \
-    river==0.13.0                   \
+    bokeh==3.1.1                    \
+    tensorflow-decision-forests==1.3.0 \
+    river==0.14.0                   \
     stumpy==1.11.1                  \
-    pyvinecopulib==0.6.2
+    pyvinecopulib==0.6.2            \
+    ijson==3.2.2                    \
+    jupyter-resource-usage==0.7.2   \
+    injector==0.20.1                \
+    openpyxl==3.1.2                 \
+    xlrd==2.0.1                     \
+    mljar-supervised==1.0.0         \
+    dm-tree==0.1.8                  \
+    lz4==4.3.2                      \
+    ortools==9.6.2534               \
+    py_vollib==1.0.1                \
+    tensorflow-addons==0.20.0       \
+    thundergbm==0.3.17              \
+    yellowbrick==1.5                \
+    livelossplot==0.5.5             \
+    gymnasium==0.26.3               \
+    interpret==0.4.2                \
+    DoubleML==0.6.3                 \
+    jupyter-bokeh==3.0.7            \
+    imbalanced-learn==0.10.1        \
+    scikeras==0.11.0                \
+    openai==0.27.8                  \
+    openai[embeddings]==0.27.8      \
+    openai[wandb]==0.27.8           \
+    lazypredict==0.2.12             \
+    fracdiff==0.9.0                 \
+    darts==0.24.0                   \
+    fastparquet==2023.4.0           \
+    tables==3.8.0                   \
+    dimod==0.12.3                   \
+    dwave-samplers==1.0.0           \
+    python-statemachine==2.1.0      \
+    pymannkendall==1.4.3            \
+    Pyomo==6.6.1                    \
+    gpflow==2.8.1                   \
+    pyarrow==12.0.1                 \
+    dwave-ocean-sdk==6.1.1          \
+    chardet==5.1.0                  \
+    stable-baselines3==1.8.0        \
+    pystan==3.7.0                   \
+    FixedEffectModel==0.0.5         \
+    tick==0.7.0.1                   \
+    transformers==4.30.2            \
+    Rbeast==0.1.13                  \
+    langchain==0.0.218              \
+    tensorflow-ranking==0.5.1       \
+    pomegranate==1.0.0              \
+    tigramite==5.2.1.8
 
-RUN python -m spacy download en_core_web_md
+# Install dwave tool
+RUN dwave install --all -y
+
+# Install 'ipopt' solver for 'Pyomo'
+RUN conda install -c conda-forge ipopt==3.14.12 \
+    && conda clean -y --all
+
+# We install need to install separately else fails to find numpy
+RUN pip install --no-cache-dir Riskfolio-Lib==4.4.0 iisignature==0.24
+
+# Install spacy models
+RUN python -m spacy download en_core_web_md && python -m spacy download en_core_web_sm
 
 RUN conda install -y -c conda-forge \
-    openmpi=4.1.4                   \
+    openmpi=4.1.5                   \
     && conda clean -y --all
 
 # Install PyTorch Geometric
 RUN TORCH=$(python -c "import torch; print(torch.__version__)") && \
     CUDA=$(python -c "import torch; print('cu' + torch.version.cuda.replace('.', ''))") && \
     pip install --no-cache-dir -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html \
-    torch-scatter==2.0.9 torch-sparse==0.6.14 torch-cluster==1.6.0 torch-spline-conv==1.2.1 torch-geometric==2.0.4
+    torch-scatter==2.1.1 torch-sparse==0.6.17 torch-cluster==1.6.1 torch-spline-conv==1.2.2 torch-geometric==2.3.1
 
+# Install nltk data
 RUN python -m nltk.downloader -d /usr/share/nltk_data punkt && \
     python -m nltk.downloader -d /usr/share/nltk_data vader_lexicon && \
-    python -m nltk.downloader -d /usr/share/nltk_data stopwords
+    python -m nltk.downloader -d /usr/share/nltk_data stopwords && \
+    python -m nltk.downloader -d /usr/share/nltk_data wordnet
 
 # Install ppscore
-RUN wget https://cdn.quantconnect.com/ppscore/ppscore-master-ce93fa3.zip && \
+RUN wget -q https://cdn.quantconnect.com/ppscore/ppscore-master-ce93fa3.zip && \
     unzip -q ppscore-master-ce93fa3.zip && cd ppscore-master && \
     pip install . && cd .. && rm -rf ppscore-master && rm ppscore-master-ce93fa3.zip
 
 # Install DX Analytics
-RUN wget https://cdn.quantconnect.com/dx/dx-master-69922c0.zip && \
+RUN wget -q https://cdn.quantconnect.com/dx/dx-master-69922c0.zip && \
     unzip -q dx-master-69922c0.zip && cd dx-master && \
     pip install . && cd .. && rm -rf dx-master && rm dx-master-69922c0.zip
 
 # Install Pyrb
-RUN wget https://cdn.quantconnect.com/pyrb/pyrb-master-250054e.zip && \
+RUN wget -q https://cdn.quantconnect.com/pyrb/pyrb-master-250054e.zip && \
     unzip -q pyrb-master-250054e.zip && cd pyrb-master && \
     pip install . && cd .. && rm -rf pyrb-master && rm pyrb-master-250054e.zip
 
 # Install SSM
-RUN wget https://cdn.quantconnect.com/ssm/ssm-master-646e188.zip && \
+RUN wget -q https://cdn.quantconnect.com/ssm/ssm-master-646e188.zip && \
     unzip -q ssm-master-646e188.zip && cd ssm-master && \
     pip install . && cd .. && rm -rf ssm-master && rm ssm-master-646e188.zip
 
 # Install TA-lib for python
-RUN wget https://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+RUN wget -q https://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -zxvf ta-lib-0.4.0-src.tar.gz && cd ta-lib && \
     ./configure --prefix=/usr && make && make install && \
-    wget https://cdn.quantconnect.com/ta-lib/TA_Lib-0.4.18.zip && \
+    wget -q https://cdn.quantconnect.com/ta-lib/TA_Lib-0.4.18.zip && \
     unzip -q TA_Lib-0.4.18.zip && cd ta-lib-TA_Lib-0.4.18 && \
     python setup.py install && cd ../.. && rm -rf ta-lib && rm ta-lib-0.4.0-src.tar.gz
 
@@ -248,24 +290,26 @@ RUN wget https://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
 RUN python -m venv /Foundation-Pomegranate --system-site-packages && . /Foundation-Pomegranate/bin/activate \
     && pip install --no-cache-dir       \
     pomegranate==0.14.8                 \
+    mxnet==1.9.1                        \
+    nbeats-keras==1.8.0                 \
+    nbeats-pytorch==1.8.0               \
+    neuralprophet[live]==0.6.2          \
     && python -m ipykernel install --name=Foundation-Pomegranate \
-    && deactivate
-
-# Due to conflicts install 'tensorforce' virtual environment package with older tensorflow
-RUN python -m venv /Foundation-Tensorforce && . /Foundation-Tensorforce/bin/activate \
-    && pip install --no-cache-dir       \
-    tensorflow==2.6.0                   \
-    keras==2.6.0                        \
-    tensorforce==0.6.5                  \
-    gym==0.21                           \
-    jupyterlab==3.4.4                   \
-    clr-loader==0.1.6                   \
-    stable-baselines3==1.6.0            \
-    alphapy==2.5.0                      \
-    && python -m ipykernel install --name=Foundation-Tensorforce \
     && deactivate
 
 RUN echo "{\"argv\":[\"python\",\"-m\",\"ipykernel_launcher\",\"-f\",\"{connection_file}\"],\"display_name\":\"Foundation-Py-Default\",\"language\":\"python\",\"metadata\":{\"debugger\":true}}" > /opt/miniconda3/share/jupyter/kernels/python3/kernel.json
 
-# List all packages
-RUN conda list
+# Install wkhtmltopdf and xvfb to support HTML to PDF conversion of reports
+RUN apt-get update && apt install -y xvfb wkhtmltopdf && \
+    apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
+
+# Install fonts for matplotlib
+RUN wget -q https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q foundation.zip && rm foundation.zip \
+    && mv "lean fonts/"* /usr/share/fonts/truetype/ && rm -rf "lean fonts/" "__MACOSX/"
+
+# Install IB Gateway: Installs to /root/ibgateway
+RUN mkdir -p /root/ibgateway && \
+    wget -q https://cdn.quantconnect.com/interactive/ibgateway-stable-standalone-linux-x64.v10.19.2a.sh && \
+    chmod 777 ibgateway-stable-standalone-linux-x64.v10.19.2a.sh && \
+    ./ibgateway-stable-standalone-linux-x64.v10.19.2a.sh -q -dir /root/ibgateway && \
+    rm ibgateway-stable-standalone-linux-x64.v10.19.2a.sh

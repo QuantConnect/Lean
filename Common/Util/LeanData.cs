@@ -15,14 +15,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
@@ -1111,17 +1112,41 @@ namespace QuantConnect.Util
                 // find where the useful part of the path starts - i.e. the securityType
                 var startIndex = info.FindIndex(x => SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
 
+                if(startIndex == -1)
+                {
+                    if (Log.DebuggingEnabled)
+                    {
+                        Log.Debug($"LeanData.TryParsePath(): Failed to parse '{fileName}' unexpected SecurityType");
+                    }
+                    // SPDB & MHDB folders
+                    return false;
+                }
                 var securityType = ParseDataSecurityType(info[startIndex]);
 
                 var market = Market.USA;
                 string ticker;
+                var isUniverses = false;
+                if (!Enum.TryParse(info[startIndex + 2], true, out resolution))
+                {
+                    resolution = Resolution.Daily;
+                    isUniverses = info[startIndex + 2].Equals("universes", StringComparison.InvariantCultureIgnoreCase);
+                    if (securityType != SecurityType.Base)
+                    {
+                        if (!isUniverses)
+                        {
+                            if (Log.DebuggingEnabled)
+                            {
+                                Log.Debug($"LeanData.TryParsePath(): Failed to parse '{fileName}' unexpected Resolution");
+                            }
+                            // only acept a failure to parse resolution if we are facing a universes path
+                            return false;
+                        }
+                        securityType = SecurityType.Base;
+                    }
+                }
+
                 if (securityType == SecurityType.Base)
                 {
-                    if (!Enum.TryParse(info[startIndex + 2], true, out resolution))
-                    {
-                        resolution = Resolution.Daily;
-                    }
-
                     // the last part of the path is the file name
                     var fileNameNoPath = info[info.Count - 1].Split('_').First();
 
@@ -1142,8 +1167,6 @@ namespace QuantConnect.Util
                 }
                 else
                 {
-                    resolution = (Resolution)Enum.Parse(typeof(Resolution), info[startIndex + 2], true);
-
                     // Gather components used to create the security
                     market = info[startIndex + 1];
                     ticker = info[startIndex + 3];
@@ -1180,7 +1203,12 @@ namespace QuantConnect.Util
                 }
                 else
                 {
-                    symbol = Symbol.Create(ticker, securityType, market);
+                    Type dataType = null;
+                    if (isUniverses && info[startIndex + 3].Equals("etf", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        dataType = typeof(ETFConstituentData);
+                    }
+                    symbol = Symbol.Create(ticker, securityType, market, baseDataType: dataType);
                 }
 
             }
@@ -1219,24 +1247,9 @@ namespace QuantConnect.Util
         /// <returns>List of aggregated <see cref="TradeBar"/>s</returns>
         public static IEnumerable<TradeBar> AggregateTradeBars(IEnumerable<TradeBar> bars, Symbol symbol, TimeSpan resolution)
         {
-            return
-                from b in bars
-                group b by b.Time.RoundDown(resolution)
-                into g
-                select new TradeBar
-                {
-                    Symbol = symbol,
-                    Time = g.Key,
-                    Open = g.First().Open,
-                    High = g.Max(b => b.High),
-                    Low = g.Min(b => b.Low),
-                    Close = g.Last().Close,
-                    Value = g.Last().Close,
-                    DataType = MarketDataType.TradeBar,
-                    Period = resolution
-                };
+            return Aggregate(new TradeBarConsolidator(resolution), bars, symbol);
         }
-        
+
         /// <summary>
         /// Aggregates a list of second/minute bars at the requested resolution
         /// </summary>
@@ -1246,74 +1259,40 @@ namespace QuantConnect.Util
         /// <returns>List of aggregated <see cref="QuoteBar"/>s</returns>
         public static IEnumerable<QuoteBar> AggregateQuoteBars(IEnumerable<QuoteBar> bars, Symbol symbol, TimeSpan resolution)
         {
-            return
-                from b in bars
-                    group b by b.Time.RoundDown(resolution)
-                    into g
-                    select new QuoteBar
-                    {
-                        Symbol = symbol,
-                        Time = g.Key,
-                        Bid = new Bar
-                        {
-                            Open = g.First().Bid.Open,
-                            High = g.Max(b => b.Bid.High),
-                            Low = g.Min(b => b.Bid.Low),
-                            Close = g.Last().Bid.Close
-                        },
-                        Ask = new Bar
-                        {
-                            Open = g.First().Ask.Open,
-                            High = g.Max(b => b.Ask.High),
-                            Low = g.Min(b => b.Ask.Low),
-                            Close = g.Last().Ask.Close
-                        },
-                        Period = resolution
-                    };
+            return Aggregate(new QuoteBarConsolidator(resolution), bars, symbol);
         }
         
          /// <summary>
          /// Aggregates a list of ticks at the requested resolution
          /// </summary>
-         /// <param name="ticks">List of <see cref="QuoteBar"/>s</param>
-         /// <param name="symbol">Symbol of all QuoteBars</param>
+         /// <param name="ticks">List of quote ticks</param>
+         /// <param name="symbol">Symbol of all ticks</param>
          /// <param name="resolution">Desired resolution for new <see cref="QuoteBar"/>s</param>
          /// <returns>List of aggregated <see cref="QuoteBar"/>s</returns>
          public static IEnumerable<QuoteBar> AggregateTicks(IEnumerable<Tick> ticks, Symbol symbol, TimeSpan resolution)
-         {
-             return
-                from t in ticks
-                    group t by t.Time.RoundDown(resolution)
-                    into g
-                    select new QuoteBar
-                    {
-                        Symbol = symbol,
-                        Time = g.Key,
-                        Bid = new Bar
-                        {
-                            Open = g.First().BidPrice,
-                            High = g.Max(b => b.BidPrice),
-                            Low = g.Min(b => b.BidPrice),
-                            Close = g.Last().BidPrice
-                        },
-                        Ask = new Bar
-                        {
-                            Open = g.First().AskPrice,
-                            High = g.Max(b => b.AskPrice),
-                            Low = g.Min(b => b.AskPrice),
-                            Close = g.Last().AskPrice
-                        },
-                        Period = resolution
-                    };
+        {
+            return Aggregate(new TickQuoteBarConsolidator(resolution), ticks, symbol);
          }
 
-         /// <summary>
-         /// Helper to separate filename and entry from a given key for DataProviders
-         /// </summary>
-         /// <param name="key">The key to parse</param>
-         /// <param name="fileName">File name extracted</param>
-         /// <param name="entryName">Entry name extracted</param>
-         public static void ParseKey(string key, out string fileName, out string entryName)
+        /// <summary>
+        /// Aggregates a list of ticks at the requested resolution
+        /// </summary>
+        /// <param name="ticks">List of trade ticks</param>
+        /// <param name="symbol">Symbol of all ticks</param>
+        /// <param name="resolution">Desired resolution for new <see cref="TradeBar"/>s</param>
+        /// <returns>List of aggregated <see cref="TradeBar"/>s</returns>
+        public static IEnumerable<TradeBar> AggregateTicksToTradeBars(IEnumerable<Tick> ticks, Symbol symbol, TimeSpan resolution)
+        {
+            return Aggregate(new TickConsolidator(resolution), ticks, symbol);
+        }
+
+        /// <summary>
+        /// Helper to separate filename and entry from a given key for DataProviders
+        /// </summary>
+        /// <param name="key">The key to parse</param>
+        /// <param name="fileName">File name extracted</param>
+        /// <param name="entryName">Entry name extracted</param>
+        public static void ParseKey(string key, out string fileName, out string entryName)
          {
              // Default scenario, no entryName included in key
              entryName = null; // default to all entries
@@ -1332,5 +1311,52 @@ namespace QuantConnect.Util
                  fileName = key.Substring(0, hashIndex);
              }
          }
+
+        /// <summary>
+        /// Helper method to aggregate ticks or bars into lower frequency resolutions
+        /// </summary>
+        /// <typeparam name="T">Output type</typeparam>
+        /// <typeparam name="K">Input type</typeparam>
+        /// <param name="consolidator">The consolidator to use</param>
+        /// <param name="dataPoints">The data point source</param>
+        /// <param name="symbol">The symbol to output</param>
+        private static IEnumerable<T> Aggregate<T, K>(PeriodCountConsolidatorBase<K, T> consolidator, IEnumerable<K> dataPoints, Symbol symbol)
+            where T : BaseData
+            where K : BaseData
+        {
+            IBaseData lastAggregated = null;
+            var getConsolidatedBar = () =>
+            {
+                if (lastAggregated != consolidator.Consolidated && consolidator.Consolidated != null)
+                {
+                    // if there's a new aggregated bar we set the symbol & return it
+                    lastAggregated = consolidator.Consolidated;
+                    lastAggregated.Symbol = symbol;
+                    return lastAggregated;
+                }
+                return null;
+            };
+
+            foreach (var dataPoint in dataPoints)
+            {
+                consolidator.Update(dataPoint);
+                var consolidated = getConsolidatedBar();
+                if (consolidated != null)
+                {
+                    yield return (T)consolidated;
+                }
+            }
+
+            // flush any partial bar
+            consolidator.Scan(Time.EndOfTime);
+            var lastConsolidated = getConsolidatedBar();
+            if (lastConsolidated != null)
+            {
+                yield return (T)lastConsolidated;
+            }
+
+            // cleanup
+            consolidator.DisposeSafely();
+        }
     }
 }

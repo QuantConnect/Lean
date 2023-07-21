@@ -55,15 +55,6 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Gets the order value in units of the security's quote currency
-        /// </summary>
-        /// <param name="security">The security matching this order's symbol</param>
-        protected override decimal GetValueImpl(Security security)
-        {
-            return base.GetValueImpl(security) * GroupOrderManager.Quantity;
-        }
-
-        /// <summary>
         /// Creates a deep-copy clone of this order
         /// </summary>
         /// <returns>A copy of this order</returns>

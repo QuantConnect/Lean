@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Newtonsoft.Json.Converters;
 using NodaTime;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
@@ -138,6 +139,30 @@ namespace QuantConnect
 
         private static readonly DateTime EpochTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
         private const long SecondToMillisecond = 1000;
+
+        /// <summary>
+        /// Helper method to get the new live auxiliary data due time
+        /// </summary>
+        /// <returns>The due time for the new auxiliary data emission</returns>
+        public static TimeSpan GetNextLiveAuxiliaryDataDueTime()
+        {
+            return GetNextLiveAuxiliaryDataDueTime(DateTime.UtcNow);
+        }
+
+        /// <summary>
+        /// Helper method to get the new live auxiliary data due time
+        /// </summary>
+        /// <param name="utcNow">The current utc time</param>
+        /// <returns>The due time for the new auxiliary data emission</returns>
+        public static TimeSpan GetNextLiveAuxiliaryDataDueTime(DateTime utcNow)
+        {
+            var nowNewYork = utcNow.ConvertFromUtc(TimeZones.NewYork);
+            if (nowNewYork.TimeOfDay < LiveAuxiliaryDataOffset)
+            {
+                return LiveAuxiliaryDataOffset - nowNewYork.TimeOfDay;
+            }
+            return nowNewYork.Date.AddDays(1).Add(+LiveAuxiliaryDataOffset) - nowNewYork;
+        }
 
         /// <summary>
         /// Helper method to adjust a waiting time, in milliseconds, so it's uneven with the second turn around
@@ -771,6 +796,20 @@ namespace QuantConnect
         public static TimeSpan Abs(this TimeSpan timeSpan)
         {
             return TimeSpan.FromTicks(Math.Abs(timeSpan.Ticks));
+        }
+
+        /// <summary>
+        /// Helper method to deserialize month/year
+        /// </summary>
+        public class MonthYearJsonConverter : IsoDateTimeConverter
+        {
+            /// <summary>
+            /// Creates a new instance
+            /// </summary>
+            public MonthYearJsonConverter()
+            {
+                DateTimeFormat = @"MM/yy";
+            }
         }
     }
 }

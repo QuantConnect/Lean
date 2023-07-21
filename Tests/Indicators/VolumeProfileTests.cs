@@ -29,6 +29,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
+            RenkoBarSize = 1m;
             return new VolumeProfile(3);
         }
         protected override Action<IndicatorBase<TradeBar>, double> Assertion
@@ -76,7 +77,7 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "VA",
-                (ind, expected) => Assert.AreEqual(expected, (double)((VolumeProfile)ind).ValueAreaVolume,0.01)
+                (ind, expected) => Assert.AreEqual(expected, (double)((VolumeProfile)ind).ValueAreaVolume, 0.01)
                 );
         }
 
@@ -110,13 +111,13 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsFalse(vp.IsReady);
             for (int i = 0; i < 3; i++)
             {
-                vp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1,Volume=1, Time = reference.AddDays(1 + i) });
+                vp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 1, Time = reference.AddDays(1 + i) });
             }
             Assert.IsTrue(vp.IsReady);
             vp.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(vp);
-            vp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume=1, Time = reference.AddDays(1) });
+            vp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 1, Time = reference.AddDays(1) });
             Assert.AreEqual(vp.Current.Value, 1m);
         }
 
@@ -134,6 +135,84 @@ namespace QuantConnect.Tests.Indicators
                 vp.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1 + i) });
                 Assert.AreEqual(i == period - 1, vp.IsReady);
             }
+        }
+
+        [TestCaseSource(nameof(BarsSequenceCases))]
+        public void DoesNotFailWithZeroVolumeBars(Bar[] bars)
+        {
+            var vp = new VolumeProfile(2);
+            var reference = new DateTime(2000, 1, 1);
+            var period = ((IIndicatorWarmUpPeriodProvider)vp).WarmUpPeriod;
+            for (var i = 0; i < bars.Length; i++)
+            {
+                var dataPoint = new TradeBar() { Symbol = Symbols.AAPL, Close = bars[i].closePrice, Volume = bars[i].volume, Time = reference.AddDays(1 + i) };
+                Assert.DoesNotThrow(() => vp.Update(dataPoint));
+                Assert.AreEqual(bars[i].expectedPOCPrice, vp.Current.Value);
+            }
+        }
+
+        public static Bar[][] BarsSequenceCases =
+        {
+            new Bar[] // Represents a sequence of real bars and a zero volume bar
+            {
+                new Bar(){ closePrice = 314.25m, volume = 100, expectedPOCPrice = 314.25m},
+                new Bar(){ closePrice = 314.242m, volume = 100, expectedPOCPrice = 314.25m},
+                new Bar(){ closePrice = 314.248m, volume = 0, expectedPOCPrice = 314.25m},
+                new Bar(){ closePrice = 315.25m, volume = 100, expectedPOCPrice = 315.25m},
+                new Bar(){ closePrice = 315.241m, volume = 100, expectedPOCPrice = 315.25m}
+            },
+
+            new Bar[] // Represents a sequence of a real bar and zero volume bars
+            {
+                new Bar(){ closePrice = 313.25m, volume = 100, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 0},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 0},
+                new Bar(){ closePrice = 313.241m, volume = 0, expectedPOCPrice = 0}
+            },
+
+            new Bar[] // Represents a sequence of zero volume bars and a real bar
+            {
+                new Bar(){ closePrice = 314.243m, volume = 0, expectedPOCPrice = 314.25m},
+                new Bar(){ closePrice = 314.243m, volume = 0, expectedPOCPrice = 314.25m},
+                new Bar(){ closePrice = 314.243m, volume = 0, expectedPOCPrice = 0},
+                new Bar(){ closePrice = 314.243m, volume = 0, expectedPOCPrice = 0},
+                new Bar(){ closePrice = 315.243m, volume = 100, expectedPOCPrice = 315.25m},
+            },
+
+            new Bar[] // Represents an alternant sequence of zero volume bars and real bars
+            {
+                new Bar(){ closePrice = 312.25m, volume = 100, expectedPOCPrice = 312.25m},
+                new Bar(){ closePrice = 312.243m, volume = 0, expectedPOCPrice = 312.25m},
+                new Bar(){ closePrice = 312.25m, volume = 100, expectedPOCPrice = 312.25m},
+                new Bar(){ closePrice = 312.243m, volume = 0, expectedPOCPrice = 312.25m},
+                new Bar(){ closePrice = 312.243m, volume = 100, expectedPOCPrice = 312.25m},
+            },
+
+            new Bar[] // Represents a sequence of zero volume bars, a real bar and zero volume bars
+            {
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.25m, volume = 100, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 0},
+            },
+
+            new Bar[] // Represents a sequence of zero volume bars
+            {
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 313.25m},
+                new Bar(){ closePrice = 313.25m, volume =  0, expectedPOCPrice = 0},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 0},
+                new Bar(){ closePrice = 313.243m, volume = 0, expectedPOCPrice = 0},
+            }
+        };
+
+        public class Bar
+        {
+            public decimal closePrice;
+            public decimal volume;
+            public decimal expectedPOCPrice;
         }
     }
 }

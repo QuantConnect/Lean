@@ -33,19 +33,16 @@ RUN dotnet tool install -g --no-cache --version 1.0.340501 --add-source "https:/
 ENV WORK /Lean/Launcher/bin/Debug/
 ENV PYTHONPATH=${WORK}:${PYTHONPATH}
 
-# Clone Lean; Link Python startup file to profile; Install Lean/PythonToolbox; Remove extra files
-RUN git clone https://github.com/QuantConnect/Lean.git && \
-    mkdir -p /root/.ipython/profile_default/startup/ && \
-    ln -s /Lean/Launcher/bin/Debug/start.py /root/.ipython/profile_default/startup/start.py && \
-    cd Lean/PythonToolbox && python setup.py install \
-    && cd ../.. && rm -irf Lean
+# Link Python startup file to profile
+RUN mkdir -p /root/.ipython/profile_default/startup/ && \
+    ln -s /Lean/Launcher/bin/Debug/start.py /root/.ipython/profile_default/startup/start.py
 
 # conda libc is old and causes issues in research we want to use the hosts version which is updated
 RUN mkdir -p /opt/miniconda3/lib/ && ln -vsf /lib/x86_64-linux-gnu/libstdc++.so.6 /opt/miniconda3/lib/libstdc++.so.6
 
 RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'QuantConnect.Lean.Launcher.runtimeconfig.json' -not -name 'decimal.py' -delete
 
-#Create initialize script
+# Create initialize script
 RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
     if [ ! -f \"${WORK}Notebooks/config.json\" ]; then echo '{ \"data-folder\": \"/home/Data/\", \
     \"composer-dll-directory\": \"$WORK\", \"algorithm-language\": \"Python\", \

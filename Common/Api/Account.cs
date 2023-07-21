@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -57,6 +57,7 @@ namespace QuantConnect.Api
         /// The credit card expiration
         /// </summary>
         [JsonProperty(PropertyName = "expiration")]
+        [JsonConverter(typeof(Time.MonthYearJsonConverter))]
         public DateTime Expiration { get; set; }
 
         /// <summary>

@@ -31,7 +31,7 @@ namespace QuantConnect.Orders.OptionExercise
         /// </summary>
         /// <param name="option">Option we're trading this order</param>
         /// <param name="order">Order to update</param>
-        public IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
+        public virtual IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
         {
             var underlying = option.Underlying;
             var utcTime = option.LocalTime.ConvertToUtc(option.Exchange.TimeZone);

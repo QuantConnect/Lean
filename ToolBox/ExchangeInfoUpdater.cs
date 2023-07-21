@@ -94,7 +94,7 @@ namespace QuantConnect.ToolBox
                 if (!entryPerSymbol.ContainsKey(existingEntry.Key))
                 {
                     // let's keep any existing which is no longer available, to take into account for delistings/removals
-                    entryPerSymbol[existingEntry.Key] = $"{existingEntry.Key.Market},{existingEntry.Key.Symbol},{existingEntry.Key.SecurityType},{existingEntry.Value}";
+                    entryPerSymbol[existingEntry.Key] = $"{existingEntry.Key.Market},{existingEntry.Key.Symbol},{existingEntry.Key.SecurityType.ToLower()},{existingEntry.Value}";
                 }
             }
 

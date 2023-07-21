@@ -29,12 +29,6 @@ namespace QuantConnect
     public class Result
     {
         /// <summary>
-        /// Contains population averages scores over the life of the algorithm
-        /// </summary>
-        [JsonProperty(PropertyName = "AlphaRuntimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
-        public AlphaRuntimeStatistics AlphaRuntimeStatistics;
-
-        /// <summary>
         /// Charts updates for the live algorithm since the last result packet
         /// </summary>
         [JsonProperty(PropertyName = "Charts", NullValueHandling = NullValueHandling.Ignore)]

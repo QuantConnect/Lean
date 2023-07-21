@@ -30,6 +30,12 @@ namespace QuantConnect.Algorithm.CSharp
     /// either way Lean has to detect the option strategy been executed and margin used has to get reduced</remarks>
     public class OptionEquityBearCallSpreadSetHoldingsRegressionAlgorithm : OptionEquityBaseStrategyRegressionAlgorithm
     {
+        public override void Initialize()
+        {
+            base.Initialize();
+            SetCash(1000000);
+        }
+
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
@@ -50,12 +56,13 @@ namespace QuantConnect.Algorithm.CSharp
                     var shortCall = callContracts.First();
                     var longCall = callContracts.First(contract => contract.Strike > shortCall.Strike && contract.Expiry == shortCall.Expiry);
 
-                    SetHoldings(shortCall.Symbol, -0.20m);
+                    SetHoldings(shortCall.Symbol, -0.05m);
                     var freeMargin = Portfolio.MarginRemaining;
 
-                    AssertDefaultGroup(shortCall.Symbol, Securities[shortCall.Symbol].Holdings.Quantity);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name,
+                        (int)Math.Abs(Securities[shortCall.Symbol].Holdings.Quantity));
 
-                    SetHoldings(longCall.Symbol, +0.20m);
+                    SetHoldings(longCall.Symbol, +0.05m);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BearCallSpread.Name);
@@ -71,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 884208;
+        public override long DataPoints => 475788;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -103,28 +110,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$3.25"},
-            {"Estimated Strategy Capacity", "$4600000.00"},
+            {"Estimated Strategy Capacity", "$33000000.00"},
             {"Lowest Capacity Asset", "GOOCV WBGM95TAH2LI|GOOCV VP83T1ZUHROL"},
-            {"Fitness Score", "0"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0"},
-            {"Return Over Maximum Drawdown", "0"},
-            {"Portfolio Turnover", "0"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "44036cc16c7da789eaf2dbb47070c6cb"}
+            {"Portfolio Turnover", "6.17%"},
+            {"OrderListHash", "354a85b9f17c89e921c3eb57e48ce909"}
         };
     }
 }

@@ -97,11 +97,13 @@ namespace QuantConnect.Tests.Algorithm
             new TestCaseData(Symbols.SPY, "TEST", Resolution.Hour, "TEST(SPY_hr)"),
             new TestCaseData(Symbols.SPY, "TEST", Resolution.Daily, "TEST(SPY_day)"),
             new TestCaseData(Symbol.Empty, "TEST", Resolution.Minute, "TEST(min)"),
-            new TestCaseData(Symbol.None, "TEST", Resolution.Minute, "TEST(min)")
+            new TestCaseData(Symbol.None, "TEST", Resolution.Minute, "TEST(min)"),
+            new TestCaseData(Symbol.Empty, "TEST", null, "TEST()"),
+            new TestCaseData(Symbol.None, "TEST", null, "TEST()")
         };
 
         [Test, TestCaseSource(nameof(IndicatorNameParameters))]
-        public void CreateIndicatorName(Symbol symbol, string baseName, Resolution resolution, string expectation)
+        public void CreateIndicatorName(Symbol symbol, string baseName, Resolution? resolution, string expectation)
         {
             Assert.AreEqual(expectation, _algorithm.CreateIndicatorName(symbol, baseName, resolution));
         }

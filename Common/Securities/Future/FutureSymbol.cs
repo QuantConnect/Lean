@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -47,7 +47,7 @@ namespace QuantConnect.Securities.Future
             }
             catch
             {
-                Log.Error($"Could not find standard date for {symbol}, will be classified as standard");
+                Log.Error($"FutureSymbol.IsStandard(): Could not find standard date for {symbol}, will be classified as standard");
                 return true;
             }
         }

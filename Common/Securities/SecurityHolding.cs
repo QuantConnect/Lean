@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using static QuantConnect.StringExtensions;
 using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Securities
@@ -32,6 +31,7 @@ namespace QuantConnect.Securities
         public event EventHandler<SecurityHoldingQuantityChangedEventArgs> QuantityChanged;
 
         //Working Variables
+        private bool _invested;
         private decimal _averagePrice;
         private decimal _quantity;
         private decimal _price;
@@ -65,7 +65,7 @@ namespace QuantConnect.Securities
         {
             _security = holding._security;
             _averagePrice = holding._averagePrice;
-            _quantity = holding._quantity;
+            Quantity = holding._quantity;
             _price = holding._price;
             _totalSaleVolume = holding._totalSaleVolume;
             _profit = holding._profit;
@@ -121,6 +121,7 @@ namespace QuantConnect.Securities
             }
             protected set
             {
+                _invested = value != 0;
                 _quantity = value;
             }
         }
@@ -247,26 +248,14 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Boolean flat indicating if we hold any of the security
         /// </summary>
-        public virtual bool HoldStock
-        {
-            get
-            {
-                return (AbsoluteQuantity > 0);
-            }
-        }
+        public virtual bool HoldStock => _invested;
 
         /// <summary>
         /// Boolean flat indicating if we hold any of the security
         /// </summary>
         /// <remarks>Alias of HoldStock</remarks>
         /// <seealso cref="HoldStock"/>
-        public virtual bool Invested
-        {
-            get
-            {
-                return HoldStock;
-            }
-        }
+        public virtual bool Invested => _invested;
 
         /// <summary>
         /// The total transaction volume for this security since the algorithm started in units of the account's currency.
@@ -442,7 +431,7 @@ namespace QuantConnect.Securities
             var previousQuantity = _quantity;
             var previousAveragePrice = _averagePrice;
 
-            _quantity = quantity;
+            Quantity = quantity;
             _averagePrice = averagePrice;
 
             OnQuantityChanged(previousAveragePrice, previousQuantity);
@@ -485,20 +474,24 @@ namespace QuantConnect.Securities
         /// Profit if we closed the holdings right now including the approximate fees in units of the account's currency.
         /// </summary>
         /// <remarks>Does not use the transaction model for market fills but should.</remarks>
-        public virtual decimal TotalCloseProfit()
+        public virtual decimal TotalCloseProfit(bool includeFees = true, decimal? exitPrice = null, decimal? entryPrice = null, decimal? quantity = null)
         {
-            if (Quantity == 0)
+            var quantityToUse = quantity ?? Quantity;
+            if (quantityToUse == 0)
             {
                 return 0;
             }
 
             // this is in the account currency
-            var marketOrder = new MarketOrder(_security.Symbol, -Quantity, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone));
+            var marketOrder = new MarketOrder(_security.Symbol, -quantityToUse, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone));
 
-            var orderFee = _security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(_security, marketOrder)).Value;
-            var feesInAccountCurrency = _currencyConverter.
-                ConvertToAccountCurrency(orderFee).Amount;
+            var feesInAccountCurrency = 0m;
+            if (includeFees)
+            {
+                var orderFee = _security.FeeModel.GetOrderFee(
+                    new OrderFeeParameters(_security, marketOrder)).Value;
+                feesInAccountCurrency = _currencyConverter.ConvertToAccountCurrency(orderFee).Amount;
+            }
 
             var price = marketOrder.Direction == OrderDirection.Sell ? _security.BidPrice : _security.AskPrice;
             if (price == 0)
@@ -508,8 +501,8 @@ namespace QuantConnect.Securities
                 price = _security.Price;
             }
 
-            var entryValue = GetQuantityValue(Quantity, AveragePrice).InAccountCurrency;
-            var potentialExitValue = GetQuantityValue(Quantity, price).InAccountCurrency;
+            var entryValue = GetQuantityValue(quantityToUse, entryPrice ?? AveragePrice).InAccountCurrency;
+            var potentialExitValue = GetQuantityValue(quantityToUse, exitPrice ?? price).InAccountCurrency;
             return potentialExitValue - entryValue - feesInAccountCurrency;
         }
 
@@ -518,7 +511,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public override string ToString()
         {
-            return Invariant($"{Symbol.Value}: {Quantity} @ {AveragePrice}");
+            return Messages.SecurityHolding.ToString(this);
         }
 
         /// <summary>

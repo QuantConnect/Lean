@@ -33,7 +33,6 @@ namespace QuantConnect.Data.UniverseSelection
         // as an array to make it easy to prepend to selected symbols
         private readonly Symbol[] _underlyingSymbol;
         private DateTime _cacheDate;
-        private DateTime _lastExchangeDate;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChainUniverse"/> class
@@ -72,7 +71,8 @@ namespace QuantConnect.Data.UniverseSelection
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
             // date change detection needs to be done in exchange time zone
-            var exchangeDate = data.Time.ConvertFromUtc(Option.Exchange.TimeZone).Date;
+            var localEndTime = data.EndTime.ConvertFromUtc(Option.Exchange.TimeZone);
+            var exchangeDate = localEndTime.Date;
             if (_cacheDate == exchangeDate)
             {
                 return Unchanged;
@@ -80,15 +80,14 @@ namespace QuantConnect.Data.UniverseSelection
 
             var availableContracts = data.Data.Select(x => x.Symbol);
             // we will only update unique strikes when there is an exchange date change
-            _optionFilterUniverse.Refresh(availableContracts, data.Underlying, _lastExchangeDate != exchangeDate);
-            _lastExchangeDate = exchangeDate;
+            _optionFilterUniverse.Refresh(availableContracts, data.Underlying, localEndTime);
 
             var results = Option.ContractFilter.Filter(_optionFilterUniverse);
 
             // if results are not dynamic, we cache them and won't call filtering till the end of the day
             if (!results.IsDynamic)
             {
-                _cacheDate = data.Time.ConvertFromUtc(Option.Exchange.TimeZone).Date;
+                _cacheDate = exchangeDate;
             }
 
             // always prepend the underlying symbol

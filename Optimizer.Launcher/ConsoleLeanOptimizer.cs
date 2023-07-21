@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -75,11 +75,12 @@ namespace QuantConnect.Optimizer.Launcher
         /// Handles starting Lean for a given parameter set
         /// </summary>
         /// <param name="parameterSet">The parameter set for the backtest to run</param>
+        /// <param name="backtestName">The backtest name to use</param>
         /// <returns>The new unique backtest id</returns>
-        protected override string RunLean(ParameterSet parameterSet)
+        protected override string RunLean(ParameterSet parameterSet, string backtestName)
         {
             var backtestId = Guid.NewGuid().ToString();
-
+            var optimizationId = NodePacket.OptimizationId;
             // start each lean instance in its own directory so they store their logs & results, else they fight for the log.txt file
             var resultDirectory = Path.Combine(_rootResultDirectory, backtestId);
             Directory.CreateDirectory(resultDirectory);
@@ -89,7 +90,7 @@ namespace QuantConnect.Optimizer.Launcher
             {
                 FileName = _leanLocation,
                 WorkingDirectory = Directory.GetParent(_leanLocation).FullName,
-                Arguments = $"--results-destination-folder \"{resultDirectory}\" --algorithm-id \"{backtestId}\" --parameters {parameterSet} {_extraLeanArguments}",
+                Arguments = $"--results-destination-folder \"{resultDirectory}\" --algorithm-id \"{backtestId}\" --optimization-id \"{optimizationId}\" --parameters {parameterSet} --backtest-name \"{backtestName}\" {_extraLeanArguments}",
                 WindowStyle = ProcessWindowStyle.Minimized
             };
 

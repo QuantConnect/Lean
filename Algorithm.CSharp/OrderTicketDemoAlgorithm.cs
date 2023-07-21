@@ -431,7 +431,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             var order = Transactions.GetOrderById(orderEvent.OrderId);
-            Console.WriteLine("{0}: {1}: {2}", Time, order.Type, orderEvent);
+            Log($"{Time}: {order.Type}: {orderEvent}");
 
             if (orderEvent.Quantity == 0)
             {
@@ -449,6 +449,16 @@ namespace QuantConnect.Algorithm.CSharp
             if (order is StopMarketOrder && orderEvent.StopPrice == 0)
             {
                 throw new Exception("OrderEvent StopPrice is Not expected to be 0 for StopMarketOrder");
+            }
+
+            // We can access the order ticket from the order event
+            if (orderEvent.Ticket == null)
+            {
+                throw new Exception("OrderEvent Ticket was not set");
+            }
+            if (orderEvent.OrderId != orderEvent.Ticket.OrderId)
+            {
+                throw new Exception("OrderEvent.OrderId and orderEvent.Ticket.OrderId do not match");
             }
         }
 
@@ -558,12 +568,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "8"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "92.027%"},
+            {"Compounding Annual Return", "92.087%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "-1"},
             {"Net Profit", "0.838%"},
-            {"Sharpe Ratio", "12.96"},
-            {"Probabilistic Sharpe Ratio", "99.089%"},
+            {"Sharpe Ratio", "12.969"},
+            {"Probabilistic Sharpe Ratio", "99.104%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
@@ -571,32 +581,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0.229"},
             {"Annual Standard Deviation", "0.054"},
             {"Annual Variance", "0.003"},
-            {"Information Ratio", "-7.418"},
+            {"Information Ratio", "-7.415"},
             {"Tracking Error", "0.172"},
-            {"Treynor Ratio", "3.066"},
+            {"Treynor Ratio", "3.069"},
             {"Total Fees", "$8.00"},
             {"Estimated Strategy Capacity", "$48000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.093"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "150.877"},
-            {"Return Over Maximum Drawdown", "1183.499"},
-            {"Portfolio Turnover", "0.093"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "3f7c620ad37d096af1af0ca341fbbe48"}
+            {"Portfolio Turnover", "7.47%"},
+            {"OrderListHash", "8719eaae0ff158d5050de45e4a607685"}
         };
     }
 }

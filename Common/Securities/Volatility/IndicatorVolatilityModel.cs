@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,8 +16,7 @@
 using System;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
-using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Securities.Volatility;
 
 namespace QuantConnect.Securities
 {
@@ -26,16 +25,15 @@ namespace QuantConnect.Securities
     /// to compute its value
     /// </summary>
     /// <typeparam name="T">The indicator's input type</typeparam>
-    public class IndicatorVolatilityModel<T> : IVolatilityModel
-        where T : BaseData
+    public class IndicatorVolatilityModel : BaseVolatilityModel
     {
-        private readonly IIndicator<T> _indicator;
-        private readonly Action<Security, BaseData, IIndicator<T>> _indicatorUpdate;
+        private readonly IIndicator _indicator;
+        private readonly Action<Security, BaseData, IIndicator> _indicatorUpdate;
 
         /// <summary>
         /// Gets the volatility of the security as a percentage
         /// </summary>
-        public decimal Volatility
+        public override decimal Volatility
         {
             get { return _indicator.Current.Value; }
         }
@@ -47,7 +45,7 @@ namespace QuantConnect.Securities
         /// into the consolidator system.
         /// </summary>
         /// <param name="indicator">The auto-updating indicator</param>
-        public IndicatorVolatilityModel(IIndicator<T> indicator)
+        public IndicatorVolatilityModel(IIndicator indicator)
         {
             _indicator = indicator;
         }
@@ -60,7 +58,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="indicator">The auto-updating indicator</param>
         /// <param name="indicatorUpdate">Function delegate used to update the indicator on each call to <see cref="Update"/></param>
-        public IndicatorVolatilityModel(IIndicator<T> indicator, Action<Security, BaseData, IIndicator<T>> indicatorUpdate)
+        public IndicatorVolatilityModel(IIndicator indicator, Action<Security, BaseData, IIndicator> indicatorUpdate)
         {
             _indicator = indicator;
             _indicatorUpdate = indicatorUpdate;
@@ -72,23 +70,12 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">The security to calculate volatility for</param>
         /// <param name="data">The new piece of data for the security</param>
-        public void Update(Security security, BaseData data)
+        public override void Update(Security security, BaseData data)
         {
             if (_indicatorUpdate != null)
             {
                 _indicatorUpdate(security, data, _indicator);
             }
-        }
-
-        /// <summary>
-        /// Returns history requirements for the volatility model expressed in the form of history request
-        /// </summary>
-        /// <param name="security">The security of the request</param>
-        /// <param name="utcTime">The date/time of the request</param>
-        /// <returns>History request object list, or empty if no requirements</returns>
-        public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
-        {
-            return Enumerable.Empty<HistoryRequest>();
         }
     }
 }

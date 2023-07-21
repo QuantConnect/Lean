@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 6214;
+        public override long DataPoints => 6202;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "0.01%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-78.502%"},
+            {"Compounding Annual Return", "-78.519%"},
             {"Drawdown", "3.100%"},
             {"Expectancy", "7.797"},
             {"Net Profit", "-1.134%"},
@@ -78,25 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "€2.89"},
             {"Estimated Strategy Capacity", "€8900000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Fitness Score", "0.506"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.506"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "€0"},
-            {"Total Accumulated Estimated Alpha Value", "€0"},
-            {"Mean Population Estimated Insight Value", "€0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Portfolio Turnover", "33.78%"},
             {"OrderListHash", "a9dd0a0ab6070455479d1b9caaa4e69c"}
         };
     }

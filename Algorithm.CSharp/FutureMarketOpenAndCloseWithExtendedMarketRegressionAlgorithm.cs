@@ -15,8 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,21 +25,21 @@ namespace QuantConnect.Algorithm.CSharp
     {
         protected override bool ExtendedMarketHours => true;
         protected override List<DateTime> AfterMarketOpen => new List<DateTime>() {
-            new DateTime(2022, 02, 01, 18, 0, 0), // Tuesday
-            new DateTime(2022, 02, 02, 18, 0, 0),
-            new DateTime(2022, 02, 03, 18, 0, 0),
-            new DateTime(2022, 02, 06, 18, 0, 0),
-            new DateTime(2022, 02, 07, 18, 0, 0),
-            new DateTime(2022, 02, 08, 18, 0, 0)
+            new DateTime(2020, 02, 04, 18, 0, 0), // Tuesday
+            new DateTime(2020, 02, 05, 18, 0, 0),
+            new DateTime(2020, 02, 06, 18, 0, 0),
+            new DateTime(2020, 02, 09, 18, 0, 0),
+            new DateTime(2020, 02, 10, 18, 0, 0),
+            new DateTime(2020, 02, 11, 18, 0, 0)
         };
         protected override List<DateTime> BeforeMarketClose => new List<DateTime>()
         {
-            new DateTime(2022, 02, 01, 17, 0, 0),
-            new DateTime(2022, 02, 02, 17, 0, 0),
-            new DateTime(2022, 02, 03, 17, 0, 0),
-            new DateTime(2022, 02, 04, 17, 0, 0),
-            new DateTime(2022, 02, 07, 17, 0, 0),
-            new DateTime(2022, 02, 08, 17, 0, 0)
+            new DateTime(2020, 02, 04, 17, 0, 0),
+            new DateTime(2020, 02, 05, 17, 0, 0),
+            new DateTime(2020, 02, 06, 17, 0, 0),
+            new DateTime(2020, 02, 07, 17, 0, 0),
+            new DateTime(2020, 02, 10, 17, 0, 0),
+            new DateTime(2020, 02, 11, 17, 0, 0)
         };
 
         /// <summary>
@@ -52,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 82827;
+        public override long DataPoints => 41466;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -75,31 +73,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
+            {"Information Ratio", "-11.049"},
+            {"Tracking Error", "0.087"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
-            {"Fitness Score", "0"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Portfolio Turnover", "0%"},
             {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }

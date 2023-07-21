@@ -63,9 +63,9 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="MarketHoursDatabase"/> class
         /// </summary>
         /// <param name="exchangeHours">The full listing of exchange hours by key</param>
-        public MarketHoursDatabase(IReadOnlyDictionary<SecurityDatabaseKey, Entry> exchangeHours)
+        public MarketHoursDatabase(Dictionary<SecurityDatabaseKey, Entry> exchangeHours)
         {
-            _entries = exchangeHours.ToDictionary();
+            _entries = exchangeHours;
         }
 
         /// <summary>
@@ -123,26 +123,20 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
         public static MarketHoursDatabase FromDataFolder()
         {
-            return FromDataFolder(Globals.DataFolder);
-        }
-
-        /// <summary>
-        /// Gets the instance of the <see cref="MarketHoursDatabase"/> class produced by reading in the market hours
-        /// data found in /Data/market-hours/
-        /// </summary>
-        /// <param name="dataFolder">Path to the data folder</param>
-        /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
-        public static MarketHoursDatabase FromDataFolder(string dataFolder)
-        {
-            lock (DataFolderMarketHoursDatabaseLock)
+            var result = _dataFolderMarketHoursDatabase;
+            if (result == null)
             {
-                if (_dataFolderMarketHoursDatabase == null)
+                lock (DataFolderMarketHoursDatabaseLock)
                 {
-                    var path = Path.Combine(dataFolder, "market-hours", "market-hours-database.json");
-                    _dataFolderMarketHoursDatabase = FromFile(path);
+                    if (_dataFolderMarketHoursDatabase == null)
+                    {
+                        var path = Path.Combine(Globals.GetDataFolderPath("market-hours"), "market-hours-database.json");
+                        _dataFolderMarketHoursDatabase = FromFile(path);
+                    }
+                    result = _dataFolderMarketHoursDatabase;
                 }
             }
-            return _dataFolderMarketHoursDatabase;
+            return result;
         }
 
         /// <summary>
@@ -208,24 +202,21 @@ namespace QuantConnect.Securities
             if (!TryGetEntry(market, symbol, securityType, out entry))
             {
                 var key = new SecurityDatabaseKey(market, symbol, securityType);
-                var keys = string.Join(", ", _entries.Keys);
-                Log.Error($"MarketHoursDatabase.GetExchangeHours(): Unable to locate exchange hours for {key}.Available keys: {keys}");
+                Log.Error($"MarketHoursDatabase.GetExchangeHours(): {Messages.MarketHoursDatabase.ExchangeHoursNotFound(key, _entries.Keys)}");
 
                 if (securityType == SecurityType.Future && market == Market.USA)
                 {
-                    var exception =
-                        "Future.Usa market type is no longer supported as we mapped each ticker to its actual exchange. " +
-                        "Please find your specific market in the symbol-properties database.";
+                    var exception = Messages.MarketHoursDatabase.FutureUsaMarketTypeNoLongerSupported;
                     if (SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(symbol, SecurityType.Future, out market))
                     {
                         // let's suggest a market
-                        exception += $" Suggested market based on the provided ticker 'Market.{market.ToUpperInvariant()}'.";
+                        exception += " " + Messages.MarketHoursDatabase.SuggestedMarketBasedOnTicker(market);
                     }
 
                     throw new ArgumentException(exception);
                 }
                 // there was nothing that really matched exactly
-                throw new ArgumentException($"Unable to locate exchange hours for {key}");
+                throw new ArgumentException(Messages.MarketHoursDatabase.ExchangeHoursNotFound(key));
             }
 
             return entry;
@@ -254,14 +245,15 @@ namespace QuantConnect.Securities
         /// <returns>True if the entry was present, else false</returns>
         public bool TryGetEntry(string market, string symbol, SecurityType securityType, out Entry entry)
         {
-            return _entries.TryGetValue(new SecurityDatabaseKey(market, symbol, securityType), out entry)
+            var symbolKey = new SecurityDatabaseKey(market, symbol, securityType);
+            return _entries.TryGetValue(symbolKey, out entry)
                 // now check with null symbol key
-                || _entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out entry)
+                || _entries.TryGetValue(symbolKey.CreateCommonKey(), out entry)
                 // if FOP check for future
                 || securityType == SecurityType.FutureOption && TryGetEntry(market,
                     FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry)
                 // if custom data type check for type specific entry
-                || (securityType == SecurityType.Base && symbol.TryGetCustomDataType(out var customType)
+                || (securityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataType(symbol, out var customType)
                     && _entries.TryGetValue(new SecurityDatabaseKey(market, $"TYPE.{customType}", securityType), out entry));
         }
 

@@ -39,14 +39,14 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.17" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.21" />
     <PackageReference Include="CoinAPI.WebSocket.V1" Version="1.6.7" />
     <PackageReference Include="Common.Logging" Version="3.4.1" />
     <PackageReference Include="Common.Logging.Core" Version="3.4.1" />
     <PackageReference Include="IQFeed.CSharpApiClient" Version="2.5.1" />
     <PackageReference Include="LaunchDarkly.EventSource" Version="3.3.2" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.6.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
   </ItemGroup>
   <ItemGroup>

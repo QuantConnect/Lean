@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities.Positions
@@ -120,18 +120,28 @@ namespace QuantConnect.Securities.Positions
             // 4. Resolve new position groups
             var contemplatedGroups = positionManager.ResolvePositionGroups(new PositionCollection(impactedPositions.Values));
 
-            // 5. Compute contemplated reserved buying power
-            var contemplated = 0m;
+            // 5. Compute contemplated margin
+            var contemplated = GetContemplatedGroupsInitialMargin(parameters.Portfolio, contemplatedGroups, positions);
+
+            return new ReservedBuyingPowerImpact(current, contemplated, impactedGroups, parameters.ContemplatedChanges, contemplatedGroups);
+        }
+
+        /// <summary>
+        /// Gets the initial margin required for the specified contemplated position group.
+        /// Used by <see cref="GetReservedBuyingPowerImpact"/> to get the contemplated groups margin.
+        /// </summary>
+        protected virtual decimal GetContemplatedGroupsInitialMargin(SecurityPortfolioManager portfolio, PositionGroupCollection contemplatedGroups,
+            List<IPosition> ordersPositions)
+        {
+            var contemplatedMargin = 0m;
             foreach (var contemplatedGroup in contemplatedGroups)
             {
-                contemplated += contemplatedGroup.BuyingPowerModel.GetMaintenanceMargin(
-                    parameters.Portfolio, contemplatedGroup
-                );
+                // We use the initial margin requirement as the contemplated groups margin in order to ensure
+                // the available buying power is enough to execute the order.
+                contemplatedMargin += contemplatedGroup.BuyingPowerModel.GetInitialMarginRequirement(portfolio, contemplatedGroup);
             }
 
-            return new ReservedBuyingPowerImpact(
-                current, contemplated, impactedGroups, parameters.ContemplatedChanges, contemplatedGroups
-            );
+            return contemplatedMargin;
         }
 
         /// <summary>
@@ -153,16 +163,16 @@ namespace QuantConnect.Securities.Positions
             //   3. Confirm we haven't exceeded maintenance margin limits via GetReservedBuyingPowerImpact's delta
 
             // 1. Confirm we meet initial margin requirements, accounting for buffer
-            var direction = parameters.Orders.Select(o =>
-            {
-                if (o.GroupOrderManager != null)
-                {
-                    return o.GroupOrderManager.Direction;
-                }
-                return o.Direction;
-            }).First();
+            var deltaBuyingPowerArgs = new ReservedBuyingPowerImpactParameters(parameters.Portfolio, parameters.PositionGroup, parameters.Orders);
+            var deltaBuyingPower = GetReservedBuyingPowerImpact(deltaBuyingPowerArgs).Delta;
 
-            var availableBuyingPower = this.GetPositionGroupBuyingPower(parameters.Portfolio, parameters.PositionGroup, direction);
+            // When order only reduces or closes a security position, capital is always sufficient
+            if (deltaBuyingPower < 0)
+            {
+                return parameters.Sufficient();
+            }
+
+            var availableBuyingPower = parameters.Portfolio.MarginRemaining;
 
             // 2. Confirm we pass position group specific checks
             var result = PassesPositionGroupSpecificBuyingPowerForOrderChecks(parameters, availableBuyingPower);
@@ -172,15 +182,15 @@ namespace QuantConnect.Securities.Positions
             }
 
             // 3. Confirm that the new groupings arising from the change doesn't make maintenance margin exceed TPV
-            var args = new ReservedBuyingPowerImpactParameters(parameters.Portfolio, parameters.PositionGroup, parameters.Orders);
-            var deltaBuyingPower = GetReservedBuyingPowerImpact(args).Delta;
+            // We can just compare the delta to the available buying power because the delta how much the maintenance margin will increase by
+            // if the order is executed, so it needs to stay below the available buying power
             if (deltaBuyingPower <= availableBuyingPower)
             {
                 return parameters.Sufficient();
             }
 
-            return parameters.Insufficient(Invariant(
-                $"Id: {string.Join(",", parameters.Orders.Select(o => o.Id))}, Maintenance Margin Delta: {deltaBuyingPower.Normalize()}, Free Margin: {availableBuyingPower.Value.Normalize()}"
+            return parameters.Insufficient(Invariant($@"Id: {string.Join(",", parameters.Orders.Select(o => o.Id))}, Maintenance Margin Delta: {
+                deltaBuyingPower.Normalize()}, Free Margin: {availableBuyingPower.Normalize()}"
             ));
         }
 
@@ -214,7 +224,17 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the position group and the target
         ///     signed buying power percentage</param>
-        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        /// <returns>
+        /// Returns the maximum allowed market order quantity and if zero, also the reason.
+        ///
+        /// Since there is no sense of "short" or "long" on position groups with multiple positions,
+        /// the sign of the returned quantity will indicate the direction of the order regarding the
+        /// reference position group passed in the parameters:
+        ///     - quantity &gt; 0: the order should be placed in the same direction as the reference position group to increase it,
+        ///                        without changing the positions' signs.
+        ///     - quantity &lt; 0: the order should be placed in the opposite direction as the reference position group to reduce it,
+        ///                        using each position's opposite sign.
+        /// </returns>
         public virtual GetMaximumLotsResult GetMaximumLotsForTargetBuyingPower(
             GetMaximumLotsForTargetBuyingPowerParameters parameters
             )
@@ -235,151 +255,121 @@ namespace QuantConnect.Securities.Positions
             // initial margin to the target buying power.
             // NOTE: The first estimate MUST be greater than the target and iteration will successively decrease quantity estimates.
             //   1. Determine current holdings of position group
-            //   2. If targeting zero, we can short circuit and return the negative of existing position quantities
-            //   3. Determine target buying power, taking into account RequiredFreeBuyingPowerPercent
-            //   4. Determine current used margin [we're using initial here to match BuyingPowerModel]
-            //   5. Determine if we need to buy or sell to reach the target and convert to absolutes
-            //   6. Resolve the group's 'unit' quantities, this is our step size
-            //   7. Compute the initial margin requirement for a single unit
-            //   7a. Compute and add order fees into the unit initial margin requirement
-            //   8. Verify the target is greater than 1 unit's initial margin, otherwise exit w/ zero
-            //   8a. Define minimum bounds on the target as target - (unit order margin + fees)
-            //   9. Assuming linearity, compute estimate of absolute order quantity to reach target
-            //  10. Begin iterating
-            //  11. For each quantity estimate, compute initial margin requirement
-            //  12. Compute order fees and add to the initial margin requirement
-            //  13. Check to see if current estimate yields is w/in one unit's margin of target (must be less than)
-            //  14. Compute a new quantity estimate
-            //  15. After 13 results in ending iteration, return result w/ direction from #5
+            //   2. Determine target buying power, taking into account RequiredFreeBuyingPowerPercent
+            //  2a. If targeting zero, simply return the negative of the quantity
+            //   3. Determine current used margin [we're using initial here to match BuyingPowerModel]
+            //   4. Check that the change of margin is above our models minimum percentage change
+            //   5. Resolve the group's 'unit' quantities, this is our step size
+            //  5a. Compute the initial margin requirement for a single unit
+            //   6. Begin iterating until the allocated holdings margin (after order fees are applied) less or equal to the expected target margin
+            //  6a. Calculate the amount to order to get the target margin
+            //  6b. Apply order fees to the allocated holdings margin and compare to the target margin to end loop.
 
             var portfolio = parameters.Portfolio;
 
             // 1. Determine current holdings of position group
             var currentPositionGroup = portfolio.Positions[parameters.PositionGroup.Key];
 
-            // 2. If targeting zero, short circuit and return the negative of existing quantities
-            if (parameters.TargetBuyingPower == 0m)
+            var inverted = false;
+            var targetBuyingPower = parameters.TargetBuyingPower;
+            // The reference position group is not necessarily in the same side as the position group in the portfolio, it could be the inverted.
+            // So the consumer needs the result relative to that position group instead of the one being held.
+            if (parameters.PositionGroup.IsInvertedOf(currentPositionGroup))
             {
-                return parameters.Result(currentPositionGroup.Quantity);
+                inverted = true;
+                targetBuyingPower = -targetBuyingPower;
             }
 
-            // 3. Determine target buying power, taking into account RequiredFreeBuyingPowerPercent
+            // 2. Determine target buying power, taking into account RequiredFreeBuyingPowerPercent
             var bufferFactor = 1 - RequiredFreeBuyingPowerPercent;
-            var targetBufferFactor = bufferFactor * parameters.TargetBuyingPower;
-
+            var targetBufferFactor = bufferFactor * targetBuyingPower;
             var totalPortfolioValue = portfolio.TotalPortfolioValue;
+            var targetFinalMargin = targetBufferFactor * totalPortfolioValue;
 
-            // 4. Determine initial margin requirement for current holdings
-            var currentSignedUsedMargin = 0m;
+            // 2a. If targeting zero, simply return the negative of the quantity
+            if (targetFinalMargin == 0)
+            {
+                var quantity = -Math.Abs(currentPositionGroup.Quantity);
+                return parameters.Result(inverted ? -quantity : quantity);
+            }
+
+            // 3. Determine initial margin requirement for current holdings
+            var currentUsedMargin = 0m;
             if (currentPositionGroup.Quantity != 0)
             {
-                currentSignedUsedMargin = this.GetInitialMarginRequirement(portfolio, currentPositionGroup);
+                currentUsedMargin = Math.Abs(currentPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(portfolio, currentPositionGroup));
             }
 
-            // 5. Determine if we need to buy or sell to reach target, we'll work in the land of absolutes after this
-            var signedTarget = targetBufferFactor * totalPortfolioValue - currentSignedUsedMargin;
-            var globalTarget = Math.Abs(signedTarget);
-            var direction = Math.Sign(signedTarget);
+            // 4. Check that the change of margin is above our models minimum percentage change
+            var absDifferenceOfMargin = Math.Abs(targetFinalMargin - currentUsedMargin);
+            if (!BuyingPowerModelExtensions.AboveMinimumOrderMarginPortfolioPercentage(parameters.Portfolio,
+                parameters.MinimumOrderMarginPortfolioPercentage, absDifferenceOfMargin))
+            {
+                string reason = null;
+                if (!parameters.SilenceNonErrorReasons)
+                {
+                    var minimumValue = totalPortfolioValue * parameters.MinimumOrderMarginPortfolioPercentage;
+                    reason = Messages.BuyingPowerModel.TargetOrderMarginNotAboveMinimum(absDifferenceOfMargin, minimumValue);
+                }
+                return new GetMaximumLotsResult(0, reason, false);
+            }
 
-            // 6. Resolve 'unit' -- this defines our step size
-            var groupUnit = parameters.PositionGroup.Key.CreateUnitGroup();
+            // 5. Resolve 'unit' group -- this is our step size
+            var groupUnit = currentPositionGroup.CreateUnitGroup(parameters.Portfolio.Positions);
 
-            // 7. Compute initial margin requirement for a single unit
-            var absUnitMargin = this.GetInitialMarginRequirement(portfolio, groupUnit);
-            if (absUnitMargin == 0m)
+            // 5a. Compute initial margin requirement for a single unit
+            var unitMargin = Math.Abs(groupUnit.BuyingPowerModel.GetInitialMarginRequirement(portfolio, groupUnit));
+            if (unitMargin == 0m)
             {
                 // likely due to missing price data
                 var zeroPricedPosition = parameters.PositionGroup.FirstOrDefault(
                     p => portfolio.Securities.GetValueOrDefault(p.Symbol)?.Price == 0m
                 );
                 return parameters.Error(zeroPricedPosition?.Symbol.GetZeroPriceMessage()
-                    ?? $"Computed zero initial margin requirement for {parameters.PositionGroup.GetUserFriendlyName()}."
-                );
+                    ?? Messages.PositionGroupBuyingPowerModel.ComputedZeroInitialMargin(parameters.PositionGroup));
             }
 
-            // 7a. Compute fees for a single unit - if fees and price are linear, we'll be able to solve exactly w/out iteration
-            var contemplatedOrderFees = GetOrderFeeInAccountCurrency(portfolio, groupUnit);
-            absUnitMargin += contemplatedOrderFees;
-
-            // 8. Verify target is more that the unit margin -- for groups, minimum is same as unit margin
-            if (absUnitMargin > globalTarget)
+            // 6. Begin iterating
+            var lastPositionGroupOrderQuantity = 0m;    // For safety check
+            decimal orderFees;
+            decimal targetHoldingsMargin;
+            decimal positionGroupQuantity;
+            do
             {
-                return parameters.SilenceNonErrorReasons
-                    ? parameters.Zero()
-                    : parameters.Zero(
-                        $"The target order margin {globalTarget} is less than the minimum initial margin: {absUnitMargin}"
-                    );
+                // 6a.Calculate the amount to order to get the target margin
+                positionGroupQuantity = GetPositionGroupOrderQuantity(portfolio, currentPositionGroup, currentUsedMargin, targetFinalMargin,
+                    groupUnit, unitMargin, out targetHoldingsMargin);
+                if (positionGroupQuantity == 0)
+                {
+                    string reason = null;
+                    if (!parameters.SilenceNonErrorReasons)
+                    {
+                        reason = Messages.PositionGroupBuyingPowerModel.PositionGroupQuantityRoundedToZero(targetFinalMargin - currentUsedMargin);
+                    }
+
+                    return new GetMaximumLotsResult(0, reason, false);
+                }
+
+                // 6b.Apply order fees to the allocated holdings margin
+                orderFees = GetOrderFeeInAccountCurrency(portfolio, currentPositionGroup.WithQuantity(positionGroupQuantity, portfolio.Positions));
+
+                // Update our target portfolio margin allocated when considering fees, then calculate the new FinalOrderMargin
+                targetFinalMargin = (totalPortfolioValue - orderFees) * targetBufferFactor;
+
+                // Start safe check after first loop, stops endless recursion
+                if (lastPositionGroupOrderQuantity == positionGroupQuantity)
+                {
+                    throw new ArgumentException(Messages.PositionGroupBuyingPowerModel.FailedToConvergeOnTargetMargin(targetFinalMargin,
+                        positionGroupQuantity, orderFees, parameters));
+                }
+
+                lastPositionGroupOrderQuantity = positionGroupQuantity;
+
             }
+            // Ensure that our target holdings margin will be less than or equal to our target allocated margin
+            while (Math.Abs(targetHoldingsMargin) > Math.Abs(targetFinalMargin));
 
-            // 9. Compute initial position group quantity estimate -- group quantities are whole numbers [number of lots/unit quantities]
-            var positionGroupQuantity = Math.Floor(globalTarget / absUnitMargin);
-            var positionGroup = groupUnit.WithQuantity(positionGroupQuantity);
-
-            // 9a. Compute fees for initial estimate and adjust targets. We take fees out of the target to decouple it from the quantity root finding
-
-            // 10. Begin iterating until order quantity is within target absFinalOrderMargin bounds (coming from above)
-            var loopCount = 0;
-            const int maxLoopCount = 5;
-            contemplatedOrderFees = GetOrderFeeInAccountCurrency(portfolio, positionGroup);
-            var orderMarginWithoutFees = this.GetInitialMarginRequirement(portfolio, positionGroup);
-            var orderMargin = orderMarginWithoutFees + contemplatedOrderFees;
-
-            // 8a. Define lower bounds on target, we seek an order that is >= targetMinimum and <= target
-            var target = Math.Abs(targetBufferFactor * (totalPortfolioValue - contemplatedOrderFees) - currentSignedUsedMargin);
-            var targetMinimum = target - absUnitMargin;
-
-            var lastOrderQuantity = 0m;
-            while (orderMarginWithoutFees > target || orderMarginWithoutFees < targetMinimum)
-            {
-                // Evaluate delta target and compute new quantity estimate
-                var deltaTarget = target - orderMarginWithoutFees;
-                var marginPerUnit = orderMarginWithoutFees / positionGroupQuantity;
-                var deltaQuantity = (int) Math.Floor(deltaTarget / marginPerUnit);
-                if (deltaQuantity == 0)
-                {
-                    deltaQuantity = orderMarginWithoutFees > target ? -1 : 1;
-                }
-
-                positionGroupQuantity += deltaQuantity;
-
-                if (positionGroupQuantity <= 0)
-                {
-                    return parameters.Zero(
-                        $"The target order margin {target} is less than the minimum {absUnitMargin}"
-                    );
-                }
-
-                ArgumentException error;
-                if (UnableToConverge(lastOrderQuantity, positionGroupQuantity, groupUnit, portfolio, target, orderMargin, absUnitMargin, contemplatedOrderFees, out error))
-                {
-                    throw error;
-                }
-
-                if (loopCount >= maxLoopCount)
-                {
-                    break;
-                }
-
-                // 12. Update order margin with new quantity estimate
-                positionGroup = positionGroup.WithQuantity(positionGroupQuantity);
-                contemplatedOrderFees = GetOrderFeeInAccountCurrency(portfolio, positionGroup);
-                orderMarginWithoutFees = this.GetInitialMarginRequirement(portfolio, positionGroup);
-                orderMargin = orderMarginWithoutFees + contemplatedOrderFees;
-
-                loopCount++;
-                lastOrderQuantity = positionGroupQuantity;
-
-                // Update margin per unit so we can refine our targets
-                marginPerUnit = orderMarginWithoutFees / positionGroupQuantity;
-
-                // if we're iterating, it's possible that we have an exotic/non-linear fee or price structure
-                // to remove a potential source of non-linearity, we deduct the fees from our target to focus on quantity root finding
-                target = Math.Abs(targetBufferFactor * (totalPortfolioValue - contemplatedOrderFees) - currentSignedUsedMargin);
-                targetMinimum = target - marginPerUnit;
-            }
-
-            // 15. Incorporate direction back into the result
-            return parameters.Result(direction * positionGroupQuantity);
+            return parameters.Result(inverted ? -positionGroupQuantity : positionGroupQuantity);
         }
 
         /// <summary>
@@ -402,8 +392,13 @@ namespace QuantConnect.Securities.Positions
                 parameters.Portfolio, currentPositionGroup
             );
 
-            var signedUsedBuyingPower = Math.Sign(currentPositionGroup.Quantity) * usedBuyingPower;
-            var targetBuyingPower = signedUsedBuyingPower + parameters.DeltaBuyingPower;
+            var targetBuyingPower = usedBuyingPower + parameters.DeltaBuyingPower;
+            // The reference position group is not necessarily in the same side as the position group in the portfolio, it could be the inverted.
+            // So the consumer needs the result relative to that position group instead of the one being held.
+            if (parameters.PositionGroup.IsInvertedOf(currentPositionGroup))
+            {
+                targetBuyingPower = parameters.DeltaBuyingPower - usedBuyingPower;
+            }
 
             var targetBuyingPowerPercent = parameters.Portfolio.TotalPortfolioValue != 0
                 ? targetBuyingPower / parameters.Portfolio.TotalPortfolioValue
@@ -437,15 +432,20 @@ namespace QuantConnect.Securities.Positions
 
             // 2. Determine if closing position
             IPositionGroup existing;
-            if (parameters.Portfolio.Positions.Groups.TryGetGroup(parameters.PositionGroup.Key, out existing) &&
-                parameters.Direction.Closes(existing.GetPositionSide()))
+            if (parameters.Portfolio.Positions.Groups.TryGetGroup(parameters.PositionGroup.Key, out existing))
             {
-                // 2a. Add reserved buying power of current position
-                buyingPower += GetReservedBuyingPowerForPositionGroup(parameters);
+                var isInverted = parameters.PositionGroup.IsInvertedOf(existing);
+                if (isInverted && parameters.Direction == OrderDirection.Buy || !isInverted && parameters.Direction == OrderDirection.Sell)
+                {
+                    // 2a. Add reserved buying power of current position
+                    // Using the existing position group's buying power model to compute its reserved buying power and initial margin requirement.
+                    // This is necessary because the margin calculations depend on the option strategy underneath the position group's BPM.
+                    buyingPower += existing.Key.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(parameters.Portfolio, existing);
 
-                // 2b. Rebate the initial margin equivalent of current position
-                // this interface doesn't have a concept of initial margin as it's an impl detail of the BuyingPowerModel base class
-                buyingPower += this.GetInitialMarginRequirement(parameters.Portfolio, existing);
+                    // 2b. Rebate the initial margin equivalent of current position
+                    // this interface doesn't have a concept of initial margin as it's an impl detail of the BuyingPowerModel base class
+                    buyingPower += Math.Abs(existing.Key.BuyingPowerModel.GetInitialMarginRequirement(parameters.Portfolio, existing));
+                }
             }
 
             return buyingPower;
@@ -481,31 +481,35 @@ namespace QuantConnect.Securities.Positions
         }
 
         /// <summary>
-        /// Checks if <paramref name="lastOrderQuantity"/> equals <paramref name="positionGroupQuantity"/> indicating we got the same result on this iteration
-        /// meaning we're unable to converge through iteration. This function was split out to support derived types using the same error message as well
-        /// as removing the added noise of the check and message creation.
+        /// Checks if the margin difference is not growing in final margin calculation, just making sure we don't end up in an infinite loop.
+        /// This function was split out to support derived types using the same error message as well as removing the added noise of the check
+        /// and message creation.
         /// </summary>
-        protected static bool UnableToConverge(decimal lastOrderQuantity, decimal positionGroupQuantity, IPositionGroup groupUnit, SecurityPortfolioManager portfolio, decimal target, decimal orderMargin, decimal absUnitMargin, decimal orderFees, out ArgumentException error)
+        protected static bool UnableToConverge(decimal currentMarginDifference, decimal lastMarginDifference, IPositionGroup groupUnit,
+            SecurityPortfolioManager portfolio, decimal positionGroupQuantity, decimal targetMargin, decimal currentMargin,
+            decimal absUnitMargin, out ArgumentException error)
         {
             // determine if we're unable to converge by seeing if quantity estimate hasn't changed
-            if (lastOrderQuantity == positionGroupQuantity)
+            if (Math.Abs(currentMarginDifference) > Math.Abs(lastMarginDifference) &&
+                Math.Sign(currentMarginDifference) == Math.Sign(lastMarginDifference)
+                || currentMarginDifference == lastMarginDifference)
             {
                 string message;
                 if (groupUnit.Count == 1)
                 {
                     // single security group
                     var security = portfolio.Securities[groupUnit.Single().Symbol];
-                    message = "GetMaximumPositionGroupOrderQuantityForTargetBuyingPower failed to converge to target order margin " +
-                        Invariant($"{target}. Current order margin is {orderMargin}. Order quantity {positionGroupQuantity}. ") +
-                        Invariant($"Lot size is {security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
-                        $"{security.Symbol}. Margin unit {absUnitMargin}.";
+                    message = "GetMaximumPositionGroupOrderQuantityForTargetBuyingPower failed to converge to target margin " +
+                        Invariant($"{targetMargin}. Current margin is {currentMargin}. Position group quantity {positionGroupQuantity}. ") +
+                        Invariant($"Lot size is {security.SymbolProperties.LotSize}.Security symbol ") +
+                        Invariant($"{security.Symbol}. Margin unit {absUnitMargin}.");
                 }
                 else
                 {
-                    message = "GetMaximumPositionGroupOrderQuantityForTargetBuyingPower failed to converge to target order margin " +
-                        Invariant($"{target}. Current order margin is {orderMargin}. Order quantity {positionGroupQuantity}. ") +
-                        Invariant($"Position Group Unit is {groupUnit.Key}. Order fees {orderFees}. Position Group Name ") +
-                        $"{groupUnit.GetUserFriendlyName()}. Margin unit {absUnitMargin}.";
+                    message = "GetMaximumPositionGroupOrderQuantityForTargetBuyingPower failed to converge to target margin " +
+                        Invariant($"{targetMargin}. Current margin is {currentMargin}. Position group quantity {positionGroupQuantity}. ") +
+                        Invariant($"Position Group Unit is {groupUnit.Key}. Position Group Name ") +
+                        Invariant($"{groupUnit.GetUserFriendlyName()}. Margin unit {absUnitMargin}.");
                 }
 
                 error = new ArgumentException(message);
@@ -562,6 +566,72 @@ namespace QuantConnect.Securities.Positions
         public override int GetHashCode()
         {
             return GetType().GetHashCode();
+        }
+
+        /// <summary>
+        /// Helper method that determines the amount to order to get to a given target safely.
+        /// Meaning it will either be at or just below target always.
+        /// </summary>
+        /// <param name="portfolio">Current portfolio</param>
+        /// <param name="currentPositionGroup">Current position group</param>
+        /// <param name="currentUsedMargin">Current margin reserved for the position</param>
+        /// <param name="targetFinalMargin">The target margin</param>
+        /// <param name="groupUnit">Unit position group corresponding to the <paramref name="currentPositionGroup"/></param>
+        /// <param name="unitMargin">Margin required for the <paramref name="groupUnit"/></param>
+        /// <param name="finalMargin">Output the final margin allocated for the position group</param
+        /// <returns>The size of the order to get safely to our target</returns>
+        public decimal GetPositionGroupOrderQuantity(SecurityPortfolioManager portfolio, IPositionGroup currentPositionGroup,
+            decimal currentUsedMargin, decimal targetFinalMargin, IPositionGroup groupUnit, decimal unitMargin,
+            out decimal finalMargin)
+        {
+            // Determine the direction to go towards when updating the estimate: +1 to increase, -1 to decrease.
+            var quantityStep = targetFinalMargin > currentUsedMargin ? +1 : -1;
+
+            // Compute initial position group quantity estimate -- group quantities are whole numbers [number of lots/unit quantities].
+            //   - If going to the opposite side (target margin < 0), move towards said side from 0 since we need to completely close the position.
+            //   - Else, just start with a unit step towards the determined direction.
+            var currentGroupAbsQuantity = Math.Abs(currentPositionGroup.Quantity);
+            var positionGroupQuantity = targetFinalMargin < 0 ? -currentGroupAbsQuantity + quantityStep : quantityStep;
+
+            // Calculate the initial value for the wanted final margin after the delta is applied.
+            var finalPositionGroup = currentPositionGroup.WithQuantity(currentGroupAbsQuantity + positionGroupQuantity, portfolio.Positions);
+            finalMargin = Math.Abs(finalPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(portfolio, finalPositionGroup));
+
+            // Keep the previous calculated final margin we would get after the delta is applied.
+            // This is useful for the cases were the final group gets us with final margin greater than the target.
+            var prevFinalMargin = finalMargin;
+
+            // Begin iterating until the final margin is equal or greater than the target margin.
+            var absTargetFinalMargin = Math.Abs(targetFinalMargin);
+            var getMarginDifference = (decimal currentFinalMargin) =>
+                targetFinalMargin < 0 ? absTargetFinalMargin - currentFinalMargin : currentFinalMargin - absTargetFinalMargin;
+
+            var marginDifference = getMarginDifference(finalMargin);
+            while ((quantityStep < 0 && marginDifference > 0) || (quantityStep > 0 && marginDifference < 0))
+            {
+                positionGroupQuantity += quantityStep;
+                finalPositionGroup = currentPositionGroup.WithQuantity(currentGroupAbsQuantity + positionGroupQuantity, portfolio.Positions);
+                finalMargin = Math.Abs(finalPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(portfolio, finalPositionGroup));
+
+                var newMarginDifference = getMarginDifference(finalMargin);
+                if (UnableToConverge(newMarginDifference, marginDifference, groupUnit, portfolio, positionGroupQuantity,
+                    targetFinalMargin, currentUsedMargin, unitMargin, out var error))
+                {
+                    throw error;
+                }
+
+                marginDifference = newMarginDifference;
+            }
+
+            // If the final margin is greater than the target, the result is the previous quantity,
+            // which is the maximum allowed to be within the target margin.
+            if (finalMargin > absTargetFinalMargin)
+            {
+                finalMargin = prevFinalMargin;
+                return positionGroupQuantity - quantityStep;
+            }
+
+            return positionGroupQuantity;
         }
     }
 }

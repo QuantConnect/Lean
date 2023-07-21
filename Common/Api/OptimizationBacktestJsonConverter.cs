@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -79,6 +78,10 @@ namespace QuantConnect.Api
                 writer.WriteStartArray();
                 foreach (var keyValuePair in optimizationBacktest.Statistics.OrderBy(pair => pair.Key))
                 {
+                    if(keyValuePair.Key == PerformanceMetrics.PortfolioTurnover)
+                    {
+                        continue;
+                    }
                     var statistic = keyValuePair.Value.Replace("%", string.Empty);
                     if (Currencies.TryParse(statistic, out var result))
                     {

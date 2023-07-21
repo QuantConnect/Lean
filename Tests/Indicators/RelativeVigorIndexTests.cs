@@ -24,6 +24,8 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            RenkoBarSize = 1m;
+            VolumeRenkoBarSize = 10000000m;
             return new RelativeVigorIndex("RVI", 10);
         }
 

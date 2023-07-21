@@ -16,13 +16,13 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -63,6 +63,11 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public MapFile(string permtick, IEnumerable<MapFileRow> data)
         {
+            if (string.IsNullOrEmpty(permtick))
+            {
+                throw new ArgumentNullException(nameof(permtick), "Provided ticker is null or empty");
+            }
+
             Permtick = permtick.LazyToUpper();
             _data = data.Distinct().OrderBy(row => row.Date).ToList();
 
@@ -154,7 +159,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="securityType">The map file security type</param>
         public void WriteToCsv(string market, SecurityType securityType)
         {
-            var filePath = Path.Combine(GetMapFilePath(market, securityType), Permtick.ToLowerInvariant() + ".csv");
+            var filePath = Path.Combine(Globals.DataFolder, GetRelativeMapFilePath(market, securityType), Permtick.ToLowerInvariant() + ".csv");
             var fileDir = Path.GetDirectoryName(filePath);
 
             if (!Directory.Exists(fileDir))
@@ -172,9 +177,9 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="market">The market this symbol belongs to</param>
         /// <param name="securityType">The map file security type</param>
         /// <returns>The file path to the requested map file</returns>
-        public static string GetMapFilePath(string market, SecurityType securityType)
+        public static string GetRelativeMapFilePath(string market, SecurityType securityType)
         {
-            return Path.Combine(Globals.CacheDataFolder, securityType.SecurityTypeToLower(), market, "map_files");
+            return Invariant($"{securityType.SecurityTypeToLower()}/{market}/map_files");
         }
 
         #region Implementation of IEnumerable

@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void UsesMultipleResolutionsFutureOption()
         {
             // we don't have minute data for this date
-            var date = new DateTime(2020, 10, 7);
+            var date = new DateTime(2020, 01, 7);
             var future = Symbol.CreateFuture(QuantConnect.Securities.Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 6, 19));
             var provider = new BacktestingOptionChainProvider(TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider);
             var optionChain = provider.GetOptionContractList(future, date).OrderBy(s => s.ID.StrikePrice).ToList();
@@ -41,6 +41,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.IsTrue(optionChain.All(x => x.SecurityType == SecurityType.FutureOption));
             Assert.IsTrue(optionChain.All(x => x.ID.Symbol == "ES"));
             Assert.IsTrue(optionChain.All(x => x.Underlying == future));
+            Assert.IsTrue(optionChain.All(x => x.ID.Date.Date >= date));
             Assert.AreEqual(107, optionChain.Count);
             Assert.AreEqual(2900m, optionChain.First().ID.StrikePrice);
             Assert.AreEqual(3500, optionChain.Last().ID.StrikePrice);
@@ -58,7 +59,8 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.IsTrue(optionChain.All(x => x.SecurityType == SecurityType.Option));
             Assert.IsTrue(optionChain.All(x => x.ID.Symbol == "AAPL"));
             Assert.IsTrue(optionChain.All(x => x.Underlying == Symbols.AAPL));
-            Assert.AreEqual(4532, optionChain.Count);
+            Assert.IsTrue(optionChain.All(x => x.ID.Date.Date >= date));
+            Assert.AreEqual(1828, optionChain.Count);
             Assert.AreEqual(27.86m, optionChain.First().ID.StrikePrice);
             Assert.AreEqual(1050m, optionChain.Last().ID.StrikePrice);
         }

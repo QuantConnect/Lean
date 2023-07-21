@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>0
-        public virtual long DataPoints => 4900229;
+        public virtual long DataPoints => 4252522;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -126,7 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0.100%"},
             {"Expectancy", "-0.678"},
             {"Net Profit", "-0.111%"},
-            {"Sharpe Ratio", "-0.967"},
+            {"Sharpe Ratio", "-0.968"},
             {"Probabilistic Sharpe Ratio", "0.000%"},
             {"Loss Rate", "80%"},
             {"Win Rate", "20%"},
@@ -135,31 +135,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "-0.001"},
             {"Annual Standard Deviation", "0.001"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.075"},
+            {"Information Ratio", "-1.076"},
             {"Tracking Error", "0.107"},
-            {"Treynor Ratio", "1.353"},
+            {"Treynor Ratio", "1.357"},
             {"Total Fees", "$19.76"},
             {"Estimated Strategy Capacity", "$1300000000.00"},
             {"Lowest Capacity Asset", "DC V5E8PHPRCHJ8|DC V5E8P9SH0U0X"},
-            {"Fitness Score", "0"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.129"},
-            {"Return Over Maximum Drawdown", "-0.997"},
-            {"Portfolio Turnover", "0"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Portfolio Turnover", "0.00%"},
             {"OrderListHash", "b3674f70c87c91669dc25170e43e6af8"}
         };
     }

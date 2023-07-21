@@ -28,32 +28,35 @@ namespace QuantConnect.Securities
 {
     /// <summary>
     /// Resolves standardized security definitions such as FIGI, CUSIP, ISIN, SEDOL into
-    /// a properly mapped Lean <see cref="Symbol"/>.
+    /// a properly mapped Lean <see cref="Symbol"/>, and vice-versa.
     /// </summary>
     public class SecurityDefinitionSymbolResolver
     {
+        private static SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver;
+        private static readonly object _lock = new object();
+
         private List<SecurityDefinition> _securityDefinitions;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly string _securitiesDefinitionKey;
         private readonly IDataProvider _dataProvider;
-        
+
         /// <summary>
         /// Creates an instance of the symbol resolver
         /// </summary>
         /// <param name="dataProvider">Data provider used to obtain symbol mappings data</param>
         /// <param name="securitiesDefinitionKey">Location to read the securities definition data from</param>
-        public SecurityDefinitionSymbolResolver(IDataProvider dataProvider = null, string securitiesDefinitionKey = null)
+        private SecurityDefinitionSymbolResolver(IDataProvider dataProvider = null, string securitiesDefinitionKey = null)
         {
             _securitiesDefinitionKey = securitiesDefinitionKey ?? Path.Combine(Globals.DataFolder, "symbol-properties", "security-database.csv");
-            
-            _dataProvider = dataProvider ?? 
+
+            _dataProvider = dataProvider ??
                 Composer.Instance.GetExportedValueByTypeName<IDataProvider>(
                     Config.Get("data-provider", "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider"));
 
             _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
             _mapFileProvider.Initialize(_dataProvider);
         }
-        
+
         /// <summary>
         /// Converts CUSIP into a Lean <see cref="Symbol"/>
         /// </summary>
@@ -71,12 +74,22 @@ namespace QuantConnect.Securities
             {
                 return null;
             }
-            
+
             return SecurityDefinitionToSymbol(
                 GetSecurityDefinitions().FirstOrDefault(x => x.CUSIP != null && x.CUSIP.Equals(cusip, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
-        
+
+        /// <summary>
+        /// Converts a Lean <see cref="Symbol"/> to its CUSIP number
+        /// </summary>
+        /// <param name="symbol">The Lean <see cref="Symbol"/></param>
+        /// <returns>The Committee on Uniform Securities Identification Procedures (CUSIP) number corresponding to the given Lean <see cref="Symbol"/></returns>
+        public string CUSIP(Symbol symbol)
+        {
+            return SymbolToSecurityDefinition(symbol)?.CUSIP;
+        }
+
         /// <summary>
         /// Converts an asset's composite FIGI into a Lean <see cref="Symbol"/>
         /// </summary>
@@ -94,12 +107,22 @@ namespace QuantConnect.Securities
             {
                 return null;
             }
-            
+
             return SecurityDefinitionToSymbol(
                 GetSecurityDefinitions().FirstOrDefault(x => x.CompositeFIGI != null && x.CompositeFIGI.Equals(compositeFigi, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
-        
+
+        /// <summary>
+        /// Converts a Lean <see cref="Symbol"/> to its composite FIGI representation
+        /// </summary>
+        /// <param name="symbol">The Lean <see cref="Symbol"/></param>
+        /// <returns>The composite Financial Instrument Global Identifier (FIGI) corresponding to the given Lean <see cref="Symbol"/></returns>
+        public string CompositeFIGI(Symbol symbol)
+        {
+            return SymbolToSecurityDefinition(symbol)?.CompositeFIGI;
+        }
+
         /// <summary>
         /// Converts SEDOL into a Lean <see cref="Symbol"/>
         /// </summary>
@@ -117,10 +140,20 @@ namespace QuantConnect.Securities
             {
                 return null;
             }
-            
+
             return SecurityDefinitionToSymbol(
                 GetSecurityDefinitions().FirstOrDefault(x => x.SEDOL != null && x.SEDOL.Equals(sedol, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
+        }
+
+        /// <summary>
+        /// Converts a Lean <see cref="Symbol"/> to its SEDOL representation
+        /// </summary>
+        /// <param name="symbol">The Lean <see cref="Symbol"/></param>
+        /// <returns>The Stock Exchange Daily Official List (SEDOL) security identifier corresponding to the given Lean <see cref="Symbol"/></returns>
+        public string SEDOL(Symbol symbol)
+        {
+            return SymbolToSecurityDefinition(symbol)?.SEDOL;
         }
 
         /// <summary>
@@ -140,10 +173,20 @@ namespace QuantConnect.Securities
             {
                 return null;
             }
-            
+
             return SecurityDefinitionToSymbol(
                 GetSecurityDefinitions().FirstOrDefault(x => x.ISIN != null && x.ISIN.Equals(isin, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
+        }
+
+        /// <summary>
+        /// Converts a Lean <see cref="Symbol"/> to its ISIN representation
+        /// </summary>
+        /// <param name="symbol">The Lean <see cref="Symbol"/></param>
+        /// <returns>The International Securities Identification Number (ISIN) corresponding to the given Lean <see cref="Symbol"/></returns>
+        public string ISIN(Symbol symbol)
+        {
+            return SymbolToSecurityDefinition(symbol)?.ISIN;
         }
 
         /// <summary>
@@ -163,7 +206,7 @@ namespace QuantConnect.Securities
             }
 
             var mapFileResolver = _mapFileProvider.Get(AuxiliaryDataKey.Create(securityDefinition.SecurityIdentifier));
-            
+
             // Get the first ticker the symbol traded under, and then lookup the
             // trading date to get the ticker on the trading date.
             var mapFile = mapFileResolver
@@ -172,16 +215,29 @@ namespace QuantConnect.Securities
             // The mapped ticker will be null if the map file is null or there's
             // no entry found for the given trading date.
             var mappedTicker = mapFile?.GetMappedSymbol(tradingDate, null);
-            
+
             // If we're null, then try again; get the last entry of the map file and use
             // it as the Symbol we return to the caller.
             mappedTicker ??= mapFile?
                 .LastOrDefault()?
                 .MappedSymbol;
 
-            return string.IsNullOrWhiteSpace(mappedTicker) 
-                ? null 
+            return string.IsNullOrWhiteSpace(mappedTicker)
+                ? null
                 : new Symbol(securityDefinition.SecurityIdentifier, mappedTicker);
+        }
+
+        /// <summary>
+        /// Gets the SecurityDefinition corresponding to the given Lean <see cref="Symbol"/>
+        /// </summary>
+        private SecurityDefinition SymbolToSecurityDefinition(Symbol symbol)
+        {
+            if (symbol == null)
+            {
+                return null;
+            }
+
+            return GetSecurityDefinitions().FirstOrDefault(x => x.SecurityIdentifier.Equals(symbol.ID));
         }
 
         /// <summary>
@@ -189,17 +245,48 @@ namespace QuantConnect.Securities
         /// </summary>
         private IEnumerable<SecurityDefinition> GetSecurityDefinitions()
         {
-            if (_securityDefinitions != null)
+            lock (_lock)
             {
-                return _securityDefinitions;
+                if (_securityDefinitions == null && !SecurityDefinition.TryRead(_dataProvider, _securitiesDefinitionKey, out _securityDefinitions))
+                {
+                    _securityDefinitions = new List<SecurityDefinition>();
+                    Log.Error($"SecurityDefinitionSymbolResolver(): No security definitions data loaded from file: {_securitiesDefinitionKey}");
+                }
             }
 
-            if (!SecurityDefinition.TryRead(_dataProvider, _securitiesDefinitionKey, out _securityDefinitions))
-            {
-                _securityDefinitions = new List<SecurityDefinition>();
-                Log.Error($"SecurityDefinitionSymbolResolver(): No security definitions data loaded from file: {_securitiesDefinitionKey}");
-            }
             return _securityDefinitions;
+        }
+
+        /// <summary>
+        /// Gets the single instance of the symbol resolver
+        /// </summary>
+        /// <param name="dataProvider">Data provider used to obtain symbol mappings data</param>
+        /// <param name="securitiesDefinitionKey">Location to read the securities definition data from</param>
+        /// <returns>The single instance of the symbol resolver</returns>
+        public static SecurityDefinitionSymbolResolver GetInstance(IDataProvider dataProvider = null, string securitiesDefinitionKey = null)
+        {
+            lock (_lock)
+            {
+                if (_securityDefinitionSymbolResolver == null)
+                {
+                    _securityDefinitionSymbolResolver = new SecurityDefinitionSymbolResolver(dataProvider, securitiesDefinitionKey);
+                }
+            }
+
+            return _securityDefinitionSymbolResolver;
+        }
+
+        /// <summary>
+        /// Resets the security definition symbol resolver, forcing a reload when reused.
+        /// Called in tests where multiple algorithms are run sequentially,
+        /// and we need to guarantee that every test starts with the same environment.
+        /// </summary>
+        public static void Reset()
+        {
+            lock (_lock)
+            {
+                _securityDefinitionSymbolResolver = null;
+            }
         }
     }
 }

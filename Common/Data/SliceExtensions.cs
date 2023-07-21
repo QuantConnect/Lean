@@ -18,13 +18,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
     /// <summary>
-    /// Provides extension methods to slice enumerables
+    /// Provides extension methods to slices and slice enumerables
     /// </summary>
     public static class SliceExtensions
     {
@@ -46,6 +47,25 @@ namespace QuantConnect.Data
         public static IEnumerable<Ticks> Ticks(this IEnumerable<Slice> slices)
         {
             return slices.Where(x => x.Ticks.Count > 0).Select(x => x.Ticks);
+        }
+
+        /// <summary>
+        /// Gets the data dictionaries or points of the requested type in each slice
+        /// </summary>
+        /// <param name="slices">The enumerable of slice</param>
+        /// <param name="type">Data type of the data that will be fetched</param>
+        /// <param name="symbol">The symbol to retrieve</param>
+        /// <returns>An enumerable of data dictionary or data point of the requested type</returns>
+        public static IEnumerable<dynamic> Get(this IEnumerable<Slice> slices, Type type, Symbol symbol = null)
+        {
+            var result = slices.Select(x => x.Get(type));
+
+            if (symbol == null)
+            {
+                return result;
+            }
+
+            return result.Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
         }
 
         /// <summary>
@@ -159,6 +179,49 @@ namespace QuantConnect.Data
                     else yield return field(item);
                 }
             }
+        }
+
+        /// <summary>
+        /// Tries to get the data for the specified symbol and type
+        /// </summary>
+        /// <typeparam name="T">The type of data we want, for example, <see cref="TradeBar"/> or <see cref="UnlinkedData"/>, etc...</typeparam>
+        /// <param name="slice">The slice</param>
+        /// <param name="symbol">The symbol data is sought for</param>
+        /// <param name="data">The found data</param>
+        /// <returns>True if data was found for the specified type and symbol</returns>
+        public static bool TryGet<T>(this Slice slice, Symbol symbol, out T data)
+            where T : IBaseData
+        {
+            data = default(T);
+            var typeData = slice.Get(typeof(T)) as DataDictionary<T>;
+            if (typeData.ContainsKey(symbol))
+            {
+                data = typeData[symbol];
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to get the data for the specified symbol and type
+        /// </summary>
+        /// <param name="slice">The slice</param>
+        /// <param name="type">The type of data we seek</param>
+        /// <param name="symbol">The symbol data is sought for</param>
+        /// <param name="data">The found data</param>
+        /// <returns>True if data was found for the specified type and symbol</returns>
+        public static bool TryGet(this Slice slice, Type type, Symbol symbol, out dynamic data)
+        {
+            data = null;
+            var typeData = slice.Get(type);
+            if (typeData.ContainsKey(symbol))
+            {
+                data = typeData[symbol];
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

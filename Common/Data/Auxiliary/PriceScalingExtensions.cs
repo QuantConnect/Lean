@@ -1,4 +1,4 @@
-﻿/*
+/*
 * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 *
@@ -33,13 +33,22 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="normalizationMode">The price normalization mode requested</param>
         /// <param name="contractOffset">The contract offset, useful for continuous contracts</param>
         /// <param name="dataMappingMode">The data mapping mode used, useful for continuous contracts</param>
+        /// <param name="endDateTime">The reference end date for scaling prices.</param>
         /// <returns>The price scale to use</returns>
+        /// <exception cref="ArgumentException">
+        /// If <paramref name="normalizationMode"/> is <see cref="DataNormalizationMode.ScaledRaw"/> and <paramref name="endDateTime"/> is null
+        /// </exception>
+        /// <remarks>
+        /// For <see cref="DataNormalizationMode.ScaledRaw"/> normalization mode,
+        /// the prices are scaled to the prices on the <paramref name="endDateTime"/>
+        /// </remarks>
         public static decimal GetPriceScale(
             this IFactorProvider factorFile,
             DateTime dateTime,
             DataNormalizationMode normalizationMode,
             uint contractOffset = 0,
-            DataMappingMode? dataMappingMode = null
+            DataMappingMode? dataMappingMode = null,
+            DateTime? endDateTime = null
             )
         {
             if (factorFile == null)
@@ -51,7 +60,20 @@ namespace QuantConnect.Data.Auxiliary
                 return 1;
             }
 
-            return factorFile.GetPriceFactor(dateTime, normalizationMode, dataMappingMode, contractOffset);
+            var endDateTimeFactor = 1m;
+            if (normalizationMode == DataNormalizationMode.ScaledRaw)
+            {
+                if (endDateTime == null)
+                {
+                    throw new ArgumentException(
+                        $"{nameof(DataNormalizationMode.ScaledRaw)} normalization mode requires an end date for price scaling.");
+                }
+
+                // For ScaledRaw, we need to get the price scale at the end date to adjust prices to that date instead of "today"
+                endDateTimeFactor = factorFile.GetPriceFactor(endDateTime.Value, normalizationMode, dataMappingMode, contractOffset);
+            }
+
+            return factorFile.GetPriceFactor(dateTime, normalizationMode, dataMappingMode, contractOffset) / endDateTimeFactor;
         }
 
         /// <summary>

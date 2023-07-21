@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Optimizer
         {
         }
 
-        protected override string RunLean(ParameterSet parameterSet)
+        protected override string RunLean(ParameterSet parameterSet, string backtestName)
         {
             var id = Guid.NewGuid().ToString();
             _backtests.Add(id);

@@ -333,7 +333,6 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Indices.Nifty50, ThreeThirtyPM)]
         [TestCase(QuantConnect.Securities.Futures.Indices.BankNifty, ThreeThirtyPM)]
         [TestCase(QuantConnect.Securities.Futures.Indices.BseSensex, ThreeThirtyPM)]
-        [TestCase(QuantConnect.Securities.Futures.Indices.HangSeng, FourPM)]
         [TestCase(QuantConnect.Securities.Futures.Indices.MicroSP500EMini, NineThirtyEasternTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.MicroDow30EMini, NineThirtyEasternTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.MSCIEuropeNTR, FourFifteenPM)]

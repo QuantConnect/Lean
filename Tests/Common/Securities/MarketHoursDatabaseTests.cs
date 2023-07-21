@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,10 +14,12 @@
 */
 
 using System;
-using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -112,6 +114,93 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(earlyCloseTime, equityHours.EarlyCloses[date]);
         }
 
+        [TestCase("AUP", Market.COMEX, true)]
+        [TestCase("AA6", Market.NYMEX, true)]
+        [TestCase("6A", Market.CME, false)]
+        [TestCase("30Y", Market.CBOT, false)]
+        [TestCase("HE", Market.CME, true)]
+        [TestCase("AW", Market.CBOT, true)]
+        [TestCase("HE", Market.CME, true)]
+        [TestCase("AW", Market.CBOT, true)]
+        [TestCase("LE", Market.CME, true)]
+        [TestCase("BCF", Market.CBOT, true)]
+        [TestCase("GD", Market.CME, true)]
+        [TestCase("BWF", Market.CBOT, true)]
+        [TestCase("CSC", Market.CME, true)]
+        [TestCase("GNF", Market.CME, true)]
+        [TestCase("GDK", Market.CME, true)]
+        public void CorrectlyReadsCMEGroupFutureHolidayGoodFridaySchedule(string futureTicker, string market, bool isHoliday)
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var ticker= OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
+            var future = Symbol.Create(ticker, SecurityType.Future, market);
+
+            var futureEntry = provider.GetEntry(market, ticker, future.SecurityType);
+            var holidays = futureEntry.ExchangeHours.Holidays;
+            var holidayDate = DateTime.Parse("4/7/2023", CultureInfo.InvariantCulture);
+            Assert.AreEqual(isHoliday, holidays.Contains(holidayDate));
+        }
+
+        [TestCase("2YY", Market.CBOT, "4/7/2023", true)]
+        [TestCase("MYM", Market.CBOT, "4/7/2023", true)]
+        [TestCase("YM", Market.CBOT, "4/7/2023", true)]
+        [TestCase("TN", Market.CBOT, "4/7/2023", true)]
+        [TestCase("6A", Market.CME, "4/7/2023", true)]
+        [TestCase("6Z", Market.CME, "4/7/2023", true)]
+        [TestCase("M6A", Market.CME, "4/7/2023", true)]
+        [TestCase("MCD", Market.CME, "4/7/2023", true)]
+        [TestCase("AW", Market.CBOT, "4/6/2023", false)]
+        [TestCase("BCF", Market.CBOT, "4/6/2023", false)]
+        [TestCase("BWF", Market.CBOT, "4/6/2023", false)]
+        [TestCase("ZC", Market.CBOT, "4/6/2023", false)]
+        [TestCase("DC", Market.CME, "4/7/2023", false)]
+        [TestCase("DY", Market.CME, "4/7/2023", false)]
+        [TestCase("GNF", Market.CME, "4/6/2023", true)]
+        [TestCase("GDK", Market.CME, "4/6/2023", true)]
+        public void CorrectlyReadsCMEGroupFutureGoodFridayEarlyCloses(string futureTicker, string market, string date, bool isEarlyClose)
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
+            var future = Symbol.Create(ticker, SecurityType.Future, market);
+
+            var futureEntry = provider.GetEntry(market, ticker, future.SecurityType);
+            var earlyCloses = futureEntry.ExchangeHours.EarlyCloses;
+            var earlyCloseDate = DateTime.Parse(date, CultureInfo.InvariantCulture);
+            Assert.AreEqual(isEarlyClose, earlyCloses.Keys.Contains(earlyCloseDate));
+        }
+
+        [TestCase("2YY", Market.CBOT, true)]
+        [TestCase("MYM", Market.CBOT, true)]
+        [TestCase("YM", Market.CBOT, true)]
+        [TestCase("TN", Market.CBOT, true)]
+        [TestCase("6A", Market.CME, true)]
+        [TestCase("6Z", Market.CME, true)]
+        [TestCase("M6A", Market.CME, true)]
+        [TestCase("MCD", Market.CME, true)]
+        [TestCase("AW", Market.CBOT, false)]
+        [TestCase("BCF", Market.CBOT, false)]
+        [TestCase("BWF", Market.CBOT, false)]
+        [TestCase("ZC", Market.CBOT, false)]
+        [TestCase("DC", Market.CME, false)]
+        [TestCase("DY", Market.CME, false)]
+        [TestCase("GNF", Market.CME, false)]
+        [TestCase("GDK", Market.CME, false)]
+        public void CheckJustEarlyClosesOrJustHolidaysForCMEGroupFuturesOnGoodFriday(string futureTicker, string market, bool isEarlyClose)
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
+            var future = Symbol.Create(ticker, SecurityType.Future, market);
+
+            var futureEntry = provider.GetEntry(market, ticker, future.SecurityType);
+            var earlyCloses = futureEntry.ExchangeHours.EarlyCloses;
+            var holidays = futureEntry.ExchangeHours.Holidays;
+
+            var goodFriday = DateTime.Parse("4/7/2023", CultureInfo.InvariantCulture);
+
+            Assert.AreEqual(isEarlyClose, earlyCloses.Keys.Contains(goodFriday));
+            Assert.AreEqual(!isEarlyClose, holidays.Contains(goodFriday));
+        }
+
         [Test]
         public void CorrectlyReadFxcmForexMarketHours()
         {
@@ -165,34 +254,49 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(TimeZones.EasternStandard, marketHoursDatabase.GetDataTimeZone(Market.FXCM, null, SecurityType.Forex));
         }
 
-        [TestCase("GC", Market.COMEX)]
-        [TestCase("SI", Market.COMEX)]
-        [TestCase("HG", Market.COMEX)]
-        [TestCase("ES", Market.CME)]
-        [TestCase("NQ", Market.CME)]
-        [TestCase("CL", Market.NYMEX)]
-        [TestCase("NG", Market.NYMEX)]
-        [TestCase("ZB", Market.CBOT)]
-        [TestCase("ZC", Market.CBOT)]
-        [TestCase("ZS", Market.CBOT)]
-        [TestCase("ZT", Market.CBOT)]
-        [TestCase("ZW", Market.CBOT)]
-        public void MissingFuturesOptionsMarketHoursResolvesToFuturesMarketHours(string ticker, string market)
+        [TestCase("SPX", SecurityType.Index, Market.USA)]
+        [TestCase("SPXW", SecurityType.Index, Market.USA)]
+        [TestCase("AAPL", SecurityType.Equity, Market.USA)]
+        [TestCase("SPY", SecurityType.Equity, Market.USA)]
+
+        [TestCase("GC", SecurityType.Future, Market.COMEX)]
+        [TestCase("SI", SecurityType.Future, Market.COMEX)]
+        [TestCase("HG", SecurityType.Future, Market.COMEX)]
+        [TestCase("ES", SecurityType.Future, Market.CME)]
+        [TestCase("NQ", SecurityType.Future, Market.CME)]
+        [TestCase("CL", SecurityType.Future, Market.NYMEX)]
+        [TestCase("NG", SecurityType.Future, Market.NYMEX)]
+        [TestCase("ZB", SecurityType.Future, Market.CBOT)]
+        [TestCase("ZC", SecurityType.Future, Market.CBOT)]
+        [TestCase("ZS", SecurityType.Future, Market.CBOT)]
+        [TestCase("ZT", SecurityType.Future, Market.CBOT)]
+        [TestCase("ZW", SecurityType.Future, Market.CBOT)]
+        public void MissingOptionsEntriesResolveToUnderlyingMarketHours(string optionTicker, SecurityType securityType, string market)
         {
             var provider = MarketHoursDatabase.FromDataFolder();
-            var future = Symbol.Create(ticker, SecurityType.Future, market);
+            var underlyingTIcker = OptionSymbol.MapToUnderlying(optionTicker, securityType);
+            var underlying = Symbol.Create(underlyingTIcker, securityType, market);
             var option = Symbol.CreateOption(
-                future,
+                underlying,
                 market,
-                default(OptionStyle),
-                default(OptionRight),
-                default(decimal),
+                default,
+                default,
+                default,
                 SecurityIdentifier.DefaultDate);
 
-            var futureEntry = provider.GetEntry(market, future, SecurityType.Future);
-            var optionEntry = provider.GetEntry(market, option, SecurityType.FutureOption);
+            var underlyingEntry = provider.GetEntry(market, underlying, underlying.SecurityType);
+            var optionEntry = provider.GetEntry(market, option, option.SecurityType);
 
-            Assert.AreEqual(futureEntry, optionEntry);
+            if (securityType == SecurityType.Future)
+            {
+                Assert.AreEqual(underlyingEntry, optionEntry);
+            }
+            else
+            {
+                Assert.AreEqual(underlyingEntry.ExchangeHours.Holidays, optionEntry.ExchangeHours.Holidays);
+                Assert.AreEqual(underlyingEntry.ExchangeHours.LateOpens, optionEntry.ExchangeHours.LateOpens);
+                Assert.AreEqual(underlyingEntry.ExchangeHours.EarlyCloses, optionEntry.ExchangeHours.EarlyCloses);
+            }
         }
 
         [TestCase("GC", Market.COMEX, "OG")]

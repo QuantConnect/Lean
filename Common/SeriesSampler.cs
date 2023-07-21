@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -45,11 +45,11 @@ namespace QuantConnect
         /// <returns>The sampled series</returns>
         public Series Sample(Series series, DateTime start, DateTime stop, bool truncateValues = false)
         {
-            var sampled = new Series(series.Name, series.SeriesType, series.Index, series.Unit);
+            var sampled = series.Clone(empty: true);
 
             // chart point times are always in universal, so force it here as well
-            double nextSample = Time.DateTimeToUnixTimeStamp(start.ToUniversalTime());
-            double unixStopDate = Time.DateTimeToUnixTimeStamp(stop.ToUniversalTime());
+            var nextSample = Time.DateTimeToUnixTimeStamp(start.ToUniversalTime());
+            var unixStopDate = Time.DateTimeToUnixTimeStamp(stop.ToUniversalTime());
 
             // we can't sample a single point and it doesn't make sense to sample scatter plots
             // in this case just copy the raw data

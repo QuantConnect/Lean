@@ -66,70 +66,52 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public virtual bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 7842;
+        public virtual long DataPoints => 7842;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public virtual int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "149"},
+            {"Total Trades", "11"},
             {"Average Win", "0.00%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "306.792%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "353.938%"},
             {"Drawdown", "2.300%"},
-            {"Expectancy", "-0.916"},
-            {"Net Profit", "1.810%"},
-            {"Sharpe Ratio", "10.567"},
-            {"Probabilistic Sharpe Ratio", "64.730%"},
-            {"Loss Rate", "92%"},
-            {"Win Rate", "8%"},
-            {"Profit-Loss Ratio", "0.04"},
-            {"Alpha", "0.659"},
-            {"Beta", "0.988"},
+            {"Expectancy", "-0.749"},
+            {"Net Profit", "1.953%"},
+            {"Sharpe Ratio", "11.787"},
+            {"Probabilistic Sharpe Ratio", "65.582%"},
+            {"Loss Rate", "75%"},
+            {"Win Rate", "25%"},
+            {"Profit-Loss Ratio", "0.00"},
+            {"Alpha", "0.96"},
+            {"Beta", "0.993"},
             {"Annual Standard Deviation", "0.248"},
-            {"Annual Variance", "0.061"},
-            {"Information Ratio", "5.565"},
+            {"Annual Variance", "0.062"},
+            {"Information Ratio", "8.324"},
             {"Tracking Error", "0.114"},
-            {"Treynor Ratio", "2.65"},
-            {"Total Fees", "$153.02"},
-            {"Estimated Strategy Capacity", "$400000.00"},
+            {"Treynor Ratio", "2.95"},
+            {"Total Fees", "$15.02"},
+            {"Estimated Strategy Capacity", "$2600000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Fitness Score", "0.577"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "16.701"},
-            {"Return Over Maximum Drawdown", "111.126"},
-            {"Portfolio Turnover", "0.579"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "50e863194b0b0e6c5e704b1bd05e9060"}
+            {"Portfolio Turnover", "44.15%"},
+            {"OrderListHash", "3865de00b5145f8939b1cde9dc0c2d8f"}
         };
     }
 }

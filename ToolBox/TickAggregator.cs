@@ -77,7 +77,7 @@ namespace QuantConnect.ToolBox
                     // OI is special
                     if (tickType == TickType.OpenInterest)
                     {
-                        yield return new OpenInterestTickAggregator();
+                        yield return new OpenInterestTickAggregator(resolution);
                         continue;
                     }
 
@@ -100,7 +100,7 @@ namespace QuantConnect.ToolBox
                         break;
 
                     case TickType.OpenInterest:
-                        yield return new OpenInterestTickAggregator();
+                        yield return new OpenInterestTickAggregator(resolution);
                         break;
 
                     default:
@@ -145,15 +145,15 @@ namespace QuantConnect.ToolBox
     }
 
     /// <summary>
-    /// Use <see cref="OpenInterestConsolidator"/> to consolidate open interest ticks daily.
+    /// Use <see cref="OpenInterestConsolidator"/> to consolidate open interest ticks into a specified resolution
     /// </summary>
     public class OpenInterestTickAggregator : TickAggregator
     {
-        public OpenInterestTickAggregator()
-            : base(Resolution.Daily, TickType.OpenInterest)
+        public OpenInterestTickAggregator(Resolution resolution)
+            : base(resolution, TickType.OpenInterest)
         {
             Consolidated = new List<BaseData>();
-            Consolidator = new OpenInterestConsolidator(Time.OneDay);
+            Consolidator = new OpenInterestConsolidator(resolution.ToTimeSpan());
             Consolidator.DataConsolidated += (sender, consolidated) =>
             {
                 Consolidated.Add(consolidated as OpenInterest);

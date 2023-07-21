@@ -18,7 +18,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm
@@ -36,10 +35,7 @@ namespace QuantConnect.Algorithm
             { "Benchmark", new List<string>() { "Benchmark" } },
             { "Assets Sales Volume", new List<string>() },
             { "Exposure", new List<string>() },
-            { "Alpha", new List<string> { "Direction Score", "Magnitude Score" } },
-            { "Alpha Count", new List<string> { "Count" } },
-            { "Alpha Assets", new List<string>() },
-            { "Alpha Asset Breakdown", new List<string>() }
+            { "Portfolio Turnover", new List<string> { "Portfolio Turnover" } }
         };
 
         /// <summary>
@@ -208,7 +204,7 @@ namespace QuantConnect.Algorithm
                 }
 
                 //If we don't have the series, create it:
-                thisChart.AddSeries(new Series(series, SeriesType.Line, 0, "$"));
+                thisChart.AddSeries(new Series(series));
             }
 
             if (LiveMode && IsWarmingUp)
@@ -335,6 +331,50 @@ namespace QuantConnect.Algorithm
         public void SetRuntimeStatistic(string name, double value)
         {
             SetRuntimeStatistic(name, value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>
+        /// Set a custom summary statistic for the algorithm.
+        /// </summary>
+        /// <param name="name">Name of the custom summary statistic</param>
+        /// <param name="value">Value of the custom summary statistic</param>
+        [DocumentationAttribute(StatisticsTag)]
+        public void SetSummaryStatistic(string name, string value)
+        {
+            _statisticsService.SetSummaryStatistic(name, value);
+        }
+
+        /// <summary>
+        /// Set a custom summary statistic for the algorithm.
+        /// </summary>
+        /// <param name="name">Name of the custom summary statistic</param>
+        /// <param name="value">Value of the custom summary statistic</param>
+        [DocumentationAttribute(StatisticsTag)]
+        public void SetSummaryStatistic(string name, int value)
+        {
+            _statisticsService.SetSummaryStatistic(name, value.ToStringInvariant());
+        }
+
+        /// <summary>
+        /// Set a custom summary statistic for the algorithm.
+        /// </summary>
+        /// <param name="name">Name of the custom summary statistic</param>
+        /// <param name="value">Value of the custom summary statistic</param>
+        [DocumentationAttribute(StatisticsTag)]
+        public void SetSummaryStatistic(string name, double value)
+        {
+            _statisticsService.SetSummaryStatistic(name, value.ToStringInvariant());
+        }
+
+        /// <summary>
+        /// Set a custom summary statistic for the algorithm.
+        /// </summary>
+        /// <param name="name">Name of the custom summary statistic</param>
+        /// <param name="value">Value of the custom summary statistic</param>
+        [DocumentationAttribute(StatisticsTag)]
+        public void SetSummaryStatistic(string name, decimal value)
+        {
+            _statisticsService.SetSummaryStatistic(name, value.ToStringInvariant());
         }
 
         /// <summary>

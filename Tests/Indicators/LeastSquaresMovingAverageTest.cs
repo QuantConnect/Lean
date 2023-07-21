@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Indicators
             125.99m  , 125.91m  , 125.75m  , 125.62m  , 125.54m  , 125.45m  ,
             125.47m  , 125.4m   , 125.43m  , 125.45m  , 125.42m  , 125.36m  ,
             125.23m  , 125.32m  , 125.26m  , 125.31m  , 125.41m  , 125.5m   ,
-            125.51m  , 125.41m  , 125.328m , 125.381m , 125.4423m, 125.4591m,
+            125.51m  , 125.2679m  , 125.328m , 125.381m , 125.4423m, 125.4591m,
             125.4689m, 125.4713m, 125.4836m, 125.4834m, 125.4803m, 125.4703m,
             125.4494m, 125.4206m, 125.3669m, 125.3521m, 125.3214m, 125.2986m,
             125.2909m, 125.2723m, 125.2619m, 125.2224m,
@@ -98,12 +98,15 @@ namespace QuantConnect.Tests.Indicators
 
             var time = DateTime.Now;
 
-            for (var i = 0; i < period.Value; i++)
+            for (var i = 1; i < period.Value; i++)
             {
-                indicator.Update(time.AddMinutes(i), Prices[i]);
-                Assert.AreEqual(Expected[i], Math.Round(indicator.Current.Value, 4));
-                Assert.AreEqual(i == period.Value - 1, indicator.IsReady);
+                indicator.Update(time.AddMinutes(i - 1), Prices[i - 1]);
+                Assert.AreEqual(Expected[i - 1], Math.Round(indicator.Current.Value, 4));
+                Assert.IsFalse(indicator.IsReady);
             }
+
+            indicator.Update(time.AddMinutes(period.Value - 1), Prices[period.Value - 1]);
+            Assert.IsTrue(indicator.IsReady);
         }
     }
 }

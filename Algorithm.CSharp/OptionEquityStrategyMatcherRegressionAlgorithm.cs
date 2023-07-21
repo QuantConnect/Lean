@@ -82,7 +82,8 @@ namespace QuantConnect.Algorithm.CSharp
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ButterflyCall.Name, 10);
                     AssertDefaultGroup(_optionSymbol.Underlying, 490);
-                    AssertDefaultGroup(lowerCall.Symbol, 5);
+                    // naked call for the lowerCall contract
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name, 5);
 
                     MarketOrder(middleCall.Symbol, -5);
                     freeMarginPostTrade = Portfolio.MarginRemaining;
@@ -91,7 +92,8 @@ namespace QuantConnect.Algorithm.CSharp
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.CoveredCall.Name, 4);
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BullCallSpread.Name, 1);
                     AssertDefaultGroup(_optionSymbol.Underlying, 90);
-                    AssertDefaultGroup(lowerCall.Symbol, 4);
+                    // naked call for the lowerCall contract
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name, 4);
 
                     // trade some other asset
                     MarketOrder("SPY", 200);
@@ -101,7 +103,8 @@ namespace QuantConnect.Algorithm.CSharp
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.CoveredCall.Name, 4);
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BullCallSpread.Name, 1);
                     AssertDefaultGroup(_optionSymbol.Underlying, 90);
-                    AssertDefaultGroup(lowerCall.Symbol, 4);
+                    // naked call for the lowerCall contract
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name, 4);
                 }
             }
         }
@@ -109,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 884389;
+        public override long DataPoints => 475969;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -141,28 +144,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$16.95"},
-            {"Estimated Strategy Capacity", "$1000.00"},
+            {"Estimated Strategy Capacity", "$2000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZFM61MKLI|GOOCV VP83T1ZUHROL"},
-            {"Fitness Score", "0"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0"},
-            {"Return Over Maximum Drawdown", "0"},
-            {"Portfolio Turnover", "0"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "16316e5491987b323d8c9f0ff87b20ee"}
+            {"Portfolio Turnover", "280.07%"},
+            {"OrderListHash", "822127363a9d980d4d71c3c45723f13a"}
         };
     }
 }

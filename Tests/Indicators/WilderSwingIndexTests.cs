@@ -36,5 +36,15 @@ namespace QuantConnect.Tests.Indicators
         {
             get { return "SI"; }
         }
+
+        /// <summary>
+        /// The final value of this indicator after being warmed up with VolumeRenkoBar's, is zero
+        /// since sometimes it receives two consecutive bars with the same open and close values.
+        /// Therefore we skip this test.
+        /// </summary>
+        /// <param name="indicator"></param>
+        protected override void IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(IndicatorBase indicator)
+        {
+        }
     }
 }

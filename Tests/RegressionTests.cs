@@ -56,7 +56,6 @@ namespace QuantConnect.Tests
             var algorithmManager = AlgorithmRunner.RunLocalBacktest(
                 parameters.Algorithm,
                 parameters.Statistics,
-                parameters.AlphaStatistics,
                 parameters.Language,
                 parameters.ExpectedFinalStatus
             ).AlgorithmManager;
@@ -90,7 +89,10 @@ namespace QuantConnect.Tests
             {
                 { "TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError },
                 { "OnOrderEventExceptionRegression", AlgorithmStatus.RuntimeError },
-                { "WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError }
+                { "WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError },
+                { "BasicTemplateIndexDailyAlgorithm", AlgorithmStatus.Running },
+                { "BasicTemplateIndexOptionsDailyAlgorithm", AlgorithmStatus.Running },
+                { "ScaledRawDataNormalizationModeNotAllowedSecuritiesAlgorithm", AlgorithmStatus.Running }
             };
 
             var languages = Config.GetValue("regression-test-languages", JArray.FromObject(new[] { "CSharp", "Python" }))
@@ -119,7 +121,6 @@ namespace QuantConnect.Tests
         {
             public readonly string Algorithm;
             public readonly Dictionary<string, string> Statistics;
-            public readonly AlphaRuntimeStatistics AlphaStatistics;
             public readonly Language Language;
             public readonly AlgorithmStatus ExpectedFinalStatus;
             public readonly long DataPoints;

@@ -57,7 +57,7 @@ namespace QuantConnect.ToolBox.Polygon
                     : SubscriptionManager.DefaultDataTypes()[securityType];
 
                 // Load settings from config.json
-                var dataDirectory = Config.Get("data-directory", "../../../Data");
+                var dataDirectory = Globals.DataFolder;
                 var startDate = fromDate.ConvertToUtc(TimeZones.NewYork);
                 var endDate = toDate.ConvertToUtc(TimeZones.NewYork);
 

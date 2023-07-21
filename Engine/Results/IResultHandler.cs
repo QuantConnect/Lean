@@ -24,6 +24,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -32,7 +33,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// Backtester or the Live trading platform:
     /// </summary>
     [InheritedExport(typeof(IResultHandler))]
-    public interface IResultHandler
+    public interface IResultHandler : IStatisticsService
     {
         /// <summary>
         /// Put messages to process into the queue so they are processed by this thread.
@@ -123,12 +124,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="algorithm">Algorithm object matching IAlgorithm interface</param>
         /// <param name="startingPortfolioValue">Algorithm starting capital for statistics calculations</param>
         void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue);
-
-        /// <summary>
-        /// Sets the current alpha runtime statistics
-        /// </summary>
-        /// <param name="statistics">The current alpha runtime statistics</param>
-        void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics);
 
         /// <summary>
         /// Send a algorithm status update to the user of the algorithms running state.

@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 16896627;
+        public long DataPoints => 16896626;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -95,14 +95,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1589"},
+            {"Total Trades", "1587"},
             {"Average Win", "0.00%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-1.158%"},
+            {"Compounding Annual Return", "-1.257%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "-0.989"},
             {"Net Profit", "-0.016%"},
-            {"Sharpe Ratio", "-9.754"},
+            {"Sharpe Ratio", "-9.719"},
             {"Probabilistic Sharpe Ratio", "0.000%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
@@ -111,32 +111,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "-0.001"},
             {"Annual Standard Deviation", "0.001"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-8.943"},
+            {"Information Ratio", "-8.944"},
             {"Tracking Error", "0.223"},
-            {"Treynor Ratio", "14.427"},
-            {"Total Fees", "$1589.00"},
-            {"Estimated Strategy Capacity", "$67000000.00"},
-            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Fitness Score", "0"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-15.241"},
-            {"Return Over Maximum Drawdown", "-72.582"},
-            {"Portfolio Turnover", "0.018"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "b500cbcfb4acc2e3b07a6ee1b7f41d1a"}
+            {"Treynor Ratio", "14.483"},
+            {"Total Fees", "$1587.00"},
+            {"Estimated Strategy Capacity", "$64000.00"},
+            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
+            {"Portfolio Turnover", "1.86%"},
+            {"OrderListHash", "6d4e987268f968b8d9c2878739b2971c"}
         };
     }
 }

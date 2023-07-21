@@ -25,6 +25,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
+using QuantConnect.Securities.CurrencyConversion;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -533,20 +534,6 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void UpdateEventCalledWhenAccessingConversionRateAfterCallingUpdateMethod()
-        {
-            var called = false;
-            var cash = new Cash(Currencies.USD, 1, 1);
-            cash.Updated += (sender, args) =>
-            {
-                called = true;
-            };
-            cash.Update();
-            var conversionRate = cash.ConversionRate;
-            Assert.IsTrue(called);
-        }
-
-        [Test]
         public void UpdateEventCalledForSetAmountMethod()
         {
             var called = false;
@@ -638,11 +625,15 @@ namespace QuantConnect.Tests.Common.Securities
             // Verify the conversion symbol is correct
             if (expectedConversionSymbols == null)
             {
-                Assert.IsNull(cash.CurrencyConversion);
+                Assert.IsInstanceOf(typeof(ConstantCurrencyConversion), cash.CurrencyConversion);
+                Assert.AreEqual(accountCurrency, cash.CurrencyConversion.SourceCurrency);
+                Assert.AreEqual(stableCoin, cash.CurrencyConversion.DestinationCurrency);
+                Assert.AreEqual(1m, cash.ConversionRate);
+                CollectionAssert.IsEmpty(cash.CurrencyConversion.ConversionRateSecurities);
             }
             else
             {
-                Assert.IsNotNull(cash.CurrencyConversion);
+                Assert.IsInstanceOf(typeof(SecurityCurrencyConversion), cash.CurrencyConversion);
 
                 var actualConversionSymbols = cash.CurrencyConversion
                     .ConversionRateSecurities

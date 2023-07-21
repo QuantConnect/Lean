@@ -27,6 +27,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
+            RenkoBarSize = 0.1m;
             return new VolumeWeightedAveragePriceIndicator(50);
         }
 
@@ -81,6 +82,117 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(ind);
             ind.Update(new TradeBar(DateTime.UtcNow, Symbols.SPY, 2m, 2m, 2m, 2m, 1));
             Assert.AreEqual(ind.Current.Value, 2m);
+        }
+        
+        [Test]
+        public void ResetsInnerVolumeWeightedAveragePriceIndicatorProperly()
+        {
+            var indicator = new TestVolumeWeightedAveragePriceIndicator(50);
+
+            foreach (var data in TestHelper.GetTradeBarStream(TestFileName))
+            {
+                indicator.Update(data);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            var lastVWAPIndicator = indicator.GetInnerVolumeWeightedAveragePriceIndicator();
+
+            Assert.AreNotEqual(0, lastVWAPIndicator.Samples);
+            Assert.AreNotEqual(0, lastVWAPIndicator.Left.Samples);
+            Assert.AreNotEqual(0, lastVWAPIndicator.Right.Samples);
+            Assert.IsTrue(lastVWAPIndicator.IsReady);
+            Assert.IsTrue(lastVWAPIndicator.Left.IsReady);
+            Assert.IsTrue(lastVWAPIndicator.Right.IsReady);
+
+            indicator.Reset();
+            var newVWAPIndicator = indicator.GetInnerVolumeWeightedAveragePriceIndicator();
+
+            Assert.IsTrue(Object.ReferenceEquals(lastVWAPIndicator, newVWAPIndicator));
+            Assert.AreEqual(0, newVWAPIndicator.Samples);
+            Assert.AreEqual(0, newVWAPIndicator.Left.Samples);
+            Assert.AreEqual(0, newVWAPIndicator.Right.Samples);
+            Assert.IsFalse(newVWAPIndicator.IsReady);
+            Assert.IsFalse(newVWAPIndicator.Left.IsReady);
+            Assert.IsFalse(newVWAPIndicator.Right.IsReady);
+        }
+
+        [Test]
+        public void ResetsInnerPriceIndicatorProperly()
+        {
+            var indicator = new TestVolumeWeightedAveragePriceIndicator(50);
+
+            foreach (var data in TestHelper.GetTradeBarStream(TestFileName))
+            {
+                indicator.Update(data);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            var lastPriceIndicator = indicator.GetInnerPriceIndicator();
+            Assert.AreNotEqual(0, lastPriceIndicator.Samples);
+            Assert.IsTrue(lastPriceIndicator.IsReady);
+
+            indicator.Reset();
+
+            var newPriceIndicator = indicator.GetInnerPriceIndicator();
+            Assert.AreEqual(0, newPriceIndicator.Samples);
+            Assert.IsFalse(newPriceIndicator.IsReady);
+        }
+
+        [Test]
+        public void ResetsInnerVolumeIndicatorProperly()
+        {
+            var indicator = new TestVolumeWeightedAveragePriceIndicator(50);
+
+            foreach (var data in TestHelper.GetTradeBarStream(TestFileName))
+            {
+                indicator.Update(data);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            var lastVolumeIndicator = indicator.GetInnerVolumeIndicator();
+            Assert.AreNotEqual(0, lastVolumeIndicator.Samples);
+            Assert.IsTrue(lastVolumeIndicator.IsReady);
+
+            indicator.Reset();
+
+            var newVolumeIndicator = indicator.GetInnerVolumeIndicator();
+            Assert.AreEqual(0, newVolumeIndicator.Samples);
+            Assert.IsFalse(newVolumeIndicator.IsReady);
+        }
+        
+        /// <summary>
+        /// The final value of this indicator is zero because it uses the Volume of the bars it receives.
+        /// Since RenkoBar's don't always have Volume, the final current value is zero. Therefore we
+        /// skip this test
+        /// </summary>
+        /// <param name="indicator"></param>
+        protected override void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
+        {
+        }
+    }
+
+    public class TestVolumeWeightedAveragePriceIndicator : VolumeWeightedAveragePriceIndicator
+    {
+        public TestVolumeWeightedAveragePriceIndicator(int period) : base(period)
+        {
+        }
+
+        public CompositeIndicator GetInnerVolumeWeightedAveragePriceIndicator()
+        {
+            return VWAP;
+        }
+
+        public IndicatorBase GetInnerPriceIndicator()
+        {
+            return Price;
+        }
+
+        public IndicatorBase GetInnerVolumeIndicator()
+        {
+            return Volume;
         }
     }
 }

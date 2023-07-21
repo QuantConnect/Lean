@@ -50,8 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetBrokerageModel(new InteractiveBrokersBrokerageModel());
 
-            var index = AddIndex("SPX", Resolution.Hour, fillDataForward: true);
-            var indexOption = AddIndexOption(index.Symbol, Resolution.Hour, fillDataForward: true);
+            var index = AddIndex("SPX", Resolution.Hour, fillForward: true);
+            var indexOption = AddIndexOption(index.Symbol, Resolution.Hour, fillForward: true);
             indexOption.SetFilter(filterFunc => filterFunc.CallsOnly());
 
             _option = indexOption;
@@ -145,7 +145,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all time slices of algorithm
         /// </summary>
-        public long DataPoints => 2009;
+        public long DataPoints => 1941;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -160,45 +160,27 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "-4.10%"},
-            {"Compounding Annual Return", "10.046%"},
+            {"Compounding Annual Return", "10.590%"},
             {"Drawdown", "1.900%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "0.676%"},
-            {"Sharpe Ratio", "3.284"},
-            {"Probabilistic Sharpe Ratio", "86.292%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0.712%"},
+            {"Sharpe Ratio", "3.343"},
+            {"Probabilistic Sharpe Ratio", "87.312%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
             {"Beta", "0"},
             {"Annual Standard Deviation", "0.081"},
             {"Annual Variance", "0.007"},
-            {"Information Ratio", "3.284"},
+            {"Information Ratio", "3.343"},
             {"Tracking Error", "0.081"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.00"},
             {"Estimated Strategy Capacity", "$1700000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3HB5O6M|SPX 31"},
-            {"Fitness Score", "0.001"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.632"},
-            {"Return Over Maximum Drawdown", "6.244"},
-            {"Portfolio Turnover", "0.002"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "d17bee5fb89f2e6cd94ed1fb776c7582"}
+            {"Portfolio Turnover", "0.16%"},
+            {"OrderListHash", "656d61c2603a4e9d85bbac20280606e5"}
         };
     }
 }

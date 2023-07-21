@@ -32,7 +32,16 @@ namespace QuantConnect.Brokerages
         private readonly List<string> _fiatsAvailableMargin = new() {"USD", "EUR"};
         private readonly List<string> _onlyFiatsAvailableMargin = new() {"BTC", "USDT", "USDC"};
         private readonly List<string> _ethAvailableMargin = new() {"REP", "XTZ", "ADA", "EOS", "TRX", "LINK" };
-        
+
+        private readonly HashSet<OrderType> _supportedOrderTypes = new()
+        {
+            OrderType.Limit,
+            OrderType.Market,
+            OrderType.StopMarket,
+            OrderType.StopLimit,
+            OrderType.LimitIfTouched
+        };
+
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
@@ -54,7 +63,7 @@ namespace QuantConnect.Brokerages
             {"LTC", 3},
             {"ADA", 3}, // eth available
             {"EOS", 3}, // eth available
-            {"DASH", 3}, 
+            {"DASH", 3},
             {"TRX", 3}, // eth available
             {"LINK", 3}, // eth available
             {"USDC", 3}, // only with fiats
@@ -66,7 +75,7 @@ namespace QuantConnect.Brokerages
         /// <param name="accountType">Cash or Margin</param>
         public KrakenBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
         {
-            
+
         }
 
         /// <summary>
@@ -91,21 +100,19 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"The {nameof(KrakenBrokerageModel)} does not support {security.Type} security type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
                 return false;
             }
-            
-            if (order.Type == OrderType.MarketOnClose || order.Type == OrderType.MarketOnOpen || order.Type == OrderType.OptionExercise)
+
+            if (!_supportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"{order.Type} orders are not supported by Kraken.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
 
                 return false;
             }
-            
+
             return base.CanSubmitOrder(security, order, out message);
         }
 
@@ -119,7 +126,7 @@ namespace QuantConnect.Brokerages
         /// <returns>Always false as Kraken does not support update of orders</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead."); ;
+            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
             return false;
         }
 
@@ -179,7 +186,7 @@ namespace QuantConnect.Brokerages
             var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Kraken);
             return SecurityBenchmark.CreateInstance(securities, symbol);
         }
-        
+
         /// <summary>
         /// Get default markets and specify Kraken as crypto market
         /// </summary>

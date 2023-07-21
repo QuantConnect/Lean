@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Packets;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
@@ -43,6 +44,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// True if the composite queue handler has any <see cref="IDataQueueUniverseProvider"/> instance
         /// </summary>
         public bool HasUniverseProvider => DataHandlers.OfType<IDataQueueUniverseProvider>().Any();
+
+        /// <summary>
+        /// Event triggered when an unsupported configuration is detected
+        /// </summary>
+        public event EventHandler<SubscriptionDataConfig> UnsupportedConfiguration;
 
         /// <summary>
         /// Subscribe to the specified configuration
@@ -90,6 +96,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         new TimeZoneOffsetProvider(exchangeTimeZone, _frontierTimeProvider.GetUtcNow(), Time.EndOfTime)
                     );
                 }
+            }
+
+            // filter out warning for expected cases to reduce noise
+            if (!dataConfig.Symbol.Value.Contains("-UNIVERSE-", StringComparison.InvariantCultureIgnoreCase)
+                && dataConfig.Type != typeof(Delisting)
+                && !dataConfig.Symbol.IsCanonical())
+            {
+                UnsupportedConfiguration?.Invoke(this, dataConfig);
             }
             return null;
         }

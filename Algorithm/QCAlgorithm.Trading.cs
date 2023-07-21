@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect.Algorithm
 {
@@ -30,6 +31,7 @@ namespace QuantConnect.Algorithm
         private int _maxOrders = 10000;
         private bool _isMarketOnOpenOrderWarningSent;
         private bool _isMarketOnOpenOrderRestrictedForFuturesWarningSent;
+        private bool _isGtdTfiForMooAndMocOrdersValidationWarningSent;
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
@@ -320,8 +322,11 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOnOpenOrder(Symbol symbol, decimal quantity, string tag = "", IOrderProperties orderProperties = null)
         {
+            var properties = orderProperties ?? DefaultOrderProperties?.Clone();
+            InvalidateGoodTilDateTimeInForce(properties);
+
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, properties);
 
             return SubmitOrderRequest(request);
         }
@@ -365,8 +370,11 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOnCloseOrder(Symbol symbol, decimal quantity, string tag = "", IOrderProperties orderProperties = null)
         {
+            var properties = orderProperties ?? DefaultOrderProperties?.Clone();
+            InvalidateGoodTilDateTimeInForce(properties);
+
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, properties);
 
             return SubmitOrderRequest(request);
         }
@@ -766,6 +774,7 @@ namespace QuantConnect.Algorithm
             var groupOrderManager = new GroupOrderManager(Transactions.GetIncrementGroupOrderManagerId(), legs.Count, quantity, limitPrice);
 
             List<OrderTicket> orderTickets = new(capacity: legs.Count);
+            List<SubmitOrderRequest> submitRequests = new(capacity: legs.Count);
             foreach (var leg in legs)
             {
                 var security = Securities[leg.Symbol];
@@ -776,26 +785,30 @@ namespace QuantConnect.Algorithm
                     limitPrice = leg.OrderPrice.Value;
                     orderType = OrderType.ComboLegLimit;
                 }
-                var request = CreateSubmitOrderRequest(orderType, security, leg.Quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone(), groupOrderManager: groupOrderManager, limitPrice: limitPrice);
+                var request = CreateSubmitOrderRequest(
+                    orderType,
+                    security,
+                    ((decimal)leg.Quantity).GetOrderLegGroupQuantity(groupOrderManager),
+                    tag,
+                    orderProperties ?? DefaultOrderProperties?.Clone(),
+                    groupOrderManager: groupOrderManager,
+                    limitPrice: limitPrice);
 
-                //Add the order and create a new order Id.
-                var orderTicket = SubmitOrderRequest(request);
-
-                orderTickets.Add(orderTicket);
-                if (orderTicket.Status == OrderStatus.Invalid)
+                // we execture pre order checks for all requests before submitting, so that if anything fails we are not left with half submitted combo orders
+                var response = PreOrderChecks(request);
+                if (response.IsError)
                 {
-                    foreach (var ticket in orderTickets)
-                    {
-                        // we should cancel all of them if any failed
-                        if (ticket.Status.IsOpen())
-                        {
-                            ticket.Cancel();
-                        }
-                    }
-
-                    // break out
-                    break;
+                    orderTickets.Add(OrderTicket.InvalidSubmitRequest(Transactions, request, response));
+                    return orderTickets;
                 }
+
+                submitRequests.Add(request);
+            }
+
+            foreach (var request in submitRequests)
+            {
+                //Add the order and create a new order Id.
+                orderTickets.Add(Transactions.AddOrder(request));
             }
 
             // Wait for the order event to process, only if the exchange is open
@@ -874,7 +887,7 @@ namespace QuantConnect.Algorithm
 
             if (Math.Abs(request.Quantity) < security.SymbolProperties.LotSize)
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.OrderQuantityLessThanLoteSize,
+                return OrderResponse.Error(request, OrderResponseErrorCode.OrderQuantityLessThanLotSize,
                     Invariant($"Unable to {request.OrderRequestType.ToLower()} order with id {request.OrderId} which ") +
                     Invariant($"quantity ({Math.Abs(request.Quantity)}) is less than lot ") +
                     Invariant($"size ({security.SymbolProperties.LotSize}).")
@@ -1015,8 +1028,10 @@ namespace QuantConnect.Algorithm
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
 
                 // Enforce MarketOnClose submission buffer
-                var latestSubmissionTime = nextMarketClose.Subtract(Orders.MarketOnCloseOrder.SubmissionTimeBuffer);
-                if (Time > latestSubmissionTime)
+                var latestSubmissionTimeUtc = nextMarketClose
+                    .ConvertToUtc(security.Exchange.TimeZone)
+                    .Subtract(Orders.MarketOnCloseOrder.SubmissionTimeBuffer);
+                if (UtcTime > latestSubmissionTimeUtc)
                 {
                     // Tell user the required buffer on these orders, also inform them it can be changed for special cases.
                     // Default buffer is 15.5 minutes because with minute data a user will receive the 3:44->3:45 bar at 3:45,
@@ -1140,12 +1155,18 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public void SetHoldings(List<PortfolioTarget> targets, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
+            //If they triggered a liquidate
+            if (liquidateExistingHoldings)
+            {
+                LiquidateExistingHoldings(targets.Select(x => x.Symbol).ToHashSet(), tag, orderProperties);
+            }
+
             foreach (var portfolioTarget in targets
                 // we need to create targets with quantities for OrderTargetsByMarginImpact
                 .Select(target => new PortfolioTarget(target.Symbol, CalculateOrderQuantity(target.Symbol, target.Quantity)))
                 .OrderTargetsByMarginImpact(this, targetIsDelta:true))
             {
-                SetHoldingsImpl(portfolioTarget.Symbol, portfolioTarget.Quantity, liquidateExistingHoldings, tag, orderProperties);
+                SetHoldingsImpl(portfolioTarget.Symbol, portfolioTarget.Quantity, false, tag, orderProperties);
             }
         }
 
@@ -1220,17 +1241,7 @@ namespace QuantConnect.Algorithm
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                foreach (var kvp in Portfolio)
-                {
-                    var holdingSymbol = kvp.Key;
-                    var holdings = kvp.Value;
-                    if (holdingSymbol != symbol && holdings.AbsoluteQuantity > 0)
-                    {
-                        //Go through all existing holdings [synchronously], market order the inverse quantity:
-                        var liquidationQuantity = CalculateOrderQuantity(holdingSymbol, 0m);
-                        Order(holdingSymbol, liquidationQuantity, false, tag, orderProperties);
-                    }
-                }
+                LiquidateExistingHoldings(new HashSet<Symbol> { symbol }, tag, orderProperties);
             }
 
             //Calculate total unfilled quantity for open market orders
@@ -1259,6 +1270,27 @@ namespace QuantConnect.Algorithm
                 else
                 {
                     MarketOnOpenOrder(symbol, quantity, tag, orderProperties);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Liquidate existing holdings, except for the target list of Symbol.
+        /// </summary>
+        /// <param name="symbols">List of Symbol indexer</param>
+        /// <param name="tag">Tag the order with a short string.</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        private void LiquidateExistingHoldings(HashSet<Symbol> symbols, string tag = "", IOrderProperties orderProperties = null)
+        {
+            foreach (var kvp in Portfolio)
+            {
+                var holdingSymbol = kvp.Key;
+                var holdings = kvp.Value;
+                if (!symbols.Contains(holdingSymbol) && holdings.AbsoluteQuantity > 0)
+                {
+                    //Go through all existing holdings [synchronously], market order the inverse quantity:
+                    var liquidationQuantity = CalculateOrderQuantity(holdingSymbol, 0m);
+                    Order(holdingSymbol, liquidationQuantity, false, tag, orderProperties);
                 }
             }
         }
@@ -1365,7 +1397,7 @@ namespace QuantConnect.Algorithm
 
         private static void CheckComboOrderSizing(List<Leg> legs, decimal quantity)
         {
-            var greatestsCommonDivisor = legs.Select(leg => leg.Quantity).GreatestCommonDivisor();
+            var greatestsCommonDivisor = Math.Abs(legs.Select(leg => leg.Quantity).GreatestCommonDivisor());
 
             if (greatestsCommonDivisor != 1)
             {
@@ -1375,6 +1407,26 @@ namespace QuantConnect.Algorithm
                     "The combo order quantities should be reduced " +
                     $"from {quantity}x({string.Join(", ", legs.Select(leg => $"{leg.Quantity} {leg.Symbol}"))}) " +
                     $"to {quantity * greatestsCommonDivisor}x({string.Join(", ", legs.Select(leg => $"{leg.Quantity / greatestsCommonDivisor} {leg.Symbol}"))}).");
+            }
+        }
+
+        /// <summary>
+        /// Resets the time-in-force to the default <see cref="TimeInForce.GoodTilCanceled" /> if the given one is a <see cref="GoodTilDateTimeInForce"/>.
+        /// This is required for MOO and MOC orders, for which GTD is not supported.
+        /// </summary>
+        private void InvalidateGoodTilDateTimeInForce(IOrderProperties orderProperties)
+        {
+            if (orderProperties.TimeInForce as GoodTilDateTimeInForce != null)
+            {
+                // Good-Til-Date(GTD) Time-In-Force is not supported for MOO and MOC orders
+                orderProperties.TimeInForce = TimeInForce.GoodTilCanceled;
+
+                if (!_isGtdTfiForMooAndMocOrdersValidationWarningSent)
+                {
+                    Debug("Warning: Good-Til-Date Time-In-Force is not supported for MOO and MOC orders. " +
+                        "The time-in-force will be reset to Good-Til-Canceled (GTC).");
+                    _isGtdTfiForMooAndMocOrdersValidationWarningSent = true;
+                }
             }
         }
     }

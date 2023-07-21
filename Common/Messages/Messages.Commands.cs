@@ -13,9 +13,7 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
 using System.Runtime.CompilerServices;
-using System;
 using QuantConnect.Commands;
 using QuantConnect.Orders;
 
@@ -74,7 +72,7 @@ namespace QuantConnect
         public static class OrderCommand
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string CommandInfo(OrderType orderType, Symbol symbol, decimal quantity, Orders.OrderResponse response)
+            public static string CommandInfo(OrderType orderType, QuantConnect.Symbol symbol, decimal quantity, Orders.OrderResponse response)
             {
                 return Invariant($"{orderType} for {quantity} units of {symbol}: {response}");
             }

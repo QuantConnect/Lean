@@ -43,7 +43,7 @@ namespace QuantConnect.ToolBox.KrakenDownloader
                 var castResolution = (Resolution)Enum.Parse(typeof(Resolution), resolution);
 
                 // Load settings from config.json and create downloader
-                var dataDirectory = Config.Get("data-directory", "../../../Data");
+                var dataDirectory = Globals.DataFolder;
                 var downloader = new KrakenDataDownloader();
 
                 foreach (var pair in tickers)

@@ -48,8 +48,8 @@ namespace QuantConnect
         public static class GroupOrderExtensions
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string InsufficientBuyingPowerForOrders(Dictionary<Orders.Order, Security> securities,
-            HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult)
+            public static string InsufficientBuyingPowerForOrders(Dictionary<Orders.Order, Securities.Security> securities,
+                HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult)
             {
                 var ids = string.Join(",", securities.Keys.Select(o => o.Id));
                 var values = string.Join(",", securities.Select(o => o.Key.GetValue(o.Value).SmartRounding()));
@@ -286,8 +286,6 @@ namespace QuantConnect
         /// </summary>
         public static class OrderTicket
         {
-            public static string NullCancelRequest = "CancelRequest is null.";
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string GetFieldError(Orders.OrderTicket ticket, OrderField field)
             {

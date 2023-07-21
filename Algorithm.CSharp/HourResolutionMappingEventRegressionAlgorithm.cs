@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2008, 08, 20);
             SetEndDate(2008, 10, 1);
 
-            AddEquity("SPWR", Resolution.Hour, fillDataForward:false);
+            AddEquity("SPWR", Resolution.Hour, fillForward:false);
         }
 
         /// <summary>
@@ -118,25 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$5.40"},
             {"Estimated Strategy Capacity", "$2400000.00"},
             {"Lowest Capacity Asset", "SPWR TDQZFPKOZ5UT"},
-            {"Fitness Score", "0.008"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-1.038"},
-            {"Return Over Maximum Drawdown", "-2.536"},
-            {"Portfolio Turnover", "0.033"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Portfolio Turnover", "2.34%"},
             {"OrderListHash", "4bf8a2d15c6c6ac98e55d7c6ea10f54e"}
         };
     }

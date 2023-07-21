@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
@@ -27,26 +28,32 @@ namespace QuantConnect.Securities
         private readonly TimeSpan _timeOfDay;
 
         /// <summary>
+        /// The list of pending funds waiting for settlement time
+        /// </summary>
+        private readonly Queue<UnsettledCashAmount> _unsettledCashAmounts;
+
+        /// <summary>
         /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
         /// </summary>
         /// <param name="numberOfDays">The number of days required for settlement</param>
         /// <param name="timeOfDay">The time of day used for settlement</param>
         public DelayedSettlementModel(int numberOfDays, TimeSpan timeOfDay)
         {
-            _numberOfDays = numberOfDays;
             _timeOfDay = timeOfDay;
+            _numberOfDays = numberOfDays;
+            _unsettledCashAmounts = new();
         }
 
         /// <summary>
         /// Applies cash settlement rules
         /// </summary>
-        /// <param name="portfolio">The algorithm's portfolio</param>
-        /// <param name="security">The fill's security</param>
-        /// <param name="applicationTimeUtc">The fill time (in UTC)</param>
-        /// <param name="currency">The currency symbol</param>
-        /// <param name="amount">The amount of cash to apply</param>
-        public void ApplyFunds(SecurityPortfolioManager portfolio, Security security, DateTime applicationTimeUtc, string currency, decimal amount)
+        /// <param name="applyFundsParameters">The funds application parameters</param>
+        public void ApplyFunds(ApplyFundsSettlementModelParameters applyFundsParameters)
         {
+            var currency = applyFundsParameters.CashAmount.Currency;
+            var amount = applyFundsParameters.CashAmount.Amount;
+            var security = applyFundsParameters.Security;
+            var portfolio = applyFundsParameters.Portfolio;
             if (amount > 0)
             {
                 // positive amount: sell order filled
@@ -54,7 +61,7 @@ namespace QuantConnect.Securities
                 portfolio.UnsettledCashBook[currency].AddAmount(amount);
 
                 // find the correct settlement date (usually T+3 or T+1)
-                var settlementDate = applicationTimeUtc.ConvertFromUtc(security.Exchange.TimeZone).Date;
+                var settlementDate = applyFundsParameters.UtcTime.ConvertFromUtc(security.Exchange.TimeZone).Date;
                 for (var i = 0; i < _numberOfDays; i++)
                 {
                     settlementDate = settlementDate.AddDays(1);
@@ -67,13 +74,40 @@ namespace QuantConnect.Securities
                 // use correct settlement time
                 var settlementTimeUtc = settlementDate.Add(_timeOfDay).ConvertToUtc(security.Exchange.Hours.TimeZone);
 
-                portfolio.AddUnsettledCashAmount(new UnsettledCashAmount(settlementTimeUtc, currency, amount));
+                lock (_unsettledCashAmounts)
+                {
+                    _unsettledCashAmounts.Enqueue(new UnsettledCashAmount(settlementTimeUtc, currency, amount));
+                }
             }
             else
             {
                 // negative amount: buy order filled
 
                 portfolio.CashBook[currency].AddAmount(amount);
+            }
+        }
+
+        /// <summary>
+        /// Scan for pending settlements
+        /// </summary>
+        /// <param name="settlementParameters">The settlement parameters</param>
+        public void Scan(ScanSettlementModelParameters settlementParameters)
+        {
+            lock (_unsettledCashAmounts)
+            {
+                while (_unsettledCashAmounts.TryPeek(out var item)
+                    // check if settlement time has passed
+                    && settlementParameters.UtcTime >= item.SettlementTimeUtc)
+                {
+                    // remove item from unsettled funds list
+                    _unsettledCashAmounts.Dequeue();
+
+                    // update unsettled cashbook
+                    settlementParameters.Portfolio.UnsettledCashBook[item.Currency].AddAmount(-item.Amount);
+
+                    // update settled cashbook
+                    settlementParameters.Portfolio.CashBook[item.Currency].AddAmount(item.Amount);
+                }
             }
         }
     }

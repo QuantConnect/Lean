@@ -17,6 +17,7 @@ using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
+using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 
@@ -27,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <meta name="tag" content="transaction fees and slippage" />
     /// <meta name="tag" content="custom fill models" />
-    public class CustomPartialFillModelAlgorithm : QCAlgorithm
+    public class CustomPartialFillModelAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
         private SecurityHolding _holdings;
@@ -52,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Time.Day > 10 && _holdings.Quantity <= 0)
             {
-                MarketOrder(_spy, 100, true);
+                MarketOrder(_spy, 105, true);
             }
             else if (Time.Day > 20 && _holdings.Quantity >= 0)
             {
@@ -86,23 +87,74 @@ namespace QuantConnect.Algorithm.CSharp
                 // Create the object
                 var fill = base.MarketFill(asset, order);
 
-                // Set this fill amount
-                fill.FillQuantity = Math.Sign(order.Quantity) * 10;
-
-                if (absoluteRemaining == fill.FillQuantity)
+                // Set the fill amount
+                fill.FillQuantity = Math.Sign(order.Quantity) * 10m;
+                if (Math.Min(Math.Abs(fill.FillQuantity), absoluteRemaining) == absoluteRemaining)
                 {
+                    fill.FillQuantity = Math.Sign(order.Quantity) * absoluteRemaining;
                     fill.Status = OrderStatus.Filled;
                     _absoluteRemainingByOrderId.Remove(order.Id);
                 }
                 else
                 {
                     fill.Status = OrderStatus.PartiallyFilled;
-                    _absoluteRemainingByOrderId[order.Id] = absoluteRemaining - fill.FillQuantity;
+                    _absoluteRemainingByOrderId[order.Id] = absoluteRemaining - Math.Abs(fill.FillQuantity);
                     var price = fill.FillPrice;
-                    _algorithm.Debug($"{_algorithm.Time} - Partial Fill - Remaining {absoluteRemaining} Price - {price}");
+                    //_algorithm.Debug($"{_algorithm.Time} - Partial Fill - Remaining {_absoluteRemainingByOrderId[order.Id]} Price - {price}");
                 }
                 return fill;
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 582;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "24"},
+            {"Average Win", "0.02%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "3.413%"},
+            {"Drawdown", "0.600%"},
+            {"Expectancy", "0.426"},
+            {"Net Profit", "0.550%"},
+            {"Sharpe Ratio", "1.604"},
+            {"Probabilistic Sharpe Ratio", "61.217%"},
+            {"Loss Rate", "44%"},
+            {"Win Rate", "56%"},
+            {"Profit-Loss Ratio", "1.52"},
+            {"Alpha", "-0.009"},
+            {"Beta", "0.05"},
+            {"Annual Standard Deviation", "0.015"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-5.465"},
+            {"Tracking Error", "0.114"},
+            {"Treynor Ratio", "0.476"},
+            {"Total Fees", "$24.00"},
+            {"Estimated Strategy Capacity", "$89000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Portfolio Turnover", "10.59%"},
+            {"OrderListHash", "4b8c4127574cacaf8fd6e6d42c7f3f67"}
+        };
     }
 }

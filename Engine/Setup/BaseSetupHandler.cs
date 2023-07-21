@@ -157,6 +157,8 @@ namespace QuantConnect.Lean.Engine.Setup
 
             Log.Trace($"BaseSetupHandler.SetupCurrencyConversions():{Environment.NewLine}" +
                 $"Account Type: {algorithm.BrokerageModel.AccountType}{Environment.NewLine}{Environment.NewLine}{algorithm.Portfolio.CashBook}");
+            // this is useful for debugging
+            algorithm.Portfolio.LogMarginInformation();
         }
 
         /// <summary>

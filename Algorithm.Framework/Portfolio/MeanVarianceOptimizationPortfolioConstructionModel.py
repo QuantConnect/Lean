@@ -68,7 +68,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
 
         symbolData = self.symbolDataBySymbol.get(insight.Symbol)
         if insight.Magnitude is None:
-            self.algorithm.SetRunTimeError(ArgumentNullException('MeanVarianceOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please checkout the selected Alpha Model specifications.'))
+            self.Algorithm.SetRunTimeError(ArgumentNullException('MeanVarianceOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please checkout the selected Alpha Model specifications.'))
             return False
         symbolData.Add(self.Algorithm.Time, insight.Magnitude)
 
@@ -89,7 +89,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         symbols = [insight.Symbol for insight in activeInsights]
 
         # Create a dictionary keyed by the symbols in the insights with an pandas.Series as value to create a data frame
-        returns = { str(symbol) : data.Return for symbol, data in self.symbolDataBySymbol.items() if symbol in symbols }
+        returns = { str(symbol.ID) : data.Return for symbol, data in self.symbolDataBySymbol.items() if symbol in symbols }
         returns = pd.DataFrame(returns)
 
         # The portfolio optimizer finds the optional weights for the given data
@@ -98,7 +98,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
 
         # Create portfolio targets from the specified insights
         for insight in activeInsights:
-            weight = weights[str(insight.Symbol)]
+            weight = weights[str(insight.Symbol.ID)]
 
             # don't trust the optimizer
             if self.portfolioBias != PortfolioBias.LongShort and self.sign(weight) != self.portfolioBias:
@@ -120,18 +120,14 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             symbolData.Reset()
 
         # initialize data for added securities
-        symbols = [ x.Symbol for x in changes.AddedSecurities ]
-        history = algorithm.History(symbols, self.lookback * self.period, self.resolution)
-        if history.empty: return
+        symbols = [x.Symbol for x in changes.AddedSecurities]
+        for symbol in [x for x in symbols if x not in self.symbolDataBySymbol]:
+            self.symbolDataBySymbol[symbol] = self.MeanVarianceSymbolData(symbol, self.lookback, self.period)
 
-        tickers = history.index.levels[0]
-        for ticker in tickers:
-            symbol = SymbolCache.GetSymbol(ticker)
-
-            if symbol not in self.symbolDataBySymbol:
-                symbolData = self.MeanVarianceSymbolData(symbol, self.lookback, self.period)
-                symbolData.WarmUpIndicators(history.loc[ticker])
-                self.symbolDataBySymbol[symbol] = symbolData
+        history = algorithm.History[TradeBar](symbols, self.lookback * self.period, self.resolution)
+        for bars in history:
+            for symbol, bar in bars.items():
+                symbolData = self.symbolDataBySymbol.get(symbol).Update(bar.EndTime, bar.Value)
 
     class MeanVarianceSymbolData:
         '''Contains data specific to a symbol required by this model'''
@@ -146,9 +142,8 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             self.roc.Reset()
             self.window.Reset()
 
-        def WarmUpIndicators(self, history):
-            for tuple in history.itertuples():
-                self.roc.Update(tuple.Index, tuple.close)
+        def Update(self, time, value):
+            return self.roc.Update(time, value)
 
         def OnRateOfChangeUpdated(self, roc, value):
             if roc.IsReady:
@@ -158,10 +153,13 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             item = IndicatorDataPoint(self.symbol, time, value)
             self.window.Add(item)
 
+        # Get symbols' returns, we use simple return according to
+        # Meucci, Attilio, Quant Nugget 2: Linear vs. Compounded Returns – Common Pitfalls in Portfolio Management (May 1, 2010). 
+        # GARP Risk Professional, pp. 49-51, April 2010 , Available at SSRN: https://ssrn.com/abstract=1586656
         @property
         def Return(self):
             return pd.Series(
-                data = [(1 + float(x.Value))**252 - 1 for x in self.window],
+                data = [x.Value for x in self.window],
                 index = [x.EndTime for x in self.window])
 
         @property
@@ -169,4 +167,4 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             return self.window.IsReady
 
         def __str__(self, **kwargs):
-            return '{}: {:.2%}'.format(self.roc.Name, (1 + self.window[0])**252 - 1)
+            return '{}: {:.2%}'.format(self.roc.Name, self.window[0])

@@ -18,14 +18,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using QuantConnect.Data;
-using System.Collections.Concurrent;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -66,14 +63,21 @@ namespace QuantConnect.Securities
             }
         }
 
-        private readonly ConcurrentDictionary<string, Cash> _currencies;
+        /// <summary>
+        /// No need for concurrent collection, they are expensive. Currencies barely change and only on the start
+        /// by the main thread, so if they do we will just create a new collection, reference change is atomic
+        /// </summary>
+        private Dictionary<string, Cash> _currencies;
 
         /// <summary>
         /// Gets the total value of the cash book in units of the base currency
         /// </summary>
         public decimal TotalValueInAccountCurrency
         {
-            get { return _currencies.Aggregate(0m, (d, pair) => d + pair.Value.ValueInAccountCurrency); }
+            get
+            {
+                return this.Aggregate(0m, (d, pair) => d + pair.Value.ValueInAccountCurrency);
+            }
         }
 
         /// <summary>
@@ -81,7 +85,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public CashBook()
         {
-            _currencies = new ConcurrentDictionary<string, Cash>();
+            _currencies = new();
             AccountCurrency = Currencies.USD;
         }
 
@@ -160,12 +164,12 @@ namespace QuantConnect.Securities
 
             if (source.ConversionRate == 0)
             {
-                throw new ArgumentException($"The conversion rate for {sourceCurrency} is not available.");
+                throw new ArgumentException(Messages.CashBook.ConversionRateNotFound(sourceCurrency));
             }
 
             if (destination.ConversionRate == 0)
             {
-                throw new ArgumentException($"The conversion rate for {destinationCurrency} is not available.");
+                throw new ArgumentException(Messages.CashBook.ConversionRateNotFound(destinationCurrency));
             }
 
             var conversionRate = source.ConversionRate / destination.ConversionRate;
@@ -196,19 +200,7 @@ namespace QuantConnect.Securities
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            sb.AppendLine(Invariant($"Symbol {"Quantity",13}    {"Conversion",10} = Value in {AccountCurrency}"));
-            foreach (var value in _currencies.Select(x => x.Value))
-            {
-                sb.AppendLine(value.ToString(AccountCurrency));
-            }
-            sb.AppendLine("-------------------------------------------------");
-            sb.AppendLine("CashBook Total Value:                " +
-                Invariant($"{Currencies.GetCurrencySymbol(AccountCurrency)}") +
-                Invariant($"{Math.Round(TotalValueInAccountCurrency, 2).ToStringInvariant()}")
-            );
-
-            return sb.ToString();
+            return Messages.CashBook.ToString(this);
         }
 
         #region IDictionary Implementation
@@ -217,7 +209,13 @@ namespace QuantConnect.Securities
         /// Gets the count of Cash items in this CashBook.
         /// </summary>
         /// <value>The count.</value>
-        public int Count => _currencies.Skip(0).Count();
+        public int Count
+        {
+            get
+            {
+                return _currencies.Count;
+            }
+        }
 
         /// <summary>
         /// Gets a value indicating whether this instance is read only.
@@ -225,7 +223,7 @@ namespace QuantConnect.Securities
         /// <value><c>true</c> if this instance is read only; otherwise, <c>false</c>.</value>
         public bool IsReadOnly
         {
-            get { return ((IDictionary<string, Cash>) _currencies).IsReadOnly; }
+            get { return false; }
         }
 
         /// <summary>
@@ -252,7 +250,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public void Clear()
         {
-            _currencies.Clear();
+            _currencies = new();
             OnUpdate(CashBookUpdateType.Removed, null);
         }
 
@@ -325,13 +323,12 @@ namespace QuantConnect.Securities
             {
                 if (symbol == Currencies.NullCurrency)
                 {
-                    throw new InvalidOperationException(
-                        "Unexpected request for NullCurrency Cash instance");
+                    throw new InvalidOperationException(Messages.CashBook.UnexpectedRequestForNullCurrency);
                 }
                 Cash cash;
                 if (!_currencies.TryGetValue(symbol, out cash))
                 {
-                    throw new KeyNotFoundException($"This cash symbol ({symbol}) was not found in your cash book.");
+                    throw new KeyNotFoundException(Messages.CashBook.CashSymbolNotFound(symbol));
                 }
                 return cash;
             }
@@ -345,13 +342,13 @@ namespace QuantConnect.Securities
         /// Gets the keys.
         /// </summary>
         /// <value>The keys.</value>
-        public ICollection<string> Keys => _currencies.Select(x => x.Key).ToList();
+        public ICollection<string> Keys => _currencies.Keys;
 
         /// <summary>
         /// Gets the values.
         /// </summary>
         /// <value>The values.</value>
-        public ICollection<Cash> Values => _currencies.Select(x => x.Value).ToList();
+        public ICollection<Cash> Values => _currencies.Values;
 
         /// <summary>
         /// Gets the enumerator.
@@ -364,7 +361,7 @@ namespace QuantConnect.Securities
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable) _currencies).GetEnumerator();
+            return _currencies.GetEnumerator();
         }
 
         #endregion
@@ -401,7 +398,11 @@ namespace QuantConnect.Securities
                 // we link our Updated event with underlying cash instances
                 // so interested listeners just subscribe to our event
                 value.Updated += OnCashUpdate;
-                _currencies.AddOrUpdate(symbol, value);
+                var newCurrencies = new Dictionary<string, Cash>(_currencies)
+                {
+                    [symbol] = value
+                };
+                _currencies = newCurrencies;
 
                 OnUpdate(CashBookUpdateType.Added, value);
 
@@ -421,12 +422,14 @@ namespace QuantConnect.Securities
         private bool Remove(string symbol, bool calledInternally)
         {
             Cash cash = null;
-            var removed = _currencies.TryRemove(symbol, out cash);
+            var newCurrencies = new Dictionary<string, Cash>(_currencies);
+            var removed = newCurrencies.Remove(symbol, out cash);
+            _currencies = newCurrencies;
             if (!removed)
             {
                 if (!calledInternally)
                 {
-                    Log.Error($"CashBook.Remove(): Failed to remove the cash book record for symbol {symbol}");
+                    Log.Error("CashBook.Remove(): " + Messages.CashBook.FailedToRemoveRecord(symbol));
                 }
             }
             else

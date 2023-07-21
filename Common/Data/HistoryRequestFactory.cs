@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -45,16 +45,20 @@ namespace QuantConnect.Data
         /// <param name="endAlgoTz">History request end time in algorithm time zone</param>
         /// <param name="exchangeHours">Security exchange hours</param>
         /// <param name="resolution">The resolution to use. If null will use <see cref="SubscriptionDataConfig.Resolution"/></param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
-        /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
         /// <returns>The new <see cref="HistoryRequest"/></returns>
         public HistoryRequest CreateHistoryRequest(SubscriptionDataConfig subscription,
             DateTime startAlgoTz,
             DateTime endAlgoTz,
             SecurityExchangeHours exchangeHours,
             Resolution? resolution,
+            bool? fillForward = null,
+            bool? extendedMarketHours = null,
             DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
@@ -70,6 +74,12 @@ namespace QuantConnect.Data
                 dataType = LeanData.GetDataType(resolution.Value, subscription.TickType);
             }
 
+            var fillForwardResolution = subscription.FillDataForward ? resolution : null;
+            if (fillForward != null)
+            {
+                fillForwardResolution = fillForward.Value ? resolution : null;
+            }
+
             var request = new HistoryRequest(subscription,
                 exchangeHours,
                 startAlgoTz.ConvertToUtc(_algorithm.TimeZone),
@@ -77,9 +87,14 @@ namespace QuantConnect.Data
             {
                 DataType = dataType,
                 Resolution = resolution.Value,
-                FillForwardResolution = subscription.FillDataForward ? resolution : null,
+                FillForwardResolution = fillForwardResolution,
                 TickType = subscription.TickType
             };
+
+            if (extendedMarketHours != null)
+            {
+                request.IncludeExtendedMarketHours = extendedMarketHours.Value;
+            }
 
             if (dataMappingMode != null)
             {
@@ -108,19 +123,35 @@ namespace QuantConnect.Data
         /// <param name="resolution">The length of each bar</param>
         /// <param name="exchange">The exchange hours used for market open hours</param>
         /// <param name="dataTimeZone">The time zone in which data are stored</param>
+        /// <param name="extendedMarketHours">
+        /// True to include extended market hours data, false otherwise.
+        /// If not passed, the config will be used to determined whether to include extended market hours.
+        /// </param>
         /// <returns>The start time that would provide the specified number of bars ending at the algorithm's current time</returns>
         public DateTime GetStartTimeAlgoTz(
             Symbol symbol,
             int periods,
             Resolution resolution,
             SecurityExchangeHours exchange,
-            DateTimeZone dataTimeZone)
+            DateTimeZone dataTimeZone,
+            bool? extendedMarketHours = null)
         {
-            var configs = _algorithm.SubscriptionManager
-                .SubscriptionDataConfigService
-                .GetSubscriptionDataConfigs(symbol);
+            var isExtendedMarketHours = false;
             // hour resolution does no have extended market hours data
-            var isExtendedMarketHours = resolution != Resolution.Hour && configs.IsExtendedMarketHours();
+            if (resolution != Resolution.Hour)
+            {
+                if (extendedMarketHours.HasValue)
+                {
+                    isExtendedMarketHours = extendedMarketHours.Value;
+                }
+                else
+                {
+                    var configs = _algorithm.SubscriptionManager
+                        .SubscriptionDataConfigService
+                        .GetSubscriptionDataConfigs(symbol);
+                    isExtendedMarketHours = configs.IsExtendedMarketHours();
+                }
+            }
 
             var timeSpan = resolution.ToTimeSpan();
             // make this a minimum of one second

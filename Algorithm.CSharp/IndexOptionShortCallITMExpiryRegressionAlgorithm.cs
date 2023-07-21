@@ -16,11 +16,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -44,6 +45,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2021, 1, 4);
             SetEndDate(2021, 1, 31);
+            SetCash(1000000);
+
+            Portfolio.SetMarginCallModel(MarginCallModel.Null);
+
+            SetSecurityInitializer(new CompositeSecurityInitializer(SecurityInitializer,
+                new FuncSecurityInitializer((security) =>
+                {
+                    var option = security as Option;
+                    // avoid getting assigned
+                    option?.SetOptionAssignmentModel(new NullOptionAssignmentModel());
+                })));
 
             _spx = AddIndex("SPX", Resolution.Minute).Symbol;
 
@@ -171,7 +183,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 20443;
+        public long DataPoints => 19623;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -184,47 +196,29 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Average Win", "48.82%"},
+            {"Average Win", "5.00%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-80.089%"},
-            {"Drawdown", "13.400%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "-10.734%"},
-            {"Sharpe Ratio", "-1.921"},
-            {"Probabilistic Sharpe Ratio", "0.511%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Compounding Annual Return", "-12.811%"},
+            {"Drawdown", "1.200%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-0.959%"},
+            {"Sharpe Ratio", "-3.005"},
+            {"Probabilistic Sharpe Ratio", "0.483%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.671"},
-            {"Beta", "0.211"},
-            {"Annual Standard Deviation", "0.344"},
-            {"Annual Variance", "0.118"},
-            {"Information Ratio", "-1.963"},
-            {"Tracking Error", "0.36"},
-            {"Treynor Ratio", "-3.133"},
+            {"Alpha", "-0.093"},
+            {"Beta", "0.019"},
+            {"Annual Standard Deviation", "0.031"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-0.99"},
+            {"Tracking Error", "0.139"},
+            {"Treynor Ratio", "-4.919"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
-            {"Fitness Score", "0.005"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.676"},
-            {"Return Over Maximum Drawdown", "-7.289"},
-            {"Portfolio Turnover", "0.024"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "e0c73c8f7b4769aec2fdc714e899cb25"}
+            {"Portfolio Turnover", "0.19%"},
+            {"OrderListHash", "e7cbe009c8a1f81580e2307789979302"}
         };
     }
 }

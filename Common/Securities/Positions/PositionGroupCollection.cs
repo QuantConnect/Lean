@@ -16,7 +16,6 @@
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -28,10 +27,7 @@ namespace QuantConnect.Securities.Positions
         /// <summary>
         /// Gets an empty instance of the <see cref="PositionGroupCollection"/> class
         /// </summary>
-        public static PositionGroupCollection Empty { get; } = new PositionGroupCollection(
-            ImmutableDictionary<PositionGroupKey, IPositionGroup>.Empty,
-            ImmutableDictionary<Symbol, ImmutableHashSet<IPositionGroup>>.Empty
-        );
+        public static PositionGroupCollection Empty => new(new Dictionary<PositionGroupKey, IPositionGroup>(), new Dictionary<Symbol, HashSet<IPositionGroup>>());
 
         /// <summary>
         /// Gets the number of positions in this group
@@ -55,8 +51,8 @@ namespace QuantConnect.Securities.Positions
         }
 
         private bool? _hasNonDefaultGroups;
-        private readonly ImmutableDictionary<PositionGroupKey, IPositionGroup> _groups;
-        private readonly ImmutableDictionary<Symbol, ImmutableHashSet<IPositionGroup>> _groupsBySymbol;
+        private readonly Dictionary<PositionGroupKey, IPositionGroup> _groups;
+        private readonly Dictionary<Symbol, HashSet<IPositionGroup>> _groupsBySymbol;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PositionGroupCollection"/> class
@@ -64,8 +60,8 @@ namespace QuantConnect.Securities.Positions
         /// <param name="groups">The position groups keyed by their group key</param>
         /// <param name="groupsBySymbol">The position groups keyed by the symbol of each position</param>
         public PositionGroupCollection(
-            ImmutableDictionary<PositionGroupKey, IPositionGroup> groups,
-            ImmutableDictionary<Symbol, ImmutableHashSet<IPositionGroup>> groupsBySymbol
+            Dictionary<PositionGroupKey, IPositionGroup> groups,
+            Dictionary<Symbol, HashSet<IPositionGroup>> groupsBySymbol
             )
         {
             _groups = groups;
@@ -78,15 +74,12 @@ namespace QuantConnect.Securities.Positions
         /// <param name="groups">The position groups</param>
         public PositionGroupCollection(IReadOnlyCollection<IPositionGroup> groups)
         {
-            _groups = groups.ToImmutableDictionary(g => g.Key);
-            _groupsBySymbol = groups.SelectMany(group =>
-                    group.Select(position => new {position.Symbol, group})
-                )
-                .GroupBy(item => item.Symbol)
-                .ToImmutableDictionary(
-                    item => item.Key,
-                    item => item.Select(x => x.group).ToImmutableHashSet()
-                );
+            _groups = new();
+            _groupsBySymbol = new();
+            foreach (var group in groups)
+            {
+                Add(group);
+            }
         }
 
         /// <summary>
@@ -96,19 +89,17 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         public PositionGroupCollection Add(IPositionGroup group)
         {
-            var bySymbol = _groupsBySymbol;
             foreach (var position in group)
             {
-                ImmutableHashSet<IPositionGroup> groups;
-                if (!_groupsBySymbol.TryGetValue(position.Symbol, out groups))
+                if (!_groupsBySymbol.TryGetValue(position.Symbol, out var groups))
                 {
-                    groups = ImmutableHashSet<IPositionGroup>.Empty;
+                    _groupsBySymbol[position.Symbol] = groups = new();
                 }
-
-                bySymbol = _groupsBySymbol.SetItem(position.Symbol, groups.Add(group));
+                groups.Add(group);
             }
+            _groups[group.Key] = group;
 
-            return new PositionGroupCollection(_groups.SetItem(group.Key, group), bySymbol);
+            return this;
         }
 
         /// <summary>
@@ -134,7 +125,7 @@ namespace QuantConnect.Securities.Positions
                 IPositionGroup group;
                 if (!TryGetGroup(key, out group))
                 {
-                    return new PositionGroup(key, key.CreateEmptyPositions());
+                    return new PositionGroup(key, 0m, key.CreateEmptyPositions());
                 }
 
                 return group;
@@ -160,8 +151,8 @@ namespace QuantConnect.Securities.Positions
         /// <returns>True if groups were found for the specified symbol, otherwise false</returns>
         public bool TryGetGroups(Symbol symbol, out IReadOnlyCollection<IPositionGroup> groups)
         {
-            ImmutableHashSet<IPositionGroup> list;
-            if (_groupsBySymbol.TryGetValue(symbol, out list) && list?.IsEmpty == false)
+            HashSet<IPositionGroup> list;
+            if (_groupsBySymbol.TryGetValue(symbol, out list) && list?.Count > 0)
             {
                 groups = list;
                 return true;
@@ -176,6 +167,15 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         public PositionGroupCollection CombineWith(PositionGroupCollection other)
         {
+            if(other.Count == 0)
+            {
+                return this;
+            }
+            if (Count == 0)
+            {
+                return other;
+            }
+
             var result = this;
             foreach (var positionGroup in other)
             {

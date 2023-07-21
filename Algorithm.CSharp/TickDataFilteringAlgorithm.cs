@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="tick data" />
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="ticks event" />
-    public class TickDataFilteringAlgorithm : QCAlgorithm
+    public class TickDataFilteringAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialize the tick filtering example algorithm
@@ -38,11 +38,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetCash(25000);
             SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Tick);
+            SetEndDate(2013, 10, 07);
+            var spy = AddEquity("SPY", Resolution.Tick);
 
             //Add our custom data filter.
-            Securities["SPY"].DataFilter = new ExchangeDataFilter(this);
+            spy.SetDataFilter(new TickExchangeDataFilter(this));
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
             //Ticks return a list of ticks this second
             foreach (var tick in spyTickList)
             {
-                Log(tick.Exchange);
+                Debug(tick.Exchange);
             }
 
             if (!Portfolio.Invested)
@@ -65,11 +65,63 @@ namespace QuantConnect.Algorithm.CSharp
                 SetHoldings("SPY", 1);
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 707410;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "1"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$1.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Portfolio Turnover", "99.58%"},
+            {"OrderListHash", "87c2f29010a7825906e4955d5b5d28df"}
+        };
     }
+
     /// <summary>
     /// Exchange filter class
     /// </summary>
-    public class ExchangeDataFilter : ISecurityDataFilter
+    public class TickExchangeDataFilter : ISecurityDataFilter
     {
         private IAlgorithm _algo;
 
@@ -77,56 +129,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// Save instance of the algorithm namespace
         /// </summary>
         /// <param name="algo"></param>
-        public ExchangeDataFilter(IAlgorithm algo)
+        public TickExchangeDataFilter(IAlgorithm algo)
         {
             _algo = algo;
         }
-
-        /// <summary>
-        /// Global Market Short Codes and their full versions: (used in tick objects)
-        /// https://github.com/QuantConnect/QCAlgorithm/blob/master/QuantConnect.Common/Global.cs
-        /// </summary>
-        public static class MarketCodesFilter
-        {
-            /// US Market Codes
-            public static Dictionary<string, string> US = new Dictionary<string, string>()
-            {
-                {"A", "American Stock Exchange"},
-                {"B", "Boston Stock Exchange"},
-                {"C", "National Stock Exchange"},
-                {"D", "FINRA ADF"},
-                {"I", "International Securities Exchange"},
-                {"J", "Direct Edge A"},
-                {"K", "Direct Edge X"},
-                {"M", "Chicago Stock Exchange"},
-                {"N", "New York Stock Exchange"},
-                {"P", "Nyse Arca Exchange"},
-                {"Q", "NASDAQ OMX"},
-                {"T", "NASDAQ OMX"},
-                {"U", "OTC Bulletin Board"},
-                {"u", "Over-the-Counter trade in Non-NASDAQ issue"},
-                {"W", "Chicago Board Options Exchange"},
-                {"X", "Philadelphia Stock Exchange"},
-                {"Y", "BATS Y-Exchange, Inc"},
-                {"Z", "BATS Exchange, Inc"}
-            };
-
-            /// Canada Market Short Codes:
-            public static Dictionary<string, string> Canada = new Dictionary<string, string>()
-            {
-                {"T", "Toronto"},
-                {"V", "Venture"}
-            };
-
-            /// <summary>
-            /// Select allowed exchanges for this filter: e.g. top 4
-            /// </summary>
-            public static List<string> AllowedExchanges = new List<string>() {
-                "P",    //NYSE ARCA - SPY PRIMARY EXCHANGE
-                        //https://www.google.com/finance?q=NYSEARCA%3ASPY&ei=XcA2VKCSLs228waMhYCIBg
-            };
-        }
-
 
         /// <summary>
         /// Filter out a tick from this vehicle, with this new data:
@@ -142,7 +148,7 @@ namespace QuantConnect.Algorithm.CSharp
             // This is a tick bar
             if (tick != null)
             {
-                if (tick.Exchange == "P") //MarketCodesFilter.AllowedExchanges.Contains()
+                if (tick.Exchange == Exchange.ARCA)
                 {
                     return true;
                 }
@@ -151,6 +157,5 @@ namespace QuantConnect.Algorithm.CSharp
             //Only allow those exchanges through.
             return false;
         }
-
     }
 }

@@ -83,6 +83,86 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler?.DisposeSafely();
         }
 
+        [TestCase(SecurityType.Option, Resolution.Daily, 0)]
+        [TestCase(SecurityType.Future, Resolution.Daily, 0)]
+        [TestCase(SecurityType.Option, Resolution.Hour, 0)]
+        [TestCase(SecurityType.Future, Resolution.Hour, 0)]
+        [TestCase(SecurityType.Option, Resolution.Minute, 0)]
+        [TestCase(SecurityType.Future, Resolution.Minute, 0)]
+        [TestCase(SecurityType.Option, Resolution.Second, 0)]
+        [TestCase(SecurityType.Future, Resolution.Second, 0)]
+        [TestCase(SecurityType.Option, Resolution.Tick, 0)]
+        [TestCase(SecurityType.Future, Resolution.Tick, 0)]
+        [TestCase(SecurityType.Option, Resolution.Daily, 1)]
+        [TestCase(SecurityType.Future, Resolution.Daily, 1)]
+        [TestCase(SecurityType.Option, Resolution.Hour, 1)]
+        [TestCase(SecurityType.Future, Resolution.Hour, 1)]
+        [TestCase(SecurityType.Option, Resolution.Minute, 1)]
+        [TestCase(SecurityType.Future, Resolution.Minute, 1)]
+        [TestCase(SecurityType.Option, Resolution.Second, 1)]
+        [TestCase(SecurityType.Future, Resolution.Second, 1)]
+        [TestCase(SecurityType.Option, Resolution.Tick, 1)]
+        [TestCase(SecurityType.Future, Resolution.Tick, 1)]
+        public void LiveChainSelection(SecurityType securityType, Resolution resolution, int expirationDatesFilter)
+        {
+            _startDate = new DateTime(2014, 6, 9);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            var endDate = _startDate.AddDays(5);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var feed = RunDataFeed();
+
+            var selectionHappened = 0;
+            if (securityType == SecurityType.Option)
+            {
+                var chainAsset = _algorithm.AddOption("AAPL", resolution);
+                chainAsset.SetFilter(x =>
+                {
+                    selectionHappened++;
+                    var symbols = x.Expiration(0, expirationDatesFilter).IncludeWeeklys().OnlyApplyFilterAtMarketOpen().ToList();
+
+                    Assert.AreEqual(expirationDatesFilter + 1, symbols.Count(s => s.ID.OptionRight == OptionRight.Call));
+                    Assert.AreEqual(expirationDatesFilter + 1, symbols.Count(s => s.ID.OptionRight == OptionRight.Put));
+                    for (var i = 0; i < expirationDatesFilter; i++)
+                    {
+                        Assert.AreEqual(2, symbols.Count(s => s.ID.Date.Date == x.LocalTime.Date.AddDays(i)));
+                    }
+                    return x;
+                });
+            }
+            else
+            {
+                var chainAsset = _algorithm.AddFuture("ES", resolution);
+                chainAsset.SetFilter(x =>
+                {
+                    selectionHappened++;
+                    var symbols = x.Expiration(0, expirationDatesFilter).IncludeWeeklys().OnlyApplyFilterAtMarketOpen().ToList();
+
+                    Assert.AreEqual(expirationDatesFilter + 1, symbols.Count);
+                    for (var i = 0; i < expirationDatesFilter; i++)
+                    {
+                        Assert.AreEqual(1, symbols.Count(s => s.ID.Date.Date == x.LocalTime.Date.AddDays(i)));
+                    }
+                    return x;
+                });
+            }
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts => {
+                if (selectionHappened == 2)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60 * 60 * 6);
+
+            Assert.AreEqual(2, selectionHappened);
+        }
+
         [TestCase(false)]
         [TestCase(true)]
         public void WarmupOptionSelection(bool useWarmupResolution)
@@ -171,8 +251,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService);
                     // old future mapped contract is removed
                     Assert.AreEqual(2, result.Count);
-                    Assert.IsTrue(result.TryGetValue(es.Symbol.Value, out var holding));
-                    Assert.IsTrue(result.TryGetValue(es.Mapped.Value, out holding));
+                    Assert.IsTrue(result.TryGetValue(es.Symbol.ID.ToString(), out var holding));
+                    Assert.IsTrue(result.TryGetValue(es.Mapped.ID.ToString(), out holding));
 
                     Assert.AreEqual(0, LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService, onlyInvested: true).Count);
 
@@ -225,8 +305,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService);
 
                     Assert.AreEqual(2, result.Count);
-                    Assert.IsTrue(result.TryGetValue(es.Symbol.Value, out var holding));
-                    Assert.IsTrue(result.TryGetValue(es.Mapped.Value, out holding));
+                    Assert.IsTrue(result.TryGetValue(es.Symbol.ID.ToString(), out var holding));
+                    Assert.IsTrue(result.TryGetValue(es.Mapped.ID.ToString(), out holding));
 
                     Assert.AreEqual(0, LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService, onlyInvested: true).Count);
 
@@ -294,7 +374,75 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         [TestCase(false)]
         [TestCase(true)]
-        public void WarmupExpiredAsset(bool useWarmupResolution)
+        public void WarmupExpiredContinuousFuture(bool useWarmupResolution)
+        {
+            _startDate = new DateTime(2014, 12, 1);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
+            var endDate = _startDate.AddDays(30);
+            _algorithm.SetFutureChainProvider(new BacktestingFutureChainProvider(TestGlobals.DataCacheProvider));
+            _algorithm.UniverseSettings.Resolution = Resolution.Daily;
+            if (useWarmupResolution)
+            {
+                _algorithm.SetWarmup(365, Resolution.Daily);
+            }
+            else
+            {
+                _algorithm.SetWarmup(TimeSpan.FromDays(365));
+            }
+            var feed = RunDataFeed();
+
+            var continuousContract = _algorithm.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily,
+                dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
+                dataMappingMode: DataMappingMode.LastTradingDay,
+                contractDepthOffset: 0
+            );
+            // the expiration of this option contract is before the start date of the algorithm but we should still get some data during warmup
+            continuousContract.SetFilter(0, 182);
+
+            var emittedChainData = false;
+            var emittedContinuousData = false;
+            var assertedSubscriptions = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                if (_algorithm.IsWarmingUp)
+                {
+                    Assert.IsFalse(_dataQueueHandler.SubscriptionDataConfigs.Any(
+                        // the data queue handler shouldn't of seen the expired subscription at any point
+                        x => !x.Symbol.IsCanonical() && x.Symbol.SecurityType == SecurityType.Future && x.Symbol.ID.Date < _algorithm.StartDate));
+
+                    if (ts.Slice.HasData)
+                    {
+                        emittedContinuousData |= ts.Slice.Keys.Any(s => s == continuousContract.Symbol
+                            // let's assert that during warmup the continuous future got data of expired future
+                            && continuousContract.Mapped.ID.Date < _algorithm.StartDate);
+                        emittedChainData |= ts.Slice.Keys.Any(s => !s.IsCanonical() && s.SecurityType == SecurityType.Future
+                            // let's assert that during warmup we got chain data of expired futures
+                            && s.ID.Date < _algorithm.StartDate);
+                    }
+                }
+                else
+                {
+                    Assert.IsTrue(_dataQueueHandler.SubscriptionDataConfigs.Any(
+                        // the data queue handler should of seen the Non expired subscription at any point
+                        x => !x.Symbol.IsCanonical() && x.Symbol.SecurityType == SecurityType.Future && x.Symbol.ID.Date >= _algorithm.StartDate));
+
+                    assertedSubscriptions = true;
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60);
+
+            Assert.IsTrue(assertedSubscriptions);
+            Assert.IsTrue(emittedContinuousData);
+            Assert.IsTrue(emittedChainData);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WarmupExpiredOption(bool useWarmupResolution)
         {
             _startDate = new DateTime(2014, 6, 14);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
@@ -311,8 +459,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _algorithm.SetWarmup(TimeSpan.FromDays(10));
             }
             var feed = RunDataFeed();
-            // after algorithm initialization let's set the time provider time to reflect warmup window
-            _manualTimeProvider.SetCurrentTimeUtc(_algorithm.UtcTime);
 
             var aapl = _algorithm.AddEquity("AAPL");
             // the expiration of this option contract is before the start date of the algorithm but we should still get some data during warmup
@@ -322,6 +468,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var emittedData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
+                // the data queue handler shouldn't of seen the expired option subscription at any point
+                Assert.IsFalse(_dataQueueHandler.SubscriptionDataConfigs.Any(x => !x.Symbol.IsCanonical() && x.Symbol.SecurityType.IsOption()));
+
                 if (ts.Slice.HasData)
                 {
                     if (_algorithm.IsWarmingUp && ts.Slice.Keys.Any(s => s == option))
@@ -720,14 +869,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // should of remove trade and quote bar subscription and split/dividend/delisting for both (8)
-                    Assert.AreEqual(currentSubscriptionCount - 8, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // should of remove trade and quote bar subscription for both (4)
+                    Assert.AreEqual(currentSubscriptionCount - 4, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
                         .Count(config => config.Symbol == Symbols.SPY));
-                    // Should be 4 left because of internal subscription + its split/dividend/delisting subscriptions
-                    Assert.AreEqual(4, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
+                    // Should be 2 left because of internal subscription trade/quote
+                    Assert.AreEqual(2, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
                     Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
 
                     // we got what we wanted shortcut unit test
@@ -768,14 +917,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // should of remove trade and quote bar subscription and split/dividend/delisting for both (8)
-                    Assert.AreEqual(currentSubscriptionCount - 8, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // should of remove trade and quote bar subscription for both (4)
+                    Assert.AreEqual(currentSubscriptionCount - 4, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
                         .Count(config => config.Symbol == Symbols.SPY));
-                    // Should be 4 left because of internal subscription + its split/dividend/delisting subscriptions
-                    Assert.AreEqual(4, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
+                    // Should be 2 left because of internal subscription trade/quote
+                    Assert.AreEqual(2, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
                     Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
@@ -844,7 +993,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = RunDataFeed();
             for (int i = 0; i < 100; i++)
             {
-                _algorithm.AddData<CustomMockedFileBaseData>((100 + i).ToStringInvariant(), Resolution.Second, fillDataForward: false);
+                _algorithm.AddData<CustomMockedFileBaseData>((100 + i).ToStringInvariant(), Resolution.Second, fillForward: false);
             }
 
             int count = 0;
@@ -892,7 +1041,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var feed = RunDataFeed();
 
-            _algorithm.AddData<TestCustomData>("Pinocho", Resolution.Minute, fillDataForward: false);
+            _algorithm.AddData<TestCustomData>("Pinocho", Resolution.Minute, fillForward: false);
 
             TestCustomData.ReturnNull = returnsNull;
             TestCustomData.ThrowException = throwsException;
@@ -1692,27 +1841,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void SkipLiveDividend(bool warmup)
         {
             var symbol = Symbols.AAPL;
+            // aapl has a dividend on the 6th
             if (warmup)
             {
-                _startDate = new DateTime(2014, 8, 10);
+                _startDate = new DateTime(2013, 11, 09);
                 _manualTimeProvider.SetCurrentTimeUtc(_startDate);
                 _algorithm.SetWarmup(5);
+            }
+            else
+            {
+                _startDate = new DateTime(2013, 11, 05);
+                _manualTimeProvider.SetCurrentTimeUtc(_startDate);
             }
 
             var startPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
             var feed = RunDataFeed(Resolution.Daily, equities: new List<string> { symbol.Value },
                     getNextTicksFunction: delegate
                     {
-                        if (warmup)
-                        {
-                            return Enumerable.Empty<BaseData>();
-                        }
-                        return Enumerable.Range(1, 2)
-                            .Select(
-                                x => x % 2 == 0
-                                    ? (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade }
-                                    : new Dividend { Symbol = symbol, Value = 2 })
-                            .ToList();
+                        return Enumerable.Empty<BaseData>();
                     });
 
             var emittedDividend = false;
@@ -1738,6 +1884,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(true)]
         public void LiveSplitHandling(bool warmup)
         {
+            // there's an split starting on the 7th
             var symbol = Symbols.AAPL;
             if (warmup)
             {
@@ -1745,47 +1892,51 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _manualTimeProvider.SetCurrentTimeUtc(_startDate);
                 _algorithm.SetWarmup(6);
             }
+            else
+            {
+                _startDate = new DateTime(2014, 06, 5);
+                _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            }
 
-            var startPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
             var feed = RunDataFeed(Resolution.Daily, equities: new List<string> { symbol.Value },
                     getNextTicksFunction: delegate
                     {
-                        if (warmup)
-                        {
-                            return Enumerable.Empty<BaseData>();
-                        }
-                        var time = _manualTimeProvider.GetUtcNow();
-                        return Enumerable.Range(1, 2)
-                            .Select(
-                                x => x % 2 == 0
-                                    ? (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade, Value = 2 }
-                                    : new Split(symbol, time.ConvertFromUtc(TimeZones.NewYork), 2, 10, SplitType.SplitOccurred))
-                            .ToList();
+                        return Enumerable.Empty<BaseData>();
                     });
 
             var holdings = _algorithm.Securities[symbol].Holdings;
             holdings.SetHoldings(10, quantity: 100);
+            var startPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
 
             var emittedSplit = false;
+            var emittedSplitWarning = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
-                if (ts.Slice.Splits.TryGetValue(symbol, out var split) && split.Type == SplitType.SplitOccurred)
+                if (ts.Slice.Splits.TryGetValue(symbol, out var split))
                 {
                     Assert.AreEqual(warmup, _algorithm.IsWarmingUp);
 
-                    emittedSplit = true;
-                    // we got what we wanted shortcut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                    if(split.Type == SplitType.SplitOccurred)
+                    {
+                        emittedSplit = true;
+                        // we got what we wanted shortcut unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                    }
+                    else
+                    {
+                        emittedSplitWarning = true;
+                    }
                 }
-            }, secondsTimeStep: warmup ? 60 * 60 : 60 * 60 * 5,
+            }, secondsTimeStep: warmup ? 60 * 60 : 60 * 60 * 12,
             endDate: _startDate.AddDays(30));
 
             Assert.IsTrue(emittedSplit);
-            Assert.AreEqual(startPortfolioValue, _algorithm.Portfolio.TotalPortfolioValue);
+            Assert.IsTrue(emittedSplitWarning);
+            Assert.AreEqual((double)startPortfolioValue, (double)_algorithm.Portfolio.TotalPortfolioValue, delta: (double)(0.1m * _algorithm.Portfolio.TotalPortfolioValue));
             if (!warmup)
             {
-                Assert.AreEqual(10, holdings.Quantity);
-                Assert.AreEqual(100, holdings.AveragePrice);
+                Assert.AreNotEqual(10, holdings.Quantity);
+                Assert.AreNotEqual(100, holdings.AveragePrice);
             }
             else
             {
@@ -1798,6 +1949,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesAuxiliaryDataAtTickResolution()
         {
+            // aapl has a dividend on the 6th
+            _startDate = new DateTime(2013, 11, 05);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
             var symbol = Symbols.AAPL;
 
             var feed = RunDataFeed(
@@ -1805,12 +1960,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 equities: new List<string> { symbol.Value },
                 getNextTicksFunction: delegate
                 {
-                    return Enumerable.Range(1, 2)
-                        .Select(
-                            x => x % 2 == 0
-                                ? (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade }
-                                : new Dividend { Symbol = symbol, Value = x })
-                        .ToList();
+                    return new[] { (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade } };
                 });
 
             var emittedTicks = false;
@@ -1827,8 +1977,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         emittedAuxData = true;
                     }
+
+                    if (emittedAuxData && emittedTicks)
+                    {
+                        // we got what we wanted shortcut unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                    }
                 }
-            });
+            }, secondsTimeStep: 60 * 60 * 4,
+            endDate: _startDate.AddDays(2));
 
             Assert.IsTrue(emittedTicks);
             Assert.IsTrue(emittedAuxData);
@@ -1930,12 +2087,28 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction,
                 lookupSymbolsFunction ?? ((symbol, _, _) =>
                 {
-                    return new List<Symbol> { Symbol.CreateOption(symbol.Underlying ?? symbol,
-                        symbol.ID.Market,
-                        symbol.SecurityType.DefaultOptionStyle(),
-                        OptionRight.Call,
-                        1,
-                        _manualTimeProvider.GetUtcNow().AddDays(10))};
+                    var date = _manualTimeProvider.GetUtcNow().Date;
+                    var symbols = new List<Symbol>();
+                    for (var i = 0; i < 4; i++)
+                    {
+                        if (symbol.SecurityType.IsOption())
+                        {
+                            foreach (var optionRight in new[] { OptionRight.Call, OptionRight.Put })
+                            {
+                                symbols.Add(Symbol.CreateOption(symbol.Underlying ?? symbol,
+                                    symbol.ID.Market,
+                                    symbol.SecurityType.DefaultOptionStyle(),
+                                    optionRight,
+                                    i,
+                                    date.AddDays(i)));
+                            }
+                        }
+                        else
+                        {
+                            symbols.Add(Symbol.CreateFuture(symbol.ID.Symbol, symbol.ID.Market, date.AddDays(i)));
+                        }
+                    }
+                    return symbols;
                 }),
                 canPerformSelection ?? (() => true), _manualTimeProvider);
 
@@ -2060,8 +2233,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             // Equity - Hourly resolution
             // We expect 7 hourly bars for 6.5 hours in open market hours
-            // We expect only 1 dividend at midnight
-            new TestCaseData(Symbols.SPY, Resolution.Hour, 1, 0, 7, 0, 1, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.SPY, Resolution.Hour, 1, 0, 7, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Equity - Minute resolution
             // We expect 30 minute bars for 0.5 hours in open market hours
@@ -2070,20 +2242,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // Equity - Tick resolution
             // In this test we only emit ticks once per hour
             // We expect only 6 ticks -- the 4 PM tick is not received because it's outside market hours -> times 2 (quote/trade bar)
-            // We expect only 1 dividend at midnight
-            new TestCaseData(Symbols.SPY, Resolution.Tick, 1, (7 - 1) * 2, 0, 0, 1, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.SPY, Resolution.Tick, 1, (7 - 1) * 2, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Forex - FXCM
             new TestCaseData(Symbols.EURUSD, Resolution.Hour, 1, 0, 0, 24, 0, 0, false, _instances[typeof(BaseData)]),
             new TestCaseData(Symbols.EURUSD, Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
             // emit at the start and end time
-            new TestCaseData(Symbols.EURUSD, Resolution.Tick, 1, 25, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.EURUSD, Resolution.Tick, 1, 24, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Forex - Oanda
             new TestCaseData(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Hour, 1, 0, 0, 24, 0, 0, false, _instances[typeof(BaseData)]),
             new TestCaseData(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
             // emit at the start and end time
-            new TestCaseData(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Tick, 1, 25, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Tick, 1, 24, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // CFD - FXCM
             new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.FXCM), Resolution.Hour, 1, 0, 0, 14, 0, 0, false, _instances[typeof(BaseData)]),
@@ -2204,59 +2375,41 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    if (symbol.SecurityType == SecurityType.Equity && exchangeTime.Day == startDate.Day + 1 &&
-                        exchangeTime.Hour == 0 && exchangeTime.Minute == 0)
+                    var tickType = TickType.Quote;
+                    var dataPoint = new Tick
                     {
-                        var dividend = new Dividend
-                        {
-                            Symbol = symbol,
-                            Time = exchangeTime,
-                            EndTime = exchangeTime,
-                            Value = actualAuxPointsEnqueued++
-                        };
+                        Symbol = symbol,
+                        Time = exchangeTime,
+                        EndTime = exchangeTime,
+                        TickType = tickType,
+                        Value = actualPricePointsEnqueued
+                    };
 
-                        dataPoints.Add(dividend);
-
-                        ConsoleWriteLine($"{algorithmTime} - FuncDataQueueHandler emitted dividend: {dividend}");
-                    }
-                    else
+                    if (symbol.SecurityType != SecurityType.Equity
+                        || resolution != Resolution.Daily
+                        || resolution != Resolution.Hour)
                     {
-                        var tickType = TickType.Quote;
-                        var dataPoint = new Tick
-                        {
-                            Symbol = symbol,
-                            Time = exchangeTime,
-                            EndTime = exchangeTime,
-                            TickType = tickType,
-                            Value = actualPricePointsEnqueued
-                        };
-
-                        if (symbol.SecurityType != SecurityType.Equity
-                            || resolution != Resolution.Daily
-                            || resolution != Resolution.Hour)
-                        {
-                            actualPricePointsEnqueued++;
-                            // equity has minute/second/tick quote data
-                            dataPoints.Add(dataPoint);
-                        }
-
-                        ConsoleWriteLine(
-                            $"{algorithmTime} - FuncDataQueueHandler emitted {tickType} tick: {dataPoint}");
-
-                        dataPoint = new Tick
-                        {
-                            Symbol = symbol,
-                            Time = exchangeTime,
-                            EndTime = exchangeTime,
-                            TickType = TickType.Trade,
-                            Value = actualPricePointsEnqueued++
-                        };
-
+                        actualPricePointsEnqueued++;
+                        // equity has minute/second/tick quote data
                         dataPoints.Add(dataPoint);
-
-                        ConsoleWriteLine(
-                            $"{algorithmTime} - FuncDataQueueHandler emitted Trade tick: {dataPoint}");
                     }
+
+                    ConsoleWriteLine(
+                        $"{algorithmTime} - FuncDataQueueHandler emitted {tickType} tick: {dataPoint}");
+
+                    dataPoint = new Tick
+                    {
+                        Symbol = symbol,
+                        Time = exchangeTime,
+                        EndTime = exchangeTime,
+                        TickType = TickType.Trade,
+                        Value = actualPricePointsEnqueued++
+                    };
+
+                    dataPoints.Add(dataPoint);
+
+                    ConsoleWriteLine(
+                        $"{algorithmTime} - FuncDataQueueHandler emitted Trade tick: {dataPoint}");
                 }
 
                 emittedData.Set();
@@ -2308,12 +2461,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 case SecurityType.Base:
                     algorithm.AddEquity(symbol.Underlying.Value, resolution, symbol.ID.Market,
-                        fillDataForward: false);
+                        fillForward: false);
 
                     if (customDataType.RequiresMapping())
                     {
                         security = algorithm.AddData<T>(symbol.Value, resolution,
-                            fillDataForward: false);
+                            fillForward: false);
                     }
                     else
                     {
@@ -2322,11 +2475,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     break;
 
                 case SecurityType.Future:
-                    security = algorithm.AddFutureContract(symbol, resolution, fillDataForward: false, extendedMarketHours: true);
+                    security = algorithm.AddFutureContract(symbol, resolution, fillForward: false, extendedMarketHours: true);
                     break;
 
                 case SecurityType.Option:
-                    security = algorithm.AddOptionContract(symbol, resolution, fillDataForward: false);
+                    security = algorithm.AddOptionContract(symbol, resolution, fillForward: false);
                     break;
 
                 default:
@@ -2478,7 +2631,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     // give enough time to the producer to emit
                     if (!emittedData.WaitOne(300))
                     {
-                        Assert.Fail("Timeout waiting for data generation");
+                        Assert.Fail($"Timeout waiting for data generation at {algorithm.Time} algorithm tz");
                     }
 
                     var currentTime = timeProvider.GetUtcNow();
@@ -2907,8 +3060,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     if (securityType == SecurityType.Future)
                     {
-                        // -1 to remove canonical since it's not part of the chain
-                        Assert.AreEqual(futureSymbols.Count - 1, futureContractCount);
+                        // -2 to remove canonical & internal since it's not part of the chain
+                        Assert.AreEqual(futureSymbols.Count - 2, futureContractCount);
 
                         foreach (var symbol in futureSymbols)
                         {

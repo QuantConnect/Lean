@@ -59,6 +59,64 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
+        public void AccessesByDataTypeAndSymbol()
+        {
+            var now = DateTime.UtcNow;
+            var tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = now };
+            var unlinkedData = new UnlinkedData { Symbol = Symbols.SPY, Time = now };
+            var quoteBar = new QuoteBar { Symbol = Symbols.SPY, Time = now };
+            var tick = new Tick(now, Symbols.SPY, 1.1m, 2.1m) { TickType = TickType.Trade };
+            var openInterest = new OpenInterest(now, Symbols.SPY, 1);
+            var split = new Split(Symbols.SPY, now, 1, 1, SplitType.SplitOccurred);
+            var delisting = new Delisting(Symbols.SPY, now, 1, DelistingType.Delisted);
+            var marginInterest = new MarginInterestRate { Symbol = Symbols.SPY, Time = now, InterestRate = 0.08m };
+
+            var slice = new Slice(now, new BaseData[] { quoteBar, tradeBar, unlinkedData, tick, split, delisting, openInterest, marginInterest }, now);
+
+            {
+                Assert.IsTrue(slice.TryGet<TradeBar>(Symbols.SPY, out var foundTradeBar));
+                Assert.AreEqual(foundTradeBar, tradeBar);
+                Assert.IsTrue(slice.TryGet<UnlinkedData>(Symbols.SPY, out var foundUnlinkedData));
+                Assert.AreEqual(foundUnlinkedData, unlinkedData);
+                Assert.IsTrue(slice.TryGet<QuoteBar>(Symbols.SPY, out var foundQuoteBar));
+                Assert.AreEqual(foundQuoteBar, quoteBar);
+                Assert.IsTrue(slice.TryGet<Tick>(Symbols.SPY, out var foundTick));
+                Assert.AreEqual(foundTick, tick);
+                Assert.IsTrue(slice.TryGet<Split>(Symbols.SPY, out var foundSplit));
+                Assert.AreEqual(foundSplit, split);
+                Assert.IsTrue(slice.TryGet<Delisting>(Symbols.SPY, out var foundDelisting));
+                Assert.AreEqual(foundDelisting, delisting);
+                Assert.IsTrue(slice.TryGet<OpenInterest>(Symbols.SPY, out var foundOpenInterest));
+                Assert.AreEqual(foundOpenInterest, openInterest);
+                Assert.IsTrue(slice.TryGet<MarginInterestRate>(Symbols.SPY, out var foundMarginInterest));
+                Assert.AreEqual(foundMarginInterest, marginInterest);
+
+                Assert.IsFalse(slice.TryGet<TradeBar>(Symbols.AAPL, out _));
+            }
+
+            {
+                Assert.IsTrue(slice.TryGet(typeof(TradeBar), Symbols.SPY, out var foundTradeBar));
+                Assert.AreEqual(foundTradeBar, tradeBar);
+                Assert.IsTrue(slice.TryGet(typeof(UnlinkedData), Symbols.SPY, out var foundUnlinkedData));
+                Assert.AreEqual(foundUnlinkedData, unlinkedData);
+                Assert.IsTrue(slice.TryGet(typeof(QuoteBar), Symbols.SPY, out var foundQuoteBar));
+                Assert.AreEqual(foundQuoteBar, quoteBar);
+                Assert.IsTrue(slice.TryGet(typeof(Tick), Symbols.SPY, out var foundTick));
+                Assert.AreEqual(foundTick, tick);
+                Assert.IsTrue(slice.TryGet(typeof(Split), Symbols.SPY, out var foundSplit));
+                Assert.AreEqual(foundSplit, split);
+                Assert.IsTrue(slice.TryGet(typeof(Delisting), Symbols.SPY, out var foundDelisting));
+                Assert.AreEqual(foundDelisting, delisting);
+                Assert.IsTrue(slice.TryGet(typeof(OpenInterest), Symbols.SPY, out var foundOpenInterest));
+                Assert.AreEqual(foundOpenInterest, openInterest);
+                Assert.IsTrue(slice.TryGet(typeof(MarginInterestRate), Symbols.SPY, out var foundMarginInterest));
+                Assert.AreEqual(foundMarginInterest, marginInterest);
+
+                Assert.IsFalse(slice.TryGet(typeof(TradeBar), Symbols.AAPL, out _));
+            }
+        }
+
+        [Test]
         public void AccessesBaseBySymbol()
         {
             IndicatorDataPoint tick = new IndicatorDataPoint(Symbols.SPY, DateTime.Now, 1);
@@ -910,7 +968,7 @@ def Test(slice, symbol):
     span2 = (datetime.now()-now).total_seconds()
 
     msg += f'Py: {span1}\nC#: {span2}\nRatio: {span1/span2}'
-    
+
     msg += '\n\n__len__'
 
     if len(slice) > 0:
@@ -944,7 +1002,7 @@ def Test(slice, symbol):
     for i in range(0,1000000):
         result = slice.Keys
     span2 = (datetime.now()-now).total_seconds()
-    
+
     msg += f'Py: {span1}\nC#: {span2}\nRatio: {span1/span2}'
 
     msg += '\n\nvalues()'
@@ -962,7 +1020,7 @@ def Test(slice, symbol):
     for i in range(0,1000000):
         result = slice.Values
     span2 = (datetime.now()-now).total_seconds()
-    
+
     msg += f'Py: {span1}\nC#: {span2}\nRatio: {span1/span2}'
 
     msg += '\n\nget()'
@@ -981,7 +1039,7 @@ def Test(slice, symbol):
     for i in range(0,1000000):
         result = slice.TryGetValue(symbol, dummy)
     span2 = (datetime.now()-now).total_seconds()
-    
+
     msg += f'Py: {span1}\nC#: {span2}\nRatio: {span1/span2}'
 
     msg += '\n\nitems()'
@@ -998,7 +1056,7 @@ def Test(slice, symbol):
     for i in range(0,1000000):
         result = [x for x in slice]
     span2 = (datetime.now()-now).total_seconds()
-    
+
     msg += f'Py: {span1}\nC#: {span2}\nRatio: {span1/span2}'
 
     return msg").GetAttr("Test");

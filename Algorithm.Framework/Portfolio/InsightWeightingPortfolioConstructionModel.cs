@@ -150,6 +150,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="insight">The insight to create a target for</param>
         /// <returns>The value of the selected insight member</returns>
-        protected virtual double GetValue(Insight insight) => insight.Weight ?? 0;
+        protected virtual double GetValue(Insight insight) => insight.Weight != null ? Math.Abs((double)insight.Weight) : 0;
     }
 }

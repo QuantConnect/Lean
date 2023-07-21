@@ -14,21 +14,23 @@
 */
 
 using System;
-using System.Collections.Generic;
 using NodaTime;
+using QuantConnect.Data;
+using QuantConnect.Orders;
+using QuantConnect.Storage;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
-using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Notifications;
-using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Notifications;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
-using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
-using QuantConnect.Storage;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Interfaces
 {
@@ -118,6 +120,14 @@ namespace QuantConnect.Interfaces
         /// Gets the brokerage model used to emulate a real brokerage
         /// </summary>
         IBrokerageModel BrokerageModel
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the brokerage name.
+        /// </summary>
+        BrokerageName BrokerageName
         {
             get;
         }
@@ -241,6 +251,22 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Algorithm running mode.
+        /// </summary>
+        AlgorithmMode AlgorithmMode
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Deployment target, either local or cloud.
+        /// </summary>
+        DeploymentTarget DeploymentTarget
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the subscription settings to be used when adding securities via universe selection
         /// </summary>
         UniverseSettings UniverseSettings
@@ -290,6 +316,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// The current algorithm statistics for the running algorithm.
+        /// </summary>
+        StatisticsResults Statistics
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the function used to define the benchmark. This function will return
         /// the value of the benchmark at a requested date/time
         /// </summary>
@@ -326,6 +360,14 @@ namespace QuantConnect.Interfaces
         /// Gets the future chain provider, used to get the list of future contracts for an underlying symbol
         /// </summary>
         IFutureChainProvider FutureChainProvider
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the insight manager
+        /// </summary>
+        InsightManager Insights
         {
             get;
         }
@@ -589,35 +631,51 @@ namespace QuantConnect.Interfaces
         /// <param name="symbol">Symbol Representation of the MarketType, e.g. AAPL</param>
         /// <param name="resolution">Resolution of the MarketType required: MarketData, Second or Minute</param>
         /// <param name="market">The market the requested security belongs to, such as 'usa' or 'fxcm'</param>
-        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
+        /// <param name="fillForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
-        Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours,
+        Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillForward, decimal leverage, bool extendedMarketHours,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null);
+
+        /// <summary>
+        /// Set a required SecurityType-symbol and resolution for algorithm
+        /// </summary>
+        /// <param name="symbol">The security Symbol</param>
+        /// <param name="resolution">Resolution of the MarketType required: MarketData, Second or Minute</param>
+        /// <param name="fillForward">If true, returns the last available data even if none in that timeslice.</param>
+        /// <param name="leverage">leverage for this security</param>
+        /// <param name="extendedMarketHours">Use extended market hours data</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
+        /// <returns>The new Security that was added to the algorithm</returns>
+        Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false,
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0);
 
         /// <summary>
         /// Creates and adds a new single <see cref="Future"/> contract to the algorithm
         /// </summary>
         /// <param name="symbol">The futures contract symbol</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">Show the after market data as well</param>
         /// <returns>The new <see cref="Future"/> security</returns>
-        Future AddFutureContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = 0m, bool extendedMarketHours = false);
+        Future AddFutureContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = 0m, bool extendedMarketHours = false);
 
         /// <summary>
         /// Creates and adds a new single <see cref="Option"/> contract to the algorithm
         /// </summary>
         /// <param name="symbol">The option contract symbol</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">Show the after market data as well</param>
         /// <returns>The new <see cref="Option"/> security</returns>
-        Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = 0m, bool extendedMarketHours = false);
+        Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = 0m, bool extendedMarketHours = false);
 
         /// <summary>
         /// Removes the security with the specified symbol. This will cancel all
@@ -627,12 +685,14 @@ namespace QuantConnect.Interfaces
         bool RemoveSecurity(Symbol symbol);
 
         /// <summary>
-        /// Sets the account currency cash symbol this algorithm is to manage.
+        /// Sets the account currency cash symbol this algorithm is to manage, as well as
+        /// the starting cash in this currency if given
         /// </summary>
         /// <remarks>Has to be called during <see cref="Initialize"/> before
         /// calling <see cref="SetCash(decimal)"/> or adding any <see cref="Security"/></remarks>
         /// <param name="accountCurrency">The account currency cash symbol to set</param>
-        void SetAccountCurrency(string accountCurrency);
+        /// <param name="startingCash">The account currency starting cash to set</param>
+        void SetAccountCurrency(string accountCurrency, decimal? startingCash = null);
 
         /// <summary>
         /// Set the starting capital for the strategy
@@ -661,6 +721,18 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="live">Bool live mode flag</param>
         void SetLiveMode(bool live);
+
+        /// <summary>
+        /// Sets the algorithm running mode
+        /// </summary>
+        /// <param name="algorithmMode">Algorithm mode</param>
+        void SetAlgorithmMode(AlgorithmMode algorithmMode);
+
+        /// <summary>
+        /// Sets the algorithm deployment target
+        /// </summary>
+        /// <param name="deploymentTarget">Deployment target</param>
+        void SetDeploymentTarget(DeploymentTarget deploymentTarget);
 
         /// <summary>
         /// Sets <see cref="IsWarmingUp"/> to false to indicate this algorithm has finished its warm up
@@ -743,5 +815,27 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="objectStore">The object store</param>
         void SetObjectStore(IObjectStore objectStore);
+
+        /// <summary>
+        /// Converts the string 'ticker' symbol into a full <see cref="Symbol"/> object
+        /// This requires that the string 'ticker' has been added to the algorithm
+        /// </summary>
+        /// <param name="ticker">The ticker symbol. This should be the ticker symbol
+        /// as it was added to the algorithm</param>
+        /// <returns>The symbol object mapped to the specified ticker</returns>
+        Symbol Symbol(string ticker);
+
+        /// <summary>
+        /// For the given symbol will resolve the ticker it used at the current algorithm date
+        /// </summary>
+        /// <param name="symbol">The symbol to get the ticker for</param>
+        /// <returns>The mapped ticker for a symbol</returns>
+        string Ticker(Symbol symbol);
+
+        /// <summary>
+        /// Sets the statistics service instance to be used by the algorithm
+        /// </summary>
+        /// <param name="statisticsService">The statistics service instance</param>
+        void SetStatisticsService(IStatisticsService statisticsService);
     }
 }

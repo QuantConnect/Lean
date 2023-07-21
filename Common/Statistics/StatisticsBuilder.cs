@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
@@ -33,10 +34,15 @@ namespace QuantConnect.Statistics
         /// <param name="pointsEquity">The list of daily equity values</param>
         /// <param name="pointsPerformance">The list of algorithm performance values</param>
         /// <param name="pointsBenchmark">The list of benchmark values</param>
+        /// <param name="pointsPortfolioTurnover">The list of portfolio turnover daily samples</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <param name="totalFees">The total fees</param>
         /// <param name="totalTransactions">The total number of transactions</param>
         /// <param name="estimatedStrategyCapacity">The estimated capacity of this strategy</param>
+        /// <param name="accountCurrencySymbol">The account currency symbol</param>
+        /// <param name="transactions">
+        /// The transaction manager to get number of winning and losing transactions
+        /// </param>
         /// <returns>Returns a <see cref="StatisticsResults"/> object</returns>
         public static StatisticsResults Generate(
             List<Trade> trades,
@@ -44,19 +50,23 @@ namespace QuantConnect.Statistics
             List<ChartPoint> pointsEquity,
             List<ChartPoint> pointsPerformance,
             List<ChartPoint> pointsBenchmark,
+            List<ChartPoint> pointsPortfolioTurnover,
             decimal startingCapital,
             decimal totalFees,
             int totalTransactions,
             CapacityEstimate estimatedStrategyCapacity,
-            string accountCurrencySymbol)
+            string accountCurrencySymbol,
+            SecurityTransactionManager transactions)
         {
             var equity = ChartPointToDictionary(pointsEquity);
 
             var firstDate = equity.Keys.FirstOrDefault().Date;
             var lastDate = equity.Keys.LastOrDefault().Date;
 
-            var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
-            var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
+            var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark,
+                pointsPortfolioTurnover, startingCapital, transactions);
+            var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark,
+                pointsPortfolioTurnover, startingCapital, transactions);
             var summary = GetSummary(totalPerformance, estimatedStrategyCapacity, totalFees, totalTransactions, accountCurrencySymbol);
 
             return new StatisticsResults(totalPerformance, rollingPerformances, summary);
@@ -72,7 +82,11 @@ namespace QuantConnect.Statistics
         /// <param name="equity">The list of daily equity values</param>
         /// <param name="pointsPerformance">The list of algorithm performance values</param>
         /// <param name="pointsBenchmark">The list of benchmark values</param>
+        /// <param name="pointsPortfolioTurnover">The list of portfolio turnover daily samples</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
+        /// <param name="transactions">
+        /// The transaction manager to get number of winning and losing transactions
+        /// </param>
         /// <returns>The algorithm performance</returns>
         private static AlgorithmPerformance GetAlgorithmPerformance(
             DateTime fromDate,
@@ -82,7 +96,9 @@ namespace QuantConnect.Statistics
             SortedDictionary<DateTime, decimal> equity,
             List<ChartPoint> pointsPerformance,
             List<ChartPoint> pointsBenchmark,
-            decimal startingCapital)
+            List<ChartPoint> pointsPortfolioTurnover,
+            decimal startingCapital,
+            SecurityTransactionManager transactions)
         {
             var periodEquity = new SortedDictionary<DateTime, decimal>(equity.Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
 
@@ -94,11 +110,14 @@ namespace QuantConnect.Statistics
 
             var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
             var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
+            var periodWinCount = transactions.WinningTransactions.Count(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1));
+            var periodLossCount = transactions.LosingTransactions.Count(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1));
 
             // Convert our charts to dictionaries
             // NOTE: Day 0 refers to sample taken at 12AM on StartDate, performance[0] always = 0, benchmark[0] is benchmark value preceding start date.
             var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
             var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
+            var portfolioTurnover = ChartPointToDictionary(pointsPortfolioTurnover, fromDate, toDate);
 
             // Ensure our series are aligned
             if (benchmark.Count != performance.Count)
@@ -108,16 +127,15 @@ namespace QuantConnect.Statistics
 
             // Convert our benchmark values into a percentage daily performance of the benchmark, this will shorten the series by one since
             // its the percentage change between each entry (No day 0 sample)
-            var listBenchmark = CreateDifferences(benchmark, fromDate, toDate);
+            var benchmarkEnumerable = CreateBenchmarkDifferences(benchmark, fromDate, toDate);
 
-            // We will skip past day 1 of performance values to deal with the OnOpen orders causing misalignment between benchmark and
-            // algorithm performance. So we drop the first value of listBenchmark (Day 1), and drop two values from performance (Day 0, Day 1)
-            listBenchmark = listBenchmark.Skip(1).ToList();
-            var listPerformance = performance.Values.Skip(2).Select(x => (double)(x / 100)).ToList();
+            var listBenchmark = benchmarkEnumerable.Select(x => x.Value).ToList();
+            var listPerformance = PreprocessPerformanceValues(performance).Select(x => x.Value).ToList();
 
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
 
-            return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, listPerformance, listBenchmark, runningCapital);
+            return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, portfolioTurnover, listPerformance, listBenchmark,
+                runningCapital, periodWinCount, periodLossCount);
         }
 
         /// <summary>
@@ -130,7 +148,11 @@ namespace QuantConnect.Statistics
         /// <param name="equity">The list of daily equity values</param>
         /// <param name="pointsPerformance">The list of algorithm performance values</param>
         /// <param name="pointsBenchmark">The list of benchmark values</param>
+        /// <param name="pointsPortfolioTurnover">The list of portfolio turnover daily samples</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
+        /// <param name="transactions">
+        /// The transaction manager to get number of winning and losing transactions
+        /// </param>
         /// <returns>A dictionary with the rolling performances</returns>
         private static Dictionary<string, AlgorithmPerformance> GetRollingPerformances(
             DateTime firstDate,
@@ -140,7 +162,9 @@ namespace QuantConnect.Statistics
             SortedDictionary<DateTime, decimal> equity,
             List<ChartPoint> pointsPerformance,
             List<ChartPoint> pointsBenchmark,
-            decimal startingCapital)
+            List<ChartPoint> pointsPortfolioTurnover,
+            decimal startingCapital,
+            SecurityTransactionManager transactions)
         {
             var rollingPerformances = new Dictionary<string, AlgorithmPerformance>();
 
@@ -152,7 +176,8 @@ namespace QuantConnect.Statistics
                 foreach (var period in ranges)
                 {
                     var key = $"M{monthPeriod}_{period.EndDate.ToStringInvariant("yyyyMMdd")}";
-                    var periodPerformance = GetAlgorithmPerformance(period.StartDate, period.EndDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
+                    var periodPerformance = GetAlgorithmPerformance(period.StartDate, period.EndDate, trades, profitLoss, equity, pointsPerformance,
+                        pointsBenchmark, pointsPortfolioTurnover, startingCapital, transactions);
                     rollingPerformances[key] = periodPerformance;
                 }
             }
@@ -198,6 +223,7 @@ namespace QuantConnect.Statistics
                 { PerformanceMetrics.TotalFees, accountCurrencySymbol + totalFees.ToStringInvariant("0.00") },
                 { PerformanceMetrics.EstimatedStrategyCapacity, accountCurrencySymbol + capacity.RoundToSignificantDigits(2).ToStringInvariant() },
                 { PerformanceMetrics.LowestCapacityAsset, lowestCapacitySymbol != Symbol.Empty ? lowestCapacitySymbol.ID.ToString() : "" },
+                { PerformanceMetrics.PortfolioTurnover, Math.Round(totalPerformance.PortfolioStatistics.PortfolioTurnover.SafeMultiply100(), 2).ToStringInvariant() + "%" }
             };
         }
 
@@ -272,35 +298,63 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Creates a list of percentage change for the period
+        /// Yields pairs of date and percentage change for the period
         /// </summary>
         /// <param name="points">The values to calculate percentage change for</param>
         /// <param name="fromDate">Starting date (inclusive)</param>
         /// <param name="toDate">Ending date (inclusive)</param>
-        /// <returns>The list of percentage change</returns>
-        private static List<double> CreateDifferences(SortedDictionary<DateTime, decimal> points, DateTime fromDate, DateTime toDate)
+        /// <returns>Pairs of date and percentage change</returns>
+        public static IEnumerable<KeyValuePair<DateTime, double>> CreateBenchmarkDifferences(IEnumerable<KeyValuePair<DateTime, decimal>> points, DateTime fromDate, DateTime toDate)
         {
-            var dtPrevious = new DateTime();
-            var listPercentage = new List<double>();
+            DateTime dtPrevious = default;
+            var previous = 0m;
+            var firstValueSkipped = false;
+            double deltaPercentage;
 
             // Get points performance array for the given period:
-            foreach (var dt in points.Keys.Where(dt => dt >= fromDate.Date && dt.Date <= toDate))
+            foreach (var kvp in points.Where(kvp => kvp.Key >= fromDate.Date && kvp.Key.Date <= toDate))
             {
-                decimal previous;
-                var hasPrevious = points.TryGetValue(dtPrevious, out previous);
-                if (hasPrevious && previous != 0)
-                {
-                    var deltaPercentage = (points[dt] - previous) / previous;
-                    listPercentage.Add((double)deltaPercentage);
-                }
-                else if (hasPrevious)
-                {
-                    listPercentage.Add(0);
-                }
-                dtPrevious = dt;
-            }
+                var dt = kvp.Key;
+                var value = kvp.Value;
 
-            return listPercentage;
+                if (dtPrevious != default)
+                {
+                    deltaPercentage = 0;
+                    if (previous != 0)
+                    {
+                        deltaPercentage = (double)((value - previous) / previous);
+                    }
+
+                    // We will skip past day 1 of performance values to deal with the OnOpen orders causing misalignment between benchmark and
+                    // algorithm performance. So we drop the first value of listBenchmark (Day 1), and drop two values from performance (Day 0, Day 1)
+                    if (firstValueSkipped)
+                    {
+                        yield return new KeyValuePair<DateTime, double>(dt, deltaPercentage);
+                    }
+                    else
+                    {
+                        firstValueSkipped = true;
+                    }
+                }
+
+                dtPrevious = dt;
+                previous = value;
+            }
+        }
+
+        /// <summary>
+        /// Skips the first two entries from the given points and divides each entry by 100
+        /// </summary>
+        /// <param name="points">The values to divide by 100</param>
+        /// <returns>Pairs of date and performance value divided by 100</returns>
+        public static IEnumerable<KeyValuePair<DateTime, double>> PreprocessPerformanceValues(IEnumerable<KeyValuePair<DateTime, decimal>> points)
+        {
+            // We will skip past day 1 of performance values to deal with the OnOpen orders causing misalignment between benchmark and
+            // algorithm performance. So we drop two values from performance (Day 0, Day 1)
+            foreach (var kvp in points.Skip(2))
+            {
+                yield return new KeyValuePair<DateTime, double>(kvp.Key, (double)(kvp.Value / 100));
+            }
         }
     }
 }

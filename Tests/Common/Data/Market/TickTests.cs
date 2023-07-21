@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -213,9 +214,44 @@ namespace QuantConnect.Tests.Common.Data.Market
 
             var baseDate = new DateTime(2013, 10, 08);
             var tick = new Tick(Symbols.SPY, line, baseDate);
-            Assert.DoesNotThrow(()=> tick.ExchangeCode = "L");
+            Assert.DoesNotThrow(()=> tick.ExchangeCode = "LL");
             Assert.AreEqual(Exchange.UNKNOWN, tick.Exchange.GetPrimaryExchange(), "Failed at Exchange Property");
             Assert.AreEqual((string)Exchange.UNKNOWN, tick.ExchangeCode, "Failed at ExchangeCode Property");
+        }
+
+        [Test]
+        public void ExchangeSetterHandlesDefinedExchanges()
+        {
+            var baseDate = new DateTime(2013, 10, 08);
+            const string line = "15093000,1456300,100,P,T,0";
+
+            var exchanges = typeof(Exchange)
+                .GetProperties(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)
+                .Where(p => p.PropertyType == typeof(Exchange))
+                .Select(propa => propa.GetValue(null))
+                .OfType<Exchange>()
+                .Where(exchange => exchange.Market == QuantConnect.Market.USA && exchange.SecurityTypes.Contains(SecurityType.Equity))
+                .ToList();
+
+            Assert.GreaterOrEqual(exchanges.Count, 20);
+
+            foreach (var exchange in exchanges)
+            {
+                {
+                    var tick = new Tick(Symbols.SPY, line, baseDate);
+                    Assert.DoesNotThrow(() => tick.ExchangeCode = exchange.Code);
+
+                    Assert.AreEqual(exchange.Name, tick.Exchange, $"ExchangeCode: Failed at Exchange Property: {exchange}");
+                    Assert.AreEqual(exchange.Code, tick.ExchangeCode, $"ExchangeCode: Failed at ExchangeCode Property: {exchange}");
+                }
+                {
+                    var tick = new Tick(Symbols.SPY, line, baseDate);
+                    Assert.DoesNotThrow(() => tick.Exchange = exchange);
+
+                    Assert.AreEqual(exchange.Name, tick.Exchange, $"Exchange: Failed at Exchange Property: {exchange}");
+                    Assert.AreEqual(exchange.Code, tick.ExchangeCode, $"Exchange: Failed at ExchangeCode Property: {exchange}");
+                }
+            }
         }
     }
 }

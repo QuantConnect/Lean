@@ -388,8 +388,9 @@ namespace QuantConnect.Interfaces
         /// Sends a notification
         /// </summary>
         /// <param name="notification">The notification to send</param>
+        /// <param name="projectId">The project id</param>
         /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
-        RestResponse SendNotification(Notification notification);
+        RestResponse SendNotification(Notification notification, int projectId);
 
         /// <summary>
         /// Get the algorithm current status, active or cancelled from the user

@@ -127,7 +127,7 @@ namespace QuantConnect.Orders.Fills
             {
                 var targetOrder = kvp.Key;
                 var security = kvp.Value;
-                var fill = InternalMarketFill(security, targetOrder, targetOrder.Quantity * targetOrder.GroupOrderManager.Quantity);
+                var fill = InternalMarketFill(security, targetOrder, targetOrder.Quantity);
                 if (fill.Status != OrderStatus.Filled)
                 {
                     return new List<OrderEvent>();
@@ -190,7 +190,7 @@ namespace QuantConnect.Orders.Fills
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = targetParameters.Prices.Low;
                             // assume the order completely filled
-                            fill.FillQuantity = targetParameters.Order.Quantity * targetParameters.Order.GroupOrderManager.Quantity;
+                            fill.FillQuantity = targetParameters.Order.Quantity;
 
                             fills.Add(fill);
                         }
@@ -211,7 +211,7 @@ namespace QuantConnect.Orders.Fills
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = targetParameters.Prices.High;
                             // assume the order completely filled
-                            fill.FillQuantity = targetParameters.Order.Quantity * targetParameters.Order.GroupOrderManager.Quantity;
+                            fill.FillQuantity = targetParameters.Order.Quantity;
 
                             fills.Add(fill);
                         }
@@ -238,7 +238,7 @@ namespace QuantConnect.Orders.Fills
                 var security = kvp.Value;
 
                 var fill = InternalLimitFill(security, targetOrder, (targetOrder as ComboLegLimitOrder).LimitPrice,
-                    targetOrder.Quantity * order.GroupOrderManager.Quantity);
+                    targetOrder.Quantity);
 
                 if (fill.Status != OrderStatus.Filled)
                 {
@@ -277,7 +277,8 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
+            var orderDirection = order.Direction;
+            var prices = GetPricesCheckingPythonWrapper(asset, orderDirection);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // if the order is filled on stale (fill-forward) data, set a warning message on the order event
@@ -294,7 +295,7 @@ namespace QuantConnect.Orders.Fills
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
             //Apply slippage
-            switch (order.Direction)
+            switch (orderDirection)
             {
                 case OrderDirection.Buy:
                     fill.FillPrice += slip;
@@ -583,14 +584,15 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
             //Get the range of prices in the last bar:
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
+            var orderDirection = order.Direction;
+            var prices = GetPricesCheckingPythonWrapper(asset, orderDirection);
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // do not fill on stale data
             if (pricesEndTime <= order.Time) return fill;
 
             //-> Valid Live/Model Order:
-            switch (order.Direction)
+            switch (orderDirection)
             {
                 case OrderDirection.Buy:
                     //Buy limit seeks lowest price
@@ -990,9 +992,28 @@ namespace QuantConnect.Orders.Fills
         /// <summary>
         /// Determines if the exchange is open using the current time of the asset
         /// </summary>
-        protected static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
+        protected virtual bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
         {
-            return asset.IsMarketOpen(isExtendedMarketHours);
+            if (!asset.Exchange.Hours.IsOpen(asset.LocalTime, isExtendedMarketHours))
+            {
+                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
+                var currentBar = asset.GetLastData();
+                if (currentBar == null)
+                {
+                    return false;
+                }
+
+                var resolution = (currentBar.EndTime - currentBar.Time).ToHigherResolutionEquivalent(false);
+                var isOnCurrentBar = resolution == Resolution.Daily
+                    // for fill purposes we consider the market open for daily bars if we are in the same day
+                    ? asset.LocalTime.Date == currentBar.EndTime.Date
+                    // for other resolution bars, market is considered open if we are within the bar time
+                    : asset.LocalTime <= currentBar.EndTime;
+
+                return isOnCurrentBar && asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours);
+            }
+
+            return true;
         }
 
         private class ComboLimitOrderLegParameters
@@ -1011,7 +1032,8 @@ namespace QuantConnect.Orders.Fills
                     // we use the same, either low or high, for every leg depending on the combo direction
                     var price = Order.GroupOrderManager.Direction == OrderDirection.Buy ? Prices.Low : Prices.High;
 
-                    var quantity = Order.Quantity;
+                    // the limit price should be calculated using the ratios instead of the group quantities, like IB does
+                    var quantity = Order.Quantity.GetOrderLegRatio(Order.GroupOrderManager);
                     if (Security.Symbol.SecurityType == SecurityType.Equity)
                     {
                         quantity /= 100;

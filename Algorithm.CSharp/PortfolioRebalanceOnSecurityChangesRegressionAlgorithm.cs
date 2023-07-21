@@ -31,6 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class PortfolioRebalanceOnSecurityChangesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private int _generatedInsightsCount;
         private Dictionary<Symbol, DateTime> _lastOrderFilled;
 
         /// <summary>
@@ -62,6 +63,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetExecution(new ImmediateExecutionModel());
 
             _lastOrderFilled = new Dictionary<Symbol, DateTime>();
+
+            InsightsGenerated += (_, e) => _generatedInsightsCount += e.Insights.Length;
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
@@ -82,6 +85,16 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnEndOfAlgorithm()
+        {
+            if (Insights.Count == _generatedInsightsCount)
+            {
+                // The number of insights is modified by the Portfolio Construction Model,
+                // since it removes expired insights and insights from removed securities 
+                throw new Exception($"The number of insights in the insight manager should be different of the number of all insights generated ({_generatedInsightsCount})");
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -95,7 +108,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5568;
+        public long DataPoints => 5500;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -108,47 +121,29 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "74"},
-            {"Average Win", "2.44%"},
-            {"Average Loss", "-2.28%"},
-            {"Compounding Annual Return", "-4.581%"},
-            {"Drawdown", "30.500%"},
-            {"Expectancy", "-0.081"},
-            {"Net Profit", "-8.951%"},
-            {"Sharpe Ratio", "-0.137"},
-            {"Probabilistic Sharpe Ratio", "2.627%"},
+            {"Average Win", "2.37%"},
+            {"Average Loss", "-2.26%"},
+            {"Compounding Annual Return", "-4.837%"},
+            {"Drawdown", "29.800%"},
+            {"Expectancy", "-0.089"},
+            {"Net Profit", "-9.439%"},
+            {"Sharpe Ratio", "-0.176"},
+            {"Probabilistic Sharpe Ratio", "2.227%"},
             {"Loss Rate", "56%"},
             {"Win Rate", "44%"},
-            {"Profit-Loss Ratio", "1.07"},
-            {"Alpha", "-0.071"},
-            {"Beta", "0.978"},
-            {"Annual Standard Deviation", "0.152"},
-            {"Annual Variance", "0.023"},
-            {"Information Ratio", "-0.748"},
-            {"Tracking Error", "0.097"},
-            {"Treynor Ratio", "-0.021"},
-            {"Total Fees", "$264.99"},
-            {"Estimated Strategy Capacity", "$55000000.00"},
+            {"Profit-Loss Ratio", "1.05"},
+            {"Alpha", "-0.064"},
+            {"Beta", "0.768"},
+            {"Annual Standard Deviation", "0.139"},
+            {"Annual Variance", "0.019"},
+            {"Information Ratio", "-0.709"},
+            {"Tracking Error", "0.108"},
+            {"Treynor Ratio", "-0.032"},
+            {"Total Fees", "$262.72"},
+            {"Estimated Strategy Capacity", "$54000000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Fitness Score", "0.027"},
-            {"Kelly Criterion Estimate", "-0.996"},
-            {"Kelly Criterion Probability Value", "1"},
-            {"Sortino Ratio", "-0.323"},
-            {"Return Over Maximum Drawdown", "-0.15"},
-            {"Portfolio Turnover", "0.06"},
-            {"Total Insights Generated", "534"},
-            {"Total Insights Closed", "534"},
-            {"Total Insights Analysis Completed", "534"},
-            {"Long Insight Count", "534"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$-389341000"},
-            {"Total Accumulated Estimated Alpha Value", "$-9476668000"},
-            {"Mean Population Estimated Insight Value", "$-17746570"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "bdb23325dc6c1fa04f63a329346be794"}
+            {"Portfolio Turnover", "5.05%"},
+            {"OrderListHash", "f15666bf49136dfbf7bb1c6a161f8504"}
         };
     }
 }

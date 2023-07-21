@@ -40,10 +40,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 6);
             SetEndDate(2013, 10, 11);
 
-            _es = AddFuture(Futures.Indices.SP500EMini, Resolution.Hour, fillDataForward: true, extendedMarketHours: true);
+            _es = AddFuture(Futures.Indices.SP500EMini, Resolution.Hour, fillForward: true, extendedMarketHours: true);
             _es.SetFilter(0, 180);
 
-            _gc = AddFuture(Futures.Metals.Gold, Resolution.Hour, fillDataForward: true, extendedMarketHours: false);
+            _gc = AddFuture(Futures.Metals.Gold, Resolution.Hour, fillForward: true, extendedMarketHours: false);
             _gc.SetFilter(0, 180);
         }
 
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 3387;
+        public long DataPoints => 3602;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -147,25 +147,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
-            {"Fitness Score", "0"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Portfolio Turnover", "0%"},
             {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }

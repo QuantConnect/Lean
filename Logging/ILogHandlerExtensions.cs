@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -33,7 +33,7 @@ namespace QuantConnect.Logging
         {
             if (logHandler == null)
             {
-                throw new ArgumentNullException("logHandler", "Log Handler cannot be null");
+                throw new ArgumentNullException(nameof(logHandler), "Log Handler cannot be null");
             }
 
             logHandler.Error(string.Format(CultureInfo.InvariantCulture, text, args));
@@ -49,7 +49,7 @@ namespace QuantConnect.Logging
         {
             if (logHandler == null)
             {
-                throw new ArgumentNullException("logHandler", "Log Handler cannot be null");
+                throw new ArgumentNullException(nameof(logHandler), "Log Handler cannot be null");
             }
 
             logHandler.Debug(string.Format(CultureInfo.InvariantCulture, text, args));
@@ -65,7 +65,7 @@ namespace QuantConnect.Logging
         {
             if (logHandler == null)
             {
-                throw new ArgumentNullException("logHandler", "Log Handler cannot be null");
+                throw new ArgumentNullException(nameof(logHandler), "Log Handler cannot be null");
             }
 
             logHandler.Trace(string.Format(CultureInfo.InvariantCulture, text, args));

@@ -24,7 +24,6 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -54,6 +53,21 @@ namespace QuantConnect.Brokerages
             typeof(GoodTilCanceledTimeInForce),
             typeof(DayTimeInForce),
             typeof(GoodTilDateTimeInForce)
+        };
+
+        private readonly HashSet<OrderType> _supportedOrderTypes = new HashSet<OrderType>
+        {
+            OrderType.Market,
+            OrderType.MarketOnOpen,
+            OrderType.MarketOnClose,
+            OrderType.Limit,
+            OrderType.StopMarket,
+            OrderType.StopLimit,
+            OrderType.LimitIfTouched,
+            OrderType.ComboMarket,
+            OrderType.ComboLimit,
+            OrderType.ComboLegLimit,
+            OrderType.OptionExercise
         };
 
         /// <summary>
@@ -107,6 +121,15 @@ namespace QuantConnect.Brokerages
         {
             message = null;
 
+            // validate order type
+            if (!_supportedOrderTypes.Contains(order.Type))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+
+                return false;
+            }
+
             // validate security type
             if (security.Type != SecurityType.Equity &&
                 security.Type != SecurityType.Forex &&
@@ -117,8 +140,7 @@ namespace QuantConnect.Brokerages
                 security.Type != SecurityType.IndexOption)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(InteractiveBrokersBrokerageModel)} does not support {security.Type} security type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
                 return false;
             }
@@ -135,8 +157,7 @@ namespace QuantConnect.Brokerages
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(InteractiveBrokersBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));
 
                 return false;
             }
@@ -147,8 +168,7 @@ namespace QuantConnect.Brokerages
                 (security.Type == SecurityType.Option && (security as Option).ExerciseSettlement == SettlementType.Cash)))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(InteractiveBrokersBrokerageModel)} does not support {order.Type} exercises for index and cash-settled options.")
-                );
+                    Messages.InteractiveBrokersBrokerageModel.UnsupportedExerciseForIndexAndCashSettledOptions(this, order));
 
                 return false;
             }
@@ -236,8 +256,7 @@ namespace QuantConnect.Brokerages
             if (!orderIsWithinForexSizeLimits)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderSizeLimit",
-                    Invariant($"The minimum and maximum limits for the allowable order size are ({min}, {max}){baseCurrency}.")
-                );
+                    Messages.InteractiveBrokersBrokerageModel.InvalidForexOrderSize(min, max, baseCurrency));
             }
             return orderIsWithinForexSizeLimits;
         }

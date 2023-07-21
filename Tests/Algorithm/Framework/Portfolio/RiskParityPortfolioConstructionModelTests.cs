@@ -41,28 +41,25 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public virtual void SetUp()
         {
             _nowUtc = new DateTime(2021, 1, 10);
-            _algorithm = new QCAlgorithm();
+            _algorithm = new AlgorithmStub();
             _algorithm.SetFinishedWarmingUp();
-            _algorithm.SetPandasConverter();
-            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _algorithm.Settings.MinimumOrderMarginPortfolioPercentage = 0;
+            _algorithm.Settings.FreePortfolioValue = 250;
             _algorithm.SetDateTime(_nowUtc.ConvertToUtc(_algorithm.TimeZone));
             _algorithm.SetCash(1200);
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            var dataProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider);
             _algorithm.SetHistoryProvider(historyProvider);
 
             historyProvider.Initialize(new HistoryProviderInitializeParameters(
                 new BacktestNodePacket(),
                 null,
                 TestGlobals.DataProvider,
-                dataProvider,
+                TestGlobals.DataCacheProvider,
                 TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
                 i => { },
                 true,
                 new DataPermissionManager()));
-
-            dataProvider.Dispose();
         }
         
         [TestCase(Language.CSharp)]
@@ -95,7 +92,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 return;
             }
 
-            SetPortfolioConstruction(language, PortfolioBias.Long);
+            SetPortfolioConstruction(language, bias);
 
             var aapl = _algorithm.AddEquity("AAPL");
             var spy = _algorithm.AddEquity("SPY");
@@ -120,6 +117,37 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 }
                 Assert.AreEqual(Math.Sign((int)bias), Math.Sign(target.Quantity));
             }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void CorrectWeightings(Language language)
+        {
+            SetPortfolioConstruction(language, PortfolioBias.Long);
+
+            var aapl = _algorithm.AddEquity("AAPL");
+            var spy = _algorithm.AddEquity("SPY");
+
+            aapl.SetMarketPrice(new Tick(_nowUtc, aapl.Symbol, 10, 10));
+            spy.SetMarketPrice(new Tick(_nowUtc, spy.Symbol, 10, 10));
+            aapl.SetMarketPrice(new Tick(_nowUtc.AddDays(1), aapl.Symbol, 12, 12));
+            spy.SetMarketPrice(new Tick(_nowUtc.AddDays(1), spy.Symbol, 20, 20));
+            aapl.SetMarketPrice(new Tick(_nowUtc.AddDays(2), aapl.Symbol, 13, 13));
+            spy.SetMarketPrice(new Tick(_nowUtc.AddDays(2), spy.Symbol, 30, 30));
+
+            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
+
+            var insights = new[]
+            {
+                new Insight(_nowUtc.AddDays(2), aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null),
+                new Insight(_nowUtc.AddDays(2), spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null)
+            };
+            
+            _algorithm.Insights.AddRange(insights);
+
+            var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToArray();
+            Assert.AreEqual(targets[0].Quantity, 30m);      // AAPL
+            Assert.AreEqual(targets[1].Quantity, 18m);      // SPY
         }
 
         protected void SetPortfolioConstruction(Language language, PortfolioBias bias, IPortfolioConstructionModel defaultModel = null)

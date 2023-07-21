@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -60,7 +60,7 @@ namespace QuantConnect.Data.Auxiliary
             var symbolID = symbol.HasUnderlying ? symbol.Underlying.ID.Symbol : symbol.ID.Symbol;
             if (dataType == null && symbol.SecurityType == SecurityType.Base)
             {
-                symbol.ID.Symbol.TryGetCustomDataType(out dataType);
+                SecurityIdentifier.TryGetCustomDataType(symbol.ID.Symbol, out dataType);
             }
             symbolID = symbol.SecurityType == SecurityType.Base && dataType != null ? symbolID.RemoveFromEnd($".{dataType}") : symbolID;
 

@@ -18,9 +18,14 @@ using System;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Represents a bar sectioned not by time, but by some amount of movement in a set field
+    /// Represents a bar sectioned not by time, but by some amount of movement in a set field,
+    /// where:
+    /// - Open : Gets the opening value that started this bar
+    /// - Close : Gets the closing value or the current value if the bar has not yet closed.
+    /// - High : Gets the highest value encountered during this bar
+    /// - Low : Gets the lowest value encountered during this bar
     /// </summary>
-    public abstract class BaseRenkoBar : BaseData, IBaseDataBar
+    public abstract class BaseRenkoBar : TradeBar, IBaseDataBar
     {
         /// <summary>
         /// Gets the kind of the bar
@@ -31,35 +36,6 @@ namespace QuantConnect.Data.Market
         /// The preset size of the consolidated bar
         /// </summary>
         public decimal BrickSize  { get; protected set; }
-
-        /// <summary>
-        /// Gets the opening value that started this bar.
-        /// </summary>
-        public decimal Open { get; protected set; }
-
-        /// <summary>
-        /// Gets the closing value or the current value if the bar has not yet closed.
-        /// </summary>
-        public decimal Close
-        {
-            get { return Value; }
-            protected set { Value = value; }
-        }
-
-        /// <summary>
-        /// Gets the highest value encountered during this bar
-        /// </summary>
-        public decimal High { get; protected set; }
-
-        /// <summary>
-        /// Gets the lowest value encountered during this bar
-        /// </summary>
-        public decimal Low { get; protected set; }
-
-        /// <summary>
-        /// Gets the volume of trades during the bar.
-        /// </summary>
-        public decimal Volume { get; protected set; }
 
         /// <summary>
         /// Gets the end time of this renko bar or the most recent update time if it <see cref="IsClosed"/>

@@ -14,9 +14,9 @@
 */
 
 using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -26,7 +26,7 @@ namespace QuantConnect.Securities.Positions
     /// </summary>
     public class PositionCollection : IEnumerable<IPosition>
     {
-        private ImmutableDictionary<Symbol, IPosition> _positions;
+        private Dictionary<Symbol, IPosition> _positions;
 
         /// <summary>Gets the number of elements in the collection.</summary>
         /// <returns>The number of elements in the collection. </returns>
@@ -36,7 +36,7 @@ namespace QuantConnect.Securities.Positions
         /// Initializes a new instance of the <see cref="PositionCollection"/> class
         /// </summary>
         /// <param name="positions">The positions to include in this collection</param>
-        public PositionCollection(ImmutableDictionary<Symbol, IPosition> positions)
+        public PositionCollection(Dictionary<Symbol, IPosition> positions)
         {
             _positions = positions;
         }
@@ -46,7 +46,7 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="positions">The positions to include in this collection</param>
         public PositionCollection(IEnumerable<IPosition> positions)
-            : this(positions.ToImmutableDictionary(p => p.Symbol))
+            : this(positions.ToDictionary(p => p.Symbol))
         {
         }
 
@@ -72,7 +72,14 @@ namespace QuantConnect.Securities.Positions
 
                     var resultingPosition = existing.Deduct(position.Quantity);
                     // directly remove positions hows quantity is 0
-                    _positions = resultingPosition.Quantity == 0 ? _positions.Remove(position.Symbol) : _positions.SetItem(position.Symbol, resultingPosition);
+                    if(resultingPosition.Quantity == 0)
+                    {
+                        _positions.Remove(position.Symbol);
+                    }
+                    else
+                    {
+                        _positions[position.Symbol] = resultingPosition;
+                    }
                 }
             }
         }
@@ -82,7 +89,7 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         public void Clear()
         {
-            _positions = _positions.Clear();
+            _positions.Clear();
         }
 
         /// <summary>

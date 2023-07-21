@@ -136,7 +136,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 43786;
+        public virtual long DataPoints => 57752;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -170,25 +170,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$4.62"},
             {"Estimated Strategy Capacity", "$17000000.00"},
             {"Lowest Capacity Asset", "GC VL5E74HP3EE5"},
-            {"Fitness Score", "0.006"},
-            {"Kelly Criterion Estimate", "-50.022"},
-            {"Kelly Criterion Probability Value", "0.711"},
-            {"Sortino Ratio", "-10.107"},
-            {"Return Over Maximum Drawdown", "-51.815"},
-            {"Portfolio Turnover", "0.54"},
-            {"Total Insights Generated", "5"},
-            {"Total Insights Closed", "4"},
-            {"Total Insights Analysis Completed", "4"},
-            {"Long Insight Count", "5"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$-4434.791"},
-            {"Total Accumulated Estimated Alpha Value", "$-720.6535"},
-            {"Mean Population Estimated Insight Value", "$-180.1634"},
-            {"Mean Population Direction", "25%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "25%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
+            {"Portfolio Turnover", "43.23%"},
             {"OrderListHash", "323b899ae80aa839e320806411665ce7"}
         };
     }

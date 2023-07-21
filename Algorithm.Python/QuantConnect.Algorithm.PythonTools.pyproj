@@ -149,6 +149,7 @@
     <Compile Include="ScikitLearnLinearRegressionAlgorithm.py" />
     <Compile Include="SectorExposureRiskFrameworkAlgorithm.py" />
     <Compile Include="SectorWeightingFrameworkAlgorithm.py" />
+    <Compile Include="SetHoldingsLiquidateExistingHoldingsMultipleTargetsRegressionAlgorithm.py" />
     <Compile Include="SetHoldingsMultipleTargetsRegressionAlgorithm.py" />
     <Compile Include="SmaCrossUniverseSelectionAlgorithm.py" />
     <Compile Include="StandardDeviationExecutionModelRegressionAlgorithm.py" />

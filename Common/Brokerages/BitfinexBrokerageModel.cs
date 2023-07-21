@@ -62,7 +62,7 @@ namespace QuantConnect.Brokerages
                 return _maxLeverage;
             }
 
-            throw new ArgumentException($"Invalid security type: {security.Type}", nameof(security));
+            throw new ArgumentException(Messages.DefaultBrokerageModel.InvalidSecurityTypeForLeverage(security), nameof(security));
         }
 
         /// <summary>
@@ -130,8 +130,7 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"The {nameof(BitfinexBrokerageModel)} does not support {security.Type} security type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
                 return false;
             }

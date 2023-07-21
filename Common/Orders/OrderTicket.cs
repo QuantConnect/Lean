@@ -280,8 +280,8 @@ namespace QuantConnect.Orders
         /// <returns>The <see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse Update(UpdateOrderFields fields)
         {
-            _transactionManager.UpdateOrder(new UpdateOrderRequest(_transactionManager.UtcTime, SubmitRequest.OrderId, fields));
-            return _updateRequests.Last().Response;
+            var ticket = _transactionManager.UpdateOrder(new UpdateOrderRequest(_transactionManager.UtcTime, SubmitRequest.OrderId, fields));
+            return ticket.UpdateRequests.Last().Response;
         }
 
         /// <summary>
@@ -384,17 +384,8 @@ namespace QuantConnect.Orders
                 }
             }
 
-            _transactionManager.ProcessRequest(request);
-
-            lock (_cancelRequestLock)
-            {
-                if (_cancelRequest != null)
-                {
-                    return _cancelRequest.Response;
-                }
-            }
-
-            throw new ArgumentException(Messages.OrderTicket.NullCancelRequest);
+            var ticket = _transactionManager.ProcessRequest(request);
+            return ticket.CancelRequest.Response;
         }
 
         /// <summary>

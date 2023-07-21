@@ -156,7 +156,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 20443;
+        public long DataPoints => 19623;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -170,46 +170,28 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-56.91%"},
-            {"Compounding Annual Return", "44.906%"},
-            {"Drawdown", "9.800%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "2.644%"},
-            {"Sharpe Ratio", "5.789"},
-            {"Probabilistic Sharpe Ratio", "89.964%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
+            {"Average Loss", "-54.58%"},
+            {"Compounding Annual Return", "101.333%"},
+            {"Drawdown", "7.600%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "5.044%"},
+            {"Sharpe Ratio", "5.256"},
+            {"Probabilistic Sharpe Ratio", "89.867%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "2.169"},
-            {"Beta", "-0.238"},
-            {"Annual Standard Deviation", "0.373"},
-            {"Annual Variance", "0.139"},
-            {"Information Ratio", "5.17"},
-            {"Tracking Error", "0.409"},
-            {"Treynor Ratio", "-9.071"},
+            {"Alpha", "1.695"},
+            {"Beta", "-0.205"},
+            {"Annual Standard Deviation", "0.321"},
+            {"Annual Variance", "0.103"},
+            {"Information Ratio", "4.556"},
+            {"Tracking Error", "0.36"},
+            {"Treynor Ratio", "-8.238"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$44000000.00"},
+            {"Estimated Strategy Capacity", "$59000000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
-            {"Fitness Score", "0.023"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.535"},
-            {"Return Over Maximum Drawdown", "5.789"},
-            {"Portfolio Turnover", "0.03"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "8176c783493b007093baaa1a43acfe4b"}
+            {"Portfolio Turnover", "2.19%"},
+            {"OrderListHash", "6d74cb5ac8ee73a1154088ad97f5ce3d"}
         };
     }
 }

@@ -19,6 +19,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Brokerages
 {
@@ -27,6 +28,14 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class FTXBrokerageModel : DefaultBrokerageModel
     {
+        private readonly HashSet<OrderType> _supportedOrderTypes = new HashSet<OrderType>
+        {
+            OrderType.Market,
+            OrderType.Limit,
+            OrderType.StopMarket,
+            OrderType.StopLimit
+        };
+
         private const decimal _defaultLeverage = 3m;
 
         /// <summary>
@@ -46,7 +55,7 @@ namespace QuantConnect.Brokerages
         public FTXBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
         {
         }
-        
+
         /// <summary>
         /// Gets the brokerage's leverage for the specified security
         /// </summary>
@@ -101,13 +110,21 @@ namespace QuantConnect.Brokerages
 
             message = null;
 
+            // validate order type
+            if (!_supportedOrderTypes.Contains(order.Type))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+
+                return false;
+            }
+
             if (order.Type is OrderType.StopMarket or OrderType.StopLimit)
             {
                 if (!security.HasData)
                 {
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point."
-                    );
+                        Messages.DefaultBrokerageModel.NoDataForSymbol);
 
                     return false;
                 }
@@ -124,8 +141,7 @@ namespace QuantConnect.Brokerages
                         if (stopPrice > security.BidPrice)
                         {
                             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                                StringExtensions.Invariant($"Trigger price too high: must be below current market price.")
-                            );
+                                Messages.FTXBrokerageModel.TriggerPriceTooHigh);
                         }
                         break;
 
@@ -133,8 +149,7 @@ namespace QuantConnect.Brokerages
                         if (stopPrice < security.AskPrice)
                         {
                             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                                StringExtensions.Invariant($"Trigger price too low: must be above current market price.")
-                            );
+                                Messages.FTXBrokerageModel.TriggerPriceTooLow);
                         }
                         break;
                 }
@@ -148,8 +163,7 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"The {this.GetType().Name} does not support {security.Type} security type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
                 return false;
             }
@@ -168,11 +182,7 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            message =
-                new BrokerageMessageEvent(
-                    BrokerageMessageType.Warning,
-                    0,
-                    "You must cancel and re-create instead.");
+            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
             return false;
         }
 

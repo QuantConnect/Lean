@@ -23,7 +23,7 @@ namespace QuantConnect.Tests.Common.Securities.Cryptos
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             if (portfolio.CashBook.ContainsKey(quote))
             {
                 portfolio.CashBook[quote].SetAmount(1000);

@@ -145,7 +145,7 @@ class RiskParityPortfolioConstructionModel(PortfolioConstructionModel):
         @property
         def Return(self):
             return pd.Series(
-                data = [(1 + float(x.Value))**252 - 1 for x in self.window],
+                data = [x.Value for x in self.window],
                 index = [x.EndTime for x in self.window])
 
         @property
@@ -153,4 +153,4 @@ class RiskParityPortfolioConstructionModel(PortfolioConstructionModel):
             return self.window.IsReady
 
         def __str__(self, **kwargs):
-            return '{}: {:.2%}'.format(self.roc.Name, (1 + self.window[0])**252 - 1)
+            return '{}: {:.2%}'.format(self.roc.Name, self.window[0])

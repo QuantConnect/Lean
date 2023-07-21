@@ -173,40 +173,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Perform daily logging of the alpha runtime statistics
-        /// </summary>
-        public override void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics)
-        {
-            try
-            {
-                if (HighFidelityLogging || _lastAlphaRuntimeStatisticsDate != Algorithm.Time.Date)
-                {
-                    lock (_sync)
-                    {
-                        _lastAlphaRuntimeStatisticsDate = Algorithm.Time.Date;
-
-                        foreach (var kvp in statistics.ToDictionary())
-                        {
-                            string value;
-                            if (!_currentAlphaRuntimeStatistics.TryGetValue(kvp.Key, out value) || value != kvp.Value)
-                            {
-                                // only log new or updated values
-                                _currentAlphaRuntimeStatistics[kvp.Key] = kvp.Value;
-                                WriteLine($"AlphaRuntimeStatistics: {kvp.Key}: {kvp.Value}");
-                            }
-                        }
-                    }
-                }
-
-                base.SetAlphaRuntimeStatistics(statistics);
-            }
-            catch (Exception exception)
-            {
-                Log.Error(exception);
-            }
-        }
-
-        /// <summary>
         /// Send list of security asset types the algortihm uses to browser.
         /// </summary>
         public override void SecurityType(List<SecurityType> types)
@@ -426,6 +392,20 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public override void Exit()
         {
+            if (!ExitTriggered && Algorithm != null)
+            {
+                var holdings = Algorithm.Portfolio.Values.Where(holding => holding.Invested).Select(holding => $"HOLDINGS:: {holding}").ToList();
+                if(holdings.Count > 0)
+                {
+                    Log.Trace($"{Environment.NewLine}{string.Join(Environment.NewLine, holdings)}");
+                }
+                else
+                {
+                    Log.Trace("HOLDINGS:: none");
+                }
+                Log.Trace($"{Environment.NewLine}{Algorithm.Portfolio.CashBook}");
+            }
+
             base.Exit();
             lock (_sync)
             {

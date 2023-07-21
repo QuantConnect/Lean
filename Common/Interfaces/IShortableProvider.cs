@@ -24,13 +24,6 @@ namespace QuantConnect.Interfaces
     public interface IShortableProvider
     {
         /// <summary>
-        /// Gets all shortable Symbols at the given time
-        /// </summary>
-        /// <param name="localTime">Local time of the algorithm</param>
-        /// <returns>All shortable Symbols including the quantity shortable as a positive number at the given time. Null if all Symbols are shortable without restrictions.</returns>
-        Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime);
-
-        /// <summary>
         /// Gets the quantity shortable for a <see cref="Symbol"/>.
         /// </summary>
         /// <param name="symbol">Symbol to check shortable quantity</param>

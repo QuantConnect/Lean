@@ -37,5 +37,8 @@ class ImmediateExecutionModel(ExecutionModel):
                     aboveMinimumPortfolio = BuyingPowerModelExtensions.AboveMinimumOrderMarginPortfolioPercentage(security.BuyingPowerModel, security, quantity, algorithm.Portfolio, algorithm.Settings.MinimumOrderMarginPortfolioPercentage)
                     if aboveMinimumPortfolio:
                         algorithm.MarketOrder(security, quantity)
+                    elif not PortfolioTarget.MinimumOrderMarginPercentageWarningSent:
+                        # will trigger the warning if it has not already been sent
+                        PortfolioTarget.MinimumOrderMarginPercentageWarningSent = False
 
             self.targetsCollection.ClearFulfilled(algorithm)

@@ -23,7 +23,7 @@ namespace QuantConnect.Tests.Research
         [Test]
         public void RunStartFromPython()
         {
-            TestProcess.RunPythonProcess("start.py", out var process, timeout: 10000);
+            TestProcess.RunPythonProcess("start.py", out var process);
 
             Assert.AreEqual(0, process.ExitCode);
 

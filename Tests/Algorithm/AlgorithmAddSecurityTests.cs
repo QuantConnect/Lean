@@ -255,7 +255,8 @@ namespace QuantConnect.Tests.Algorithm
 
         private static DataNormalizationMode[] GetDataNormalizationModes()
         {
-            return (DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode));
+            return ((DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode)))
+                .Where(x => x != DataNormalizationMode.ScaledRaw).ToArray();
         }
 
         private static Func<QCAlgorithm, Security>[] FuturesTestCases

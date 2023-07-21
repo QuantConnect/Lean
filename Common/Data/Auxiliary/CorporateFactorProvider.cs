@@ -64,6 +64,7 @@ namespace QuantConnect.Data.Auxiliary
                         factor = factorFileRow.First().SplitFactor;
                         break;
                     case DataNormalizationMode.Adjusted:
+                    case DataNormalizationMode.ScaledRaw:
                         factor = factorFileRow.First().PriceScaleFactor;
                         break;
                     default:
