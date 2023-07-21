@@ -29,6 +29,9 @@ namespace QuantConnect.Orders.Fills
     /// </summary>
     public class FillModel : IFillModel
     {
+        // minimum/maximum asset prices to be used to update trailing stop orders stop prices.
+        private Dictionary<Symbol, Prices> _extremePrices = new();
+
         /// <summary>
         /// The parameters instance to be used by the different XxxxFill() implementations
         /// </summary>
@@ -82,6 +85,11 @@ namespace QuantConnect.Orders.Fills
                     orderEvents.Add(PythonWrapper != null
                         ? PythonWrapper.StopMarketFill(parameters.Security, parameters.Order as StopMarketOrder)
                         : StopMarketFill(parameters.Security, parameters.Order as StopMarketOrder));
+                    break;
+                case OrderType.TrailingStop:
+                    orderEvents.Add(PythonWrapper != null
+                        ? PythonWrapper.TrailingStopFill(parameters.Security, parameters.Order as TrailingStopOrder)
+                        : TrailingStopFill(parameters.Security, parameters.Order as TrailingStopOrder));
                     break;
                 case OrderType.StopLimit:
                     orderEvents.Add(PythonWrapper != null
@@ -367,6 +375,83 @@ namespace QuantConnect.Orders.Fills
                     }
                     break;
             }
+
+            return fill;
+        }
+
+        /// <summary>
+        /// Default trailing stop fill model implementation in base class security. (Trailing Stop Order Type)
+        /// </summary>
+        /// <param name="asset">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        public virtual OrderEvent TrailingStopFill(Security asset, TrailingStopOrder order)
+        {
+            // Default order event to return.
+            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
+
+            // If its canceled don't need anymore checks:
+            if (order.Status == OrderStatus.Canceled) return fill;
+
+            // Make sure the exchange is open/normal market hours before filling
+            if (!IsExchangeOpen(asset, false)) return fill;
+
+            // Get the range of prices in the last bar:
+            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
+            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+
+            // Do not fill on stale data
+            if (pricesEndTime <= order.Time) return fill;
+
+            //Calculate the model slippage: e.g. 0.01c
+            var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
+
+            // Get the current extreme prices
+            var extremePrices = _extremePrices.GetValueOrDefault(asset.Symbol);
+
+            //Check if the Stop Order was filled: opposite to a limit order
+            switch (order.Direction)
+            {
+                case OrderDirection.Sell:
+                    // Update the stop price if necessary
+                    if (extremePrices != null && prices.High > extremePrices.High)
+                    {
+                        order.UpdateStopPrice(prices.High);
+                    }
+
+                    // Fill sell if market price drops below stop price
+                    if (prices.Low <= order.StopPrice)
+                    {
+                        fill.Status = OrderStatus.Filled;
+                        // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
+                        fill.FillPrice = Math.Min(order.StopPrice, prices.Current - slip);
+                        // assume the order completely filled
+                        fill.FillQuantity = order.Quantity;
+                    }
+                    break;
+
+                case OrderDirection.Buy:
+                    // Update the stop price if necessary
+                    if (extremePrices != null && prices.Low < extremePrices.Low)
+                    {
+                        order.UpdateStopPrice(prices.Low);
+                    }
+
+                    // Fill buy if market price rises above stop price
+                    if (prices.High >= order.StopPrice)
+                    {
+                        fill.Status = OrderStatus.Filled;
+                        // Assuming worse case scenario fill - fill at highest of the stop & asset price.
+                        fill.FillPrice = Math.Max(order.StopPrice, prices.Current + slip);
+                        // assume the order completely filled
+                        fill.FillQuantity = order.Quantity;
+                    }
+                    break;
+            }
+
+            // Update the min/max prices for next time
+            UpdateExtremePrices(asset);
 
             return fill;
         }
@@ -1014,6 +1099,20 @@ namespace QuantConnect.Orders.Fills
             }
 
             return true;
+        }
+
+        private void UpdateExtremePrices(Security asset)
+        {
+            var prices = GetPricesCheckingPythonWrapper(asset, OrderDirection.Hold);
+            if (!_extremePrices.TryGetValue(asset.Symbol, out var extremePrices))
+            {
+                _extremePrices[asset.Symbol] = prices;
+            }
+            else
+            {
+                _extremePrices[asset.Symbol] = new Prices(prices.EndTime, prices.Current, prices.Open, Math.Max(prices.High, extremePrices.High),
+                    Math.Min(prices.Low, extremePrices.Low), prices.Close);
+            }
         }
 
         private class ComboLimitOrderLegParameters

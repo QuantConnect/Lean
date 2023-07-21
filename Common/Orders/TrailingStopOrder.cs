@@ -136,6 +136,15 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Updates the stop price given the current market price
+        /// </summary>
+        /// <param name="currentMarketPrice"></param>
+        internal void UpdateStopPrice(decimal currentMarketPrice)
+        {
+            StopPrice = CalculateStopPrice(currentMarketPrice, TrailingAmount, TrailingAsPercentage, Direction);
+        }
+
+        /// <summary>
         /// Calculates the stop price for a trailing stop order given the current market price
         /// </summary>
         /// <param name="currentMarketPrice">The current market price</param>

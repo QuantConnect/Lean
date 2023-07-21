@@ -153,6 +153,20 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Trailing Stop Fill Model. Return an order event with the fill details.
+        /// </summary>
+        /// <param name="asset">Asset we're trading this order</param>
+        /// <param name="order">Stop Order to Check, return filled if true</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        public override OrderEvent TrailingStopFill(Security asset, TrailingStopOrder order)
+        {
+            using (Py.GIL())
+            {
+                return (_model.TrailingStopFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
+            }
+        }
+
+        /// <summary>
         /// Get the minimum and maximum price for this security in the last bar:
         /// </summary>
         /// <param name="asset">Security asset we're checking</param>
