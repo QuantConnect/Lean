@@ -29,8 +29,10 @@ namespace QuantConnect.Orders.Fills
     /// </summary>
     public class FillModel : IFillModel
     {
-        // minimum/maximum asset prices to be used to update trailing stop orders stop prices.
-        private Dictionary<Symbol, Prices> _extremePrices = new();
+        // TODO: This might not be the best place to keep track of the extreme prices. After a split, they need to be adjusted as well!
+        // Minimum/maximum asset prices to be used to update trailing stop orders stop prices.
+        // They are keep by order id so each order can keep track of its own extreme prices.
+        private Dictionary<int, Prices> _extremePrices = new();
 
         /// <summary>
         /// The parameters instance to be used by the different XxxxFill() implementations
@@ -408,7 +410,7 @@ namespace QuantConnect.Orders.Fills
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
             // Get the current extreme prices
-            var extremePrices = _extremePrices.GetValueOrDefault(asset.Symbol);
+            var extremePrices = _extremePrices.GetValueOrDefault(order.Id);
 
             //Check if the Stop Order was filled: opposite to a limit order
             switch (order.Direction)
@@ -450,8 +452,15 @@ namespace QuantConnect.Orders.Fills
                     break;
             }
 
-            // Update the min/max prices for next time
-            UpdateExtremePrices(asset);
+            if (fill.Status == OrderStatus.Filled)
+            {
+                _extremePrices.Remove(order.Id);
+            }
+            else
+            {
+                // Update the min/max prices for next time
+                UpdateExtremePrices(order.Id, asset);
+            }
 
             return fill;
         }
@@ -1101,16 +1110,16 @@ namespace QuantConnect.Orders.Fills
             return true;
         }
 
-        private void UpdateExtremePrices(Security asset)
+        private void UpdateExtremePrices(int orderId, Security asset)
         {
             var prices = GetPricesCheckingPythonWrapper(asset, OrderDirection.Hold);
-            if (!_extremePrices.TryGetValue(asset.Symbol, out var extremePrices))
+            if (!_extremePrices.TryGetValue(orderId, out var extremePrices))
             {
-                _extremePrices[asset.Symbol] = prices;
+                _extremePrices[orderId] = prices;
             }
             else
             {
-                _extremePrices[asset.Symbol] = new Prices(prices.EndTime, prices.Current, prices.Open, Math.Max(prices.High, extremePrices.High),
+                _extremePrices[orderId] = new Prices(prices.EndTime, prices.Current, prices.Open, Math.Max(prices.High, extremePrices.High),
                     Math.Min(prices.Low, extremePrices.Low), prices.Close);
             }
         }
