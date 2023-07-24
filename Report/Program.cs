@@ -67,11 +67,22 @@ namespace QuantConnect.Report
                 live = JsonConvert.DeserializeObject<LiveResult>(File.ReadAllText(liveDataFile), settings);
             }
 
-            var cssOverrideContent = !string.IsNullOrEmpty(cssOverrideFile) ? File.ReadAllText(cssOverrideFile) : null;
+            string cssOverrideContent = null;
+            if (!string.IsNullOrEmpty(cssOverrideFile))
+            {
+                if (File.Exists(cssOverrideFile))
+                {
+                    cssOverrideContent = File.ReadAllText(cssOverrideFile);
+                }
+                else
+                {
+                    Log.Error($"QuantConnect.Report.Main(): CSS override file {cssOverrideFile} was not found");
+                }
+            }
 
             //Create a new report
             Log.Trace("QuantConnect.Report.Main(): Instantiating report...");
-            var report = new Report(name, description, version, backtest, live, cssOverrideFile: cssOverrideContent);
+            var report = new Report(name, description, version, backtest, live, cssOverride: cssOverrideContent);
 
             // Generate the html content
             Log.Trace("QuantConnect.Report.Main(): Starting content compile...");
