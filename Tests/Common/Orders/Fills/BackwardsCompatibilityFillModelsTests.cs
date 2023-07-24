@@ -613,6 +613,10 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 }
                 return new Fill(orderEvent);
             }
+
+            public void ApplySplit(Split split)
+            {
+            }
         }
 
         private class TestFillModelInheritBaseClass : FillModel

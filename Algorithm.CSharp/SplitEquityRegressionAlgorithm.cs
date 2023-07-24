@@ -31,6 +31,9 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _aapl;
         private List<OrderTicket> _tickets = new();
 
+        private decimal _marketPriceAtLatestSplit;
+        private decimal _splitFactor;
+
         public override void Initialize()
         {
             SetStartDate(2014, 6, 5);
@@ -42,13 +45,20 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
+            if (slice.Splits.ContainsKey(_aapl))
+            {
+                var split = slice.Splits[_aapl];
+                _splitFactor = split.SplitFactor;
+                _marketPriceAtLatestSplit = Securities[_aapl].Price;
+            }
+
             if (Transactions.GetOrders().IsNullOrEmpty())
             {
                 _tickets.Add(LimitIfTouchedOrder(_aapl, 10, 10, 10));
                 _tickets.Add(LimitOrder(_aapl, 10, 5));
                 _tickets.Add(StopLimitOrder(_aapl, 10, 15, 15));
-                _tickets.Add(TrailingStopOrder(_aapl, 10, 15, 1.5m, trailingAsPercentage: false));
-                _tickets.Add(TrailingStopOrder(_aapl, 10, 15, 0.1m, trailingAsPercentage: true));
+                _tickets.Add(TrailingStopOrder(_aapl, 10, 1000, 60m, trailingAsPercentage: false));
+                _tickets.Add(TrailingStopOrder(_aapl, 10, 1000, 0.1m, trailingAsPercentage: true));
             }
         }
 
@@ -90,22 +100,35 @@ namespace QuantConnect.Algorithm.CSharp
                         break;
 
                     case OrderType.TrailingStop:
-                        if (ticket.Get(OrderField.StopPrice) != 2.14m)
-                        {
-                            throw new Exception($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
-                        }
+                        var stopPrice = ticket.Get(OrderField.StopPrice);
+                        var trailingAmount = ticket.Get(OrderField.TrailingAmount);
 
                         if (ticket.Get<bool>(OrderField.TrailingAsPercentage))
                         {
-                            // Trailing amount unchanged
-                            if (ticket.Get(OrderField.TrailingAmount) != 0.1m)
+                            // We only expect one stop price update in this algorithm
+                            if (Math.Abs(stopPrice - _marketPriceAtLatestSplit) > 0.1m * stopPrice)
                             {
-                                throw new Exception($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 0.214m, but was {ticket.Get(OrderField.TrailingAmount)}");
+                                throw new Exception($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
+                            }
+
+                            // Trailing amount unchanged since it's a percentage
+                            if (trailingAmount != 0.1m)
+                            {
+                                throw new Exception($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 0.214m, but was {trailingAmount}");
                             }
                         }
-                        else if (ticket.Get(OrderField.TrailingAmount) != 0.214m)
+                        else
                         {
-                            throw new Exception($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 0.214m, but was {ticket.Get(OrderField.TrailingAmount)}");
+                            // We only expect one stop price update in this algorithm
+                            if (Math.Abs(stopPrice - _marketPriceAtLatestSplit) > 60m * _splitFactor)
+                            {
+                                throw new Exception($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
+                            }
+
+                            if (trailingAmount != 8.57m)
+                            {
+                                throw new Exception($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 8.57m, but was {trailingAmount}");
+                            }
                         }
                         break;
                 }
@@ -160,7 +183,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "fb7383d38257493fe4f3427e781d9a34"}
+            {"OrderListHash", "27b79cb97ffe7002f262c244e189b631"}
         };
     }
 }

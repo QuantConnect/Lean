@@ -251,6 +251,10 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                     Status = status
                 });
             }
+
+            public void ApplySplit(Split split)
+            {
+            }
         }
     }
 }

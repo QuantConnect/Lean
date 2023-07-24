@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data.Market;
+
 namespace QuantConnect.Orders.Fills
 {
     /// <summary>
@@ -28,5 +30,14 @@ namespace QuantConnect.Orders.Fills
         /// <param name="parameters">A <see cref="FillModelParameters"/> object containing the security and order</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         Fill Fill(FillModelParameters parameters);
+
+        /// <summary>
+        /// Applies the split to the fill model.
+        /// </summary>
+        /// <remarks>
+        /// This is useful for fill models that need to be aware of splits in order to properly compute fills.
+        /// </remarks>
+        /// <param name="split">The split event data</param>
+        void ApplySplit(Split split);
     }
 }

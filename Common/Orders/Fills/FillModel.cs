@@ -832,6 +832,24 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
+        /// Applies the split to the fill model.
+        /// </summary>
+        /// <remarks>
+        /// This is useful for fill models that need to be aware of splits in order to properly compute fills.
+        /// </remarks>
+        /// <param name="split">The split event data</param>
+        public virtual void ApplySplit(Split split)
+        {
+            var splitFactor = split.SplitFactor;
+            foreach (var kvp in _extremePrices)
+            {
+                var prices = kvp.Value;
+                _extremePrices[kvp.Key] = new Prices(prices.EndTime, prices.Current * splitFactor, prices.Open * splitFactor,
+                    prices.High * splitFactor, prices.Low * splitFactor, prices.Close * splitFactor);
+            }
+        }
+
+        /// <summary>
         /// Get current ask price for subscribed data
         /// This method will try to get the most recent ask price data, so it will try to get tick quote first, then quote bar.
         /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
