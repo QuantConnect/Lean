@@ -420,6 +420,7 @@ namespace QuantConnect.Orders.Fills
                     if (extremePrices != null && prices.High > extremePrices.High)
                     {
                         order.UpdateStopPrice(prices.High);
+                        Parameters.OnOrderUpdated(order);
                     }
 
                     // Fill sell if market price drops below stop price
@@ -438,6 +439,7 @@ namespace QuantConnect.Orders.Fills
                     if (extremePrices != null && prices.Low < extremePrices.Low)
                     {
                         order.UpdateStopPrice(prices.Low);
+                        Parameters.OnOrderUpdated(order);
                     }
 
                     // Fill buy if market price rises above stop price

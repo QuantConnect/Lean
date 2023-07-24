@@ -53,6 +53,11 @@ namespace QuantConnect.Orders.Fills
         public Dictionary<Order, Security> SecuritiesForOrders { get; }
 
         /// <summary>
+        /// Callback to notify when an order is updated by the fill model
+        /// </summary>
+        public Action<Order> OnOrderUpdated { get; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="security">Security asset we're filling</param>
@@ -65,13 +70,15 @@ namespace QuantConnect.Orders.Fills
             Order order,
             ISubscriptionDataConfigProvider configProvider,
             TimeSpan stalePriceTimeSpan,
-            Dictionary<Order, Security> securitiesForOrders)
+            Dictionary<Order, Security> securitiesForOrders,
+            Action<Order> onOrderUpdated = null)
         {
             Security = security;
             Order = order;
             ConfigProvider = configProvider;
             StalePriceTimeSpan = stalePriceTimeSpan;
             SecuritiesForOrders = securitiesForOrders;
+            OnOrderUpdated = onOrderUpdated ?? (o => { });
         }
     }
 }

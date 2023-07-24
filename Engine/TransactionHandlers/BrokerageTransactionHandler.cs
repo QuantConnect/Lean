@@ -188,6 +188,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 HandlerBrokerageOrderIdChangedEvent(e);
             };
 
+            _brokerage.OrderUpdated += (sender, e) =>
+            {
+                HandleOrderUpdated(e);
+            };
+
             IsActive = true;
 
             _algorithm = algorithm;
@@ -1237,6 +1242,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private void HandleOrderEvent(OrderEvent orderEvent)
         {
             HandleOrderEvents(new List<OrderEvent> { orderEvent });
+        }
+
+        private void HandleOrderUpdated(Order order)
+        {
+            if (!_completeOrders.ContainsKey(order.Id))
+            {
+                Log.Error("BrokerageTransactionHandler.HandleOrderUpdated(): Unable to locate open order with id " + order.Id);
+                return;
+            }
+
+            _openOrders[order.Id] = order;
         }
 
         /// <summary>
