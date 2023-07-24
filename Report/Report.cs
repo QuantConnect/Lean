@@ -48,8 +48,9 @@ namespace QuantConnect.Report
         /// <param name="version">Version number of the strategy</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
+        /// <param name="cssOverrideFile">CSS file that overrides some of the default rules defined in report.css</param>
         /// <param name="pointInTimePortfolioDestination">Point in time portfolio json output base filename</param>
-        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null)
+        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null, string cssOverrideFile = null)
         {
             var backtestCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(backtest));
             var liveCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(live));
@@ -104,7 +105,7 @@ namespace QuantConnect.Report
                 new TextReportElement("strategy name", ReportKey.StrategyName, name),
                 new TextReportElement("description", ReportKey.StrategyDescription, description),
                 new TextReportElement("version", ReportKey.StrategyVersion, version),
-                new TextReportElement("stylesheet", ReportKey.Stylesheet, File.ReadAllText("css/report.css")),
+                new TextReportElement("stylesheet", ReportKey.Stylesheet, File.ReadAllText("css/report.css") + (cssOverrideFile ?? string.Empty)),
                 new TextReportElement("live marker key", ReportKey.LiveMarker, live == null ? string.Empty : "Live "),
 
                 //KPI's Backtest:
