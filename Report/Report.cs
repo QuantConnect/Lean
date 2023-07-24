@@ -132,8 +132,9 @@ namespace QuantConnect.Report
                 new LeverageUtilizationReportElement("leverage plot", ReportKey.LeverageUtilization, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
                 new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
 
-                //
-                new ParametersElement("parameters", ReportKey.Parameters, backtest, live),
+                // Include Algorithm Parameters
+                new ParametersReportElement("parameters page", ReportKey.ParametersPageStyle, backtestConfiguration, liveConfiguration),
+                new ParametersReportElement("parameters", ReportKey.Parameters, backtestConfiguration, liveConfiguration),
 
                 // Array of Crisis Plots:
                 new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live),
@@ -157,7 +158,7 @@ namespace QuantConnect.Report
                 Log.Trace($"QuantConnect.Report.Compile(): Rendering {element.Name}...");
                 html = html.Replace(element.Key, element.Render());
 
-                if (element is TextReportElement || element is CrisisReportElement || (element as ReportElement) == null)
+                if (element is TextReportElement || element is CrisisReportElement || element is ParametersReportElement ||(element as ReportElement) == null)
                 {
                     continue;
                 }
