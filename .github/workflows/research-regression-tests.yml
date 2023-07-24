@@ -10,29 +10,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
-    container:
-        image: quantconnect/lean:foundation
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Free space
+        run: df -h && rm -rf /opt/hostedtoolcache* && df -h
 
-      - name: free space
-        run: df -h && rm -rf /__t/* && df -h
-
-      - name: install dependencies
-        run: |
-          pip3 install papermill==2.4.0 clr-loader==0.1.6
-
-      - name: install kernel
-        run: dotnet tool install --global Microsoft.dotnet-interactive --version 1.0.340501
-
-      - name: Add dotnet tools to Path
-        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-
-      - name: activate kernel for jupyter
-        run: dotnet interactive jupyter install
-
-      - name: Build
-        run: dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
-
-      - name: Run Tests
-        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter TestCategory=ResearchRegressionTests -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\) TestRunParameters.Parameter\(name=\"reduced-disk-size\", value=\"true\"\)
+      - uses: addnab/docker-run-action@v3
+        with:
+          image: quantconnect/lean:foundation
+          options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w
+          shell: bash
+          run: |
+            # install dependencies
+            pip3 install papermill==2.4.0 clr-loader==0.1.6
+            # install kernel
+            dotnet tool install --global Microsoft.dotnet-interactive --version 1.0.340501
+            # Add dotnet tools to Path
+            export PATH="$HOME/.dotnet/tools:$PATH"
+            # activate kernel for jupyter
+            dotnet interactive jupyter install
+            # Build
+            dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+            # Run Tests
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter TestCategory=ResearchRegressionTests -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\) TestRunParameters.Parameter\(name=\"reduced-disk-size\", value=\"true\"\)
