@@ -431,6 +431,18 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
+        /// Invokes the <see cref="Brokerage.OnOrderUpdated(OrderUpdateEvent)" /> event with the given order updates.
+        /// </summary>
+        private void OnOrderUpdated(Order order)
+        {
+            // Only trailing stop orders updates are supported for now
+            if (order.Type == OrderType.TrailingStop)
+            {
+                OnOrderUpdated(new OrderUpdateEvent { OrderId = order.Id, TrailingStopPrice = ((TrailingStopOrder)order).StopPrice });
+            }
+        }
+
+        /// <summary>
         /// Helper method to drive option assignment models
         /// </summary>
         private void ProcessAssignmentOrders()

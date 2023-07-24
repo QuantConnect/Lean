@@ -43,7 +43,7 @@ namespace QuantConnect.Interfaces
         /// <remarks>
         /// These are not status changes but mainly price changes, like the stop price of a trailing stop order
         /// </remarks>
-        event EventHandler<Order> OrderUpdated;
+        event EventHandler<OrderUpdateEvent> OrderUpdated;
 
         /// <summary>
         /// Event that fires each time a short option position is assigned

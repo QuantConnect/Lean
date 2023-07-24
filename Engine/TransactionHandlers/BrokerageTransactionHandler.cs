@@ -1244,15 +1244,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             HandleOrderEvents(new List<OrderEvent> { orderEvent });
         }
 
-        private void HandleOrderUpdated(Order order)
+        private void HandleOrderUpdated(OrderUpdateEvent e)
         {
-            if (!_completeOrders.ContainsKey(order.Id))
+            if (!_completeOrders.TryGetValue(e.OrderId, out var order))
             {
-                Log.Error("BrokerageTransactionHandler.HandleOrderUpdated(): Unable to locate open order with id " + order.Id);
+                Log.Error("BrokerageTransactionHandler.HandleOrderUpdated(): Unable to locate open order with id " + e.OrderId);
                 return;
             }
 
-            _openOrders[order.Id] = order;
+            // Only trailing stop orders updates are supported for now
+            if (order.Type == OrderType.TrailingStop)
+            {
+                ((TrailingStopOrder)order).StopPrice = e.TrailingStopPrice;
+            }
         }
 
         /// <summary>

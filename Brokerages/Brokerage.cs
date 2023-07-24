@@ -54,7 +54,7 @@ namespace QuantConnect.Brokerages
         /// <remarks>
         /// These are not status changes but mainly price changes, like the stop price of a trailing stop order
         /// </remarks>
-        public event EventHandler<Order> OrderUpdated;
+        public event EventHandler<OrderUpdateEvent> OrderUpdated;
 
         /// <summary>
         /// Event that fires each time a short option position is assigned
@@ -173,11 +173,11 @@ namespace QuantConnect.Brokerages
         /// Event invocator for the OrderUpdated event
         /// </summary>
         /// <param name="order">The order being updated</param>
-        protected virtual void OnOrderUpdated(Order order)
+        protected virtual void OnOrderUpdated(OrderUpdateEvent e)
         {
             try
             {
-                OrderUpdated?.Invoke(this, order);
+                OrderUpdated?.Invoke(this, e);
             }
             catch (Exception err)
             {
