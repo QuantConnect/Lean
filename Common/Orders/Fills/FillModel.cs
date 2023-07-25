@@ -29,11 +29,6 @@ namespace QuantConnect.Orders.Fills
     /// </summary>
     public class FillModel : IFillModel
     {
-        // TODO: This might not be the best place to keep track of the extreme prices. After a split, they need to be adjusted as well!
-        // Minimum/maximum asset prices to be used to update trailing stop orders stop prices.
-        // They are keep by order id so each order can keep track of its own extreme prices.
-        private Dictionary<int, Prices> _extremePrices = new();
-
         /// <summary>
         /// The parameters instance to be used by the different XxxxFill() implementations
         /// </summary>
@@ -406,23 +401,20 @@ namespace QuantConnect.Orders.Fills
             // Do not fill on stale data
             if (pricesEndTime <= order.Time) return fill;
 
-            //Calculate the model slippage: e.g. 0.01c
+            // Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
-            // Get the current extreme prices
-            var extremePrices = _extremePrices.GetValueOrDefault(order.Id);
+            // Update the stop price
+            if (TrailingStopOrder.TryUpdateStopPrice(order.Direction == OrderDirection.Sell ? prices.High : prices.Low, order.StopPrice,
+                    order.TrailingAmount, order.TrailingAsPercentage, order.Direction, out var updatedStopPrice))
+            {
+                order.StopPrice = updatedStopPrice;
+                Parameters.OnOrderUpdated(order);
+            }
 
-            //Check if the Stop Order was filled: opposite to a limit order
             switch (order.Direction)
             {
                 case OrderDirection.Sell:
-                    // Update the stop price if necessary
-                    if (extremePrices != null && prices.High > extremePrices.High)
-                    {
-                        order.UpdateStopPrice(prices.High);
-                        Parameters.OnOrderUpdated(order);
-                    }
-
                     // Fill sell if market price drops below stop price
                     if (prices.Low <= order.StopPrice)
                     {
@@ -435,13 +427,6 @@ namespace QuantConnect.Orders.Fills
                     break;
 
                 case OrderDirection.Buy:
-                    // Update the stop price if necessary
-                    if (extremePrices != null && prices.Low < extremePrices.Low)
-                    {
-                        order.UpdateStopPrice(prices.Low);
-                        Parameters.OnOrderUpdated(order);
-                    }
-
                     // Fill buy if market price rises above stop price
                     if (prices.High >= order.StopPrice)
                     {
@@ -452,16 +437,6 @@ namespace QuantConnect.Orders.Fills
                         fill.FillQuantity = order.Quantity;
                     }
                     break;
-            }
-
-            if (fill.Status == OrderStatus.Filled)
-            {
-                _extremePrices.Remove(order.Id);
-            }
-            else
-            {
-                // Update the min/max prices for next time
-                UpdateExtremePrices(order.Id, asset);
             }
 
             return fill;
@@ -834,24 +809,6 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// Applies the split to the fill model.
-        /// </summary>
-        /// <remarks>
-        /// This is useful for fill models that need to be aware of splits in order to properly compute fills.
-        /// </remarks>
-        /// <param name="split">The split event data</param>
-        public virtual void ApplySplit(Split split)
-        {
-            var splitFactor = split.SplitFactor;
-            foreach (var kvp in _extremePrices)
-            {
-                var prices = kvp.Value;
-                _extremePrices[kvp.Key] = new Prices(prices.EndTime, prices.Current * splitFactor, prices.Open * splitFactor,
-                    prices.High * splitFactor, prices.Low * splitFactor, prices.Close * splitFactor);
-            }
-        }
-
-        /// <summary>
         /// Get current ask price for subscribed data
         /// This method will try to get the most recent ask price data, so it will try to get tick quote first, then quote bar.
         /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
@@ -1128,20 +1085,6 @@ namespace QuantConnect.Orders.Fills
             }
 
             return true;
-        }
-
-        private void UpdateExtremePrices(int orderId, Security asset)
-        {
-            var prices = GetPricesCheckingPythonWrapper(asset, OrderDirection.Hold);
-            if (!_extremePrices.TryGetValue(orderId, out var extremePrices))
-            {
-                _extremePrices[orderId] = prices;
-            }
-            else
-            {
-                _extremePrices[orderId] = new Prices(prices.EndTime, prices.Current, prices.Open, Math.Max(prices.High, extremePrices.High),
-                    Math.Min(prices.Low, extremePrices.Low), prices.Close);
-            }
         }
 
         private class ComboLimitOrderLegParameters

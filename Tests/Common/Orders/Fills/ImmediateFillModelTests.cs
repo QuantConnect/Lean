@@ -358,20 +358,23 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void PerformsTrailingStopImmediateFillBuy(bool isInternal)
+        [Test]
+        public void PerformsTrailingStopImmediateFillBuy([Values] bool isInternal, [Values] bool trailingAsPercentage)
         {
             var model = new ImmediateFillModel();
-            // Assume market price is $100, with a trailing amount of $10 set the stop price to $110
-            var order = new TrailingStopOrder(Symbols.SPY, 100, 110m, 10m, false, Noon);
+            // Assume market price is $100:
+            var order = trailingAsPercentage
+                // a trailing amount of 5%, stop price $105
+                ? new TrailingStopOrder(Symbols.SPY, 100, 105m, 0.05m, true, Noon)
+                // a trailing amount of $10 set the stop price to $110
+                : new TrailingStopOrder(Symbols.SPY, 100, 110m, 10m, false, Noon);
 
             var config = CreateTradeBarConfig(Symbols.SPY, isInternal);
             var security = GetSecurity(config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             // Security price rises above stop price immediately
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 110m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, trailingAsPercentage ? 100m * (1 + 0.05m) : 100m + 10m));
 
             var fill = model.Fill(new FillModelParameters(
                 security,
@@ -383,20 +386,25 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             AssertFilled(fill, order.Quantity, Math.Max(security.Price, order.StopPrice));
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void PerformsTrailingStopFillBuy(bool isInternal)
+        [Test]
+        public void PerformsTrailingStopFillBuy([Values] bool isInternal, [Values] bool trailingAsPercentage)
         {
             var model = new ImmediateFillModel();
-            // Assume market price is $100, with a trailing amount of $10 set the stop price to $110
-            var order = new TrailingStopOrder(Symbols.SPY, 100, 110m, 10m, false, Noon);
+            // Assume market price is $100:
+            var order = trailingAsPercentage
+                // a trailing amount of 5%, stop price $105
+                ? new TrailingStopOrder(Symbols.SPY, 100, 105m, 0.05m, true, Noon)
+                // a trailing amount of $10 set the stop price to $110
+                : new TrailingStopOrder(Symbols.SPY, 100, 110m, 10m, false, Noon);
 
             var config = CreateTradeBarConfig(Symbols.SPY, isInternal);
             var security = GetSecurity(config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
+            var initialTrailingStopPrice = order.StopPrice;
+            var prevMarketPrice = 100m;
             // Market price hasn't moved
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 100m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, prevMarketPrice));
 
             var fill = model.Fill(new FillModelParameters(
                 security,
@@ -407,8 +415,12 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             AssertUnfilled(fill);
 
+            // Stop price should have not been updated
+            Assert.AreEqual(initialTrailingStopPrice, order.StopPrice);
+
             // Simulate a rising security price, but not enough to trigger the stop
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 105m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon,
+                trailingAsPercentage ? prevMarketPrice * (1 + 0.025m) : prevMarketPrice + 5m));
 
             fill = model.Fill(new FillModelParameters(
                 security,
@@ -420,10 +432,12 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             AssertUnfilled(fill);
 
             // Stop price should have not been updated
-            Assert.AreEqual(110m, order.StopPrice);
+            Assert.AreEqual(initialTrailingStopPrice, order.StopPrice);
 
+            prevMarketPrice = security.Price;
             // Simulate a falling security price, but still above the lowest market price
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102.5m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon,
+                trailingAsPercentage ? prevMarketPrice * (1 + 0.0125m) : prevMarketPrice - 2.5m));
 
             fill = model.Fill(new FillModelParameters(
                 security,
@@ -435,10 +449,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             AssertUnfilled(fill);
 
             // Stop price should have not been updated
-            Assert.AreEqual(110m, order.StopPrice);
+            Assert.AreEqual(initialTrailingStopPrice, order.StopPrice);
 
             // Simulate a falling security price, which triggers a stop price update
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 95m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon,
+                trailingAsPercentage ? prevMarketPrice * (1 - 0.05m) : prevMarketPrice - 10m));
 
             fill = model.Fill(new FillModelParameters(
                 security,
@@ -449,11 +464,16 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             AssertUnfilled(fill);
 
-            // Stop price should have been updated to market price + trailing amount
-            Assert.AreEqual(95m + 10m, order.StopPrice);
+            // Stop price should have been updated to:
+            //  --> (market price + trailing amount) if trailing amount is not a percentage
+            //  --> (market price * (1 + trailing amount)) if trailing amount is a percentage
+            Assert.AreNotEqual(initialTrailingStopPrice, order.StopPrice);
+            var expectedUpdatedStopPrice = trailingAsPercentage ? security.Price * (1 + 0.05m) : security.Price + 10m;
+            Assert.AreEqual(expectedUpdatedStopPrice, order.StopPrice);
 
             // Simulate a rising security price, enough to trigger the stop
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 105m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon,
+                trailingAsPercentage ? order.StopPrice * (1 + 0.05m) : order.StopPrice + 10m));
 
             fill = model.Fill(new FillModelParameters(
                 security,
@@ -463,25 +483,26 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 null)).Single();
 
             // Stop price should have not been updated
-            Assert.AreEqual(95m + 10m, order.StopPrice);
+            Assert.AreEqual(expectedUpdatedStopPrice, order.StopPrice);
 
             AssertFilled(fill, order.Quantity, Math.Max(security.Price, order.StopPrice));
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void PerformsTrailingStopImmediateFillSell(bool isInternal)
+        [Test]
+        public void PerformsTrailingStopImmediateFillSell([Values] bool isInternal, [Values] bool trailingAsPercentage)
         {
             var model = new ImmediateFillModel();
             // Assume market price is $100, with a trailing amount of $10 set the stop price to $90
-            var order = new TrailingStopOrder(Symbols.SPY, 100, 90m, 10m, false, Noon);
+            var order = trailingAsPercentage
+                ? new TrailingStopOrder(Symbols.SPY, 100, 95m, 0.05m, true, Noon)
+                : new TrailingStopOrder(Symbols.SPY, 100, 90m, 10m, false, Noon);
 
             var config = CreateTradeBarConfig(Symbols.SPY, isInternal);
             var security = GetSecurity(config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             // Security price falls below stop price immediately
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 90m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, trailingAsPercentage ? 100m * (1 - 0.05m) : 100m - 10m));
 
             var fill = model.Fill(new FillModelParameters(
                 security,
@@ -493,20 +514,24 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             AssertFilled(fill, order.Quantity, Math.Min(security.Price, order.StopPrice));
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void PerformsTrailingStopFillSell(bool isInternal)
+        [Test]
+        public void PerformsTrailingStopFillSell([Values] bool isInternal, [Values] bool trailingAsPercentage)
         {
             var model = new ImmediateFillModel();
-            // Assume market price is $100, with a trailing amount of $10 set the stop price to $90
-            var order = new TrailingStopOrder(Symbols.SPY, -100, 90m, 10m, false, Noon);
+            var prevMarketPrice = 100m;
+            // Initial market price $100, trailing amount of $10 set the stop price to $90
+            var order = trailingAsPercentage
+                ? new TrailingStopOrder(Symbols.SPY, -100, 90m, 0.1m, true, Noon)
+                : new TrailingStopOrder(Symbols.SPY, -100, 90m, 10m, false, Noon);
+
+            var initialTrailingStopPrice = order.StopPrice;
 
             var config = CreateTradeBarConfig(Symbols.SPY, isInternal);
             var security = GetSecurity(config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             // Market price hasn't moved
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 100m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, prevMarketPrice));
 
             var fill = model.Fill(new FillModelParameters(
                 security,
@@ -516,6 +541,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 null)).Single();
 
             AssertUnfilled(fill);
+
+            // Stop price should have not been updated
+            Assert.AreEqual(initialTrailingStopPrice, order.StopPrice);
 
             // Simulate a falling security price, but not enough to trigger the stop
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 95m));
@@ -530,8 +558,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             AssertUnfilled(fill);
 
             // Stop price should have not been updated
-            Assert.AreEqual(90m, order.StopPrice);
+            Assert.AreEqual(initialTrailingStopPrice, order.StopPrice);
 
+            prevMarketPrice = security.Price;
             // Simulate a rising security price, but still above the lowest market price
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 97.5m));
 
@@ -545,8 +574,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             AssertUnfilled(fill);
 
             // Stop price should have not been updated
-            Assert.AreEqual(90m, order.StopPrice);
+            Assert.AreEqual(initialTrailingStopPrice, order.StopPrice);
 
+            prevMarketPrice = security.Price;
             // Simulate a rising security price, which triggers a stop price update
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 105m));
 
@@ -559,11 +589,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             AssertUnfilled(fill);
 
-            // Stop price should have been updated to market price - trailing amount
-            Assert.AreEqual(105m - 10m, order.StopPrice);
+            // Stop price should have been updated to:
+            //  --> (market price - trailing amount) if trailing amount is not a percentage
+            //  --> (market price * (1 - trailing amount)) if trailing amount is a percentage
+            Assert.AreNotEqual(initialTrailingStopPrice, order.StopPrice);
+            var expectedUpdatedStopPrice = trailingAsPercentage ? 105m * (1 - 0.1m) : 105m - 10m;
+            Assert.AreEqual(expectedUpdatedStopPrice, order.StopPrice);
 
+            prevMarketPrice = security.Price;
+            var sopTriggerMarketPrice = trailingAsPercentage ? prevMarketPrice * (1 - 0.1m) : prevMarketPrice - 10m;
             // Simulate a falling security price, enough to trigger the stop
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 95m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, sopTriggerMarketPrice));
 
             fill = model.Fill(new FillModelParameters(
                 security,
@@ -573,7 +609,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 null)).Single();
 
             // Stop price should have not been updated
-            Assert.AreEqual(105m - 10m, order.StopPrice);
+            Assert.AreEqual(expectedUpdatedStopPrice, order.StopPrice);
 
             AssertFilled(fill, order.Quantity, Math.Min(security.Price, order.StopPrice));
         }

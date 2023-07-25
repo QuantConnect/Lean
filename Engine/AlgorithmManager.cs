@@ -754,7 +754,6 @@ namespace QuantConnect.Lean.Engine
                         // in live mode we always want to have our order match the order at the brokerage, so apply the split to the orders
                         var openOrders = algorithm.Transactions.GetOpenOrderTickets(ticket => ticket.Symbol == split.Symbol);
                         algorithm.BrokerageModel.ApplySplit(openOrders.ToList(), split);
-                        security.FillModel.ApplySplit(split);
                     }
                 }
                 catch (Exception err)

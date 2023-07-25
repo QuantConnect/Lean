@@ -136,12 +136,33 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Updates the stop price given the current market price
+        /// Tries to update the stop price for a trailing stop order given the current market price
         /// </summary>
-        /// <param name="currentMarketPrice"></param>
-        internal void UpdateStopPrice(decimal currentMarketPrice)
+        /// <param name="currentMarketPrice">The current market price</param>
+        /// <param name="currentStopPrice">The current trailing stop order stop price</param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="direction">The order direction</param>
+        /// <param name="updatedStopPrice">The updated stop price</param>
+        /// <returns>
+        /// Whether the stop price was updated.
+        /// This only happens when the distance between the current stop price and the current market price is greater than the trailing amount,
+        /// which will happen when the market price raises/falls for sell/buy orders respectively.
+        /// </returns>
+        public static bool TryUpdateStopPrice(decimal currentMarketPrice, decimal currentStopPrice, decimal trailingAmount,
+            bool trailingAsPercentage, OrderDirection direction, out decimal updatedStopPrice)
         {
-            StopPrice = CalculateStopPrice(currentMarketPrice, TrailingAmount, TrailingAsPercentage, Direction);
+            updatedStopPrice = 0m;
+            var distanceToMarketPrice = Math.Abs(currentMarketPrice - currentStopPrice);
+            var stopReference = trailingAsPercentage ? currentStopPrice * trailingAmount / (1 - trailingAmount) : trailingAmount;
+
+            if (distanceToMarketPrice <= stopReference)
+            {
+                return false;
+            }
+
+            updatedStopPrice = CalculateStopPrice(currentMarketPrice, trailingAmount, trailingAsPercentage, direction);
+            return true;
         }
 
         /// <summary>
