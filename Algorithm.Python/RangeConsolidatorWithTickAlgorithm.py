@@ -7,7 +7,7 @@ from RangeConsolidatorAlgorithm import RangeConsolidatorAlgorithm
 ### </summary>
 class RangeConsolidatorWithTickAlgorithm(RangeConsolidatorAlgorithm):
     def GetRange(self):
-        return 1
+        return 5
 
     def GetResolution(self):
         return Resolution.Tick

@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class RangeConsolidatorWithTickAlgorithm : RangeConsolidatorAlgorithm
     {
         protected override Resolution Resolution => Resolution.Tick;
-        protected override int Range => 1;
+        protected override int Range => 5;
 
         protected override void SetStartAndEndDates()
         {
