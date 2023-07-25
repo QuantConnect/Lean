@@ -89,7 +89,7 @@ namespace QuantConnect.Data.Consolidators
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
-        protected BaseTimelessConsolidator(Func<IBaseData, decimal> selector, Func<IBaseData, decimal> volumeSelector = null)
+        protected BaseTimelessConsolidator(Func<IBaseData, decimal> selector = null, Func<IBaseData, decimal> volumeSelector = null)
         {
             Selector = selector ?? (x => x.Value);
             VolumeSelector = volumeSelector ?? (x => x is TradeBar bar ? bar.Volume : (x is Tick tick ? tick.Quantity : 0));
@@ -103,7 +103,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
         protected BaseTimelessConsolidator(PyObject valueSelector, PyObject volumeSelector = null)
-            : this (TryToConvertSelector(valueSelector, nameof(valueSelector)) ?? (x => x.Value), TryToConvertSelector(volumeSelector, nameof(volumeSelector)) ?? (x => 0))
+            : this (TryToConvertSelector(valueSelector, nameof(valueSelector)), TryToConvertSelector(volumeSelector, nameof(volumeSelector)))
         {
         }
 
@@ -156,7 +156,7 @@ namespace QuantConnect.Data.Consolidators
             // then we might need to create a new bar
             if (CurrentBar == null)
             {
-                CreateNewBar(data);
+                CreateNewBar(data, currentValue, volume);
             }
         }
 
@@ -173,7 +173,9 @@ namespace QuantConnect.Data.Consolidators
         /// Creates a new bar with the given data
         /// </summary>
         /// <param name="data">The new data for the bar</param>
-        protected abstract void CreateNewBar(IBaseData data);
+        /// <param name="currentValue">The new value for the bar</param>
+        /// <param name="volume">The new volume to the bar</param>
+        protected abstract void CreateNewBar(IBaseData data, decimal currentValue, decimal volume);
 
         /// <summary>
         /// Event invocator for the DataConsolidated event. This should be invoked
@@ -191,7 +193,7 @@ namespace QuantConnect.Data.Consolidators
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
+        public virtual void Dispose()
         {
             DataConsolidated = null;
             DataConsolidatedHandler = null;

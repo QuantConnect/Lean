@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void RangeConsolidatorReturnsExpectedValues()
         {
-            using var consolidator = CreateConsolidator(100m);
+            using var consolidator = CreateConsolidator(100);
             var testValues = new List<decimal>() { 90m, 94.5m, 94m, 89.5m, 89m, 90.5m, 90m, 91.5m, 90m, 90.5m, 92.5m };
             var returnedBars = UpdateConsolidator(consolidator, testValues, "IBM");
 
@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Common.Data
         [TestCaseSource(nameof(PriceGapBehaviorIsTheExpectedOneTestCases))]
         public virtual void PriceGapBehaviorIsTheExpectedOne(Symbol symbol, double minimumPriceVariation, double range)
         {
-            using var consolidator = CreateConsolidator((decimal)range);
+            using var consolidator = CreateConsolidator((int)range);
             var testValues = new List<decimal>() { 90m, 94.5m, 94m, 89.5m, 89m, 90.5m, 90m, 91.5m, 90m, 90.5m, 92.5m };
             var returnedBars = UpdateConsolidator(consolidator, testValues, symbol);
             RangeBar lastRangeBar = null;
@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Common.Data
         [TestCaseSource(nameof(ConsolidatorCreatesExpectedBarsTestCases))]
         public void ConsolidatorCreatesExpectedBarsInDifferentScenarios(List<decimal> testValues, RangeBar[] expectedBars)
         {
-            using var consolidator = CreateConsolidator(100m);
+            using var consolidator = CreateConsolidator(100);
             var returnedBars = UpdateConsolidator(consolidator, testValues, Symbols.IBM);
 
             Assert.IsNotEmpty(returnedBars);
@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Common.Data
             }
         }
 
-        protected virtual RangeConsolidator CreateConsolidator(decimal range)
+        protected virtual RangeConsolidator CreateConsolidator(int range)
         {
             return new RangeConsolidator(range, x => x.Value, x => 10m);
         }

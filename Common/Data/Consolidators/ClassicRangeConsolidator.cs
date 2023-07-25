@@ -30,15 +30,6 @@ namespace QuantConnect.Data.Consolidators
     public class ClassicRangeConsolidator : RangeConsolidator
     {
         /// <summary>
-        ///Initializes a new instance of the <see cref="ClassicRangeConsolidator" /> class.
-        /// </summary>
-        /// <param name="range">The Range interval sets the range in which the price moves, which in turn initiates the formation of a new bar.
-        /// One range equals to one minimum price change, where this last value is defined depending of the RangeBar's symbol</param>
-        public ClassicRangeConsolidator(decimal range) : base(range)
-        {
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="ClassicRangeConsolidator" /> class.
         /// </summary>
         /// <param name="range">The Range interval sets the range in which the price moves, which in turn initiates the formation of a new bar.
@@ -48,8 +39,8 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar, except if the input is a TradeBar.</param>
         public ClassicRangeConsolidator(
-            decimal range,
-            Func<IBaseData, decimal> selector,
+            int range,
+            Func<IBaseData, decimal> selector = null,
             Func<IBaseData, decimal> volumeSelector = null)
             : base(range, selector, volumeSelector)
         {
@@ -64,7 +55,7 @@ namespace QuantConnect.Data.Consolidators
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
-        public ClassicRangeConsolidator(decimal range,
+        public ClassicRangeConsolidator(int range,
             PyObject selector,
             PyObject volumeSelector = null)
             : base(range, selector, volumeSelector)

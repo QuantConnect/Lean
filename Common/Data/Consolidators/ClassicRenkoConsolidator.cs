@@ -56,7 +56,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="barSize">The constant value size of each bar</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
         public ClassicRenkoConsolidator(decimal barSize, bool evenBars = true)
-            : base(x => x.Value, x => 0)
+            : base()
         {
             EpsilonCheck(barSize);
             _barSize = barSize;
@@ -142,11 +142,10 @@ namespace QuantConnect.Data.Consolidators
         /// Creates a new bar with the given data
         /// </summary>
         /// <param name="data">The new data for the bar</param>
-        protected override void CreateNewBar(IBaseData data)
+        /// <param name="currentValue">The new value for the bar</param>
+        /// <param name="volume">The new volume to the bar</param>
+        protected override void CreateNewBar(IBaseData data, decimal currentValue, decimal volume)
         {
-            var currentValue = Selector(data);
-            var volume = VolumeSelector(data);
-
             var open = _lastCloseValue ?? currentValue;
             if (_evenBars && !_lastCloseValue.HasValue)
             {

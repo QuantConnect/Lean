@@ -47,7 +47,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Number of MinimumPriceVariation units
         /// </summary>
-        public decimal Range { get; private set; }
+        public int Range { get; private set; }
 
         /// <summary>
         /// Gets <see cref="RangeBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
@@ -60,16 +60,6 @@ namespace QuantConnect.Data.Consolidators
         public override IBaseData WorkingData => CurrentBar?.Clone();
 
         /// <summary>
-        ///Initializes a new instance of the <see cref="RangeConsolidator" /> class.
-        /// </summary>
-        /// <param name="range">The Range interval sets the range in which the price moves, which in turn initiates the formation of a new bar.
-        /// One range equals to one minimum price change, where this last value is defined depending of the RangeBar's symbol</param>
-        public RangeConsolidator(decimal range)
-            : this(range, x => x.Value)
-        {
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="RangeConsolidator" /> class.
         /// </summary>
         /// <param name="range">The Range interval sets the range in which the price moves, which in turn initiates the formation of a new bar.
@@ -79,8 +69,8 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar, except if the input is a TradeBar.</param>
         public RangeConsolidator(
-            decimal range,
-            Func<IBaseData, decimal> selector,
+            int range,
+            Func<IBaseData, decimal> selector = null,
             Func<IBaseData, decimal> volumeSelector = null)
             : base(selector, volumeSelector)
         {
@@ -97,7 +87,7 @@ namespace QuantConnect.Data.Consolidators
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does
         /// not aggregate volume per bar.</param>
-        public RangeConsolidator(decimal range,
+        public RangeConsolidator(int range,
             PyObject selector,
             PyObject volumeSelector = null)
             : base(selector, volumeSelector)
@@ -133,7 +123,7 @@ namespace QuantConnect.Data.Consolidators
             while (CurrentBar.IsClosed)
             {
                 OnDataConsolidated(CurrentBar);
-                CurrentBar = new RangeBar(CurrentBar.Symbol, CurrentBar.EndTime, RangeSize, isRising ? CurrentBar.High + _minimumPriceVariation : CurrentBar.Low - _minimumPriceVariation, 0);
+                CurrentBar = new RangeBar(CurrentBar.Symbol, CurrentBar.EndTime, RangeSize, isRising ? CurrentBar.High + _minimumPriceVariation : CurrentBar.Low - _minimumPriceVariation);
                 CurrentBar.Update(time, currentValue, Math.Abs(CurrentBar.Low - currentValue) > RangeSize ? 0 : volume); // Intermediate/phantom RangeBar's have zero volume
             }
         }
@@ -142,10 +132,10 @@ namespace QuantConnect.Data.Consolidators
         /// Creates a new bar with the given data
         /// </summary>
         /// <param name="data">The new data for the bar</param>
-        protected override void CreateNewBar(IBaseData data)
+        /// <param name="currentValue">The new value for the bar</param>
+        /// <param name="volume">The new volume for the bar</param>
+        protected override void CreateNewBar(IBaseData data, decimal currentValue, decimal volume)
         {
-            var currentValue = Selector(data);
-            var volume = VolumeSelector(data);
             var open = currentValue;
 
             if (_firstTick)
@@ -156,7 +146,7 @@ namespace QuantConnect.Data.Consolidators
                 _firstTick = false;
             }
 
-            CurrentBar = new RangeBar(data.Symbol, data.Time, RangeSize, open, volume);
+            CurrentBar = new RangeBar(data.Symbol, data.Time, RangeSize, open, volume: volume);
         }
     }
 }

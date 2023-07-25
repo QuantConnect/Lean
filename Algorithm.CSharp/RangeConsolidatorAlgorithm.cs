@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class RangeConsolidatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private RangeBar _firstDataConsolidated;
-        protected virtual decimal Range => 100m;
+        protected virtual int Range => 100;
         protected virtual Resolution Resolution => Resolution.Daily;
 
         public override void Initialize()

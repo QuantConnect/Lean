@@ -43,45 +43,24 @@ namespace QuantConnect.Data.Market
         /// Initializes a new instance of the <see cref="RangeBar"/> class with the specified values
         /// </summary>
         /// <param name="symbol">The symbol of this data</param>
-        /// <param name="time">The start time of the bar</param>
-        /// <param name="rangeSize">The size of each range bar</param>
-        /// <param name="open">The opening price for the new bar</param>
-        /// <param name="volume">Any initial volume associated with the data</param>
-        public RangeBar(Symbol symbol, DateTime time, decimal rangeSize, decimal open, decimal volume)
-        {
-            Symbol = symbol;
-            EndTime = time;
-            RangeSize = rangeSize;
-            Open = open;
-            Close = open;
-            Volume = volume;
-            High = open;
-            Low = open;
-            IsClosed = false;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RangeBar"/> class with the specified values
-        /// </summary>
-        /// <param name="symbol">The symbol of this data</param>
-        /// <param name="start">The start time of the bar</param>
         /// <param name="endTime">The end time of the bar</param>
         /// <param name="rangeSize">The size of each range bar</param>
         /// <param name="open">The opening price for the new bar</param>
         /// <param name="high">The high price for the new bar</param>
         /// <param name="low">The low price for the new bar</param>
         /// <param name="close">The closing price for the new bar</param>
+        /// <param name="volume">The volume value for the new bar</param>
         public RangeBar(Symbol symbol, DateTime endTime,
-            decimal rangeSize, decimal open, decimal high, decimal low, decimal close)
+            decimal rangeSize, decimal open, decimal? high = null, decimal? low = null, decimal? close = null, decimal volume = 0)
         {
             Symbol = symbol;
             EndTime = endTime;
             RangeSize = rangeSize;
             Open = open;
-            Close = close;
-            Volume = 0;
-            High = high;
-            Low = low;
+            Close = close ?? open;
+            Volume = volume;
+            High = high ?? open;
+            Low = low ?? open;
         }
 
         /// <summary>

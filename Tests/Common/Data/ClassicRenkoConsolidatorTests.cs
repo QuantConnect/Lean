@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Common.Data
             var consolidator = new ClassicRenkoConsolidator(10, x => x.Value, x => 0);
             consolidator.DataConsolidated += (sender, consolidated) =>
             {
-                bar = consolidated as RenkoBar;
+                bar = consolidated;
             };
 
             var reference = DateTime.Today;
@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Common.Data
             var consolidator = new ClassicRenkoConsolidator(10, x => x.Value, x => 0);
             consolidator.DataConsolidated += (sender, consolidated) =>
             {
-                bar = consolidated as RenkoBar;
+                bar = consolidated;
             };
 
             var reference = DateTime.Today;
@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.DataConsolidated += (sender, consolidated) =>
             {
                 rcount++;
-                bar = consolidated as RenkoBar;
+                bar = consolidated;
             };
 
             var reference = DateTime.Today;
