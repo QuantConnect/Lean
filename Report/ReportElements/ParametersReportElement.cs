@@ -38,9 +38,14 @@ namespace QuantConnect.Report.ReportElements
             {
                 _parameters = liveConfiguration.Parameters;
             }
-            else
+            else if (backtestConfiguration != null)
             {
                 _parameters = backtestConfiguration.Parameters;
+            }
+            else
+            {
+                // This case only happens for the unit tests, then we just create an empty dictionary
+                _parameters = new Dictionary<string, string>();
             }
         }
 
