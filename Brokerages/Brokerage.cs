@@ -172,7 +172,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Event invocator for the OrderUpdated event
         /// </summary>
-        /// <param name="order">The order being updated</param>
+        /// <param name="e">The update event</param>
         protected virtual void OnOrderUpdated(OrderUpdateEvent e)
         {
             try

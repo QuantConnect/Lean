@@ -20,12 +20,11 @@ using System.Linq;
 using NUnit.Framework;
 using System.Threading;
 using QuantConnect.Api;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.API
 {
     /// <summary>
-    /// API Project endpoints, includes some Backtest endpoints testing as well
+    /// API Project endpoints, includes some Backtest endpoints testing as well 
     /// </summary>
     [TestFixture, Explicit("Requires configured api access and available backtest node to run on")]
     public class ProjectTests : ApiTestBase
@@ -207,7 +206,7 @@ namespace QuantConnect.Tests.API
             var project = ApiClient.CreateProject(projectName, language, TestOrganization);
             Assert.IsTrue(project.Success);
             Assert.IsTrue(project.Projects.First().ProjectId > 0);
-            //Assert.IsTrue(project.Projects.First().Name == projectName);
+            Assert.IsTrue(project.Projects.First().Name == projectName);
 
             // Make sure the project just created is now present
             var projects = ApiClient.ListProjects();
@@ -217,7 +216,7 @@ namespace QuantConnect.Tests.API
             // Test read back the project we just created
             var readProject = ApiClient.ReadProject(project.Projects.First().ProjectId);
             Assert.IsTrue(readProject.Success);
-            //Assert.IsTrue(readProject.Projects.First().Name == projectName);
+            Assert.IsTrue(readProject.Projects.First().Name == projectName);
 
             // Test change project file name and content
             var file = new ProjectFile { Name = algorithmName, Code = code };
