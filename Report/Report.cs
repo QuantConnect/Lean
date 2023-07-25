@@ -105,7 +105,7 @@ namespace QuantConnect.Report
                 new TextReportElement("strategy name", ReportKey.StrategyName, name),
                 new TextReportElement("description", ReportKey.StrategyDescription, description),
                 new TextReportElement("version", ReportKey.StrategyVersion, version),
-                new TextReportElement("stylesheet", ReportKey.Stylesheet, File.ReadAllText("css/report.css") + (cssOverride ?? string.Empty)),
+                new TextReportElement("stylesheet", ReportKey.Stylesheet, File.ReadAllText("css/report.css") + (cssOverride ?? File.ReadAllText("css/report_override.css"))),
                 new TextReportElement("live marker key", ReportKey.LiveMarker, live == null ? string.Empty : "Live "),
 
                 //KPI's Backtest:

@@ -76,7 +76,7 @@ namespace QuantConnect.Report
                 }
                 else
                 {
-                    Log.Error($"QuantConnect.Report.Main(): CSS override file {cssOverrideFile} was not found");
+                    Log.Trace($"QuantConnect.Report.Main(): CSS override file {cssOverrideFile} was not found");
                 }
             }
 

@@ -288,6 +288,19 @@
                     </div>
                 </div>
             </div>
+            <div class="page" style="{{$CSS-CRISIS-PAGE-STYLE}}">
+                <div class="header">
+                    <div class="header-left">
+                        <img src="https://cdn.quantconnect.com/web/i/logo.png">
+                    </div>
+                    <div class="header-right">Strategy Report Summary: {{$TEXT-STRATEGY-NAME}} {{$TEXT-STRATEGY-VERSION}}</div>
+                </div>
+                <div class="content">
+                    <div class="container-row">
+                        {{$HTML-CRISIS-PLOTS}}
+                    </div>
+                </div>
+            </div>
 			<div class="page" id="parameters" style="{{$CSS-PARAMETERS-PAGE-STYLE}}">
                 <div class="header">
                     <div class="header-left">
@@ -309,19 +322,6 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-            </div>
-            <div class="page" style="{{$CSS-CRISIS-PAGE-STYLE}}">
-                <div class="header">
-                    <div class="header-left">
-                        <img src="https://cdn.quantconnect.com/web/i/logo.png">
-                    </div>
-                    <div class="header-right">Strategy Report Summary: {{$TEXT-STRATEGY-NAME}} {{$TEXT-STRATEGY-VERSION}}</div>
-                </div>
-                <div class="content">
-                    <div class="container-row">
-                        {{$HTML-CRISIS-PLOTS}}
                     </div>
                 </div>
             </div>
