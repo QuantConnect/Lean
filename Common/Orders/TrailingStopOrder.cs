@@ -23,8 +23,6 @@ namespace QuantConnect.Orders
     /// </summary>
     public class TrailingStopOrder : StopMarketOrder
     {
-        // TODO: The stop price should be re-calculated from last trade price
-
         /// <summary>
         /// Trailing amount for this trailing stop order
         /// </summary>
@@ -91,7 +89,6 @@ namespace QuantConnect.Orders
             DateTime time, string tag = "", IOrderProperties properties = null)
             : this(symbol, quantity, 0, trailingAmount, trailingAsPercentage, time, tag, properties)
         {
-            // TODO: How to calculate the stop price? We don't have access to the current market price here
         }
 
         /// <summary>

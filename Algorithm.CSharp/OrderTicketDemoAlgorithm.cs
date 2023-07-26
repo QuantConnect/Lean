@@ -368,14 +368,14 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var close = Securities[symbol].Close;
                 var stopPrice = close * 1.0025m;
-                var newTicket = TrailingStopOrder(symbol, 10, stopPrice, trailingAmount: 0.05m, trailingAsPercentage: true);
+                var newTicket = TrailingStopOrder(symbol, 10, stopPrice, trailingAmount: 0.0025m, trailingAsPercentage: true);
                 _openTrailingStopOrders.Add(newTicket);
 
                 // a short stop is triggered when the price falls below the value
                 // so we'll set a short stop .25% below the current bar's close
 
                 stopPrice = close * .9975m;
-                newTicket = TrailingStopOrder(symbol, -10, stopPrice, trailingAmount: 0.05m, trailingAsPercentage: true);
+                newTicket = TrailingStopOrder(symbol, -10, stopPrice, trailingAmount: 0.0025m, trailingAsPercentage: true);
                 _openTrailingStopOrders.Add(newTicket);
             }
 
@@ -392,15 +392,15 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
-                // if neither order has filled in the last 5 minutes, bring in the trailing percentage by 0.1%
-                if ((Time - longOrder.Time).TotalMinutes % 5 != 0)
+                // if neither order has filled in the last 5 minutes, bring in the trailing percentage by 0.01%
+                if ((UtcTime - longOrder.Time).TotalMinutes % 5 != 0)
                 {
                     return;
                 }
                 var longTrailingPercentage = longOrder.Get(OrderField.TrailingAmount);
-                var newLongTrailingPercentage = Math.Max(longTrailingPercentage - 0.001m, 0.001m);
+                var newLongTrailingPercentage = Math.Max(longTrailingPercentage - 0.0001m, 0.0001m);
                 var shortTrailingPercentage = shortOrder.Get(OrderField.TrailingAmount);
-                var newShortTrailingPercentage = Math.Max(shortTrailingPercentage - 0.001m, 0.001m);
+                var newShortTrailingPercentage = Math.Max(shortTrailingPercentage - 0.0001m, 0.0001m);
                 Log($"Updating trailing percentages - Long: {newLongTrailingPercentage.ToStringInvariant("0.000")} Short: {newShortTrailingPercentage.ToStringInvariant("0.000")}");
 
                 longOrder.Update(new UpdateOrderFields
@@ -646,7 +646,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "9"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "77.125%"},
+            {"Compounding Annual Return", "77.184%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "-1"},
             {"Net Profit", "0.734%"},
@@ -663,10 +663,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.18"},
             {"Treynor Ratio", "3.041"},
             {"Total Fees", "$9.00"},
-            {"Estimated Strategy Capacity", "$56000000.00"},
+            {"Estimated Strategy Capacity", "$49000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "7.18%"},
-            {"OrderListHash", "2f2ddc553d389abc69bcc629fb13e42b"}
+            {"OrderListHash", "10d88258b3166092c0b6125b6adcad64"}
         };
     }
 }

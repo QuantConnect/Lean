@@ -1534,7 +1534,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 parameter.ExpectedFinalStatus,
                 setupHandler: "TestIncrementalOrderIdSetupHandler");
 
-            Assert.AreEqual(10, TestIncrementalOrderIdAlgorithm.OrderEventIds.Count);
+            Assert.AreEqual(12, TestIncrementalOrderIdAlgorithm.OrderEventIds.Count);
         }
 
         [Test]

@@ -38,6 +38,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         self.__openLimitOrders = []
         self.__openStopMarketOrders = []
         self.__openStopLimitOrders = []
+        self.__openTrailingStopOrders = []
 
 
     def OnData(self, data):
@@ -51,13 +52,16 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         # STOP MARKET ORDERS
         self.StopMarketOrders()
 
-        ## STOP LIMIT ORDERS
+        # STOP LIMIT ORDERS
         self.StopLimitOrders()
 
-        ## MARKET ON OPEN ORDERS
+        # TRAILING STOP ORDERS
+        self.TrailingStopOrders()
+
+        # MARKET ON OPEN ORDERS
         self.MarketOnOpenOrders()
 
-        ## MARKET ON CLOSE ORDERS
+        # MARKET ON CLOSE ORDERS
         self.MarketOnCloseOrders()
 
 
@@ -257,6 +261,66 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             shortOrder.Update(updateOrderFields)
 
 
+    def TrailingStopOrders(self):
+        '''TrailingStopOrders work the same way as StopMarketOrders, except
+        their stop price is adjusted to a certain amount, keeping it a certain
+        fixed distance from/to the market price, depending on the order direction,
+        which allows to preserve profits and protecting against losses.
+        The stop price can be accessed just as with StopMarketOrders, and
+        the trailing amount can be accessed with the OrderTicket.Get(OrderField), for example:
+        Code:
+            currentTrailingAmount = orderTicket.Get(OrderField.StopPrice)
+            trailingAsPercentage = orderTicket.Get[bool](OrderField.TrailingAsPercentage)'''
+        if self.TimeIs(7, 12, 0):
+            self.Log("Submitting TrailingStopOrder")
+
+            # a long stop is triggered when the price rises above the
+            # value so we'll set a long stop .25% above the current bar's
+
+            close = self.Securities[self.spy.Value].Close
+            stopPrice = close * 1.0025
+            newTicket = self.TrailingStopOrder(self.spy, 10, stopPrice, trailingAmount=0.0025, trailingAsPercentage=True)
+            self.__openTrailingStopOrders.append(newTicket)
+
+            # a short stop is triggered when the price falls below the
+            # value so we'll set a short stop .25% below the current bar's
+
+            stopPrice = close * .9975
+            newTicket = self.TrailingStopOrder(self.spy, -10, stopPrice, trailingAmount=0.0025, trailingAsPercentage=True)
+            self.__openTrailingStopOrders.append(newTicket)
+
+        # when we submitted new stop market orders we placed them into this list,
+        # so while there's two entries they're still open and need processing
+        elif len(self.__openTrailingStopOrders) == 2:
+            longOrder = self.__openTrailingStopOrders[0]
+            shortOrder = self.__openTrailingStopOrders[1]
+            if self.CheckPairOrdersForFills(longOrder, shortOrder):
+                self.__openTrailingStopOrders = []
+                return
+
+            # if neither order has filled in the last 5 minutes, bring in the trailing percentage by 0.01%
+            if ((self.UtcTime - longOrder.Time).total_seconds() / 60) % 5 != 0:
+                return
+
+            longTrailingPercentage = longOrder.Get(OrderField.TrailingAmount)
+            newLongTrailingPercentage = max(longTrailingPercentage - 0.0001, 0.0001)
+            shortTrailingPercentage = shortOrder.Get(OrderField.TrailingAmount)
+            newShortTrailingPercentage = max(shortTrailingPercentage - 0.0001, 0.0001)
+            self.Log("Updating trailing percentages - Long: {0:.3f} Short: {1:.3f}".format(newLongTrailingPercentage, newShortTrailingPercentage))
+
+            updateOrderFields = UpdateOrderFields()
+            # we could change the quantity, but need to specify it
+            #Quantity =
+            updateOrderFields.TrailingAmount = newLongTrailingPercentage
+            updateOrderFields.Tag = "Update #{0}".format(len(longOrder.UpdateRequests) + 1)
+            longOrder.Update(updateOrderFields)
+
+            updateOrderFields = UpdateOrderFields()
+            updateOrderFields.TrailingAmount = newShortTrailingPercentage
+            updateOrderFields.Tag = "Update #{0}".format(len(shortOrder.UpdateRequests) + 1)
+            shortOrder.Update(updateOrderFields)
+
+
     def MarketOnCloseOrders(self):
         '''MarketOnCloseOrders are always executed at the next market's closing price.
         The only properties that can be updated are the quantity and order tag properties.'''
@@ -375,7 +439,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         orderTicketsSize = sum(1 for ticket in orderTickets)
         openOrderTicketsSize = sum(1 for ticket in openOrderTickets)
 
-        assert(filledOrdersSize == 8 and orderTicketsSize == 10), "There were expected 8 filled orders and 10 order tickets"
+        assert(filledOrdersSize == 9 and orderTicketsSize == 12), "There were expected 9 filled orders and 12 order tickets"
         assert(not (len(openOrders) or openOrderTicketsSize)), "No open orders or tickets were expected"
         assert(not remainingOpenOrders), "No remaining quantity to be filled from open orders was expected"
 
@@ -397,6 +461,6 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         defaultOrderTicketsSize = sum(1 for ticket in defaultOrderTickets)
         defaultOpenOrderTicketsSize = sum(1 for ticket in defaultOpenOrderTickets)
 
-        assert(defaultOrdersSize == 10 and defaultOrderTicketsSize == 10), "There were expected 10 orders and 10 order tickets"
+        assert(defaultOrdersSize == 12 and defaultOrderTicketsSize == 12), "There were expected 12 orders and 12 order tickets"
         assert(not (len(defaultOpenOrders) or defaultOpenOrderTicketsSize)), "No open orders or tickets were expected"
         assert(not defaultOpenOrdersRemaining), "No remaining quantity to be filled from open orders was expected"
