@@ -102,6 +102,7 @@ namespace QuantConnect.Data.Market
                 }
             }
 
+            EndTime = time;
             Volume += volumeSinceLastUpdate;
         }
 

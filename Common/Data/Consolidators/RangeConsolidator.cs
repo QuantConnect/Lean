@@ -105,7 +105,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volume">Volume of the given data</param>
         protected override void UpdateBar(DateTime time, decimal currentValue, decimal volume)
         {
-            bool isRising;
+            bool isRising = default;
             if (currentValue > CurrentBar.High)
             {
                 isRising = true;
@@ -113,10 +113,6 @@ namespace QuantConnect.Data.Consolidators
             else if (currentValue < CurrentBar.Low)
             {
                 isRising = false;
-            }
-            else
-            {
-                return;
             }
 
             CurrentBar.Update(time, currentValue, volume);
