@@ -71,6 +71,8 @@ namespace QuantConnect.Data.Market
         /// <param name="volumeSinceLastUpdate">The volume since the last update called on this instance</param>
         public void Update(DateTime time, decimal currentValue, decimal volumeSinceLastUpdate)
         {
+            EndTime = time;
+
             if (currentValue < Low)
             {
                 if ((High - currentValue) > RangeSize)
@@ -78,7 +80,6 @@ namespace QuantConnect.Data.Market
                     IsClosed = true;
                     Low = High - RangeSize;
                     Close = Low;
-                    EndTime = time;
                     return;
                 }
                 else
@@ -93,7 +94,6 @@ namespace QuantConnect.Data.Market
                     IsClosed = true;
                     High = Low + RangeSize;
                     Close = High;
-                    EndTime = time;
                     return;
                 }
                 else
@@ -102,7 +102,6 @@ namespace QuantConnect.Data.Market
                 }
             }
 
-            EndTime = time;
             Volume += volumeSinceLastUpdate;
         }
 
