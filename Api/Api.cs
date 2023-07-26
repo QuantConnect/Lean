@@ -509,10 +509,8 @@ namespace QuantConnect.Api
                         chart = chart.Key.Replace(' ', '+')
                     }), ParameterType.RequestBody);
 
-                    ApiConnection.TryRequest(chartRequest, out BacktestResponseWrapper chartResponse);
-
                     // Add this chart to our updated collection
-                    if (chartResponse.Success)
+                    if (ApiConnection.TryRequest(chartRequest, out BacktestResponseWrapper chartResponse) && chartResponse.Success)
                     {
                         updatedCharts.Add(chart.Key, chartResponse.Backtest.Charts[chart.Key]);
                     }
@@ -1300,7 +1298,7 @@ namespace QuantConnect.Api
 
         /// <summary>
         /// Read an optimization
-        /// </summary>        
+        /// </summary>
         /// <param name="optimizationId">Optimization id for the optimization we want to read</param>
         /// <returns><see cref="Optimization"/></returns>
         public Optimization ReadOptimization(string optimizationId)
@@ -1321,7 +1319,7 @@ namespace QuantConnect.Api
 
         /// <summary>
         /// Abort an optimization
-        /// </summary>        
+        /// </summary>
         /// <param name="optimizationId">Optimization id for the optimization we want to abort</param>
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse AbortOptimization(string optimizationId)
@@ -1371,7 +1369,7 @@ namespace QuantConnect.Api
 
         /// <summary>
         /// Delete an optimization
-        /// </summary>        
+        /// </summary>
         /// <param name="optimizationId">Optimization id for the optimization we want to delete</param>
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse DeleteOptimization(string optimizationId)
@@ -1389,7 +1387,7 @@ namespace QuantConnect.Api
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
-        
+
         /// <summary>
         /// Helper method to normalize path for api data requests
         /// </summary>
