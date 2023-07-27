@@ -43,7 +43,7 @@ namespace QuantConnect.Report
             var liveDataFile = Config.Get("live-data-source-file");
             var destination = Config.Get("report-destination");
             var reportFormat = Config.Get("report-format");
-            var cssOverrideFile = Config.Get("report-css-override-file");
+            var cssOverrideFile = Config.Get("report-css-override-file", "css/report_override.css");
 
             // Parse content from source files into result objects
             Log.Trace($"QuantConnect.Report.Main(): Parsing source files...{backtestDataFile}, {liveDataFile}");
