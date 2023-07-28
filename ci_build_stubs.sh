@@ -102,6 +102,7 @@ if [[ " ${CLI_ARGS[@]} " =~ " -h " ]]; then
 fi
 
 if [[ ! "$GITHUB_REF" =~ "refs/tags/" ]]; then
+    echo "GITHUB_REF not defined!"
     exit 0
 fi
 
