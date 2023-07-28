@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Securities;
@@ -227,49 +228,82 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="field">The order field to get</param>
         /// <returns>The value of the field</returns>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <exception cref="ArgumentException">Field out of range</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Field out of range for order type</exception>
         public decimal Get(OrderField field)
         {
+            return Get<decimal>(field);
+        }
+
+        /// <summary>
+        /// Gets the specified field from the ticket and tries to convert it to the specified type
+        /// </summary>
+        /// <param name="field">The order field to get</param>
+        /// <returns>The value of the field</returns>
+        /// <exception cref="ArgumentException">Field out of range</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Field out of range for order type</exception>
+        public T Get<T>(OrderField field)
+        {
+            object fieldValue = null;
+
             switch (field)
             {
                 case OrderField.LimitPrice:
                     if (_submitRequest.OrderType == OrderType.ComboLimit)
                     {
-                        return AccessOrder<ComboLimitOrder>(this, field, o => o.GroupOrderManager.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<ComboLimitOrder, decimal>(this, field, o => o.GroupOrderManager.LimitPrice, r => r.LimitPrice);
                     }
-                    if (_submitRequest.OrderType == OrderType.Limit || _submitRequest.OrderType == OrderType.ComboLegLimit)
+                    else if (_submitRequest.OrderType == OrderType.Limit || _submitRequest.OrderType == OrderType.ComboLegLimit)
                     {
-                        return AccessOrder<LimitOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<LimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }
-                    if (_submitRequest.OrderType == OrderType.StopLimit)
+                    else if (_submitRequest.OrderType == OrderType.StopLimit)
                     {
-                        return AccessOrder<StopLimitOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<StopLimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }
-                    if (_submitRequest.OrderType == OrderType.LimitIfTouched)
+                    else if (_submitRequest.OrderType == OrderType.LimitIfTouched)
                     {
-                        return AccessOrder<LimitIfTouchedOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<LimitIfTouchedOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }
                     break;
 
                 case OrderField.StopPrice:
                     if (_submitRequest.OrderType == OrderType.StopLimit)
                     {
-                        return AccessOrder<StopLimitOrder>(this, field, o => o.StopPrice, r => r.StopPrice);
+                        fieldValue = AccessOrder<StopLimitOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
                     }
-                    if (_submitRequest.OrderType == OrderType.StopMarket)
+                    else if (_submitRequest.OrderType == OrderType.StopMarket)
                     {
-                        return AccessOrder<StopMarketOrder>(this, field, o => o.StopPrice, r => r.StopPrice);
+                        fieldValue = AccessOrder<StopMarketOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
+                    }
+                    else if (_submitRequest.OrderType == OrderType.TrailingStop)
+                    {
+                        fieldValue = AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
                     }
                     break;
 
                 case OrderField.TriggerPrice:
-                    return AccessOrder<LimitIfTouchedOrder>(this, field, o => o.TriggerPrice, r => r.TriggerPrice);
+                    fieldValue = AccessOrder<LimitIfTouchedOrder, decimal>(this, field, o => o.TriggerPrice, r => r.TriggerPrice);
+                    break;
+
+                case OrderField.TrailingAmount:
+                    fieldValue = AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.TrailingAmount, r => r.TrailingAmount);
+                    break;
+
+                case OrderField.TrailingAsPercentage:
+                    fieldValue = AccessOrder<TrailingStopOrder, bool>(this, field, o => o.TrailingAsPercentage, r => r.TrailingAsPercentage);
+                    break;
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(field), field, null);
             }
 
-            throw new ArgumentException(Messages.OrderTicket.GetFieldError(this, field));
+            if (fieldValue == null)
+            {
+                throw new ArgumentException(Messages.OrderTicket.GetFieldError(this, field));
+            }
+
+            return (T)fieldValue;
         }
 
         /// <summary>
@@ -362,6 +396,23 @@ namespace QuantConnect.Orders
             var fields = new UpdateOrderFields()
             {
                 TriggerPrice = triggerPrice,
+                Tag = tag
+            };
+            return Update(fields);
+        }
+
+        /// <summary>
+        /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
+        /// the ticker with stop trailing amount specified in <paramref name="trailingAmount"/> and with tag specified in <paramref name="tag"/>
+        /// </summary>
+        /// <param name="trailingAmount">The new trailing amount for this order ticket</param>
+        /// <param name="tag">The new tag for this order ticket</param>
+        /// <returns><see cref="OrderResponse"/> from updating the order</returns>
+        public OrderResponse UpdateStopTrailingAmount(decimal trailingAmount, string tag = null)
+        {
+            var fields = new UpdateOrderFields()
+            {
+                TrailingAmount = trailingAmount,
                 Tag = tag
             };
             return Update(fields);
@@ -620,8 +671,7 @@ namespace QuantConnect.Orders
             return ticket.OrderId;
         }
 
-
-        private static decimal AccessOrder<T>(OrderTicket ticket, OrderField field, Func<T, decimal> orderSelector, Func<SubmitOrderRequest, decimal> requestSelector)
+        private static P AccessOrder<T, P>(OrderTicket ticket, OrderField field, Func<T, P> orderSelector, Func<SubmitOrderRequest, P> requestSelector)
             where T : Order
         {
             var order = ticket._order;

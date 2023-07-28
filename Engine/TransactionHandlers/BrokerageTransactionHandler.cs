@@ -188,6 +188,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 HandlerBrokerageOrderIdChangedEvent(e);
             };
 
+            _brokerage.OrderUpdated += (sender, e) =>
+            {
+                HandleOrderUpdated(e);
+            };
+
             IsActive = true;
 
             _algorithm = algorithm;
@@ -1118,6 +1123,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             orderEvent.LimitPrice = stopLimitOrder.LimitPrice;
                             orderEvent.StopPrice = stopLimitOrder.StopPrice;
                             break;
+                        case OrderType.TrailingStop:
+                            var trailingStopOrder = order as TrailingStopOrder;
+                            orderEvent.StopPrice = trailingStopOrder.StopPrice;
+                            orderEvent.TrailingAmount = trailingStopOrder.TrailingAmount;
+                            break;
                         case OrderType.LimitIfTouched:
                             var limitIfTouchedOrder = order as LimitIfTouchedOrder;
                             orderEvent.LimitPrice = limitIfTouchedOrder.LimitPrice;
@@ -1232,6 +1242,21 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private void HandleOrderEvent(OrderEvent orderEvent)
         {
             HandleOrderEvents(new List<OrderEvent> { orderEvent });
+        }
+
+        private void HandleOrderUpdated(OrderUpdateEvent e)
+        {
+            if (!_completeOrders.TryGetValue(e.OrderId, out var order))
+            {
+                Log.Error("BrokerageTransactionHandler.HandleOrderUpdated(): Unable to locate open order with id " + e.OrderId);
+                return;
+            }
+
+            // Only trailing stop orders updates are supported for now
+            if (order.Type == OrderType.TrailingStop)
+            {
+                ((TrailingStopOrder)order).StopPrice = e.TrailingStopPrice;
+            }
         }
 
         /// <summary>
@@ -1517,79 +1542,60 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 case OrderType.Limit:
                     {
-                        var limitPrice = ((LimitOrder)order).LimitPrice;
-                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(
-                            new GetMinimumPriceVariationParameters(security, limitPrice));
-                        if (increment > 0)
-                        {
-                            var limitRound = Math.Round(limitPrice / increment) * increment;
-                            ((LimitOrder)order).LimitPrice = limitRound;
-                            SendWarningOnPriceChange("Limit", limitRound, limitPrice);
-                        }
+                        var limitOrder = (LimitOrder)order;
+                        RoundOrderPrice(security, limitOrder.LimitPrice, "LimitPrice", (roundedPrice) => limitOrder.LimitPrice = roundedPrice);
                     }
                     break;
 
                 case OrderType.StopMarket:
                     {
-                        var stopPrice = ((StopMarketOrder)order).StopPrice;
-                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(
-                            new GetMinimumPriceVariationParameters(security, stopPrice));
-                        if (increment > 0)
-                        {
-                            var stopRound = Math.Round(stopPrice / increment) * increment;
-                            ((StopMarketOrder)order).StopPrice = stopRound;
-                            SendWarningOnPriceChange("Stop", stopRound, stopPrice);
-                        }
+                        var stopMarketOrder = (StopMarketOrder)order;
+                        RoundOrderPrice(security, stopMarketOrder.StopPrice, "StopPrice", (roundedPrice) => stopMarketOrder.StopPrice = roundedPrice);
                     }
                     break;
 
                 case OrderType.StopLimit:
                     {
-                        var limitPrice = ((StopLimitOrder)order).LimitPrice;
-                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(
-                            new GetMinimumPriceVariationParameters(security, limitPrice));
-                        if (increment > 0)
-                        {
-                            var limitRound = Math.Round(limitPrice / increment) * increment;
-                            ((StopLimitOrder)order).LimitPrice = limitRound;
-                            SendWarningOnPriceChange("Limit", limitRound, limitPrice);
-                        }
+                        var stopLimitOrder = (StopLimitOrder)order;
+                        RoundOrderPrice(security, stopLimitOrder.LimitPrice, "LimitPrice", (roundedPrice) => stopLimitOrder.LimitPrice = roundedPrice);
+                        RoundOrderPrice(security, stopLimitOrder.StopPrice, "StopPrice", (roundedPrice) => stopLimitOrder.StopPrice = roundedPrice);
+                    }
+                    break;
 
-                        var stopPrice = ((StopLimitOrder)order).StopPrice;
-                        increment = security.PriceVariationModel.GetMinimumPriceVariation(
-                            new GetMinimumPriceVariationParameters(security, stopPrice));
-                        if (increment > 0)
+                case OrderType.TrailingStop:
+                    {
+                        var trailingStopOrder = (TrailingStopOrder)order;
+                        RoundOrderPrice(security, trailingStopOrder.StopPrice, "StopPrice",
+                            (roundedPrice) => trailingStopOrder.StopPrice = roundedPrice);
+
+                        if (!trailingStopOrder.TrailingAsPercentage)
                         {
-                            var stopRound = Math.Round(stopPrice / increment) * increment;
-                            ((StopLimitOrder)order).StopPrice = stopRound;
-                            SendWarningOnPriceChange("Stop", stopRound, stopPrice);
+                            RoundOrderPrice(security, trailingStopOrder.TrailingAmount, "TrailingAmount",
+                                (roundedAmount) => trailingStopOrder.TrailingAmount = roundedAmount);
                         }
                     }
                     break;
 
                 case OrderType.LimitIfTouched:
                     {
-                        var limitPrice = ((LimitIfTouchedOrder)order).LimitPrice;
-                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(
-                            new GetMinimumPriceVariationParameters(security, limitPrice));
-                        if (increment > 0)
-                        {
-                            var limitRound = Math.Round(limitPrice / increment) * increment;
-                            ((LimitIfTouchedOrder)order).LimitPrice = limitRound;
-                            SendWarningOnPriceChange("Limit", limitRound, limitPrice);
-                        }
-
-                        var triggerPrice = ((LimitIfTouchedOrder)order).TriggerPrice;
-                        increment = security.PriceVariationModel.GetMinimumPriceVariation(
-                            new GetMinimumPriceVariationParameters(security, triggerPrice));
-                        if (increment > 0)
-                        {
-                            var triggerRound = Math.Round(triggerPrice / increment) * increment;
-                            ((LimitIfTouchedOrder)order).TriggerPrice = triggerRound;
-                            SendWarningOnPriceChange("Trigger", triggerRound, triggerPrice);
-                        }
+                        var limitIfTouchedOrder = (LimitIfTouchedOrder)order;
+                        RoundOrderPrice(security, limitIfTouchedOrder.LimitPrice, "LimitPrice",
+                            (roundedPrice) => limitIfTouchedOrder.LimitPrice = roundedPrice);
+                        RoundOrderPrice(security, limitIfTouchedOrder.TriggerPrice, "TriggerPrice",
+                            (roundedPrice) => limitIfTouchedOrder.TriggerPrice = roundedPrice);
                     }
                     break;
+            }
+        }
+
+        private void RoundOrderPrice(Security security, decimal price, string priceType, Action<decimal> setPrice)
+        {
+            var increment = security.PriceVariationModel.GetMinimumPriceVariation(new GetMinimumPriceVariationParameters(security, price));
+            if (increment > 0)
+            {
+                var roundedPrice = Math.Round(price / increment) * increment;
+                setPrice(roundedPrice);
+                SendWarningOnPriceChange(priceType, roundedPrice, price);
             }
         }
 
@@ -1617,7 +1623,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!priceOriginal.Equals(priceRound))
             {
                 _algorithm.Error(
-                    $"Warning: To meet brokerage precision requirements, order {priceType.ToStringInvariant()}Price was rounded to {priceRound.ToStringInvariant()} from {priceOriginal.ToStringInvariant()}"
+                    $"Warning: To meet brokerage precision requirements, order {priceType.ToStringInvariant()} was rounded to {priceRound.ToStringInvariant()} from {priceOriginal.ToStringInvariant()}"
                 );
             }
         }

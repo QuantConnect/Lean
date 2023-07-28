@@ -16,33 +16,19 @@
 namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Specifies an order field that does not apply to all order types
+    /// Event that fires each time an order is updated in the brokerage side.
+    /// These are not status changes but mainly price changes, like the stop price of a trailing stop order.
     /// </summary>
-    public enum OrderField
+    public class OrderUpdateEvent
     {
         /// <summary>
-        /// The limit price for a <see cref="LimitOrder"/>, <see cref="StopLimitOrder"/> or <see cref="LimitIfTouchedOrder"/> (0)
+        /// The order ID.
         /// </summary>
-        LimitPrice,
+        public int OrderId { get; set; }
 
         /// <summary>
-        /// The stop price for stop orders (<see cref="StopMarketOrder"/>, <see cref="StopLimitOrder"/>) (1)
+        /// The updated stop price for a <see cref="TrailingStopOrder"/>
         /// </summary>
-        StopPrice,
-
-        /// <summary>
-        /// The trigger price for a <see cref="LimitIfTouchedOrder"/> (2)
-        /// </summary>
-        TriggerPrice,
-
-        /// <summary>
-        /// The trailing amount for a <see cref="TrailingStopOrder"/> (3)
-        /// </summary>
-        TrailingAmount,
-
-        /// <summary>
-        /// Whether the trailing amount for a <see cref="TrailingStopOrder"/> is a percentage or an absolute currency value (4)
-        /// </summary>
-        TrailingAsPercentage
+        public decimal TrailingStopPrice { get; set; }
     }
 }

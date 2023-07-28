@@ -153,6 +153,18 @@ namespace QuantConnect.Orders.Serialization
         public decimal? StopPrice { get; set; }
 
         /// <summary>
+        /// The trailing stop order trailing amount
+        /// </summary>
+        [JsonProperty("trailing-amount", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal? TrailingAmount { get; set; }
+
+        /// <summary>
+        /// Whether the <see cref="TrailingAmount"/> is a percentage or an absolute currency amount
+        /// </summary>
+        [JsonProperty("trailing-as-percentage", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? TrailingAsPercentage { get; set; }
+
+        /// <summary>
         /// Signal showing the "StopLimitOrder" has been converted into a Limit Order
         /// </summary>
         [JsonProperty("stop-triggered", DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -265,6 +277,13 @@ namespace QuantConnect.Orders.Serialization
             {
                 var stopMarket = order as StopMarketOrder;
                 StopPrice = stopMarket.StopPrice;
+            }
+            else if (order.Type == OrderType.TrailingStop)
+            {
+                var trailingStop = order as TrailingStopOrder;
+                StopPrice = trailingStop.StopPrice;
+                TrailingAmount = trailingStop.TrailingAmount;
+                TrailingAsPercentage = trailingStop.TrailingAsPercentage;
             }
             else if (order.Type == OrderType.LimitIfTouched)
             {
