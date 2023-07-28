@@ -153,7 +153,7 @@ namespace QuantConnect.Orders
             var distanceToMarketPrice = direction == OrderDirection.Sell
                 ? currentMarketPrice - currentStopPrice
                 : currentStopPrice - currentMarketPrice;
-            var stopReference = trailingAsPercentage ? currentStopPrice * trailingAmount / (1 - trailingAmount) : trailingAmount;
+            var stopReference = trailingAsPercentage ? currentMarketPrice * trailingAmount : trailingAmount;
 
             if (distanceToMarketPrice <= stopReference)
             {

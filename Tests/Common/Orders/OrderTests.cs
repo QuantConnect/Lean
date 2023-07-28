@@ -90,6 +90,42 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(Invariant($"Trigger Price: {order.TriggerPrice:C} Limit Price: {order.LimitPrice:C}"), order.Tag);
         }
 
+        [TestCase(OrderDirection.Sell, 300, 0.1, true, 270)]
+        [TestCase(OrderDirection.Sell, 300, 30, false, 270)]
+        [TestCase(OrderDirection.Buy, 300, 0.1, true, 330)]
+        [TestCase(OrderDirection.Buy, 300, 30, false, 330)]
+        public void TrailingStopOrder_CalculatesStopPrice(OrderDirection direction, decimal marketPrice, decimal trailingAmount,
+            bool trailingAsPercentage, decimal expectedStopPrice)
+        {
+            var stopPrice = TrailingStopOrder.CalculateStopPrice(marketPrice, trailingAmount, trailingAsPercentage, direction);
+            Assert.AreEqual(expectedStopPrice, stopPrice);
+        }
+
+        [TestCase(OrderDirection.Sell, 269, 300, 0.1, true, 270)]
+        [TestCase(OrderDirection.Sell, 270, 300, 0.1, true, null)]
+        [TestCase(OrderDirection.Sell, 269, 300, 30, false, 270)]
+        [TestCase(OrderDirection.Sell, 270, 300, 30, false, null)]
+        [TestCase(OrderDirection.Buy, 331, 300, 0.1, true, 330)]
+        [TestCase(OrderDirection.Buy, 330, 300, 0.1, true, null)]
+        [TestCase(OrderDirection.Buy, 331, 300, 30, false, 330)]
+        [TestCase(OrderDirection.Buy, 330, 300, 30, false, null)]
+        public void TrailingStopOrder_UpdatesStopPriceIfNecessary(OrderDirection direction, decimal currentStopPrice, decimal marketPrice,
+            decimal trailingAmount, bool trailingAsPercentage, decimal? expectedStopPrice)
+        {
+            var updated = TrailingStopOrder.TryUpdateStopPrice(marketPrice, currentStopPrice, trailingAmount, trailingAsPercentage, direction,
+                out var updatedStopPrice);
+
+            if (expectedStopPrice.HasValue)
+            {
+                Assert.IsTrue(updated);
+                Assert.AreEqual(expectedStopPrice.Value, updatedStopPrice);
+            }
+            else
+            {
+                Assert.IsFalse(updated);
+            }
+        }
+
         private static TestCaseData[] GetValueTestParameters()
         {
             const decimal delta = 1m;
