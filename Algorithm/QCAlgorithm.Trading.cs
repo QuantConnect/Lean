@@ -479,7 +479,7 @@ namespace QuantConnect.Algorithm
         /// Create a trailing stop order and return the newly created order id; or negative if the order is invalid.
         /// It will calculate the stop price using the trailing amount and the current market price.
         /// </summary>
-        /// <param name="symbol">String symbol for the asset we're trading</param>
+        /// <param name="symbol">Trading asset symbol</param>
         /// <param name="quantity">Quantity to be traded</param>
         /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
         /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
@@ -497,7 +497,7 @@ namespace QuantConnect.Algorithm
         /// Create a trailing stop order and return the newly created order id; or negative if the order is invalid.
         /// It will calculate the stop price using the trailing amount and the current market price.
         /// </summary>
-        /// <param name="symbol">String symbol for the asset we're trading</param>
+        /// <param name="symbol">Trading asset symbol</param>
         /// <param name="quantity">Quantity to be traded</param>
         /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
         /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
@@ -515,7 +515,7 @@ namespace QuantConnect.Algorithm
         /// Create a trailing stop order and return the newly created order id; or negative if the order is invalid.
         /// It will calculate the stop price using the trailing amount and the current market price.
         /// </summary>
-        /// <param name="symbol">String symbol for the asset we're trading</param>
+        /// <param name="symbol">Trading asset symbol</param>
         /// <param name="quantity">Quantity to be traded</param>
         /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
         /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
@@ -535,7 +535,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Create a trailing stop order and return the newly created order id; or negative if the order is invalid
         /// </summary>
-        /// <param name="symbol">String symbol for the asset we're trading</param>
+        /// <param name="symbol">Trading asset symbol</param>
         /// <param name="quantity">Quantity to be traded</param>
         /// <param name="stopPrice">Initial stop price at which the order should be triggered</param>
         /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
@@ -553,7 +553,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Create a trailing stop order and return the newly created order id; or negative if the order is invalid
         /// </summary>
-        /// <param name="symbol">String symbol for the asset we're trading</param>
+        /// <param name="symbol">Trading asset symbol</param>
         /// <param name="quantity">Quantity to be traded</param>
         /// <param name="stopPrice">Initial stop price at which the order should be triggered</param>
         /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
@@ -571,7 +571,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Create a trailing stop order and return the newly created order id; or negative if the order is invalid
         /// </summary>
-        /// <param name="symbol">String symbol for the asset we're trading</param>
+        /// <param name="symbol">Trading asset symbol</param>
         /// <param name="quantity">Quantity to be traded</param>
         /// <param name="stopPrice">Initial stop price at which the order should be triggered</param>
         /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>

@@ -150,7 +150,9 @@ namespace QuantConnect.Orders
             bool trailingAsPercentage, OrderDirection direction, out decimal updatedStopPrice)
         {
             updatedStopPrice = 0m;
-            var distanceToMarketPrice = Math.Abs(currentMarketPrice - currentStopPrice);
+            var distanceToMarketPrice = direction == OrderDirection.Sell
+                ? currentMarketPrice - currentStopPrice
+                : currentStopPrice - currentMarketPrice;
             var stopReference = trailingAsPercentage ? currentStopPrice * trailingAmount / (1 - trailingAmount) : trailingAmount;
 
             if (distanceToMarketPrice <= stopReference)

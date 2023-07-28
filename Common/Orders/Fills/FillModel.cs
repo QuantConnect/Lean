@@ -404,14 +404,6 @@ namespace QuantConnect.Orders.Fills
             // Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
-            // Update the stop price
-            if (TrailingStopOrder.TryUpdateStopPrice(order.Direction == OrderDirection.Sell ? prices.High : prices.Low, order.StopPrice,
-                    order.TrailingAmount, order.TrailingAsPercentage, order.Direction, out var updatedStopPrice))
-            {
-                order.StopPrice = updatedStopPrice;
-                Parameters.OnOrderUpdated(order);
-            }
-
             switch (order.Direction)
             {
                 case OrderDirection.Sell:
@@ -437,6 +429,19 @@ namespace QuantConnect.Orders.Fills
                         fill.FillQuantity = order.Quantity;
                     }
                     break;
+            }
+
+            // Update the stop price:
+            // NOTE: Doing this after attempting to fill the order in the following cases:
+            //  - Sell: if low < stop price, order is filled. If we were to update the stop price before and it is moved towards the high price
+            //          placing the stop price above the low price, it will not trigger a fill.
+            //  - Buy: if high > stop price, order is filled. If we were to update the stop price before and it is moved towards the low price
+            //         placing the stop price below the high price, it will not trigger a fill.
+            if (TrailingStopOrder.TryUpdateStopPrice(order.Direction == OrderDirection.Sell ? prices.High : prices.Low, order.StopPrice,
+                    order.TrailingAmount, order.TrailingAsPercentage, order.Direction, out var updatedStopPrice))
+            {
+                order.StopPrice = updatedStopPrice;
+                Parameters.OnOrderUpdated(order);
             }
 
             return fill;

@@ -228,70 +228,82 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="field">The order field to get</param>
         /// <returns>The value of the field</returns>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <exception cref="ArgumentException">Field out of range</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Field out of range for order type</exception>
         public decimal Get(OrderField field)
         {
+            return Get<decimal>(field);
+        }
+
+        /// <summary>
+        /// Gets the specified field from the ticket and tries to convert it to the specified type
+        /// </summary>
+        /// <param name="field">The order field to get</param>
+        /// <returns>The value of the field</returns>
+        /// <exception cref="ArgumentException">Field out of range</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Field out of range for order type</exception>
+        public T Get<T>(OrderField field)
+        {
+            object fieldValue = null;
+
             switch (field)
             {
                 case OrderField.LimitPrice:
                     if (_submitRequest.OrderType == OrderType.ComboLimit)
                     {
-                        return AccessOrder<ComboLimitOrder, decimal>(this, field, o => o.GroupOrderManager.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<ComboLimitOrder, decimal>(this, field, o => o.GroupOrderManager.LimitPrice, r => r.LimitPrice);
                     }
-                    if (_submitRequest.OrderType == OrderType.Limit || _submitRequest.OrderType == OrderType.ComboLegLimit)
+                    else if (_submitRequest.OrderType == OrderType.Limit || _submitRequest.OrderType == OrderType.ComboLegLimit)
                     {
-                        return AccessOrder<LimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<LimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }
-                    if (_submitRequest.OrderType == OrderType.StopLimit)
+                    else if (_submitRequest.OrderType == OrderType.StopLimit)
                     {
-                        return AccessOrder<StopLimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<StopLimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }
-                    if (_submitRequest.OrderType == OrderType.LimitIfTouched)
+                    else if (_submitRequest.OrderType == OrderType.LimitIfTouched)
                     {
-                        return AccessOrder<LimitIfTouchedOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                        fieldValue = AccessOrder<LimitIfTouchedOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }
                     break;
 
                 case OrderField.StopPrice:
                     if (_submitRequest.OrderType == OrderType.StopLimit)
                     {
-                        return AccessOrder<StopLimitOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
+                        fieldValue = AccessOrder<StopLimitOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
                     }
-                    if (_submitRequest.OrderType == OrderType.StopMarket)
+                    else if (_submitRequest.OrderType == OrderType.StopMarket)
                     {
-                        return AccessOrder<StopMarketOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
+                        fieldValue = AccessOrder<StopMarketOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
                     }
-                    if (_submitRequest.OrderType == OrderType.TrailingStop)
+                    else if (_submitRequest.OrderType == OrderType.TrailingStop)
                     {
-                        return AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
+                        fieldValue = AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
                     }
                     break;
 
                 case OrderField.TriggerPrice:
-                    return AccessOrder<LimitIfTouchedOrder, decimal>(this, field, o => o.TriggerPrice, r => r.TriggerPrice);
+                    fieldValue = AccessOrder<LimitIfTouchedOrder, decimal>(this, field, o => o.TriggerPrice, r => r.TriggerPrice);
+                    break;
 
                 case OrderField.TrailingAmount:
-                    return AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.TrailingAmount, r => r.TrailingAmount);
+                    fieldValue = AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.TrailingAmount, r => r.TrailingAmount);
+                    break;
 
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(field), field, null);
-            }
-
-            throw new ArgumentException(Messages.OrderTicket.GetFieldError(this, field));
-        }
-
-        public T Get<T>(OrderField field)
-        {
-            switch (field)
-            {
                 case OrderField.TrailingAsPercentage:
-                    return (T)(object)AccessOrder<TrailingStopOrder, bool>(this, field, o => o.TrailingAsPercentage, r => r.TrailingAsPercentage);
+                    fieldValue = AccessOrder<TrailingStopOrder, bool>(this, field, o => o.TrailingAsPercentage, r => r.TrailingAsPercentage);
+                    break;
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(field), field, null);
             }
 
-            throw new ArgumentException(Messages.OrderTicket.GetFieldError(this, field));
+            if (fieldValue == null)
+            {
+                throw new ArgumentException(Messages.OrderTicket.GetFieldError(this, field));
+            }
+
+            return (T)fieldValue;
         }
 
         /// <summary>

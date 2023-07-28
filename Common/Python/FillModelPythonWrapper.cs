@@ -142,7 +142,7 @@ namespace QuantConnect.Python
         /// Stop Market Fill Model. Return an order event with the fill details.
         /// </summary>
         /// <param name="asset">Asset we're trading this order</param>
-        /// <param name="order">Stop Order to Check, return filled if true</param>
+        /// <param name="order">Trailing Stop Order to check, return filled if true</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public override OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
