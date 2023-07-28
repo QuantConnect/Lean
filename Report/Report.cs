@@ -48,8 +48,9 @@ namespace QuantConnect.Report
         /// <param name="version">Version number of the strategy</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
+        /// <param name="cssOverride">CSS file that overrides some of the default rules defined in report.css</param>
         /// <param name="pointInTimePortfolioDestination">Point in time portfolio json output base filename</param>
-        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null)
+        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null, string cssOverride = null)
         {
             var backtestCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(backtest));
             var liveCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(live));
@@ -104,7 +105,7 @@ namespace QuantConnect.Report
                 new TextReportElement("strategy name", ReportKey.StrategyName, name),
                 new TextReportElement("description", ReportKey.StrategyDescription, description),
                 new TextReportElement("version", ReportKey.StrategyVersion, version),
-                new TextReportElement("stylesheet", ReportKey.Stylesheet, File.ReadAllText("css/report.css")),
+                new TextReportElement("stylesheet", ReportKey.Stylesheet, File.ReadAllText("css/report.css") + (cssOverride)),
                 new TextReportElement("live marker key", ReportKey.LiveMarker, live == null ? string.Empty : "Live "),
 
                 //KPI's Backtest:
@@ -132,6 +133,10 @@ namespace QuantConnect.Report
                 new LeverageUtilizationReportElement("leverage plot", ReportKey.LeverageUtilization, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
                 new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
 
+                // Include Algorithm Parameters
+                new ParametersReportElement("parameters page", ReportKey.ParametersPageStyle, backtestConfiguration, liveConfiguration),
+                new ParametersReportElement("parameters", ReportKey.Parameters, backtestConfiguration, liveConfiguration),
+
                 // Array of Crisis Plots:
                 new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live),
                 new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live)
@@ -154,7 +159,7 @@ namespace QuantConnect.Report
                 Log.Trace($"QuantConnect.Report.Compile(): Rendering {element.Name}...");
                 html = html.Replace(element.Key, element.Render());
 
-                if (element is TextReportElement || element is CrisisReportElement || (element as ReportElement) == null)
+                if (element is TextReportElement || element is CrisisReportElement || element is ParametersReportElement ||(element as ReportElement) == null)
                 {
                     continue;
                 }
