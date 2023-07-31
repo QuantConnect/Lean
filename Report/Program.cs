@@ -96,7 +96,7 @@ namespace QuantConnect.Report
 
             //Create a new report
             Log.Trace("QuantConnect.Report.Main(): Instantiating report...");
-            var report = new Report(name, description, version, backtest, live, cssOverrideContent, htmlCustomContent);
+            var report = new Report(name, description, version, backtest, live, cssOverride: cssOverrideContent, htmlCustom: htmlCustomContent);
 
             // Generate the html content
             Log.Trace("QuantConnect.Report.Main(): Starting content compile...");

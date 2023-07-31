@@ -24,6 +24,7 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Report.ReportElements;
 using QuantConnect.Orders;
+using System.Text.RegularExpressions;
 
 namespace QuantConnect.Report
 {
@@ -48,12 +49,20 @@ namespace QuantConnect.Report
         /// <param name="version">Version number of the strategy</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
+        /// <param name="pointInTimePortfolioDestination">Point in time portfolio json output base filename</param>
         /// <param name="cssOverride">CSS file that overrides some of the default rules defined in report.css</param>
         /// <param name="htmlCustom">Custom HTML file to replace the default template</param>
-        /// <param name="pointInTimePortfolioDestination">Point in time portfolio json output base filename</param>
-        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string cssOverride = null, string htmlCustom = null, string pointInTimePortfolioDestination = null)
+        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null, string cssOverride = null, string htmlCustom = null)
         {
             _template = htmlCustom ?? File.ReadAllText("template.html");
+            var crisisRegex = new Regex(@"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->");
+            var crisisMatch = crisisRegex.Match(_template);
+            var customCrisisHtml = crisisMatch.Success ? crisisMatch.Groups[2].Value : null;
+
+            var parametersRegex = new Regex(@"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->");
+            var parametersMatch = parametersRegex.Match(_template);
+            var customParametersHtml = parametersMatch.Success ? parametersMatch.Groups[2].Value : null;
+
             var backtestCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(backtest));
             var liveCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(live));
 
@@ -136,12 +145,12 @@ namespace QuantConnect.Report
                 new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
 
                 // Include Algorithm Parameters
-                new ParametersReportElement("parameters page", ReportKey.ParametersPageStyle, backtestConfiguration, liveConfiguration),
-                new ParametersReportElement("parameters", ReportKey.Parameters, backtestConfiguration, liveConfiguration),
+                new ParametersReportElement("parameters page", ReportKey.ParametersPageStyle, backtestConfiguration, liveConfiguration, customParametersHtml),
+                new ParametersReportElement("parameters", ReportKey.Parameters, backtestConfiguration, liveConfiguration, customParametersHtml),
 
                 // Array of Crisis Plots:
-                new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live),
-                new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live)
+                new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live, customCrisisHtml),
+                new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live, customCrisisHtml)
             };
 
         }
