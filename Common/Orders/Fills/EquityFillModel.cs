@@ -288,7 +288,11 @@ namespace QuantConnect.Orders.Fills
                     //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
                     if (prices.High > order.StopPrice || order.StopTriggered)
                     {
-                        order.StopTriggered = true;
+                        if (!order.StopTriggered)
+                        {
+                            order.StopTriggered = true;
+                            Parameters.OnOrderUpdated(order);
+                        }
 
                         // Fill the limit order, using closing price of bar:
                         // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
@@ -306,7 +310,11 @@ namespace QuantConnect.Orders.Fills
                     //-> 1.1 Sell Stop: If Price below setpoint, Sell:
                     if (prices.Low < order.StopPrice || order.StopTriggered)
                     {
-                        order.StopTriggered = true;
+                        if (!order.StopTriggered)
+                        {
+                            order.StopTriggered = true;
+                            Parameters.OnOrderUpdated(order);
+                        }
 
                         // Fill the limit order, using minimum price of the bar
                         // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.

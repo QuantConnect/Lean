@@ -30,5 +30,10 @@ namespace QuantConnect.Orders
         /// The updated stop price for a <see cref="TrailingStopOrder"/>
         /// </summary>
         public decimal TrailingStopPrice { get; set; }
+
+        /// <summary>
+        /// Flag indicating whether stop has been triggered for a <see cref="StopLimitOrder"/>
+        /// </summary>
+        public bool StopTriggered { get; set; }
     }
 }
