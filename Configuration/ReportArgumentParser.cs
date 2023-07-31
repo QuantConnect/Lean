@@ -40,7 +40,6 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("report-destination", CommandOptionType.SingleValue, "Destination of processed report file"),
                 new CommandLineOption("report-css-override-file", CommandOptionType.SingleValue, "CSS override source file"),
                 new CommandLineOption("report-html-custom-file", CommandOptionType.SingleValue, "Custom HTML source file"),
-                new CommandLineOption("report-crisis-custom-file", CommandOptionType.SingleValue, "Custom HTML source file for the crisis charts"),
             };
 
         /// <summary>

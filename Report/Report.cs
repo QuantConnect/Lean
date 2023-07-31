@@ -50,9 +50,8 @@ namespace QuantConnect.Report
         /// <param name="live">Live result object</param>
         /// <param name="cssOverride">CSS file that overrides some of the default rules defined in report.css</param>
         /// <param name="htmlCustom">Custom HTML file to replace the default template</param>
-        /// <param name="crisisCustom">Custom HTML source file for the crisis charts</param>
         /// <param name="pointInTimePortfolioDestination">Point in time portfolio json output base filename</param>
-        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string cssOverride = null, string htmlCustom = null, string crisisCustom = null, string pointInTimePortfolioDestination = null)
+        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string cssOverride = null, string htmlCustom = null, string pointInTimePortfolioDestination = null)
         {
             _template = htmlCustom ?? File.ReadAllText("template.html");
             var backtestCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(backtest));
@@ -141,8 +140,8 @@ namespace QuantConnect.Report
                 new ParametersReportElement("parameters", ReportKey.Parameters, backtestConfiguration, liveConfiguration),
 
                 // Array of Crisis Plots:
-                new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live, crisisCustom),
-                new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live, crisisCustom)
+                new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live),
+                new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live)
             };
 
         }

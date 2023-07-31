@@ -45,7 +45,6 @@ namespace QuantConnect.Report
             var reportFormat = Config.Get("report-format");
             var cssOverrideFile = Config.Get("report-css-override-file", "css/report_override.css");
             var htmlCustomFile = Config.Get("report-html-custom-file", "template.html");
-            var crisisCustomFile = Config.Get("report-crisis-custom-file", "template.crisis.html");
 
             // Parse content from source files into result objects
             Log.Trace($"QuantConnect.Report.Main(): Parsing source files...{backtestDataFile}, {liveDataFile}");
@@ -95,22 +94,9 @@ namespace QuantConnect.Report
                 }
             }
 
-            string crisisCustomContent = null;
-            if (!string.IsNullOrEmpty(crisisCustomFile))
-            {
-                if (File.Exists(crisisCustomFile))
-                {
-                    crisisCustomContent = File.ReadAllText(crisisCustomFile);
-                }
-                else
-                {
-                    Log.Trace($"QuantConnect.Report.Main(): custom crisis HTML file {crisisCustomFile} was not found");
-                }
-            }
-
             //Create a new report
             Log.Trace("QuantConnect.Report.Main(): Instantiating report...");
-            var report = new Report(name, description, version, backtest, live, cssOverrideContent, htmlCustomContent, crisisCustomContent);
+            var report = new Report(name, description, version, backtest, live, cssOverrideContent, htmlCustomContent);
 
             // Generate the html content
             Log.Trace("QuantConnect.Report.Main(): Starting content compile...");

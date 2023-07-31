@@ -37,12 +37,11 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        /// <param name="customTemplate">Custom HTML template</param>
-        public CrisisReportElement(string name, string key, BacktestResult backtest, LiveResult live, string customTemplate)
+        public CrisisReportElement(string name, string key, BacktestResult backtest, LiveResult live)
         {
             _live = live;
             _backtest = backtest;
-            _template = customTemplate ?? File.ReadAllText("template.crisis.html");
+            _template = File.ReadAllText("template.crisis.html");
             Name = name;
             Key = key;
         }
