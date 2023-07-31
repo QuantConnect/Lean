@@ -32,7 +32,7 @@
   </Target>
   <ItemGroup>
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.21" />
-    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
