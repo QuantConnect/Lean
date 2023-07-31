@@ -32,7 +32,7 @@ namespace QuantConnect.Report
     /// </summary>
     public class Report
     {
-        private const string _template = "template.html";
+        private string _template;
         private readonly IReadOnlyCollection<IReportElement> _elements;
 
         /// <summary>
@@ -49,9 +49,11 @@ namespace QuantConnect.Report
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
         /// <param name="cssOverride">CSS file that overrides some of the default rules defined in report.css</param>
+        /// <param name="htmlCustom">Custom HTML file to replace the default template</param>
         /// <param name="pointInTimePortfolioDestination">Point in time portfolio json output base filename</param>
-        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null, string cssOverride = null)
+        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string cssOverride = null, string htmlCustom = null, string pointInTimePortfolioDestination = null)
         {
+            _template = htmlCustom ?? File.ReadAllText("template.html");
             var backtestCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(backtest));
             var liveCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(live));
 
@@ -150,7 +152,7 @@ namespace QuantConnect.Report
         /// <returns></returns>
         public void Compile(out string html, out string reportStatistics)
         {
-            html = File.ReadAllText(_template);
+            html = _template;
             var statistics = new Dictionary<string, object>();
 
             // Render the output and replace the report section
