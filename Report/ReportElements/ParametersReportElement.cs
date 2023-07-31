@@ -31,12 +31,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtestConfiguration">The configuration of the backtest algorithm</param>
         /// <param name="liveConfiguration">The configuration of the live algorithm</param>
-        /// <param name="customTemplate">Custom HTML template file to use</param>
-        public ParametersReportElement(string name, string key, AlgorithmConfiguration backtestConfiguration, AlgorithmConfiguration liveConfiguration, string customTemplate)
+        /// <param name="template">HTML template to use</param>
+        public ParametersReportElement(string name, string key, AlgorithmConfiguration backtestConfiguration, AlgorithmConfiguration liveConfiguration, string template)
         {
             Name = name;
             Key = key;
-            _template = customTemplate ?? File.ReadAllText("template.parameters.html");
+            _template = template;
 
             if (liveConfiguration != null)
             {
