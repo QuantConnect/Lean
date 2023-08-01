@@ -185,7 +185,27 @@ namespace QuantConnect.Tests.Report
             }
         }
 
-        [TestCase(htmlExampleCode,
+        [TestCase(htmlExampleCode + @"
+
+<!--crisis
+<div class=""col-xs-4"">
+    <table class=""crisis-chart table compact"">
+        <thead>
+        <tr>
+            <th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td style=""padding:0;"">
+                <img src=""{{$PLOT-CRISIS-CONTENT}}"">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+crisis-->
+",
             @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->", @"<div class=""col-xs-4"">
     <table class=""crisis-chart table compact"">
         <thead>
@@ -203,7 +223,13 @@ namespace QuantConnect.Tests.Report
     </table>
 </div>
 ")]
-        [TestCase(htmlExampleCode,
+        [TestCase(htmlExampleCode + @"
+<!--parameters
+<tr>
+	<td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td>
+	<td class = ""title""> {{$SECOND-KPI-NAME}} </td><td> {{$SECOND-KPI-VALUE}} </td>
+</tr>
+parameters-->",
             @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->", @"<tr>
 	<td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td>
 	<td class = ""title""> {{$SECOND-KPI-NAME}} </td><td> {{$SECOND-KPI-VALUE}} </td>
@@ -218,6 +244,54 @@ namespace QuantConnect.Tests.Report
             var htmlCode = GetRegexInInput(pattern, input);
             Assert.IsNotNull(htmlCode);
             Assert.AreEqual(expected, htmlCode);
+        }
+
+        [TestCase(htmlExampleCode + @"
+
+<!--crisis
+<div class=""col-xs-4"">
+    <table class=""crisis-chart table compact"">
+        <thead>
+        <tr>
+            <th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td style=""padding:0;"">
+                <img src=""{{$PLOT-CRISIS-CONTENT}}"">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+crisis-->
+", @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->")]
+        [TestCase(htmlExampleCode + @"
+<!--parameters
+<tr>
+	<td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td>
+	<td class = ""title""> {{$SECOND-KPI-NAME}} </td><td> {{$SECOND-KPI-VALUE}} </td>
+</tr>
+parameters-->", @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
+        [TestCase(@"", @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
+        [TestCase(@"", @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->")]
+        [TestCase(@"<div class=""col-xs-4""><table class=""crisis-chart table compact""><thead><tr><th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th></tr></thead><tbody><tr><td style=""padding:0;""><img src=""{{$PLOT-CRISIS-CONTENT}}""></td></tr></tbody></table></div>crisis-->",
+    @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
+        [TestCase(@"<!--crisis<div class=""col-xs-4""><table class=""crisis-chart table compact""><thead><tr><th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th></tr></thead><tbody><tr><td style=""padding:0;""><img src=""{{$PLOT-CRISIS-CONTENT}}""></td></tr></tbody></table></div>",
+    @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
+        [TestCase(@"<div class=""col-xs-4""><table class=""crisis-chart table compact""><thead><tr><th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th></tr></thead><tbody><tr><td style=""padding:0;""><img src=""{{$PLOT-CRISIS-CONTENT}}""></td></tr></tbody></table></div>",
+    @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
+        [TestCase(@"<tr><td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td></tr>parameters-->",
+    @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->")]
+        [TestCase(@"<!--parameters<tr><td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td></tr>",
+    @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->")]
+        [TestCase(@"<tr><td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td></tr>",
+    @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->")]
+        public void FindsNoMatchingForCrisisAndParametersInGivenInput(string input, string pattern)
+        {
+            var matching = GetRegexInInput(pattern, input);
+            Assert.IsNull(matching);
         }
 
         public IEnumerable<KeyValuePair<long, decimal>> GetChartPoints(Result result)
@@ -263,32 +337,6 @@ namespace QuantConnect.Tests.Report
                 </div>
             </div>
     </body>
-    </html>
-
-<!--crisis
-<div class=""col-xs-4"">
-    <table class=""crisis-chart table compact"">
-        <thead>
-        <tr>
-            <th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td style=""padding:0;"">
-                <img src=""{{$PLOT-CRISIS-CONTENT}}"">
-            </td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-crisis-->
-
-<!--parameters
-<tr>
-	<td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td>
-	<td class = ""title""> {{$SECOND-KPI-NAME}} </td><td> {{$SECOND-KPI-VALUE}} </td>
-</tr>
-parameters-->";
+    </html>";
     }
 }
