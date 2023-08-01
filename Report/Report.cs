@@ -24,6 +24,7 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Report.ReportElements;
 using QuantConnect.Orders;
+using System.Text.RegularExpressions;
 
 namespace QuantConnect.Report
 {
@@ -32,8 +33,8 @@ namespace QuantConnect.Report
     /// </summary>
     public class Report
     {
-        private const string _template = "template.html";
-        private readonly IReadOnlyCollection<IReportElement> _elements;
+        private string _template;
+        private readonly List<IReportElement> _elements;
 
         /// <summary>
         /// File name for statistics
@@ -48,10 +49,15 @@ namespace QuantConnect.Report
         /// <param name="version">Version number of the strategy</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        /// <param name="cssOverride">CSS file that overrides some of the default rules defined in report.css</param>
         /// <param name="pointInTimePortfolioDestination">Point in time portfolio json output base filename</param>
-        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null, string cssOverride = null)
+        /// <param name="cssOverride">CSS file that overrides some of the default rules defined in report.css</param>
+        /// <param name="htmlCustom">Custom HTML file to replace the default template</param>
+        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null, string cssOverride = null, string htmlCustom = null)
         {
+            _template = htmlCustom ?? File.ReadAllText("template.html");
+            var crisisHtmlContent = GetRegexInInput(@"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->", _template);
+            var parametersHtmlContent = GetRegexInInput(@"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->", _template);
+
             var backtestCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(backtest));
             var liveCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(live));
 
@@ -131,16 +137,22 @@ namespace QuantConnect.Report
                 new RollingPortfolioBetaReportElement("rolling beta to equities plot", ReportKey.RollingBeta, backtest, live),
                 new RollingSharpeReportElement("rolling sharpe ratio plot", ReportKey.RollingSharpe, backtest, live),
                 new LeverageUtilizationReportElement("leverage plot", ReportKey.LeverageUtilization, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
-                new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
-
-                // Include Algorithm Parameters
-                new ParametersReportElement("parameters page", ReportKey.ParametersPageStyle, backtestConfiguration, liveConfiguration),
-                new ParametersReportElement("parameters", ReportKey.Parameters, backtestConfiguration, liveConfiguration),
-
-                // Array of Crisis Plots:
-                new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live),
-                new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live)
+                new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live, backtestPortfolioInTime, livePortfolioInTime)
             };
+
+            // Include Algorithm Parameters
+            if (parametersHtmlContent != null)
+            {
+                _elements.Add(new ParametersReportElement("parameters page", ReportKey.ParametersPageStyle, backtestConfiguration, liveConfiguration, parametersHtmlContent));
+                _elements.Add(new ParametersReportElement("parameters", ReportKey.Parameters, backtestConfiguration, liveConfiguration, parametersHtmlContent));
+            }
+
+            // Array of Crisis Plots:
+            if (crisisHtmlContent != null)
+            {
+                _elements.Add(new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live, crisisHtmlContent));
+                _elements.Add(new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live, crisisHtmlContent));
+            }
 
         }
 
@@ -150,7 +162,7 @@ namespace QuantConnect.Report
         /// <returns></returns>
         public void Compile(out string html, out string reportStatistics)
         {
-            html = File.ReadAllText(_template);
+            html = _template;
             var statistics = new Dictionary<string, object>();
 
             // Render the output and replace the report section
@@ -169,6 +181,20 @@ namespace QuantConnect.Report
             }
 
             reportStatistics = JsonConvert.SerializeObject(statistics, Formatting.None);
+        }
+
+        /// <summary>
+        /// Gets the regex pattern in the given input string
+        /// </summary>
+        /// <param name="pattern">Regex pattern to be find the input string</param>
+        /// <param name="input">Input string that may contain the regex pattern</param>
+        /// <returns>The regex pattern in the input string if found. Otherwise, null</returns>
+        public static string GetRegexInInput(string pattern, string input)
+        {
+            var regex = new Regex(pattern);
+            var match = regex.Match(input);
+            var regexWithinInput = match.Success ? match.Groups[2].Value : null;
+            return regexWithinInput;
         }
     }
 }

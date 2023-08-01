@@ -21,6 +21,7 @@ namespace QuantConnect.Report.ReportElements
     internal sealed class ParametersReportElement : ReportElement
     {
         private IReadOnlyDictionary<string, string> _parameters;
+        private readonly string _template;
 
         /// <summary>
         /// Creates a two column table for the Algorithm's Parameters
@@ -29,10 +30,12 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtestConfiguration">The configuration of the backtest algorithm</param>
         /// <param name="liveConfiguration">The configuration of the live algorithm</param>
-        public ParametersReportElement(string name, string key, AlgorithmConfiguration backtestConfiguration, AlgorithmConfiguration liveConfiguration)
+        /// <param name="template">HTML template to use</param>
+        public ParametersReportElement(string name, string key, AlgorithmConfiguration backtestConfiguration, AlgorithmConfiguration liveConfiguration, string template)
         {
             Name = name;
             Key = key;
+            _template = template;
 
             if (liveConfiguration != null)
             {
@@ -59,7 +62,7 @@ namespace QuantConnect.Report.ReportElements
 
             for (int index = 0; index < _parameters.Count; index += 2)
             {
-                var template = "<tr><td class = \"title\"> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td><td class = \"title\"> {{$SECOND-KPI-NAME}} </td><td> {{$SECOND-KPI-VALUE}} </td></tr>";
+                var template = _template;
                 var firstKVP = _parameters.ElementAt(index);
                 var firstKey = string.Join(" ", (firstKVP.Key).Split("-").Select(x => x[0].ToString().ToUpper() + x.Substring(1)));
                 template = template.Replace("{{$FIRST-KPI-NAME}}", firstKey);

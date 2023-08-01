@@ -77,9 +77,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ReportChartTests.py" />
-    <Content Include="template.crisis.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="template.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
