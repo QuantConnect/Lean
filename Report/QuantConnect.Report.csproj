@@ -43,7 +43,7 @@
   <ItemGroup>
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.21" />
     <PackageReference Include="Deedle" Version="2.1.0" />
-    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
   </ItemGroup>

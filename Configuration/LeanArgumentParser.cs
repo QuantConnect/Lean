@@ -57,7 +57,7 @@ namespace QuantConnect.Configuration
                 // algorithm class selector
                 new CommandLineOption("algorithm-type-name", CommandOptionType.SingleValue),
 
-                // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
+                // Algorithm language selector - options CSharp, Python
                 new CommandLineOption("algorithm-language", CommandOptionType.SingleValue),
 
                 //Physical DLL location
