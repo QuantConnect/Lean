@@ -160,7 +160,7 @@ namespace QuantConnect.Tests.Engine.Results
             // | 2013-10-11 20:00:00 -> <missing>            <missing>            0.006419605     |
             // ===================================================================================|
             //
-            // After new adjustments 
+            // After new adjustments
             // ====================================================================================
             // |                           equity           bench                 perf            |
             // | 10/7/2013 12:00:00 AM  -> <missing>        <missing>             0               |
@@ -180,7 +180,7 @@ namespace QuantConnect.Tests.Engine.Results
             var expectedBenchmarkPerformance = new List<double>
             {
                 0,                          // First sample at start, seen as missing since percent change won't exists for that day
-                -0.0087038817532125255,     // 10/7 - 10/8 
+                -0.0087038817532125255,     // 10/7 - 10/8
                 -0.011587791300935823,      // 10/8 - 10/9
                 0.00054375782787635836,     // 10/9 - 10/10
                 0.022165997700413814,       // 10/10 - 10/11
@@ -263,7 +263,7 @@ namespace QuantConnect.Tests.Engine.Results
             var expectedBenchmarkPerformance = new List<double>
             {
                 0,                          // First sample at start 10/7 12AM, seen as missing since percent change won't exists for that day
-                -0.0087038817532125255,     // 10/7 - 10/8 
+                -0.0087038817532125255,     // 10/7 - 10/8
                 -0.011587791300935823,      // 10/8 - 10/9
                 0.00054375782787635836,     // 10/9 - 10/10
                 0.022165997700413814,       // 10/10 - 10/11
@@ -344,7 +344,7 @@ namespace QuantConnect.Tests.Engine.Results
             var expectedBenchmarkPerformance = new List<double>
             {
                 0,                          // First sample at start 10/7 12AM, seen as missing since percent change won't exists for that day
-                -0.0087038817532125255,     // 10/7 - 10/8 
+                -0.0087038817532125255,     // 10/7 - 10/8
                 -0.011587791300935823,      // 10/8 - 10/9
                 0.00054375782787635836,     // 10/9 - 10/10
                 0.022165997700413814,       // 10/10 - 10/11
@@ -428,7 +428,7 @@ namespace QuantConnect.Tests.Engine.Results
             var expectedBenchmarkPerformance = new List<double>
             {
                 0,                          // First sample at start 10/7 12AM, seen as missing since percent change won't exists for that day
-                -0.0087038817532125255,     // 10/7 - 10/8 
+                -0.0087038817532125255,     // 10/7 - 10/8
                 -0.011587791300935823,      // 10/8 - 10/9
                 0.00054375782787635836,     // 10/9 - 10/10
                 0.022165997700413814,       // 10/10 - 10/11
@@ -529,9 +529,9 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.IsTrue(benchmarkPerformanceAndPerformanceDoNotDiverge, benchmarkPerformanceAndPerformanceDoNotDivergeMessage);
         }
 
-        private static Series<DateTime, double> ToDeedleSeries(Series series)
+        private static Series<DateTime, double> ToDeedleSeries(BaseSeries series)
         {
-            return new Series<DateTime, double>(series.Values.Select(x => new KeyValuePair<DateTime, double>(Time.UnixTimeStampToDateTime(x.x), (double)x.y)));
+            return new Series<DateTime, double>(series.Values.Select(x => new KeyValuePair<DateTime, double>(x.Time, (double)x.Values[0])));
         }
     }
 }

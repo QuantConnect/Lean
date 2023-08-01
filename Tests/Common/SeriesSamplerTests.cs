@@ -1,11 +1,11 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,8 +33,8 @@ namespace QuantConnect.Tests.Common
 
             var sampled = sampler.Sample(series, reference.AddSeconds(-1), reference.AddSeconds(1));
             Assert.AreEqual(1, sampled.Values.Count);
-            Assert.AreEqual(series.Values[0].x, sampled.Values[0].x);
-            Assert.AreEqual(series.Values[0].y, sampled.Values[0].y);
+            Assert.AreEqual(((ChartPoint)series.Values[0]).x, ((ChartPoint)sampled.Values[0]).x);
+            Assert.AreEqual(((ChartPoint)series.Values[0]).y, ((ChartPoint)sampled.Values[0]).y);
         }
 
         [Test]
@@ -52,14 +52,14 @@ namespace QuantConnect.Tests.Common
             var sampled = sampler.Sample(series, reference, reference.AddDays(3));
             Assert.AreEqual(3, sampled.Values.Count);
 
-            Assert.AreEqual(series.Values[0].x, sampled.Values[0].x);
-            Assert.AreEqual(series.Values[0].y, sampled.Values[0].y);
+            Assert.AreEqual(((ChartPoint)series.Values[0]).x, ((ChartPoint)sampled.Values[0]).x);
+            Assert.AreEqual(((ChartPoint)series.Values[0]).y, ((ChartPoint)sampled.Values[0]).y);
 
-            Assert.AreEqual((series.Values[1].x + series.Values[2].x)/2, sampled.Values[1].x);
-            Assert.AreEqual((series.Values[1].y + series.Values[2].y)/2, sampled.Values[1].y);
+            Assert.AreEqual((((ChartPoint)series.Values[1]).x + ((ChartPoint)series.Values[2]).x)/2, ((ChartPoint)sampled.Values[1]).x);
+            Assert.AreEqual((((ChartPoint)series.Values[1]).y + ((ChartPoint)series.Values[2]).y)/2, ((ChartPoint)sampled.Values[1]).y);
 
-            Assert.AreEqual(series.Values[3].x, sampled.Values[2].x);
-            Assert.AreEqual(series.Values[3].y, sampled.Values[2].y);
+            Assert.AreEqual(((ChartPoint)series.Values[3]).x, ((ChartPoint)sampled.Values[2]).x);
+            Assert.AreEqual(((ChartPoint)series.Values[3]).y, ((ChartPoint)sampled.Values[2]).y);
         }
 
         [Test]
@@ -78,11 +78,11 @@ namespace QuantConnect.Tests.Common
             var sampled = sampler.Sample(series, reference.AddDays(1), reference.AddDays(2));
             Assert.AreEqual(2, sampled.Values.Count);
 
-            Assert.AreEqual(series.Values[1].x, sampled.Values[0].x);
-            Assert.AreEqual(series.Values[1].y, sampled.Values[0].y);
+            Assert.AreEqual(((ChartPoint)series.Values[1]).x, ((ChartPoint)sampled.Values[0]).x);
+            Assert.AreEqual(((ChartPoint)series.Values[1]).y, ((ChartPoint)sampled.Values[0]).y);
 
-            Assert.AreEqual(series.Values[2].x, sampled.Values[1].x);
-            Assert.AreEqual(series.Values[2].y, sampled.Values[1].y);
+            Assert.AreEqual(((ChartPoint)series.Values[2]).x, ((ChartPoint)sampled.Values[1]).x);
+            Assert.AreEqual(((ChartPoint)series.Values[2]).y, ((ChartPoint)sampled.Values[1]).y);
         }
 
         [Test]
@@ -101,14 +101,14 @@ namespace QuantConnect.Tests.Common
             var sampled = sampler.Sample(series, reference.AddDays(-1), reference.AddDays(2));
             Assert.AreEqual(3, sampled.Values.Count);
 
-            Assert.AreEqual(series.Values[0].x, sampled.Values[0].x);
-            Assert.AreEqual(series.Values[0].y, sampled.Values[0].y);
+            Assert.AreEqual(((ChartPoint)series.Values[0]).x, ((ChartPoint)sampled.Values[0]).x);
+            Assert.AreEqual(((ChartPoint)series.Values[0]).y, ((ChartPoint)sampled.Values[0]).y);
 
-            Assert.AreEqual(series.Values[1].x, sampled.Values[1].x);
-            Assert.AreEqual(series.Values[1].y, sampled.Values[1].y);
+            Assert.AreEqual(((ChartPoint)series.Values[1]).x, ((ChartPoint)sampled.Values[1]).x);
+            Assert.AreEqual(((ChartPoint)series.Values[1]).y, ((ChartPoint)sampled.Values[1]).y);
 
-            Assert.AreEqual(series.Values[2].x, sampled.Values[2].x);
-            Assert.AreEqual(series.Values[2].y, sampled.Values[2].y);
+            Assert.AreEqual(((ChartPoint)series.Values[2]).x, ((ChartPoint)sampled.Values[2]).x);
+            Assert.AreEqual(((ChartPoint)series.Values[2]).y, ((ChartPoint)sampled.Values[2]).y);
         }
 
         [Test]
@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Common
             // it was also respect the latest value
 
             Assert.AreEqual(2, sampled.Values.Count);
-            foreach (var pair in series.Values.Skip(1).Zip<ChartPoint, ChartPoint, Tuple<ChartPoint, ChartPoint>>(sampled.Values, Tuple.Create))
+            foreach (var pair in series.Values.Skip(1).Cast<ChartPoint>().Zip(sampled.Values.Cast<ChartPoint>(), Tuple.Create))
             {
                 Assert.AreEqual(pair.Item1.x, pair.Item2.x);
                 Assert.AreEqual(pair.Item1.y, pair.Item2.y);
@@ -144,7 +144,7 @@ namespace QuantConnect.Tests.Common
 
             var sampler = new SeriesSampler(TimeSpan.FromMilliseconds(1));
             var sampled = sampler.Sample(scatter, DateTime.Today, DateTime.Today.AddDays(1));
-            foreach (var pair in scatter.Values.Zip<ChartPoint, ChartPoint, Tuple<ChartPoint, ChartPoint>>(sampled.Values, Tuple.Create))
+            foreach (var pair in scatter.Values.Cast<ChartPoint>().Zip(sampled.Values.Cast<ChartPoint>(), Tuple.Create))
             {
                 Assert.AreEqual(pair.Item1.x, pair.Item2.x);
                 Assert.AreEqual(pair.Item1.y, pair.Item2.y);

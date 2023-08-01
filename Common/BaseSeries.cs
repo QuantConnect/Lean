@@ -15,14 +15,16 @@
 
 using System;
 using System.Collections.Generic;
-
+using Newtonsoft.Json;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
     /// <summary>
     /// Chart Series Object - Series data and properties for a chart:
     /// </summary>
+    [JsonConverter(typeof(SeriesJsonConverter))]
     public abstract class BaseSeries
     {
         /// The index of the last fetch update request to only retrieve the "delta" of the previous request.

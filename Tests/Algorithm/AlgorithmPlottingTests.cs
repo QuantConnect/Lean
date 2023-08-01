@@ -170,7 +170,7 @@ class PythonCustomIndicator(PythonIndicator):
                 Assert.DoesNotThrow(() => _algorithm.Plot("PlotTest", customIndicator));
                 var charts = _algorithm.GetChartUpdates();
                 Assert.IsTrue(charts.Where(x => x.Name == "PlotTest").Any());
-                Assert.AreEqual(10, charts.First().Series["custom"].Values.First().y);
+                Assert.AreEqual(10, charts.First().Series["custom"].Values.First().Values[0]);
             }
         }
 
@@ -197,7 +197,7 @@ class CustomIndicator:
                 var charts = _algorithm.GetChartUpdates();
                 Assert.IsFalse(charts.Where(x => x.Name == "PlotTest").Any());
                 Assert.IsTrue(charts.Where(x => x.Name == "Strategy Equity").Any());
-                Assert.AreEqual(10, charts.First().Series["PlotTest"].Values.First().y);
+                Assert.AreEqual(10, charts.First().Series["PlotTest"].Values.First().Values[0]);
             }
         }
 
@@ -218,7 +218,7 @@ class CustomIndicator:
 
             var chart = charts.First();
             Assert.AreEqual("PlotTest", chart.Name);
-            Assert.AreEqual(sma1.Current.Value / sma2.Current.Value, chart.Series[ratio.Name].Values.First().y);
+            Assert.AreEqual(sma1.Current.Value / sma2.Current.Value, chart.Series[ratio.Name].Values.First().Values[0]);
         }
     }
 }

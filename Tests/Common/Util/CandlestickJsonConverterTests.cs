@@ -14,22 +14,28 @@
 */
 
 using System;
-using System.Linq;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
-namespace QuantConnect.Tests.Common
+namespace QuantConnect.Tests.Common.Util
 {
     [TestFixture]
-    public class SeriesTests
+    public class CandlestickJsonConverterTests
     {
         [Test]
-        public void RespectsMostRecentTimeOnDuplicatePoints()
+        public void SerializeDeserializeReturnsSameValue()
         {
-            var series = new Series();
-            series.AddPoint(DateTime.Today, 1m);
-            series.AddPoint(DateTime.Today, 2m);
-            Assert.AreEqual(1, series.Values.Count);
-            Assert.AreEqual(2m, series.Values.Single().Values.Single());
+            var dateTime = new DateTime(2023, 08, 01, 12, 11, 10);
+            var candlestick = new Candlestick(dateTime, 100, 110, 80, 90);
+
+            var serializedCandlestick = JsonConvert.SerializeObject(candlestick);
+            var result = (Candlestick)JsonConvert.DeserializeObject(serializedCandlestick, typeof(Candlestick));
+
+            Assert.AreEqual(candlestick.Time, result.Time);
+            Assert.AreEqual(candlestick.Open, result.Open);
+            Assert.AreEqual(candlestick.High, result.High);
+            Assert.AreEqual(candlestick.Low, result.Low);
+            Assert.AreEqual(candlestick.Close, result.Close);
         }
     }
 }

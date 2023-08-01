@@ -15,7 +15,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Util
 {
@@ -32,55 +35,113 @@ namespace QuantConnect.Util
         /// <param name="serializer">The Json Serializer to use</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var series = value as Series;
-            if (series == null)
+            var baseSeries = value as BaseSeries;
+            if (baseSeries == null)
             {
                 return;
             }
 
             writer.WriteStartObject();
 
-            List<ISeriesPoint> values;
-            if (series.SeriesType == SeriesType.Pie)
-            {
-                values = new List<ISeriesPoint>();
-                var dataPoint = series.ConsolidateChartPoints();
-                if (dataPoint != null)
-                {
-                    values.Add(dataPoint);
-                }
-            }
-            else
-            {
-                values = series.Values;
-            }
-
-            // have to add the converter we want to use, else will use default
-            serializer.Converters.Add(new ColorJsonConverter());
-
             writer.WritePropertyName("Name");
-            writer.WriteValue(series.Name);
+            writer.WriteValue(baseSeries.Name);
             writer.WritePropertyName("Unit");
-            writer.WriteValue(series.Unit);
+            writer.WriteValue(baseSeries.Unit);
             writer.WritePropertyName("Index");
-            writer.WriteValue(series.Index);
-            writer.WritePropertyName("Values");
-            serializer.Serialize(writer, values);
+            writer.WriteValue(baseSeries.Index);
             writer.WritePropertyName("SeriesType");
-            writer.WriteValue(series.SeriesType);
-            writer.WritePropertyName("Color");
-            serializer.Serialize(writer, series.Color);
-            writer.WritePropertyName("ScatterMarkerSymbol");
-            serializer.Serialize(writer, series.ScatterMarkerSymbol);
+            writer.WriteValue(baseSeries.SeriesType);
+
+            switch (value)
+            {
+                case Series series:
+                    List<ChartPoint> values;
+                    if (series.SeriesType == SeriesType.Pie)
+                    {
+                        values = new List<ChartPoint>();
+                        var dataPoint = series.ConsolidateChartPoints();
+                        if (dataPoint != null)
+                        {
+                            values.Add(dataPoint);
+                        }
+                    }
+                    else
+                    {
+                        values = series.Values.Cast<ChartPoint>().ToList();
+                    }
+
+                    // have to add the converter we want to use, else will use default
+                    serializer.Converters.Add(new ColorJsonConverter());
+
+                    writer.WritePropertyName("Values");
+                    serializer.Serialize(writer, values);
+                    writer.WritePropertyName("Color");
+                    serializer.Serialize(writer, series.Color);
+                    writer.WritePropertyName("ScatterMarkerSymbol");
+                    serializer.Serialize(writer, series.ScatterMarkerSymbol);
+                    break;
+
+                case CandlestickSeries candlestickSeries:
+                    writer.WritePropertyName("Values");
+                    serializer.Serialize(writer, candlestickSeries.Values.Cast<Candlestick>().ToList(), typeof(Candlestick));
+                    break;
+            }
+
             writer.WriteEndObject();
         }
 
         /// <summary>
-        /// Not implemented
+        /// Reads series from Json
         /// </summary>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            var jObject = JObject.Load(reader);
+
+            var name = jObject["Name"].Value<string>();
+            var unit = jObject["Unit"].Value<string>();
+            var index = jObject["Index"].Value<int>();
+            var seriesType = (SeriesType)jObject["SeriesType"].Value<int>();
+
+            var values = (JArray)jObject["Values"];
+
+            try
+            {
+                var chartPoints = values.ToObject<List<ChartPoint>>(serializer);
+                // This is a Series
+                return new Series()
+                {
+                    Name = name,
+                    Unit = unit,
+                    Index = index,
+                    SeriesType = seriesType,
+                    Color = jObject["Color"].ToObject<Color>(serializer),
+                    ScatterMarkerSymbol = jObject["ScatterMarkerSymbol"].ToObject<ScatterMarkerSymbol>(serializer),
+                    Values = chartPoints.Cast<ISeriesPoint>().ToList()
+                };
+            } catch (JsonSerializationException)
+            {
+                // Do nothing, try another series type
+            }
+
+            try
+            {
+                var candlesticks = values.ToObject<List<Candlestick>>(serializer);
+                // This is a CandlestickSeries
+                return new CandlestickSeries()
+                {
+                    Name = name,
+                    Unit = unit,
+                    Index = index,
+                    SeriesType = seriesType,
+                    Values = candlesticks.Cast<ISeriesPoint>().ToList()
+                };
+            }
+            catch (JsonSerializationException)
+            {
+                // Do nothing, we'll return null
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -90,12 +151,12 @@ namespace QuantConnect.Util
         /// <returns>True if <see cref="Series"/></returns>
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(Series);
+            return typeof(BaseSeries).IsAssignableFrom(objectType);
         }
 
         /// <summary>
         /// This converter wont be used to read JSON. Will throw exception if manually called.
         /// </summary>
-        public override bool CanRead => false;
+        public override bool CanRead => true;
     }
 }

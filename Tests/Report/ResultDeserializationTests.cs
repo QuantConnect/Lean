@@ -309,7 +309,7 @@ parameters-->", @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
 
         public IEnumerable<KeyValuePair<long, decimal>> GetChartPoints(Result result)
         {
-            return result.Charts["Equity"].Series["Performance"].Values.Select(point => new KeyValuePair<long, decimal>(point.x, point.y));
+            return result.Charts["Equity"].Series["Performance"].Values.Cast<ChartPoint>().Select(point => new KeyValuePair<long, decimal>(point.x, point.y));
         }
 
         private const string htmlExampleCode = @"            <div class=""page"" style=""{{$CSS-CRISIS-PAGE-STYLE}}"">

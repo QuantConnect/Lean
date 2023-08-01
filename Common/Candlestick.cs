@@ -17,13 +17,14 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
     /// <summary>
     /// Single candlestick for a candlestick chart
     /// </summary>
-    [JsonObject]
+    [JsonConverter(typeof(CandlestickJsonConverter))]
     public class Candlestick : ISeriesPoint
     {
         /// <summary>
@@ -38,11 +39,7 @@ namespace QuantConnect
         {
             get
             {
-                return Convert.ToInt64(Time.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds);
-            }
-            set
-            {
-                Time = new DateTime(1970, 1, 1).AddMilliseconds(value);
+                return (long)QuantConnect.Time.DateTimeToUnixTimeStamp(Time);
             }
         }
 
@@ -50,7 +47,7 @@ namespace QuantConnect
         /// List of values for this candlestick.
         /// A candlestick is represented as a list of length 4, with the values being (open, high, low, close).
         /// </summary>
-        public List<decimal> Values { get; set; }
+        public List<decimal> Values { get; }
 
         /// <summary>
         /// The candlestick open price
@@ -89,8 +86,9 @@ namespace QuantConnect
         /// <param name="low">Candlestick low price</param>
         /// <param name="close">Candlestick close price</param>
         public Candlestick(long time, decimal open, decimal high, decimal low, decimal close)
-            : this(QuantConnect.Time.UnixTimeStampToDateTime(time), open, high, low, close)
         {
+            Time = QuantConnect.Time.UnixTimeStampToDateTime(time);
+            Values = new List<decimal>() { open, high, low, close };
         }
 
         /// <summary>
@@ -103,7 +101,7 @@ namespace QuantConnect
         /// <param name="close">Candlestick close price</param>
         public Candlestick(DateTime time, decimal open, decimal high, decimal low, decimal close)
         {
-            Time = time;
+            Time = time.ToUniversalTime();
             Values = new List<decimal>() { open, high, low, close };
         }
 
@@ -116,7 +114,7 @@ namespace QuantConnect
         /// <param name="low">Candlestick low price</param>
         /// <param name="close">Candlestick close price</param>
         public Candlestick(TradeBar bar)
-            : this(bar.EndTime, bar.Open, bar.High, bar.Low, bar.Close)
+            : this(bar.EndTime.ToUniversalTime(), bar.Open, bar.High, bar.Low, bar.Close)
         {
         }
 

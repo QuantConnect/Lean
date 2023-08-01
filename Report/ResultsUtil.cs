@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -41,7 +41,7 @@ namespace QuantConnect.Report
                 return points;
             }
 
-            foreach (var point in result.Charts["Strategy Equity"].Series[seriesName].Values)
+            foreach (ChartPoint point in result.Charts["Strategy Equity"].Series[seriesName].Values)
             {
                 points[Time.UnixTimeStampToDateTime(point.x)] = Convert.ToDouble(point.y);
             }
@@ -75,7 +75,7 @@ namespace QuantConnect.Report
                 return new SortedList<DateTime, double>();
             }
 
-            foreach (var point in result.Charts["Benchmark"].Series["Benchmark"].Values)
+            foreach (ChartPoint point in result.Charts["Benchmark"].Series["Benchmark"].Values)
             {
                 points[Time.UnixTimeStampToDateTime(point.x)] = Convert.ToDouble(point.y);
             }

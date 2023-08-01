@@ -52,7 +52,7 @@ namespace QuantConnect
         /// A single (x, y) value is represented as a list of length 1, with x being the <see cref="Time"/> and y being the value.
         /// </remarks>
         [JsonIgnore]
-        public List<decimal> Values { get; set; }
+        public List<decimal> Values { get; }
 
         /// Time of this chart point: lower case for javascript encoding simplicity
         public long x
@@ -112,13 +112,13 @@ namespace QuantConnect
         public ChartPoint(DateTime time, decimal value)
             : this()
         {
-            Time = time;
+            Time = time.ToUniversalTime();
             y = value.SmartRounding();
         }
 
         ///Cloner Constructor:
         public ChartPoint(ChartPoint point)
-            : this(point.Time, point.y)
+            : this(point.Time.ToUniversalTime(), point.y)
         {
         }
 

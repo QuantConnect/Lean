@@ -15,14 +15,12 @@
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
 namespace QuantConnect
 {
     /// <summary>
     /// Single chart series point/bar data.
     /// </summary>
-    [JsonObject]
     public interface ISeriesPoint
     {
         /// <summary>
@@ -37,7 +35,7 @@ namespace QuantConnect
         /// A single (x, y) value is represented as a list of length 1, with x being the <see cref="Time"/> and y being the value.
         /// On the other hand, a candlestick is represented as a list of length 4, with the values being (open, high, low, close).
         /// </remarks>
-        List<decimal> Values { get; set; }
+        List<decimal> Values { get; }
 
         /// <summary>
         /// Clone implementation for ISeriesPoint

@@ -168,7 +168,7 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.IsTrue(resultHandler.Charts.ContainsKey("Strategy Equity"));
             Assert.AreEqual(1, resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
-            var currentEquityValue = resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last().y;
+            var currentEquityValue = resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last().Values[0];
             Assert.AreEqual(101000, currentEquityValue);
 
             // Add value to portfolio, see if portfolio updates with new sample
@@ -179,7 +179,7 @@ namespace QuantConnect.Tests.Engine.Results
             resultHandler.Sample(referenceDate.AddHours(22));
             Assert.AreEqual(2, resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
-            currentEquityValue = resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last().y;
+            currentEquityValue = resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last().Values[0];
             Assert.AreEqual(extendedMarketHoursEnabled ? 111000 : 101000, currentEquityValue);
 
             resultHandler.Exit();

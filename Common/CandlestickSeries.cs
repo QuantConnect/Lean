@@ -14,17 +14,17 @@
 */
 
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using System;
 using QuantConnect.Data.Market;
+using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
     /// <summary>
     /// Candlestick Chart Series Object - Series data and properties for a candlestick chart
     /// </summary>
-    //[JsonConverter(typeof(CandlestickSeriesJsonConverter))]
+    [JsonConverter(typeof(SeriesJsonConverter))]
     public class CandlestickSeries : BaseSeries
     {
         /// <summary>
