@@ -47,10 +47,10 @@ namespace QuantConnect.Statistics
         public static StatisticsResults Generate(
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
-            List<ChartPoint> pointsEquity,
-            List<ChartPoint> pointsPerformance,
-            List<ChartPoint> pointsBenchmark,
-            List<ChartPoint> pointsPortfolioTurnover,
+            List<ISeriesPoint> pointsEquity,
+            List<ISeriesPoint> pointsPerformance,
+            List<ISeriesPoint> pointsBenchmark,
+            List<ISeriesPoint> pointsPortfolioTurnover,
             decimal startingCapital,
             decimal totalFees,
             int totalTransactions,
@@ -58,7 +58,7 @@ namespace QuantConnect.Statistics
             string accountCurrencySymbol,
             SecurityTransactionManager transactions)
         {
-            var equity = ChartPointToDictionary(pointsEquity);
+            var equity = ChartPointToDictionary(pointsEquity.Cast<ChartPoint>());
 
             var firstDate = equity.Keys.FirstOrDefault().Date;
             var lastDate = equity.Keys.LastOrDefault().Date;
@@ -94,9 +94,9 @@ namespace QuantConnect.Statistics
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
-            List<ChartPoint> pointsPerformance,
-            List<ChartPoint> pointsBenchmark,
-            List<ChartPoint> pointsPortfolioTurnover,
+            List<ISeriesPoint> pointsPerformance,
+            List<ISeriesPoint> pointsBenchmark,
+            List<ISeriesPoint> pointsPortfolioTurnover,
             decimal startingCapital,
             SecurityTransactionManager transactions)
         {
@@ -115,9 +115,9 @@ namespace QuantConnect.Statistics
 
             // Convert our charts to dictionaries
             // NOTE: Day 0 refers to sample taken at 12AM on StartDate, performance[0] always = 0, benchmark[0] is benchmark value preceding start date.
-            var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
-            var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
-            var portfolioTurnover = ChartPointToDictionary(pointsPortfolioTurnover, fromDate, toDate);
+            var benchmark = ChartPointToDictionary(pointsBenchmark.Cast<ChartPoint>(), fromDate, toDate);
+            var performance = ChartPointToDictionary(pointsPerformance.Cast<ChartPoint>(), fromDate, toDate);
+            var portfolioTurnover = ChartPointToDictionary(pointsPortfolioTurnover.Cast<ChartPoint>(), fromDate, toDate);
 
             // Ensure our series are aligned
             if (benchmark.Count != performance.Count)
@@ -160,9 +160,9 @@ namespace QuantConnect.Statistics
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
-            List<ChartPoint> pointsPerformance,
-            List<ChartPoint> pointsBenchmark,
-            List<ChartPoint> pointsPortfolioTurnover,
+            List<ISeriesPoint> pointsPerformance,
+            List<ISeriesPoint> pointsBenchmark,
+            List<ISeriesPoint> pointsPortfolioTurnover,
             decimal startingCapital,
             SecurityTransactionManager transactions)
         {

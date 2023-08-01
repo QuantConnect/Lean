@@ -36,7 +36,7 @@ namespace QuantConnect
         public ChartType ChartType = ChartType.Overlay;
 
         /// List of Series Objects for this Chart:
-        public Dictionary<string, Series> Series = new Dictionary<string, Series>();
+        public Dictionary<string, BaseSeries> Series = new Dictionary<string, BaseSeries>();
 
         /// <summary>
         /// Default constructor for chart:
@@ -52,7 +52,7 @@ namespace QuantConnect
         public Chart(string name, ChartType type = ChartType.Overlay)
         {
             Name = name;
-            Series = new Dictionary<string, Series>();
+            Series = new Dictionary<string, BaseSeries>();
             ChartType = type;
         }
 
@@ -63,14 +63,14 @@ namespace QuantConnect
         public Chart(string name)
         {
             Name = name;
-            Series = new Dictionary<string, Series>();
+            Series = new Dictionary<string, BaseSeries>();
         }
 
         /// <summary>
         /// Add a reference to this chart series:
         /// </summary>
         /// <param name="series">Chart series class object</param>
-        public void AddSeries(Series series)
+        public void AddSeries(BaseSeries series)
         {
             //If we dont already have this series, add to the chrt:
             if (!Series.ContainsKey(series.Name))
@@ -93,10 +93,10 @@ namespace QuantConnect
         /// <param name="color">Color of the series</param>
         /// <param name="symbol">Symbol for the marker in a scatter plot series</param>
         /// <param name="forceAddNew">True will always add a new Series instance, stepping on existing if any</param>
-        public Series TryAddAndGetSeries(string name, SeriesType type, int index, string unit,
+        public BaseSeries TryAddAndGetSeries(string name, SeriesType type, int index, string unit,
                                       Color color, ScatterMarkerSymbol symbol, bool forceAddNew = false)
         {
-            Series series;
+            BaseSeries series;
             if (forceAddNew || !Series.TryGetValue(name, out series))
             {
                 series = new Series(name, type, index, unit)

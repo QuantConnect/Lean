@@ -538,7 +538,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Add the sample to our chart:
-                Series series;
+                BaseSeries series;
                 if (!chart.Series.TryGetValue(seriesName, out series))
                 {
                     series = new Series(seriesName, seriesType, seriesIndex, unit);
@@ -546,11 +546,11 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Add our value:
-                if (series.Values.Count == 0 || time > Time.UnixTimeStampToDateTime(series.Values[series.Values.Count - 1].x)
+                if (series.Values.Count == 0 || time > series.Values[series.Values.Count - 1].Time
                     // always sample portfolio turnover and use latest value
                     || chartName == PortfolioTurnoverKey)
                 {
-                    series.AddPoint(time, value);
+                    series.AddPoint(time, new List<decimal> { value });
                 }
             }
         }
@@ -586,7 +586,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     //Add these samples to this chart.
-                    foreach (var series in update.Series.Values)
+                    foreach (Series series in update.Series.Values)
                     {
                         if (series.Values.Count > 0)
                         {

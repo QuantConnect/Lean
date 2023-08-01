@@ -216,7 +216,7 @@ namespace QuantConnect.Algorithm
                 }
                 return;
             }
-            thisChart.Series[series].AddPoint(UtcTime, value);
+            ((Series)thisChart.Series[series]).AddPoint(UtcTime, value);
         }
 
         /// <summary>

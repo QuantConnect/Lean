@@ -326,7 +326,7 @@ namespace QuantConnect.Lean.Engine.Results
                     if (utcNow > _nextChartTrimming)
                     {
                         Log.Debug("LiveTradingResultHandler.Update(): Trimming charts");
-                        var timeLimitUtc = Time.DateTimeToUnixTimeStamp(utcNow.AddDays(-2));
+                        var timeLimitUtc = utcNow.AddDays(-2);
                         lock (ChartLock)
                         {
                             foreach (var chart in Charts)
@@ -336,7 +336,7 @@ namespace QuantConnect.Lean.Engine.Results
                                     // trim data that's older than 2 days
                                     series.Value.Values =
                                         (from v in series.Value.Values
-                                         where v.x > timeLimitUtc
+                                         where v.Time > timeLimitUtc
                                          select v).ToList();
                                 }
                             }
@@ -683,7 +683,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     //Add these samples to this chart.
-                    foreach (var series in update.Series.Values)
+                    foreach (Series series in update.Series.Values)
                     {
                         if (series.Values.Count > 0)
                         {
@@ -1002,9 +1002,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         private static void Truncate(LiveResult result, DateTime start, DateTime stop)
         {
-            var unixDateStart = Time.DateTimeToUnixTimeStamp(start);
-            var unixDateStop = Time.DateTimeToUnixTimeStamp(stop);
-
             //Log.Trace("LiveTradingResultHandler.Truncate: Start: " + start.ToString("u") + " Stop : " + stop.ToString("u"));
             //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Delta: " + (unixDateStop - unixDateStart) + " Incoming Points: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
@@ -1017,7 +1014,7 @@ namespace QuantConnect.Lean.Engine.Results
                 foreach (var series in chart.Series.Values)
                 {
                     var newSeries = series.Clone(empty: true);
-                    newSeries.Values.AddRange(series.Values.Where(chartPoint => chartPoint.x >= unixDateStart && chartPoint.x <= unixDateStop));
+                    newSeries.Values.AddRange(series.Values.Where(chartPoint => chartPoint.Time >= start && chartPoint.Time <= stop));
                     newChart.AddSeries(newSeries);
                 }
             }

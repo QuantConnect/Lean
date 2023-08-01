@@ -810,14 +810,14 @@ namespace QuantConnect.Lean.Engine.Results
                     var totalTransactions = Algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
                     var trades = Algorithm.TradeBuilder.ClosedTrades;
 
-                    Series portfolioTurnover;
+                    BaseSeries portfolioTurnover;
                     if (charts.TryGetValue(PortfolioTurnoverKey, out var portfolioTurnoverChart))
                     {
                         portfolioTurnoverChart.Series.TryGetValue(PortfolioTurnoverKey, out portfolioTurnover);
                     }
                     else
                     {
-                        portfolioTurnover = new();
+                        portfolioTurnover = new Series();
                     }
 
                     statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performance.Values, benchmark.Values,

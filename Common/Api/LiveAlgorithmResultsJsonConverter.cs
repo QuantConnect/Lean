@@ -130,9 +130,9 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="series">Series data and properties for a chart</param>
         /// <returns>Dictionary with the name of the series as the key and the Series itself as the value</returns>
-        private static Dictionary<string, Series> GetChartSeries(JToken series)
+        private static Dictionary<string, BaseSeries> GetChartSeries(JToken series)
         {
-            var chartSeriesDict = new Dictionary<string, Series>();
+            var chartSeriesDict = new Dictionary<string, BaseSeries>();
 
             foreach (var child in series.Children())
             {
@@ -154,9 +154,9 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="values">json array of x, y value pairs</param>
         /// <returns>List of ChartPoints</returns>
-        private static List<ChartPoint> GetSeriesValues(JToken values)
+        private static List<ISeriesPoint> GetSeriesValues(JToken values)
         {
-            var chartPoints = new List<ChartPoint>();
+            var chartPoints = new List<ISeriesPoint>();
 
             // Special ChartPoint that only represents time (only has x component)
             if (values.Children().Count() == 1)

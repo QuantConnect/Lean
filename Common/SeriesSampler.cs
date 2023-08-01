@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,7 +43,7 @@ namespace QuantConnect
         /// <param name="stop">The date to stop sampling, if after stop of data, then stop of data will be used</param>
         /// <param name="truncateValues">True will truncate values to integers</param>
         /// <returns>The sampled series</returns>
-        public Series Sample(Series series, DateTime start, DateTime stop, bool truncateValues = false)
+        public BaseSeries Sample(BaseSeries series, DateTime start, DateTime stop, bool truncateValues = false)
         {
             var sampled = series.Clone(empty: true);
 
@@ -56,7 +56,7 @@ namespace QuantConnect
             if (series.Values.Count < 2 || series.SeriesType == SeriesType.Scatter)
             {
                 // we can minimally verify we're within the start/stop interval
-                foreach (var point in series.Values)
+                foreach (ChartPoint point in series.Values)
                 {
                     if (point.x >= nextSample && point.x <= unixStopDate)
                     {
@@ -76,9 +76,9 @@ namespace QuantConnect
 
             // initialize current/previous
             enumerator.MoveNext();
-            ChartPoint previous = enumerator.Current;
+            var previous = (ChartPoint)enumerator.Current;
             enumerator.MoveNext();
-            ChartPoint current = enumerator.Current;
+            var current = (ChartPoint)enumerator.Current;
 
             // make sure we don't start sampling before the data begins
             if (nextSample < previous.x)
@@ -90,7 +90,7 @@ namespace QuantConnect
             while (current.x < nextSample && enumerator.MoveNext())
             {
                 previous = current;
-                current = enumerator.Current;
+                current = (ChartPoint)enumerator.Current;
             }
 
             do
@@ -101,7 +101,7 @@ namespace QuantConnect
                     if (enumerator.MoveNext())
                     {
                         previous = current;
-                        current = enumerator.Current;
+                        current = (ChartPoint)enumerator.Current;
                     }
                     else
                     {
