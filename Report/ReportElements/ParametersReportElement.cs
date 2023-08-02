@@ -15,10 +15,11 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace QuantConnect.Report.ReportElements
 {
-    internal sealed class ParametersReportElement : ReportElement
+    public class ParametersReportElement : ReportElement
     {
         private IReadOnlyDictionary<string, string> _parameters;
         private readonly string _template;
@@ -59,21 +60,38 @@ namespace QuantConnect.Report.ReportElements
         public override string Render()
         {
             var items = new List<string>();
+            int parameterIndex;
+            var columns = (new Regex(@"{{\$KEY(\d+?)}}")).Matches(_template).Count;
 
-            for (int index = 0; index < _parameters.Count; index += 2)
+            for (parameterIndex = 0; parameterIndex < _parameters.Count;)
             {
                 var template = _template;
-                var firstKVP = _parameters.ElementAt(index);
-                var firstKey = string.Join(" ", (firstKVP.Key).Split("-").Select(x => x[0].ToString().ToUpper() + x.Substring(1)));
-                template = template.Replace("{{$FIRST-KPI-NAME}}", firstKey);
-                template = template.Replace("{{$FIRST-KPI-VALUE}}", firstKVP.Value);
-                if ((index + 1) < _parameters.Count)
+                int column;
+                for (column = 0; column < columns; column++)
                 {
-                    var secondKVP = _parameters.ElementAt(index + 1);
-                    var secondKey = string.Join(" ", (secondKVP.Key).Split("-").Select(x => x[0].ToString().ToUpper() + x.Substring(1)));
-                    template = template.Replace("{{$SECOND-KPI-NAME}}", secondKey);
-                    template = template.Replace("{{$SECOND-KPI-VALUE}}", secondKVP.Value);
+                    var currTemplateKey = "{{$KEY" + column.ToString() + "}}";
+                    var currTemplateValue = "{{$VALUE" + column.ToString() + "}}";
+
+                    if (parameterIndex < _parameters.Count)
+                    {
+                        var parameter = _parameters.ElementAt(parameterIndex);
+                        template = template.Replace(currTemplateKey, EmbellishKeyName(parameter.Key));
+                        template = template.Replace(currTemplateValue, parameter.Value);
+                    }
+                    else
+                    {
+                        template = template.Replace(currTemplateKey, string.Empty);
+                        template = template.Replace(currTemplateValue, string.Empty);
+                    }
+
+                    parameterIndex++;
                 }
+
+                if (column == 0)
+                {
+                    parameterIndex++;
+                }
+
                 items.Add(template);
             }
 
@@ -89,6 +107,17 @@ namespace QuantConnect.Report.ReportElements
 
             var parameters= string.Join("\n", items);
             return parameters;
+        }
+
+        /// <summary>
+        /// Replaces the "-" character in the given string for a space, and upper case
+        /// each word in the given string
+        /// </summary>
+        /// <param name="keyName">Key name to embellish</param>
+        /// <returns>The given key name embellished as the description says</returns>
+        private static string EmbellishKeyName(string keyName)
+        {
+            return string.Join(" ", (keyName).Split("-").Select(x => x[0].ToString().ToUpper() + x.Substring(1)));
         }
     }
 }
