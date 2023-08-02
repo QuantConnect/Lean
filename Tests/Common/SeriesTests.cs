@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common
             series.AddPoint(DateTime.Today, 1m);
             series.AddPoint(DateTime.Today, 2m);
             Assert.AreEqual(1, series.Values.Count);
-            Assert.AreEqual(2m, series.Values.Single().Values.Single());
+            Assert.AreEqual(2m, series.GetValues<ChartPoint>().Single().y);
         }
     }
 }

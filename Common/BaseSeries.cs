@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -183,6 +184,10 @@ namespace QuantConnect
         /// <returns></returns>
         public abstract BaseSeries Clone(bool empty = false);
 
+        /// <summary>
+        /// Return a list of cloned values
+        /// </summary>
+        /// <returns></returns>
         protected List<ISeriesPoint> CloneValues()
         {
             var clone = new List<ISeriesPoint>();
@@ -191,6 +196,16 @@ namespace QuantConnect
                 clone.Add(point.Clone());
             }
             return clone;
+        }
+
+        /// <summary>
+        /// Returns an enumerable of the values of the series cast to the specified type
+        /// </summary>
+        /// <returns>An enumerable of the values of the series cast to the specified type</returns>
+        public IEnumerable<T> GetValues<T>()
+            where T : ISeriesPoint
+        {
+            return Values.Cast<T>();
         }
     }
 

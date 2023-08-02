@@ -41,9 +41,22 @@ namespace QuantConnect.Report
                 return points;
             }
 
-            foreach (ChartPoint point in result.Charts["Strategy Equity"].Series[seriesName].Values)
+            var series = result.Charts["Strategy Equity"].Series[seriesName];
+            switch (series)
             {
-                points[Time.UnixTimeStampToDateTime(point.x)] = Convert.ToDouble(point.y);
+                case Series s:
+                    foreach (ChartPoint point in s.Values)
+                    {
+                        points[point.Time] = Convert.ToDouble(point.y);
+                    }
+                    break;
+
+                case CandlestickSeries candlestickSeries:
+                    foreach (Candlestick candlestick in candlestickSeries.Values)
+                    {
+                        points[candlestick.Time] = Convert.ToDouble(candlestick.Close);
+                    }
+                    break;
             }
 
             return points;
@@ -75,6 +88,7 @@ namespace QuantConnect.Report
                 return new SortedList<DateTime, double>();
             }
 
+            // Benchmark should be a Series, so we cast the points directly to ChartPoint
             foreach (ChartPoint point in result.Charts["Benchmark"].Series["Benchmark"].Values)
             {
                 points[Time.UnixTimeStampToDateTime(point.x)] = Convert.ToDouble(point.y);

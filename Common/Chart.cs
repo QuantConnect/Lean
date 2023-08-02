@@ -93,7 +93,7 @@ namespace QuantConnect
         /// <param name="color">Color of the series</param>
         /// <param name="symbol">Symbol for the marker in a scatter plot series</param>
         /// <param name="forceAddNew">True will always add a new Series instance, stepping on existing if any</param>
-        public BaseSeries TryAddAndGetSeries(string name, SeriesType type, int index, string unit,
+        public Series TryAddAndGetSeries(string name, SeriesType type, int index, string unit,
                                       Color color, ScatterMarkerSymbol symbol, bool forceAddNew = false)
         {
             BaseSeries series;
@@ -107,7 +107,23 @@ namespace QuantConnect
                 Series[name] = series;
             }
 
-            return series;
+            return (Series)series;
+        }
+
+        /// <summary>
+        /// Gets Series if already present in chart, else will add a new series and return it
+        /// </summary>
+        /// <param name="name">Name of the series</param>
+        /// <param name="forceAddNew">True will always add a new Series instance, stepping on existing if any</param>
+        public BaseSeries TryAddAndGetSeries(string name, BaseSeries series, bool forceAddNew = false)
+        {
+            BaseSeries chartSeries;
+            if (forceAddNew || !Series.TryGetValue(name, out chartSeries))
+            {
+                Series[name] = chartSeries = series;
+            }
+
+            return chartSeries;
         }
 
         /// <summary>

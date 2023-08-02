@@ -531,7 +531,21 @@ namespace QuantConnect.Tests.Engine.Results
 
         private static Series<DateTime, double> ToDeedleSeries(BaseSeries series)
         {
-            return new Series<DateTime, double>(series.Values.Select(x => new KeyValuePair<DateTime, double>(x.Time, (double)x.Values[0])));
+            return new Series<DateTime, double>(series.Values.Select(x =>
+            {
+                var value = 0d;
+                switch (x)
+                {
+                    case ChartPoint chartPoint:
+                        value = (double)chartPoint.y;
+                        break;
+                    case Candlestick candlestick:
+                        value = (double)candlestick.Close;
+                        break;
+                }
+
+                return new KeyValuePair<DateTime, double>(x.Time, value);
+            }));
         }
     }
 }

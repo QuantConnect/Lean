@@ -586,12 +586,11 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     //Add these samples to this chart.
-                    foreach (Series series in update.Series.Values)
+                    foreach (var series in update.Series.Values)
                     {
                         if (series.Values.Count > 0)
                         {
-                            var thisSeries = chart.TryAddAndGetSeries(series.Name, series.SeriesType, series.Index,
-                                series.Unit, series.Color, series.ScatterMarkerSymbol, false);
+                            var thisSeries = chart.TryAddAndGetSeries(series.Name, series.Clone(empty: true), forceAddNew: false);
                             if (series.SeriesType == SeriesType.Pie)
                             {
                                 var dataPoint = series.ConsolidateChartPoints();

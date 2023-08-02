@@ -15,8 +15,10 @@
 
 using System;
 using System.Drawing;
+using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -35,10 +37,12 @@ namespace QuantConnect.Tests.Common.Util
             var result = (Series) JsonConvert.DeserializeObject(serializedSeries, typeof(Series));
 
             Assert.AreEqual(series.Values.Count, result.Values.Count);
-            for (var i = 0; i < series.Values.Count; i++)
+            var values = series.GetValues<ChartPoint>().ToList();
+            var resultValues = result.GetValues<ChartPoint>().ToList();
+            for (var i = 0; i < values.Count; i++)
             {
-                Assert.AreEqual(((ChartPoint)series.Values[i]).x, ((ChartPoint)result.Values[i]).x);
-                Assert.AreEqual(((ChartPoint)series.Values[i]).y, ((ChartPoint)result.Values[i]).y);
+                Assert.AreEqual(values[i].x, resultValues[i].x);
+                Assert.AreEqual(values[i].y, resultValues[i].y);
             }
             Assert.AreEqual(series.Name, result.Name);
             Assert.AreEqual(series.Unit, result.Unit);
@@ -82,14 +86,15 @@ namespace QuantConnect.Tests.Common.Util
             var result = (CandlestickSeries)JsonConvert.DeserializeObject(serializedSeries, typeof(CandlestickSeries));
 
             Assert.AreEqual(series.Values.Count, result.Values.Count);
-            for (var i = 0; i < series.Values.Count; i++)
+            var values = series.GetValues<Candlestick>().ToList();
+            var resultValues = result.GetValues<Candlestick>().ToList();
+            for (var i = 0; i < values.Count; i++)
             {
-                Assert.AreEqual(series.Values[i].Time, result.Values[i].Time);
-                Assert.AreEqual(((Candlestick)series.Values[i]).LongTime, ((Candlestick)result.Values[i]).LongTime);
-                Assert.AreEqual(((Candlestick)series.Values[i]).Open, ((Candlestick)result.Values[i]).Open);
-                Assert.AreEqual(((Candlestick)series.Values[i]).High, ((Candlestick)result.Values[i]).High);
-                Assert.AreEqual(((Candlestick)series.Values[i]).Low, ((Candlestick)result.Values[i]).Low);
-                Assert.AreEqual(((Candlestick)series.Values[i]).Close, ((Candlestick)result.Values[i]).Close);
+                Assert.AreEqual(values[i].Time, resultValues[i].Time);
+                Assert.AreEqual(values[i].Open, resultValues[i].Open);
+                Assert.AreEqual(values[i].High, resultValues[i].High);
+                Assert.AreEqual(values[i].Low, resultValues[i].Low);
+                Assert.AreEqual(values[i].Close, resultValues[i].Close);
             }
             Assert.AreEqual(series.Name, result.Name);
             Assert.AreEqual(series.Unit, result.Unit);
