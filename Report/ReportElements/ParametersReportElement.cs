@@ -105,7 +105,7 @@ namespace QuantConnect.Report.ReportElements
                 return string.Empty;
             }
 
-            var parameters= string.Join("\r\n", items);
+            var parameters= string.Join("\n", items);
             return parameters;
         }
 
