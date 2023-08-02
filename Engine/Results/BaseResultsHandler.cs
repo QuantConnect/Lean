@@ -535,23 +535,17 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Sample the current equity of the strategy directly with time-open-high-low-close tuple.
+        /// Sample the current equity of the strategy directly with time and using
+        /// the current algorithm equity value in <see cref="CurrentAlgorithmEquity"/>
         /// </summary>
         /// <param name="time">Equity candlestick end time</param>
-        /// <param name="open">Open equity value</param>
-        /// <param name="high">High equity value</param>
-        /// <param name="low">Low equity value</param>
-        /// <param name="close">Close equity value</param>
         protected virtual void SampleEquity(DateTime time)
         {
-            Sample(
-                StrategyEquityKey,
-                EquityKey,
-                0,
-                SeriesType.Candle,
-                new Candlestick(time, CurrentAlgorithmEquity.Open, CurrentAlgorithmEquity.High, CurrentAlgorithmEquity.Low,
-                    CurrentAlgorithmEquity.Close),
-                AlgorithmCurrencySymbol);
+            var candlestick = CurrentAlgorithmEquity != null
+                ? new Candlestick(time, CurrentAlgorithmEquity.Open, CurrentAlgorithmEquity.High, CurrentAlgorithmEquity.Low,
+                    CurrentAlgorithmEquity.Close)
+                : new Candlestick(time, 0, 0, 0, 0);
+            Sample(StrategyEquityKey, EquityKey, 0, SeriesType.Candle, candlestick, AlgorithmCurrencySymbol);
         }
 
         /// <summary>

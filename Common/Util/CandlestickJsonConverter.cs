@@ -43,10 +43,10 @@ namespace QuantConnect.Util
             writer.WriteStartArray();
 
             writer.WriteValue(candlestick.LongTime);
-            foreach (var val in candlestick.Values)
-            {
-                writer.WriteValue(val);
-            }
+            writer.WriteValue(candlestick.Open);
+            writer.WriteValue(candlestick.High);
+            writer.WriteValue(candlestick.Low);
+            writer.WriteValue(candlestick.Close);
 
             writer.WriteEndArray();
         }

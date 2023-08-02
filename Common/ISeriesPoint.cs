@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 
 namespace QuantConnect
 {
@@ -27,15 +26,6 @@ namespace QuantConnect
         /// Time of this chart series point
         /// </summary>
         DateTime Time { get; set; }
-
-        /// <summary>
-        /// List of values for this chart series point
-        /// </summary>
-        /// <remarks>
-        /// A single (x, y) value is represented as a list of length 1, with x being the <see cref="Time"/> and y being the value.
-        /// On the other hand, a candlestick is represented as a list of length 4, with the values being (open, high, low, close).
-        /// </remarks>
-        List<decimal> Values { get; }
 
         /// <summary>
         /// Clone implementation for ISeriesPoint

@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
@@ -27,6 +26,11 @@ namespace QuantConnect
     [JsonConverter(typeof(CandlestickJsonConverter))]
     public class Candlestick : ISeriesPoint
     {
+        private decimal _open;
+        private decimal _high;
+        private decimal _low;
+        private decimal _close;
+
         /// <summary>
         /// The candlestick time
         /// </summary>
@@ -44,38 +48,45 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// List of values for this candlestick.
-        /// A candlestick is represented as a list of length 4, with the values being (open, high, low, close).
-        /// </summary>
-        public List<decimal> Values { get; }
-
-        /// <summary>
         /// The candlestick open price
         /// </summary>
-        public decimal Open { get { return Values[0]; } }
+        public decimal Open
+        {
+            get { return _open; }
+            set { _open = value.SmartRounding(); }
+        }
 
         /// <summary>
         /// The candlestick high price
         /// </summary>
-        public decimal High { get { return Values[1]; } }
+        public decimal High
+        {
+            get { return _high; }
+            set { _high = value.SmartRounding(); }
+        }
 
         /// <summary>
         /// The candlestick low price
         /// </summary>
-        public decimal Low { get { return Values[2]; } }
+        public decimal Low
+        {
+            get { return _low; }
+            set { _low = value.SmartRounding(); }
+        }
 
         /// <summary>
         /// The candlestick close price
         /// </summary>
-        public decimal Close { get { return Values[3]; } }
+        public decimal Close
+        {
+            get { return _close; }
+            set { _close = value.SmartRounding(); }
+        }
 
         /// <summary>
         /// Default constructor
         /// </summary>
-        public Candlestick()
-        {
-            Values = new List<decimal>() { 0, 0, 0, 0 };
-        }
+        public Candlestick() { }
 
         /// <summary>
         /// Constructor taking the candlestick values
@@ -86,9 +97,8 @@ namespace QuantConnect
         /// <param name="low">Candlestick low price</param>
         /// <param name="close">Candlestick close price</param>
         public Candlestick(long time, decimal open, decimal high, decimal low, decimal close)
+            : this(QuantConnect.Time.UnixTimeStampToDateTime(time), open, high, low, close)
         {
-            Time = QuantConnect.Time.UnixTimeStampToDateTime(time);
-            Values = new List<decimal>() { open.SmartRounding(), high.SmartRounding(), low.SmartRounding(), close.SmartRounding() };
         }
 
         /// <summary>
@@ -102,17 +112,16 @@ namespace QuantConnect
         public Candlestick(DateTime time, decimal open, decimal high, decimal low, decimal close)
         {
             Time = time;
-            Values = new List<decimal>() { open.SmartRounding(), high.SmartRounding(), low.SmartRounding(), close.SmartRounding() };
+            Open = open;
+            High = high;
+            Low = low;
+            Close = close;
         }
 
         /// <summary>
         /// Constructor taking candlestick values and time in DateTime format
         /// </summary>
-        /// <param name="time">Candlestick time in seconds</param>
-        /// <param name="open">Candlestick open price</param>
-        /// <param name="high">Candlestick high price</param>
-        /// <param name="low">Candlestick low price</param>
-        /// <param name="close">Candlestick close price</param>
+        /// <param name="bar">Bar which data will be used to create the candlestick</param>
         public Candlestick(TradeBar bar)
             : this(bar.EndTime, bar.Open, bar.High, bar.Low, bar.Close)
         {

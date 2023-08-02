@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect
@@ -27,6 +26,7 @@ namespace QuantConnect
     {
         private DateTime _time;
         private long _x;
+        private decimal _y;
 
         /// <summary>
         /// Time of this chart series point
@@ -40,21 +40,15 @@ namespace QuantConnect
             }
             set
             {
-                _x = Convert.ToInt64(QuantConnect.Time.DateTimeToUnixTimeStamp(value));
                 _time = value;
+                _x = Convert.ToInt64(QuantConnect.Time.DateTimeToUnixTimeStamp(_time));
             }
         }
 
         /// <summary>
-        /// List of values for this chart series point
+        /// Chart point time
         /// </summary>
-        /// <remarks>
-        /// A single (x, y) value is represented as a list of length 1, with x being the <see cref="Time"/> and y being the value.
-        /// </remarks>
-        [JsonIgnore]
-        public List<decimal> Values { get; }
-
-        /// Time of this chart point: lower case for javascript encoding simplicity
+        /// <remarks>Lower case for javascript encoding simplicity</remarks>
         public long x
         {
             get
@@ -68,33 +62,36 @@ namespace QuantConnect
             }
         }
 
-        /// Value of this chart point:  lower case for javascript encoding simplicity
+        /// <summary>
+        /// Chart point value
+        /// </summary>
+        /// <remarks>Lower case for javascript encoding simplicity</remarks>
         public decimal y
         {
             get
             {
-                return Values.Count > 0 ? Values[0] : default;
+                return _y;
             }
             set
             {
-                if (Values.Count == 0)
-                {
-                    Values.Add(value);
-                }
-                else
-                {
-                    Values[0] = value;
-                }
+                _y = value.SmartRounding();
             }
         }
 
         /// <summary>
+        /// Shortcut for <see cref="x"/> for C# naming conventions
+        /// </summary>
+        public decimal X => x;
+
+        /// <summary>
+        /// Shortcut for <see cref="y"/> for C# naming conventions
+        /// </summary>
+        public decimal Y => y;
+
+        /// <summary>
         /// Default constructor. Using in SeriesSampler.
         /// </summary>
-        public ChartPoint()
-        {
-            Values = new List<decimal>();
-        }
+        public ChartPoint() { }
 
         /// <summary>
         /// Constructor that takes both x, y value pairs
@@ -105,21 +102,23 @@ namespace QuantConnect
             : this()
         {
             x = xValue;
-            y = yValue.SmartRounding();
+            y = yValue;
         }
 
         ///Constructor for datetime-value arguments:
         public ChartPoint(DateTime time, decimal value)
             : this()
         {
-            Time = time.ToUniversalTime();
-            y = value.SmartRounding();
+            Time = time;
+            y = value;
         }
 
         ///Cloner Constructor:
         public ChartPoint(ChartPoint point)
-            : this(point.Time.ToUniversalTime(), point.y)
         {
+            _time = point._time;
+            _x = point._x;
+            _y = point._y;
         }
 
         /// <summary>
