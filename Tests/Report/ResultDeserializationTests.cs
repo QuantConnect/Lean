@@ -18,9 +18,11 @@ using NUnit.Framework;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Report;
+using QuantConnect.Report.ReportElements;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using static QuantConnect.Report.Report;
 
 namespace QuantConnect.Tests.Report
@@ -185,6 +187,16 @@ namespace QuantConnect.Tests.Report
             }
         }
 
+        [TestCaseSource(nameof(CreatesReportParametersTableCorrectlyTestCases))]
+        public void CreatesReportParametersTableCorrectly(string parametersTemplate, Dictionary<string, string> parameters, bool templateFormatIsCorrect)
+        {
+            var algorithmConfiguration = new AlgorithmConfiguration { Parameters = parameters };
+            var parametersReportElment = new ParametersReportElement("parameters", "", algorithmConfiguration, null, parametersTemplate);
+            var parametersTable = parametersReportElment.Render();
+            var rawTemplateKeysOrValues = (new Regex(@"{{(.*?)}}")).Matches(parametersTable).Count;
+            Assert.AreEqual(templateFormatIsCorrect, rawTemplateKeysOrValues == 0);
+        }
+
         [TestCase(htmlExampleCode + @"
 
 <!--crisis
@@ -338,5 +350,89 @@ parameters-->", @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
             </div>
     </body>
     </html>";
+
+        public static object[] CreatesReportParametersTableCorrectlyTestCases = new object[]
+        {
+            // Happy test cases
+            new object[] { @"<!--parameters
+<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+</tr>
+parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, true},
+
+            new object[] { @"<!--parameters
+<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>
+parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, true},
+
+            new object[] { @"<!--parameters
+<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>
+parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" } }, true},
+
+            new object[] { @"<!--parameters
+<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+    <td class = ""title""> {{$KEY2}} </td><td> {{$VALUE2}} </td>
+</tr>
+parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4"} }, true},
+
+            new object[] { @"<!--parameters
+<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+    <td class = ""title""> {{$KEY2}} </td><td> {{$VALUE2}} </td>
+</tr>
+parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4"}, { "test-key-five", "5"} }, true },
+
+            new object[] { @"<!--parameters
+<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+    <td class = ""title""> {{$KEY2}} </td><td> {{$VALUE2}} </td>
+    <td class = ""title""> {{$KEY3}} </td><td> {{$VALUE3}} </td>
+    <td class = ""title""> {{$KEY4}} </td><td> {{$VALUE4}} </td>
+    <td class = ""title""> {{$KEY5}} </td><td> {{$VALUE5}} </td>
+    <td class = ""title""> {{$KEY6}} </td><td> {{$VALUE6}} </td>
+    <td class = ""title""> {{$KEY7}} </td><td> {{$VALUE7}} </td>
+    <td class = ""title""> {{$KEY8}} </td><td> {{$VALUE8}} </td>
+    <td class = ""title""> {{$KEY9}} </td><td> {{$VALUE9}} </td>
+    <td class = ""title""> {{$KEY10}} </td><td> {{$VALUE10}} </td>
+    <td class = ""title""> {{$KEY11}} </td><td> {{$VALUE11}} </td>
+</tr>
+parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4" }, { "test-key-five", "5" },
+                { "test-key-six", "6" }, { "test-key-seven", "7" }, { "test-key-eight", "8" }, { "test-key-nine", "9" }, { "test-key-10", "10"} }, true},
+            // Sad test cases
+            new object[] { @"<!--parameters
+<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>
+parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, false},
+
+            new object[] { @"<!--parameters
+<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE}} </td>
+</tr>
+parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, false},
+
+            new object[] { @"<!--parameters
+<tr>
+	<td class = ""title""> {{$KEY}} </td><td> {{$VALUE1}} </td>
+</tr>
+parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, false},
+
+            new object[] { @"<!--parameters
+<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+	<td class = ""title""> {{$KEY2}} </td><td> {{$VALUE2}} </td>
+    <td class = ""title""> {{$KEY3}} </td><td> {{$VALUE3}} </td>
+</tr>
+parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4"} }, false},
+        };
     }
 }

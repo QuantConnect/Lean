@@ -19,7 +19,7 @@ using System.Text.RegularExpressions;
 
 namespace QuantConnect.Report.ReportElements
 {
-    internal sealed class ParametersReportElement : ReportElement
+    public class ParametersReportElement : ReportElement
     {
         private IReadOnlyDictionary<string, string> _parameters;
         private readonly string _template;
@@ -84,6 +84,11 @@ namespace QuantConnect.Report.ReportElements
                         template = template.Replace(currTemplateValue, string.Empty);
                     }
 
+                    parameterIndex++;
+                }
+
+                if (column == 0)
+                {
                     parameterIndex++;
                 }
 
