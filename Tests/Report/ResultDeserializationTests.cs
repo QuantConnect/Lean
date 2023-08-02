@@ -188,13 +188,12 @@ namespace QuantConnect.Tests.Report
         }
 
         [TestCaseSource(nameof(CreatesReportParametersTableCorrectlyTestCases))]
-        public void CreatesReportParametersTableCorrectly(string parametersTemplate, Dictionary<string, string> parameters, bool templateFormatIsCorrect)
+        public void CreatesReportParametersTableCorrectly(string parametersTemplate, Dictionary<string, string> parameters, string expectedParametersTable)
         {
             var algorithmConfiguration = new AlgorithmConfiguration { Parameters = parameters };
             var parametersReportElment = new ParametersReportElement("parameters", "", algorithmConfiguration, null, parametersTemplate);
             var parametersTable = parametersReportElment.Render();
-            var rawTemplateKeysOrValues = (new Regex(@"{{(.*?)}}")).Matches(parametersTable).Count;
-            Assert.AreEqual(templateFormatIsCorrect, rawTemplateKeysOrValues == 0);
+            Assert.AreEqual(expectedParametersTable, parametersTable);
         }
 
         [TestCase(htmlExampleCode + @"
@@ -354,44 +353,69 @@ parameters-->", @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
         public static object[] CreatesReportParametersTableCorrectlyTestCases = new object[]
         {
             // Happy test cases
-            new object[] { @"<!--parameters
-<tr>
+            new object[] { @"<tr>
 	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } },
+                @"<tr>
+	<td class = ""title""> Test Key One </td><td> 1 </td>
 </tr>
-parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, true},
-
-            new object[] { @"<!--parameters
 <tr>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+</tr>
+<tr>
+	<td class = ""title""> Test Key Three </td><td> three </td>
+</tr>"},
+
+            new object[] { @"<tr>
 	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
 	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, @"<tr>
+	<td class = ""title""> Test Key One </td><td> 1 </td>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
 </tr>
-parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, true},
-
-            new object[] { @"<!--parameters
 <tr>
+	<td class = ""title""> Test Key Three </td><td> three </td>
+	<td class = ""title"">  </td><td>  </td>
+</tr>"},
+
+            new object[] { @"<tr>
 	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
 	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
-</tr>
-parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" } }, true},
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" } }, @"<tr>
+	<td class = ""title""> Test Key One </td><td> 1 </td>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+</tr>"},
 
-            new object[] { @"<!--parameters
-<tr>
+            new object[] { @"<tr>
 	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
 	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
     <td class = ""title""> {{$KEY2}} </td><td> {{$VALUE2}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4"} }, @"<tr>
+	<td class = ""title""> Test Key One </td><td> 1 </td>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+    <td class = ""title""> Test Key Three </td><td> three </td>
 </tr>
-parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4"} }, true},
-
-            new object[] { @"<!--parameters
 <tr>
+	<td class = ""title""> Test Key Four </td><td> 4 </td>
+	<td class = ""title"">  </td><td>  </td>
+    <td class = ""title"">  </td><td>  </td>
+</tr>"},
+            new object[] { @"<tr>
 	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
 	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
     <td class = ""title""> {{$KEY2}} </td><td> {{$VALUE2}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4"}, { "test-key-five", "5"} }, @"<tr>
+	<td class = ""title""> Test Key One </td><td> 1 </td>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+    <td class = ""title""> Test Key Three </td><td> three </td>
 </tr>
-parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4"}, { "test-key-five", "5"} }, true },
-
-            new object[] { @"<!--parameters
 <tr>
+	<td class = ""title""> Test Key Four </td><td> 4 </td>
+	<td class = ""title""> Test Key Five </td><td> 5 </td>
+    <td class = ""title"">  </td><td>  </td>
+</tr>"},
+
+            new object[] { @"<tr>
 	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
 	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
     <td class = ""title""> {{$KEY2}} </td><td> {{$VALUE2}} </td>
@@ -404,35 +428,72 @@ parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "t
     <td class = ""title""> {{$KEY9}} </td><td> {{$VALUE9}} </td>
     <td class = ""title""> {{$KEY10}} </td><td> {{$VALUE10}} </td>
     <td class = ""title""> {{$KEY11}} </td><td> {{$VALUE11}} </td>
-</tr>
-parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4" }, { "test-key-five", "5" },
-                { "test-key-six", "6" }, { "test-key-seven", "7" }, { "test-key-eight", "8" }, { "test-key-nine", "9" }, { "test-key-10", "10"} }, true},
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4" }, { "test-key-five", "5" },
+                { "test-key-six", "6" }, { "test-key-seven", "7" }, { "test-key-eight", "8" }, { "test-key-nine", "9" }, { "test-key-ten", "10"}, { "test-key-eleven", "11"}}, @"<tr>
+	<td class = ""title""> Test Key One </td><td> 1 </td>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+    <td class = ""title""> Test Key Three </td><td> three </td>
+    <td class = ""title""> Test Key Four </td><td> 4 </td>
+    <td class = ""title""> Test Key Five </td><td> 5 </td>
+    <td class = ""title""> Test Key Six </td><td> 6 </td>
+    <td class = ""title""> Test Key Seven </td><td> 7 </td>
+    <td class = ""title""> Test Key Eight </td><td> 8 </td>
+    <td class = ""title""> Test Key Nine </td><td> 9 </td>
+    <td class = ""title""> Test Key Ten </td><td> 10 </td>
+    <td class = ""title""> Test Key Eleven </td><td> 11 </td>
+    <td class = ""title"">  </td><td>  </td>
+</tr>"},
             // Sad test cases
-            new object[] { @"<!--parameters
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, @"<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>
 <tr>
 	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
 </tr>
-parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, false},
-
-            new object[] { @"<!--parameters
 <tr>
-	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE}} </td>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>"},
+
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, @"<tr>
+	<td class = ""title""> Test Key One </td><td> {{$VALUE}} </td>
 </tr>
-parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, false},
-
-            new object[] { @"<!--parameters
 <tr>
-	<td class = ""title""> {{$KEY}} </td><td> {{$VALUE1}} </td>
+	<td class = ""title""> Test Key Two </td><td> {{$VALUE}} </td>
 </tr>
-parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, false},
-
-            new object[] { @"<!--parameters
 <tr>
+	<td class = ""title""> Test Key Three </td><td> {{$VALUE}} </td>
+</tr>"},
+
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE0}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, @"<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> 1 </td>
+</tr>
+<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> 2 </td>
+</tr>
+<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> three </td>
+</tr>"},
+
+            new object[] { @"<tr>
 	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
 	<td class = ""title""> {{$KEY2}} </td><td> {{$VALUE2}} </td>
     <td class = ""title""> {{$KEY3}} </td><td> {{$VALUE3}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4"} }, @"<tr>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+	<td class = ""title""> Test Key Three </td><td> three </td>
+    <td class = ""title""> {{$KEY3}} </td><td> {{$VALUE3}} </td>
 </tr>
-parameters-->", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4"} }, false},
+<tr>
+	<td class = ""title"">  </td><td>  </td>
+	<td class = ""title"">  </td><td>  </td>
+    <td class = ""title""> {{$KEY3}} </td><td> {{$VALUE3}} </td>
+</tr>"},
         };
     }
 }
