@@ -77,7 +77,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Default charts:
             Charts.AddOrUpdate(StrategyEquityKey, new Chart(StrategyEquityKey));
-            Charts[StrategyEquityKey].Series.Add(EquityKey, new Series(EquityKey, SeriesType.Candle, 0, "$"));
+            Charts[StrategyEquityKey].Series.Add(EquityKey, new CandlestickSeries(EquityKey, 0, "$"));
             Charts[StrategyEquityKey].Series.Add(DailyPerformanceKey, new Series(DailyPerformanceKey, SeriesType.Bar, 1, "%"));
         }
 
@@ -516,10 +516,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="seriesIndex">Type of chart we should create if it doesn't already exist.</param>
         /// <param name="seriesName">Series name for the chart.</param>
         /// <param name="seriesType">Series type for the chart.</param>
-        /// <param name="time">Time for the sample</param>
-        /// <param name="unit">Unit of the sample</param>
         /// <param name="value">Value for the chart sample.</param>
-        protected override void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
+        /// <param name="unit">Unit of the sample</param>
+        protected override void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, ISeriesPoint value,
+            string unit = "$")
         {
             // Sampling during warming up period skews statistics
             if (Algorithm.IsWarmingUp)
@@ -541,16 +541,16 @@ namespace QuantConnect.Lean.Engine.Results
                 BaseSeries series;
                 if (!chart.Series.TryGetValue(seriesName, out series))
                 {
-                    series = new Series(seriesName, seriesType, seriesIndex, unit);
+                    series = BaseSeries.Create(seriesType, seriesName, seriesIndex, unit);
                     chart.Series.Add(seriesName, series);
                 }
 
                 //Add our value:
-                if (series.Values.Count == 0 || time > series.Values[series.Values.Count - 1].Time
+                if (series.Values.Count == 0 || value.Time > series.Values[series.Values.Count - 1].Time
                     // always sample portfolio turnover and use latest value
                     || chartName == PortfolioTurnoverKey)
                 {
-                    series.AddPoint(time, new List<decimal> { value });
+                    series.AddPoint(value);
                 }
             }
         }
@@ -563,8 +563,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             // Sample strategy capacity, round to 1k
             var roundedCapacity = _capacityEstimate.Capacity;
-            Sample("Capacity", "Strategy Capacity", 0, SeriesType.Line, time,
-                roundedCapacity, AlgorithmCurrencySymbol);
+            Sample("Capacity", "Strategy Capacity", 0, SeriesType.Line, new ChartPoint(time, roundedCapacity), AlgorithmCurrencySymbol);
         }
 
         /// <summary>
@@ -699,6 +698,9 @@ namespace QuantConnect.Lean.Engine.Results
             // Invalidate the processed days count so it gets recalculated
             _progressMonitor.InvalidateProcessedDays();
 
+            // Update the equity bar
+            UpdateAlgorithmEquity(Algorithm.Portfolio.TotalPortfolioValue);
+
             var time = Algorithm.UtcTime;
             if (time > _nextSample || forceProcess)
             {
@@ -706,7 +708,10 @@ namespace QuantConnect.Lean.Engine.Results
                 _nextSample = time.Add(ResamplePeriod);
 
                 //Sample the portfolio value over time for chart.
-                SampleEquity(time, Math.Round(Algorithm.Portfolio.TotalPortfolioValue, 4));
+                SampleEquity(time);
+
+                // Reset the current algorithm equity object so another bar is create on the next sample
+                CloseAlgorithmEquity();
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(Algorithm.GetChartUpdates());

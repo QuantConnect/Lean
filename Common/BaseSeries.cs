@@ -207,6 +207,32 @@ namespace QuantConnect
         {
             return Values.Cast<T>();
         }
+
+        /// <summary>
+        /// Creates a series according to the specified type.
+        /// </summary>
+        /// <param name="seriesType">The series type</param>
+        /// <param name="name">The name of the series</param>
+        /// <param name="index">Series index position on the chart</param>
+        /// <param name="unit">Unit for the series axis</param>
+        /// <returns>
+        /// A <see cref="CandlestickSeries"/> if <paramref name="seriesType"/> is <see cref="SeriesType.Candle"/>.
+        /// A <see cref="Series"/> otherwise.
+        /// </returns>
+        public static BaseSeries Create(SeriesType seriesType, string name, int index = 0, string unit = "$")
+        {
+            if (!Enum.IsDefined(typeof(SeriesType), seriesType))
+            {
+                throw new ArgumentOutOfRangeException(nameof(seriesType), "Series type out of range");
+            }
+
+            if (seriesType == SeriesType.Candle)
+            {
+                return new CandlestickSeries(name, index, unit);
+            }
+
+            return new Series(name, seriesType, index, unit);
+        }
     }
 
     /// <summary>

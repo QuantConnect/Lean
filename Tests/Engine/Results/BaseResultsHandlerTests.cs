@@ -214,8 +214,7 @@ namespace QuantConnect.Tests.Engine.Results
                                            string seriesName,
                                            int seriesIndex,
                                            SeriesType seriesType,
-                                           DateTime time,
-                                           decimal value,
+                                           ISeriesPoint value,
                                            string unit = "$")
             {
                 throw new NotImplementedException();

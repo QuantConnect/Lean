@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -58,7 +59,7 @@ namespace QuantConnect.Statistics
             string accountCurrencySymbol,
             SecurityTransactionManager transactions)
         {
-            var equity = ChartPointToDictionary(pointsEquity.Cast<ChartPoint>());
+            var equity = ChartPointToDictionary(pointsEquity);
 
             var firstDate = equity.Keys.FirstOrDefault().Date;
             var lastDate = equity.Keys.LastOrDefault().Date;
@@ -115,9 +116,9 @@ namespace QuantConnect.Statistics
 
             // Convert our charts to dictionaries
             // NOTE: Day 0 refers to sample taken at 12AM on StartDate, performance[0] always = 0, benchmark[0] is benchmark value preceding start date.
-            var benchmark = ChartPointToDictionary(pointsBenchmark.Cast<ChartPoint>(), fromDate, toDate);
-            var performance = ChartPointToDictionary(pointsPerformance.Cast<ChartPoint>(), fromDate, toDate);
-            var portfolioTurnover = ChartPointToDictionary(pointsPortfolioTurnover.Cast<ChartPoint>(), fromDate, toDate);
+            var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
+            var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
+            var portfolioTurnover = ChartPointToDictionary(pointsPortfolioTurnover, fromDate, toDate);
 
             // Ensure our series are aligned
             if (benchmark.Count != performance.Count)
@@ -280,21 +281,33 @@ namespace QuantConnect.Statistics
         /// <param name="fromDate">An optional starting date</param>
         /// <param name="toDate">An optional ending date</param>
         /// <returns>SortedDictionary of the equity decimal values ordered in time</returns>
-        private static SortedDictionary<DateTime, decimal> ChartPointToDictionary(IEnumerable<ChartPoint> points, DateTime? fromDate = null, DateTime? toDate = null)
+        private static SortedDictionary<DateTime, decimal> ChartPointToDictionary(IEnumerable<ISeriesPoint> points, DateTime? fromDate = null, DateTime? toDate = null)
         {
             var dictionary = new SortedDictionary<DateTime, decimal>();
 
             foreach (var point in points)
             {
-                var x = Time.UnixTimeStampToDateTime(point.x);
+                if (fromDate != null && point.Time.Date < fromDate) continue;
+                if (toDate != null && point.Time.Date >= ((DateTime)toDate).AddDays(1)) break;
 
-                if (fromDate != null && x.Date < fromDate) continue;
-                if (toDate != null && x.Date >= ((DateTime)toDate).AddDays(1)) break;
-
-                dictionary[x] = point.y;
+                dictionary[point.Time] = GetPointValue(point);
             }
 
             return dictionary;
+        }
+
+        /// <summary>
+        /// Gets the value of a point, either ChartPoint.y or Candlestick.Close
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static decimal GetPointValue(ISeriesPoint point)
+        {
+            if (point is ChartPoint)
+            {
+                return ((ChartPoint)point).y;
+            }
+
+            return ((Candlestick)point).Close;
         }
 
         /// <summary>

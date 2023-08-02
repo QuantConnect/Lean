@@ -31,6 +31,7 @@ namespace QuantConnect
         /// <summary>
         /// Time of this chart series point
         /// </summary>
+        [JsonIgnore]
         public DateTime Time
         {
             get

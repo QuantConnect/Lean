@@ -77,6 +77,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         protected int LastDeltaOrderEventsPosition;
 
+        protected AlgorithmEquity CurrentAlgorithmEquity { get; set; }
+
         /// <summary>
         /// The task in charge of running the <see cref="Run"/> update method
         /// </summary>
@@ -506,7 +508,7 @@ namespace QuantConnect.Lean.Engine.Results
             CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
 
             // Sample all our default charts
-            SampleEquity(time, currentPortfolioValue);
+            SampleEquity(time, currentPortfolioValue, currentPortfolioValue, currentPortfolioValue, currentPortfolioValue);
             SampleBenchmark(time, GetBenchmarkValue(time));
             SamplePerformance(time, portfolioPerformance);
             SampleDrawdown(time, currentPortfolioValue);
@@ -520,13 +522,36 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Sample the current equity of the strategy directly with time-value pair.
+        /// Sample the current equity of the strategy directly with time-open-high-low-close tuple.
         /// </summary>
-        /// <param name="time">Time of the sample.</param>
-        /// <param name="value">Current equity value.</param>
-        protected virtual void SampleEquity(DateTime time, decimal value)
+        /// <param name="time">Equity candlestick end time</param>
+        /// <param name="open">Open equity value</param>
+        /// <param name="high">High equity value</param>
+        /// <param name="low">Low equity value</param>
+        /// <param name="close">Close equity value</param>
+        protected virtual void SampleEquity(DateTime time, decimal open, decimal high, decimal low, decimal close)
         {
-            Sample(StrategyEquityKey, EquityKey, 0, SeriesType.Candle, time, value, AlgorithmCurrencySymbol);
+            Sample(StrategyEquityKey, EquityKey, 0, SeriesType.Candle, new Candlestick(time, open, high, low, close), AlgorithmCurrencySymbol);
+        }
+
+        /// <summary>
+        /// Sample the current equity of the strategy directly with time-open-high-low-close tuple.
+        /// </summary>
+        /// <param name="time">Equity candlestick end time</param>
+        /// <param name="open">Open equity value</param>
+        /// <param name="high">High equity value</param>
+        /// <param name="low">Low equity value</param>
+        /// <param name="close">Close equity value</param>
+        protected virtual void SampleEquity(DateTime time)
+        {
+            Sample(
+                StrategyEquityKey,
+                EquityKey,
+                0,
+                SeriesType.Candle,
+                new Candlestick(time, CurrentAlgorithmEquity.Open, CurrentAlgorithmEquity.High, CurrentAlgorithmEquity.Low,
+                    CurrentAlgorithmEquity.Close),
+                AlgorithmCurrencySymbol);
         }
 
         /// <summary>
@@ -540,7 +565,7 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 Log.Debug("BaseResultsHandler.SamplePerformance(): " + time.ToShortTimeString() + " >" + value);
             }
-            Sample(StrategyEquityKey, DailyPerformanceKey, 1, SeriesType.Bar, time, value, "%");
+            Sample(StrategyEquityKey, DailyPerformanceKey, 1, SeriesType.Bar, new ChartPoint(time, value), "%");
         }
 
         /// <summary>
@@ -551,7 +576,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <seealso cref="IResultHandler.Sample"/>
         protected virtual void SampleBenchmark(DateTime time, decimal value)
         {
-            Sample(BenchmarkKey, BenchmarkKey, 0, SeriesType.Line, time, value);
+            Sample(BenchmarkKey, BenchmarkKey, 0, SeriesType.Line, new ChartPoint(time, value));
         }
 
         /// <summary>
@@ -566,7 +591,7 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 // Calculate our drawdown and sample it
                 var drawdown = Statistics.Statistics.DrawdownPercent(currentPortfolioValue, CumulativeMaxPortfolioValue);
-                Sample(DrawdownKey, "Equity Drawdown", 0, SeriesType.Line, time, drawdown, "%");
+                Sample(DrawdownKey, "Equity Drawdown", 0, SeriesType.Line, new ChartPoint(time, drawdown), "%");
             }
         }
 
@@ -602,7 +627,7 @@ namespace QuantConnect.Lean.Engine.Results
                 _previousSalesVolume.Add(currentTotalSaleVolume);
                 _previousPortfolioTurnoverSample = time;
 
-                Sample(PortfolioTurnoverKey, PortfolioTurnoverKey, 0, SeriesType.Line, time, todayPortfolioTurnOver, "%");
+                Sample(PortfolioTurnoverKey, PortfolioTurnoverKey, 0, SeriesType.Line, new ChartPoint(time, todayPortfolioTurnOver), "%");
             }
         }
 
@@ -616,8 +641,8 @@ namespace QuantConnect.Lean.Engine.Results
             foreach (var holding in Algorithm.Portfolio.Values.Where(y => y.TotalSaleVolume != 0)
                 .OrderByDescending(x => x.TotalSaleVolume).Take(30))
             {
-                Sample("Assets Sales Volume", $"{holding.Symbol.Value}", 0, SeriesType.Treemap, time,
-                    holding.TotalSaleVolume, AlgorithmCurrencySymbol);
+                Sample("Assets Sales Volume", $"{holding.Symbol.Value}", 0, SeriesType.Treemap, new ChartPoint(time, holding.TotalSaleVolume),
+                    AlgorithmCurrencySymbol);
             }
         }
 
@@ -683,8 +708,8 @@ namespace QuantConnect.Lean.Engine.Results
             foreach (var kvp in holdings)
             {
                 var ratio = Math.Round(kvp.Value / currentPortfolioValue, 4);
-                Sample("Exposure", $"{kvp.Key} - {type} Ratio", 0, SeriesType.Line, time,
-                    ratio, "");
+                Sample("Exposure", $"{kvp.Key} - {type} Ratio", 0, SeriesType.Line, new ChartPoint(time, ratio),
+                    "");
             }
         }
 
@@ -704,7 +729,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="seriesName">Series name for the chart.</param>
         /// <param name="seriesIndex">Series chart index - which chart should this series belong</param>
         /// <param name="seriesType">Series type for the chart.</param>
-        /// <param name="time">Time for the sample</param>
         /// <param name="value">Value for the chart sample.</param>
         /// <param name="unit">Unit for the chart axis</param>
         /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
@@ -712,8 +736,7 @@ namespace QuantConnect.Lean.Engine.Results
             string seriesName,
             int seriesIndex,
             SeriesType seriesType,
-            DateTime time,
-            decimal value,
+            ISeriesPoint value,
             string unit = "$");
 
         /// <summary>
@@ -941,6 +964,59 @@ namespace QuantConnect.Lean.Engine.Results
         protected void SummaryStatistic(string name, string value)
         {
             _customSummaryStatistics.AddOrUpdate(name, value);
+        }
+
+        protected void UpdateAlgorithmEquity(decimal currentEquity)
+        {
+            if (CurrentAlgorithmEquity == null)
+            {
+                CurrentAlgorithmEquity = new AlgorithmEquity(currentEquity);
+            }
+            else
+            {
+                CurrentAlgorithmEquity.Update(currentEquity);
+            }
+        }
+
+        protected void CloseAlgorithmEquity()
+        {
+            CurrentAlgorithmEquity = null;
+        }
+
+        /// <summary>
+        /// Helper class to keep track of the algorithm equity for a given period of time in order to form the candlesticks
+        /// </summary>
+        protected class AlgorithmEquity
+        {
+            public decimal Open { get; set; }
+            public decimal High { get; set; }
+            public decimal Low { get; set; }
+            public decimal Close { get; set; }
+
+            public AlgorithmEquity(decimal currentValue)
+            {
+                var value = Math.Round(currentValue, 4);
+
+                Open = value;
+                High = value;
+                Low = value;
+                Close = value;
+            }
+
+            public void Update(decimal currentValue)
+            {
+                var value = Math.Round(currentValue, 4);
+
+                if (value > High)
+                {
+                    High = value;
+                }
+                else if (value < Low)
+                {
+                    Low = value;
+                }
+                Close = value;
+            }
         }
     }
 }

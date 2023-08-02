@@ -88,7 +88,7 @@ namespace QuantConnect
         public Candlestick(long time, decimal open, decimal high, decimal low, decimal close)
         {
             Time = QuantConnect.Time.UnixTimeStampToDateTime(time);
-            Values = new List<decimal>() { open, high, low, close };
+            Values = new List<decimal>() { open.SmartRounding(), high.SmartRounding(), low.SmartRounding(), close.SmartRounding() };
         }
 
         /// <summary>
@@ -101,8 +101,8 @@ namespace QuantConnect
         /// <param name="close">Candlestick close price</param>
         public Candlestick(DateTime time, decimal open, decimal high, decimal low, decimal close)
         {
-            Time = time.ToUniversalTime();
-            Values = new List<decimal>() { open, high, low, close };
+            Time = time;
+            Values = new List<decimal>() { open.SmartRounding(), high.SmartRounding(), low.SmartRounding(), close.SmartRounding() };
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace QuantConnect
         /// <param name="low">Candlestick low price</param>
         /// <param name="close">Candlestick close price</param>
         public Candlestick(TradeBar bar)
-            : this(bar.EndTime.ToUniversalTime(), bar.Open, bar.High, bar.Low, bar.Close)
+            : this(bar.EndTime, bar.Open, bar.High, bar.Low, bar.Close)
         {
         }
 
