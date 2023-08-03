@@ -31,7 +31,8 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Plotly.NET.Interactive" Version="4.2.1" />
+    <PackageReference Include="Plotly.NET" Version="3.0.1" />
+    <PackageReference Include="Plotly.NET.Interactive" Version="3.0.2" />
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.21" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
   </ItemGroup>
