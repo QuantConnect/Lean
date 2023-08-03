@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Logging;
 using static QuantConnect.Messages;
@@ -131,7 +132,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Charting)]
         public void Plot(string series, float value)
         {
-            Plot(series, (decimal)value);
+            Plot(series, (double)value);
         }
 
         /// <summary>
@@ -161,7 +162,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Charting)]
         public void Plot(string chart, string series, float value)
         {
-            Plot(chart, series, (decimal)value);
+            Plot(chart, series, (double)value);
         }
 
         /// <summary>
@@ -182,6 +183,11 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Plot a candlestick to the default/primary chart series by the given series name.
         /// </summary>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
         /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
         [DocumentationAttribute(Charting)]
         public void Plot(string series, double open, double high, double low, double close)
@@ -192,16 +198,26 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Plot a candlestick to the default/primary chart series by the given series name.
         /// </summary>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
         /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
         [DocumentationAttribute(Charting)]
         public void Plot(string series, float open, float high, float low, float close)
         {
-            Plot(series, (decimal)open, (decimal)high, (decimal)low, (decimal)close);
+            Plot(series, (double)open, (double)high, (double)low, (double)close);
         }
 
         /// <summary>
         /// Plot a candlestick to the default/primary chart series by the given series name.
         /// </summary>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
         /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
         [DocumentationAttribute(Charting)]
         public void Plot(string series, int open, int high, int low, int close)
@@ -228,6 +244,12 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Plot a candlestick to the given series of the given chart.
         /// </summary>
+        /// <param name="chart">Chart name</param>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
         /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
         [DocumentationAttribute(Charting)]
         public void Plot(string chart, string series, double open, double high, double low, double close)
@@ -238,16 +260,28 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Plot a candlestick to the given series of the given chart.
         /// </summary>
+        /// <param name="chart">Chart name</param>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
         /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
         [DocumentationAttribute(Charting)]
         public void Plot(string chart, string series, float open, float high, float low, float close)
         {
-            Plot(chart, series, (decimal)open, (decimal)high, (decimal)low, (decimal)close);
+            Plot(chart, series, (double)open, (double)high, (double)low, (double)close);
         }
 
         /// <summary>
         /// Plot a candlestick to the given series of the given chart.
         /// </summary>
+        /// <param name="chart">Chart name</param>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
         /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
         [DocumentationAttribute(Charting)]
         public void Plot(string chart, string series, int open, int high, int low, int close)
@@ -256,7 +290,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Plot a value to a chart of string-chart name, with string series name, and decimal value. If chart does not exist, create it.
+        /// Plot a candlestick to a chart of string-chart name, with string series name, and decimal value. If chart does not exist, create it.
         /// </summary>
         /// <param name="chart">Chart name</param>
         /// <param name="series">Series name</param>
@@ -271,6 +305,31 @@ namespace QuantConnect.Algorithm
             {
                 candlestickSeries.AddPoint(UtcTime, open, high, low, close);
             }
+        }
+
+        /// <summary>
+        /// Plot a candlestick to the given series of the given chart.
+        /// </summary>
+        /// <param name="series">Name of the plot series</param>
+        /// <param name="bar">The trade bar to be plotted to the candlestick series</param>
+        /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
+        [DocumentationAttribute(Charting)]
+        public void Plot(string series, TradeBar bar)
+        {
+            Plot(series, bar.Open, bar.High, bar.Low, bar.Close);
+        }
+
+        /// <summary>
+        /// Plot a candlestick to the given series of the given chart.
+        /// </summary>
+        /// <param name="chart">Chart name</param>
+        /// <param name="series">Name of the plot series</param>
+        /// <param name="bar">The trade bar to be plotted to the candlestick series</param>
+        /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
+        [DocumentationAttribute(Charting)]
+        public void Plot(string chart, string series, TradeBar bar)
+        {
+            Plot(chart, series, bar.Open, bar.High, bar.Low, bar.Close);
         }
 
         private bool TryGetChartSeries<T>(string chartName, string seriesName, out T series)

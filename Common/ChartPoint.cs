@@ -81,11 +81,13 @@ namespace QuantConnect
         /// <summary>
         /// Shortcut for <see cref="x"/> for C# naming conventions
         /// </summary>
+        [JsonIgnore]
         public decimal X => x;
 
         /// <summary>
         /// Shortcut for <see cref="y"/> for C# naming conventions
         /// </summary>
+        [JsonIgnore]
         public decimal Y => y;
 
         /// <summary>
