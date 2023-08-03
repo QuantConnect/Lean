@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Util;
 
 namespace QuantConnect
@@ -24,7 +25,7 @@ namespace QuantConnect
     /// </summary>
     public class SeriesSampler
     {
-        private readonly double _seconds;
+        private readonly TimeSpan _step;
 
         /// <summary>
         /// Creates a new SeriesSampler to sample Series data on the specified resolution
@@ -32,7 +33,7 @@ namespace QuantConnect
         /// <param name="resolution">The desired sampling resolution</param>
         public SeriesSampler(TimeSpan resolution)
         {
-            _seconds = resolution.TotalSeconds;
+            _step = resolution;
         }
 
         /// <summary>
@@ -45,93 +46,17 @@ namespace QuantConnect
         /// <returns>The sampled series</returns>
         public BaseSeries Sample(BaseSeries series, DateTime start, DateTime stop, bool truncateValues = false)
         {
-            var sampled = series.Clone(empty: true);
-
-            // chart point times are always in universal, so force it here as well
-            var nextSample = Time.DateTimeToUnixTimeStamp(start.ToUniversalTime());
-            var unixStopDate = Time.DateTimeToUnixTimeStamp(stop.ToUniversalTime());
-
-            // we can't sample a single point and it doesn't make sense to sample scatter plots
-            // in this case just copy the raw data
-            if (series.Values.Count < 2 || series.SeriesType == SeriesType.Scatter)
+            if (series is Series seriesToSample)
             {
-                // we can minimally verify we're within the start/stop interval
-                foreach (ChartPoint point in series.Values)
-                {
-                    if (point.x >= nextSample && point.x <= unixStopDate)
-                    {
-                        var samplePoint = point;
-                        if (truncateValues)
-                        {
-                            // let's not modify the original
-                            samplePoint = new ChartPoint(samplePoint) { y = Math.Truncate(samplePoint.y) };
-                        }
-                        sampled.Values.Add(samplePoint);
-                    }
-                }
-                return sampled;
+                return SampleSeries(seriesToSample, start, stop, truncateValues);
             }
 
-            var enumerator = series.Values.GetEnumerator();
-
-            // initialize current/previous
-            enumerator.MoveNext();
-            var previous = (ChartPoint)enumerator.Current;
-            enumerator.MoveNext();
-            var current = (ChartPoint)enumerator.Current;
-
-            // make sure we don't start sampling before the data begins
-            if (nextSample < previous.x)
+            if (series is CandlestickSeries candlestickSeries)
             {
-                nextSample = previous.x;
+                return SampleCandlestickSeries(candlestickSeries, start, stop);
             }
 
-            // make sure to advance into the requestd time frame before sampling
-            while (current.x < nextSample && enumerator.MoveNext())
-            {
-                previous = current;
-                current = (ChartPoint)enumerator.Current;
-            }
-
-            do
-            {
-                // advance our current/previous
-                if (nextSample > current.x)
-                {
-                    if (enumerator.MoveNext())
-                    {
-                        previous = current;
-                        current = (ChartPoint)enumerator.Current;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                // iterate until we pass where we want our next point
-                while (nextSample <= current.x && nextSample <= unixStopDate)
-                {
-                    var value = Interpolate(previous, current, (long) nextSample);
-                    var point = new ChartPoint {x = (long) nextSample, y = value};
-                    if (truncateValues)
-                    {
-                        point.y = Math.Truncate(point.y);
-                    }
-                    sampled.Values.Add(point);
-                    nextSample += _seconds;
-                }
-
-                // if we've passed our stop then we're finished sampling
-                if (nextSample > unixStopDate)
-                {
-                    break;
-                }
-            }
-            while (true);
-
-            enumerator.DisposeSafely();
-            return sampled;
+            throw new ArgumentException($"SeriesSampler.Sample(): Sampling only supports {typeof(Series)} and {typeof(CandlestickSeries)}");
         }
 
         /// <summary>
@@ -158,22 +83,245 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Samples the given series
+        /// </summary>
+        /// <param name="series">The series to be sampled</param>
+        /// <param name="start">The date to start sampling, if before start of data then start of data will be used</param>
+        /// <param name="stop">The date to stop sampling, if after stop of data, then stop of data will be used</param>
+        /// <param name="truncateValues">True will truncate values to integers</param>
+        /// <returns>The sampled series</returns>
+        private Series SampleSeries(Series series, DateTime start, DateTime stop, bool truncateValues = false)
+        {
+            var sampled = series.Clone(empty: true);
+
+            var nextSampleTime = start;
+
+            // we can't sample a single point and it doesn't make sense to sample scatter plots
+            // in this case just copy the raw data
+            if (series.Values.Count < 2 || series.SeriesType == SeriesType.Scatter)
+            {
+                // we can minimally verify we're within the start/stop interval
+                foreach (var point in series.Values)
+                {
+                    if (point.Time >= nextSampleTime && point.Time <= stop)
+                    {
+                        var samplePoint = point.Clone();
+                        if (truncateValues)
+                        {
+                            TruncateValue(samplePoint);
+                        }
+                        sampled.Values.Add(samplePoint);
+                    }
+                }
+                return sampled;
+            }
+
+            var enumerator = series.Values.Cast<ChartPoint>().GetEnumerator();
+
+            // initialize current/previous
+            enumerator.MoveNext();
+            var previous = enumerator.Current;
+            enumerator.MoveNext();
+            var current = enumerator.Current;
+
+            // make sure we don't start sampling before the data begins
+            if (nextSampleTime < previous.Time)
+            {
+                nextSampleTime = previous.Time;
+            }
+
+            // make sure to advance into the requested time frame before sampling
+            while (current.Time < nextSampleTime && enumerator.MoveNext())
+            {
+                previous = current;
+                current = enumerator.Current;
+            }
+
+            do
+            {
+                // advance our current/previous
+                if (nextSampleTime > current.Time)
+                {
+                    if (enumerator.MoveNext())
+                    {
+                        previous = current;
+                        current = enumerator.Current;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                // iterate until we pass where we want our next point
+                while (nextSampleTime <= current.Time && nextSampleTime <= stop)
+                {
+                    var sampledPoint = Interpolate(previous, current, nextSampleTime);
+                    if (truncateValues)
+                    {
+                        TruncateValue(sampledPoint);
+                    }
+                    sampled.Values.Add(sampledPoint);
+                    nextSampleTime += _step;
+                }
+
+                // if we've passed our stop then we're finished sampling
+                if (nextSampleTime > stop)
+                {
+                    break;
+                }
+            }
+            while (true);
+
+            enumerator.DisposeSafely();
+            return sampled;
+        }
+
+        /// <summary>
+        /// Samples the given candlestick series
+        /// </summary>
+        /// <param name="series">The series to be sampled</param>
+        /// <param name="start">The date to start sampling, if before start of data then start of data will be used</param>
+        /// <param name="stop">The date to stop sampling, if after stop of data, then stop of data will be used</param>
+        /// <param name="truncateValues">True will truncate values to integers</param>
+        /// <returns>The sampled series</returns>
+        private CandlestickSeries SampleCandlestickSeries(CandlestickSeries series, DateTime start, DateTime stop, bool truncateValues = false)
+        {
+            var sampledSeries = series.Clone(empty: true);
+
+            var candlesticks = series.Values;
+            var seriesSize = candlesticks.Count;
+
+            // we can't sample a single point, so just copy the raw data
+            if (seriesSize < 2)
+            {
+                // we can minimally verify we're within the start/stop interval
+                foreach (var point in candlesticks)
+                {
+                    if (point.Time >= start && point.Time <= stop)
+                    {
+                        var samplePoint = point.Clone();
+                        if (truncateValues)
+                        {
+                            TruncateValue(samplePoint);
+                        }
+                        sampledSeries.Values.Add(samplePoint);
+                    }
+                }
+                return sampledSeries;
+            }
+
+            // Make sure we don't start sampling before the data begins.
+            var nextSampleTime = start < candlesticks[0].Time ? candlesticks[0].Time : start;
+
+            // Find the first candlestick that is after the start time.
+            // This variable will also be used to keep track of the first candlestick to be aggregated.
+            var startIndex = candlesticks.FindIndex(x => x.Time > nextSampleTime) - 1;
+
+            // We iterate ignoring the last candlestick because we need to check the next candlestick on each iteration.
+            for (var i = startIndex; i < seriesSize - 1 && nextSampleTime <= stop; i++)
+            {
+                var next = (Candlestick)candlesticks[i + 1];
+                if (nextSampleTime >= next.Time)
+                {
+                    continue;
+                }
+
+                var sampledCandlestick = AggregateCandlesticks(candlesticks, startIndex, i + 1, nextSampleTime, truncateValues);
+
+                while (nextSampleTime < next.Time && nextSampleTime <= stop)
+                {
+                    var currentSampledCandlestick = sampledCandlestick.Clone();
+                    currentSampledCandlestick.Time = nextSampleTime;
+                    sampledSeries.Values.Add(currentSampledCandlestick);
+                    nextSampleTime += _step;
+                }
+
+                startIndex = i + 1;
+            }
+
+            // Check the last candlestick to see if it should be aggregated.
+            if (nextSampleTime <= stop && nextSampleTime == candlesticks[seriesSize - 1].Time)
+            {
+                var sampledCandlestick = AggregateCandlesticks(candlesticks, startIndex, seriesSize, nextSampleTime, truncateValues);
+                sampledSeries.Values.Add(sampledCandlestick);
+            }
+
+            return sampledSeries;
+        }
+
+        /// <summary>
+        /// Aggregates the candlesticks in the given range into a single candlestick,
+        /// keeping the first open and last close and calculating highest high and lowest low
+        /// </summary>
+        private static Candlestick AggregateCandlesticks(List<ISeriesPoint> candlesticks, int start, int end, DateTime time, bool truncateValues)
+        {
+            var high = 0m;
+            var low = decimal.MaxValue;
+            for (var j = start; j < end; j++)
+            {
+                var point = (Candlestick)candlesticks[j];
+                if (point.High > high)
+                {
+                    high = point.High;
+                }
+                if (point.Low < low)
+                {
+                    low = point.Low;
+                }
+            }
+
+            var aggregatedCandlestick = new Candlestick
+            {
+                Time = time,
+                Open = ((Candlestick)candlesticks[start]).Open,
+                Close = ((Candlestick)candlesticks[end - 1]).Close,
+                High = high,
+                Low = low
+            };
+            if (truncateValues)
+            {
+                TruncateValue(aggregatedCandlestick);
+            }
+
+            return aggregatedCandlestick;
+        }
+
+        /// <summary>
         /// Linear interpolation used for sampling
         /// </summary>
-        private static decimal Interpolate(ChartPoint previous, ChartPoint current, long target)
+        private static ChartPoint Interpolate(ChartPoint previous, ChartPoint current, DateTime targetTime)
         {
             var deltaTicks = current.x - previous.x;
-
             // if they're at the same time return the current value
             if (deltaTicks == 0)
             {
-                return current.y;
+                return (ChartPoint)current.Clone();
             }
 
-            double percentage = (target - previous.x) / (double)deltaTicks;
+            var targetUnitTime = Time.DateTimeToUnixTimeStamp(targetTime);
+            double percentage = (targetUnitTime - previous.x) / deltaTicks;
 
             //  y=mx+b
-            return (current.y - previous.y) * (decimal)percentage + previous.y;
+            return new ChartPoint(targetTime, (current.y - previous.y) * percentage.SafeDecimalCast() + previous.y);
+        }
+
+        /// <summary>
+        /// Truncates the value/values of the point
+        /// </summary>
+        private static void TruncateValue(ISeriesPoint point)
+        {
+            if (point is ChartPoint chartPoint)
+            {
+                chartPoint.y = Math.Truncate(chartPoint.y);
+            }
+            else if (point is Candlestick candlestick)
+            {
+                candlestick.Open = Math.Truncate(candlestick.Open);
+                candlestick.High = Math.Truncate(candlestick.High);
+                candlestick.Low = Math.Truncate(candlestick.Low);
+                candlestick.Close = Math.Truncate(candlestick.Close);
+            }
         }
     }
 }

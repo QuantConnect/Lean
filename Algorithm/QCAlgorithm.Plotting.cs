@@ -20,8 +20,6 @@ using System.Globalization;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using QuantConnect.Logging;
-using static QuantConnect.Messages;
 
 namespace QuantConnect.Algorithm
 {
