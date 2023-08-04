@@ -222,7 +222,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 }
                 default:
                 {
-                    return price > 0 && price < 1000000;
+                    return price > 0 && price < 10000000;
                 }
             }
         }
