@@ -227,32 +227,26 @@ namespace QuantConnect
         /// </summary>
         private static Candlestick AggregateCandlesticks(List<ISeriesPoint> candlesticks, int start, int end, DateTime time, bool truncateValues)
         {
-            var high = 0m;
-            var low = decimal.MaxValue;
-            for (var j = start; j < end; j++)
-            {
-                var point = (Candlestick)candlesticks[j];
-                if (point.High > high)
-                {
-                    high = point.High;
-                }
-                if (point.Low < low)
-                {
-                    low = point.Low;
-                }
-            }
-
             var aggregatedCandlestick = new Candlestick
             {
-                Time = time,
-                Open = ((Candlestick)candlesticks[start]).Open,
-                Close = ((Candlestick)candlesticks[end - 1]).Close,
-                High = high,
-                Low = low
+                Time = time
             };
-            aggregatedCandlestick = (Candlestick)TruncateValue(aggregatedCandlestick, truncateValues, clone: false);
 
-            return aggregatedCandlestick;
+            // Set the open
+            aggregatedCandlestick.Update(((Candlestick)candlesticks[start]).Open);
+
+            // Set high and low
+            for (var j = start; j < end; j++)
+            {
+                var current = (Candlestick)candlesticks[j];
+                aggregatedCandlestick.Update(current.High);
+                aggregatedCandlestick.Update(current.Low);
+            }
+
+            // Set the close
+            aggregatedCandlestick.Update(((Candlestick)candlesticks[end - 1]).Close);
+
+            return (Candlestick)TruncateValue(aggregatedCandlestick, truncateValues, clone: false);
         }
 
         /// <summary>

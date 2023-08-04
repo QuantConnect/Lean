@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,25 +30,25 @@ namespace QuantConnect.Data.Market
         /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
         [ProtoMember(1)]
-        public decimal Open { get; set; }
+        public virtual decimal Open { get; set; }
 
         /// <summary>
         /// High price of the bar during the time period.
         /// </summary>
         [ProtoMember(2)]
-        public decimal High { get; set; }
+        public virtual decimal High { get; set; }
 
         /// <summary>
         /// Low price of the bar during the time period.
         /// </summary>
         [ProtoMember(3)]
-        public decimal Low { get; set; }
+        public virtual decimal Low { get; set; }
 
         /// <summary>
         /// Closing price of the bar. Defined as the price at Start Time + TimeSpan.
         /// </summary>
         [ProtoMember(4)]
-        public decimal Close { get; set; }
+        public virtual decimal Close { get; set; }
 
         /// <summary>
         /// Default initializer to setup an empty bar.

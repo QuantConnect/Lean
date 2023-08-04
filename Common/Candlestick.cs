@@ -24,7 +24,7 @@ namespace QuantConnect
     /// Single candlestick for a candlestick chart
     /// </summary>
     [JsonConverter(typeof(CandlestickJsonConverter))]
-    public class Candlestick : ISeriesPoint
+    public class Candlestick : Bar, ISeriesPoint
     {
         private decimal _open;
         private decimal _high;
@@ -50,7 +50,7 @@ namespace QuantConnect
         /// <summary>
         /// The candlestick open price
         /// </summary>
-        public decimal Open
+        public override decimal Open
         {
             get { return _open; }
             set { _open = value.SmartRounding(); }
@@ -59,7 +59,7 @@ namespace QuantConnect
         /// <summary>
         /// The candlestick high price
         /// </summary>
-        public decimal High
+        public override decimal High
         {
             get { return _high; }
             set { _high = value.SmartRounding(); }
@@ -68,7 +68,7 @@ namespace QuantConnect
         /// <summary>
         /// The candlestick low price
         /// </summary>
-        public decimal Low
+        public override decimal Low
         {
             get { return _low; }
             set { _low = value.SmartRounding(); }
@@ -77,7 +77,7 @@ namespace QuantConnect
         /// <summary>
         /// The candlestick close price
         /// </summary>
-        public decimal Close
+        public override decimal Close
         {
             get { return _close; }
             set { _close = value.SmartRounding(); }
