@@ -1,8 +1,21 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Auxiliary;
 
@@ -77,7 +90,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var dividendEveryQuarter = _randomValueGenerator.NextBool(_settings.DividendEveryQuarterPercentage);
 
             var previousX = _random.NextDouble();
-            var months = tickHistory.Select(x => x.Time.Month.ToString()+ "-" + x.Time.Year.ToString()).GroupBy(x => x).Count();
+
+            // Since the largest equity value we can obtain is 10 000 000, if we want this price divided by the FinalSplitFactor
+            // to be upper bounded by 100 000 000 we need to make sure the FinalSplitFactor is lower bounded by 0.1. Therefore,
+            // since in the worst of the cases FinalSplitFactor = (previousSplitFactor)^(2m), where m is the number of months
+            // in the time span, we need to lower bound previousSplitFactor by (0.1)^(1/(2m))
+            //
+            // In the sameway, since the smallest equity value is 0.01, if we want this price divided by the FinalSplitFactor
+            // to be lower bounded by 0.01 we need to make sure the FinalSplitFactor is upper bounded by 1. Therefore, since
+            // in the worst of the cases FinalSplitFactor = (previousSplitFactor)^(2m), where m is the number of months in
+            // the time span, we need to upper bound previousSplitFactor by 1
+
+            var months = (int)Math.Round(_settings.End.Subtract(_settings.Start).Days / (365.25 / 12));
             var minPreviousSplitFactor = (decimal)(Math.Pow((double)0.1, 1 / (double)(2 * months)));
             var maxPreviousSplitFactor = 1;
             var previousSplitFactor = hasSplits ? ((decimal)_random.NextDouble())*(maxPreviousSplitFactor - minPreviousSplitFactor) + minPreviousSplitFactor : 1;
@@ -168,7 +192,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                             }
                         }
                         // Have a 5% chance of a split every month
-                        if (hasSplits && _randomValueGenerator.NextBool(5.0))
+                        if (hasSplits && _randomValueGenerator.NextBool(_settings.MonthSplitPercentage))
                         {
                             // Produce another split factor that is also bounded by the min and max split factors allowed
                             if (_randomValueGenerator.NextBool(5.0)) // Add the possibility of a reverse split

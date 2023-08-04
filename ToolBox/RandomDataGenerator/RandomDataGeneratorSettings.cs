@@ -43,6 +43,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public double HasIpoPercentage { get; init; }
         public double HasRenamePercentage { get; init; }
         public double HasSplitsPercentage { get; init; }
+        public double MonthSplitPercentage { get; init; }
         public double HasDividendsPercentage { get; init; }
         public double DividendEveryQuarterPercentage { get; init; }
         public string OptionPriceEngineName { get; init; }
@@ -68,7 +69,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string optionPriceEngineName,
             string volatilityModelResolutionString,
             string chainSymbolCountString,
-            List<string> tickers
+            List<string> tickers,
+            double monthSplitPercentage = 5.0
             )
         {
             var randomSeedSet = true;
@@ -319,6 +321,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 HasIpoPercentage = hasIpoPercentage,
                 HasRenamePercentage = hasRenamePercentage,
                 HasSplitsPercentage = hasSplitsPercentage,
+                MonthSplitPercentage = monthSplitPercentage,
                 HasDividendsPercentage = hasDividendsPercentage,
                 DividendEveryQuarterPercentage = dividendEveryQuarterPercentage,
                 OptionPriceEngineName = optionPriceEngineName,

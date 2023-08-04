@@ -56,12 +56,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             Assert.GreaterOrEqual(delistDate, midPoint);
         }
 
-        [Repeat(10)]
-        [TestCase("20230101", "20230108")]
-        [TestCase("20230101", "20230201")]
-        [TestCase("20230501", "20230801")]
-        [TestCase("20230101", "20230801")]
-        [TestCase("20180101", "20230101")]
+        [TestCase("20220101", "20230101")]
         public void RandomGeneratorProducesValuesBoundedForEquitiesWhenSplit(string start, string end)
         {
             var settings = RandomDataGeneratorSettings.FromCommandLineArguments(
@@ -83,7 +78,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 "BaroneAdesiWhaleyApproximationEngine",
                 "Daily",
                 "1",
-                new List<string>()
+                new List<string>(),
+                100
             );
 
             var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
@@ -117,7 +113,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             foreach (var tick in tickHistory)
             {
                 tick.Value = tick.Value / dividendsSplitsMaps.FinalSplitFactor;
-                Assert.IsTrue( 0.00099m <= tick.Value && tick.Value <= 10000000 );
+                Assert.IsTrue( 0.001m <= tick.Value && tick.Value <= 10000000, $"The tick value was {tick.Value} but should have been bounded by 0.001 and 10 000 000");
             }
         }
 

@@ -29,6 +29,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly Random _random;
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
+        private const decimal _maximumPriceAllowed = 10000000m;
 
 
         public RandomValueGenerator()
@@ -177,14 +178,14 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     increaseProbabilityFactor = Math.Max(increaseProbabilityFactor - 0.05, 0);
                 }
 
-                if (price > 1000000)
+                if (price > (_maximumPriceAllowed / 10m))
                 {
                     // The price should not be too higher
                     // Decrease the probability of it to going up
                     increaseProbabilityFactor = increaseProbabilityFactor + 0.05;
                 }
 
-                if (price > 10000000)
+                if (price > _maximumPriceAllowed)
                 {
                     // The price should not be too higher
                     // Invalidate the price to try again
@@ -222,7 +223,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 }
                 default:
                 {
-                    return price > 0 && price < 10000000;
+                    return price > 0 && price < _maximumPriceAllowed;
                 }
             }
         }
