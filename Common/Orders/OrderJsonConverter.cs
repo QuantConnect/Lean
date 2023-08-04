@@ -254,6 +254,15 @@ namespace QuantConnect.Orders
                     };
                     break;
 
+                case OrderType.TrailingStop:
+                    order = new TrailingStopOrder
+                    {
+                        StopPrice = jObject["StopPrice"] == null ? default(decimal) : jObject["StopPrice"].Value<decimal>(),
+                        TrailingAmount = jObject["TrailingAmount"] == null ? default(decimal) : jObject["TrailingAmount"].Value<decimal>(),
+                        TrailingAsPercentage = jObject["TrailingAsPercentage"] == null ? default(bool) : jObject["TrailingAsPercentage"].Value<bool>()
+                    };
+                    break;
+
                 case OrderType.LimitIfTouched:
                     order = new LimitIfTouchedOrder
                     {

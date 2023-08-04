@@ -388,6 +388,8 @@ namespace QuantConnect.Orders
                 serializedOrder.LimitPrice ?? 0,
                 serializedOrder.StopPrice ?? 0,
                 serializedOrder.TriggerPrice ?? 0,
+                serializedOrder.TrailingAmount ?? 0,
+                serializedOrder.TrailingAsPercentage ?? false,
                 serializedOrder.GroupOrderManager);
 
             order.OrderSubmissionData = new OrderSubmissionData(serializedOrder.SubmissionBidPrice,
@@ -427,11 +429,13 @@ namespace QuantConnect.Orders
         public static Order CreateOrder(SubmitOrderRequest request)
         {
             return CreateOrder(request.OrderId, request.OrderType, request.Symbol, request.Quantity, request.Time,
-                 request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice, request.GroupOrderManager);
+                 request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice, request.TrailingAmount,
+                 request.TrailingAsPercentage, request.GroupOrderManager);
         }
 
         private static Order CreateOrder(int orderId, OrderType type, Symbol symbol, decimal quantity, DateTime time,
-            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice, decimal triggerPrice, GroupOrderManager groupOrderManager)
+            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice, decimal triggerPrice, decimal trailingAmount,
+            bool trailingAsPercentage, GroupOrderManager groupOrderManager)
         {
             Order order;
             switch (type)
@@ -450,6 +454,10 @@ namespace QuantConnect.Orders
 
                 case OrderType.StopLimit:
                     order = new StopLimitOrder(symbol, quantity, stopPrice, limitPrice, time, tag, properties);
+                    break;
+
+                case OrderType.TrailingStop:
+                    order = new TrailingStopOrder(symbol, quantity, stopPrice, trailingAmount, trailingAsPercentage, time, tag, properties);
                     break;
 
                 case OrderType.LimitIfTouched:

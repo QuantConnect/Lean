@@ -59,6 +59,7 @@ namespace QuantConnect.Tests
         public static readonly Symbol DE30EUR = CreateCfdSymbol("DE30EUR", Market.Oanda);
         public static readonly Symbol XAGUSD = CreateCfdSymbol("XAGUSD", Market.Oanda);
         public static readonly Symbol XAUUSD = CreateCfdSymbol("XAUUSD", Market.Oanda);
+        public static readonly Symbol XAUJPY = CreateCfdSymbol("XAUJPY", Market.Oanda);
 
         public static readonly Symbol SPY_Option_Chain = CreateOptionsCanonicalSymbol("SPY");
         public static readonly Symbol SPY_C_192_Feb19_2016 = CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2016, 02, 19));

@@ -54,7 +54,7 @@ namespace QuantConnect.Orders
         /// Option Exercise Order Type (6)
         /// </summary>
         OptionExercise,
-        
+
         /// <summary>
         ///  Limit if Touched Order Type - a limit order to be placed after first reaching a trigger value (7)
         /// </summary>
@@ -73,7 +73,12 @@ namespace QuantConnect.Orders
         /// <summary>
         ///  Combo Leg Limit Order Type - (10)
         /// </summary>
-        ComboLegLimit
+        ComboLegLimit,
+
+        /// <summary>
+        /// Trailing Stop Order Type - (11)
+        /// </summary>
+        TrailingStop
     }
 
     /// <summary>

@@ -59,7 +59,7 @@ namespace QuantConnect.Indicators
         {
             get
             {
-                return Window.Size > 1 ? Window[1] : new IndicatorDataPoint(DateTime.MinValue, 0);
+                return Window.Count > 1 ? Window[1] : new IndicatorDataPoint(DateTime.MinValue, 0);
             }
         }
 

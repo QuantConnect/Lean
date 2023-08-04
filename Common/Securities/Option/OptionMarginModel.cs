@@ -30,7 +30,8 @@ namespace QuantConnect.Securities.Option
         // initial margin
         private const decimal OptionMarginRequirement = 1;
         private const decimal NakedPositionMarginRequirement = 0.1m;
-        private const decimal NakedPositionMarginRequirementOtm = 0.2m;
+        private const decimal EquityOptionNakedPositionMarginRequirementOtm = 0.2m;
+        private const decimal IndexOptionNakedPositionMarginRequirementOtm = 0.15m;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionMarginModel"/>
@@ -169,10 +170,13 @@ namespace QuantConnect.Securities.Option
             var nakedMarginRequirement = option.Right == OptionRight.Call
                 ? NakedPositionMarginRequirement * underlyingValueRatio
                 : NakedPositionMarginRequirement * strikePriceRatio;
+            var nakedMarginRequirementOtm = security.Type == SecurityType.Option
+                ? EquityOptionNakedPositionMarginRequirementOtm
+                : IndexOptionNakedPositionMarginRequirementOtm;
 
             return OptionMarginRequirement +
                    Math.Abs(quantity) * Math.Max(nakedMarginRequirement,
-                       NakedPositionMarginRequirementOtm * underlyingValueRatio - underlyingValueRatioOTM);
+                       nakedMarginRequirementOtm * underlyingValueRatio - underlyingValueRatioOTM);
         }
     }
 }

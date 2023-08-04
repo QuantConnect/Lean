@@ -25,6 +25,8 @@ namespace QuantConnect.Report
         public const string StrategyDescription = @"{{$TEXT-STRATEGY-DESCRIPTION}}";
         public const string StrategyVersion = @"{{$TEXT-STRATEGY-VERSION}}";
         public const string LiveMarker = @"{{$LIVE-MARKER}}";
+        public const string ParametersPageStyle = @"{{$CSS-PARAMETERS-PAGE-STYLE}}";
+        public const string Parameters = @"{{$PARAMETERS}}";
 
         public const string CAGR = @"{{$KPI-CAGR}}";
         public const string Turnover = @"{{$KPI-TURNOVER}}";

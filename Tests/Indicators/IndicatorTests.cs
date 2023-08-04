@@ -319,6 +319,19 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(dataPoints[^2], indicator[1]);
         }
 
+        [Test]
+        public void PreviousValueIsNotNullAtStart()
+        {
+            var indicator = new TestIndicator("Test indicator");
+
+            // Access current and previous without warming the indicator up
+            var defaultValue = new IndicatorDataPoint(DateTime.MinValue, 0);
+            Assert.IsNotNull(indicator.Current);
+            Assert.AreEqual(defaultValue, indicator.Current);
+            Assert.IsNotNull(indicator.Previous);
+            Assert.AreEqual(defaultValue, indicator.Previous);
+        }
+
         private static void TestComparisonOperators<TValue>()
         {
             var indicator = new TestIndicator();
