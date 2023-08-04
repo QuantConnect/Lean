@@ -124,7 +124,7 @@ namespace QuantConnect.Optimizer.Strategies
         /// <summary>
         /// Calculates number od data points for step based optimization parameter based on min/max and step values
         /// </summary>
-        private int Estimate(OptimizationParameter parameter)
+        private static int Estimate(OptimizationParameter parameter)
         {
             if (parameter is StaticOptimizationParameter)
             {
@@ -188,7 +188,7 @@ namespace QuantConnect.Optimizer.Strategies
         /// <summary>
         /// Calculate step and min step values based on default number of fragments
         /// </summary>
-        private void CalculateStep(OptimizationStepParameter parameter, int defaultSegmentAmount)
+        private static void CalculateStep(OptimizationStepParameter parameter, int defaultSegmentAmount)
         {
             if (defaultSegmentAmount < 1)
             {
@@ -233,7 +233,7 @@ namespace QuantConnect.Optimizer.Strategies
             }
         }
 
-        private IEnumerator<string> GetEnumerator(OptimizationParameter parameter)
+        private static IEnumerator<string> GetEnumerator(OptimizationParameter parameter)
         {
             var staticOptimizationParameter = parameter as StaticOptimizationParameter;
             if (staticOptimizationParameter != null)

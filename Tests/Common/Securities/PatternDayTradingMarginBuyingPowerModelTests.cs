@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Securities
         private static readonly DateTime NoonHoliday = new DateTime(2016, 02, 15, 12, 0, 0);
         private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
 
-        private BuyingPowerModelComparator GetModel(decimal closed = 2m, decimal open = 4m)
+        private static BuyingPowerModelComparator GetModel(decimal closed = 2m, decimal open = 4m)
         {
             return new BuyingPowerModelComparator(
                 new PatternDayTradingMarginModel(closed, open),
@@ -334,7 +334,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expected, actual);
         }
 
-        private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int quantity, DateTime time)
+        private static SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int quantity, DateTime time)
         {
             var securities = new SecurityManager(new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork));
             var transactions = new SecurityTransactionManager(null, securities);

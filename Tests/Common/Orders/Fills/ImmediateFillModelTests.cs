@@ -1532,13 +1532,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(expectedFillPrice, fill.FillPrice);
         }
 
-        private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, bool isInternal = false, bool extendedMarketHours = true,
+        private static SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, bool isInternal = false, bool extendedMarketHours = true,
             Resolution resolution = Resolution.Minute)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, extendedMarketHours, isInternal);
         }
 
-        private Security GetSecurity(SubscriptionDataConfig config)
+        private static Security GetSecurity(SubscriptionDataConfig config)
         {
             var entry = MarketHoursDatabase.FromDataFolder().GetEntry(config.Symbol.ID.Market, config.Symbol, config.SecurityType);
             var security = new Security(

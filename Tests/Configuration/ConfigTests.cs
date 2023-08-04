@@ -174,7 +174,7 @@ namespace QuantConnect.Tests.Configuration
             Assert.AreEqual(expected, Config.GetDouble("temp-value"));
         }
 
-        private void GetValueHandles<T>(T value)
+        private static void GetValueHandles<T>(T value)
         {
             var configValue = Invariant($"{value}");
             Config.Set("temp-value", configValue);

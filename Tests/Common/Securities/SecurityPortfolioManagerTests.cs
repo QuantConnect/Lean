@@ -2834,7 +2834,7 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
-        private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
+        private static SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)
                 return new SubscriptionDataConfig(typeof (TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);

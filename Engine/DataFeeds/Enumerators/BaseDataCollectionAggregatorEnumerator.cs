@@ -167,7 +167,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="time">The start time of the collection</param>
         /// <param name="endTime">The end time of the collection</param>
         /// <returns>A new, empty <see cref="BaseDataCollection"/></returns>
-        private BaseDataCollection CreateCollection(Symbol symbol, DateTime time, DateTime endTime)
+        private static BaseDataCollection CreateCollection(Symbol symbol, DateTime time, DateTime endTime)
         {
             return new BaseDataCollection
             {

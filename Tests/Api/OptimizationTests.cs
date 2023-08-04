@@ -193,7 +193,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(response.Success);
         }
 
-        private void TestBaseOptimization(BaseOptimization optimization)
+        private static void TestBaseOptimization(BaseOptimization optimization)
         {
             Assert.IsNotNull(optimization);
             Assert.IsNotEmpty(optimization.OptimizationId);

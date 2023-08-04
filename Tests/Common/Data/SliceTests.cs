@@ -1341,7 +1341,7 @@ def Test(slice, symbol):
             }
         }
 
-        private Slice GetSlice()
+        private static Slice GetSlice()
         {
             SymbolCache.Clear();
             var indexedLinkedDataSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };

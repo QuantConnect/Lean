@@ -142,7 +142,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        private IEnumerable<Symbol> GetFutureOptionContractList(Symbol futureContractSymbol, DateTime date)
+        private static IEnumerable<Symbol> GetFutureOptionContractList(Symbol futureContractSymbol, DateTime date)
         {
             var symbols = new List<Symbol>();
             var retries = 0;

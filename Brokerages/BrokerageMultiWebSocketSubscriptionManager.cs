@@ -307,7 +307,7 @@ namespace QuantConnect.Brokerages
             }
         }
 
-        private void Disconnect(IWebSocket webSocket)
+        private static void Disconnect(IWebSocket webSocket)
         {
             webSocket.Close();
         }

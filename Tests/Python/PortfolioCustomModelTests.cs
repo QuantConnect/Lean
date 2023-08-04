@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Python
             Assert.Throws<NotImplementedException>(() => portfolio.SetMarginCallModel(CreateCustomMarginCallModel(code, portfolio)));
         }
 
-        private PyObject CreateCustomMarginCallModel(string code, SecurityPortfolioManager portfolio)
+        private static PyObject CreateCustomMarginCallModel(string code, SecurityPortfolioManager portfolio)
         {
             using (Py.GIL())
             {
@@ -90,7 +90,7 @@ namespace QuantConnect.Tests.Python
             }
         }
 
-        private string CreateCustomMarginCallModelCode() => @"
+        private static string CreateCustomMarginCallModelCode() => @"
 import os, sys
 sys.path.append(os.getcwd())
 
@@ -119,7 +119,7 @@ class CustomMarginCallModel:
         
         return [order, order, order], issueMarginCallWarning";
 
-        private string CreateCustomMarginCallModelFromSecurityMarginModelCode() => @"
+        private static string CreateCustomMarginCallModelFromSecurityMarginModelCode() => @"
 import os, sys
 sys.path.append(os.getcwd())
 

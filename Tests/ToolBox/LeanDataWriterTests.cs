@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.ToolBox
             _crypto = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
         }
 
-        private List<Tick> GetTicks(Symbol sym)
+        private static List<Tick> GetTicks(Symbol sym)
         {
             return new List<Tick>()
             {
@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.ToolBox
             };
         }
 
-        private List<QuoteBar> GetQuoteBars(Symbol sym)
+        private static List<QuoteBar> GetQuoteBars(Symbol sym)
         {
             return new List<QuoteBar>()
             {
@@ -362,7 +362,7 @@ namespace QuantConnect.Tests.ToolBox
         /// Helper to get history for tests from a brokerage implementation
         /// </summary>
         /// <returns>List of data points from history request</returns>
-        private List<BaseData> GetHistory(IBrokerage brokerage, Resolution resolution, SecurityType securityType, Symbol symbol, TickType tickType, DateTime startTimeUtc, DateTime endTimeUtc)
+        private static List<BaseData> GetHistory(IBrokerage brokerage, Resolution resolution, SecurityType securityType, Symbol symbol, TickType tickType, DateTime startTimeUtc, DateTime endTimeUtc)
         {
             var dataType = LeanData.GetDataType(resolution, tickType);
 

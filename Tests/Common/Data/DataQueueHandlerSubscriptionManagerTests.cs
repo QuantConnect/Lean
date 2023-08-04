@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Common.Data
 
         #region helper
 
-        private SubscriptionDataConfig GetSubscriptionDataConfig(Type T, Symbol symbol, Resolution resolution, TickType? tickType = null)
+        private static SubscriptionDataConfig GetSubscriptionDataConfig(Type T, Symbol symbol, Resolution resolution, TickType? tickType = null)
         {
             return new SubscriptionDataConfig(
                 T,

@@ -121,7 +121,7 @@ namespace QuantConnect.Tests.Common.Data
             return new RangeConsolidator(range, x => x.Value, x => 10m);
         }
 
-        private List<RangeBar> UpdateConsolidator(RangeConsolidator rangeConsolidator, List<decimal> testValues, Symbol symbol)
+        private static List<RangeBar> UpdateConsolidator(RangeConsolidator rangeConsolidator, List<decimal> testValues, Symbol symbol)
         {
             var time = new DateTime(2016, 1, 1);
             using var consolidator = rangeConsolidator;

@@ -65,7 +65,7 @@ namespace QuantConnect.Util
         /// </summary>
         /// <param name="hexValue">Hexadecimal number</param>
         /// <returns>Integer representation of the hexadecimal</returns>
-        private int HexToInt(string hexValue)
+        private static int HexToInt(string hexValue)
         {
             if (hexValue.Length != 2)
             {

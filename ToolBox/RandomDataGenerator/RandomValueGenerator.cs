@@ -194,7 +194,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             return Math.Round(price / minimumPriceVariation) * minimumPriceVariation;
         }
 
-        private bool IsWithinRange(DateTime value, DateTime min, DateTime max)
+        private static bool IsWithinRange(DateTime value, DateTime min, DateTime max)
         {
             return value >= min && value <= max;
         }

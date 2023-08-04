@@ -266,7 +266,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             return GetDataAggregator(new ManualTimeProvider(DateTime.Today));
         }
 
-        private IDataAggregator GetDataAggregator(ITimeProvider timeProvider)
+        private static IDataAggregator GetDataAggregator(ITimeProvider timeProvider)
         {
             return new TestAggregationManager(timeProvider);
         }
@@ -276,7 +276,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             return GetSubscriptionDataConfig(typeof(T), symbol, resolution, tickType);
         }
 
-        private SubscriptionDataConfig GetSubscriptionDataConfig(Type T, Symbol symbol, Resolution resolution, TickType? tickType = null)
+        private static SubscriptionDataConfig GetSubscriptionDataConfig(Type T, Symbol symbol, Resolution resolution, TickType? tickType = null)
         {
             return new SubscriptionDataConfig(
                 T,

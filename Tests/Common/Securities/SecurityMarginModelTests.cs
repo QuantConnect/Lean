@@ -876,7 +876,7 @@ namespace QuantConnect.Tests.Common.Securities
             });
         }
 
-        private bool HasSufficientBuyingPowerForOrder(decimal orderQuantity, Security security, IAlgorithm algo)
+        private static bool HasSufficientBuyingPowerForOrder(decimal orderQuantity, Security security, IAlgorithm algo)
         {
             var order = new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow);
             _fakeOrderProcessor.AddTicket(order.ToOrderTicket(algo.Transactions));

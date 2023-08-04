@@ -140,7 +140,7 @@ namespace QuantConnect.Exceptions
             return stackExceptionInterpreter;
         }
 
-        private IEnumerable<Exception> InnersAndSelf(Exception exception)
+        private static IEnumerable<Exception> InnersAndSelf(Exception exception)
         {
             yield return exception;
             while (exception.InnerException != null)

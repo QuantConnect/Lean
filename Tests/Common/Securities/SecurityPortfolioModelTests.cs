@@ -792,7 +792,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(win ? 0 : 1, portfolio.Transactions.LossCount);
         }
 
-        private Security InitializeTest(DateTime reference,
+        private static Security InitializeTest(DateTime reference,
             out SecurityPortfolioManager portfolio,
             string accountCurrency = "USD")
         {

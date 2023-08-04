@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Common
             });
         }
 
-        private QCAlgorithm GetAlgorithm(decimal? holdings = null)
+        private static QCAlgorithm GetAlgorithm(decimal? holdings = null)
         {
             var algorithm = new AlgorithmStub();
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());

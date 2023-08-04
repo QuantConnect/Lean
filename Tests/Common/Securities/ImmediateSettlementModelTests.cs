@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, portfolio.UnsettledCash);
         }
 
-        private SubscriptionDataConfig CreateTradeBarConfig()
+        private static SubscriptionDataConfig CreateTradeBarConfig()
         {
             return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
         }

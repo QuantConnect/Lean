@@ -98,7 +98,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             }
         }
 
-        private Dictionary<DateTime, List<SubscriptionDataConfig>> GetSubscriptionDataConfigByDateTime(
+        private static Dictionary<DateTime, List<SubscriptionDataConfig>> GetSubscriptionDataConfigByDateTime(
             IEnumerable<HistoryRequest> requests)
         {
             var dictionary = new Dictionary<DateTime, List<SubscriptionDataConfig>>();

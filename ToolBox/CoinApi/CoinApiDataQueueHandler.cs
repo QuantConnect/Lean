@@ -494,7 +494,7 @@ namespace QuantConnect.ToolBox.CoinApi
             Log.Trace($"CoinApiDataQueueHandler.TraceRestUsage(): Used {used}, Remaining {remaining}, Total {total}");
         }
 
-        private string GetHttpHeaderValue(IRestResponse response, string propertyName)
+        private static string GetHttpHeaderValue(IRestResponse response, string propertyName)
         {
             return response.Headers
                 .FirstOrDefault(x => x.Name == propertyName)?

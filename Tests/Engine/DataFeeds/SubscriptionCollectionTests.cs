@@ -348,7 +348,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             subscription6.Dispose();
         }
 
-        private Subscription CreateSubscription(Resolution resolution, string symbol = "AAPL", bool isInternalFeed = false,
+        private static Subscription CreateSubscription(Resolution resolution, string symbol = "AAPL", bool isInternalFeed = false,
                                                 SecurityType type = SecurityType.Equity, TickType tickType = TickType.Trade)
         {
             var start = DateTime.UtcNow;

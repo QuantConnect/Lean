@@ -223,7 +223,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// Private method loads symbol multipliers from algoseek csv file
         /// </summary>
         /// <returns></returns>
-        private Dictionary<string, decimal> LoadSymbolMultipliers()
+        private static Dictionary<string, decimal> LoadSymbolMultipliers()
         {
             const int columnUnderlying = 0;
             const int columnMultipleFactor = 2;
@@ -239,7 +239,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                                   line => line[columnMultipleFactor].ConvertInvariant<decimal>());
         }
 
-        private void Flush(Processors processors, DateTime time, bool final)
+        private static void Flush(Processors processors, DateTime time, bool final)
         {
             foreach (var symbol in processors.Keys)
             {

@@ -318,7 +318,7 @@ namespace QuantConnect.Util
                 return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
             }
 
-            private void SetSegmentsForDay(SecurityExchangeHours hours, DayOfWeek day, out List<MarketHoursSegment> segments)
+            private static void SetSegmentsForDay(SecurityExchangeHours hours, DayOfWeek day, out List<MarketHoursSegment> segments)
             {
                 LocalMarketHours local;
                 if (hours.MarketHours.TryGetValue(day, out local))

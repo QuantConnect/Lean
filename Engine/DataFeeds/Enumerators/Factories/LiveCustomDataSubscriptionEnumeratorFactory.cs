@@ -191,7 +191,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             return SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, true, baseDataInstance, dataProvider);
         }
 
-        private bool SourceRequiresFastForward(SubscriptionDataSource source)
+        private static bool SourceRequiresFastForward(SubscriptionDataSource source)
         {
             return source.TransportMedium == SubscriptionTransportMedium.LocalFile
                 || source.TransportMedium == SubscriptionTransportMedium.RemoteFile;

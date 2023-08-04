@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Log.DebuggingEnabled = Config.GetBool("debug-mode");
         }
 
-        private void ProcessFeed(IEnumerator<BaseData> enumerator, Action<BaseData> callback = null)
+        private static void ProcessFeed(IEnumerator<BaseData> enumerator, Action<BaseData> callback = null)
         {
             Task.Run(() =>
             {
@@ -284,7 +284,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
-        private SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
+        private static SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
         {
             return new SubscriptionDataConfig(
                 typeof(T),

@@ -2906,7 +2906,7 @@ namespace QuantConnect.Algorithm
         }
 
         [DocumentationAttribute(ConsolidatingData)]
-        private IDataConsolidator CreateConsolidator(Func<DateTime, CalendarInfo> calendar, Type consolidatorInputType, TickType tickType)
+        private static IDataConsolidator CreateConsolidator(Func<DateTime, CalendarInfo> calendar, Type consolidatorInputType, TickType tickType)
         {
             // if our type can be used as a trade bar, then let's just make one of those
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to TradeBar

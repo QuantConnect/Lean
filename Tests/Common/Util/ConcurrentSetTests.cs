@@ -265,7 +265,7 @@ namespace QuantConnect.Tests.Common.Util
             }
         }
 
-        private void CompareWithHashSet<T>(ConcurrentSet<T> set, Func<ISet<T>, ISet<T>> func)
+        private static void CompareWithHashSet<T>(ConcurrentSet<T> set, Func<ISet<T>, ISet<T>> func)
         {
             var asHashSet = set.ToHashSet();
             var expected = func(asHashSet);

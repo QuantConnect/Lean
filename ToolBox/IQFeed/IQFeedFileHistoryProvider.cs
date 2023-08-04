@@ -207,7 +207,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// </summary>
         /// <param name="symbol">The symbol to be handled</param>
         /// <returns>True if this data provider can get data for the symbol, false otherwise</returns>
-        private bool CanHandle(Symbol symbol)
+        private static bool CanHandle(Symbol symbol)
         {
             var market = symbol.ID.Market;
             var securityType = symbol.ID.SecurityType;

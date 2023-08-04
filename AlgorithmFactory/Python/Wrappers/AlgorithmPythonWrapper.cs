@@ -1044,7 +1044,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="pyObject">PyObject to be converted</param>
         /// <param name="result">C# object that of type T</param>
         /// <returns>True if successful conversion</returns>
-        private bool TryConvert<T>(PyObject pyObject, out T result)
+        private static bool TryConvert<T>(PyObject pyObject, out T result)
         {
             result = default(T);
             var type = (Type)pyObject.GetPythonType().AsManagedObject(typeof(Type));

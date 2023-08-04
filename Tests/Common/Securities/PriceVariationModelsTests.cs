@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             Assert.AreEqual(expected, actual);
         }
 
-        private Security GetSecurity(Symbol symbol, DataNormalizationMode mode)
+        private static Security GetSecurity(Symbol symbol, DataNormalizationMode mode)
         {
             var symbolProperties = SymbolPropertiesDatabase.FromDataFolder()
                 .GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, Currencies.USD);

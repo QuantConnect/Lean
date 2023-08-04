@@ -82,6 +82,6 @@ namespace QuantConnect.Tests.Research
             }
         }
 
-        private int GetDataFrameLength(dynamic df) => (int)(df.shape[0] as PyObject).AsManagedObject(typeof(int));
+        private static int GetDataFrameLength(dynamic df) => (int)(df.shape[0] as PyObject).AsManagedObject(typeof(int));
     }
 }

@@ -245,7 +245,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
             request.Verify(m => m.AddOrUpdateParameter("apikey", API_KEY));
         }
 
-        private string BuildUrl(IRestRequest request)
+        private static string BuildUrl(IRestRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));

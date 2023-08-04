@@ -157,7 +157,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.DoesNotThrow(() => crypto.SetLeverage(2));
         }
 
-        private Crypto GetCrypto(Symbol symbol)
+        private static Crypto GetCrypto(Symbol symbol)
         {
             return new Crypto(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),

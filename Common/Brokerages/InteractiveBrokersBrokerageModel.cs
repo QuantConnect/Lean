@@ -215,7 +215,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Returns true if the specified order is within IB's order size limits
         /// </summary>
-        private bool IsForexWithinOrderSizeLimits(string currencyPair, decimal quantity, out BrokerageMessageEvent message)
+        private static bool IsForexWithinOrderSizeLimits(string currencyPair, decimal quantity, out BrokerageMessageEvent message)
         {
             /* https://www.interactivebrokers.com/en/trading/forexOrderSize.php
             Currency    Currency Description	    Minimum Order Size	Maximum Order Size

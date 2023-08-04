@@ -66,12 +66,12 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
-        private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, bool isInternal = false, bool extendedMarketHours = true)
+        private static SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, bool isInternal = false, bool extendedMarketHours = true)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, extendedMarketHours, isInternal);
         }
 
-        private Security GetSecurity(SubscriptionDataConfig config)
+        private static Security GetSecurity(SubscriptionDataConfig config)
         {
             var entry = MarketHoursDatabase.FromDataFolder().GetEntry(config.Symbol.ID.Market, config.Symbol, config.SecurityType);
             var security = new Security(

@@ -1345,17 +1345,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             return equity;
         }
 
-        private SubscriptionDataConfig CreateTickConfig(Symbol symbol, bool extendedHours = true)
+        private static SubscriptionDataConfig CreateTickConfig(Symbol symbol, bool extendedHours = true)
         {
             return new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, extendedHours, false);
         }
 
-        private SubscriptionDataConfig CreateQuoteBarConfig(Symbol symbol, Resolution resolution = Resolution.Minute, bool extendedHours = true)
+        private static SubscriptionDataConfig CreateQuoteBarConfig(Symbol symbol, Resolution resolution = Resolution.Minute, bool extendedHours = true)
         {
             return new SubscriptionDataConfig(typeof(QuoteBar), symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, extendedHours, false);
         }
 
-        private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, Resolution resolution = Resolution.Minute, bool extendedHours = true)
+        private static SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, Resolution resolution = Resolution.Minute, bool extendedHours = true)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, extendedHours, false);
         }

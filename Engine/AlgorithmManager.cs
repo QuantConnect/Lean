@@ -818,7 +818,7 @@ namespace QuantConnect.Lean.Engine
         /// <param name="methodInvokers">The dictionary of method invokers</param>
         /// <param name="methodName">The name of the method to search for</param>
         /// <returns>True if the method existed and was added to the collection</returns>
-        private bool AddMethodInvoker<T>(IAlgorithm algorithm, Dictionary<Type, MethodInvoker> methodInvokers, string methodName = "OnData")
+        private static bool AddMethodInvoker<T>(IAlgorithm algorithm, Dictionary<Type, MethodInvoker> methodInvokers, string methodName = "OnData")
         {
             var newSplitMethodInfo = algorithm.GetType().GetMethod(methodName, new[] { typeof(T) });
             if (newSplitMethodInfo != null)

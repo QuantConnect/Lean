@@ -131,7 +131,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="quantity">Holding quantity</param>
         /// <param name="value">Holding value</param>
         /// <returns></returns>
-        private decimal GetMarginRequirement(Security security, decimal quantity, decimal value)
+        private static decimal GetMarginRequirement(Security security, decimal quantity, decimal value)
         {
             var option = (Option)security;
 

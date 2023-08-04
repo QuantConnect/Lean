@@ -62,7 +62,7 @@ namespace QuantConnect.ToolBox
         {
         }
 
-        private Type GetDataType(SecurityType securityType, Resolution resolution, TickType tickType)
+        private static Type GetDataType(SecurityType securityType, Resolution resolution, TickType tickType)
         {
             if (resolution == Resolution.Tick)
             {

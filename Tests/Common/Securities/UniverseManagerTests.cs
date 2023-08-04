@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Common.Securities
             manager.Remove(universe.Configuration.Symbol);
         }
 
-        private SubscriptionDataConfig CreateTradeBarConfig()
+        private static SubscriptionDataConfig CreateTradeBarConfig()
         {
             return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
         }

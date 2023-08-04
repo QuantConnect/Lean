@@ -139,7 +139,7 @@ namespace QuantConnect.Tests.Common.Securities
                 calendar.GetTradingDays(new DateTime(2010, 2, 28), new DateTime(2010, 2, 10)).ToList());
         }
 
-        private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
+        private static SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)
                 return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);

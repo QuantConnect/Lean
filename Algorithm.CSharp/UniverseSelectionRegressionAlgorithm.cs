@@ -147,7 +147,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private void AssertQuantity(Security security, int expected)
+        private static void AssertQuantity(Security security, int expected)
         {
             var actual = security.Holdings.Quantity;
             if (actual != expected)

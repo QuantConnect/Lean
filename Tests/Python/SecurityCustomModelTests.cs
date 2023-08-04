@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Python
             Assert.Throws<NotImplementedException>(() => spy.SetBuyingPowerModel(pyObject));
         }
 
-        private PyObject CreateCustomBuyingPowerModel(string code)
+        private static PyObject CreateCustomBuyingPowerModel(string code)
         {
             using (Py.GIL())
             {
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Python
             }
         }
 
-        private string CreateCustomBuyingPowerModelCode() => @"
+        private static string CreateCustomBuyingPowerModelCode() => @"
 import os, sys
 sys.path.append(os.getcwd())
 
@@ -122,7 +122,7 @@ class CustomBuyingPowerModel:
     def SetLeverage(self, security, leverage):
         self.margin = 1.0 / float(leverage)";
 
-        private string CreateCustomBuyingPowerModelFromSecurityMarginModelCode() => @"
+        private static string CreateCustomBuyingPowerModelFromSecurityMarginModelCode() => @"
 import os, sys
 sys.path.append(os.getcwd())
 
@@ -132,7 +132,7 @@ class CustomBuyingPowerModel(SecurityMarginModel):
     def GetMaximumOrderQuantityForTargetBuyingPower(self, context):
         return GetMaximumOrderQuantityResult(100)";
 
-        private Security GetSecurity<T>(Symbol symbol, Resolution resolution)
+        private static Security GetSecurity<T>(Symbol symbol, Resolution resolution)
         {
             var subscriptionDataConfig = new SubscriptionDataConfig(
                 typeof(T),

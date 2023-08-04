@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Report
             }
         }
 
-        private Dictionary<DateTime, double> CreateFakeSeries(double[] inputs)
+        private static Dictionary<DateTime, double> CreateFakeSeries(double[] inputs)
         {
             var i = 0;
             return inputs.ToList().ToDictionary(item =>

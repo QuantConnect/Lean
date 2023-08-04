@@ -99,7 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private void AssertIndicatorState(IIndicator indicator, bool isReady)
+        private static void AssertIndicatorState(IIndicator indicator, bool isReady)
         {
             if (indicator.IsReady != isReady)
             {

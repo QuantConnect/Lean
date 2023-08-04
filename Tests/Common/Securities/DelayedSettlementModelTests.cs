@@ -149,7 +149,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, portfolio.UnsettledCash);
         }
 
-        private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
+        private static SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
         }

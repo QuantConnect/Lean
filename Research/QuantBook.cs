@@ -674,7 +674,7 @@ namespace QuantConnect.Research
         /// </summary>
         /// <param name="series">pandas.Series to be converted</param>
         /// <returns><see cref="SortedDictionary{DateTime, Double}"/> with pandas.Series information</returns>
-        private SortedDictionary<DateTime, double> GetDictionaryFromSeries(PyObject series)
+        private static SortedDictionary<DateTime, double> GetDictionaryFromSeries(PyObject series)
         {
             var dictionary = new SortedDictionary<DateTime, double>();
 
@@ -694,7 +694,7 @@ namespace QuantConnect.Research
         /// </summary>
         /// <param name="dictionary"><see cref="IDictionary{DateTime, Double}"/> with prices keyed by time</param>
         /// <returns><see cref="List{Double}"/> with daily rate of change</returns>
-        private List<double> CalculateDailyRateOfChange(IDictionary<DateTime, double> dictionary)
+        private static List<double> CalculateDailyRateOfChange(IDictionary<DateTime, double> dictionary)
         {
             var daily = dictionary.GroupBy(kvp => kvp.Key.Date)
                 .ToDictionary(x => x.Key, v => v.LastOrDefault().Value)
@@ -757,7 +757,7 @@ namespace QuantConnect.Research
         /// <param name="baseData">Object with the desired property</param>
         /// <param name="fullName">Property name</param>
         /// <returns>Property value</returns>
-        private object GetPropertyValue(object baseData, string fullName)
+        private static object GetPropertyValue(object baseData, string fullName)
         {
             foreach (var name in fullName.Split('.'))
             {

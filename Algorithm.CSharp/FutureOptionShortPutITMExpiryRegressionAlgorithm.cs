@@ -125,7 +125,7 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{orderEvent}");
         }
 
-        private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
+        private static void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)
         {
             if (orderEvent.Message.Contains("Assignment"))
             {
@@ -145,7 +145,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private void AssertFutureOptionContractOrder(OrderEvent orderEvent, Security option)
+        private static void AssertFutureOptionContractOrder(OrderEvent orderEvent, Security option)
         {
             if (orderEvent.Direction == OrderDirection.Sell && option.Holdings.Quantity != -1)
             {

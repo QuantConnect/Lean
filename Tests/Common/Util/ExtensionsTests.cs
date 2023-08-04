@@ -1703,7 +1703,7 @@ actualDictionary.update({'IBM': 5})
             Assert.AreEqual(expectedResult, values.GreatestCommonDivisor());
         }
 
-        private PyObject ConvertToPyObject(object value)
+        private static PyObject ConvertToPyObject(object value)
         {
             using (Py.GIL())
             {

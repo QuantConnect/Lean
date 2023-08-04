@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return orderedDictionary.Take(2).Select(x => x.Key);
             }
 
-            private double[] GetReturns(QCAlgorithm algorithm, Symbol symbol)
+            private static double[] GetReturns(QCAlgorithm algorithm, Symbol symbol)
             {
                 var window = new RollingWindow<double>(period);
                 var rateOfChange = new RateOfChange(1);

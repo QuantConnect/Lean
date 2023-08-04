@@ -133,7 +133,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 return insights;
             }
 
-            private bool ShouldEmitInsight(QCAlgorithm algorithm, Symbol symbol)
+            private static bool ShouldEmitInsight(QCAlgorithm algorithm, Symbol symbol)
             {
                 var timeOfDay = algorithm.Time.TimeOfDay;
 

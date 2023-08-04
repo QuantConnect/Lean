@@ -312,7 +312,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.IsTrue(targets.IsNullOrEmpty());
         }
 
-        private QCAlgorithm GetAlgorithm(IOrderProcessor orderProcessor)
+        private static QCAlgorithm GetAlgorithm(IOrderProcessor orderProcessor)
         {
             var algorithm = new FakeAlgorithm();
             algorithm.SetFinishedWarmingUp();

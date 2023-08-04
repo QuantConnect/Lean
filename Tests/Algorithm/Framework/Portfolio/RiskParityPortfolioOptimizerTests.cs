@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(expected, result);
         }
 
-        private T[,] JaggedArrayTo2DArray<T>(T[][] source)
+        private static T[,] JaggedArrayTo2DArray<T>(T[][] source)
         {
             int FirstDim = source.Length;
             int SecondDim = source.GroupBy(row => row.Length).Single().Key;

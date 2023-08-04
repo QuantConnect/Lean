@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             Quit();
         }
 
-        private void CheckParameter<T, P>(T expected, P actual, string call)
+        private static void CheckParameter<T, P>(T expected, P actual, string call)
         {
             if (expected == null && actual != null)
             {

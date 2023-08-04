@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Report
     [TestFixture]
     public class PortfolioLooperAlgorithmTests
     {
-        private PortfolioLooperAlgorithm CreateAlgorithm(IEnumerable<Order> orders, AlgorithmConfiguration algorithmConfiguration = null)
+        private static PortfolioLooperAlgorithm CreateAlgorithm(IEnumerable<Order> orders, AlgorithmConfiguration algorithmConfiguration = null)
         {
             var algorithm = new PortfolioLooperAlgorithm(100000m, orders, algorithmConfiguration);
 

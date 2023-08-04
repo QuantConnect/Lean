@@ -1009,7 +1009,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks>If the target type is <see cref="BaseData"/>, <see cref="OpenInterest"/> config types will return false.
         /// This is useful to filter OpenInterest by default from history requests unless it's explicitly requested</remarks>
-        private bool SubscriptionDataConfigTypeFilter(Type targetType, Type configType)
+        private static bool SubscriptionDataConfigTypeFilter(Type targetType, Type configType)
         {
             var targetIsGenericType = targetType == typeof(BaseData);
 

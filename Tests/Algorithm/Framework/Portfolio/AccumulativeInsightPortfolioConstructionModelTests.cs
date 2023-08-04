@@ -446,7 +446,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.IsTrue(createdValidTarget);
         }
 
-        private Security GetSecurity(Symbol symbol)
+        private static Security GetSecurity(Symbol symbol)
         {
             var config = SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc);
             return new Equity(
@@ -500,7 +500,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.SetDateTime(dateTime.ConvertToUtc(_algorithm.TimeZone));
         }
 
-        private void AssertTargets(IEnumerable<IPortfolioTarget> expectedTargets, IEnumerable<IPortfolioTarget> actualTargets)
+        private static void AssertTargets(IEnumerable<IPortfolioTarget> expectedTargets, IEnumerable<IPortfolioTarget> actualTargets)
         {
             var list = actualTargets.ToList();
             Assert.AreEqual(expectedTargets.Count(), list.Count);

@@ -123,7 +123,7 @@ namespace QuantConnect.ToolBox.Polygon
             Send(json);
         }
 
-        private string GetSubscriptionPrefix(SecurityType securityType, TickType tickType)
+        private static string GetSubscriptionPrefix(SecurityType securityType, TickType tickType)
         {
             switch (securityType)
             {
@@ -141,7 +141,7 @@ namespace QuantConnect.ToolBox.Polygon
             }
         }
 
-        private string GetWebSocketUrl(SecurityType securityType)
+        private static string GetWebSocketUrl(SecurityType securityType)
         {
             switch (securityType)
             {

@@ -177,7 +177,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Get the calendar open hours for the date.
         /// </summary>
-        private IEnumerable<MarketHoursSegment> MarketToday(DateTime time, Symbol symbol)
+        private static IEnumerable<MarketHoursSegment> MarketToday(DateTime time, Symbol symbol)
         {
             if (Config.GetBool("force-exchange-always-open"))
             {

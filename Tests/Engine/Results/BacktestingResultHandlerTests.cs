@@ -472,7 +472,7 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(expectedEquityPerformance, equityPerformance.ValuesAll.ToList());
         }
 
-        private void TestSampleAlignmentsRelative(
+        private static void TestSampleAlignmentsRelative(
             Series<DateTime, double> equityPerformance,
             Series<DateTime, double> benchmarkPerformance,
             Series<DateTime, double> performance,

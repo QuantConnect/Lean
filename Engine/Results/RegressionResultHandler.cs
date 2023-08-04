@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class RegressionResultHandler : BacktestingResultHandler
     {
-        private Language Language => Config.GetValue<Language>("algorithm-language");
+        private static Language Language => Config.GetValue<Language>("algorithm-language");
 
         private DateTime _testStartTime;
         private DateTime _lastRuntimeStatisticsDate;

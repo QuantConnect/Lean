@@ -343,7 +343,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(2, marginCallOrders.Count);
         }
 
-        private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int cash)
+        private static SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int cash)
         {
             var securities = new SecurityManager(new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }));
             var transactions = new SecurityTransactionManager(null, securities);
@@ -355,7 +355,7 @@ namespace QuantConnect.Tests.Common.Securities
             return portfolio;
         }
 
-        private Security GetSecurity(Symbol symbol)
+        private static Security GetSecurity(Symbol symbol)
         {
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -377,7 +377,7 @@ namespace QuantConnect.Tests.Common.Securities
             );
         }
 
-        private Option GetOption(Symbol symbol)
+        private static Option GetOption(Symbol symbol)
         {
             return new Option(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),

@@ -114,7 +114,7 @@ def Monthly(dt):
             }
         }
 
-        private void AssertTradeBar(IEnumerable<TradeBar> tradeBars, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
+        private static void AssertTradeBar(IEnumerable<TradeBar> tradeBars, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
         {
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(openTime, consolidated.Time);
@@ -175,7 +175,7 @@ def Monthly(dt):
                 monthlyConsolidator.Update(bar);
             }
         }
-        private void AssertQuoteBar(IEnumerable<QuoteBar> quoteBars, DateTime openTime, DateTime closeTime, Symbol symbol, QuoteBar consolidated)
+        private static void AssertQuoteBar(IEnumerable<QuoteBar> quoteBars, DateTime openTime, DateTime closeTime, Symbol symbol, QuoteBar consolidated)
         {
             Assert.AreEqual(symbol, consolidated.Symbol);
             Assert.AreEqual(openTime, consolidated.Time);
@@ -243,7 +243,7 @@ def Monthly(dt):
             }
         }
 
-        private void AssertTickTradeBar(IEnumerable<Tick> ticks, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
+        private static void AssertTickTradeBar(IEnumerable<Tick> ticks, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
         {
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(openTime, consolidated.Time);
@@ -305,7 +305,7 @@ def Monthly(dt):
             }
         }
 
-        private void AssertTickQuoteBar(IEnumerable<Tick> ticks, DateTime openTime, DateTime closeTime, Symbol symbol, QuoteBar consolidated)
+        private static void AssertTickQuoteBar(IEnumerable<Tick> ticks, DateTime openTime, DateTime closeTime, Symbol symbol, QuoteBar consolidated)
         {
             Assert.IsNotNull(consolidated);        
             Assert.AreEqual(openTime, consolidated.Time);
@@ -371,7 +371,7 @@ def Monthly(dt):
         }
 
 
-        private void AssertBaseTradeBar(IEnumerable<Tick> ticks, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
+        private static void AssertBaseTradeBar(IEnumerable<Tick> ticks, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
         {
             Assert.AreEqual(openTime, consolidated.Time);
             Assert.AreEqual(closeTime, consolidated.EndTime);
@@ -416,7 +416,7 @@ def Monthly(dt):
             }
         }
 
-        private void AssertDailyTradeBar(IEnumerable<TradeBar> tradeBars, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
+        private static void AssertDailyTradeBar(IEnumerable<TradeBar> tradeBars, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
         {
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(openTime, consolidated.Time);

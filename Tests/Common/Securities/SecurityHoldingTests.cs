@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(firstPrice, second.PreviousAveragePrice);
         }
 
-        private Security GetSecurity<T>(Symbol symbol, Resolution resolution)
+        private static Security GetSecurity<T>(Symbol symbol, Resolution resolution)
         {
             var subscriptionDataConfig = new SubscriptionDataConfig(
                 typeof(T),

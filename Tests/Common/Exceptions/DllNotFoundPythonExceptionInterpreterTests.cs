@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.That(() => interpreter.Interpret(exception, NullExceptionInterpreter.Instance), constraint);
         }
 
-        private Exception CreateExceptionFromType(Type type)
+        private static Exception CreateExceptionFromType(Type type)
         {
             if (type == typeof(DllNotFoundException))
             {

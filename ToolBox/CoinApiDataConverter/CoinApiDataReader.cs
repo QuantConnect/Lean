@@ -111,7 +111,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// <param name="reader">The reader.</param>
         /// <param name="headerParts">The header parts.</param>
         /// <returns></returns>
-        private IEnumerable<Tick> ParseTradeData(Symbol symbol, StreamReader reader, List<string> headerParts)
+        private static IEnumerable<Tick> ParseTradeData(Symbol symbol, StreamReader reader, List<string> headerParts)
         {
             var columnTime = headerParts.FindIndex(x => x == "time_exchange");
             var columnPrice = headerParts.FindIndex(x => x == "price");
@@ -145,7 +145,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// <param name="reader">The reader.</param>
         /// <param name="headerParts">The header parts.</param>
         /// <returns></returns>
-        private IEnumerable<Tick> ParseQuoteData(Symbol symbol, StreamReader reader, List<string> headerParts)
+        private static IEnumerable<Tick> ParseQuoteData(Symbol symbol, StreamReader reader, List<string> headerParts)
         {
             var columnTime = headerParts.FindIndex(x => x == "time_exchange");
             var columnAskPrice = headerParts.FindIndex(x => x == "ask_px");

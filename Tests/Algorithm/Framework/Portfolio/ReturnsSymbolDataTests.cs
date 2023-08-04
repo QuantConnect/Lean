@@ -148,7 +148,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.DoesNotThrow(() => algorithm.PortfolioConstruction.CreateTargets(algorithm, insights));
         }
 
-        private List<Slice> GetHistory(IEnumerable<Symbol> symbols, bool odd)
+        private static List<Slice> GetHistory(IEnumerable<Symbol> symbols, bool odd)
         {
             var reference = DateTime.Now;
             var rnd = new Random(reference.Second);
@@ -172,7 +172,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             }).ToList();
         }
 
-        private double GetExpectedValue(List<Slice> history)
+        private static double GetExpectedValue(List<Slice> history)
         {
             var code = @"
 import numpy as np

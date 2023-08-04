@@ -54,7 +54,7 @@ namespace QuantConnect.Queues
         /// <summary>
         /// Physical location of Algorithm DLL.
         /// </summary>
-        private string AlgorithmLocation
+        private static string AlgorithmLocation
         {
             get
             {

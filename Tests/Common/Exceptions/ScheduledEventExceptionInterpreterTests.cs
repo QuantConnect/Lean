@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             mockInnerInterpreter.Verify(iep => iep.Interpret(inner, mockInnerInterpreter.Object), Times.Exactly(1));
         }
 
-        private Exception CreateExceptionFromType(Type type)
+        private static Exception CreateExceptionFromType(Type type)
         {
             if (type == typeof(ScheduledEventException))
             {

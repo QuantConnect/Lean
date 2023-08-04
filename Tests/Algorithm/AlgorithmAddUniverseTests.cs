@@ -137,14 +137,14 @@ namespace QuantConnect.Tests.Algorithm
             };
         }
 
-        private QCAlgorithm CreateAlgorithm()
+        private static QCAlgorithm CreateAlgorithm()
         {
             var algo = new QCAlgorithm();
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
             return algo;
         }
 
-        private Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> CreateReturnAllFunc()
+        private static Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> CreateReturnAllFunc()
         {
             return x => x.Select(y => y.Symbol);
         }

@@ -199,7 +199,7 @@ namespace QuantConnect.Python
         /// <param name="key">Key to insert in the <see cref="PyDict"/></param>
         /// <param name="points">List of <see cref="IndicatorDataPoint"/> that will make up the resulting series</param>
         /// <param name="pyDict"><see cref="PyDict"/> where the resulting key-value pair will be inserted into</param>
-        private void AddSeriesToPyDict(string key, List<IndicatorDataPoint> points, PyDict pyDict)
+        private static void AddSeriesToPyDict(string key, List<IndicatorDataPoint> points, PyDict pyDict)
         {
             var index = new List<DateTime>();
             var values = new List<double>();
@@ -217,7 +217,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="pyDict"><see cref="PyDict"/> of string to pandas.Series</param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
-        private PyObject MakeIndicatorDataFrame(PyDict pyDict)
+        private static PyObject MakeIndicatorDataFrame(PyDict pyDict)
         {
             return _pandas.DataFrame(pyDict, columns: pyDict.Keys().Select(x => x.As<string>().ToLowerInvariant()).OrderBy(x => x));
         }
@@ -226,7 +226,7 @@ namespace QuantConnect.Python
         /// Gets the <see cref="PandasData"/> for the given symbol if it exists in the dictionary, otherwise it creates a new instance with the
         /// given base data and adds it to the dictionary
         /// </summary>
-        private PandasData GetPandasDataValue(IDictionary<SecurityIdentifier, PandasData> sliceDataDict, Symbol symbol, object data, ref int maxLevels)
+        private static PandasData GetPandasDataValue(IDictionary<SecurityIdentifier, PandasData> sliceDataDict, Symbol symbol, object data, ref int maxLevels)
         {
             PandasData value;
             if (!sliceDataDict.TryGetValue(symbol.ID, out value))

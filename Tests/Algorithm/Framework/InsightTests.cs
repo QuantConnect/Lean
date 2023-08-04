@@ -327,7 +327,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
                 new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
         }
 
-        private void SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(Insight insight, DateTime generatedTimeUtc, DateTime expected)
+        private static void SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(Insight insight, DateTime generatedTimeUtc, DateTime expected)
         {
             var symbol = insight.Symbol;
             insight.GeneratedTimeUtc = generatedTimeUtc;

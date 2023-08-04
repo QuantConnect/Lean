@@ -149,7 +149,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.TotalReturn); });
         }
 
-        private SubscriptionDataConfig CreateTradeBarConfig()
+        private static SubscriptionDataConfig CreateTradeBarConfig()
         {
             return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
         }

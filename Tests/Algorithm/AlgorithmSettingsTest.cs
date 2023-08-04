@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(4986m, actual);
         }
 
-        private FakeOrderProcessor InitializeAndGetFakeOrderProcessor(QCAlgorithm algo)
+        private static FakeOrderProcessor InitializeAndGetFakeOrderProcessor(QCAlgorithm algo)
         {
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
             algo.SetFinishedWarmingUp();

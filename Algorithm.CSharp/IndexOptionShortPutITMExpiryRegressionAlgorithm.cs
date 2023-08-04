@@ -130,7 +130,7 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{orderEvent}");
         }
 
-        private void AssertIndexOptionOrderExercise(OrderEvent orderEvent, Security index, Security optionContract)
+        private static void AssertIndexOptionOrderExercise(OrderEvent orderEvent, Security index, Security optionContract)
         {
             if (orderEvent.Message.Contains("Assignment"))
             {
@@ -149,7 +149,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private void AssertIndexOptionContractOrder(OrderEvent orderEvent, Security option)
+        private static void AssertIndexOptionContractOrder(OrderEvent orderEvent, Security option)
         {
             if (orderEvent.Direction == OrderDirection.Sell && option.Holdings.Quantity != -1)
             {

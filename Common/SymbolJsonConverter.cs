@@ -103,7 +103,7 @@ namespace QuantConnect
         /// <summary>
         /// Creates a symbol from the user friendly string representation
         /// </summary>
-        private Symbol BuildSymbolFromUserFriendlyValue(JObject jObject)
+        private static Symbol BuildSymbolFromUserFriendlyValue(JObject jObject)
         {
             if (jObject.TryGetValue("value", StringComparison.InvariantCultureIgnoreCase, out var value)
                 && jObject.TryGetValue("type", StringComparison.InvariantCultureIgnoreCase, out var securityTypeToken)

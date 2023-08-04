@@ -369,7 +369,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             );
         }
 
-        private Symbol GetSymbol(string ticker) => Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+        private static Symbol GetSymbol(string ticker) => Symbol.Create(ticker, SecurityType.Equity, Market.USA);
 
         private Insight GetInsight(string SourceModel, string ticker, double magnitude)
         {
@@ -452,7 +452,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             }
         }
 
-        private string GetPythonBLOPCM()
+        private static string GetPythonBLOPCM()
         {
             return @"
 from AlgorithmImports import *

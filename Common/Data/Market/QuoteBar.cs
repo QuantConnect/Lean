@@ -561,7 +561,7 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this reader request</param>
         /// <param name="useScaleFactor">Whether the data has a scaling factor applied</param>
         /// <returns><see cref="QuoteBar"/> with the bid/ask prices set appropriately</returns>
-        private QuoteBar ParseQuote(SubscriptionDataConfig config, DateTime date, StreamReader streamReader, bool useScaleFactor)
+        private static QuoteBar ParseQuote(SubscriptionDataConfig config, DateTime date, StreamReader streamReader, bool useScaleFactor)
         {
             // Non-equity asset classes will not use scaling, including options that have a non-equity underlying asset class.
             var scaleFactor = useScaleFactor
@@ -639,7 +639,7 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this reader request</param>
         /// <param name="useScaleFactor">Whether the data has a scaling factor applied</param>
         /// <returns><see cref="QuoteBar"/> with the bid/ask prices set appropriately</returns>
-        private QuoteBar ParseQuote(SubscriptionDataConfig config, DateTime date, string line, bool useScaleFactor)
+        private static QuoteBar ParseQuote(SubscriptionDataConfig config, DateTime date, string line, bool useScaleFactor)
         {
             var scaleFactor = useScaleFactor
                               ? _scaleFactor

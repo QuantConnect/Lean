@@ -537,7 +537,7 @@ namespace QuantConnect.Tests.Common
             Assert.Less(stopWatch.ElapsedMilliseconds, 2200);
         }
 
-        private Symbol GetOptionSymbol(Symbol underlying, OptionStyle optionStyle, OptionRight optionRight, decimal strike = 192m)
+        private static Symbol GetOptionSymbol(Symbol underlying, OptionStyle optionStyle, OptionRight optionRight, decimal strike = 192m)
         {
             return Symbol.CreateOption(underlying.Value, Market.USA, optionStyle, optionRight, strike, new DateTime(2016, 02, 19));
         }

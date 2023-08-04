@@ -127,7 +127,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(manualMode, security.DataNormalizationMode);
         }
 
-        private Tuple<QCAlgorithm, DataManager> GetAlgorithmAndDataManager()
+        private static Tuple<QCAlgorithm, DataManager> GetAlgorithmAndDataManager()
         {
             var algorithm = new QCAlgorithm();
 

@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
-        private bool Compare(Tick expected, Tick actual)
+        private static bool Compare(Tick expected, Tick actual)
         {
             return expected.Time == actual.Time
                    && expected.BidPrice == actual.BidPrice

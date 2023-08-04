@@ -3775,7 +3775,7 @@ def DataFrameIsEmpty():
                 new Dictionary<Universe, BaseDataCollection>()).Slice);
         }
 
-        private SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
+        private static SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
         {
             return new SubscriptionDataConfig(
                 typeof(T),
@@ -3788,7 +3788,7 @@ def DataFrameIsEmpty():
                 false);
         }
 
-        private Security GetSecurity(SubscriptionDataConfig subscriptionDataConfig)
+        private static Security GetSecurity(SubscriptionDataConfig subscriptionDataConfig)
         {
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),

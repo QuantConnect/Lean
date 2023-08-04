@@ -195,7 +195,7 @@ namespace QuantConnect.Data.Custom
         /// <param name="ticker">The pair ticker.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentException">Volume data is not available for the selected ticker. - ticker</exception>
-        private int GetFxcmIDFromSymbol(string ticker)
+        private static int GetFxcmIDFromSymbol(string ticker)
         {
             int symbolId;
             try
@@ -219,7 +219,7 @@ namespace QuantConnect.Data.Custom
         ///     resolution - tick or second resolution are not supported for Forex
         ///     Volume.
         /// </exception>
-        private string GetIntervalFromResolution(Resolution resolution)
+        private static string GetIntervalFromResolution(Resolution resolution)
         {
             string interval;
             switch (resolution)

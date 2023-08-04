@@ -137,7 +137,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Determines the new state. This is basically cross-over detection logic that
         /// includes considerations for bouncing using the configured bounce tolerance.
         /// </summary>
-        private State GetState(RelativeStrengthIndex rsi, State previous)
+        private static State GetState(RelativeStrengthIndex rsi, State previous)
         {
             if (rsi > 70m)
             {

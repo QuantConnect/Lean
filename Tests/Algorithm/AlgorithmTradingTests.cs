@@ -1616,7 +1616,7 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        private QCAlgorithm GetAlgorithm(out Security msft, decimal leverage, decimal fee)
+        private static QCAlgorithm GetAlgorithm(out Security msft, decimal leverage, decimal fee)
         {
             //Initialize algorithm
             var algo = new QCAlgorithm();
@@ -1634,7 +1634,7 @@ namespace QuantConnect.Tests.Algorithm
             return algo;
         }
 
-        private QCAlgorithm GetAlgorithm(out Security msft, decimal initialMarginRequirement, decimal maintenanceMarginRequirement, decimal fee)
+        private static QCAlgorithm GetAlgorithm(out Security msft, decimal initialMarginRequirement, decimal maintenanceMarginRequirement, decimal fee)
         {
             //Initialize algorithm
             var algo = new QCAlgorithm();
@@ -1650,7 +1650,7 @@ namespace QuantConnect.Tests.Algorithm
             return algo;
         }
 
-        private void Update(Security security, decimal close)
+        private static void Update(Security security, decimal close)
         {
             security.SetMarketPrice(new TradeBar
             {
@@ -1663,7 +1663,7 @@ namespace QuantConnect.Tests.Algorithm
             });
         }
 
-        private bool HasSufficientBuyingPowerForOrder(decimal orderQuantity, Security security, IAlgorithm algo)
+        private static bool HasSufficientBuyingPowerForOrder(decimal orderQuantity, Security security, IAlgorithm algo)
         {
             var order = new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow);
             _fakeOrderProcessor.AddTicket(order.ToOrderTicket(algo.Transactions));

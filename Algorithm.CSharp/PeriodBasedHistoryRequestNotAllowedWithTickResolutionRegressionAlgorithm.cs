@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private void AssertThatHistoryThrowsForTickResolution(Action historyCall, string historyCallDescription)
+        private static void AssertThatHistoryThrowsForTickResolution(Action historyCall, string historyCallDescription)
         {
             try
             {

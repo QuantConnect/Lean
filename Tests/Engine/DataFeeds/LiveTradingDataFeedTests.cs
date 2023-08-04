@@ -2221,7 +2221,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
-        private void ConsoleWriteLine(string line = "")
+        private static void ConsoleWriteLine(string line = "")
         {
             if (LogsEnabled)
             {

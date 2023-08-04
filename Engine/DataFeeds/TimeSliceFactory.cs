@@ -408,7 +408,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 #pragma warning restore 0618
         }
 
-        private bool HandleOptionData(DateTime algorithmTime, BaseData baseData, OptionChains optionChains, ISecurityPrice security, Lazy<Slice> sliceFuture, IReadOnlyDictionary<Symbol, BaseData> optionUnderlyingUpdates)
+        private static bool HandleOptionData(DateTime algorithmTime, BaseData baseData, OptionChains optionChains, ISecurityPrice security, Lazy<Slice> sliceFuture, IReadOnlyDictionary<Symbol, BaseData> optionUnderlyingUpdates)
         {
             var symbol = baseData.Symbol;
 
@@ -503,7 +503,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
 
-        private bool HandleFuturesData(DateTime algorithmTime, BaseData baseData, FuturesChains futuresChains, ISecurityPrice security)
+        private static bool HandleFuturesData(DateTime algorithmTime, BaseData baseData, FuturesChains futuresChains, ISecurityPrice security)
         {
             var symbol = baseData.Symbol;
 

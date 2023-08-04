@@ -341,7 +341,7 @@ namespace QuantConnect.Securities.Option
         /// Some models do not evaluate all greeks under some circumstances (e.g. low dividend yield)
         /// We override this restriction to calculate the Greeks directly with the BlackCalculator
         /// </summary>
-        private BlackCalculator CreateBlackCalculator(double forwardPrice, double riskFreeDiscount, double stdDev, PlainVanillaPayoff payoff)
+        private static BlackCalculator CreateBlackCalculator(double forwardPrice, double riskFreeDiscount, double stdDev, PlainVanillaPayoff payoff)
         {
             return new BlackCalculator(payoff, forwardPrice, stdDev, riskFreeDiscount);
         }

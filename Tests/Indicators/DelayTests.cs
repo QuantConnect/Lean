@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
-        private void TestDelayTakesPeriodPlus2UpdatesToEmitNonInitialPoint(int period)
+        private static void TestDelayTakesPeriodPlus2UpdatesToEmitNonInitialPoint(int period)
         {
             var delay = new Delay(period);
             for (var i = 0; i < period + 2; i++)

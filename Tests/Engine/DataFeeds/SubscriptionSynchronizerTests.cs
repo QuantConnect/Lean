@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             dataManager.RemoveAllSubscriptions();
         }
 
-        private Subscription CreateSubscription(QCAlgorithm algorithm, Security security, DateTime startTimeUtc, DateTime endTimeUtc, out int dataPointCount)
+        private static Subscription CreateSubscription(QCAlgorithm algorithm, Security security, DateTime startTimeUtc, DateTime endTimeUtc, out int dataPointCount)
         {
             var universe = algorithm.UniverseManager.Values.OfType<UserDefinedUniverse>()
                 .Single(u => u.SelectSymbols(default(DateTime), null).Contains(security.Symbol));

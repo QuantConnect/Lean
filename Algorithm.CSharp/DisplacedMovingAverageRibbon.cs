@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Returns true if the specified values are in ascending order
         /// </summary>
-        private bool IsAscending(IEnumerable<decimal> values)
+        private static bool IsAscending(IEnumerable<decimal> values)
         {
             decimal? last = null;
             foreach (var val in values)
@@ -131,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Returns true if the specified values are in descending order
         /// </summary>
-        private bool IsDescending(IEnumerable<decimal> values)
+        private static bool IsDescending(IEnumerable<decimal> values)
         {
             decimal? last = null;
             foreach (var val in values)

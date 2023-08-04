@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{Time:yyyy-MM-dd HH:mm:ss} -- {orderEvent.Symbol} :: Price: {Securities[orderEvent.Symbol].Holdings.Price} Qty: {Securities[orderEvent.Symbol].Holdings.Quantity} Direction: {orderEvent.Direction} Msg: {orderEvent.Message}");
         }
 
-        private void AssertIndexOptionOrderExercise(OrderEvent orderEvent, Security index, Security optionContract)
+        private static void AssertIndexOptionOrderExercise(OrderEvent orderEvent, Security index, Security optionContract)
         {
             var expectedLiquidationTimeUtc = new DateTime(2021, 1, 16, 3, 0, 0);
 
@@ -139,7 +139,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private void AssertIndexOptionContractOrder(OrderEvent orderEvent, Security option)
+        private static void AssertIndexOptionContractOrder(OrderEvent orderEvent, Security option)
         {
             if (orderEvent.Direction == OrderDirection.Buy && option.Holdings.Quantity != 1)
             {

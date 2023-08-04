@@ -136,7 +136,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="x">Input</param>
         /// <returns>Output</returns>
-        private double FisherTransformFunction(double x)
+        private static double FisherTransformFunction(double x)
         {
             if (x > .999)
             {

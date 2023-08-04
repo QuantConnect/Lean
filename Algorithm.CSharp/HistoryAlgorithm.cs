@@ -223,7 +223,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private void AssertHistoryCount<T>(string methodCall, IEnumerable<T> history, int expected, params Symbol[] expectedSymbols)
+        private static void AssertHistoryCount<T>(string methodCall, IEnumerable<T> history, int expected, params Symbol[] expectedSymbols)
         {
             history = history.ToList();
             var count = history.Count();

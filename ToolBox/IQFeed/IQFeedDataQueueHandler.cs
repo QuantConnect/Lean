@@ -702,7 +702,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// </summary>
         /// <param name="symbol">The symbol to be handled</param>
         /// <returns>True if this data provider can get data for the symbol, false otherwise</returns>
-        private bool CanHandle(Symbol symbol)
+        private static bool CanHandle(Symbol symbol)
         {
             var market = symbol.ID.Market;
             var securityType = symbol.ID.SecurityType;
@@ -778,7 +778,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <param name="e">Received data</param>
         /// <param name="requestData">Request information</param>
         /// <returns>BaseData object</returns>
-        private BaseData GetData(LookupEventArgs e, HistoryRequest requestData)
+        private static BaseData GetData(LookupEventArgs e, HistoryRequest requestData)
         {
             var isEquity = requestData.Symbol.SecurityType == SecurityType.Equity;
             try

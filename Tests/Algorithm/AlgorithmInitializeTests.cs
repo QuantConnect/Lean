@@ -506,7 +506,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
         }
 
-        private QCAlgorithm GetAlgorithm()
+        private static QCAlgorithm GetAlgorithm()
         {
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
