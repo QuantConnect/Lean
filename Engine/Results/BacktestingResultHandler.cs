@@ -589,7 +589,7 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         if (series.Values.Count > 0)
                         {
-                            var thisSeries = chart.TryAddAndGetSeries(series.Name, series.Clone(empty: true), forceAddNew: false);
+                            var thisSeries = chart.TryAddAndGetSeries(series.Name, series, forceAddNew: false);
                             if (series.SeriesType == SeriesType.Pie)
                             {
                                 var dataPoint = series.ConsolidateChartPoints();

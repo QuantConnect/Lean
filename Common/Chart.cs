@@ -114,13 +114,14 @@ namespace QuantConnect
         /// Gets Series if already present in chart, else will add a new series and return it
         /// </summary>
         /// <param name="name">Name of the series</param>
+        /// <param name="templateSeries">Series to be used as a template. It will be clone without values if the series is added to the chart</param>
         /// <param name="forceAddNew">True will always add a new Series instance, stepping on existing if any</param>
-        public BaseSeries TryAddAndGetSeries(string name, BaseSeries series, bool forceAddNew = false)
+        public BaseSeries TryAddAndGetSeries(string name, BaseSeries templateSeries, bool forceAddNew = false)
         {
             BaseSeries chartSeries;
             if (forceAddNew || !Series.TryGetValue(name, out chartSeries))
             {
-                Series[name] = chartSeries = series;
+                Series[name] = chartSeries = templateSeries.Clone(empty: true);
             }
 
             return chartSeries;

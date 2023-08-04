@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using QuantConnect.Util;
 
 namespace QuantConnect
@@ -53,7 +54,7 @@ namespace QuantConnect
 
             if (series is CandlestickSeries candlestickSeries)
             {
-                return SampleCandlestickSeries(candlestickSeries, start, stop);
+                return SampleCandlestickSeries(candlestickSeries, start, stop, truncateValues);
             }
 
             throw new ArgumentException($"SeriesSampler.Sample(): Sampling only supports {typeof(Series)} and {typeof(CandlestickSeries)}");
@@ -90,7 +91,7 @@ namespace QuantConnect
         /// <param name="stop">The date to stop sampling, if after stop of data, then stop of data will be used</param>
         /// <param name="truncateValues">True will truncate values to integers</param>
         /// <returns>The sampled series</returns>
-        private Series SampleSeries(Series series, DateTime start, DateTime stop, bool truncateValues = false)
+        private Series SampleSeries(Series series, DateTime start, DateTime stop, bool truncateValues)
         {
             var sampled = series.Clone(empty: true);
 
@@ -100,20 +101,7 @@ namespace QuantConnect
             // in this case just copy the raw data
             if (series.Values.Count < 2 || series.SeriesType == SeriesType.Scatter)
             {
-                // we can minimally verify we're within the start/stop interval
-                foreach (var point in series.Values)
-                {
-                    if (point.Time >= nextSampleTime && point.Time <= stop)
-                    {
-                        var samplePoint = point.Clone();
-                        if (truncateValues)
-                        {
-                            TruncateValue(samplePoint);
-                        }
-                        sampled.Values.Add(samplePoint);
-                    }
-                }
-                return sampled;
+                return GetIdentitySeries(series, start, stop, truncateValues);
             }
 
             var enumerator = series.Values.Cast<ChartPoint>().GetEnumerator();
@@ -156,11 +144,7 @@ namespace QuantConnect
                 // iterate until we pass where we want our next point
                 while (nextSampleTime <= current.Time && nextSampleTime <= stop)
                 {
-                    var sampledPoint = Interpolate(previous, current, nextSampleTime);
-                    if (truncateValues)
-                    {
-                        TruncateValue(sampledPoint);
-                    }
+                    var sampledPoint = TruncateValue(Interpolate(previous, current, nextSampleTime), truncateValues, clone: false);
                     sampled.Values.Add(sampledPoint);
                     nextSampleTime += _step;
                 }
@@ -185,7 +169,7 @@ namespace QuantConnect
         /// <param name="stop">The date to stop sampling, if after stop of data, then stop of data will be used</param>
         /// <param name="truncateValues">True will truncate values to integers</param>
         /// <returns>The sampled series</returns>
-        private CandlestickSeries SampleCandlestickSeries(CandlestickSeries series, DateTime start, DateTime stop, bool truncateValues = false)
+        private CandlestickSeries SampleCandlestickSeries(CandlestickSeries series, DateTime start, DateTime stop, bool truncateValues)
         {
             var sampledSeries = series.Clone(empty: true);
 
@@ -195,20 +179,7 @@ namespace QuantConnect
             // we can't sample a single point, so just copy the raw data
             if (seriesSize < 2)
             {
-                // we can minimally verify we're within the start/stop interval
-                foreach (var point in candlesticks)
-                {
-                    if (point.Time >= start && point.Time <= stop)
-                    {
-                        var samplePoint = point.Clone();
-                        if (truncateValues)
-                        {
-                            TruncateValue(samplePoint);
-                        }
-                        sampledSeries.Values.Add(samplePoint);
-                    }
-                }
-                return sampledSeries;
+                return GetIdentitySeries(series, start, stop, truncateValues);
             }
 
             // Make sure we don't start sampling before the data begins.
@@ -279,10 +250,7 @@ namespace QuantConnect
                 High = high,
                 Low = low
             };
-            if (truncateValues)
-            {
-                TruncateValue(aggregatedCandlestick);
-            }
+            aggregatedCandlestick = (Candlestick)TruncateValue(aggregatedCandlestick, truncateValues, clone: false);
 
             return aggregatedCandlestick;
         }
@@ -307,21 +275,49 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Truncates the value/values of the point
+        /// Truncates the value/values of the point after cloning it to avoid mutating the original point
         /// </summary>
-        private static void TruncateValue(ISeriesPoint point)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ISeriesPoint TruncateValue(ISeriesPoint point, bool truncate, bool clone = false)
         {
-            if (point is ChartPoint chartPoint)
+            if (!truncate)
+            {
+                return point;
+            }
+
+            var truncatedPoint = clone ? point.Clone() : point;
+
+            if (truncatedPoint is ChartPoint chartPoint)
             {
                 chartPoint.y = Math.Truncate(chartPoint.y);
             }
-            else if (point is Candlestick candlestick)
+            else if (truncatedPoint is Candlestick candlestick)
             {
                 candlestick.Open = Math.Truncate(candlestick.Open);
                 candlestick.High = Math.Truncate(candlestick.High);
                 candlestick.Low = Math.Truncate(candlestick.Low);
                 candlestick.Close = Math.Truncate(candlestick.Close);
             }
+
+            return truncatedPoint;
+        }
+
+        /// <summary>
+        /// Gets the identity series, this is the series with no sampling applied.
+        /// </summary>
+        private static T GetIdentitySeries<T>(T series, DateTime start, DateTime stop, bool truncateValues)
+            where T : BaseSeries
+        {
+            var sampled = (T)series.Clone(empty: true);
+            // we can minimally verify we're within the start/stop interval
+            foreach (var point in series.Values)
+            {
+                if (point.Time >= start && point.Time <= stop)
+                {
+                    sampled.Values.Add(TruncateValue(point, truncateValues, clone: true));
+                }
+            }
+            return sampled;
         }
     }
 }

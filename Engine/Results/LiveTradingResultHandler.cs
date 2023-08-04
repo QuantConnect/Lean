@@ -631,8 +631,8 @@ namespace QuantConnect.Lean.Engine.Results
                 //Add a copy locally:
                 if (!Charts.TryGetValue(chartName, out var chart))
                 {
-                    chart = new Chart(chartName);
-                    Charts.TryAdd(chartName, chart);
+                    Charts.AddOrUpdate(chartName, new Chart(chartName));
+                    chart = Charts[chartName];
                 }
 
                 //Add the sample to our chart:
@@ -643,28 +643,9 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Add our value:
-                series.AddPoint(value);
+                series.Values.Add(value);
             }
             Log.Debug("LiveTradingResultHandler.Sample(): Done sampling " + chartName + "." + seriesName);
-        }
-
-        /// <summary>
-        /// Wrapper method on sample to create the equity chart.
-        /// </summary>
-        /// <param name="time">Time of the sample.</param>
-        /// <param name="open">Open equity value</param>
-        /// <param name="high">High equity value</param>
-        /// <param name="low">Low equity value</param>
-        /// <param name="close">Close equity value</param>
-        /// <seealso cref="Sample(string,string,int,SeriesType,ISeriesPoint,string)"/>
-        protected override void SampleEquity(DateTime time, decimal open, decimal high, decimal low, decimal close)
-        {
-            if (open > 0 && high > 0 && low > 0 && close > 0)
-            {
-                Log.Debug($"LiveTradingResultHandler.SampleEquity(): {time.ToShortTimeString()} > O:{open} H:{high} L:{low} C:{close}");
-
-                base.SampleEquity(time, open, high, low, close);
-            }
         }
 
         /// <summary>
@@ -692,7 +673,7 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         if (series.Values.Count > 0)
                         {
-                            var thisSeries = chart.TryAddAndGetSeries(series.Name, series.Clone(empty: true), forceAddNew: false);
+                            var thisSeries = chart.TryAddAndGetSeries(series.Name, series, forceAddNew: false);
                             if (series.SeriesType == SeriesType.Pie)
                             {
                                 var dataPoint = series.ConsolidateChartPoints();
@@ -1056,9 +1037,8 @@ namespace QuantConnect.Lean.Engine.Results
         {
             var time = DateTime.UtcNow;
 
-            // Check to see if we should update stored portfolio and bench values
+            // Check to see if we should update stored portfolio values
             UpdatePortfolioValue(time, forceProcess);
-            UpdateBenchmarkValue(time, forceProcess);
 
             // Update the equity bar
             UpdateAlgorithmEquity();
@@ -1069,6 +1049,9 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
+
+                // Check to see if we should update stored bench values
+                UpdateBenchmarkValue(time, forceProcess);
 
                 //Sample the portfolio value over time for chart.
                 SampleEquity(time);

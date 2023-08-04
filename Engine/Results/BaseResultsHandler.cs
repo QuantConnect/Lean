@@ -78,6 +78,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         protected int LastDeltaOrderEventsPosition;
 
+        /// <summary>
+        /// The current aggregated equity bar for sampling.
+        /// It will be aggregated with values from the <see cref="GetPortfolioValue"/>
+        /// </summary>
         protected Bar CurrentAlgorithmEquity { get; set; }
 
         /// <summary>
@@ -509,7 +513,7 @@ namespace QuantConnect.Lean.Engine.Results
             CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
 
             // Sample all our default charts
-            SampleEquity(time, currentPortfolioValue, currentPortfolioValue, currentPortfolioValue, currentPortfolioValue);
+            SampleEquity(time);
             SampleBenchmark(time, GetBenchmarkValue(time));
             SamplePerformance(time, portfolioPerformance);
             SampleDrawdown(time, currentPortfolioValue);
@@ -520,19 +524,6 @@ namespace QuantConnect.Lean.Engine.Results
 
             // Update daily portfolio value; works because we only call sample once a day
             DailyPortfolioValue = currentPortfolioValue;
-        }
-
-        /// <summary>
-        /// Sample the current equity of the strategy directly with time-open-high-low-close tuple.
-        /// </summary>
-        /// <param name="time">Equity candlestick end time</param>
-        /// <param name="open">Open equity value</param>
-        /// <param name="high">High equity value</param>
-        /// <param name="low">Low equity value</param>
-        /// <param name="close">Close equity value</param>
-        protected virtual void SampleEquity(DateTime time, decimal open, decimal high, decimal low, decimal close)
-        {
-            Sample(StrategyEquityKey, EquityKey, 0, SeriesType.Candle, new Candlestick(time, open, high, low, close), AlgorithmCurrencySymbol);
         }
 
         /// <summary>
