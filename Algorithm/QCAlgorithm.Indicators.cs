@@ -1688,6 +1688,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Time Series Foreacast indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose TSF we want</param>
+        /// <param name="period">The period over which to compute the TSF</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The Sum indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public TimeSeriesForecast TSF(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"TSF({period})", resolution);
+            var tsf = new TimeSeriesForecast(name, period);
+            InitializeIndicator(symbol, tsf, resolution, selector);
+
+            return tsf;
+        }
+
+        /// <summary>
         /// Creates a new TripleExponentialMovingAverage indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose TEMA we want</param>
