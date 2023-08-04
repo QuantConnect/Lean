@@ -170,6 +170,16 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         // Have a 5% chance of a split every month
                         if (hasSplits && _randomValueGenerator.NextBool(5.0))
                         {
+                            // Produce another split factor that is also bounded by the min and max split factors allowed
+                            if (_randomValueGenerator.NextBool(5.0)) // Add the possibility of a reverse split
+                            {
+                                previousSplitFactor = ((decimal)_random.NextDouble()) * (previousSplitFactor - minPreviousSplitFactor) + minPreviousSplitFactor;
+                            }
+                            else
+                            {
+                                previousSplitFactor = ((decimal)_random.NextDouble()) * (maxPreviousSplitFactor - previousSplitFactor) + previousSplitFactor;
+                            }
+
                             splitDates.Add(_randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5)));
                         }
                         // 10% chance of being renamed every month

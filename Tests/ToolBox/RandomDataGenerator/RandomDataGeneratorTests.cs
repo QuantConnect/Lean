@@ -14,8 +14,19 @@
 */
 
 using System;
+using System.Collections.Generic;
+using QuantConnect.Securities;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.ToolBox.RandomDataGenerator;
+using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities.Option;
+using QuantConnect.Util;
+using static QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -43,6 +54,102 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             // delistDate must be less than or equal to end
             Assert.LessOrEqual(delistDate, end);
             Assert.GreaterOrEqual(delistDate, midPoint);
+        }
+
+        [Repeat(10)]
+        [TestCase("20230101", "20230108")]
+        [TestCase("20230101", "20230201")]
+        [TestCase("20230501", "20230801")]
+        [TestCase("20230101", "20230801")]
+        [TestCase("20180101", "20230101")]
+        public void RandomGeneratorProducesValuesBoundedForEquitiesWhenSplit(string start, string end)
+        {
+            var settings = RandomDataGeneratorSettings.FromCommandLineArguments(
+                start,
+                end,
+                "1",
+                "usa",
+                "Equity",
+                "Minute",
+                "Dense",
+                "true",
+                "1",
+                null,
+                "5.0",
+                "30.0",
+                "100.0",
+                "60.0",
+                "30.0",
+                "BaroneAdesiWhaleyApproximationEngine",
+                "Daily",
+                "1",
+                new List<string>()
+            );
+
+            var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
+            var securityService = GetSecurityService(settings, securityManager);
+            securityManager.SetSecurityService(securityService);
+
+            var security = securityManager.CreateSecurity(Symbols.AAPL, new List<SubscriptionDataConfig>(), underlying: null);
+            var randomValueGenerator = new RandomValueGenerator();
+            var tickGenerator = new TickGenerator(settings, new TickType[1] {TickType.Trade}, security, randomValueGenerator).GenerateTicks().GetEnumerator();
+            using var sync = new SynchronizingBaseDataEnumerator(tickGenerator);
+            var tickHistory = new List<Tick>();
+
+            while (sync.MoveNext())
+            {
+                var dataPoint = sync.Current;
+                tickHistory.Add(dataPoint as Tick);
+            }
+
+            var dividendsSplitsMaps = new DividendSplitMapGenerator(
+                        Symbols.AAPL,
+                        settings,
+                        randomValueGenerator,
+                        BaseSymbolGenerator.Create(settings, randomValueGenerator),
+                        new Random(),
+                        GetDelistingDate(settings.Start, settings.End, randomValueGenerator),
+                        false);
+
+            dividendsSplitsMaps.GenerateSplitsDividends(tickHistory);
+            Assert.IsTrue(0.099m <= dividendsSplitsMaps.FinalSplitFactor && dividendsSplitsMaps.FinalSplitFactor <= 1.5m);
+
+            foreach (var tick in tickHistory)
+            {
+                tick.Value = tick.Value / dividendsSplitsMaps.FinalSplitFactor;
+                Assert.IsTrue( 0.00099m <= tick.Value && tick.Value <= 10000000 );
+            }
+        }
+
+        private static SecurityService GetSecurityService(RandomDataGeneratorSettings settings, SecurityManager securityManager)
+        {
+            var securityService = new SecurityService(
+                new CashBook(),
+                MarketHoursDatabase.FromDataFolder(),
+                SymbolPropertiesDatabase.FromDataFolder(),
+                new SecurityInitializerProvider(new FuncSecurityInitializer(security =>
+                {
+                    // init price
+                    security.SetMarketPrice(new Tick(settings.Start, security.Symbol, 100, 100));
+                    security.SetMarketPrice(new OpenInterest(settings.Start, security.Symbol, 10000));
+
+                    // from settings
+                    security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(settings.VolatilityModelResolution);
+
+                    // from settings
+                    if (security is Option option)
+                    {
+                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName, Statistics.PortfolioStatistics.GetRiskFreeRate());
+                    }
+                })),
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCacheProvider(
+                    new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager), new AlgorithmSettings())),
+                new MapFilePrimaryExchangeProvider(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")))
+            );
+            securityManager.SetSecurityService(securityService);
+
+            return securityService;
         }
     }
 }

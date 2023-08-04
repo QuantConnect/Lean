@@ -180,9 +180,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 if (price > 1000000)
                 {
                     // The price should not be too higher
-                    // Invalidate the price to try again and decrease the probability of it to going up
-                    price = -1m;
+                    // Decrease the probability of it to going up
                     increaseProbabilityFactor = increaseProbabilityFactor + 0.05;
+                }
+
+                if (price > 10000000)
+                {
+                    // The price should not be too higher
+                    // Invalidate the price to try again
+                    price = -1;
                 }
             } while (!IsPriceValid(securityType, price) && ++attempts < 10);
 
