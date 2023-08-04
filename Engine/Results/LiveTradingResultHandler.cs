@@ -1061,7 +1061,7 @@ namespace QuantConnect.Lean.Engine.Results
             UpdateBenchmarkValue(time, forceProcess);
 
             // Update the equity bar
-            UpdateAlgorithmEquity(GetPortfolioValue());
+            UpdateAlgorithmEquity();
 
             if (time > _nextSample || forceProcess)
             {
@@ -1072,9 +1072,6 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Sample the portfolio value over time for chart.
                 SampleEquity(time);
-
-                // Reset the current algorithm equity object so another bar is create on the next sample
-                CloseAlgorithmEquity();
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(Algorithm.GetChartUpdates(true));

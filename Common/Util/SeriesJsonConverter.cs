@@ -101,47 +101,30 @@ namespace QuantConnect.Util
             var unit = jObject["Unit"].Value<string>();
             var index = jObject["Index"].Value<int>();
             var seriesType = (SeriesType)jObject["SeriesType"].Value<int>();
-
             var values = (JArray)jObject["Values"];
 
-            try
+            if (seriesType == SeriesType.Candle)
             {
-                var chartPoints = values.ToObject<List<ChartPoint>>(serializer);
-                // This is a Series
-                return new Series()
-                {
-                    Name = name,
-                    Unit = unit,
-                    Index = index,
-                    SeriesType = seriesType,
-                    Color = jObject["Color"].ToObject<Color>(serializer),
-                    ScatterMarkerSymbol = jObject["ScatterMarkerSymbol"].ToObject<ScatterMarkerSymbol>(serializer),
-                    Values = chartPoints.Cast<ISeriesPoint>().ToList()
-                };
-            } catch (JsonSerializationException)
-            {
-                // Do nothing, try another series type
-            }
-
-            try
-            {
-                var candlesticks = values.ToObject<List<Candlestick>>(serializer);
-                // This is a CandlestickSeries
                 return new CandlestickSeries()
                 {
                     Name = name,
                     Unit = unit,
                     Index = index,
                     SeriesType = seriesType,
-                    Values = candlesticks.Cast<ISeriesPoint>().ToList()
+                    Values = values.ToObject<List<Candlestick>>(serializer).Cast<ISeriesPoint>().ToList()
                 };
             }
-            catch (JsonSerializationException)
-            {
-                // Do nothing, we'll return null
-            }
 
-            return null;
+            return new Series()
+            {
+                Name = name,
+                Unit = unit,
+                Index = index,
+                SeriesType = seriesType,
+                Color = jObject["Color"].ToObject<Color>(serializer),
+                ScatterMarkerSymbol = jObject["ScatterMarkerSymbol"].ToObject<ScatterMarkerSymbol>(serializer),
+                Values = values.ToObject<List<ChartPoint>>(serializer).Cast<ISeriesPoint>().ToList()
+            };
         }
 
         /// <summary>

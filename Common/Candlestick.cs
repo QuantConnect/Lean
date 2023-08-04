@@ -128,6 +128,16 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Constructor taking candlestick values and time in DateTime format
+        /// </summary>
+        /// <param name="time">Candlestick time in seconds</param>
+        /// <param name="bar">Bar which data will be used to create the candlestick</param>
+        public Candlestick(DateTime time, Bar bar)
+            : this(time, bar.Open, bar.High, bar.Low, bar.Close)
+        {
+        }
+
+        /// <summary>
         /// Copy constructor
         /// </summary>
         /// <param name="candlestick">Candlestick to copy from</param>

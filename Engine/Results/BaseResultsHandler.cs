@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -77,7 +78,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         protected int LastDeltaOrderEventsPosition;
 
-        protected AlgorithmEquity CurrentAlgorithmEquity { get; set; }
+        protected Bar CurrentAlgorithmEquity { get; set; }
 
         /// <summary>
         /// The task in charge of running the <see cref="Run"/> update method
@@ -541,11 +542,15 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Equity candlestick end time</param>
         protected virtual void SampleEquity(DateTime time)
         {
-            var candlestick = CurrentAlgorithmEquity != null
-                ? new Candlestick(time, CurrentAlgorithmEquity.Open, CurrentAlgorithmEquity.High, CurrentAlgorithmEquity.Low,
-                    CurrentAlgorithmEquity.Close)
-                : new Candlestick(time, 0, 0, 0, 0);
-            Sample(StrategyEquityKey, EquityKey, 0, SeriesType.Candle, candlestick, AlgorithmCurrencySymbol);
+            if (CurrentAlgorithmEquity == null)
+            {
+                UpdateAlgorithmEquity();
+            }
+
+            Sample(StrategyEquityKey, EquityKey, 0, SeriesType.Candle, new Candlestick(time, CurrentAlgorithmEquity), AlgorithmCurrencySymbol);
+
+            // Reset the current algorithm equity object so another bar is create on the next sample
+            CurrentAlgorithmEquity = null;
         }
 
         /// <summary>
@@ -960,57 +965,17 @@ namespace QuantConnect.Lean.Engine.Results
             _customSummaryStatistics.AddOrUpdate(name, value);
         }
 
-        protected void UpdateAlgorithmEquity(decimal currentEquity)
+        /// <summary>
+        /// Updates the current equity bar with the current equity value from <see cref="GetPortfolioValue"/>
+        /// </summary>
+        protected void UpdateAlgorithmEquity()
         {
             if (CurrentAlgorithmEquity == null)
             {
-                CurrentAlgorithmEquity = new AlgorithmEquity(currentEquity);
-            }
-            else
-            {
-                CurrentAlgorithmEquity.Update(currentEquity);
-            }
-        }
-
-        protected void CloseAlgorithmEquity()
-        {
-            CurrentAlgorithmEquity = null;
-        }
-
-        /// <summary>
-        /// Helper class to keep track of the algorithm equity for a given period of time in order to form the candlesticks
-        /// </summary>
-        protected class AlgorithmEquity
-        {
-            public decimal Open { get; set; }
-            public decimal High { get; set; }
-            public decimal Low { get; set; }
-            public decimal Close { get; set; }
-
-            public AlgorithmEquity(decimal currentValue)
-            {
-                var value = Math.Round(currentValue, 4);
-
-                Open = value;
-                High = value;
-                Low = value;
-                Close = value;
+                CurrentAlgorithmEquity = new Bar();
             }
 
-            public void Update(decimal currentValue)
-            {
-                var value = Math.Round(currentValue, 4);
-
-                if (value > High)
-                {
-                    High = value;
-                }
-                else if (value < Low)
-                {
-                    Low = value;
-                }
-                Close = value;
-            }
+            CurrentAlgorithmEquity.Update(GetPortfolioValue());
         }
     }
 }

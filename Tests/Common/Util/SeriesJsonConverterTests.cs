@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common.Util
             var serializedSeries = JsonConvert.SerializeObject(series);
             var result = (Series)JsonConvert.DeserializeObject(serializedSeries, typeof(Series));
 
-            var expectedX = Convert.ToInt64(Time.DateTimeToUnixTimeStamp(date2.ToUniversalTime())); // expect last dateTime (date2)
+            var expectedX = Convert.ToInt64(Time.DateTimeToUnixTimeStamp(date2)); // expect last dateTime (date2)
             Assert.AreEqual(1, result.Values.Count); // expect only one value
             Assert.AreEqual(expectedX, ((ChartPoint)result.Values[0]).x);
             Assert.AreEqual(3, ((ChartPoint)result.Values[0]).y); // expect sum of values (1 + 2)
