@@ -95,7 +95,8 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     limitPrice = !isLong ? (1 + LimitPercentage) * data.Bars[symbol].High : (1 - LimitPercentage) * data.Bars[symbol].Low;
                 }
-                var request = new SubmitOrderRequest(orderType, SecType, symbol, Quantity, stopPrice, limitPrice, UtcTime, ((int)orderType).ToString(CultureInfo.InvariantCulture));
+                var request = new SubmitOrderRequest(orderType, SecType, symbol, Quantity, stopPrice, limitPrice, 0, 0.01m, true, UtcTime,
+                    ((int)orderType).ToString(CultureInfo.InvariantCulture));
                 var ticket = Transactions.AddOrder(request);
                 _tickets.Add(ticket);
             }
@@ -123,7 +124,9 @@ namespace QuantConnect.Algorithm.CSharp
                         ticket.Update(new UpdateOrderFields
                         {
                             LimitPrice = Security.Price*(1 - Math.Sign(ticket.Quantity)*LimitPercentageDelta),
-                            StopPrice = Security.Price*(1 + Math.Sign(ticket.Quantity)*StopPercentageDelta),
+                            StopPrice = ticket.OrderType != OrderType.TrailingStop
+                                ? Security.Price*(1 + Math.Sign(ticket.Quantity)*StopPercentageDelta)
+                                : null,
                             Tag = "Change prices: " + Time.Day
                         });
                         Log("UPDATE2:: " + ticket.UpdateRequests.Last());
@@ -205,30 +208,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "21"},
+            {"Total Trades", "19"},
             {"Average Win", "0%"},
-            {"Average Loss", "-1.51%"},
-            {"Compounding Annual Return", "-7.337%"},
-            {"Drawdown", "15.000%"},
+            {"Average Loss", "-1.91%"},
+            {"Compounding Annual Return", "-12.291%"},
+            {"Drawdown", "24.600%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-14.135%"},
-            {"Sharpe Ratio", "-1.092"},
-            {"Probabilistic Sharpe Ratio", "0.026%"},
+            {"Net Profit", "-23.071%"},
+            {"Sharpe Ratio", "-1.048"},
+            {"Probabilistic Sharpe Ratio", "0.023%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.015"},
-            {"Beta", "-0.417"},
-            {"Annual Standard Deviation", "0.046"},
-            {"Annual Variance", "0.002"},
-            {"Information Ratio", "-1.525"},
-            {"Tracking Error", "0.135"},
-            {"Treynor Ratio", "0.121"},
-            {"Total Fees", "$21.00"},
-            {"Estimated Strategy Capacity", "$3000000000.00"},
+            {"Alpha", "0.034"},
+            {"Beta", "-0.754"},
+            {"Annual Standard Deviation", "0.08"},
+            {"Annual Variance", "0.006"},
+            {"Information Ratio", "-1.42"},
+            {"Tracking Error", "0.168"},
+            {"Treynor Ratio", "0.111"},
+            {"Total Fees", "$19.00"},
+            {"Estimated Strategy Capacity", "$1100000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.51%"},
-            {"OrderListHash", "7601626d70ec06969356ec2c3b9082ad"}
+            {"Portfolio Turnover", "0.46%"},
+            {"OrderListHash", "72889f8424c22ec9a877a4395151126a"}
         };
     }
 }

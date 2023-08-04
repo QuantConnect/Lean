@@ -37,7 +37,9 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("strategy-description", CommandOptionType.SingleValue, "Strategy description"),
                 new CommandLineOption("live-data-source-file", CommandOptionType.SingleValue, "Live source data json file"),
                 new CommandLineOption("backtest-data-source-file", CommandOptionType.SingleValue, "Backtest source data json file"),
-                new CommandLineOption("report-destination", CommandOptionType.SingleValue, "Destination of processed report file")
+                new CommandLineOption("report-destination", CommandOptionType.SingleValue, "Destination of processed report file"),
+                new CommandLineOption("report-css-override-file", CommandOptionType.SingleValue, "CSS override source file"),
+                new CommandLineOption("report-html-custom-file", CommandOptionType.SingleValue, "Custom HTML source file"),
             };
 
         /// <summary>

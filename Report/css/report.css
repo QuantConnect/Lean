@@ -39,7 +39,7 @@ body {
 h1 {
     font-size: 26px;
     width: 100%;
-    font-family: 'Titillium Web', Helvetica, Arial, sans-serif !important;
+    font-family: 'Inter', Helvetica, Arial, sans-serif !important;
     font-weight: bold;
 }
 
@@ -50,7 +50,7 @@ h1 {
     height: 80px;
     position: absolute;
     color: #222;
-    font-family: 'Titillium Web', Helvetica, Arial, sans-serif;
+    font-family: 'Inter', Helvetica, Arial, sans-serif;
     text-align: center;
     line-height: 50px;
 }
@@ -80,7 +80,7 @@ h1 {
     padding-left: 40px;
     padding-right: 40px;
     color: #222;
-    font-family: 'Titillium Web', Helvetica, Arial, sans-serif;
+    font-family: 'Inter', Helvetica, Arial, sans-serif;
 }
 
 .header .header-left {
@@ -125,7 +125,7 @@ table.table {
         border-left: solid 1px #677080;
         border-bottom: solid 1px #677080;
         color: #ffffff;
-        font-family: 'Titillium Web', Helvetica, Arial, sans-serif;
+        font-family: 'Inter', Helvetica, Arial, sans-serif;
         font-weight: bold;
     }
 
@@ -166,7 +166,7 @@ table.table {
     .table.qc-table span,
     .table.qc-table div,
     .table.qc-table p {
-        font-family: 'Titillium Web', Helvetica, Arial, sans-serif;
+        font-family: 'Inter', Helvetica, Arial, sans-serif;
         font-weight: bold;
     }
 
@@ -175,7 +175,7 @@ table.table {
     .table.qc-table.table-itemized tbody tr td:first-child span,
     .table.qc-table.table-itemized tbody tr td:first-child div,
     .table.qc-table.table-itemized tbody tr td:first-child p {
-        font-family: 'Titillium Web', Helvetica, Arial, sans-serif;
+        font-family: 'Inter', Helvetica, Arial, sans-serif;
         font-weight: bold;
     }
 
@@ -311,7 +311,7 @@ table.table > thead > tr > th {
     font-weight: bold;
     font-size: 18px;
     padding-top: 15px;
-    font-family: 'Titillium Web', sans-serif;
+    font-family: 'Inter', sans-serif;
 }
 
 table.table > tbody > tr > td {
@@ -377,7 +377,7 @@ table#description-box {
 
     table#description-box > thead > tr > th > p {
         color: #f5ae29;
-        font-size: 24px;
+        font-size: 20px;
     }
 
         table#description-box > thead > tr > th > p > span {
@@ -420,7 +420,7 @@ table#description-box {
 }
 
 .header .header-right {
-    font-family: 'Titillium Web', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-weight: bold;
     margin-top: 40px;
     line-height: 23px;
@@ -443,7 +443,7 @@ table#description-box {
     }
 
         .container-row.first-row .col-xs-4:last-child p {
-            font-family: 'Titillium Web', sans-serif;
+            font-family: 'Inter', sans-serif;
             position: absolute;
             transform: rotate(-90deg);
             font-size: 12px;
@@ -533,4 +533,8 @@ p#strategy-description {
 
 #monthly-returns-plot {
     width: 100% !important;
+}
+
+.page .container-row:last-child {
+	border-bottom: 0;
 }

@@ -63,6 +63,7 @@ namespace QuantConnect.Brokerages
             OrderType.Limit,
             OrderType.StopMarket,
             OrderType.StopLimit,
+            OrderType.TrailingStop,
             OrderType.LimitIfTouched,
             OrderType.ComboMarket,
             OrderType.ComboLimit,

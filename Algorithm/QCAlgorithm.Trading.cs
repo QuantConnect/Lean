@@ -476,6 +476,128 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Create a trailing stop order and return the newly created order id; or negative if the order is invalid.
+        /// It will calculate the stop price using the trailing amount and the current market price.
+        /// </summary>
+        /// <param name="symbol">Trading asset symbol</param>
+        /// <param name="quantity">Quantity to be traded</param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="tag">Optional string data tag for the order</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket TrailingStopOrder(Symbol symbol, int quantity, decimal trailingAmount, bool trailingAsPercentage,
+            string tag = "", IOrderProperties orderProperties = null)
+        {
+            return TrailingStopOrder(symbol, (decimal)quantity, trailingAmount, trailingAsPercentage, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Create a trailing stop order and return the newly created order id; or negative if the order is invalid.
+        /// It will calculate the stop price using the trailing amount and the current market price.
+        /// </summary>
+        /// <param name="symbol">Trading asset symbol</param>
+        /// <param name="quantity">Quantity to be traded</param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="tag">Optional string data tag for the order</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket TrailingStopOrder(Symbol symbol, double quantity, decimal trailingAmount, bool trailingAsPercentage,
+            string tag = "", IOrderProperties orderProperties = null)
+        {
+            return TrailingStopOrder(symbol, quantity.SafeDecimalCast(), trailingAmount, trailingAsPercentage, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Create a trailing stop order and return the newly created order id; or negative if the order is invalid.
+        /// It will calculate the stop price using the trailing amount and the current market price.
+        /// </summary>
+        /// <param name="symbol">Trading asset symbol</param>
+        /// <param name="quantity">Quantity to be traded</param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="tag">Optional string data tag for the order</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket TrailingStopOrder(Symbol symbol, decimal quantity, decimal trailingAmount, bool trailingAsPercentage,
+            string tag = "", IOrderProperties orderProperties = null)
+        {
+            var security = Securities[symbol];
+            var stopPrice = Orders.TrailingStopOrder.CalculateStopPrice(security.Price, trailingAmount, trailingAsPercentage,
+                quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell);
+            return TrailingStopOrder(symbol, quantity, stopPrice, trailingAmount, trailingAsPercentage, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Create a trailing stop order and return the newly created order id; or negative if the order is invalid
+        /// </summary>
+        /// <param name="symbol">Trading asset symbol</param>
+        /// <param name="quantity">Quantity to be traded</param>
+        /// <param name="stopPrice">Initial stop price at which the order should be triggered</param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="tag">Optional string data tag for the order</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket TrailingStopOrder(Symbol symbol, int quantity, decimal stopPrice, decimal trailingAmount, bool trailingAsPercentage,
+            string tag = "", IOrderProperties orderProperties = null)
+        {
+            return TrailingStopOrder(symbol, (decimal)quantity, stopPrice, trailingAmount, trailingAsPercentage, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Create a trailing stop order and return the newly created order id; or negative if the order is invalid
+        /// </summary>
+        /// <param name="symbol">Trading asset symbol</param>
+        /// <param name="quantity">Quantity to be traded</param>
+        /// <param name="stopPrice">Initial stop price at which the order should be triggered</param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="tag">Optional string data tag for the order</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket TrailingStopOrder(Symbol symbol, double quantity, decimal stopPrice, decimal trailingAmount, bool trailingAsPercentage,
+            string tag = "", IOrderProperties orderProperties = null)
+        {
+            return TrailingStopOrder(symbol, quantity.SafeDecimalCast(), stopPrice, trailingAmount, trailingAsPercentage, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Create a trailing stop order and return the newly created order id; or negative if the order is invalid
+        /// </summary>
+        /// <param name="symbol">Trading asset symbol</param>
+        /// <param name="quantity">Quantity to be traded</param>
+        /// <param name="stopPrice">Initial stop price at which the order should be triggered</param>
+        /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
+        /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="tag">Optional string data tag for the order</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket TrailingStopOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal trailingAmount, bool trailingAsPercentage,
+            string tag = "", IOrderProperties orderProperties = null)
+        {
+            var security = Securities[symbol];
+            var request = CreateSubmitOrderRequest(
+                OrderType.TrailingStop,
+                security,
+                quantity,
+                tag,
+                stopPrice: stopPrice,
+                trailingAmount: trailingAmount,
+                trailingAsPercentage: trailingAsPercentage,
+                properties: orderProperties ?? DefaultOrderProperties?.Clone());
+
+            return SubmitOrderRequest(request);
+        }
+
+        /// <summary>
         /// Send a stop limit order to the transaction handler:
         /// </summary>
         /// <param name="symbol">String symbol for the asset</param>
@@ -1389,10 +1511,12 @@ namespace QuantConnect.Algorithm
             return symbol.IsMarketOpen(UtcTime, false);
         }
 
-        private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, IOrderProperties properties,
-            decimal stopPrice = 0m, decimal limitPrice = 0m,  decimal triggerPrice = 0m, GroupOrderManager groupOrderManager = null)
+        private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag,
+            IOrderProperties properties, decimal stopPrice = 0m, decimal limitPrice = 0m, decimal triggerPrice = 0m, decimal trailingAmount = 0m,
+            bool trailingAsPercentage = false, GroupOrderManager groupOrderManager = null)
         {
-            return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, triggerPrice, UtcTime, tag, properties, groupOrderManager);
+            return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, triggerPrice, trailingAmount,
+                trailingAsPercentage, UtcTime, tag, properties, groupOrderManager);
         }
 
         private static void CheckComboOrderSizing(List<Leg> legs, decimal quantity)

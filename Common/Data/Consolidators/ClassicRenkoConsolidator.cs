@@ -20,16 +20,18 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
-    /// This consolidator can transform a stream of <see cref="BaseData"/> instances into a stream of <see cref="RenkoBar"/>
+    /// This consolidator can transform a stream of <see cref="IBaseData"/> instances into a stream of <see cref="RenkoBar"/>
     /// </summary>
-    public class ClassicRenkoConsolidator : IDataConsolidator
+    public class ClassicRenkoConsolidator : BaseTimelessConsolidator<RenkoBar>
     {
-        private RenkoBar _currentBar;
-        private DataConsolidatedHandler _dataConsolidatedHandler;
         private decimal _barSize;
         private bool _evenBars;
-        private Func<IBaseData, decimal> _selector;
-        private Func<IBaseData, decimal> _volumeSelector;
+        private decimal? _lastCloseValue;
+
+        /// <summary>
+        /// Bar being created
+        /// </summary>
+        protected override RenkoBar CurrentBar { get; set; }
 
         /// <summary>
         /// Gets the kind of the bar
@@ -39,37 +41,12 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public IBaseData WorkingData => _currentBar?.Clone();
-
-        /// <summary>
-        /// Gets the type consumed by this consolidator
-        /// </summary>
-        public Type InputType => typeof(IBaseData);
+        public override IBaseData WorkingData => CurrentBar?.Clone();
 
         /// <summary>
         /// Gets <see cref="RenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
-        public Type OutputType => typeof(RenkoBar);
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet.
-        /// </summary>
-        public IBaseData Consolidated { get; private set; }
-
-        /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        public event EventHandler<RenkoBar> DataConsolidated;
-
-        /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        event DataConsolidatedHandler IDataConsolidator.DataConsolidated
-        {
-            add { _dataConsolidatedHandler += value; }
-            remove { _dataConsolidatedHandler -= value; }
-        }
+        public override Type OutputType => typeof(RenkoBar);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
@@ -79,12 +56,11 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="barSize">The constant value size of each bar</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
         public ClassicRenkoConsolidator(decimal barSize, bool evenBars = true)
+            : base()
         {
             EpsilonCheck(barSize);
             _barSize = barSize;
-            _selector = x => x.Value;
             _evenBars = evenBars;
-            _volumeSelector = x => 0;
         }
 
         /// <summary>
@@ -100,14 +76,12 @@ namespace QuantConnect.Data.Consolidators
             decimal barSize,
             Func<IBaseData, decimal> selector,
             Func<IBaseData, decimal> volumeSelector = null,
-            bool evenBars = true
-            )
+            bool evenBars = true)
+            : base(selector, volumeSelector)
         {
             EpsilonCheck(barSize);
             _barSize = barSize;
-            _selector = selector ?? (x => x.Value);
             _evenBars = evenBars;
-            _volumeSelector = volumeSelector ?? (x => 0);
         }
 
         /// <summary>
@@ -138,89 +112,47 @@ namespace QuantConnect.Data.Consolidators
             PyObject selector,
             PyObject volumeSelector = null,
             bool evenBars = true)
-            : this(barSize, evenBars)
+            : base(selector, volumeSelector)
         {
-            using (Py.GIL())
-            {
-                if (selector != null && !selector.IsNone())
-                {
-                    if (!selector.TryConvertToDelegate(out _selector))
-                    {
-                        throw new ArgumentException(
-                            "Unable to convert parameter 'selector' to delegate type Func<IBaseData, decimal>");
-                    }
-                }
-                else
-                {
-                    _selector = x => x.Value;
-                }
+            EpsilonCheck(barSize);
+            _barSize = barSize;
+            _evenBars = evenBars;
+        }
 
-                if (volumeSelector != null && !volumeSelector.IsNone())
-                {
-                    if (!volumeSelector.TryConvertToDelegate(out _volumeSelector))
-                    {
-                        throw new ArgumentException(
-                            "Unable to convert parameter 'volumeSelector' to delegate type Func<IBaseData, decimal>");
-                    }
-                }
-                else
-                {
-                    _volumeSelector = x => 0;
-                }
+        /// <summary>
+        /// Updates the current RangeBar being created with the given data.
+        /// Additionally, if it's the case, it consolidates the current RangeBar
+        /// </summary>
+        /// <param name="time">Time of the given data</param>
+        /// <param name="currentValue">Value of the given data</param>
+        /// <param name="volume">Volume of the given data</param>
+        protected override void UpdateBar(DateTime time, decimal currentValue, decimal volume)
+        {
+            CurrentBar.Update(time, currentValue, volume);
+
+            if (CurrentBar.IsClosed)
+            {
+                _lastCloseValue = CurrentBar.Close;
+                OnDataConsolidated(CurrentBar);
+                CurrentBar = null;
             }
         }
 
         /// <summary>
-        /// Updates this consolidator with the specified data
+        /// Creates a new bar with the given data
         /// </summary>
-        /// <param name="data">The new data for the consolidator</param>
-        public void Update(IBaseData data)
+        /// <param name="data">The new data for the bar</param>
+        /// <param name="currentValue">The new value for the bar</param>
+        /// <param name="volume">The new volume to the bar</param>
+        protected override void CreateNewBar(IBaseData data, decimal currentValue, decimal volume)
         {
-            var currentValue = _selector(data);
-            var volume = _volumeSelector(data);
-
-            decimal? close = null;
-
-            // if we're already in a bar then update it
-            if (_currentBar != null)
+            var open = _lastCloseValue ?? currentValue;
+            if (_evenBars && !_lastCloseValue.HasValue)
             {
-                _currentBar.Update(data.Time, currentValue, volume);
-
-                // if the update caused this bar to close, fire the event and reset the bar
-                if (_currentBar.IsClosed)
-                {
-                    close = _currentBar.Close;
-                    OnDataConsolidated(_currentBar);
-                    _currentBar = null;
-                }
+                open = Math.Ceiling(open / _barSize) * _barSize;
             }
 
-            if (_currentBar == null)
-            {
-                var open = close ?? currentValue;
-                if (_evenBars && !close.HasValue)
-                {
-                    open = Math.Ceiling(open / _barSize) * _barSize;
-                }
-
-                _currentBar = new RenkoBar(data.Symbol, data.Time, _barSize, open, volume);
-            }
-        }
-
-        /// <summary>
-        /// Scans this consolidator to see if it should emit a bar due to time passing
-        /// </summary>
-        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public void Scan(DateTime currentLocalTime)
-        {
-        }
-
-        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
-            DataConsolidated = null;
-            _dataConsolidatedHandler = null;
+            CurrentBar = new RenkoBar(data.Symbol, data.Time, _barSize, open, volume);
         }
 
         private static void EpsilonCheck(decimal barSize)
@@ -230,20 +162,6 @@ namespace QuantConnect.Data.Consolidators
                 throw new ArgumentOutOfRangeException(nameof(barSize),
                     "RenkoConsolidator bar size must be positve and greater than 1e-28");
             }
-        }
-
-        /// <summary>
-        /// Event invocator for the DataConsolidated event. This should be invoked
-        /// by derived classes when they have consolidated a new piece of data.
-        /// </summary>
-        /// <param name="consolidated">The newly consolidated data</param>
-        private void OnDataConsolidated(RenkoBar consolidated)
-        {
-            DataConsolidated?.Invoke(this, consolidated);
-
-            _dataConsolidatedHandler?.Invoke(this, consolidated);
-
-            Consolidated = consolidated;
         }
     }
 

@@ -328,7 +328,8 @@ namespace QuantConnect.Brokerages.Backtesting
                                     order,
                                     Algorithm.SubscriptionManager.SubscriptionDataConfigService,
                                     Algorithm.Settings.StalePriceTimeSpan,
-                                    securities);
+                                    securities,
+                                    OnOrderUpdated);
 
                                 // check if the fill should be emitted
                                 var fill = model.Fill(context);
@@ -426,6 +427,18 @@ namespace QuantConnect.Brokerages.Backtesting
                 // if we didn't fill then we need to continue to scan or
                 // if there are still pending orders
                 _needsScan = stillNeedsScan || !_pending.IsEmpty;
+            }
+        }
+
+        /// <summary>
+        /// Invokes the <see cref="Brokerage.OnOrderUpdated(OrderUpdateEvent)" /> event with the given order updates.
+        /// </summary>
+        private void OnOrderUpdated(Order order)
+        {
+            // Only trailing stop orders updates are supported for now
+            if (order.Type == OrderType.TrailingStop)
+            {
+                OnOrderUpdated(new OrderUpdateEvent { OrderId = order.Id, TrailingStopPrice = ((TrailingStopOrder)order).StopPrice });
             }
         }
 

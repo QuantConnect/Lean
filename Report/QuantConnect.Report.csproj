@@ -43,7 +43,7 @@
   <ItemGroup>
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.21" />
     <PackageReference Include="Deedle" Version="2.1.0" />
-    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
   </ItemGroup>
@@ -52,6 +52,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="css\report.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="css\report_override.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="ReportCharts.py">
@@ -74,9 +77,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ReportChartTests.py" />
-    <Content Include="template.crisis.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="template.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

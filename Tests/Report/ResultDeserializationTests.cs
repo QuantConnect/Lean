@@ -18,9 +18,12 @@ using NUnit.Framework;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Report;
+using QuantConnect.Report.ReportElements;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using static QuantConnect.Report.Report;
 
 namespace QuantConnect.Tests.Report
 {
@@ -184,9 +187,315 @@ namespace QuantConnect.Tests.Report
             }
         }
 
+        [TestCaseSource(nameof(CreatesReportParametersTableCorrectlyTestCases))]
+        public void CreatesReportParametersTableCorrectly(string parametersTemplate, Dictionary<string, string> parameters, string expectedParametersTable)
+        {
+            parametersTemplate = parametersTemplate.Replace("\r", string.Empty);
+            var algorithmConfiguration = new AlgorithmConfiguration { Parameters = parameters };
+            var parametersReportElment = new ParametersReportElement("parameters", "", algorithmConfiguration, null, parametersTemplate);
+            var parametersTable = parametersReportElment.Render();
+            expectedParametersTable = expectedParametersTable.Replace("\r", string.Empty);
+            Assert.AreEqual(expectedParametersTable, parametersTable);
+        }
+
+        [TestCase(htmlExampleCode + @"
+
+<!--crisis
+<div class=""col-xs-4"">
+    <table class=""crisis-chart table compact"">
+        <thead>
+        <tr>
+            <th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td style=""padding:0;"">
+                <img src=""{{$PLOT-CRISIS-CONTENT}}"">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+crisis-->
+",
+            @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->", @"<div class=""col-xs-4"">
+    <table class=""crisis-chart table compact"">
+        <thead>
+        <tr>
+            <th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td style=""padding:0;"">
+                <img src=""{{$PLOT-CRISIS-CONTENT}}"">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+")]
+        [TestCase(htmlExampleCode + @"
+<!--parameters
+<tr>
+	<td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td>
+	<td class = ""title""> {{$SECOND-KPI-NAME}} </td><td> {{$SECOND-KPI-VALUE}} </td>
+</tr>
+parameters-->",
+            @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->", @"<tr>
+	<td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td>
+	<td class = ""title""> {{$SECOND-KPI-NAME}} </td><td> {{$SECOND-KPI-VALUE}} </td>
+</tr>
+")]
+        [TestCase(@"<!--crisis<div class=""col-xs-4""><table class=""crisis-chart table compact""><thead><tr><th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th></tr></thead><tbody><tr><td style=""padding:0;""><img src=""{{$PLOT-CRISIS-CONTENT}}""></td></tr></tbody></table></div>crisis-->",
+            @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->", @"<div class=""col-xs-4""><table class=""crisis-chart table compact""><thead><tr><th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th></tr></thead><tbody><tr><td style=""padding:0;""><img src=""{{$PLOT-CRISIS-CONTENT}}""></td></tr></tbody></table></div>")]
+        [TestCase(@"<!--parameters<tr><td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td></tr>parameters-->",
+            @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->", @"<tr><td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td></tr>")]
+        public void GetsExpectedCrisisAndParametersHTMLCodes(string input, string pattern, string expected)
+        {
+            var htmlCode = GetRegexInInput(pattern, input);
+            Assert.IsNotNull(htmlCode);
+            Assert.AreEqual(expected, htmlCode);
+        }
+
+        [TestCase(htmlExampleCode + @"
+
+<!--crisis
+<div class=""col-xs-4"">
+    <table class=""crisis-chart table compact"">
+        <thead>
+        <tr>
+            <th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td style=""padding:0;"">
+                <img src=""{{$PLOT-CRISIS-CONTENT}}"">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+crisis-->
+", @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->")]
+        [TestCase(htmlExampleCode + @"
+<!--parameters
+<tr>
+	<td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td>
+	<td class = ""title""> {{$SECOND-KPI-NAME}} </td><td> {{$SECOND-KPI-VALUE}} </td>
+</tr>
+parameters-->", @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
+        [TestCase(@"", @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
+        [TestCase(@"", @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->")]
+        [TestCase(@"<div class=""col-xs-4""><table class=""crisis-chart table compact""><thead><tr><th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th></tr></thead><tbody><tr><td style=""padding:0;""><img src=""{{$PLOT-CRISIS-CONTENT}}""></td></tr></tbody></table></div>crisis-->",
+    @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
+        [TestCase(@"<!--crisis<div class=""col-xs-4""><table class=""crisis-chart table compact""><thead><tr><th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th></tr></thead><tbody><tr><td style=""padding:0;""><img src=""{{$PLOT-CRISIS-CONTENT}}""></td></tr></tbody></table></div>",
+    @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
+        [TestCase(@"<div class=""col-xs-4""><table class=""crisis-chart table compact""><thead><tr><th style=""display: block; height: 75px;"">{{$TEXT-CRISIS-TITLE}}</th></tr></thead><tbody><tr><td style=""padding:0;""><img src=""{{$PLOT-CRISIS-CONTENT}}""></td></tr></tbody></table></div>",
+    @"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->")]
+        [TestCase(@"<tr><td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td></tr>parameters-->",
+    @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->")]
+        [TestCase(@"<!--parameters<tr><td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td></tr>",
+    @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->")]
+        [TestCase(@"<tr><td class = ""title""> {{$FIRST-KPI-NAME}} </td><td> {{$FIRST-KPI-VALUE}} </td></tr>",
+    @"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->")]
+        public void FindsNoMatchingForCrisisAndParametersInGivenInput(string input, string pattern)
+        {
+            var matching = GetRegexInInput(pattern, input);
+            Assert.IsNull(matching);
+        }
+
         public IEnumerable<KeyValuePair<long, decimal>> GetChartPoints(Result result)
         {
             return result.Charts["Equity"].Series["Performance"].Values.Select(point => new KeyValuePair<long, decimal>(point.x, point.y));
         }
+
+        private const string htmlExampleCode = @"            <div class=""page"" style=""{{$CSS-CRISIS-PAGE-STYLE}}"">
+                <div class=""header"">
+                    <div class=""header-left"">
+                        <img src=""https://cdn.quantconnect.com/web/i/logo.png"">
+                    </div>
+                    <div class=""header-right"">Strategy Report Summary: {{$TEXT-STRATEGY-NAME}} {{$TEXT-STRATEGY-VERSION}}</div>
+                </div>
+                <div class=""content"">
+                    <div class=""container-row"">
+                        {{$HTML-CRISIS-PLOTS}}
+                    </div>
+                </div>
+            </div>
+			<div class=""page"" id=""parameters"" style=""{{$CSS-PARAMETERS-PAGE-STYLE}}"">
+                <div class=""header"">
+                    <div class=""header-left"">
+                        <img src=""https://cdn.quantconnect.com/web/i/logo.png"">
+                    </div>
+                    <div class=""header-right"">Strategy Report Summary: {{$TEXT-STRATEGY-NAME}} {{$TEXT-STRATEGY-VERSION}}</div>
+                </div>
+                <div class=""content"">
+                    <div class=""container-row"">
+                        <div class=""col-xs-12"">
+                            <table id=""key-characteristics"" class=""table compact"">
+                                <thead>
+                                <tr>
+                                    <th class=""title"">Parameters</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    {{$PARAMETERS}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </body>
+    </html>";
+
+        public static object[] CreatesReportParametersTableCorrectlyTestCases = new object[]
+        {
+            // Happy test cases
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } },
+                @"<tr>
+	<td class = ""title""> Test Key One </td><td> 1 </td>
+</tr>
+<tr>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+</tr>
+<tr>
+	<td class = ""title""> Test Key Three </td><td> three </td>
+</tr>"},
+
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, @"<tr>
+	<td class = ""title""> Test Key One </td><td> 1 </td>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+</tr>
+<tr>
+	<td class = ""title""> Test Key Three </td><td> three </td>
+	<td class = ""title"">  </td><td>  </td>
+</tr>"},
+
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" } }, @"<tr>
+	<td class = ""title""> Test Key One </td><td> 1 </td>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+</tr>"},
+
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+    <td class = ""title""> {{$KEY2}} </td><td> {{$VALUE2}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4"} }, @"<tr>
+	<td class = ""title""> Test Key One </td><td> 1 </td>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+    <td class = ""title""> Test Key Three </td><td> three </td>
+</tr>
+<tr>
+	<td class = ""title""> Test Key Four </td><td> 4 </td>
+	<td class = ""title"">  </td><td>  </td>
+    <td class = ""title"">  </td><td>  </td>
+</tr>"},
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+    <td class = ""title""> {{$KEY2}} </td><td> {{$VALUE2}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4"}, { "test-key-five", "5"} }, @"<tr>
+	<td class = ""title""> Test Key One </td><td> 1 </td>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+    <td class = ""title""> Test Key Three </td><td> three </td>
+</tr>
+<tr>
+	<td class = ""title""> Test Key Four </td><td> 4 </td>
+	<td class = ""title""> Test Key Five </td><td> 5 </td>
+    <td class = ""title"">  </td><td>  </td>
+</tr>"},
+
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE0}} </td>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+    <td class = ""title""> {{$KEY2}} </td><td> {{$VALUE2}} </td>
+    <td class = ""title""> {{$KEY3}} </td><td> {{$VALUE3}} </td>
+    <td class = ""title""> {{$KEY4}} </td><td> {{$VALUE4}} </td>
+    <td class = ""title""> {{$KEY5}} </td><td> {{$VALUE5}} </td>
+    <td class = ""title""> {{$KEY6}} </td><td> {{$VALUE6}} </td>
+    <td class = ""title""> {{$KEY7}} </td><td> {{$VALUE7}} </td>
+    <td class = ""title""> {{$KEY8}} </td><td> {{$VALUE8}} </td>
+    <td class = ""title""> {{$KEY9}} </td><td> {{$VALUE9}} </td>
+    <td class = ""title""> {{$KEY10}} </td><td> {{$VALUE10}} </td>
+    <td class = ""title""> {{$KEY11}} </td><td> {{$VALUE11}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4" }, { "test-key-five", "5" },
+                { "test-key-six", "6" }, { "test-key-seven", "7" }, { "test-key-eight", "8" }, { "test-key-nine", "9" }, { "test-key-ten", "10"}, { "test-key-eleven", "11"}}, @"<tr>
+	<td class = ""title""> Test Key One </td><td> 1 </td>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+    <td class = ""title""> Test Key Three </td><td> three </td>
+    <td class = ""title""> Test Key Four </td><td> 4 </td>
+    <td class = ""title""> Test Key Five </td><td> 5 </td>
+    <td class = ""title""> Test Key Six </td><td> 6 </td>
+    <td class = ""title""> Test Key Seven </td><td> 7 </td>
+    <td class = ""title""> Test Key Eight </td><td> 8 </td>
+    <td class = ""title""> Test Key Nine </td><td> 9 </td>
+    <td class = ""title""> Test Key Ten </td><td> 10 </td>
+    <td class = ""title""> Test Key Eleven </td><td> 11 </td>
+    <td class = ""title"">  </td><td>  </td>
+</tr>"},
+            // Sad test cases
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, @"<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>
+<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>
+<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+</tr>"},
+
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY0}} </td><td> {{$VALUE}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, @"<tr>
+	<td class = ""title""> Test Key One </td><td> {{$VALUE}} </td>
+</tr>
+<tr>
+	<td class = ""title""> Test Key Two </td><td> {{$VALUE}} </td>
+</tr>
+<tr>
+	<td class = ""title""> Test Key Three </td><td> {{$VALUE}} </td>
+</tr>"},
+
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE0}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" } }, @"<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> 1 </td>
+</tr>
+<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> 2 </td>
+</tr>
+<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> three </td>
+</tr>"},
+
+            new object[] { @"<tr>
+	<td class = ""title""> {{$KEY1}} </td><td> {{$VALUE1}} </td>
+	<td class = ""title""> {{$KEY2}} </td><td> {{$VALUE2}} </td>
+    <td class = ""title""> {{$KEY3}} </td><td> {{$VALUE3}} </td>
+</tr>", new Dictionary<string, string>() { { "test-key-one", "1" }, { "test-key-two", "2" }, { "test-key-three", "three" }, { "test-key-four", "4"} }, @"<tr>
+	<td class = ""title""> Test Key Two </td><td> 2 </td>
+	<td class = ""title""> Test Key Three </td><td> three </td>
+    <td class = ""title""> {{$KEY3}} </td><td> {{$VALUE3}} </td>
+</tr>
+<tr>
+	<td class = ""title"">  </td><td>  </td>
+	<td class = ""title"">  </td><td>  </td>
+    <td class = ""title""> {{$KEY3}} </td><td> {{$VALUE3}} </td>
+</tr>"},
+        };
     }
 }
