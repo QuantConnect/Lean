@@ -77,7 +77,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var dividendEveryQuarter = _randomValueGenerator.NextBool(_settings.DividendEveryQuarterPercentage);
 
             var previousX = _random.NextDouble();
-            var previousSplitFactor = hasSplits ? (decimal)_random.NextDouble() : 1;
+            var months = tickHistory.Select(x => x.Time.Month.ToString()+ "-" + x.Time.Year.ToString()).GroupBy(x => x).Count();
+            var minPreviousSplitFactor = (decimal)(Math.Pow((double)0.1, 1 / (double)(2 * months)));
+            var maxPreviousSplitFactor = 1;
+            var previousSplitFactor = hasSplits ? ((decimal)_random.NextDouble())*(maxPreviousSplitFactor - minPreviousSplitFactor) + minPreviousSplitFactor : 1;
             var previousPriceFactor = hasDividends ? (decimal)Math.Tanh(previousX) : 1;
 
             var splitDates = new List<DateTime>();
@@ -167,18 +170,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         // Have a 5% chance of a split every month
                         if (hasSplits && _randomValueGenerator.NextBool(5.0))
                         {
-                            do
-                            {
-                                if (previousSplitFactor < 1)
-                                {
-                                    previousSplitFactor += (decimal)(_random.NextDouble() - _random.NextDouble());
-                                }
-                                else
-                                {
-                                    previousSplitFactor *= (decimal)_random.NextDouble() * _random.Next(1, 5);
-                                }
-                            } while (previousSplitFactor < 0);
-
                             splitDates.Add(_randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5)));
                         }
                         // 10% chance of being renamed every month
