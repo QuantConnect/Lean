@@ -29,7 +29,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly Random _random;
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
-        private const decimal _maximumPriceAllowed = 10000000m;
+        private const decimal _maximumPriceAllowed = 1000m;
 
 
         public RandomValueGenerator()
