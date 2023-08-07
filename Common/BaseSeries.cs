@@ -255,6 +255,10 @@ namespace QuantConnect
         /// Pie chart (6)
         Pie,
         /// Treemap Plot (7)
-        Treemap
+        Treemap,
+        /// Heatmap Plot (9) -- NOTE: 8 is reserved
+        Heatmap = 9,
+        /// Scatter 3D Plot (10)
+        Scatter3d
     }
 }
