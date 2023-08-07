@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using QuantConnect.Util;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace QuantConnect
 {
@@ -183,39 +184,57 @@ namespace QuantConnect
             }
 
             // Make sure we don't start sampling before the data begins.
-            var nextSampleTime = start < candlesticks[0].Time ? candlesticks[0].Time : start;
+            var nextSampleTime = start;
+            if (start < candlesticks[0].Time)
+            {
+                nextSampleTime = candlesticks[0].Time;
+            }
 
             // Find the first candlestick that is after the start time.
             // This variable will also be used to keep track of the first candlestick to be aggregated.
             var startIndex = candlesticks.FindIndex(x => x.Time > nextSampleTime) - 1;
 
-            // We iterate ignoring the last candlestick because we need to check the next candlestick on each iteration.
-            for (var i = startIndex; i < seriesSize - 1 && nextSampleTime <= stop; i++)
+            if (candlesticks[startIndex].Time == nextSampleTime)
             {
-                var next = (Candlestick)candlesticks[i + 1];
-                if (nextSampleTime >= next.Time)
+                sampledSeries.Values.Add(candlesticks[startIndex].Clone());
+                nextSampleTime += _step;
+                startIndex++;
+            }
+
+            // We iterate ignoring the last candlestick because we need to check the next candlestick on each iteration.
+            for (var i = startIndex; i < seriesSize && nextSampleTime <= stop; i++)
+            {
+                var current = (Candlestick)candlesticks[i];
+                if (nextSampleTime > current.Time)
                 {
                     continue;
                 }
 
+                // Form the bar(s) between candlesticks at startIndex and i
+
                 var sampledCandlestick = AggregateCandlesticks(candlesticks, startIndex, i + 1, nextSampleTime, truncateValues);
 
-                while (nextSampleTime < next.Time && nextSampleTime <= stop)
+                var first = (Candlestick)candlesticks[startIndex];
+                var firstOpenTime = startIndex > 0
+                    ? candlesticks[startIndex - 1].Time
+                    : first.Time - (candlesticks[startIndex + 1].Time - candlesticks[startIndex].Time);
+                Candlestick previous = null;
+                while (nextSampleTime <= current.Time && nextSampleTime <= stop)
                 {
-                    var currentSampledCandlestick = sampledCandlestick.Clone();
-                    currentSampledCandlestick.Time = nextSampleTime;
-                    sampledSeries.Values.Add(currentSampledCandlestick);
+                    var interpolated = Interpolate(sampledCandlestick, first, current, firstOpenTime, nextSampleTime);
+
+                    if (previous != null)
+                    {
+                        interpolated.Open = previous.Close;
+                    }
+
+                    sampledSeries.Values.Add(interpolated);
+                    previous = interpolated;
                     nextSampleTime += _step;
                 }
 
+                // Update the start index
                 startIndex = i + 1;
-            }
-
-            // Check the last candlestick to see if it should be aggregated.
-            if (nextSampleTime <= stop && nextSampleTime == candlesticks[seriesSize - 1].Time)
-            {
-                var sampledCandlestick = AggregateCandlesticks(candlesticks, startIndex, seriesSize, nextSampleTime, truncateValues);
-                sampledSeries.Values.Add(sampledCandlestick);
             }
 
             return sampledSeries;
@@ -252,20 +271,49 @@ namespace QuantConnect
         /// <summary>
         /// Linear interpolation used for sampling
         /// </summary>
+        private static decimal Interpolate(decimal x0, decimal y0, decimal x1, decimal y1, decimal x)
+        {
+            //  y=mx+b
+            return (y1 - y0) * (x - x0) / (x1 - x0) + y0;
+        }
+
+        /// <summary>
+        /// Linear interpolation used for sampling
+        /// </summary>
         private static ChartPoint Interpolate(ChartPoint previous, ChartPoint current, DateTime targetTime)
         {
-            var deltaTicks = current.x - previous.x;
-            // if they're at the same time return the current value
-            if (deltaTicks == 0)
+            if (current.X == previous.X)
             {
                 return (ChartPoint)current.Clone();
             }
 
-            var targetUnitTime = Time.DateTimeToUnixTimeStamp(targetTime);
-            double percentage = (targetUnitTime - previous.x) / deltaTicks;
+            var targetUnixTime = Time.DateTimeToUnixTimeStamp(targetTime).SafeDecimalCast();
 
-            //  y=mx+b
-            return new ChartPoint(targetTime, (current.y - previous.y) * percentage.SafeDecimalCast() + previous.y);
+            return new ChartPoint(targetTime, Interpolate(previous.X, previous.Y, current.X, current.Y, targetUnixTime));
+        }
+
+        /// <summary>
+        /// Linear interpolation used for sampling
+        /// </summary>
+        private static Candlestick Interpolate(Candlestick template, Candlestick first, Candlestick current,
+            DateTime firstOpenTime, DateTime targetTime)
+        {
+            Candlestick result;
+            if (firstOpenTime == current.Time)
+            {
+                result = (Candlestick)current.Clone();
+                result.Time = targetTime;
+                return result;
+            }
+
+            result = (Candlestick)template.Clone();
+            result.Time = targetTime;
+
+            var targetUnixTime = Time.DateTimeToUnixTimeStamp(targetTime).SafeDecimalCast();
+            var firstOpenUnitTime = Time.DateTimeToUnixTimeStamp(firstOpenTime).SafeDecimalCast();
+            result.Close = Interpolate(firstOpenUnitTime, first.Open, current.LongTime, current.Close, targetUnixTime);
+
+            return result;
         }
 
         /// <summary>

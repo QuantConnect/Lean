@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using NUnit.Framework;
 
 namespace QuantConnect.Tests.Common
@@ -203,6 +204,33 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void DoesNotSampleCandlestickSeriesBeforeStart()
+        {
+            var series = new CandlestickSeries { Name = "name" };
+            var reference = new DateTime(2023, 03, 03);
+            series.AddPoint(reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(reference.AddDays(1), 2m, 3m, 2m, 3m);
+            series.AddPoint(reference.AddDays(2), 4m, 4m, 3m, 3m);
+            series.AddPoint(reference.AddDays(3), 2m, 2m, 1m, 1m);
+            series.AddPoint(reference.AddDays(4), 2m, 3m, 2m, 3m);
+
+            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
+
+            var sampled = sampler.Sample(series, reference.AddDays(-1), reference.AddDays(2));
+
+            var seriesValues = series.Values.Cast<Candlestick>().ToList();
+            var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
+
+            Assert.AreEqual(3, sampled.Values.Count);
+
+            for (var i = 0; i < sampledValues.Count; i++)
+            {
+                Assert.AreEqual(seriesValues[i].Time, sampledValues[i].Time);
+                AssertCandlesticksValuesAreEqual(seriesValues[i], sampledValues[i]);
+            }
+        }
+
+        [Test]
         public void DownSamplesCandlestickSeriesWithStopSameAsLastPoint()
         {
             // Original series is sampled at 1 day intervals
@@ -230,12 +258,15 @@ namespace QuantConnect.Tests.Common
             AssertCandlesticksValuesAreEqual(seriesValues[0], sampledValues[0]);
 
             Assert.AreEqual(seriesValues[0].Time.AddDays(1.5), sampledValues[1].Time);
-            AssertCandlesticksValuesAreEqual(seriesValues[1], sampledValues[1]);
+            Assert.AreEqual(seriesValues[1].Open, sampledValues[1].Open);
+            Assert.AreEqual(Math.Max(seriesValues[1].High, seriesValues[2].High), sampledValues[1].High);
+            Assert.AreEqual(Math.Min(seriesValues[1].Low, seriesValues[2].Low), sampledValues[1].Low);
+            Assert.AreEqual(InterpolateClose(seriesValues[1], seriesValues[2], TimeSpan.FromDays(1), sampledValues[1].LongTime), sampledValues[1].Close);
 
             Assert.AreEqual(seriesValues[0].Time.AddDays(2 * 1.5), sampledValues[2].Time);
-            Assert.AreEqual(seriesValues[2].Open, sampledValues[2].Open);
-            Assert.AreEqual(Math.Max(seriesValues[2].High, seriesValues[3].High), sampledValues[2].High);
-            Assert.AreEqual(Math.Min(seriesValues[2].Low, seriesValues[3].Low), sampledValues[2].Low);
+            Assert.AreEqual(seriesValues[3].Open, sampledValues[2].Open);
+            Assert.AreEqual(seriesValues[3].High, sampledValues[2].High);
+            Assert.AreEqual(seriesValues[3].Low, sampledValues[2].Low);
             Assert.AreEqual(seriesValues[3].Close, sampledValues[2].Close);
         }
 
@@ -268,13 +299,22 @@ namespace QuantConnect.Tests.Common
             AssertCandlesticksValuesAreEqual(seriesValues[0], sampledValues[0]);
 
             Assert.AreEqual(seriesValues[0].Time.AddDays(1.5), sampledValues[1].Time);
-            AssertCandlesticksValuesAreEqual(seriesValues[1], sampledValues[1]);
+            Assert.AreEqual(seriesValues[1].Open, sampledValues[1].Open);
+            Assert.AreEqual(Math.Max(seriesValues[1].High, seriesValues[2].High), sampledValues[1].High);
+            Assert.AreEqual(Math.Min(seriesValues[1].Low, seriesValues[2].Low), sampledValues[1].Low);
+            Assert.AreEqual(InterpolateClose(seriesValues[1], seriesValues[2], TimeSpan.FromDays(1), sampledValues[1].LongTime), sampledValues[1].Close);
 
             Assert.AreEqual(seriesValues[0].Time.AddDays(2 * 1.5), sampledValues[2].Time);
-            Assert.AreEqual(seriesValues[2].Open, sampledValues[2].Open);
-            Assert.AreEqual(Math.Max(seriesValues[2].High, seriesValues[3].High), sampledValues[2].High);
-            Assert.AreEqual(Math.Min(seriesValues[2].Low, seriesValues[3].Low), sampledValues[2].Low);
+            Assert.AreEqual(seriesValues[3].Open, sampledValues[2].Open);
+            Assert.AreEqual(seriesValues[3].High, sampledValues[2].High);
+            Assert.AreEqual(seriesValues[3].Low, sampledValues[2].Low);
             Assert.AreEqual(seriesValues[3].Close, sampledValues[2].Close);
+        }
+
+        private static decimal InterpolateClose(Candlestick prev, Candlestick next, TimeSpan candleSpan, long time)
+        {
+            var prevOpenUnitTime = Time.DateTimeToUnixTimeStamp(prev.Time - candleSpan).SafeDecimalCast();
+            return (next.Close - prev.Open) * (time - prevOpenUnitTime) / (next.LongTime - prevOpenUnitTime) + prev.Open;
         }
 
         [Test]
@@ -302,11 +342,26 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(4, sampled.Values.Count);
 
-            for (var i = 0; i < sampledValues.Count; i++)
-            {
-                Assert.AreEqual(seriesValues[0].Time.AddDays(i * 1.25), sampledValues[i].Time);
-                AssertCandlesticksValuesAreEqual(seriesValues[i], sampledValues[i]);
-            }
+            Assert.AreEqual(seriesValues[0].Time, sampledValues[0].Time);
+            AssertCandlesticksValuesAreEqual(seriesValues[0], sampledValues[0]);
+
+            Assert.AreEqual(seriesValues[0].Time.AddDays(1.25), sampledValues[1].Time);
+            Assert.AreEqual(seriesValues[1].Open, sampledValues[1].Open);
+            Assert.AreEqual(Math.Max(seriesValues[1].High, seriesValues[2].High), sampledValues[1].High);
+            Assert.AreEqual(Math.Min(seriesValues[1].Low, seriesValues[2].Low), sampledValues[1].Low);
+            Assert.AreEqual(InterpolateClose(seriesValues[1], seriesValues[2], TimeSpan.FromDays(1), sampledValues[1].LongTime), sampledValues[1].Close);
+
+            Assert.AreEqual(seriesValues[0].Time.AddDays(2 * 1.25), sampledValues[2].Time);
+            Assert.AreEqual(seriesValues[3].Open, sampledValues[2].Open);
+            Assert.AreEqual(seriesValues[3].High, sampledValues[2].High);
+            Assert.AreEqual(seriesValues[3].Low, sampledValues[2].Low);
+            Assert.AreEqual(InterpolateClose(seriesValues[3], seriesValues[3], TimeSpan.FromDays(1), sampledValues[2].LongTime), sampledValues[2].Close);
+
+            Assert.AreEqual(seriesValues[0].Time.AddDays(3 * 1.25), sampledValues[3].Time);
+            Assert.AreEqual(seriesValues[4].Open, sampledValues[3].Open);
+            Assert.AreEqual(seriesValues[4].High, sampledValues[3].High);
+            Assert.AreEqual(seriesValues[4].Low, sampledValues[3].Low);
+            Assert.AreEqual(InterpolateClose(seriesValues[4], seriesValues[4], TimeSpan.FromDays(1), sampledValues[3].LongTime), sampledValues[3].Close);
         }
 
         [Test]
@@ -337,61 +392,6 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
-        public void DoesNotSampleCandlestickSeriesBeforeStart()
-        {
-            var series = new CandlestickSeries { Name = "name" };
-            var reference = new DateTime(2023, 03, 03);
-            series.AddPoint(reference, 1m, 2m, 1m, 2m);
-            series.AddPoint(reference.AddDays(1), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(2), 4m, 4m, 3m, 3m);
-            series.AddPoint(reference.AddDays(3), 2m, 2m, 1m, 1m);
-            series.AddPoint(reference.AddDays(4), 2m, 3m, 2m, 3m);
-
-            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
-
-            var sampled = sampler.Sample(series, reference.AddDays(-1), reference.AddDays(2));
-
-            var seriesValues = series.Values.Cast<Candlestick>().ToList();
-            var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
-
-            Assert.AreEqual(3, sampled.Values.Count);
-
-            for (var i = 0; i < sampledValues.Count; i++)
-            {
-                Assert.AreEqual(seriesValues[i].Time, sampledValues[i].Time);
-                AssertCandlesticksValuesAreEqual(seriesValues[i], sampledValues[i]);
-            }
-        }
-
-        [Test]
-        public void HandlesCandlestickSeriesDuplicateTimes()
-        {
-
-            var series = new CandlestickSeries { Name = "name" };
-            var reference = new DateTime(2023, 03, 03);
-            series.AddPoint(reference, 1m, 2m, 1m, 2m);
-            series.Values.Add(new Candlestick(reference, 2m, 3m, 2m, 3m));
-            series.AddPoint(reference.AddDays(1), 4m, 4m, 3m, 3m);
-
-            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
-            var sampled = sampler.Sample(series, reference, reference.AddDays(1));
-
-            var seriesValues = series.Values.Cast<Candlestick>().ToList();
-            var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
-
-            // sampler will only produce one value at the time
-            // it was also respect the latest value
-
-            Assert.AreEqual(2, sampledValues.Count);
-
-            for (var i = 0; i < sampledValues.Count; i++)
-            {
-                Assert.AreEqual(series.Values[i + 1].Time, sampledValues[i].Time);
-                AssertCandlesticksValuesAreEqual(seriesValues[i + 1], sampledValues[i]);
-            }
-        }
-
-        [Test]
         public void SamplesCandlestickSeriesWithHigherSamplingResolution()
         {
             // Original series is sampled at 1 day intervals
@@ -414,18 +414,60 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(9, sampled.Values.Count);
 
-            for (int i = 0, j = 0; i < seriesValues.Count - 1; i++)
-            {
-                while (sampledValues[j].Time < seriesValues[i + 1].Time)
-                {
-                    Assert.AreEqual(seriesValues[0].Time.AddDays(j * 0.25), sampledValues[j].Time);
-                    AssertCandlesticksValuesAreEqual(seriesValues[i], sampledValues[j]);
-                    j++;
-                }
-            }
+            // First half:
 
-            Assert.AreEqual(seriesValues[seriesValues.Count - 1].Time, sampledValues[sampledValues.Count - 1].Time);
-            AssertCandlesticksValuesAreEqual(seriesValues[seriesValues.Count - 1], sampledValues[sampledValues.Count - 1]);
+            Assert.AreEqual(seriesValues[0].Time, sampledValues[0].Time);
+            AssertCandlesticksValuesAreEqual(seriesValues[0], sampledValues[0]);
+
+            Assert.AreEqual(seriesValues[0].Time.AddDays(0.25), sampledValues[1].Time);
+            Assert.AreEqual(seriesValues[1].Open, sampledValues[1].Open);
+            Assert.AreEqual(seriesValues[1].High, sampledValues[1].High);
+            Assert.AreEqual(seriesValues[1].Low, sampledValues[1].Low);
+            Assert.AreEqual(InterpolateClose(seriesValues[1], seriesValues[1], TimeSpan.FromDays(1), sampledValues[1].LongTime), sampledValues[1].Close);
+
+            Assert.AreEqual(seriesValues[0].Time.AddDays(2 * 0.25), sampledValues[2].Time);
+            Assert.AreEqual(sampledValues[1].Close, sampledValues[2].Open);
+            Assert.AreEqual(seriesValues[1].High, sampledValues[2].High);
+            Assert.AreEqual(seriesValues[1].Low, sampledValues[2].Low);
+            Assert.AreEqual(InterpolateClose(seriesValues[1], seriesValues[1], TimeSpan.FromDays(1), sampledValues[2].LongTime), sampledValues[2].Close);
+
+            Assert.AreEqual(seriesValues[0].Time.AddDays(3 * 0.25), sampledValues[3].Time);
+            Assert.AreEqual(sampledValues[2].Close, sampledValues[3].Open);
+            Assert.AreEqual(seriesValues[1].High, sampledValues[3].High);
+            Assert.AreEqual(seriesValues[1].Low, sampledValues[3].Low);
+            Assert.AreEqual(InterpolateClose(seriesValues[1], seriesValues[1], TimeSpan.FromDays(1), sampledValues[3].LongTime), sampledValues[3].Close);
+
+            Assert.AreEqual(seriesValues[0].Time.AddDays(4 * 0.25), sampledValues[4].Time);
+            Assert.AreEqual(sampledValues[3].Close, sampledValues[4].Open);
+            Assert.AreEqual(seriesValues[1].High, sampledValues[4].High);
+            Assert.AreEqual(seriesValues[1].Low, sampledValues[4].Low);
+            Assert.AreEqual(seriesValues[1].Close, sampledValues[4].Close);
+
+            // Second half:
+
+            Assert.AreEqual(seriesValues[0].Time.AddDays(5 * 0.25), sampledValues[5].Time);
+            Assert.AreEqual(seriesValues[2].Open, sampledValues[5].Open);
+            Assert.AreEqual(seriesValues[2].High, sampledValues[5].High);
+            Assert.AreEqual(seriesValues[2].Low, sampledValues[5].Low);
+            Assert.AreEqual(InterpolateClose(seriesValues[2], seriesValues[2], TimeSpan.FromDays(1), sampledValues[5].LongTime), sampledValues[5].Close);
+
+            Assert.AreEqual(seriesValues[0].Time.AddDays(6 * 0.25), sampledValues[6].Time);
+            Assert.AreEqual(sampledValues[5].Close, sampledValues[6].Open);
+            Assert.AreEqual(seriesValues[2].High, sampledValues[6].High);
+            Assert.AreEqual(seriesValues[2].Low, sampledValues[6].Low);
+            Assert.AreEqual(InterpolateClose(seriesValues[2], seriesValues[2], TimeSpan.FromDays(1), sampledValues[6].LongTime), sampledValues[6].Close);
+
+            Assert.AreEqual(seriesValues[0].Time.AddDays(7 * 0.25), sampledValues[7].Time);
+            Assert.AreEqual(sampledValues[6].Close, sampledValues[7].Open);
+            Assert.AreEqual(seriesValues[2].High, sampledValues[7].High);
+            Assert.AreEqual(seriesValues[2].Low, sampledValues[7].Low);
+            Assert.AreEqual(InterpolateClose(seriesValues[2], seriesValues[2], TimeSpan.FromDays(1), sampledValues[7].LongTime), sampledValues[7].Close);
+
+            Assert.AreEqual(seriesValues[0].Time.AddDays(8 * 0.25), sampledValues[8].Time);
+            Assert.AreEqual(sampledValues[7].Close, sampledValues[8].Open);
+            Assert.AreEqual(seriesValues[2].High, sampledValues[8].High);
+            Assert.AreEqual(seriesValues[2].Low, sampledValues[8].Low);
+            Assert.AreEqual(seriesValues[2].Close, sampledValues[8].Close);
         }
 
         [Test]
@@ -451,19 +493,36 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(5, sampled.Values.Count);
 
-            var j = 0;
-            for (int i = 0; i < seriesValues.Count - 1; i++)
-            {
-                while (j < sampledValues.Count && sampledValues[j].Time < seriesValues[i + 1].Time)
-                {
-                    Assert.AreEqual(seriesValues[0].Time.AddHours(j * 10), sampledValues[j].Time);
-                    AssertCandlesticksValuesAreEqual(seriesValues[i], sampledValues[j]);
-                    j++;
-                }
-            }
+            // First half:
 
-            // Make sure we checked all the values of the sampled series
-            Assert.AreEqual(5, j);
+            Assert.AreEqual(seriesValues[0].Time, sampledValues[0].Time);
+            AssertCandlesticksValuesAreEqual(seriesValues[0], sampledValues[0]);
+
+            Assert.AreEqual(seriesValues[0].Time.AddHours(1 * 10), sampledValues[1].Time);
+            Assert.AreEqual(seriesValues[1].Open, sampledValues[1].Open);
+            Assert.AreEqual(seriesValues[1].High, sampledValues[1].High);
+            Assert.AreEqual(seriesValues[1].Low, sampledValues[1].Low);
+            Assert.AreEqual((double)InterpolateClose(seriesValues[1], seriesValues[1], TimeSpan.FromDays(1), sampledValues[1].LongTime), (double)sampledValues[1].Close, delta: 1e-3);
+
+            Assert.AreEqual(seriesValues[0].Time.AddHours(2 * 10), sampledValues[2].Time);
+            Assert.AreEqual(sampledValues[1].Close, sampledValues[2].Open);
+            Assert.AreEqual(seriesValues[1].High, sampledValues[2].High);
+            Assert.AreEqual(seriesValues[1].Low, sampledValues[2].Low);
+            Assert.AreEqual((double)InterpolateClose(seriesValues[1], seriesValues[1], TimeSpan.FromDays(1), sampledValues[2].LongTime), (double)sampledValues[2].Close, delta: 1e-3);
+
+            // Second half:
+
+            Assert.AreEqual(seriesValues[0].Time.AddHours(3 * 10), sampledValues[3].Time);
+            Assert.AreEqual(seriesValues[2].Open, sampledValues[3].Open);
+            Assert.AreEqual(seriesValues[2].High, sampledValues[3].High);
+            Assert.AreEqual(seriesValues[2].Low, sampledValues[3].Low);
+            Assert.AreEqual((double)InterpolateClose(seriesValues[2], seriesValues[2], TimeSpan.FromDays(1), sampledValues[3].LongTime), (double)sampledValues[3].Close, delta: 1e-3);
+
+            Assert.AreEqual(seriesValues[0].Time.AddHours(4 * 10), sampledValues[4].Time);
+            Assert.AreEqual(sampledValues[3].Close, sampledValues[4].Open);
+            Assert.AreEqual(seriesValues[2].High, sampledValues[4].High);
+            Assert.AreEqual(seriesValues[2].Low, sampledValues[4].Low);
+            Assert.AreEqual((double)InterpolateClose(seriesValues[2], seriesValues[2], TimeSpan.FromDays(1), sampledValues[4].LongTime), (double)sampledValues[4].Close, delta: 1e-3);
         }
 
         [Test]
@@ -489,19 +548,38 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(5, sampled.Values.Count);
 
-            var j = 0;
-            for (int i = 0; i < seriesValues.Count - 1; i++)
-            {
-                while (j < sampledValues.Count && sampledValues[j].Time < seriesValues[i + 1].Time)
-                {
-                    Assert.AreEqual(seriesValues[0].Time.AddHours(j * 10), sampledValues[j].Time);
-                    AssertCandlesticksValuesAreEqual(seriesValues[i], sampledValues[j]);
-                    j++;
-                }
-            }
+            Assert.AreEqual(5, sampled.Values.Count);
 
-            // Make sure we checked all the values of the sampled series
-            Assert.AreEqual(5, j);
+            // First half:
+
+            Assert.AreEqual(seriesValues[0].Time, sampledValues[0].Time);
+            AssertCandlesticksValuesAreEqual(seriesValues[0], sampledValues[0]);
+
+            Assert.AreEqual(seriesValues[0].Time.AddHours(1 * 10), sampledValues[1].Time);
+            Assert.AreEqual(seriesValues[1].Open, sampledValues[1].Open);
+            Assert.AreEqual(seriesValues[1].High, sampledValues[1].High);
+            Assert.AreEqual(seriesValues[1].Low, sampledValues[1].Low);
+            Assert.AreEqual((double)InterpolateClose(seriesValues[1], seriesValues[1], TimeSpan.FromDays(1), sampledValues[1].LongTime), (double)sampledValues[1].Close, delta: 1e-3);
+
+            Assert.AreEqual(seriesValues[0].Time.AddHours(2 * 10), sampledValues[2].Time);
+            Assert.AreEqual(sampledValues[1].Close, sampledValues[2].Open);
+            Assert.AreEqual(seriesValues[1].High, sampledValues[2].High);
+            Assert.AreEqual(seriesValues[1].Low, sampledValues[2].Low);
+            Assert.AreEqual((double)InterpolateClose(seriesValues[1], seriesValues[1], TimeSpan.FromDays(1), sampledValues[2].LongTime), (double)sampledValues[2].Close, delta: 1e-3);
+
+            // Second half:
+
+            Assert.AreEqual(seriesValues[0].Time.AddHours(3 * 10), sampledValues[3].Time);
+            Assert.AreEqual(seriesValues[2].Open, sampledValues[3].Open);
+            Assert.AreEqual(seriesValues[2].High, sampledValues[3].High);
+            Assert.AreEqual(seriesValues[2].Low, sampledValues[3].Low);
+            Assert.AreEqual((double)InterpolateClose(seriesValues[2], seriesValues[2], TimeSpan.FromDays(1), sampledValues[3].LongTime), (double)sampledValues[3].Close, delta: 1e-3);
+
+            Assert.AreEqual(seriesValues[0].Time.AddHours(4 * 10), sampledValues[4].Time);
+            Assert.AreEqual(sampledValues[3].Close, sampledValues[4].Open);
+            Assert.AreEqual(seriesValues[2].High, sampledValues[4].High);
+            Assert.AreEqual(seriesValues[2].Low, sampledValues[4].Low);
+            Assert.AreEqual((double)InterpolateClose(seriesValues[2], seriesValues[2], TimeSpan.FromDays(1), sampledValues[4].LongTime), (double)sampledValues[4].Close, delta: 1e-3);
         }
 
         private static void AssertCandlesticksValuesAreEqual(Candlestick first, Candlestick second)
