@@ -68,7 +68,20 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(QuantConnect.ChartPoint instance)
             {
-                return Invariant($"{QuantConnect.Time.UnixTimeStampToDateTime(instance.x):o} - {instance.y}");
+                return Invariant($"{instance.Time:o} - {instance.y}");
+            }
+        }
+
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="QuantConnect.Candlestick"/> class and its consumers or related classes
+        /// </summary>
+        public static class Candlestick
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(QuantConnect.Candlestick instance)
+            {
+                return Invariant($@"{instance.Time:o} - (O:{instance.Open} H: {instance.High} L: {
+                    instance.Low} C: {instance.Close})");
             }
         }
 

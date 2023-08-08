@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -47,10 +48,10 @@ namespace QuantConnect.Statistics
         public static StatisticsResults Generate(
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
-            List<ChartPoint> pointsEquity,
-            List<ChartPoint> pointsPerformance,
-            List<ChartPoint> pointsBenchmark,
-            List<ChartPoint> pointsPortfolioTurnover,
+            List<ISeriesPoint> pointsEquity,
+            List<ISeriesPoint> pointsPerformance,
+            List<ISeriesPoint> pointsBenchmark,
+            List<ISeriesPoint> pointsPortfolioTurnover,
             decimal startingCapital,
             decimal totalFees,
             int totalTransactions,
@@ -94,9 +95,9 @@ namespace QuantConnect.Statistics
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
-            List<ChartPoint> pointsPerformance,
-            List<ChartPoint> pointsBenchmark,
-            List<ChartPoint> pointsPortfolioTurnover,
+            List<ISeriesPoint> pointsPerformance,
+            List<ISeriesPoint> pointsBenchmark,
+            List<ISeriesPoint> pointsPortfolioTurnover,
             decimal startingCapital,
             SecurityTransactionManager transactions)
         {
@@ -160,9 +161,9 @@ namespace QuantConnect.Statistics
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
-            List<ChartPoint> pointsPerformance,
-            List<ChartPoint> pointsBenchmark,
-            List<ChartPoint> pointsPortfolioTurnover,
+            List<ISeriesPoint> pointsPerformance,
+            List<ISeriesPoint> pointsBenchmark,
+            List<ISeriesPoint> pointsPortfolioTurnover,
             decimal startingCapital,
             SecurityTransactionManager transactions)
         {
@@ -280,21 +281,33 @@ namespace QuantConnect.Statistics
         /// <param name="fromDate">An optional starting date</param>
         /// <param name="toDate">An optional ending date</param>
         /// <returns>SortedDictionary of the equity decimal values ordered in time</returns>
-        private static SortedDictionary<DateTime, decimal> ChartPointToDictionary(IEnumerable<ChartPoint> points, DateTime? fromDate = null, DateTime? toDate = null)
+        private static SortedDictionary<DateTime, decimal> ChartPointToDictionary(IEnumerable<ISeriesPoint> points, DateTime? fromDate = null, DateTime? toDate = null)
         {
             var dictionary = new SortedDictionary<DateTime, decimal>();
 
             foreach (var point in points)
             {
-                var x = Time.UnixTimeStampToDateTime(point.x);
+                if (fromDate != null && point.Time.Date < fromDate) continue;
+                if (toDate != null && point.Time.Date >= ((DateTime)toDate).AddDays(1)) break;
 
-                if (fromDate != null && x.Date < fromDate) continue;
-                if (toDate != null && x.Date >= ((DateTime)toDate).AddDays(1)) break;
-
-                dictionary[x] = point.y;
+                dictionary[point.Time] = GetPointValue(point);
             }
 
             return dictionary;
+        }
+
+        /// <summary>
+        /// Gets the value of a point, either ChartPoint.y or Candlestick.Close
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static decimal GetPointValue(ISeriesPoint point)
+        {
+            if (point is ChartPoint)
+            {
+                return ((ChartPoint)point).y;
+            }
+
+            return ((Candlestick)point).Close;
         }
 
         /// <summary>

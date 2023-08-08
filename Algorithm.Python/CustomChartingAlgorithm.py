@@ -28,7 +28,8 @@ class CustomChartingAlgorithm(QCAlgorithm):
         self.SetStartDate(2016,1,1)
         self.SetEndDate(2017,1,1)
         self.SetCash(100000)
-        self.AddEquity("SPY", Resolution.Daily)
+
+        spy = self.AddEquity("SPY", Resolution.Daily).Symbol
 
         # In your initialize method:
         # Chart - Master Container for the Chart:
@@ -44,6 +45,14 @@ class CustomChartingAlgorithm(QCAlgorithm):
         avgCross.AddSeries(Series("FastMA", SeriesType.Line, 0))
         avgCross.AddSeries(Series("SlowMA", SeriesType.Line, 0))
         self.AddChart(avgCross)
+
+        # There's support for candlestick charts built-in:
+        weeklySpyPlot = Chart("Weekly SPY")
+        spyCandlesticks = CandlestickSeries("SPY")
+        weeklySpyPlot.AddSeries(spyCandlesticks)
+        self.AddChart(weeklySpyPlot)
+
+        self.Consolidate(spy, Calendar.Weekly, lambda bar: self.Plot("Weekly SPY", "SPY", bar))
 
         self.fastMA = 0
         self.slowMA = 0

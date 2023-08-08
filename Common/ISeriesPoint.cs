@@ -14,22 +14,23 @@
 */
 
 using System;
-using System.Linq;
-using NUnit.Framework;
 
-namespace QuantConnect.Tests.Common
+namespace QuantConnect
 {
-    [TestFixture]
-    public class SeriesTests
+    /// <summary>
+    /// Single chart series point/bar data.
+    /// </summary>
+    public interface ISeriesPoint
     {
-        [Test]
-        public void RespectsMostRecentTimeOnDuplicatePoints()
-        {
-            var series = new Series();
-            series.AddPoint(DateTime.Today, 1m);
-            series.AddPoint(DateTime.Today, 2m);
-            Assert.AreEqual(1, series.Values.Count);
-            Assert.AreEqual(2m, series.GetValues<ChartPoint>().Single().y);
-        }
+        /// <summary>
+        /// Time of this chart series point
+        /// </summary>
+        DateTime Time { get; set; }
+
+        /// <summary>
+        /// Clone implementation for ISeriesPoint
+        /// </summary>
+        /// <returns>Clone of the series</returns>
+        ISeriesPoint Clone();
     }
 }

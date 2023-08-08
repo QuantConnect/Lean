@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.API
 
             optimizationBacktest.Equity = new Series
             {
-                Values = new List<ChartPoint> { new ChartPoint(1, 1), new ChartPoint(2, 2), new ChartPoint(3, 3) }
+                Values = new List<ISeriesPoint> { new ChartPoint(1, 1), new ChartPoint(2, 2), new ChartPoint(3, 3) }
             };
 
             var serialized = JsonConvert.SerializeObject(optimizationBacktest);
@@ -97,12 +97,12 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(deserialized.ParameterSet.Value["pinocho"] == "19");
             Assert.IsTrue(deserialized.ParameterSet.Value["pepe"] == "-1");
             Assert.IsTrue(deserialized.Equity.Values.Count == 3);
-            Assert.IsTrue(deserialized.Equity.Values[0].x == 1);
-            Assert.IsTrue(deserialized.Equity.Values[0].y == 1m);
-            Assert.IsTrue(deserialized.Equity.Values[1].x == 2);
-            Assert.IsTrue(deserialized.Equity.Values[1].y == 2m);
-            Assert.IsTrue(deserialized.Equity.Values[2].x == 3);
-            Assert.IsTrue(deserialized.Equity.Values[2].y == 3m);
+            Assert.IsTrue(((ChartPoint)deserialized.Equity.Values[0]).x == 1);
+            Assert.IsTrue(((ChartPoint)deserialized.Equity.Values[0]).y == 1m);
+            Assert.IsTrue(((ChartPoint)deserialized.Equity.Values[1]).x == 2);
+            Assert.IsTrue(((ChartPoint)deserialized.Equity.Values[1]).y == 2m);
+            Assert.IsTrue(((ChartPoint)deserialized.Equity.Values[2]).x == 3);
+            Assert.IsTrue(((ChartPoint)deserialized.Equity.Values[2]).y == 3m);
             Assert.AreEqual("77.188", deserialized.Statistics[PerformanceMetrics.ProbabilisticSharpeRatio]);
         }
     }

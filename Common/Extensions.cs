@@ -553,9 +553,9 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Returns true if the specified <see cref="Series"/> instance holds no <see cref="ChartPoint"/>
+        /// Returns true if the specified <see cref="BaseSeries"/> instance holds no <see cref="ISeriesPoint"/>
         /// </summary>
-        public static bool IsEmpty(this Series series)
+        public static bool IsEmpty(this BaseSeries series)
         {
             return series.Values.Count == 0;
         }

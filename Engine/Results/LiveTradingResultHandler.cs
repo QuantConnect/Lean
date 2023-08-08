@@ -326,7 +326,7 @@ namespace QuantConnect.Lean.Engine.Results
                     if (utcNow > _nextChartTrimming)
                     {
                         Log.Debug("LiveTradingResultHandler.Update(): Trimming charts");
-                        var timeLimitUtc = Time.DateTimeToUnixTimeStamp(utcNow.AddDays(-2));
+                        var timeLimitUtc = utcNow.AddDays(-2);
                         lock (ChartLock)
                         {
                             foreach (var chart in Charts)
@@ -336,7 +336,7 @@ namespace QuantConnect.Lean.Engine.Results
                                     // trim data that's older than 2 days
                                     series.Value.Values =
                                         (from v in series.Value.Values
-                                         where v.x > timeLimitUtc
+                                         where v.Time > timeLimitUtc
                                          select v).ToList();
                                 }
                             }
@@ -613,11 +613,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="seriesName">Series name for the chart.</param>
         /// <param name="seriesIndex">Series chart index - which chart should this series belong</param>
         /// <param name="seriesType">Series type for the chart.</param>
-        /// <param name="time">Time for the sample</param>
         /// <param name="value">Value for the chart sample.</param>
         /// <param name="unit">Unit for the chart axis</param>
         /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
-        protected override void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
+        protected override void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, ISeriesPoint value,
+            string unit = "$")
         {
             // Sampling during warming up period skews statistics
             if (Algorithm.IsWarmingUp)
@@ -629,44 +629,30 @@ namespace QuantConnect.Lean.Engine.Results
             lock (ChartLock)
             {
                 //Add a copy locally:
-                if (!Charts.ContainsKey(chartName))
+                if (!Charts.TryGetValue(chartName, out var chart))
                 {
                     Charts.AddOrUpdate(chartName, new Chart(chartName));
+                    chart = Charts[chartName];
                 }
 
                 //Add the sample to our chart:
-                if (!Charts[chartName].Series.ContainsKey(seriesName))
+                if (!chart.Series.TryGetValue(seriesName, out var series))
                 {
-                    Charts[chartName].Series.Add(seriesName, new Series(seriesName, seriesType, seriesIndex, unit));
+                    series = BaseSeries.Create(seriesType, seriesName, seriesIndex, unit);
+                    chart.Series.Add(seriesName, series);
                 }
 
                 //Add our value:
-                Charts[chartName].Series[seriesName].Values.Add(new ChartPoint(time, value));
+                series.Values.Add(value);
             }
             Log.Debug("LiveTradingResultHandler.Sample(): Done sampling " + chartName + "." + seriesName);
-        }
-
-        /// <summary>
-        /// Wrapper methond on sample to create the equity chart.
-        /// </summary>
-        /// <param name="time">Time of the sample.</param>
-        /// <param name="value">Equity value at this moment in time.</param>
-        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
-        protected override void SampleEquity(DateTime time, decimal value)
-        {
-            if (value > 0)
-            {
-                Log.Debug("LiveTradingResultHandler.SampleEquity(): " + time.ToShortTimeString() + " >" + value);
-
-                base.SampleEquity(time, value);
-            }
         }
 
         /// <summary>
         /// Add a range of samples from the users algorithms to the end of our current list.
         /// </summary>
         /// <param name="updates">Chart updates since the last request.</param>
-        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
+        /// <seealso cref="Sample(string,string,int,SeriesType,ISeriesPoint,string)"/>
         protected void SampleRange(List<Chart> updates)
         {
             Log.Debug("LiveTradingResultHandler.SampleRange(): Begin sampling");
@@ -683,12 +669,11 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     //Add these samples to this chart.
-                    foreach (var series in update.Series.Values)
+                    foreach (BaseSeries series in update.Series.Values)
                     {
                         if (series.Values.Count > 0)
                         {
-                            var thisSeries = chart.TryAddAndGetSeries(series.Name, series.SeriesType, series.Index,
-                                series.Unit, series.Color, series.ScatterMarkerSymbol, false);
+                            var thisSeries = chart.TryAddAndGetSeries(series.Name, series, forceAddNew: false);
                             if (series.SeriesType == SeriesType.Pie)
                             {
                                 var dataPoint = series.ConsolidateChartPoints();
@@ -1002,9 +987,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         private static void Truncate(LiveResult result, DateTime start, DateTime stop)
         {
-            var unixDateStart = Time.DateTimeToUnixTimeStamp(start);
-            var unixDateStop = Time.DateTimeToUnixTimeStamp(stop);
-
             //Log.Trace("LiveTradingResultHandler.Truncate: Start: " + start.ToString("u") + " Stop : " + stop.ToString("u"));
             //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Delta: " + (unixDateStop - unixDateStart) + " Incoming Points: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
@@ -1017,7 +999,7 @@ namespace QuantConnect.Lean.Engine.Results
                 foreach (var series in chart.Series.Values)
                 {
                     var newSeries = series.Clone(empty: true);
-                    newSeries.Values.AddRange(series.Values.Where(chartPoint => chartPoint.x >= unixDateStart && chartPoint.x <= unixDateStop));
+                    newSeries.Values.AddRange(series.Values.Where(chartPoint => chartPoint.Time >= start && chartPoint.Time <= stop));
                     newChart.AddSeries(newSeries);
                 }
             }
@@ -1055,6 +1037,12 @@ namespace QuantConnect.Lean.Engine.Results
         {
             var time = DateTime.UtcNow;
 
+            // Check to see if we should update stored portfolio values
+            UpdatePortfolioValue(time, forceProcess);
+
+            // Update the equity bar
+            UpdateAlgorithmEquity();
+
             if (time > _nextSample || forceProcess)
             {
                 Log.Debug("LiveTradingResultHandler.ProcessSynchronousEvents(): Enter");
@@ -1062,12 +1050,11 @@ namespace QuantConnect.Lean.Engine.Results
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
 
-                // Check to see if we should update stored portfolio and bench values
-                UpdatePortfolioValue(time, forceProcess);
+                // Check to see if we should update stored bench values
                 UpdateBenchmarkValue(time, forceProcess);
 
                 //Sample the portfolio value over time for chart.
-                SampleEquity(time, Math.Round(GetPortfolioValue(), 4));
+                SampleEquity(time);
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(Algorithm.GetChartUpdates(true));

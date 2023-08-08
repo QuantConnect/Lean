@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -71,8 +71,9 @@ namespace QuantConnect.Report
                     var newValues = new List<JToken>();
                     foreach (var entry in seriesProperty.Value["Values"])
                     {
-                        if (entry["x"] == null || entry["x"].Value<long?>() == null ||
-                            entry["y"] == null || entry["y"].Value<decimal?>() == null)
+                        if (entry is JObject jobj &&
+                            (jobj["x"] == null || jobj["x"].Value<long?>() == null ||
+                             jobj["y"] == null || jobj["y"].Value<decimal?>() == null))
                         {
                             continue;
                         }

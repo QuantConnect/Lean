@@ -101,7 +101,7 @@ namespace QuantConnect.Api
             {
                 writer.WritePropertyName("equity");
                 writer.WriteStartArray();
-                foreach (var chartPoint in optimizationBacktest.Equity.Values)
+                foreach (ChartPoint chartPoint in optimizationBacktest.Equity.Values)
                 {
                     writer.WriteStartArray();
                     writer.WriteValue(chartPoint.x);
@@ -181,9 +181,9 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="values">json array of x, y value pairs</param>
         /// <returns>List of ChartPoints</returns>
-        private static List<ChartPoint> GetSeriesValues(JToken values)
+        private static List<ISeriesPoint> GetSeriesValues(JToken values)
         {
-            var chartPoints = new List<ChartPoint>();
+            var chartPoints = new List<ISeriesPoint>();
 
             foreach (var point in values.Children())
             {

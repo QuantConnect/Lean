@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm
@@ -129,7 +130,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Charting)]
         public void Plot(string series, float value)
         {
-            Plot(series, (decimal)value);
+            Plot(series, (double)value);
         }
 
         /// <summary>
@@ -159,7 +160,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Charting)]
         public void Plot(string chart, string series, float value)
         {
-            Plot(chart, series, (decimal)value);
+            Plot(chart, series, (double)value);
         }
 
         /// <summary>
@@ -171,25 +172,187 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Charting)]
         public void Plot(string chart, string series, decimal value)
         {
+            if (TryGetChartSeries(chart, series, out Series chartSeries))
+            {
+                chartSeries.AddPoint(UtcTime, value);
+            }
+        }
+
+        /// <summary>
+        /// Plot a candlestick to the default/primary chart series by the given series name.
+        /// </summary>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
+        /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
+        [DocumentationAttribute(Charting)]
+        public void Plot(string series, double open, double high, double low, double close)
+        {
+            Plot(series, open.SafeDecimalCast(), high.SafeDecimalCast(), low.SafeDecimalCast(), close.SafeDecimalCast());
+        }
+
+        /// <summary>
+        /// Plot a candlestick to the default/primary chart series by the given series name.
+        /// </summary>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
+        /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
+        [DocumentationAttribute(Charting)]
+        public void Plot(string series, float open, float high, float low, float close)
+        {
+            Plot(series, (double)open, (double)high, (double)low, (double)close);
+        }
+
+        /// <summary>
+        /// Plot a candlestick to the default/primary chart series by the given series name.
+        /// </summary>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
+        /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
+        [DocumentationAttribute(Charting)]
+        public void Plot(string series, int open, int high, int low, int close)
+        {
+            Plot(series, (decimal)open, (decimal)high, (decimal)low, (decimal)close);
+        }
+
+        /// <summary>
+        /// Plot a candlestick to the default/primary chart series by the given series name.
+        /// </summary>
+        /// <param name="series">Name of the plot series</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
+        /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
+        [DocumentationAttribute(Charting)]
+        public void Plot(string series, decimal open, decimal high, decimal low, decimal close)
+        {
+            //By default plot to the primary chart:
+            Plot("Strategy Equity", series, open, high, low, close);
+        }
+
+        /// <summary>
+        /// Plot a candlestick to the given series of the given chart.
+        /// </summary>
+        /// <param name="chart">Chart name</param>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
+        /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
+        [DocumentationAttribute(Charting)]
+        public void Plot(string chart, string series, double open, double high, double low, double close)
+        {
+            Plot(chart, series, open.SafeDecimalCast(), high.SafeDecimalCast(), low.SafeDecimalCast(), close.SafeDecimalCast());
+        }
+
+        /// <summary>
+        /// Plot a candlestick to the given series of the given chart.
+        /// </summary>
+        /// <param name="chart">Chart name</param>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
+        /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
+        [DocumentationAttribute(Charting)]
+        public void Plot(string chart, string series, float open, float high, float low, float close)
+        {
+            Plot(chart, series, (double)open, (double)high, (double)low, (double)close);
+        }
+
+        /// <summary>
+        /// Plot a candlestick to the given series of the given chart.
+        /// </summary>
+        /// <param name="chart">Chart name</param>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
+        /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
+        [DocumentationAttribute(Charting)]
+        public void Plot(string chart, string series, int open, int high, int low, int close)
+        {
+            Plot(chart, series, (decimal)open, (decimal)high, (decimal)low, (decimal)close);
+        }
+
+        /// <summary>
+        /// Plot a candlestick to a chart of string-chart name, with string series name, and decimal value. If chart does not exist, create it.
+        /// </summary>
+        /// <param name="chart">Chart name</param>
+        /// <param name="series">Series name</param>
+        /// <param name="open">The candlestick open value</param>
+        /// <param name="high">The candlestick high value</param>
+        /// <param name="low">The candlestick low value</param>
+        /// <param name="close">The candlestick close value</param>
+        [DocumentationAttribute(Charting)]
+        public void Plot(string chart, string series, decimal open, decimal high, decimal low, decimal close)
+        {
+            if (TryGetChartSeries(chart, series, out CandlestickSeries candlestickSeries))
+            {
+                candlestickSeries.AddPoint(UtcTime, open, high, low, close);
+            }
+        }
+
+        /// <summary>
+        /// Plot a candlestick to the given series of the given chart.
+        /// </summary>
+        /// <param name="series">Name of the plot series</param>
+        /// <param name="bar">The trade bar to be plotted to the candlestick series</param>
+        /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
+        [DocumentationAttribute(Charting)]
+        public void Plot(string series, TradeBar bar)
+        {
+            Plot(series, bar.Open, bar.High, bar.Low, bar.Close);
+        }
+
+        /// <summary>
+        /// Plot a candlestick to the given series of the given chart.
+        /// </summary>
+        /// <param name="chart">Chart name</param>
+        /// <param name="series">Name of the plot series</param>
+        /// <param name="bar">The trade bar to be plotted to the candlestick series</param>
+        /// <seealso cref="Plot(string,string,decimal,decimal,decimal,decimal)"/>
+        [DocumentationAttribute(Charting)]
+        public void Plot(string chart, string series, TradeBar bar)
+        {
+            Plot(chart, series, bar.Open, bar.High, bar.Low, bar.Close);
+        }
+
+        private bool TryGetChartSeries<T>(string chartName, string seriesName, out T series)
+            where T : BaseSeries, new()
+        {
+            series = null;
+
             // Check if chart/series names are reserved
-            List<string> reservedSeriesNames;
-            if (ReservedChartSeriesNames.TryGetValue(chart, out reservedSeriesNames))
+            if (ReservedChartSeriesNames.TryGetValue(chartName, out var reservedSeriesNames))
             {
                 if (reservedSeriesNames.Count == 0)
                 {
-                    throw new Exception($"Algorithm.Plot(): '{chart}' is a reserved chart name.");
+                    throw new Exception($"Algorithm.Plot(): '{chartName}' is a reserved chart name.");
                 }
-                if (reservedSeriesNames.Contains(series))
+                if (reservedSeriesNames.Contains(seriesName))
                 {
-                    throw new Exception($"Algorithm.Plot(): '{series}' is a reserved series name for chart '{chart}'.");
+                    throw new Exception($"Algorithm.Plot(): '{seriesName}' is a reserved series name for chart '{chartName}'.");
                 }
             }
 
-            // If we don't have the chart, create it:
-            _charts.TryAdd(chart, new Chart(chart));
+            // If we don't have the chart, create it
+            _charts.TryAdd(chartName, new Chart(chartName));
 
-            var thisChart = _charts[chart];
-            if (!thisChart.Series.ContainsKey(series))
+            var chart = _charts[chartName];
+            if (!chart.Series.TryGetValue(seriesName, out var chartSeries))
             {
                 //Number of series in total, excluding reserved charts
                 var seriesCount = _charts.Select(x => x.Value)
@@ -200,11 +363,11 @@ namespace QuantConnect.Algorithm
                 if (seriesCount > 10)
                 {
                     Error("Exceeded maximum series count: Each backtest can have up to 10 series in total.");
-                    return;
+                    return false;
                 }
 
-                //If we don't have the series, create it:
-                thisChart.AddSeries(new Series(series));
+                chartSeries = new T() { Name = seriesName };
+                chart.AddSeries(chartSeries);
             }
 
             if (LiveMode && IsWarmingUp)
@@ -214,9 +377,11 @@ namespace QuantConnect.Algorithm
                     _isEmitWarmupPlotWarningSet = true;
                     Debug("Plotting is disabled during algorithm warmup in live trading.");
                 }
-                return;
+                return false;
             }
-            thisChart.Series[series].AddPoint(UtcTime, value);
+
+            series = (T)chartSeries;
+            return true;
         }
 
         /// <summary>
@@ -237,7 +402,7 @@ namespace QuantConnect.Algorithm
                 _charts[chart] = c = new Chart(chart);
             }
 
-            c.Series[series] = new Series(series, seriesType, unit);
+            c.Series[series] = BaseSeries.Create(seriesType, series, unit: unit);
         }
 
         /// <summary>
