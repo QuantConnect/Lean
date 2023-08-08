@@ -435,10 +435,15 @@ namespace QuantConnect.Brokerages.Backtesting
         /// </summary>
         private void OnOrderUpdated(Order order)
         {
-            // Only trailing stop orders updates are supported for now
-            if (order.Type == OrderType.TrailingStop)
+            switch (order.Type)
             {
-                OnOrderUpdated(new OrderUpdateEvent { OrderId = order.Id, TrailingStopPrice = ((TrailingStopOrder)order).StopPrice });
+                case OrderType.TrailingStop:
+                    OnOrderUpdated(new OrderUpdateEvent { OrderId = order.Id, TrailingStopPrice = ((TrailingStopOrder)order).StopPrice });
+                    break;
+
+                case OrderType.StopLimit:
+                    OnOrderUpdated(new OrderUpdateEvent { OrderId = order.Id, StopTriggered = ((StopLimitOrder)order).StopTriggered });
+                    break;
             }
         }
 

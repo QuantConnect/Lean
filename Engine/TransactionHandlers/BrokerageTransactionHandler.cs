@@ -1252,10 +1252,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return;
             }
 
-            // Only trailing stop orders updates are supported for now
-            if (order.Type == OrderType.TrailingStop)
+            switch (order.Type)
             {
-                ((TrailingStopOrder)order).StopPrice = e.TrailingStopPrice;
+                case OrderType.TrailingStop:
+                    ((TrailingStopOrder)order).StopPrice = e.TrailingStopPrice;
+                    break;
+
+                case OrderType.StopLimit:
+                    ((StopLimitOrder)order).StopTriggered = e.StopTriggered;
+                    break;
             }
         }
 

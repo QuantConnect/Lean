@@ -133,7 +133,7 @@ namespace QuantConnect.Orders
         /// <returns>A copy of this order</returns>
         public override Order Clone()
         {
-            var order = new StopLimitOrder {StopPrice = StopPrice, LimitPrice = LimitPrice};
+            var order = new StopLimitOrder { StopPrice = StopPrice, LimitPrice = LimitPrice, StopTriggered = StopTriggered };
             CopyTo(order);
             return order;
         }
