@@ -61,14 +61,14 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [TestCase(1)]
         public void PriceScaledBySplitFactorIsBounded(int months)
         {
-            var maxPossiblePrice = 1000m;
+            var maxPossiblePrice = 1000000m;
             var minPossiblePrice = 0.0001m;
             var lowerBound = DividendSplitMapGenerator.GetLowerBoundForPreviousSplitFactor(months);
             var upperBound = 1;
             var nextPreviousSplitFactor = DividendSplitMapGenerator.GetNextPreviousSplitFactor(new Random(), lowerBound, upperBound);
             var finalSplitFactor = (decimal)Math.Pow((double)nextPreviousSplitFactor, 2 * (double)months);
-            Assert.IsTrue(0.0001m <= (maxPossiblePrice / finalSplitFactor) && (maxPossiblePrice / finalSplitFactor) <= 1000000m, (maxPossiblePrice / finalSplitFactor).ToString());
-            Assert.IsTrue(0.0001m <= (minPossiblePrice / finalSplitFactor) && (minPossiblePrice / finalSplitFactor) <= 1000000m, (minPossiblePrice / finalSplitFactor).ToString());
+            Assert.IsTrue(0.0001m <= (maxPossiblePrice / finalSplitFactor) && (maxPossiblePrice / finalSplitFactor) <= 1000000000m, (maxPossiblePrice / finalSplitFactor).ToString());
+            Assert.IsTrue(0.0001m <= (minPossiblePrice / finalSplitFactor) && (minPossiblePrice / finalSplitFactor) <= 1000000000m, (minPossiblePrice / finalSplitFactor).ToString());
         }
     }
 }

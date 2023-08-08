@@ -93,8 +93,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             var previousX = _random.NextDouble();
 
-            // Since the largest equity value we can obtain is 1000, if we want this price divided by the FinalSplitFactor
-            // to be upper bounded by 1 000 000 we need to make sure the FinalSplitFactor is lower bounded by 0.001. Therefore,
+            // Since the largest equity value we can obtain is 1 000 000, if we want this price divided by the FinalSplitFactor
+            // to be upper bounded by 1 000 000 000 we need to make sure the FinalSplitFactor is lower bounded by 0.001. Therefore,
             // since in the worst of the cases FinalSplitFactor = (previousSplitFactor)^(2m), where m is the number of months
             // in the time span, we need to lower bound previousSplitFactor by (0.001)^(1/(2m))
             //

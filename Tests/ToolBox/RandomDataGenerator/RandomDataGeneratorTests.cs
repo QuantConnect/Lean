@@ -113,7 +113,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             foreach (var tick in tickHistory)
             {
                 tick.Value = tick.Value / dividendsSplitsMaps.FinalSplitFactor;
-                Assert.IsTrue( 0.001m <= tick.Value && tick.Value <= 10000000, $"The tick value was {tick.Value} but should have been bounded by 0.001 and 10 000 000");
+                Assert.IsTrue( 0.001m <= tick.Value && tick.Value <= 1000000000, $"The tick value was {tick.Value} but should have been bounded by 0.001 and 1 000 000 000");
             }
         }
 
