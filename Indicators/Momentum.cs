@@ -27,6 +27,11 @@ namespace QuantConnect.Indicators
         public int WarmUpPeriod => Period;
 
         /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => Samples > WarmUpPeriod;
+
+        /// <summary>
         /// Creates a new Momentum indicator with the specified period
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
