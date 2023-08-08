@@ -1,8 +1,21 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Auxiliary;
 
@@ -13,6 +26,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// </summary>
     public class DividendSplitMapGenerator
     {
+        private const double _minimumFinalSplitFactorAllowed = 0.001;
+
         /// <summary>
         /// The final factor to adjust all prices with in order to maintain price continuity.
         /// </summary>
@@ -77,7 +92,20 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var dividendEveryQuarter = _randomValueGenerator.NextBool(_settings.DividendEveryQuarterPercentage);
 
             var previousX = _random.NextDouble();
-            var previousSplitFactor = hasSplits ? (decimal)_random.NextDouble() : 1;
+
+            // Since the largest equity value we can obtain is 1 000 000, if we want this price divided by the FinalSplitFactor
+            // to be upper bounded by 1 000 000 000 we need to make sure the FinalSplitFactor is lower bounded by 0.001. Therefore,
+            // since in the worst of the cases FinalSplitFactor = (previousSplitFactor)^(2m), where m is the number of months
+            // in the time span, we need to lower bound previousSplitFactor by (0.001)^(1/(2m))
+            //
+            // On the other hand, if the upper bound for the previousSplitFactor is 1, then the FinalSplitFactor will be, in the
+            // worst of the cases as small as the minimum equity value we can obtain
+
+            var months = (int)Math.Round(_settings.End.Subtract(_settings.Start).Days / (365.25 / 12));
+            months = months != 0 ? months : 1;
+            var minPreviousSplitFactor = GetLowerBoundForPreviousSplitFactor(months);
+            var maxPreviousSplitFactor = 1;
+            var previousSplitFactor = hasSplits ? GetNextPreviousSplitFactor(_random, minPreviousSplitFactor, maxPreviousSplitFactor) : 1;
             var previousPriceFactor = hasDividends ? (decimal)Math.Tanh(previousX) : 1;
 
             var splitDates = new List<DateTime>();
@@ -165,19 +193,21 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                             }
                         }
                         // Have a 5% chance of a split every month
-                        if (hasSplits && _randomValueGenerator.NextBool(5.0))
+                        if (hasSplits && _randomValueGenerator.NextBool(_settings.MonthSplitPercentage))
                         {
-                            do
+                            // Produce another split factor that is also bounded by the min and max split factors allowed
+                            if (_randomValueGenerator.NextBool(5.0)) // Add the possibility of a reverse split
                             {
-                                if (previousSplitFactor < 1)
-                                {
-                                    previousSplitFactor += (decimal)(_random.NextDouble() - _random.NextDouble());
-                                }
-                                else
-                                {
-                                    previousSplitFactor *= (decimal)_random.NextDouble() * _random.Next(1, 5);
-                                }
-                            } while (previousSplitFactor < 0);
+                                // A reverse split is a split that is smaller than the current previousSplitFactor
+                                // Update previousSplitFactor with a smaller value that is still bounded below by minPreviousSplitFactor
+                                previousSplitFactor = GetNextPreviousSplitFactor(_random, minPreviousSplitFactor, previousSplitFactor);
+                            }
+                            else
+                            {
+                                // Update previousSplitFactor with a higher value that is still bounded by maxPreviousSplitFactor
+                                // Usually, the split factor tends to grow across the time span(See /Data/Equity/usa/factor_files/aapl for instance)
+                                previousSplitFactor = GetNextPreviousSplitFactor(_random, previousSplitFactor, maxPreviousSplitFactor);
+                            }
 
                             splitDates.Add(_randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5)));
                         }
@@ -203,6 +233,33 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     firstTick = false;
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets a lower bound that guarantees the FinalSplitFactor, in all the possible
+        /// cases, will never be smaller than the _minimumFinalSplitFactorAllowed (0.001)
+        /// </summary>
+        /// <param name="months">The lower bound for the previous split factor is based on
+        /// the number of months between the start and end date from ticksHistory <see cref="GenerateSplitsDividends(IEnumerable{Tick})"></param>
+        /// <returns>A valid lower bound that guarantees the FinalSplitFactor is always higher
+        /// than the _minimumFinalSplitFactorAllowed</returns>
+        public static decimal GetLowerBoundForPreviousSplitFactor(int months)
+        {
+            return (decimal)(Math.Pow(_minimumFinalSplitFactorAllowed, 1 / (double)(2 * months)));
+        }
+
+        /// <summary>
+        /// Gets a new valid previousSplitFactor that is still bounded by the given upper and lower
+        /// bounds
+        /// </summary>
+        /// <param name="random">Random number generator</param>
+        /// <param name="lowerBound">Minimum allowed value to obtain</param>
+        /// <param name="upperBound">Maximum allowed value to obtain</param>
+        /// <returns>A new valid previousSplitFactor that is still bounded by the given upper and lower
+        /// bounds</returns>
+        public static decimal GetNextPreviousSplitFactor(Random random, decimal lowerBound, decimal upperBound)
+        {
+            return ((decimal)random.NextDouble()) * (upperBound - lowerBound) + lowerBound;
         }
     }
 }
