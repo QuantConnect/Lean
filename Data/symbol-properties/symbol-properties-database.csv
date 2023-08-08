@@ -152,7 +152,7 @@ cme,HE,future,Lean Hog Futures,USD,40000.0,0.00025,1.0,,1,100
 cme,IBV,future,USD-Denominated Ibovespa Index Futures,USD,1.0,5.0,1.0
 cme,J7,future,E-mini Japanese Yen Futures,USD,6250000.0,1e-06,1.0
 cme,LBS,future,Random Length Lumber Futures,USD,110.0,0.1,1.0
-cme,LE,future,Live Cattle Futures,USD,40000.0,0.025,1.0,,1,100
+cme,LE,future,Live Cattle Futures,USD,40000.0,0.00025,1.0,,1,100
 cme,M2K,future,Micro E-mini Russell 2000 Index Futures,USD,5.0,0.1,1,,1
 cme,M6A,future,Micro Australian Dollar/U.S. Dollar (AUD/USD) Futures,USD,10000,0.0001,1,,1
 cme,M6B,future,Micro British Pound Sterling/U.S. Dollar (GBP/USD) Futures,USD,6250,0.0001,1,,1
