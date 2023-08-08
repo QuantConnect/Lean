@@ -51,6 +51,8 @@ namespace QuantConnect.Lean.Engine.Results
 
         private string _hostName;
 
+        private Bar _currentAlgorithmEquity;
+
         protected const string StrategyEquityKey = "Strategy Equity";
         protected const string EquityKey = "Equity";
         protected const string DailyPerformanceKey = "Daily Performance";
@@ -82,7 +84,22 @@ namespace QuantConnect.Lean.Engine.Results
         /// The current aggregated equity bar for sampling.
         /// It will be aggregated with values from the <see cref="GetPortfolioValue"/>
         /// </summary>
-        protected Bar CurrentAlgorithmEquity { get; set; }
+        protected Bar CurrentAlgorithmEquity
+        {
+            get
+            {
+                if (_currentAlgorithmEquity == null)
+                {
+                    _currentAlgorithmEquity = new Bar();
+                    UpdateAlgorithmEquity(_currentAlgorithmEquity);
+                }
+                return _currentAlgorithmEquity;
+            }
+            set
+            {
+                _currentAlgorithmEquity = value;
+            }
+        }
 
         /// <summary>
         /// The task in charge of running the <see cref="Run"/> update method
@@ -513,6 +530,7 @@ namespace QuantConnect.Lean.Engine.Results
             CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
 
             // Sample all our default charts
+            UpdateAlgorithmEquity();
             SampleEquity(time);
             SampleBenchmark(time, GetBenchmarkValue(time));
             SamplePerformance(time, portfolioPerformance);
@@ -533,11 +551,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Equity candlestick end time</param>
         protected virtual void SampleEquity(DateTime time)
         {
-            if (CurrentAlgorithmEquity == null)
-            {
-                UpdateAlgorithmEquity();
-            }
-
             Sample(StrategyEquityKey, EquityKey, 0, SeriesType.Candle, new Candlestick(time, CurrentAlgorithmEquity), AlgorithmCurrencySymbol);
 
             // Reset the current algorithm equity object so another bar is create on the next sample
@@ -959,14 +972,21 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Updates the current equity bar with the current equity value from <see cref="GetPortfolioValue"/>
         /// </summary>
+        /// <remarks>
+        /// This is required in order to update the <see cref="CurrentAlgorithmEquity"/> bar without using the getter,
+        /// which would cause the bar to be created if it doesn't exist.
+        /// </remarks>
+        private void UpdateAlgorithmEquity(Bar equity)
+        {
+            equity.Update(Math.Round(GetPortfolioValue(), 4));
+        }
+
+        /// <summary>
+        /// Updates the current equity bar with the current equity value from <see cref="GetPortfolioValue"/>
+        /// </summary>
         protected void UpdateAlgorithmEquity()
         {
-            if (CurrentAlgorithmEquity == null)
-            {
-                CurrentAlgorithmEquity = new Bar();
-            }
-
-            CurrentAlgorithmEquity.Update(GetPortfolioValue());
+            UpdateAlgorithmEquity(CurrentAlgorithmEquity);
         }
     }
 }
