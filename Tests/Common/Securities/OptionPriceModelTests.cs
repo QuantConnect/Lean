@@ -24,6 +24,8 @@ using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Cash = QuantConnect.Securities.Cash;
@@ -459,6 +461,101 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual((double)greeks.Rho, (double)ibRho, 0.005);
         }
 
+        /// This test aim to comapre the maximum greek calculation error between models (2dp)
+        /// as well as a benchmark of each model to monitor future changes
+        /// The delta parameter is the least 2dp-error
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.39d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.39d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 1d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 1.05d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.07d)]
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 1d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 1.05d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.07d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 1d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 1d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.12d)]
+        [TestCase(OptionStyle.European, "Integral", 0.38d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.12d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 1.04d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.12d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 1d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 1.04d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.12d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 1d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 1d)]
+        public void MatchesIBGreeksBulk(OptionStyle style, string qlModelName, double delta)
+        {
+            // Include cases for near-term/far-term ATM/deep ITM/deep OTM cases
+            List<string> cases;
+            Symbol symbol;
+            if (style == OptionStyle.American)
+            {
+                symbol = Symbols.SPY;
+                cases = new List<string>
+                {
+                    "SPY230811C00450000", "SPY230811P00450000", "SPY230901C00450000", "SPY230901P00450000", 
+                    "SPY230811C00430000", "SPY230811C00470000", "SPY230811P00430000", "SPY230811P00470000",
+                    "SPY230901C00430000", "SPY230901C00470000", "SPY230901P00430000", "SPY230901P00470000"
+                };
+            }
+            else
+            {
+                symbol = Symbols.SPX;
+                cases = new List<string>
+                {
+                    "SPX230811C04500000", "SPX230811P04500000", "SPX230901C04500000", "SPX230901P04500000",
+                    "SPX230811C04300000", "SPX230811C04700000", "SPX230811P04300000", "SPX230811P04700000",
+                    "SPX230901C04300000", "SPX230901C04700000", "SPX230901P04300000", "SPX230901P04700000"
+                };
+            }
+            
+            
+            foreach (var filename in cases)
+            {
+                var optionRight = filename[9] == 'C' ? OptionRight.Call : OptionRight.Put;
+                var strike = Parse.Decimal(filename[10..]) / 1000m;
+                var expiry = DateTime.ParseExact(filename.Substring(3, 6), "yyMMdd", CultureInfo.InvariantCulture);
+                var optionSymbol = GetOptionSymbol(symbol, style, optionRight, strike, expiry);
+
+                var tz = TimeZones.NewYork;
+                var evaluationDate = new DateTime(2023, 8, 4);
+
+                // setting up underlying
+                var equity = GetEquity(symbol, 450m, 0.15m, tz);       // dummy non-zero values
+
+                // setting up option
+                var contract = GetOptionContract(optionSymbol, symbol, evaluationDate);
+                var option = GetOption(optionSymbol, equity, tz);
+                var priceModel = (IOptionPriceModel)typeof(OptionPriceModels).GetMethod(qlModelName).Invoke(null, new object[] { });
+
+                // Get test data
+                var data = File.ReadAllLines($"TestData/greeks/{filename}.csv")
+                    .Skip(1)                                            // skip header row
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x => x.Split(','));
+
+                // running evaluation: iterate per slice
+                foreach (var datum in data)
+                {
+                    equity.SetMarketPrice(new Tick { Value = Parse.Decimal(datum[7]) });
+                    option.SetMarketPrice(new Tick { Value = Parse.Decimal(datum[1]) });
+                    var results = priceModel.Evaluate(option, null, contract);
+
+                    // Check the option Greeks are valid
+                    var greeks = results.Greeks;
+
+                    // Expect minor error due to interest rate, bid/ask price and dividend yield used in IB
+                    // And approximation error using Black Calculator if the original pricing model fails
+                    Assert.AreEqual((double)greeks.Delta, Parse.Double(datum[3]), delta);
+                    Assert.AreEqual((double)greeks.Gamma, Parse.Double(datum[4]), delta);
+                    // We do not test Vega as the tangent line of price change over volatility is steep for deep ITM/OTM
+                    // We do not test Theta as the tangent line of price change over time change is steep for near-expiry options
+                    // No model will be estimating these quantities well
+                }
+            }
+        }
+
         [TestCase(OptionRight.Call, 200, 24.76, 0.3003)]         // ATM
         [TestCase(OptionRight.Call, 250, 12.33, 0.3430)]         // deep OTM
         [TestCase(OptionRight.Call, 150, 57.24, 0.3323)]         // deep ITM
@@ -486,7 +583,7 @@ namespace QuantConnect.Tests.Common
             // Expect minor error due to interest rate and dividend yield used in IB
             Assert.AreEqual(impliedVolEstimate, ibImpliedVol, 0.001);
         }
-
+        
         [Test]
         public void PriceModelEvaluateSpeedTest()
         {
@@ -537,9 +634,13 @@ namespace QuantConnect.Tests.Common
             Assert.Less(stopWatch.ElapsedMilliseconds, 2200);
         }
 
-        private Symbol GetOptionSymbol(Symbol underlying, OptionStyle optionStyle, OptionRight optionRight, decimal strike = 192m)
+        private static Symbol GetOptionSymbol(Symbol underlying, OptionStyle optionStyle, OptionRight optionRight, decimal strike = 192m, DateTime? expiry = null)
         {
-            return Symbol.CreateOption(underlying.Value, Market.USA, optionStyle, optionRight, strike, new DateTime(2016, 02, 19));
+            if (expiry == null)
+            {
+                expiry = new DateTime(2016, 02, 19);
+            }
+            return Symbol.CreateOption(underlying.Value, Market.USA, optionStyle, optionRight, strike, (DateTime)expiry);
         }
 
         public static Equity GetEquity(Symbol symbol, decimal underlyingPrice, decimal underlyingVol, NodaTime.DateTimeZone tz)
