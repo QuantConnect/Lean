@@ -60,6 +60,8 @@ namespace QuantConnect.Tests.Indicators
                 mom.Update(dataStream[i]);
                 Assert.AreEqual(i == period - 1, mom.IsReady);
             }
+            Assert.IsTrue(mom.IsReady);
+            Assert.IsTrue(mom.Samples > mom.Period);
         }
     }
 }
