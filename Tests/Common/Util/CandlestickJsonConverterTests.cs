@@ -37,5 +37,21 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(candlestick.Low, result.Low);
             Assert.AreEqual(candlestick.Close, result.Close);
         }
+
+        [Test]
+        public void BackwardsCompatility()
+        {
+            var dateTime = new DateTime(2023, 08, 01, 12, 11, 10);
+            var chartPoint = new ChartPoint(dateTime, 100);
+
+            var serializedChartPoint = JsonConvert.SerializeObject(chartPoint);
+            var result = (Candlestick)JsonConvert.DeserializeObject(serializedChartPoint, typeof(Candlestick));
+
+            Assert.AreEqual(chartPoint.Time, result.Time);
+            Assert.AreEqual(chartPoint.y, result.Open);
+            Assert.AreEqual(chartPoint.y, result.High);
+            Assert.AreEqual(chartPoint.y, result.Low);
+            Assert.AreEqual(chartPoint.y, result.Close);
+        }
     }
 }
