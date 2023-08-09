@@ -56,6 +56,15 @@ namespace QuantConnect.Util
         /// </summary>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
+            if(reader.TokenType == JsonToken.StartObject)
+            {
+                // backwards compatibility with old format
+                var jObject = JObject.Load(reader);
+
+                var chartPoint = new ChartPoint(jObject["x"].Value<long>(), jObject["y"].Value<decimal>());
+                return new Candlestick(chartPoint.X, chartPoint.Y, chartPoint.Y, chartPoint.Y, chartPoint.Y);
+            }
+
             var jArray = JArray.Load(reader);
             return new Candlestick(jArray[0].Value<long>(), jArray[1].Value<decimal>(), jArray[2].Value<decimal>(),
                 jArray[3].Value<decimal>(), jArray[4].Value<decimal>());
