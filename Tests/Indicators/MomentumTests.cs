@@ -53,16 +53,15 @@ namespace QuantConnect.Tests.Indicators
         {
             var mom = new Momentum(5);
             var period = ((IIndicatorWarmUpPeriodProvider)mom).WarmUpPeriod;
-            var dataStream = TestHelper.GetDataStream(period + 1).ToArray();
+            var dataStream = TestHelper.GetDataStream(period).ToArray();
 
             for (var i = 0; i < period; i++)
             {
                 mom.Update(dataStream[i]);
+                Assert.AreEqual(i == period - 1, mom.IsReady);
             }
-
-            Assert.IsFalse(mom.IsReady);
-            mom.Update(dataStream[period]);
             Assert.IsTrue(mom.IsReady);
+            Assert.IsTrue(mom.Samples > mom.Period);
         }
     }
 }
