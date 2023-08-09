@@ -27,6 +27,7 @@ using QuantConnect.Securities;
 using QuantConnect.Data;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -48,6 +49,32 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
             Assert.AreEqual("NotSupported", message.Code);
             StringAssert.Contains("exercises for index and cash-settled options", message.Message);
+        }
+
+        [Test]
+        public void test()
+        {
+            var symbol = Symbol.CreateOption(Symbols.SPY,
+                                    Market.USA,
+                                    Symbols.SPY.SecurityType.DefaultOptionStyle(),
+                                    OptionRight.Put,
+                                    104m,
+                                    new DateTime(2010, 02, 20));
+
+            var tz = TimeZones.NewYork;
+            var security = new Option(symbol,
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new Cash("USD", 0, 0),
+                new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache(),
+                null
+            );
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 0.38m, 0.2m));
+
+            var _feeModel = new InteractiveBrokersFeeModel();
+            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, new MarketOrder(security.Symbol, 26, DateTime.UtcNow)));
         }
 
         [TestCaseSource(nameof(GetForexOrderTestCases))]
