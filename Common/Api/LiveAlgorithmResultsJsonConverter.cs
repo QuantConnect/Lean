@@ -98,8 +98,16 @@ namespace QuantConnect.Api
             var results = jObject["LiveResults"]["results"];
 
             // Deserialize charting data
+            Dictionary<string, Chart> chartDictionary = new();
             var charts = results["Charts"];
-            var chartDictionary = JsonConvert.DeserializeObject<Dictionary<string, Chart>>(results["Charts"].ToString());
+            if (charts != null)
+            {
+                var stringCharts = results["Charts"].ToString();
+                if(!string.IsNullOrEmpty(stringCharts))
+                {
+                    chartDictionary = JsonConvert.DeserializeObject<Dictionary<string, Chart>>(stringCharts);
+                }
+            }
 
             // Live Results - At this time only that charting data can be returned from the api (9/30/2016)
             liveAlgoResults.LiveResults.Results = new LiveResult(new LiveResultParameters(chartDictionary,

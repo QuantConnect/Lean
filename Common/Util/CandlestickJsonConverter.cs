@@ -68,7 +68,7 @@ namespace QuantConnect.Util
             var jArray = JArray.Load(reader);
             if(jArray.Count <= 2)
             {
-                var chartPoint = serializer.Deserialize<ChartPoint>(reader);
+                var chartPoint = jArray.ToObject<ChartPoint>();
                 if (chartPoint == null)
                 {
                     return null;
