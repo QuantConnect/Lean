@@ -58,7 +58,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// The backtest equity chart series
         /// </summary>
-        public Series Equity { get; set; }
+        public CandlestickSeries Equity { get; set; }
 
         /// <summary>
         /// The exit code of this backtest

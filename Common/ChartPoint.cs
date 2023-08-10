@@ -15,13 +15,14 @@
 
 using System;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
     /// <summary>
     /// Single Chart Point Value Type for QCAlgorithm.Plot();
     /// </summary>
-    [JsonObject]
+    [JsonConverter(typeof(ChartPointJsonConverter))]
     public class ChartPoint : ISeriesPoint
     {
         private DateTime _time;

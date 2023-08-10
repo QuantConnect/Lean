@@ -16,12 +16,12 @@
 using System;
 using System.Linq;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 using QuantConnect.Orders;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 
 namespace QuantConnect.Api
 {
@@ -99,17 +99,7 @@ namespace QuantConnect.Api
 
             // Deserialize charting data
             var charts = results["Charts"];
-            var chartDictionary = new Dictionary<string, Chart>();
-
-            foreach (var chart in charts.Children())
-            {
-                var newChart = new Chart(((JProperty) chart).Name)
-                {
-                    Series = GetChartSeries(chart.First()["Series"])
-                };
-
-                chartDictionary.Add(newChart.Name, newChart);
-            }
+            var chartDictionary = JsonConvert.DeserializeObject<Dictionary<string, Chart>>(results["Charts"].ToString());
 
             // Live Results - At this time only that charting data can be returned from the api (9/30/2016)
             liveAlgoResults.LiveResults.Results = new LiveResult(new LiveResultParameters(chartDictionary,
@@ -123,70 +113,6 @@ namespace QuantConnect.Api
             );
 
             return liveAlgoResults;
-        }
-
-        /// <summary>
-        /// Get series data for a specific chart
-        /// </summary>
-        /// <param name="series">Series data and properties for a chart</param>
-        /// <returns>Dictionary with the name of the series as the key and the Series itself as the value</returns>
-        private static Dictionary<string, BaseSeries> GetChartSeries(JToken series)
-        {
-            var chartSeriesDict = new Dictionary<string, BaseSeries>();
-
-            foreach (var child in series.Children())
-            {
-                var s = child.First();
-                var newSeries = new Series(((JProperty) child).Name)
-                {
-                    SeriesType = (SeriesType) s["SeriesType"].Value<int>(),
-                    Values     = GetSeriesValues(s["Values"])
-                };
-
-                chartSeriesDict.Add(newSeries.Name, newSeries);
-            }
-
-            return chartSeriesDict;
-        }
-
-        /// <summary>
-        /// Get x and y value pairs that represent series data
-        /// </summary>
-        /// <param name="values">json array of x, y value pairs</param>
-        /// <returns>List of ChartPoints</returns>
-        private static List<ISeriesPoint> GetSeriesValues(JToken values)
-        {
-            var chartPoints = new List<ISeriesPoint>();
-
-            // Special ChartPoint that only represents time (only has x component)
-            if (values.Children().Count() == 1)
-            {
-                var point = values.Children().First();
-                var x = point["x"];
-
-                chartPoints.Add(new ChartPoint((long)x, 0));
-            }
-            // Typical series of values that is used for charting
-            else
-            {
-                foreach (var point in values.Children())
-                {
-                    var x = point["x"];
-                    var y = point["y"];
-
-                    // this piece of code is why this entire custom serializer is necessary
-                    if (y != null && y.Type == JTokenType.Float)
-                    {
-                        chartPoints.Add(new ChartPoint((long)x, (decimal)y));
-                    }
-                    else
-                    {
-                        chartPoints.Add(null);
-                    }
-                }
-            }
-
-            return chartPoints;
         }
     }
 }

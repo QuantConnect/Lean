@@ -52,20 +52,29 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Not implemented
+        /// Json reader implementation which handles backwards compatiblity for old equity chart points
         /// </summary>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             if(reader.TokenType == JsonToken.StartObject)
             {
-                // backwards compatibility with old format
-                var jObject = JObject.Load(reader);
-
-                var chartPoint = new ChartPoint(jObject["x"].Value<long>(), jObject["y"].Value<decimal>());
+                var chartPoint = serializer.Deserialize<ChartPoint>(reader);
+                if(chartPoint == null)
+                {
+                    return null;
+                }
                 return new Candlestick(chartPoint.X, chartPoint.Y, chartPoint.Y, chartPoint.Y, chartPoint.Y);
             }
-
             var jArray = JArray.Load(reader);
+            if(jArray.Count <= 2)
+            {
+                var chartPoint = serializer.Deserialize<ChartPoint>(reader);
+                if (chartPoint == null)
+                {
+                    return null;
+                }
+                return new Candlestick(chartPoint.X, chartPoint.Y, chartPoint.Y, chartPoint.Y, chartPoint.Y);
+            }
             return new Candlestick(jArray[0].Value<long>(), jArray[1].Value<decimal>(), jArray[2].Value<decimal>(),
                 jArray[3].Value<decimal>(), jArray[4].Value<decimal>());
         }
