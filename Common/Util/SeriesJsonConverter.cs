@@ -111,7 +111,7 @@ namespace QuantConnect.Util
                     Unit = unit,
                     Index = index,
                     SeriesType = seriesType,
-                    Values = values.ToObject<List<Candlestick>>(serializer).Cast<ISeriesPoint>().ToList()
+                    Values = values.ToObject<List<Candlestick>>(serializer).Where(x => x != null).Cast<ISeriesPoint>().ToList()
                 };
             }
 
@@ -123,7 +123,7 @@ namespace QuantConnect.Util
                 SeriesType = seriesType,
                 Color = jObject["Color"].ToObject<Color>(serializer),
                 ScatterMarkerSymbol = jObject["ScatterMarkerSymbol"].ToObject<ScatterMarkerSymbol>(serializer),
-                Values = values.ToObject<List<ChartPoint>>(serializer).Cast<ISeriesPoint>().ToList()
+                Values = values.ToObject<List<ChartPoint>>(serializer).Where(x => x != null).Cast<ISeriesPoint>().ToList()
             };
         }
 

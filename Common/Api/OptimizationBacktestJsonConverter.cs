@@ -100,15 +100,9 @@ namespace QuantConnect.Api
             if (optimizationBacktest.Equity != null)
             {
                 writer.WritePropertyName("equity");
-                writer.WriteStartArray();
-                foreach (ChartPoint chartPoint in optimizationBacktest.Equity.Values)
-                {
-                    writer.WriteStartArray();
-                    writer.WriteValue(chartPoint.x);
-                    writer.WriteValue(chartPoint.y);
-                    writer.WriteEndArray();
-                }
-                writer.WriteEndArray();
+
+                var equity = JsonConvert.SerializeObject(optimizationBacktest.Equity.Values);
+                writer.WriteRawValue(equity);
             }
 
             writer.WriteEndObject();
@@ -162,7 +156,11 @@ namespace QuantConnect.Api
 
             var parameterSet = serializer.Deserialize<ParameterSet>(jObject["parameterSet"].CreateReader());
 
-            var equity = new Series { Values = GetSeriesValues(jObject["equity"]) };
+            var equity = new CandlestickSeries();
+            foreach (var point in JsonConvert.DeserializeObject<List<Candlestick>>(jObject["equity"].ToString()))
+            {
+                equity.AddPoint(point);
+            }
 
             var optimizationBacktest = new OptimizationBacktest(parameterSet, backtestId, name)
             {
@@ -174,26 +172,6 @@ namespace QuantConnect.Api
             };
 
             return optimizationBacktest;
-        }
-
-        /// <summary>
-        /// Get x and y value pairs that represent series data
-        /// </summary>
-        /// <param name="values">json array of x, y value pairs</param>
-        /// <returns>List of ChartPoints</returns>
-        private static List<ISeriesPoint> GetSeriesValues(JToken values)
-        {
-            var chartPoints = new List<ISeriesPoint>();
-
-            foreach (var point in values.Children())
-            {
-                var x = point[0];
-                var y = point[1];
-
-                chartPoints.Add(new ChartPoint((long)x, (decimal)y));
-            }
-
-            return chartPoints;
         }
     }
 }

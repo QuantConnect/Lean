@@ -91,8 +91,6 @@ namespace QuantConnect.Tests.Engine.Results
             var protectedMockResultHandler = mockResultHandler.Protected();
 
             protectedMockResultHandler.Setup("SampleEquity", ItExpr.IsAny<DateTime>());
-            protectedMockResultHandler.Setup("SampleEquity", ItExpr.IsAny<DateTime>(), ItExpr.IsAny<decimal>(), ItExpr.IsAny<decimal>(),
-                ItExpr.IsAny<decimal>(), ItExpr.IsAny<decimal>());
             protectedMockResultHandler.Setup("SampleBenchmark", ItExpr.IsAny<DateTime>(), ItExpr.IsAny<decimal>());
             protectedMockResultHandler
                 .Setup<decimal>("GetBenchmarkValue", ItExpr.IsAny<DateTime>())
@@ -144,8 +142,8 @@ namespace QuantConnect.Tests.Engine.Results
             mockResultHandler.Object.Sample(timeKeeper.UtcTime);
 
             // BaseResultHandler.Algorithm property accessed once by BaseResultHandler.SampleExposure()
-            // and once by BaseResultHandler.GetPortfolioValue()
-            protectedMockResultHandler.VerifyGet<IAlgorithm>("Algorithm", Times.Exactly(2));
+            // and once by BaseResultHandler.GetPortfolioValue() + 2 for sampling current equity value
+            protectedMockResultHandler.VerifyGet<IAlgorithm>("Algorithm", Times.Exactly(4));
 
             // Sample should've been called twice, by BaseResultHandler.SampleExposure(), once for the long and once for the short positions
             protectedMockResultHandler.Verify("Sample", Times.Exactly(2), ItExpr.IsAny<string>(), ItExpr.IsAny<string>(),
