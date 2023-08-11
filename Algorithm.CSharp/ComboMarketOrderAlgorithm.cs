@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Orders;
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -27,6 +28,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             legs.ForEach(x => { x.OrderPrice = null; });
             return ComboMarketOrder(legs, quantity);
+        }
+
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            base.OnOrderEvent(orderEvent);
+            if (orderEvent.Status == OrderStatus.Filled && orderEvent.OrderFee.Value.Amount != 2.5m)
+            {
+                throw new Exception($"The fee for each order should be 2.50 USD, but for order {orderEvent.OrderId} was {orderEvent.OrderFee} USD");
+            }
         }
 
         /// <summary>
