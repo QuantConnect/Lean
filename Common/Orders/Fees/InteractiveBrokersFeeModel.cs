@@ -83,11 +83,6 @@ namespace QuantConnect.Orders.Fees
             }
 
             var quantity = order.AbsoluteQuantity;
-            if (order.GroupOrderManager != null)
-            {
-                quantity *= order.GroupOrderManager.AbsoluteQuantity;
-            }
-
             decimal feeResult;
             string feeCurrency;
             var market = security.Symbol.ID.Market;
