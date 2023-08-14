@@ -33,9 +33,9 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             base.OnOrderEvent(orderEvent);
-            if (orderEvent.Status == OrderStatus.Filled && orderEvent.OrderFee.Value.Amount != 2.5m)
+            if (orderEvent.Status == OrderStatus.Filled && orderEvent.OrderFee.Value.Amount != (orderEvent.AbsoluteFillQuantity * 0.25m))
             {
-                throw new Exception($"The fee for each order should be 2.50 USD, but for order {orderEvent.OrderId} was {orderEvent.OrderFee} USD");
+                throw new Exception($"The fee for each order should be {orderEvent.AbsoluteFillQuantity * 0.25m} USD, but for order {orderEvent.OrderId} was {orderEvent.OrderFee}");
             }
         }
 
@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$7.50"},
+            {"Total Fees", "$10.00"},
             {"Estimated Strategy Capacity", "$70000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "30.35%"},

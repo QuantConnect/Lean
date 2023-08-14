@@ -215,7 +215,7 @@ namespace QuantConnect.Orders.Fees
                 optionsCommissionFunc = (orderSize, premium) =>
                 {
                     var commissionRate = premium >= 0.1m ?
-                                            0.7m :
+                                            0.65m :
                                             (0.05m <= premium && premium < 0.1m ? 0.5m : 0.25m);
                     return new CashAmount(Math.Max(orderSize * commissionRate, 1.0m), Currencies.USD);
                 };
