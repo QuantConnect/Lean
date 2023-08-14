@@ -448,7 +448,7 @@ namespace QuantConnect.Tests.Common
             option.SetMarketPrice(new Tick { Value = price });
 
             // running evaluation for the default model
-            var priceModel = OptionPriceModels.BjerksundStensland();
+            var priceModel = OptionPriceModels.BinomialCoxRossRubinstein();
             var results = priceModel.Evaluate(option, null, contract);
             var greeks = results.Greeks;
 
@@ -707,7 +707,7 @@ namespace QuantConnect.Tests.Common
         class TestOptionPriceModel : QLOptionPriceModel
         {
             public TestOptionPriceModel()
-                : base(process => new BjerksundStenslandApproximationEngine(process), null, null, null)
+                : base(process => new BinomialVanillaEngine<CoxRossRubinstein>(process, 100), null, null, null)
             {
             }
 

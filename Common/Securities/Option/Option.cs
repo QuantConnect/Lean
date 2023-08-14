@@ -173,7 +173,13 @@ namespace QuantConnect.Securities.Option
             OptionExerciseModel = new DefaultExerciseModel();
             PriceModel = symbol.ID.OptionStyle switch
             {
-                OptionStyle.American => OptionPriceModels.BjerksundStensland(),
+                // CRR model has the best accuracy and speed suggested by
+                // Branka, Zdravka & Tea (2014). Numerical Methods versus Bjerksund and Stensland Approximations for American Options Pricing.
+                // International Journal of Economics and Management Engineering. 8:4.
+                // Available via: https://downloads.dxfeed.com/specifications/dxLibOptions/Numerical-Methods-versus-Bjerksund-and-Stensland-Approximations-for-American-Options-Pricing-.pdf
+                // Also refer to OptionPriceModelTests.MatchesIBGreeksBulk() test,
+                // we select the most accurate and computational efficient model
+                OptionStyle.American => OptionPriceModels.BinomialCoxRossRubinstein(),
                 OptionStyle.European => OptionPriceModels.BlackScholes(),
                 _ => throw new ArgumentException("Invalid OptionStyle")
             };
