@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Orders;
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -27,6 +28,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             legs.ForEach(x => { x.OrderPrice = null; });
             return ComboMarketOrder(legs, quantity);
+        }
+
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            base.OnOrderEvent(orderEvent);
+            if (orderEvent.Status == OrderStatus.Filled && orderEvent.OrderFee.Value.Amount != (orderEvent.AbsoluteFillQuantity * 0.25m))
+            {
+                throw new Exception($"The fee for each order should be {orderEvent.AbsoluteFillQuantity * 0.25m} USD, but for order {orderEvent.OrderId} was {orderEvent.OrderFee}");
+            }
         }
 
         /// <summary>
@@ -73,10 +83,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$75.00"},
+            {"Total Fees", "$10.00"},
             {"Estimated Strategy Capacity", "$70000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "30.36%"},
+            {"Portfolio Turnover", "30.35%"},
             {"OrderListHash", "cf49ecb1e9787688df1d9920a75b83b7"}
         };
     }

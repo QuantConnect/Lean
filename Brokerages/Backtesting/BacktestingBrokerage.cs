@@ -349,7 +349,10 @@ namespace QuantConnect.Brokerages.Backtesting
                                     // TODO : This check can be removed in April, 2019 -- a 6-month window to upgrade (also, suspect small % of users, if any are impacted)
                                     if (fill.OrderFee.Value.Amount == 0m)
                                     {
-                                        fill.OrderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
+                                        // It could be the case the order is a combo order, then it contains legs with different quantities and security types.
+                                        // Therefore, we need to compute the fees based on the specific leg order and security
+                                        var legKVP = securities.Where(x => x.Key.Id == fill.OrderId).Single();
+                                        fill.OrderFee = legKVP.Value.FeeModel.GetOrderFee(new OrderFeeParameters(legKVP.Value, legKVP.Key));
                                     }
                                 }
                             }
