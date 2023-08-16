@@ -105,7 +105,64 @@ namespace QuantConnect.Orders.Fees
                         throw new KeyNotFoundException(Messages.InteractiveBrokersFeeModel.UnexpectedOptionMarket(market));
                     }
                     // applying commission function to the order
-                    var optionFee = optionsCommissionFunc(quantity, order.Price);
+                    decimal price = 0;
+                    decimal securityPrice;
+                    if (order.Direction == OrderDirection.Buy)
+                    {
+                        securityPrice = security.BidPrice;
+                    }
+                    else
+                    {
+                        securityPrice = security.AskPrice;
+                    }
+
+                    switch (order.Type)
+                    {
+                        case OrderType.TrailingStop:
+                        case OrderType.StopMarket:
+                            var stopPrice = order.GetType().GetProperty("StopPrice").GetValue(order, null) as decimal?;
+                            if (quantity < 0)
+                            {
+                                price = quantity * Math.Max(stopPrice ?? 0, security.Price);
+                            }
+                            else if (quantity > 0)
+                            {
+                                price = quantity * Math.Min(stopPrice ?? 0, security.Price);
+                            }
+                            break;
+                        case OrderType.ComboMarket:
+                        case OrderType.MarketOnOpen:
+                        case OrderType.MarketOnClose:
+                        case OrderType.Market:
+                            price = securityPrice;
+                            break;
+                        case OrderType.ComboLimit:
+                            if (quantity < 0)
+                            {
+                                price = quantity * Math.Max((order as ComboLimitOrder).GroupOrderManager.LimitPrice, security.Price);
+                            }
+                            else if (quantity > 0)
+                            {
+                                price = quantity * Math.Min((order as ComboLimitOrder).GroupOrderManager.LimitPrice, security.Price);
+                            }
+                            break;
+                        case OrderType.ComboLegLimit:
+                        case OrderType.StopLimit:
+                        case OrderType.LimitIfTouched:
+                        case OrderType.Limit:
+                            var limitPrice = order.GetType().GetProperty("LimitPrice").GetValue(order, null) as decimal?;
+                            if (quantity < 0)
+                            {
+                                price = quantity * Math.Max(limitPrice ?? 0, security.Price);
+                            }
+                            else if (quantity > 0)
+                            {
+                                price = quantity * Math.Min(limitPrice ?? 0, security.Price);
+                            }
+                            break;
+                    }
+
+                    var optionFee = optionsCommissionFunc(quantity, price);
                     feeResult = optionFee.Amount;
                     feeCurrency = optionFee.Currency;
                     break;
