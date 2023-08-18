@@ -78,6 +78,11 @@ namespace QuantConnect.Lean.Engine.Storage
         protected string AlgorithmStorageRoot { get; private set; }
 
         /// <summary>
+        /// The file handler instance to use
+        /// </summary>
+        protected FileHandler FileHandler { get; set; } = new ();
+
+        /// <summary>
         /// Initializes the object store
         /// </summary>
         /// <param name="userId">The user id</param>
@@ -86,11 +91,10 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <param name="controls">The job controls instance</param>
         public virtual void Initialize(int userId, int projectId, string userToken, Controls controls)
         {
-            // absolute path including algorithm name
             AlgorithmStorageRoot = _storageRoot;
 
             // create the root path if it does not exist
-            Directory.CreateDirectory(AlgorithmStorageRoot);
+            var directoryInfo = FileHandler.CreateDirectory(AlgorithmStorageRoot);
 
             Controls = controls;
 
@@ -100,7 +104,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 _persistenceTimer = new Timer(_ => Persist(), null, Controls.PersistenceIntervalSeconds * 1000, Timeout.Infinite);
             }
 
-            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB");
+            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {directoryInfo.FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB");
         }
 
         /// <summary>
@@ -122,10 +126,9 @@ namespace QuantConnect.Lean.Engine.Storage
                         }
                     }
 
-                    var rootFolder = new DirectoryInfo(AlgorithmStorageRoot);
-                    foreach (var file in rootFolder.EnumerateFiles("*", SearchOption.AllDirectories))
+                    foreach (var file in FileHandler.EnumerateFiles(AlgorithmStorageRoot, "*", SearchOption.AllDirectories, out var rootFolder))
                     {
-                        var path = NormalizePath(file.FullName.RemoveFromStart(rootFolder.FullName));
+                        var path = NormalizePath(file.FullName.RemoveFromStart(rootFolder));
 
                         ObjectStoreEntry objectStoreEntry;
                         if (loadContent)
@@ -198,7 +201,7 @@ namespace QuantConnect.Lean.Engine.Storage
 
             // if we don't have the file but it exists, be friendly and register it
             var filePath = PathForKey(path);
-            if (File.Exists(filePath))
+            if (FileHandler.Exists(filePath))
             {
                 _storage[path] = new ObjectStoreEntry(path, null);
                 return true;
@@ -321,11 +324,7 @@ namespace QuantConnect.Lean.Engine.Storage
                     }
                     else
                     {
-                        var fileInfo = new FileInfo(PathForKey(kvp.Path));
-                        if (fileInfo.Exists)
-                        {
-                            expectedStorageSizeBytes += fileInfo.Length;
-                        }
+                        expectedStorageSizeBytes += FileHandler.TryGetFileLength(PathForKey(kvp.Path));
                     }
                 }
             }
@@ -372,9 +371,9 @@ namespace QuantConnect.Lean.Engine.Storage
             var wasInCache = _storage.TryRemove(path, out var _);
 
             var filePath = PathForKey(path);
-            if (File.Exists(filePath))
+            if (FileHandler.Exists(filePath))
             {
-                File.Delete(filePath);
+                FileHandler.Delete(filePath);
                 return true;
             }
 
@@ -516,11 +515,11 @@ namespace QuantConnect.Lean.Engine.Storage
                         var filePath = PathForKey(kvp.Key);
                         // directory might not exist for custom prefix
                         var parentDirectory = Path.GetDirectoryName(filePath);
-                        if (!Directory.Exists(parentDirectory))
+                        if (!FileHandler.DirectoryExists(parentDirectory))
                         {
-                            Directory.CreateDirectory(parentDirectory);
+                            FileHandler.CreateDirectory(parentDirectory);
                         }
-                        File.WriteAllBytes(filePath, kvp.Value.Data);
+                        FileHandler.WriteAllBytes(filePath, kvp.Value.Data);
 
                         // clear the dirty flag
                         kvp.Value.SetClean();
@@ -562,7 +561,7 @@ namespace QuantConnect.Lean.Engine.Storage
             return path.TrimStart('.').TrimStart('/', '\\').Replace('\\', '/');
         }
 
-        private static bool TryCreateObjectStoreEntry(string filePath, string path, out ObjectStoreEntry objectStoreEntry)
+        private bool TryCreateObjectStoreEntry(string filePath, string path, out ObjectStoreEntry objectStoreEntry)
         {
             var count = 0;
             do
@@ -570,9 +569,9 @@ namespace QuantConnect.Lean.Engine.Storage
                 count++;
                 try
                 {
-                    if (File.Exists(filePath))
+                    if (FileHandler.Exists(filePath))
                     {
-                        objectStoreEntry = new ObjectStoreEntry(path, File.ReadAllBytes(filePath));
+                        objectStoreEntry = new ObjectStoreEntry(path, FileHandler.ReadAllBytes(filePath));
                         return true;
                     }
                     objectStoreEntry = null;
