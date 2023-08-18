@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QLNet;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
@@ -32,45 +33,44 @@ namespace QuantConnect.Algorithm.CSharp
     public class Collective2SignalExportDemonstrationAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
-        /// Collective2 API: This value is provided by Collective2 in their webpage in your account section (See https://collective2.com/account-info)
+        /// Collective2 APIv4 KEY: This value is provided by Collective2 in your account section (See https://collective2.com/account-info)
+        /// See API documentation at https://trade.collective2.com/c2-api
         /// </summary>
-        private const string _collective2ApiKey = "";
+        private const string _collective2ApiKey = "YOUR APIV4 KEY";
 
         /// <summary>
         /// Collective2 System ID: This value is found beside the system's name (strategy's name) on the main system page
         /// </summary>
         private const int _collective2SystemId = 0;
 
-        /// <summary>
-        /// Field to set your platform ID given by Collective2 (See https://collective2.com/api-docs/latest) (Optional)
-        /// </summary>
-        private const string _collective2PlatformId = "";
-
         private ExponentialMovingAverage _fast;
         private ExponentialMovingAverage _slow;
         private bool _emaFastWasAbove;
         private bool _emaFastIsNotSet;
         private bool _firstCall = true;
-
-        private PortfolioTarget[] _targets = new PortfolioTarget[2];
+        
+        private PortfolioTarget[] _targets = new PortfolioTarget[4];
         
         /// <summary>
         /// Symbols accepted by Collective2. Collective2 accepts stock,
-        /// future, forex and option symbols
+        /// future, forex and US stock option symbols 
         /// </summary>
-        private List<Pair<string, SecurityType>> _symbols = new()
-        {
-            new Pair<string, SecurityType>("SPY", SecurityType.Equity),
-            new Pair<string, SecurityType>("EURUSD", SecurityType.Forex)
+        private List<Symbol> _symbols = new()
+        {   
+            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA, null, null),
+            QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda, null, null),
+            QuantConnect.Symbol.CreateFuture("ES", Market.CME, new DateTime(2023, 12, 15), null),
+            QuantConnect.Symbol.CreateOption("GOOG", Market.USA, OptionStyle.American, OptionRight.Call, 130, new DateTime(2023, 9, 1)),
         };
 
         /// <summary>
         /// Initialize the date and add all equity symbols present in _symbols list.
         /// Besides, make a new PortfolioTarget for each symbol in _symbols, assign it
-        /// an initial quantity of 0.05 and save it in _targets array
+        /// an initial quantity and save it in _targets array
         /// </summary>
         public override void Initialize()
         {
+            Settings.MinimumOrderMarginPortfolioPercentage = 0;
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
             SetCash(100 * 1000);
@@ -78,8 +78,16 @@ namespace QuantConnect.Algorithm.CSharp
             var index = 0;
             foreach (var item in _symbols)
             {
-                var symbol = AddSecurity(item.second, item.first).Symbol;
-                _targets[index] = new PortfolioTarget(symbol, (decimal)0.05);
+                var symbol = AddSecurity(item).Symbol;
+                if (symbol.SecurityType == SecurityType.Equity
+                    || symbol.SecurityType == SecurityType.Forex)
+                {
+                    _targets[index] = new PortfolioTarget(symbol, (decimal)0.05);
+                }
+                else
+                {
+                    _targets[index] = new PortfolioTarget(symbol, 1);
+                }
                 index++;
             }
 
@@ -90,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
             _emaFastIsNotSet = true;
 
             // Set Collective2 signal export provider
-            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId, _collective2PlatformId));
+            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
 
             SetWarmUp(100);
         }

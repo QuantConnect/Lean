@@ -337,7 +337,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         /// </summary>
         private class Collective2SignalExportHandler : Collective2SignalExport
         {
-            public Collective2SignalExportHandler(string apiKey, int systemId, string platformId = null) : base(apiKey, systemId, platformId)
+            public Collective2SignalExportHandler(string apiKey, int systemId) : base(apiKey, systemId)
             {
             }
 
