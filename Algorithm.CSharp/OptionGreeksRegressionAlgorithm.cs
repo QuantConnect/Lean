@@ -22,7 +22,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm reproducing issue #5610
+    /// Regression algorithm reproducing issue #7408
     /// </summary>
     public class OptionGreeksRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

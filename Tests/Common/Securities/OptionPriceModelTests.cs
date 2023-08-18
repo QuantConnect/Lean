@@ -427,128 +427,427 @@ namespace QuantConnect.Tests.Common
             }
         }
 
-        [TestCase(OptionRight.Call, 448.61, 450, 5.95, 0.50931, 0.02742)]         // ATM
-        [TestCase(OptionRight.Call, 448.84, 470, 0.32, 0.06535, 0.01160)]         // deep OTM
-        [TestCase(OptionRight.Call, 448.85, 430, 21.77, 0.86232, 0.0136)]         // deep ITM
-        [TestCase(OptionRight.Put, 448.77, 450, 5.82, -0.50271, 0.02896)]         // ATM
-        [TestCase(OptionRight.Put, 448.83, 470, 21.16, -1, 0)]                    // deep ITM
-        [TestCase(OptionRight.Put, 449.07, 430, 1.40, -0.13734, 0.01143)]         // deep OTM
-        public void MatchesIBGreeks(OptionRight optionRight, decimal spot, decimal strike, decimal price, decimal ibDelta, decimal ibGamma)
+        /// This test aim to comapre the maximum greek calculation error between models (2dp)
+        /// as well as a benchmark of each model to monitor future changes
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 0.01d, 0.03d, 0.01d, 0.03d, 77d)]
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.01d, 0.03d, 0.01d, 0.03d, 77d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.01d, 0.03d, 0.01d, 0.03d, 77d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 0.01d, 0.03d, 0.01d, 0.03d, 77d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 0.01d, 0.03d, 0.01d, 0.03d, 78d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 0.01d, 0.03d, 0.01d, 0.03d, 78d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.01d, 0.03d, 0.01d, 0.03d, 77d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 0.01d, 0.03d, 0.01d, 0.03d, 77d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.01d, 0.03d, 0.01d, 0.03d, 77d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 0.01d, 0.03d, 0.01d, 0.03d, 508d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 0.01d, 0.01d, 0.01d, 0.33d, 724d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.01d, 0.01d, 0.01d, 0.33d, 724d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 0.01d, 0.01d, 0.01d, 0.33d, 723d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 0.01d, 0.01d, 0.01d, 0.33d, 731d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 0.01d, 0.01d, 0.01d, 0.33d, 731d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.01d, 0.01d, 0.01d, 0.33d, 723d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 0.01d, 0.01d, 0.01d, 0.33d, 724d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.01d, 0.01d, 0.01d, 0.21d, 724d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.01d, 0.01d, 0.01d, 0.33d, 724d)]
+        [TestCase(OptionStyle.European, "Integral", 0.01d, 0.12d, 0.01d, 0.33d, 4882d)]
+        public void MatchesIBGreeksNearATMCall(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
         {
-            const decimal underlyingVol = 0.13m;
-            var tz = TimeZones.NewYork;
-            var evaluationDate = new DateTime(2023, 8, 10);
-            var spy = Symbols.SPY;
-            var optionSymbol = GetOptionSymbol(spy, OptionStyle.American, optionRight, strike, new DateTime(2023, 8, 11));
+            var filename = style == OptionStyle.American ? "SPY230811C00450000" : "SPX230811C04500000";
+            var symbol = Symbols.SPY;       // dummy
+            var strike = Parse.Decimal(filename[10..]) / 1000m;
+            var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Call, strike, new DateTime(2023, 8, 11));
 
-            // setting up
-            var equity = GetEquity(spy, spot, underlyingVol, tz);
-            var contract = GetOptionContract(optionSymbol, spy, evaluationDate);
-            var option = GetOption(optionSymbol, equity, tz);
-            option.SetMarketPrice(new Tick { Value = price });
-
-            // running evaluation for the default model
-            var priceModel = OptionPriceModels.BinomialCoxRossRubinstein();
-            var results = priceModel.Evaluate(option, null, contract);
-            var greeks = results.Greeks;
-
-            // Expect minor error due to interest rate and dividend yield used in IB
-            Assert.AreEqual((double)greeks.Delta, (double)ibDelta, 0.07);
-            Assert.AreEqual((double)greeks.Gamma, (double)ibGamma, 0.07);
+            MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
         }
 
         /// This test aim to comapre the maximum greek calculation error between models (2dp)
         /// as well as a benchmark of each model to monitor future changes
-        /// The delta parameter is the least 2dp-error
-        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.39d)]
-        [TestCase(OptionStyle.American, "BjerksundStensland", 0.39d)]
-        [TestCase(OptionStyle.American, "CrankNicolsonFD", 1d)]
-        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 1.05d)]
-        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.07d)]
-        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 1d)]
-        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 1.05d)]
-        [TestCase(OptionStyle.American, "BinomialTian", 0.07d)]
-        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 1d)]
-        [TestCase(OptionStyle.American, "BinomialJoshi", 1d)]
-        [TestCase(OptionStyle.European, "BlackScholes", 0.12d)]
-        [TestCase(OptionStyle.European, "Integral", 0.38d)]
-        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.12d)]
-        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 1.04d)]
-        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.12d)]
-        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 1d)]
-        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 1.04d)]
-        [TestCase(OptionStyle.European, "BinomialTian", 0.12d)]
-        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 1d)]
-        [TestCase(OptionStyle.European, "BinomialJoshi", 1d)]
-        public void MatchesIBGreeksBulk(OptionStyle style, string qlModelName, double delta)
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 0.03d, 0.05d, 0.01d, 0.02d, 48d)]
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.03d, 0.05d, 0.01d, 0.02d, 49d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.03d, 0.05d, 0.01d, 0.02d, 48d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 0.03d, 0.05d, 0.01d, 0.02d, 48d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 0.03d, 0.05d, 0.01d, 0.02d, 49d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 0.03d, 0.05d, 0.01d, 0.02d, 49d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.03d, 0.05d, 0.01d, 0.02d, 48d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 0.03d, 0.05d, 0.01d, 0.02d, 48d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.03d, 0.05d, 0.01d, 0.02d, 49d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 0.03d, 0.05d, 0.01d, 0.02d, 165d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 0.01d, 0.03d, 0.01d, 0.22d, 450d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.01d, 0.03d, 0.01d, 0.22d, 450d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 0.01d, 0.03d, 0.01d, 0.22d, 450d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 0.01d, 0.03d, 0.01d, 0.22d, 455d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 0.01d, 0.03d, 0.01d, 0.22d, 455d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.01d, 0.03d, 0.01d, 0.22d, 451d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 0.01d, 0.03d, 0.01d, 0.22d, 450d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.01d, 0.03d, 0.01d, 0.14d, 453d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.01d, 0.03d, 0.01d, 0.22d, 453d)]
+        [TestCase(OptionStyle.European, "Integral", 0.01d, 0.06d, 0.01d, 0.22d, 1555d)]
+        public void MatchesIBGreeksFarATMCall(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
         {
-            // Include cases for near-term/far-term ATM/deep ITM/deep OTM cases
-            List<string> cases;
-            Symbol symbol;
-            if (style == OptionStyle.American)
+            var filename = style == OptionStyle.American ? "SPY230901C00450000" : "SPX230901C04500000";
+            var symbol = Symbols.SPY;       // dummy
+            var strike = Parse.Decimal(filename[10..]) / 1000m;
+            var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Call, strike, new DateTime(2023, 9, 1));
+
+            MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
+        }
+
+        /// This test aim to comapre the maximum greek calculation error between models (2dp)
+        /// as well as a benchmark of each model to monitor future changes
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 0.02d, 0.02d, 0.01d, 0.03d, 64d)]
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.02d, 0.08d, 0.05d, 0.03d, 447d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.02d, 0.02d, 0.01d, 0.03d, 64d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 0.02d, 0.02d, 0.01d, 0.03d, 64d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 0.02d, 0.02d, 0.01d, 0.03d, 65d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 0.02d, 0.02d, 0.01d, 0.03d, 65d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.02d, 0.02d, 0.01d, 0.03d, 64d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 0.02d, 0.02d, 0.01d, 0.03d, 64d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.02d, 0.08d, 0.05d, 0.03d, 447d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 0.02d, 0.02d, 0.01d, 0.03d, 447d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 0.01d, 0.01d, 0.01d, 0.33d, 641d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.01d, 0.01d, 0.01d, 0.33d, 641d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 0.01d, 0.01d, 0.01d, 0.33d, 641d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 0.01d, 0.01d, 0.01d, 0.33d, 649d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 0.01d, 0.01d, 0.01d, 0.33d, 649d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.01d, 0.01d, 0.01d, 0.33d, 641d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 0.01d, 0.01d, 0.01d, 0.33d, 641d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.01d, 0.01d, 0.01d, 0.13d, 642d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.01d, 0.01d, 0.01d, 0.33d, 642d)]
+        [TestCase(OptionStyle.European, "Integral", 0.01d, 0.12d, 0.01d, 0.33d, 4622d)]
+        public void MatchesIBGreeksNearATMPut(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
+        { 
+            var filename = style == OptionStyle.American ? "SPY230811P00450000" : "SPX230811P04500000";
+            var symbol = Symbols.SPY;       // dummy
+            var strike = Parse.Decimal(filename[10..]) / 1000m;
+            var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Put, strike, new DateTime(2023, 8, 11));
+
+            MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
+        }
+
+        /// This test aim to comapre the maximum greek calculation error between models (2dp)
+        /// as well as a benchmark of each model to monitor future changes
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 0.02d, 0.03d, 0.01d, 0.02d, 35d)]
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.02d, 0.05d, 0.02d, 0.02d, 129d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.02d, 0.03d, 0.01d, 0.02d, 35d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 0.02d, 0.03d, 0.01d, 0.02d, 35d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 0.02d, 0.03d, 0.01d, 0.02d, 35d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 0.02d, 0.03d, 0.01d, 0.02d, 35d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.02d, 0.03d, 0.01d, 0.02d, 35d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 0.02d, 0.03d, 0.01d, 0.02d, 35d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.02d, 0.05d, 0.02d, 0.02d, 129d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 0.02d, 0.03d, 0.01d, 0.02d, 129d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 0.01d, 0.02d, 0.01d, 0.22d, 356d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.01d, 0.02d, 0.01d, 0.22d, 356d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 0.01d, 0.02d, 0.01d, 0.22d, 356d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 0.01d, 0.02d, 0.01d, 0.22d, 360d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 0.01d, 0.02d, 0.01d, 0.22d, 360d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.01d, 0.02d, 0.01d, 0.22d, 357d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 0.01d, 0.02d, 0.01d, 0.22d, 356d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.01d, 0.02d, 0.01d, 0.17d, 358d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.01d, 0.02d, 0.01d, 0.22d, 359d)]
+        [TestCase(OptionStyle.European, "Integral", 0.01d, 0.06d, 0.01d, 0.22d, 1335d)]
+        public void MatchesIBGreeksFarATMPut(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
+        {
+            var filename = style == OptionStyle.American ? "SPY230901P00450000" : "SPX230901P04500000";
+            var symbol = Symbols.SPY;       // dummy
+            var strike = Parse.Decimal(filename[10..]) / 1000m;
+            var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Put, strike, new DateTime(2023, 9, 1));
+
+            MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
+        }
+
+        /// This test aim to comapre the maximum greek calculation error between models (2dp)
+        /// as well as a benchmark of each model to monitor future changes
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 0.05d, 0.05d, 0.01d, 0.22d, 56d)]
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.05d, 0.05d, 0.01d, 0.06d, 57d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.05d, 0.05d, 0.01d, 0.22d, 56d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 0.05d, 0.05d, 0.01d, 0.22d, 56d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 0.05d, 0.05d, 0.01d, 0.22d, 57d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 0.05d, 0.05d, 0.01d, 0.22d, 57d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.05d, 0.05d, 0.01d, 0.22d, 56d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 0.05d, 0.05d, 0.01d, 0.22d, 56d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.05d, 0.05d, 0.01d, 0.06d, 57d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 0.05d, 0.05d, 0.01d, 0.22d, 916d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 0.02d, 0.02d, 0.01d, 2.21d, 331d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.02d, 0.02d, 0.01d, 2.21d, 330d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 0.02d, 0.02d, 0.01d, 2.21d, 330d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 0.02d, 0.02d, 0.01d, 2.21d, 337d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 0.02d, 0.02d, 0.01d, 2.21d, 337d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.02d, 0.02d, 0.01d, 2.21d, 330d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 0.02d, 0.02d, 0.01d, 2.21d, 330d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.02d, 0.02d, 0.01d, 0.19d, 333d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.02d, 0.02d, 0.01d, 2.21d, 333d)]
+        [TestCase(OptionStyle.European, "Integral", 0.02d, 0.34d, 0.01d, 2.21d, 7981d)]
+        public void MatchesIBGreeksNearITMCall(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
+        {
+             var filename = style == OptionStyle.American ? "SPY230811C00430000" : "SPX230811C04300000";
+            var symbol = Symbols.SPY;       // dummy
+            var strike = Parse.Decimal(filename[10..]) / 1000m;
+            var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Call, strike, new DateTime(2023, 8, 11));
+
+            MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
+        }
+
+        /// This test aim to comapre the maximum greek calculation error between models (2dp)
+        /// as well as a benchmark of each model to monitor future changes
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 0.04d, 0.07d, 0.01d, 0.23d, 50d)]
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.04d, 0.07d, 0.01d, 0.09d, 50d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.04d, 0.07d, 0.01d, 0.23d, 50d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 0.04d, 0.07d, 0.01d, 0.23d, 50d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 0.04d, 0.07d, 0.01d, 0.23d, 50d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 0.04d, 0.07d, 0.01d, 0.23d, 50d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.04d, 0.07d, 0.01d, 0.23d, 49d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 0.04d, 0.07d, 0.01d, 0.23d, 50d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.04d, 0.07d, 0.01d, 0.09d, 50d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 0.04d, 0.07d, 0.01d, 0.23d, 226d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 0.02d, 0.04d, 0.01d, 2.25d, 406d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.02d, 0.04d, 0.01d, 2.25d, 406d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 0.02d, 0.04d, 0.01d, 2.25d, 406d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 0.02d, 0.04d, 0.01d, 2.25d, 411d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 0.02d, 0.04d, 0.01d, 2.25d, 411d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.02d, 0.04d, 0.01d, 2.25d, 406d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 0.02d, 0.04d, 0.01d, 2.25d, 406d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.02d, 0.04d, 0.01d, 0.51d, 409d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.02d, 0.04d, 0.01d, 2.25d, 409d)]
+        [TestCase(OptionStyle.European, "Integral", 0.02d, 0.24d, 0.01d, 2.25d, 2029d)]
+        public void MatchesIBGreeksFarITMCall(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
+        {
+            var filename = style == OptionStyle.American ? "SPY230901C00430000" : "SPX230901C04300000";
+            var symbol = Symbols.SPY;       // dummy
+            var strike = Parse.Decimal(filename[10..]) / 1000m;
+            var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Call, strike, new DateTime(2023, 9, 1));
+
+            MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
+        }
+
+        /// This test aim to comapre the maximum greek calculation error between models (2dp)
+        /// as well as a benchmark of each model to monitor future changes
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 0.13d, 1.00d, 0.01d, 0.24d, 5.92d)]
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.13d, 0.39d, 0.01d, 0.24d, 526d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.13d, 0.01d, 0.01d, 0.24d, 5.93d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 0.13d, 1.05d, 0.01d, 0.24d, 5.93d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 0.13d, 1.00d, 0.01d, 0.24d, 6.49d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 0.13d, 1.00d, 0.01d, 0.24d, 6.49d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.13d, 0.01d, 0.01d, 0.24d, 5.93d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 0.13d, 1.05d, 0.01d, 0.24d, 5.93d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.13d, 0.39d, 0.01d, 0.24d, 526d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 0.13d, 1.00d, 0.01d, 0.24d, 526d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 0.14d, 1.00d, 0.01d, 0.37d, 0.71d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.14d, 0.03d, 0.01d, 0.37d, 47d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 0.14d, 1.04d, 0.01d, 0.37d, 0.71d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 0.14d, 1.00d, 0.01d, 0.37d, 0.71d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 0.14d, 1.00d, 0.01d, 0.37d, 0.71d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.14d, 0.03d, 0.01d, 0.37d, 47d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 0.14d, 1.04d, 0.01d, 0.37d, 0.71d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.14d, 0.03d, 0.01d, 0.37d, 47d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.14d, 0.03d, 0.01d, 0.37d, 47d)]
+        [TestCase(OptionStyle.European, "Integral", 0.14d, 0.03d, 0.01d, 0.37d, 47d)]
+        public void MatchesIBGreeksNearITMPut(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
+        {
+            var filename = style == OptionStyle.American ? "SPY230811P00470000" : "SPX230811P04700000";
+            var symbol = Symbols.SPY;       // dummy
+            var strike = Parse.Decimal(filename[10..]) / 1000m;
+            var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Put, strike, new DateTime(2023, 8, 11));
+
+            MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
+        }
+
+        /// This test aim to comapre the maximum greek calculation error between models (2dp)
+        /// as well as a benchmark of each model to monitor future changes
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 0.11d, 1.00d, 0.02d, 0.37d, 4.66d)]
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.11d, 0.31d, 0.02d, 0.37d, 90d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.11d, 0.02d, 0.02d, 0.37d, 4.70d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 0.11d, 1.05d, 0.02d, 0.37d, 4.68d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 0.11d, 1.00d, 0.01d, 0.37d, 4.89d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 0.11d, 1.00d, 0.01d, 0.37d, 4.89d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.11d, 0.02d, 0.05d, 0.37d, 4.71d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 0.11d, 1.05d, 0.02d, 0.37d, 4.65d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.11d, 0.31d, 0.02d, 0.37d, 90d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 0.11d, 1.00d, 0.01d, 0.37d, 90d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 0.11d, 0.90d, 0.01d, 2.47d, 0.21d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.11d, 0.12d, 0.01d, 2.47d, 47d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 0.11d, 0.94d, 0.01d, 2.47d, 0.21d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 0.11d, 0.90d, 0.01d, 2.47d, 0.21d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 0.11d, 0.90d, 0.01d, 2.47d, 0.21d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.11d, 0.12d, 0.01d, 2.47d, 47d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 0.11d, 0.94d, 0.01d, 2.47d, 0.21d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.11d, 0.12d, 0.01d, 2.47d, 47d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.11d, 0.12d, 0.01d, 2.47d, 47d)]
+        [TestCase(OptionStyle.European, "Integral", 0.11d, 0.12d, 0.01d, 2.47d, 47d)]
+        public void MatchesIBGreeksFarITMPut(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
+        {
+            var filename = style == OptionStyle.American ? "SPY230901P00470000" : "SPX230901P04700000";
+            var symbol = Symbols.SPY;       // dummy
+            var strike = Parse.Decimal(filename[10..]) / 1000m;
+            var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Put, strike, new DateTime(2023, 9, 1));
+
+            MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
+        }
+
+        /// This test aim to comapre the maximum greek calculation error between models (2dp)
+        /// as well as a benchmark of each model to monitor future changes
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 0.01d, 0.01d, 0.01d, 0.24d, 5.84d)]
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.01d, 0.01d, 0.01d, 0.01d, 6.02d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.01d, 0.01d, 0.01d, 0.24d, 5.85d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 0.01d, 0.01d, 0.01d, 0.24d, 5.85d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 0.01d, 0.01d, 0.01d, 0.24d, 6.14d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 0.01d, 0.01d, 0.01d, 0.24d, 6.14d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.01d, 0.01d, 0.01d, 0.24d, 5.82d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 0.01d, 0.01d, 0.01d, 0.24d, 5.85d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.01d, 0.01d, 0.01d, 0.01d, 6.02d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 0.01d, 0.01d, 0.01d, 0.24d, 488d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 0.01d, 0.01d, 0.01d, 2.42d, 53d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.01d, 0.01d, 0.01d, 2.42d, 53d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 0.01d, 0.01d, 0.01d, 2.42d, 53d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 0.01d, 0.01d, 0.01d, 2.42d, 55d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 0.01d, 0.01d, 0.01d, 2.42d, 55d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.01d, 0.01d, 0.01d, 2.42d, 53d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 0.01d, 0.01d, 0.01d, 2.42d, 53d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.01d, 0.01d, 0.01d, 0.01d, 54d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.01d, 0.01d, 0.01d, 2.42d, 55d)]
+        [TestCase(OptionStyle.European, "Integral", 0.01d, 0.38d, 0.01d, 2.42d, 4459d)]
+        public void MatchesIBGreeksNearOTMCall(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
+        {
+            var filename = style == OptionStyle.American ? "SPY230811C00470000" : "SPX230811C04700000";
+            var symbol = Symbols.SPY;       // dummy
+            var strike = Parse.Decimal(filename[10..]) / 1000m;
+            var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Call, strike, new DateTime(2023, 8, 11));
+
+            MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
+        }
+
+        /// This test aim to comapre the maximum greek calculation error between models (2dp)
+        /// as well as a benchmark of each model to monitor future changes
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 0.01d, 0.01d, 0.01d, 0.24d, 17d)]
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.01d, 0.01d, 0.01d, 0.24d, 17d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.01d, 0.01d, 0.01d, 0.24d, 17d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 0.01d, 0.01d, 0.01d, 0.24d, 17d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 0.01d, 0.01d, 0.01d, 0.24d, 17d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 0.01d, 0.01d, 0.01d, 0.24d, 17d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.01d, 0.01d, 0.01d, 0.24d, 17d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 0.01d, 0.01d, 0.01d, 0.24d, 17d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.01d, 0.01d, 0.01d, 0.24d, 17d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 0.01d, 0.01d, 0.01d, 0.24d, 123d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 0.01d, 0.01d, 0.01d, 2.54d, 164d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.01d, 0.01d, 0.01d, 2.54d, 164d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 0.01d, 0.01d, 0.01d, 2.54d, 164d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 0.01d, 0.01d, 0.01d, 2.54d, 167d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 0.01d, 0.01d, 0.01d, 2.54d, 167d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.01d, 0.01d, 0.01d, 2.54d, 164d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 0.01d, 0.01d, 0.01d, 2.54d, 166d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.01d, 0.01d, 0.01d, 0.02d, 166d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.01d, 0.01d, 0.01d, 2.54d, 166d)]
+        [TestCase(OptionStyle.European, "Integral", 0.01d, 0.28d, 0.01d, 2.54d, 1173d)]
+        public void MatchesIBGreeksFarOTMCall(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
+        {
+            var filename = style == OptionStyle.American ? "SPY230901C00470000" : "SPX230901C04700000";
+            var symbol = Symbols.SPY;       // dummy
+            var strike = Parse.Decimal(filename[10..]) / 1000m;
+            var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Call, strike, new DateTime(2023, 9, 1));
+
+            MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
+        }
+
+        /// This test aim to comapre the maximum greek calculation error between models (2dp)
+        /// as well as a benchmark of each model to monitor future changes
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 0.02d, 0.01d, 0.01d, 0.21d, 19d)]
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.02d, 0.33d, 0.01d, 0.21d, 678d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.02d, 0.01d, 0.01d, 0.21d, 19d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 0.02d, 0.01d, 0.01d, 0.21d, 19d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 0.02d, 0.01d, 0.01d, 0.21d, 20d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 0.02d, 0.01d, 0.01d, 0.21d, 20d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.02d, 0.01d, 0.01d, 0.21d, 19d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 0.02d, 0.01d, 0.01d, 0.21d, 19d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.02d, 0.33d, 0.01d, 0.21d, 678d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 0.02d, 0.01d, 0.01d, 0.21d, 678d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 0.01d, 0.01d, 0.01d, 2.14d, 183d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.01d, 0.01d, 0.01d, 2.14d, 183d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 0.01d, 0.01d, 0.01d, 2.14d, 183d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 0.01d, 0.01d, 0.01d, 2.14d, 189d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 0.01d, 0.01d, 0.01d, 2.14d, 189d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.01d, 0.01d, 0.01d, 2.14d, 183d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 0.01d, 0.01d, 0.01d, 2.14d, 183d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.01d, 0.01d, 0.01d, 0.03d, 186d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.01d, 0.01d, 0.01d, 2.14d, 185d)]
+        [TestCase(OptionStyle.European, "Integral", 0.01d, 0.33d, 0.01d, 2.14d, 6957d)]
+        public void MatchesIBGreeksNearOTMPut(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
+        {
+            var filename = style == OptionStyle.American ? "SPY230811P00430000" : "SPX230811P04300000";
+            var symbol = Symbols.SPY;       // dummy
+            var strike = Parse.Decimal(filename[10..]) / 1000m;
+            var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Put, strike, new DateTime(2023, 8, 11));
+
+            MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
+        }
+
+        /// This test aim to comapre the maximum greek calculation error between models (2dp)
+        /// as well as a benchmark of each model to monitor future changes
+        [TestCase(OptionStyle.American, "AdditiveEquiprobabilities", 0.01d, 0.01d, 0.01d, 0.21d, 29d)]
+        [TestCase(OptionStyle.American, "BaroneAdesiWhaley", 0.01d, 0.23d, 0.01d, 0.21d, 169d)]
+        [TestCase(OptionStyle.American, "BinomialCoxRossRubinstein", 0.01d, 0.01d, 0.01d, 0.21d, 29d)]
+        [TestCase(OptionStyle.American, "BinomialJarrowRudd", 0.01d, 0.01d, 0.01d, 0.21d, 29d)]
+        [TestCase(OptionStyle.American, "BinomialJoshi", 0.01d, 0.01d, 0.01d, 0.21d, 29d)]
+        [TestCase(OptionStyle.American, "BinomialLeisenReimer", 0.01d, 0.01d, 0.01d, 0.21d, 29d)]
+        [TestCase(OptionStyle.American, "BinomialTian", 0.01d, 0.01d, 0.01d, 0.21d, 29d)]
+        [TestCase(OptionStyle.American, "BinomialTrigeorgis", 0.01d, 0.01d, 0.01d, 0.21d, 29d)]
+        [TestCase(OptionStyle.American, "BjerksundStensland", 0.01d, 0.23d, 0.01d, 0.21d, 169d)]
+        [TestCase(OptionStyle.American, "CrankNicolsonFD", 0.01d, 0.01d, 0.01d, 0.21d, 169d)]
+        [TestCase(OptionStyle.European, "AdditiveEquiprobabilities", 0.01d, 0.01d, 0.01d, 2.18d, 276d)]
+        [TestCase(OptionStyle.European, "BinomialCoxRossRubinstein", 0.01d, 0.01d, 0.01d, 2.18d, 276d)]
+        [TestCase(OptionStyle.European, "BinomialJarrowRudd", 0.01d, 0.01d, 0.01d, 2.18d, 276d)]
+        [TestCase(OptionStyle.European, "BinomialJoshi", 0.01d, 0.01d, 0.01d, 2.18d, 280d)]
+        [TestCase(OptionStyle.European, "BinomialLeisenReimer", 0.01d, 0.01d, 0.01d, 2.18d, 280d)]
+        [TestCase(OptionStyle.European, "BinomialTian", 0.01d, 0.01d, 0.01d, 2.18d, 275d)]
+        [TestCase(OptionStyle.European, "BinomialTrigeorgis", 0.01d, 0.01d, 0.01d, 2.18d, 276d)]
+        [TestCase(OptionStyle.European, "BlackScholes", 0.01d, 0.01d, 0.01d, 0.08d, 278d)]
+        [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.01d, 0.01d, 0.01d, 2.18d, 278d)]
+        [TestCase(OptionStyle.European, "Integral", 0.01d, 0.23d, 0.01d, 2.18d, 1727d)]
+        public void MatchesIBGreeksFarOTMPut(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
+        {
+            var filename = style == OptionStyle.American ? "SPY230901P00430000" : "SPX230901P04300000";
+            var symbol = Symbols.SPY;       // dummy
+            var strike = Parse.Decimal(filename[10..]) / 1000m;
+            var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Put, strike, new DateTime(2023, 9, 1));
+
+            MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
+        }
+
+        private void MatchesIBGreeksTest(Symbol symbol, Symbol optionSymbol, string filename, string qlModelName, 
+                                         double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
+        {
+            var tz = TimeZones.NewYork;
+            var evaluationDate = new DateTime(2023, 8, 4);
+
+            // setting up underlying
+            var equity = GetEquity(symbol, 450m, 0.15m, tz);       // dummy non-zero values
+
+            // setting up option
+            var contract = GetOptionContract(optionSymbol, symbol, evaluationDate);
+            var option = GetOption(optionSymbol, equity, tz);
+            var priceModel = (IOptionPriceModel)typeof(OptionPriceModels).GetMethod(qlModelName).Invoke(null, new object[] { });
+
+            // Get test data
+            var data = File.ReadAllLines($"TestData/greeks/{filename}.csv")
+                .Skip(1)                                            // skip header row
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Split(','));
+
+            // running evaluation: iterate per slice
+            foreach (var datum in data)
             {
-                symbol = Symbols.SPY;
-                cases = new List<string>
-                {
-                    "SPY230811C00450000", "SPY230811P00450000", "SPY230901C00450000", "SPY230901P00450000", 
-                    "SPY230811C00430000", "SPY230811C00470000", "SPY230811P00430000", "SPY230811P00470000",
-                    "SPY230901C00430000", "SPY230901C00470000", "SPY230901P00430000", "SPY230901P00470000"
-                };
-            }
-            else
-            {
-                symbol = Symbols.SPX;
-                cases = new List<string>
-                {
-                    "SPX230811C04500000", "SPX230811P04500000", "SPX230901C04500000", "SPX230901P04500000",
-                    "SPX230811C04300000", "SPX230811C04700000", "SPX230811P04300000", "SPX230811P04700000",
-                    "SPX230901C04300000", "SPX230901C04700000", "SPX230901P04300000", "SPX230901P04700000"
-                };
-            }
-            
-            
-            foreach (var filename in cases)
-            {
-                var optionRight = filename[9] == 'C' ? OptionRight.Call : OptionRight.Put;
-                var strike = Parse.Decimal(filename[10..]) / 1000m;
-                var expiry = DateTime.ParseExact(filename.Substring(3, 6), "yyMMdd", CultureInfo.InvariantCulture);
-                var optionSymbol = GetOptionSymbol(symbol, style, optionRight, strike, expiry);
+                equity.SetMarketPrice(new Tick { Value = Parse.Decimal(datum[7]) });
+                option.SetMarketPrice(new Tick { Value = Parse.Decimal(datum[1]) });
+                var results = priceModel.Evaluate(option, null, contract);
 
-                var tz = TimeZones.NewYork;
-                var evaluationDate = new DateTime(2023, 8, 4);
+                // Check the option Greeks are valid
+                var greeks = results.Greeks;
 
-                // setting up underlying
-                var equity = GetEquity(symbol, 450m, 0.15m, tz);       // dummy non-zero values
-
-                // setting up option
-                var contract = GetOptionContract(optionSymbol, symbol, evaluationDate);
-                var option = GetOption(optionSymbol, equity, tz);
-                var priceModel = (IOptionPriceModel)typeof(OptionPriceModels).GetMethod(qlModelName).Invoke(null, new object[] { });
-
-                // Get test data
-                var data = File.ReadAllLines($"TestData/greeks/{filename}.csv")
-                    .Skip(1)                                            // skip header row
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Select(x => x.Split(','));
-
-                // running evaluation: iterate per slice
-                foreach (var datum in data)
-                {
-                    equity.SetMarketPrice(new Tick { Value = Parse.Decimal(datum[7]) });
-                    option.SetMarketPrice(new Tick { Value = Parse.Decimal(datum[1]) });
-                    var results = priceModel.Evaluate(option, null, contract);
-
-                    // Check the option Greeks are valid
-                    var greeks = results.Greeks;
-
-                    // Expect minor error due to interest rate, bid/ask price and dividend yield used in IB
-                    // And approximation error using Black Calculator if the original pricing model fails
-                    Assert.AreEqual((double)greeks.Delta, Parse.Double(datum[3]), delta);
-                    Assert.AreEqual((double)greeks.Gamma, Parse.Double(datum[4]), delta);
-                    // We do not test Vega as the tangent line of price change over volatility is steep for deep ITM/OTM
-                    // We do not test Theta as the tangent line of price change over time change is steep for near-expiry options
-                    // No model will be estimating these quantities well
-                }
+                // Expect minor error due to interest rate, bid/ask price and dividend yield used in IB
+                // And approximation error using Black Calculator if the original pricing model fails
+                Assert.AreEqual((double)results.ImpliedVolatility, Parse.Double(datum[2]), errorIV);
+                Assert.AreEqual((double)greeks.Delta, Parse.Double(datum[3]), errorDelta);
+                Assert.AreEqual((double)greeks.Gamma, Parse.Double(datum[4]), errorGamma);
+                Assert.AreEqual((double)greeks.Vega, Parse.Double(datum[5]), errorVega);
+                Assert.AreEqual((double)greeks.Theta, Parse.Double(datum[6]), errorTheta);
             }
         }
 
