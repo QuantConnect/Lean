@@ -211,11 +211,16 @@ namespace QuantConnect.Orders.Fees
                     price = (order as ComboLimitOrder).GroupOrderManager.LimitPrice;
                     break;
                 case OrderType.ComboLegLimit:
+                    price = (order as ComboLegLimitOrder).LimitPrice;
+                    break;
                 case OrderType.StopLimit:
+                    price = (order as StopLimitOrder).LimitPrice;
+                    break;
                 case OrderType.LimitIfTouched:
+                    price = (order as LimitIfTouchedOrder).LimitPrice;
+                    break;
                 case OrderType.Limit:
-                    var limitPrice = order.GetType().GetProperty("LimitPrice").GetValue(order, null) as decimal?;
-                    price = (limitPrice ?? 0);
+                    price = (order as LimitOrder).LimitPrice;
                     break;
             }
 
