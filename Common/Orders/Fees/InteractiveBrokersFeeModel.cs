@@ -182,8 +182,6 @@ namespace QuantConnect.Orders.Fees
         /// </summary>
         protected static decimal GetPotentialOrderPrice(Order order, Security security)
         {
-            var quantity = order.Quantity;
-
             decimal price = 0;
             switch (order.Type)
             {
