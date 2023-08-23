@@ -28266,6 +28266,47 @@
       "saturday": [],
       "holidays": []
     },
+	"Future-cme-LBR": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "America/Chicago",
+      "monday": [
+        {
+          "start": "09:00:00",
+          "end": "15:05:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "09:00:00",
+          "end": "15:05:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "09:00:00",
+          "end": "15:05:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "09:00:00",
+          "end": "15:05:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "09:00:00",
+          "end": "15:05:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
     "Future-ice-CC": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",

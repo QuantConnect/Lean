@@ -1213,6 +1213,11 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Cocoa = "CC";
+
+            /// <summary>
+            /// Lumber Futures
+            /// </summary>
+            public const string Lumber = "LBR";
         }
 
         /// <summary>
