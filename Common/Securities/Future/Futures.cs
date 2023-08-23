@@ -1048,6 +1048,11 @@ namespace QuantConnect.Securities
             /// Random Length Lumber Futures
             /// </summary>
             public const string RandomLengthLumber = "LBS";
+
+            /// <summary>
+            /// Lumber Futures
+            /// </summary>
+            public const string Lumber = "LBR";
         }
 
         /// <summary>
@@ -1213,11 +1218,6 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Cocoa = "CC";
-
-            /// <summary>
-            /// Lumber Futures
-            /// </summary>
-            public const string Lumber = "LBR";
         }
 
         /// <summary>

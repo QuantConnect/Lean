@@ -780,7 +780,7 @@ namespace QuantConnect.Securities.Future
             },
             // Lumber and Softs
             // Lumber Futures (LBR): https://www.cmegroup.com/markets/agriculture/lumber-and-softs/lumber.contractSpecs.html
-            {Symbol.Create(Futures.Softs.Lumber, SecurityType.Future, Market.CME), (time =>
+            {Symbol.Create(Futures.Forestry.Lumber, SecurityType.Future, Market.CME), (time =>
                 {
                     // Monthly contracts (Jan, Mar, May, Jul, Sep, Nov) listed for 7 months
                     while (!FutureExpirationCycles.FHKNUX.Contains(time.Month))
