@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using Moq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -98,9 +99,42 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(1000 * expectedFee, fee.Value.Amount);
         }
 
-        [Test]
-        public void USAOptionFee()
+        [TestCase(OrderType.ComboMarket, 0.01, 250)]
+        [TestCase(OrderType.ComboLimit, 0.01, 250)]
+        [TestCase(OrderType.ComboLegLimit, 0.01, 250)]
+        [TestCase(OrderType.Limit, 0.01, 250)]
+        [TestCase(OrderType.StopLimit, 0.01, 250)]
+        [TestCase(OrderType.LimitIfTouched, 0.01, 250)]
+        [TestCase(OrderType.StopMarket, 0.01, 250)]
+        [TestCase(OrderType.TrailingStop, 0.01, 250)]
+        [TestCase(OrderType.Market, 0.01, 250)]
+        [TestCase(OrderType.MarketOnClose, 0.01, 250)]
+        [TestCase(OrderType.MarketOnOpen, 0.01, 250)]
+        [TestCase(OrderType.ComboMarket, 0.2, 650)]
+        [TestCase(OrderType.ComboLimit, 0.2, 650)]
+        [TestCase(OrderType.ComboLegLimit, 0.2, 650)]
+        [TestCase(OrderType.Limit, 0.2, 650)]
+        [TestCase(OrderType.StopLimit, 0.2, 650)]
+        [TestCase(OrderType.LimitIfTouched, 0.2, 650)]
+        [TestCase(OrderType.StopMarket, 0.2, 650)]
+        [TestCase(OrderType.TrailingStop, 0.2, 650)]
+        [TestCase(OrderType.Market, 0.2, 650)]
+        [TestCase(OrderType.MarketOnClose, 0.2, 650)]
+        [TestCase(OrderType.MarketOnOpen, 0.2, 650)]
+        [TestCase(OrderType.ComboMarket, 0.07, 500)]
+        [TestCase(OrderType.ComboLimit, 0.07, 500)]
+        [TestCase(OrderType.ComboLegLimit, 0.07, 500)]
+        [TestCase(OrderType.Limit, 0.07, 500)]
+        [TestCase(OrderType.StopLimit, 0.07, 500)]
+        [TestCase(OrderType.LimitIfTouched, 0.07, 500)]
+        [TestCase(OrderType.StopMarket, 0.07, 500)]
+        [TestCase(OrderType.TrailingStop, 0.07, 500)]
+        [TestCase(OrderType.Market, 0.07, 500)]
+        [TestCase(OrderType.MarketOnClose, 0.07, 500)]
+        [TestCase(OrderType.MarketOnOpen, 0.07, 500)]
+        public void USAOptionFee(OrderType orderType, double price, double expectedFees)
         {
+            var optionPrice = (decimal)price;
             var tz = TimeZones.NewYork;
             var security = new Option(Symbols.SPY_C_192_Feb19_2016,
                 SecurityExchangeHours.AlwaysOpen(tz),
@@ -111,17 +145,56 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new SecurityCache(),
                 null
             );
-            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, optionPrice, 0));
+            var order = (new Mock<Order>()).Object;
+            var groupOrderManager = new GroupOrderManager(0, 2, 10);
+
+            switch (orderType)
+            {
+                case OrderType.ComboMarket:
+                    order = new ComboMarketOrder(security.Symbol, 1000, DateTime.UtcNow, groupOrderManager);
+                    break;
+                case OrderType.ComboLimit:
+                    order = new ComboLimitOrder(security.Symbol, 1000, optionPrice, DateTime.UtcNow, groupOrderManager);
+                    break;
+                case OrderType.ComboLegLimit:
+                    order = new ComboLegLimitOrder(security.Symbol, 1000, optionPrice, DateTime.UtcNow, groupOrderManager);
+                    break;
+                case OrderType.Limit:
+                    order = new LimitOrder(security.Symbol, 1000, optionPrice, DateTime.UtcNow);
+                    break;
+                case OrderType.StopLimit:
+                    order = new StopLimitOrder(security.Symbol, 1000, optionPrice, optionPrice, DateTime.UtcNow);
+                    break;
+                case OrderType.LimitIfTouched:
+                    order = new LimitIfTouchedOrder(security.Symbol, 1000, optionPrice, optionPrice, DateTime.UtcNow);
+                    break;
+                case OrderType.StopMarket:
+                    order = new StopMarketOrder(security.Symbol, 1000, optionPrice, DateTime.UtcNow);
+                    break;
+                case OrderType.TrailingStop:
+                    order = new TrailingStopOrder(security.Symbol, 1000, optionPrice, optionPrice, false, DateTime.UtcNow);
+                    break;
+                case OrderType.Market:
+                    order = new MarketOrder(security.Symbol, 1000, DateTime.UtcNow);
+                    break;
+                case OrderType.MarketOnClose:
+                    order = new MarketOnCloseOrder(security.Symbol, 1000, DateTime.UtcNow);
+                    break;
+                case OrderType.MarketOnOpen:
+                    order = new MarketOnOpenOrder(security.Symbol, 1000, DateTime.UtcNow);
+                    break;
+            }
 
             var fee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     security,
-                    new MarketOrder(security.Symbol, 1000, DateTime.UtcNow)
+                    order
                 )
             );
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            Assert.AreEqual(250m, fee.Value.Amount);
+            Assert.AreEqual((decimal)expectedFees, fee.Value.Amount);
         }
 
         [Test]
