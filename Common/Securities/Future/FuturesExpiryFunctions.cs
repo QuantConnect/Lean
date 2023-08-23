@@ -778,6 +778,21 @@ namespace QuantConnect.Securities.Future
                     return FuturesExpiryUtilityFunctions.AddBusinessDays(sixteenth, -1).Add(new TimeSpan(17, 5, 0));
                 })
             },
+            // Lumber and Softs
+            // Lumber Futures (LBR): https://www.cmegroup.com/markets/agriculture/lumber-and-softs/lumber.contractSpecs.html
+            {Symbol.Create(Futures.Forestry.Lumber, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Monthly contracts (Jan, Mar, May, Jul, Sep, Nov) listed for 7 months
+                    while (!FutureExpirationCycles.FHKNUX.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // The business day prior to the 16th calendar day of the contract month at 12:05pm CT
+                    var sixteenth = new DateTime(time.Year,time.Month, 16);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(sixteenth, -1).Add(new TimeSpan(17, 5, 0));
+                })
+            },
             // Grains And OilSeeds Group
             // Chicago SRW Wheat (ZW): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/wheat_contract_specifications.html
             {Symbol.Create(Futures.Grains.SRWWheat, SecurityType.Future, Market.CBOT), (time =>

@@ -380,6 +380,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
+        [TestCase(QuantConnect.Securities.Futures.Forestry.Lumber, TwelveFivePMCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Forestry.RandomLengthLumber, TwelveFivePMCentralTime)]
         public void LumberPulpExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
