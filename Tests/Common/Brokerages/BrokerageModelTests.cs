@@ -252,6 +252,7 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
                 new TestCaseData(new ExanteBrokerageModel(), BrokerageName.Exante),
                 new TestCaseData(new FTXUSBrokerageModel(), BrokerageName.FTXUS),
                 new TestCaseData(new FTXBrokerageModel(), BrokerageName.FTX),
+                new TestCaseData(new BybitBrokerageModel(), BrokerageName.Bybit),
                 new TestCaseData(new DefaultBrokerageModel(), BrokerageName.Default)
             };
         }
@@ -273,6 +274,7 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
         private class CustomExanteBrokerageModel : ExanteBrokerageModel {}
         private class CustomFTXUSBrokerageModel : FTXUSBrokerageModel {}
         private class CustomFTXBrokerageModel : FTXBrokerageModel {}
+        private  class CustomBybitBrokerageModel : BybitBrokerageModel {}
         private class CustomDefaultBrokerageModel : DefaultBrokerageModel {}
 
         private static TestCaseData[] GetCustomBrokerageNameTestCases()
@@ -296,6 +298,7 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
                 new TestCaseData(new CustomExanteBrokerageModel(), BrokerageName.Exante),
                 new TestCaseData(new CustomFTXUSBrokerageModel(), BrokerageName.FTXUS),
                 new TestCaseData(new CustomFTXBrokerageModel(), BrokerageName.FTX),
+                new TestCaseData(new CustomBybitBrokerageModel(), BrokerageName.Bybit),
                 new TestCaseData(new CustomDefaultBrokerageModel(), BrokerageName.Default)
             };
         }

@@ -1,0 +1,95 @@
+using System;
+using System.Collections.Generic;
+using QuantConnect.Securities;
+using QuantConnect.Util;
+
+namespace QuantConnect.Orders.Fees;
+
+public class BybitFeeModel : FeeModel
+{
+    /// <summary>
+    /// Tier 1 maker fees
+    /// https://learn.bybit.com/bybit-guide/bybit-trading-fees/
+    /// </summary>
+    public const decimal MakerNonVIPFee = 0.001m;
+
+    /// <summary>
+    /// Tier 1 taker fees
+    /// https://learn.bybit.com/bybit-guide/bybit-trading-fees/
+    /// </summary>
+    public const decimal TakerNonVIPFee = 0.001m;
+
+    private readonly decimal _makerFee;
+    private readonly decimal _takerFee;
+
+    /// <summary>
+    /// Creates Binance fee model setting fees values
+    /// </summary>
+    /// <param name="mFee">Maker fee value</param>
+    /// <param name="tFee">Taker fee value</param>
+    public BybitFeeModel(decimal mFee = MakerNonVIPFee, decimal tFee = TakerNonVIPFee)
+    {
+        _makerFee = mFee;
+        _takerFee = tFee;
+    }
+        
+    public override OrderFee GetOrderFee(OrderFeeParameters parameters)
+    {
+        var security = parameters.Security;
+        var order = parameters.Order;
+
+        var fee = GetFee(order);
+
+        if(security.Symbol.ID.SecurityType == SecurityType.CryptoFuture)
+        {
+            var positionValue = security.Holdings.GetQuantityValue(order.AbsoluteQuantity, security.Price);
+            return new OrderFee(new CashAmount(positionValue.Amount * fee, positionValue.Cash.Symbol));
+        }
+
+        if (order.Direction == OrderDirection.Buy)
+        {
+            // fees taken in the received currency
+            CurrencyPairUtil.DecomposeCurrencyPair(order.Symbol, out var baseCurrency, out _);
+            return new OrderFee(new CashAmount(order.AbsoluteQuantity * fee, baseCurrency));
+        }
+
+        // get order value in quote currency
+        var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+        if (order.Type == OrderType.Limit)
+        {
+            // limit order posted to the order book
+            unitPrice = ((LimitOrder)order).LimitPrice;
+        }
+
+        unitPrice *= security.SymbolProperties.ContractMultiplier;
+
+        return new OrderFee(new CashAmount(
+            unitPrice * order.AbsoluteQuantity * fee,
+            security.QuoteCurrency.Symbol));
+    }
+    
+    /// <summary>
+    /// Gets the fee factor for the given order
+    /// </summary>
+    /// <param name="order">The order to get the fee factor for</param>
+    /// <returns>The fee factor for the given order</returns>
+    protected virtual decimal GetFee(Order order)
+    {
+        return GetFee(order, _makerFee, _takerFee);
+    }
+
+    protected static decimal GetFee(Order order, decimal makerFee, decimal takerFee)
+    {
+        // apply fee factor, currently we do not model 30-day volume, so we use the first tier
+        var fee = takerFee;
+        var props = order.Properties as BybitOrderProperties;
+
+        if (order.Type == OrderType.Limit && ((props != null && props.PostOnly) || !order.IsMarketable))
+        {
+            // limit order posted to the order book
+            fee = makerFee;
+        }
+
+        return fee;
+    }
+}

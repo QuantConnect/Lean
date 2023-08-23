@@ -142,6 +142,13 @@
   "binanceus-api-url": "https://api.binance.us",
   "binanceus-websocket-url": "wss://stream.binance.us:9443/ws",
 
+
+  // bybit configuration
+  "bybit-api-secret": "",
+  "bybit-api-key": "",
+  "bybit-api-url": "https://api.bybit.com",
+  "bybit-websocket-url": "wss://stream.bybit.com",
+
   // kraken configuration
   "kraken-api-secret": "",
   "kraken-api-key": "",

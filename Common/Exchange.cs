@@ -268,6 +268,9 @@ namespace QuantConnect
         public static Exchange NYSELIFFE { get; }
             = new("NYSELIFFE", "NYSELIFFE", "London International Financial Futures and Options Exchange", QuantConnect.Market.NYSELIFFE, SecurityType.Future, SecurityType.FutureOption);
 
+        public static Exchange Bybit { get; }
+            = new("Bybit", "BYBIT", "Bybit", QuantConnect.Market.Bybit, SecurityType.CryptoFuture, SecurityType.Crypto); //todo is this correct, the other markets don't seem to have this
+        
         /// <summary>
         /// Exchange description
         /// </summary>
