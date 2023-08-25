@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -60,7 +60,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (MapFile.HasData(startTime.Date))
             {
                 // initialize mapped symbol using request start date
-                Config.MappedSymbol = MapFile.GetMappedSymbol(startTime.Date, Config.MappedSymbol);
+                Config.MappedSymbol = MapFile.GetMappedSymbol(startTime.Date, Config.MappedSymbol, Config.DataMappingMode);
             }
         }
 
@@ -75,7 +75,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 && MapFile.HasData(eventArgs.Date))
             {
                 var old = Config.MappedSymbol;
-                var newSymbol = MapFile.GetMappedSymbol(eventArgs.Date, Config.MappedSymbol);
+                var newSymbol = MapFile.GetMappedSymbol(eventArgs.Date, Config.MappedSymbol, Config.DataMappingMode);
                 Config.MappedSymbol = newSymbol;
 
                 // check to see if the symbol was remapped

@@ -38,7 +38,7 @@ namespace QuantConnect.Data.Auxiliary
             {
                 resolver = mapFileProvider.Get(AuxiliaryDataKey.Create(dataConfig.Symbol));
             }
-            return resolver.ResolveMapFile(dataConfig.Symbol , dataConfig.Type.Name, dataConfig.DataMappingMode);
+            return resolver.ResolveMapFile(dataConfig.Symbol, dataConfig.Type.Name);
         }
 
         /// <summary>
@@ -49,12 +49,10 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="mapFileResolver">The map file resolver</param>
         /// <param name="symbol">The symbol that we want to map</param>
         /// <param name="dataType">The string data type name if any</param>
-        /// <param name="mappingMode">The mapping mode to use if any</param>
         /// <returns>The mapping file to use</returns>
         public static MapFile ResolveMapFile(this MapFileResolver mapFileResolver,
             Symbol symbol,
-            string dataType = null,
-            DataMappingMode? mappingMode = null)
+            string dataType = null)
         {
             // Load the symbol and date to complete the mapFile checks in one statement
             var symbolID = symbol.HasUnderlying ? symbol.Underlying.ID.Symbol : symbol.ID.Symbol;
@@ -74,7 +72,6 @@ namespace QuantConnect.Data.Auxiliary
                 var date = symbol.HasUnderlying ? symbol.Underlying.ID.Date : symbol.ID.Date;
                 result = mapFileResolver.ResolveMapFile(symbolID, date);
             }
-            result.DataMappingMode = mappingMode;
 
             return result;
         }
