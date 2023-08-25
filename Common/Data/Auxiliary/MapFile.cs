@@ -54,11 +54,6 @@ namespace QuantConnect.Data.Auxiliary
         public string FirstTicker { get; }
 
         /// <summary>
-        /// Allows the consumer to specify a desired mapping mode
-        /// </summary>
-        public DataMappingMode? DataMappingMode { get; set; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="MapFile"/> class.
         /// </summary>
         public MapFile(string permtick, IEnumerable<MapFileRow> data)
@@ -106,15 +101,16 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         /// <param name="searchDate">date for symbol we need to find.</param>
         /// <param name="defaultReturnValue">Default return value if search was got no result.</param>
+        /// <param name="dataMappingMode">The mapping mode to use if any.</param>
         /// <returns>Symbol on this date.</returns>
-        public string GetMappedSymbol(DateTime searchDate, string defaultReturnValue = "")
+        public string GetMappedSymbol(DateTime searchDate, string defaultReturnValue = "", DataMappingMode? dataMappingMode = null)
         {
             var mappedSymbol = defaultReturnValue;
             //Iterate backwards to find the most recent factor:
             for (var i = 0; i < _data.Count; i++)
             {
                 var row = _data[i];
-                if (row.Date < searchDate || row.DataMappingMode.HasValue && row.DataMappingMode != DataMappingMode)
+                if (row.Date < searchDate || row.DataMappingMode.HasValue && row.DataMappingMode != dataMappingMode)
                 {
                     continue;
                 }
