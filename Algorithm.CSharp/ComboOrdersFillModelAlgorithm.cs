@@ -52,9 +52,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var legs = new List<Leg>() { Leg.Create(_spy.Symbol, 1), Leg.Create(_ibm.Symbol, -1)};
                 ComboMarketOrder(legs, 100);
-                ComboLimitOrder(legs, 100, _spy.BidPrice * 0.95m);
+                ComboLimitOrder(legs, 100, Math.Round(_spy.BidPrice));
 
-                legs = new List<Leg>() { Leg.Create(_spy.Symbol, 1, _spy.BidPrice + 1), Leg.Create(_ibm.Symbol, -1, _ibm.BidPrice + 1) };
+                legs = new List<Leg>() { Leg.Create(_spy.Symbol, 1, Math.Round(_spy.BidPrice) + 1), Leg.Create(_ibm.Symbol, -1, Math.Round(_ibm.BidPrice) + 1) };
                 ComboLegLimitOrder(legs, 100);
             }
         }
@@ -134,27 +134,27 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "6"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "164.920%"},
+            {"Compounding Annual Return", "162.471%"},
             {"Drawdown", "1.800%"},
             {"Expectancy", "0"},
-            {"Net Profit", "4.829%"},
-            {"Sharpe Ratio", "8.721"},
-            {"Probabilistic Sharpe Ratio", "87.791%"},
+            {"Net Profit", "4.781%"},
+            {"Sharpe Ratio", "8.525"},
+            {"Probabilistic Sharpe Ratio", "87.028%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.015"},
-            {"Beta", "0.64"},
-            {"Annual Standard Deviation", "0.118"},
+            {"Alpha", "-0.038"},
+            {"Beta", "0.646"},
+            {"Annual Standard Deviation", "0.119"},
             {"Annual Variance", "0.014"},
-            {"Information Ratio", "-8.624"},
-            {"Tracking Error", "0.07"},
-            {"Treynor Ratio", "1.602"},
+            {"Information Ratio", "-8.927"},
+            {"Tracking Error", "0.069"},
+            {"Treynor Ratio", "1.566"},
             {"Total Fees", "$6.00"},
-            {"Estimated Strategy Capacity", "$230000.00"},
+            {"Estimated Strategy Capacity", "$250000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "9.82%"},
-            {"OrderListHash", "8be34e412fd4ae13f8fc28014d14771e"}
+            {"Portfolio Turnover", "9.81%"},
+            {"OrderListHash", "1affde4d9c046e9539950e700f6dafaf"}
         };
     }
 

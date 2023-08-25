@@ -37,9 +37,9 @@ class ComboOrdersFillModelAlgorithm(QCAlgorithm):
         if not self.Portfolio.Invested:
             legs = [Leg.Create(self.spy.Symbol, 1), Leg.Create(self.ibm.Symbol, -1)]
             self.ComboMarketOrder(legs, 100)
-            self.ComboLimitOrder(legs, 100, self.spy.BidPrice * 0.95)
+            self.ComboLimitOrder(legs, 100, round(self.spy.BidPrice))
 
-            legs = [Leg.Create(self.spy.Symbol, 1, self.spy.BidPrice + 1), Leg.Create(self.ibm.Symbol, -1, self.ibm.BidPrice + 1)]
+            legs = [Leg.Create(self.spy.Symbol, 1, round(self.spy.BidPrice) + 1), Leg.Create(self.ibm.Symbol, -1, round(self.ibm.BidPrice) + 1)]
             self.ComboLegLimitOrder(legs, 100)
 
     def OnOrderEvent(self, orderEvent):
