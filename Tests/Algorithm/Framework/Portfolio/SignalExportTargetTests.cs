@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
 
-            var expectedMessage = @"{""positions"":[{""symbol"":""SPY"",""typeofsymbol"":""stock"",""quant"":99},{""symbol"":""EURUSD"",""typeofsymbol"":""forex"",""quant"":149},{""symbol"":""@ESZ8"",""typeofsymbol"":""future"",""quant"":2},{""symbol"":""SPY1619B192"",""typeofsymbol"":""option"",""quant"":1}],""systemid"":0,""apikey"":""""}";
+            var expectedMessage = @"{""StrategyId"":0,""Positions"":[{""C2Symbol"":{""FullSymbol"":""SPY"",""SymbolType"":""stock""},""Quantity"":99.0},{""C2Symbol"":{""FullSymbol"":""EURUSD"",""SymbolType"":""forex""},""Quantity"":149.0},{""C2Symbol"":{""FullSymbol"":""@ESZ8"",""SymbolType"":""future""},""Quantity"":2.0},{""C2Symbol"":{""FullSymbol"":""SPY1619B192"",""SymbolType"":""option""},""Quantity"":1.0}]}";
 
             Assert.AreEqual(expectedMessage, message);
         }

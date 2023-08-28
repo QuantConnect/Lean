@@ -14,7 +14,6 @@
 */
 
 using System;
-using QLNet;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
@@ -48,12 +47,12 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _emaFastWasAbove;
         private bool _emaFastIsNotSet;
         private bool _firstCall = true;
-        
+
         private PortfolioTarget[] _targets = new PortfolioTarget[4];
         
         /// <summary>
         /// Symbols accepted by Collective2. Collective2 accepts stock,
-        /// future, forex and US stock option symbols 
+        /// future, forex and US stock option symbols
         /// </summary>
         private List<Symbol> _symbols = new()
         {   
@@ -70,7 +69,6 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            Settings.MinimumOrderMarginPortfolioPercentage = 0;
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
             SetCash(100 * 1000);
@@ -166,7 +164,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4153;
+        public long DataPoints => 4155;
 
         /// <summary>
         /// Data Points count of the algorithm history

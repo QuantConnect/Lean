@@ -29,10 +29,11 @@ class Collective2PortfolioSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 11)    #Set End Date
         self.SetCash(100000)             #Set Strategy Cash
 
-        # Symbols accepted by Collective2. Collective2 accepts stock, future, forex and option symbols 
-        self.symbols = [["SPY", SecurityType.Equity], ["EURUSD", SecurityType.Forex]]
+        # Symbols accepted by Collective2. Collective2 accepts stock, future, forex and US stock option symbols
+        self.AddEquity("GOOG")
+        self.symbols = [Symbol.Create("SPY", SecurityType.Equity, Market.USA, None, None), Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda, None, None), Symbol.CreateFuture("ES", Market.CME, datetime(2023, 12, 15), None), Symbol.CreateOption("GOOG", Market.USA, OptionStyle.American, OptionRight.Call, 130, datetime(2023, 9, 1))]
         for item in self.symbols:
-            self.AddSecurity(item[1], item[0])
+            self.AddSecurity(item)
 
         self.fast = self.EMA("SPY", 10)
         self.slow = self.EMA("SPY", 100)
@@ -41,16 +42,14 @@ class Collective2PortfolioSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.emaFastIsNotSet = True;
         self.emaFastWasAbove = False;
 
-        # Set Collective2 export provider
-        # Collective2 API: This value is provided by Collective2 in their webpage in your account section (See https://collective2.com/account-info)
-        self.collective2Apikey = ""
+        # Collective2 APIv4 KEY: This value is provided by Collective2 in their webpage in your account section (See https://collective2.com/account-info)
+        # See API documentation at https://trade.collective2.com/c2-api
+        self.collective2Apikey = "YOUR APIV4 KEY"
 
         # Collective2 System ID: This value is found beside the system's name (strategy's name) on the main system page
         self.collective2SystemId = 0
 
-        # Field to set your platform ID given by Collective2 (See https://collective2.com/api-docs/latest) (Optional)
-        self.collective2PlatformId = ""
-        self.SignalExport.AddSignalExportProviders(Collective2SignalExport(self.collective2Apikey, self.collective2SystemId, self.collective2PlatformId))
+        self.SignalExport.AddSignalExportProviders(Collective2SignalExport(self.collective2Apikey, self.collective2SystemId))
         
         self.first_call = True
         

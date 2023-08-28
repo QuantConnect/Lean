@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// expected to be sent to Collective2 API and the algorithm being ran</param>
         /// <param name="positions">A list of Collective2 positions</param>
         /// <returns>True if the given targets could be converted to a Collective2Position list, false otherwise</returns>
-        public bool ConvertHoldingsToCollective2(SignalExportTargetParameters parameters, out List<Collective2Position> positions)
+        protected bool ConvertHoldingsToCollective2(SignalExportTargetParameters parameters, out List<Collective2Position> positions)
         {
             _algorithm = parameters.Algorithm;
             var targets = parameters.Targets;
@@ -193,7 +193,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="algorithm">Algorithm being ran</param>
         /// <param name="target">Desired position to be sent to the Collective2 API</param>
         /// <returns>Number of shares hold of the given position/returns>
-        public int ConvertPercentageToQuantity(IAlgorithm algorithm, PortfolioTarget target)
+        protected int ConvertPercentageToQuantity(IAlgorithm algorithm, PortfolioTarget target)
         {
             var numberShares = PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity);
             if (numberShares == null)
@@ -256,7 +256,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             return true;
         }
 
-        static string PrintErrors(List<ResponseError> errors)
+        private static string PrintErrors(List<ResponseError> errors)
         {
             if (errors?.Count == 0)
             {
@@ -354,7 +354,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// Stores position's needed information to be serialized in JSON format
         /// and then sent to Collective2 API
         /// </summary>
-        public class Collective2Position
+        protected class Collective2Position
         {
             /// <summary>
             /// Position symbol
@@ -373,7 +373,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// The Collective2 symbol
         /// </summary>
-        public class C2Symbol
+        protected class C2Symbol
         {
             /// <summary>
             /// The The full native C2 symbol e.g. BSRR2121Q22.5

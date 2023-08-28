@@ -14,13 +14,11 @@
 */
 
 using System;
-using QLNet;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -148,7 +146,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4153;
+        public long DataPoints => 4155;
 
         /// <summary>
         /// Data Points count of the algorithm history
