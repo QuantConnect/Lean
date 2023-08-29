@@ -45,7 +45,7 @@ The most important plugins are:
    > Process new order requests; either using the fill models provided by the algorithm or with an actual brokerage. Send the processed orders back to the algorithm's portfolio to be filled.
 
  - **Realtime Event Management** (IRealtimeHandler)
-   > Generate real-time events - such as the end of day events. Trigger callbacks to real-time event handlers. For backtesting, this is mocked-up a works on simulated time. 
+   > Generate real-time events - such as the end of day events. Trigger callbacks to real-time event handlers. For backtesting, this is mocked-up to work on simulated time. 
  
  - **Algorithm State Setup** (ISetupHandler)
    > Configure the algorithm cash, portfolio and data requested. Initialize all state parameters required.
