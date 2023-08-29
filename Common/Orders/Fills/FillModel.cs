@@ -104,13 +104,19 @@ namespace QuantConnect.Orders.Fills
                         : MarketOnCloseFill(parameters.Security, parameters.Order as MarketOnCloseOrder));
                     break;
                 case OrderType.ComboMarket:
-                    orderEvents = ComboMarketFill(parameters.Order, parameters);
+                    orderEvents = PythonWrapper != null
+                        ? PythonWrapper.ComboMarketFill(parameters.Order, parameters)
+                        : ComboMarketFill(parameters.Order, parameters);
                     break;
                 case OrderType.ComboLimit:
-                    orderEvents = ComboLimitFill(parameters.Order, parameters);
+                    orderEvents = PythonWrapper != null
+                        ? PythonWrapper.ComboLimitFill(parameters.Order, parameters)
+                        : ComboLimitFill(parameters.Order, parameters);
                     break;
                 case OrderType.ComboLegLimit:
-                    orderEvents = ComboLegLimitFill(parameters.Order, parameters);
+                    orderEvents = PythonWrapper != null
+                        ? PythonWrapper.ComboLegLimitFill(parameters.Order, parameters)
+                        : ComboLegLimitFill(parameters.Order, parameters);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

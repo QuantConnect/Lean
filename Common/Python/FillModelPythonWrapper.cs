@@ -17,6 +17,7 @@ using Python.Runtime;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Python
 {
@@ -163,6 +164,48 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 return (_model.TrailingStopFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
+            }
+        }
+
+        /// <summary>
+        /// Default combo market fill model for the base security class. Fills at the last traded price for each leg.
+        /// </summary>
+        /// <param name="order">Order to fill</param>
+        /// <param name="parameters">Fill parameters for the order</param>
+        /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
+        public override List<OrderEvent> ComboMarketFill(Order order, FillModelParameters parameters)
+        {
+            using (Py.GIL())
+            {
+                return (_model.ComboMarketFill(order, parameters) as PyObject).GetAndDispose<List<OrderEvent>>();
+            }
+        }
+
+        /// <summary>
+        /// Default combo limit fill model for the base security class. Fills at the sum of prices for the assets of every leg.
+        /// </summary>
+        /// <param name="order">Order to fill</param>
+        /// <param name="parameters">Fill parameters for the order</param>
+        /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
+        public override List<OrderEvent> ComboLimitFill(Order order, FillModelParameters parameters)
+        {
+            using (Py.GIL())
+            {
+                return (_model.ComboLimitFill(order, parameters) as PyObject).GetAndDispose<List<OrderEvent>>();
+            }
+        }
+
+        /// <summary>
+        /// Default combo limit fill model for the base security class. Fills at the limit price for each leg
+        /// </summary>
+        /// <param name="order">Order to fill</param>
+        /// <param name="parameters">Fill parameters for the order</param>
+        /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
+        public override List<OrderEvent> ComboLegLimitFill(Order order, FillModelParameters parameters)
+        {
+            using (Py.GIL())
+            {
+                return (_model.ComboLegLimitFill(order, parameters) as PyObject).GetAndDispose<List<OrderEvent>>();
             }
         }
 
