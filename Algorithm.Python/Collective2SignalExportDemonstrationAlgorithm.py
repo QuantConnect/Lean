@@ -28,14 +28,18 @@ class Collective2SignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 11)    #Set End Date
         self.SetCash(100000)             #Set Strategy Cash
 
-        # Symbols accepted by Collective2. Collective2 accepts stock, future, forex and option symbols 
-        self.symbols = [["SPY", SecurityType.Equity], ["EURUSD", SecurityType.Forex]]
+        # Symbols accepted by Collective2. Collective2 accepts stock, future, forex and US stock option symbols
+        self.AddEquity("GOOG")
+        self.symbols = [Symbol.Create("SPY", SecurityType.Equity, Market.USA, None, None), Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda, None, None), Symbol.CreateFuture("ES", Market.CME, datetime(2023, 12, 15), None), Symbol.CreateOption("GOOG", Market.USA, OptionStyle.American, OptionRight.Call, 130, datetime(2023, 9, 1))]
         self.targets = []
 
         # Create a new PortfolioTarget for each symbol, assign it an initial amount of 0.05 and save it in self.targets list
         for item in self.symbols:
-            symbol = self.AddSecurity(item[1], item[0]).Symbol
-            self.targets.append(PortfolioTarget(symbol, 0.05))
+            symbol = self.AddSecurity(item).Symbol
+            if symbol.SecurityType == SecurityType.Equity or symbol.SecurityType == SecurityType.Forex:
+                self.targets.append(PortfolioTarget(symbol, 0.05))
+            else:
+                self.targets.append(PortfolioTarget(symbol, 1))
 
         self.fast = self.EMA("SPY", 10)
         self.slow = self.EMA("SPY", 100)
@@ -45,15 +49,14 @@ class Collective2SignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.emaFastWasAbove = False;
 
         # Set Collective2 export provider
-        # Collective2 API: This value is provided by Collective2 in their webpage in your account section (See https://collective2.com/account-info)
-        self.collective2Apikey = ""
+        # Collective2 APIv4 KEY: This value is provided by Collective2 in your account section (See https://collective2.com/account-info)
+        # See API documentation at https://trade.collective2.com/c2-api
+        self.collective2Apikey = "YOUR APIV4 KEY"
 
         # Collective2 System ID: This value is found beside the system's name (strategy's name) on the main system page
         self.collective2SystemId = 0
 
-        # Field to set your platform ID given by Collective2 (See https://collective2.com/api-docs/latest) (Optional)
-        self.collective2PlatformId = ""
-        self.SignalExport.AddSignalExportProviders(Collective2SignalExport(self.collective2Apikey, self.collective2SystemId, self.collective2PlatformId))
+        self.SignalExport.AddSignalExportProviders(Collective2SignalExport(self.collective2Apikey, self.collective2SystemId))
         
         self.first_call = True
         
@@ -67,8 +70,8 @@ class Collective2SignalExportDemonstrationAlgorithm(QCAlgorithm):
         # Place an order as soon as possible to send a signal.
         if self.first_call:
             self.SetHoldings("SPY", 0.1)
-            target = PortfolioTarget(self.Portfolio["SPY"].Symbol, 0.1)
-            self.SignalExport.SetTargetPortfolio(target)
+            self.targets[0] = PortfolioTarget(self.Portfolio["SPY"].Symbol, 0.1)
+            self.SignalExport.SetTargetPortfolio(self.targets)
             self.first_call = False
 
         fast = self.fast.Current.Value
@@ -83,7 +86,7 @@ class Collective2SignalExportDemonstrationAlgorithm(QCAlgorithm):
             self.emaFastIsNotSet = False;
 
         # Check whether ema fast and ema slow crosses. If they do, set holdings to SPY
-        # or reduce its holdings, update its value in self.targets list and send signals
+        # or reduce its holdings, change its value in self.targets list and send signals
         #  to Collective2 API from self.targets
         if fast > slow * 1.001 and (not self.emaFastWasAbove):
             self.SetHoldings("SPY", 0.1)

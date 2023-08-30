@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-using QLNet;
+using System;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
@@ -32,19 +32,15 @@ namespace QuantConnect.Algorithm.CSharp
     public class Collective2PortfolioSignalExportDemonstrationAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
-        /// Collective2 API: This value is provided by Collective2 in their webpage in your account section (See https://collective2.com/account-info)
+        /// Collective2 APIv4 KEY: This value is provided by Collective2 in their webpage in your account section (See https://collective2.com/account-info)
+        /// See API documentation at https://trade.collective2.com/c2-api
         /// </summary>
-        private const string _collective2ApiKey = "";
+        private const string _collective2ApiKey = "YOUR APIV4 KEY";
 
         /// <summary>
         /// Collective2 System ID: This value is found beside the system's name (strategy's name) on the main system page
         /// </summary>
         private const int _collective2SystemId = 0;
-
-        /// <summary>
-        /// Field to set your platform ID given by Collective2 (See https://collective2.com/api-docs/latest) (Optional)
-        /// </summary>
-        private const string _collective2PlatformId = "";
 
         private ExponentialMovingAverage _fast;
         private ExponentialMovingAverage _slow;
@@ -54,12 +50,14 @@ namespace QuantConnect.Algorithm.CSharp
 
         /// <summary>
         /// Symbols accepted by Collective2. Collective2 accepts stock,
-        /// future, forex and option symbols 
+        /// future, forex and US stock option symbols 
         /// </summary>
-        private List<Pair<string, SecurityType>> _symbols = new()
-        {
-            new Pair<string, SecurityType>("SPY", SecurityType.Equity),
-            new Pair<string, SecurityType>("EURUSD", SecurityType.Forex)
+        private List<Symbol> _symbols = new()
+        {   
+            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA, null, null),
+            QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda, null, null),
+            QuantConnect.Symbol.CreateFuture("ES", Market.CME, new DateTime(2023, 12, 15), null),
+            QuantConnect.Symbol.CreateOption("GOOG", Market.USA, OptionStyle.American, OptionRight.Call, 130, new DateTime(2023, 9, 1)),
         };
 
         /// <summary>
@@ -73,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             foreach (var item in _symbols)
             {
-                AddSecurity(item.second, item.first);
+                AddSecurity(item);
             }
 
             _fast = EMA("SPY", 10);
@@ -83,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
             _emaFastIsNotSet = true;
 
             // Set Collective2 signal export provider
-            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId, _collective2PlatformId));
+            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
 
             SetWarmUp(100);
         }
@@ -148,7 +146,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4153;
+        public long DataPoints => 4155;
 
         /// <summary>
         /// Data Points count of the algorithm history

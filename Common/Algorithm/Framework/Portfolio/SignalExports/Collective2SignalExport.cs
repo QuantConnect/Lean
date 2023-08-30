@@ -14,12 +14,13 @@
 */
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
@@ -56,24 +57,32 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         protected override string Name { get; } = "Collective2";
 
         /// <summary>
+        /// Lazy initialization of ten seconds rate limiter
+        /// </summary>
+        private static Lazy<RateGate> _tenSecondsRateLimiter = new Lazy<RateGate>(() => new RateGate(100, TimeSpan.FromMilliseconds(1000)));
+
+        /// <summary>
+        /// Lazy initialization of one hour rate limiter
+        /// </summary>
+        private static Lazy<RateGate> _hourlyRateLimiter = new Lazy<RateGate>(() => new RateGate(1000, TimeSpan.FromHours(1)));
+
+        /// <summary>
+        /// Lazy initialization of one day rate limiter
+        /// </summary>
+        private static Lazy<RateGate> _dailyRateLimiter = new Lazy<RateGate>(() => new RateGate(20000, TimeSpan.FromDays(1)));
+
+
+        /// <summary>
         /// Collective2SignalExport constructor. It obtains the entry information for Collective2 API requests.
-        /// See (https://collective2.com/api-docs/latest)
+        /// See API documentation at https://trade.collective2.com/c2-api
         /// </summary>
         /// <param name="apiKey">API key provided by Collective2</param>
         /// <param name="systemId">Trading system's ID number</param>
-        /// <param name="platformId">Platform ID, it's only used in the Private Platform context. Empty string by default</param>
-        public Collective2SignalExport(string apiKey, int systemId, string platformId = "")
+        public Collective2SignalExport(string apiKey, int systemId)
         {
             _apiKey = apiKey;
             _systemId = systemId;
-            if (platformId.IsNullOrEmpty())
-            {
-                _destination = new Uri("https://api.collective2.com/world/apiv3/setDesiredPositions");
-            } 
-            else
-            {
-                _destination = new Uri($"https://api.collective2.com/world/{platformId}/setDesiredPositions");
-            }
+            _destination = new Uri("https://api4-general.collective2.com/Strategies/SetDesiredPositions");
         }
 
         /// <summary>
@@ -95,6 +104,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
             var message = CreateMessage(positions);
+            _tenSecondsRateLimiter.Value.WaitToProceed();
+            _hourlyRateLimiter.Value.WaitToProceed();
+            _dailyRateLimiter.Value.WaitToProceed();
             var result = SendPositions(message);
 
             return result;
@@ -134,7 +146,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 {
                     symbol = SymbolRepresentation.GenerateOptionTicker(target.Symbol);
                 }
-                positions.Add(new Collective2Position { Symbol = symbol, TypeOfSymbol = typeOfSymbol, Quant = ConvertPercentageToQuantity(_algorithm, target) });
+
+                positions.Add(new Collective2Position
+                {
+                    C2Symbol = new C2Symbol
+                    {
+                        FullSymbol = symbol,
+                        SymbolType = typeOfSymbol,
+                    },
+                    Quantity = ConvertPercentageToQuantity(_algorithm, target),
+                });
             }
 
             return true;
@@ -146,7 +167,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="targetSymbol">Symbol of the desired position</param>
         /// <param name="typeOfSymbol">The type of the symbol according to Collective2 API</param>
-        /// <returns>True if the symbol's type was allowed by Collective2, false otherwise</returns>
+        /// <returns>True if the symbol's type is supported by Collective2, false otherwise</returns>
         private bool ConvertTypeOfSymbol(Symbol targetSymbol, out string typeOfSymbol)
         {
             switch (targetSymbol.SecurityType)
@@ -163,9 +184,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 case SecurityType.Forex:
                     typeOfSymbol = "forex";
                     break;
-                case SecurityType.IndexOption:
-                    typeOfSymbol = "option";
-                    break;
                 default:
                     typeOfSymbol = "NotImplemented";
                     break;
@@ -173,7 +191,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             if (typeOfSymbol == "NotImplemented")
             {
-                _algorithm.Error($"{targetSymbol.SecurityType} security type has not been implemented by Collective2 yet.");
+                _algorithm.Error($"{targetSymbol.SecurityType} security type is not supported by Collective2.");
                 return false;
             }
 
@@ -206,9 +224,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             var payload = new
             {
-                positions,
-                systemid = _systemId,
-                apikey = _apiKey
+                StrategyId = _systemId,
+                Positions = positions,
             };
 
             var jsonMessage = JsonConvert.SerializeObject(payload);
@@ -224,23 +241,124 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private bool SendPositions(string message)
         {
             using var httpMessage = new StringContent(message, Encoding.UTF8, "application/json");
+
+            //Add the QuantConnect app header
+            httpMessage.Headers.Add("X-AppId", "OPA1N90E71");
+
+            //Add the Authorization header
+            HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
+
+            //Send the message
             using HttpResponseMessage response = HttpClient.PostAsync(_destination, httpMessage).Result;
+
+            //Parse it
+            var responseObject = response.Content.ReadFromJsonAsync<C2Response>().Result;
 
             if (!response.IsSuccessStatusCode)
             {
-                _algorithm.Error($"Collective2 API returned HttpRequestException {response.StatusCode}");
+                _algorithm.Error($"Collective2 API returned the following errors: {string.Join(",", PrintErrors(responseObject.ResponseStatus.Errors))}");
                 return false;
             }
-
-            var responseContent = response.Content.ReadAsStringAsync().Result;
-            var parsedResponseContent = JObject.Parse(responseContent);
-            if ((string)parsedResponseContent["ok"] == "0")
+            else if (responseObject.Results.Count > 0)
             {
-                _algorithm.Error($"Collective2 API returned the following errors: {string.Join(",", parsedResponseContent["error"])}");
-                return false;
+                _algorithm.Debug($"Collective2: NewSignals={string.Join(',', responseObject.Results[0].NewSignals)} | CanceledSignals={string.Join(',', responseObject.Results[0].CanceledSignals)}");
+            }
+            
+            return true;
+        }
+
+        private static string PrintErrors(List<ResponseError> errors)
+        {
+            if (errors?.Count == 0)
+            {
+                return "NULL";
             }
 
-            return true;
+            StringBuilder sb = new StringBuilder();
+            foreach (var error in errors)
+            {
+                sb.AppendLine(CultureInfo.InvariantCulture, $"({error.ErrorCode}) {error.FieldName}: {error.Message}");
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// The main C2 response class for this endpoint
+        /// </summary>
+        private class C2Response
+        {
+            [JsonProperty(PropertyName = "Results")]
+            public virtual List<DesiredPositionResponse> Results { get; set; }
+
+
+            [JsonProperty(PropertyName = "ResponseStatus")]
+            public ResponseStatus ResponseStatus { get; set; }
+        }
+
+        /// <summary>
+        /// The Results object
+        /// </summary>
+        private class DesiredPositionResponse
+        {
+            [JsonProperty(PropertyName = "NewSignals")]
+            public List<long> NewSignals { get; set; } = new List<long>();
+
+
+            [JsonProperty(PropertyName = "CanceledSignals")]
+            public List<long> CanceledSignals { get; set; } = new List<long>();
+        }
+
+        /// <summary>
+        /// The C2 ResponseStatus object
+        /// </summary>
+        private class ResponseStatus
+        {
+            /* Example:
+
+                    "ResponseStatus": 
+                    {
+                      "ErrorCode": ""401",
+                      "Message": ""Unauthorized",
+                      "Errors": [
+                        {
+                          "ErrorCode": "2015",
+                          "FieldName": "APIKey",
+                          "Message": ""Unknown API Key"
+                        }
+                      ]
+                    }
+            */
+
+
+            [JsonProperty(PropertyName = "ErrorCode")]
+            public string ErrorCode { get; set; }
+
+
+            [JsonProperty(PropertyName = "Message")]
+            public string Message { get; set; }
+
+
+            [JsonProperty(PropertyName = "Errors")]
+            public List<ResponseError> Errors { get; set; }
+
+        }
+
+        /// <summary>
+        /// The ResponseError object
+        /// </summary>
+        private class ResponseError
+        {
+            [JsonProperty(PropertyName = "ErrorCode")]
+            public string ErrorCode { get; set; }
+
+
+            [JsonProperty(PropertyName = "FieldName")]
+            public string FieldName { get; set; }
+
+
+            [JsonProperty(PropertyName = "Message")]
+            public string Message { get; set; }
         }
 
         /// <summary>
@@ -252,21 +370,34 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             /// <summary>
             /// Position symbol
             /// </summary>
-            [JsonProperty(PropertyName = "symbol")]
-            public string Symbol { get; set; }
+            [JsonProperty(PropertyName = "C2Symbol")]
+            public C2Symbol C2Symbol { get; set; }
 
             /// <summary>
-            /// Type of symbol. It can be: stock, future, option or forex
+            /// Number of shares/contracts of the given symbol. Positive quantites are long positions
+            /// and negative short positions.
             /// </summary>
-            [JsonProperty(PropertyName = "typeofsymbol")]
-            public string TypeOfSymbol { get; set; }
+            [JsonProperty(PropertyName = "Quantity")]
+            public decimal Quantity { get; set; } // number of shares, not % of the portfolio
+        }
+
+        /// <summary>
+        /// The Collective2 symbol
+        /// </summary>
+        protected class C2Symbol
+        {
+            /// <summary>
+            /// The The full native C2 symbol e.g. BSRR2121Q22.5
+            /// </summary>
+            [JsonProperty(PropertyName = "FullSymbol")]
+            public string FullSymbol { get; set; }
+
 
             /// <summary>
-            /// Number of shares of the given symbol. Positive quantites are long positions
-            /// and negative short positions
+            /// The type of instrument. e.g. 'stock', 'option', 'future', 'forex'
             /// </summary>
-            [JsonProperty(PropertyName = "quant")]
-            public int Quant { get; set; } // number of shares not % of the portfolio
+            [JsonProperty(PropertyName = "SymbolType")]
+            public string SymbolType { get; set; }
         }
     }
 }
