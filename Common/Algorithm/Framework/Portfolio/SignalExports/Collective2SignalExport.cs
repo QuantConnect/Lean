@@ -56,9 +56,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         protected override string Name { get; } = "Collective2";
 
-        private static RateGate TenSecondsRateLimiter = new RateGate(100, TimeSpan.FromMilliseconds(1000));
-        private static RateGate HourlyRateLimiter = new RateGate(1000, TimeSpan.FromHours(1));
-        private static RateGate DailyRateLimiter = new RateGate(20000, TimeSpan.FromDays(1));
+        /// <summary>
+        /// Lazy initialization of ten seconds rate limiter
+        /// </summary>
+        private static Lazy<RateGate> _tenSecondsRateLimiter = new Lazy<RateGate>(() => new RateGate(100, TimeSpan.FromMilliseconds(1000)));
+
+        /// <summary>
+        /// Lazy initialization of one hour rate limiter
+        /// </summary>
+        private static Lazy<RateGate> _hourlyRateLimiter = new Lazy<RateGate>(() => new RateGate(1000, TimeSpan.FromHours(1)));
+
+        /// <summary>
+        /// Lazy initialization of one day rate limiter
+        /// </summary>
+        private static Lazy<RateGate> _dailyRateLimiter = new Lazy<RateGate>(() => new RateGate(20000, TimeSpan.FromDays(1)));
 
 
         /// <summary>
@@ -93,9 +104,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
             var message = CreateMessage(positions);
-            TenSecondsRateLimiter.WaitToProceed();
-            HourlyRateLimiter.WaitToProceed();
-            DailyRateLimiter.WaitToProceed();
+            _tenSecondsRateLimiter.Value.WaitToProceed();
+            _hourlyRateLimiter.Value.WaitToProceed();
+            _dailyRateLimiter.Value.WaitToProceed();
             var result = SendPositions(message);
 
             return result;
@@ -275,7 +286,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// The main C2 response class for this endpoint
         /// </summary>
-        protected class C2Response
+        private class C2Response
         {
             [JsonProperty(PropertyName = "Results")]
             public virtual List<DesiredPositionResponse> Results { get; set; }
@@ -288,7 +299,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// The Results object
         /// </summary>
-        protected class DesiredPositionResponse
+        private class DesiredPositionResponse
         {
             [JsonProperty(PropertyName = "NewSignals")]
             public List<long> NewSignals { get; set; } = new List<long>();
@@ -301,7 +312,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// The C2 ResponseStatus object
         /// </summary>
-        protected class ResponseStatus
+        private class ResponseStatus
         {
             /* Example:
 
@@ -336,7 +347,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// The ResponseError object
         /// </summary>
-        protected class ResponseError
+        private class ResponseError
         {
             [JsonProperty(PropertyName = "ErrorCode")]
             public string ErrorCode { get; set; }
