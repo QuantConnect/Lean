@@ -9,7 +9,7 @@ using QuantConnect.Util;
 namespace QuantConnect.Brokerages;
 
 /// <summary>
-/// 
+/// Provides Bybit specific properties
 /// </summary>
 public class BybitBrokerageModel : DefaultBrokerageModel
 {
@@ -24,9 +24,10 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.Bybit);
 
 
-    public override IFeeModel GetFeeModel(Security security) => new BybitFeeModel();
-
-
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BybitBrokerageModel"/> class
+    /// </summary>
+    /// <param name="accountType">The type of account to be modeled, defaults to <see cref="AccountType.Cash"/></param>
     public BybitBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
     {
     }
@@ -43,8 +44,19 @@ public class BybitBrokerageModel : DefaultBrokerageModel
             return 1m;
         }
 
-        return security.Symbol.SecurityType == SecurityType.CryptoFuture ? 10 : 10;
+        return security.Symbol.SecurityType == SecurityType.CryptoFuture ? 10 : 10; //todo default leverage
     }
+    
+    /// <summary>
+    /// Provides Bybit fee model
+    /// </summary>
+    /// <param name="security"></param>
+    /// <returns></returns>
+    public override IFeeModel GetFeeModel(Security security)
+    {
+        return new BybitFeeModel();
+    }
+
 
     /// <summary>
     /// Get the benchmark for this model
@@ -55,9 +67,19 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     {
         var symbol = Symbol.Create("BTCUSDC", SecurityType.Crypto, MarketName);
         return SecurityBenchmark.CreateInstance(securities, symbol);
+        //todo
     }
 
 
+    /// <summary>
+    /// Returns true if the brokerage could accept this order update. This takes into account
+    /// order type, security type, and order size limits. Bybit can only update inverse, linear, and option orders
+    /// </summary>
+    /// <param name="security">The security of the order</param>
+    /// <param name="order">The order to be updated</param>
+    /// <param name="request">The requested update to be made to the order</param>
+    /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
+    /// <returns>True if the brokerage could update the order, false otherwise</returns>
     public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request,
         out BrokerageMessageEvent message)
     {
@@ -70,6 +92,7 @@ public class BybitBrokerageModel : DefaultBrokerageModel
         {
             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                 Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
+            return false;
         }
 
         if (order.Status is not (OrderStatus.New or OrderStatus.PartiallyFilled))
@@ -90,14 +113,19 @@ public class BybitBrokerageModel : DefaultBrokerageModel
         return true;
     }
 
-    protected static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)
-    {
-        var map = DefaultMarketMap.ToDictionary();
-        map[SecurityType.Crypto] = marketName;
-        return map.ToReadOnlyDictionary();
-    }
 
 
+    /// <summary>
+    /// Returns true if the brokerage could accept this order. This takes into account
+    /// order type, security type, and order size limits.
+    /// </summary>
+    /// <remarks>
+    /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
+    /// </remarks>
+    /// <param name="security">The security of the order</param>
+    /// <param name="order">The order to be processed</param>
+    /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+    /// <returns>True if the brokerage could process the order, false otherwise</returns>
     public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
     {
         security = security ?? throw new ArgumentNullException(nameof(security));
@@ -112,7 +140,7 @@ public class BybitBrokerageModel : DefaultBrokerageModel
         }
 
         message = null;
-        var quantityIsValid = true;
+        bool quantityIsValid;
 
         switch (order)
         {
@@ -141,9 +169,22 @@ public class BybitBrokerageModel : DefaultBrokerageModel
         return base.CanSubmitOrder(security, order, out message);
     }
 
+    /// <summary>
+    /// Returns true if the order size is large enough for the given security.
+    /// </summary>
+    /// <param name="security">The security of the order</param>
+    /// <param name="orderQuantity">The order quantity</param>
+    /// <returns>True if the order size is large enough, false otherwise</returns>
     protected virtual bool IsOrderSizeLargeEnough(Security security, decimal orderQuantity)
     {
         return !security.SymbolProperties.MinimumOrderSize.HasValue ||
                orderQuantity > security.SymbolProperties.MinimumOrderSize;
+    }
+    
+    private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)
+    {
+        var map = DefaultMarketMap.ToDictionary();
+        map[SecurityType.Crypto] = marketName;
+        return map.ToReadOnlyDictionary();
     }
 }

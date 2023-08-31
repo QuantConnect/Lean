@@ -1,10 +1,11 @@
-using System;
-using System.Collections.Generic;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Orders.Fees;
 
+/// <summary>
+/// Bybit fee model implementation
+/// </summary>
 public class BybitFeeModel : FeeModel
 {
     /// <summary>
@@ -33,6 +34,12 @@ public class BybitFeeModel : FeeModel
         _takerFee = tFee;
     }
         
+    /// <summary>
+    /// Gets the order fee associated with the specified order.
+    /// </summary>
+    /// <param name="parameters">A <see cref="OrderFeeParameters"/> object
+    /// containing the security and order</param>
+    /// <returns>The cost of the order in a <see cref="CashAmount"/> instance</returns>
     public override OrderFee GetOrderFee(OrderFeeParameters parameters)
     {
         var security = parameters.Security;
@@ -78,7 +85,7 @@ public class BybitFeeModel : FeeModel
         return GetFee(order, _makerFee, _takerFee);
     }
 
-    protected static decimal GetFee(Order order, decimal makerFee, decimal takerFee)
+    private static decimal GetFee(Order order, decimal makerFee, decimal takerFee)
     {
         // apply fee factor, currently we do not model 30-day volume, so we use the first tier
         var fee = takerFee;

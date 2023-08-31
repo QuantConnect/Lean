@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         {
             var feeModel = new BybitFuturesFeeModel();
 
-            TestFeeModel(feeModel, parameters, true, BybitFuturesFeeModel.MakerNoinVIPFee);
+            TestFeeModel(feeModel, parameters, true, BybitFuturesFeeModel.MakerNonVIPFee);
         }
 
         [TestCaseSource(nameof(TakerOrders))]
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var feeModel = new BybitFuturesFeeModel();
 
 
-            TestFeeModel(feeModel, parameters, false, BybitFuturesFeeModel.MakerNoinVIPFee);
+            TestFeeModel(feeModel, parameters, false, BybitFuturesFeeModel.MakerNonVIPFee);
         }
 
         [TestCaseSource(nameof(TakerOrders))]
