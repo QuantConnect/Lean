@@ -43,8 +43,8 @@ public class BybitBrokerageModel : DefaultBrokerageModel
         {
             return 1m;
         }
-
-        return security.Symbol.SecurityType == SecurityType.CryptoFuture ? 10 : 10; //todo default leverage
+        
+        return 10;
     }
     
     /// <summary>
@@ -67,7 +67,7 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     {
         var symbol = Symbol.Create("BTCUSDC", SecurityType.Crypto, MarketName);
         return SecurityBenchmark.CreateInstance(securities, symbol);
-        //todo
+        //todo default conversion?
     }
 
 
@@ -83,10 +83,6 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request,
         out BrokerageMessageEvent message)
     {
-        security = security ?? throw new ArgumentNullException(nameof(security));
-        order = order ?? throw new ArgumentNullException(nameof(order));
-        request = request ?? throw new ArgumentNullException(nameof(request));
-
         //can only update linear, inverse, and options
         if (security.Type != SecurityType.CryptoFuture)
         {
@@ -128,9 +124,6 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     /// <returns>True if the brokerage could process the order, false otherwise</returns>
     public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
     {
-        security = security ?? throw new ArgumentNullException(nameof(security));
-        order = order ?? throw new ArgumentNullException(nameof(order));
-
         if (security.Type != SecurityType.Crypto && security.Type != SecurityType.CryptoFuture)
         {
             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
