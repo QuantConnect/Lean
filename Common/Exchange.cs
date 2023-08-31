@@ -267,7 +267,7 @@ namespace QuantConnect
         /// </summary>
         public static Exchange NYSELIFFE { get; }
             = new("NYSELIFFE", "NYSELIFFE", "London International Financial Futures and Options Exchange", QuantConnect.Market.NYSELIFFE, SecurityType.Future, SecurityType.FutureOption);
-        
+
         /// <summary>
         /// Exchange description
         /// </summary>
