@@ -18,7 +18,7 @@ from System import Action
 from QuantConnect.Logging import *
 
 ### <summary>
-### Regression algorithm asserting that when setting custom models for canonical securities, a on-time warning is sent
+### Regression algorithm asserting that when setting custom models for canonical securities, a one-time warning is sent
 ### informing the user that the contracts models are different (not the custom ones).
 ### </summary>
 class OptionModelsConsistencyRegressionAlgorithm(QCAlgorithm):
@@ -27,9 +27,10 @@ class OptionModelsConsistencyRegressionAlgorithm(QCAlgorithm):
         self.warning_sent = False
 
         # Set a functional log handler in order to be able to assert on the warning message
+        self.original_log_handler = Log.LogHandler
         Log.LogHandler = CompositeLogHandler(
             [
-                ConsoleLogHandler(),
+                Log.LogHandler,
                 FunctionalLogHandler(
                     Action[String](lambda debug_message: None),
                     Action[String](self.CheckWarningMessage),
@@ -64,6 +65,8 @@ class OptionModelsConsistencyRegressionAlgorithm(QCAlgorithm):
         security.SetVolatilityModel(CustomVolatilityModel())
 
     def OnEndOfAlgorithm(self) -> None:
+        Log.LogHandler = self.original_log_handler
+
         if not self.warning_sent:
             raise Exception("On-time warning about canonical models mismatch was not sent.")
 

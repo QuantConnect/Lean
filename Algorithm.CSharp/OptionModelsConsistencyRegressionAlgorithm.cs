@@ -26,19 +26,22 @@ using QuantConnect.Logging;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting that when setting custom models for canonical securities, a on-time warning is sent
+    /// Regression algorithm asserting that when setting custom models for canonical options, a one-time warning is sent
     /// informing the user that the contracts models are different (not the custom ones).
     /// </summary>
     public class OptionModelsConsistencyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private ILogHandler _originalLogHandler;
+
         protected bool WarningSent { get; set; }
 
         public override void Initialize()
         {
             // Set a functional log handler in order to be able to assert on the warning message
+            _originalLogHandler = Logging.Log.LogHandler;
             Logging.Log.LogHandler = new CompositeLogHandler(new ILogHandler[]
             {
-                new ConsoleLogHandler(),
+                Logging.Log.LogHandler,
                 new FunctionalLogHandler(
                     (debugMessage) => { },
                     (traceMessage) =>
@@ -82,6 +85,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
+            Logging.Log.LogHandler = _originalLogHandler;
+
             if (!WarningSent)
             {
                 throw new Exception("On-time warning about canonical models mismatch was not sent.");
