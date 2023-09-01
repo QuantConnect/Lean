@@ -163,7 +163,8 @@ namespace QuantConnect.Research
                     symbolPropertiesDataBase,
                     this,
                     registeredTypes,
-                    new SecurityCacheProvider(Portfolio));
+                    new SecurityCacheProvider(Portfolio),
+                    algorithm: this);
                 Securities.SetSecurityService(securityService);
                 SubscriptionManager.SetDataManager(
                     new DataManager(new NullDataFeed(),

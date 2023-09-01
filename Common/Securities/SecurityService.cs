@@ -35,7 +35,9 @@ namespace QuantConnect.Securities
         private readonly ISecurityInitializerProvider _securityInitializerProvider;
         private readonly SecurityCacheProvider _cacheProvider;
         private readonly IPrimaryExchangeProvider _primaryExchangeProvider;
+        private readonly IAlgorithm _algorithm;
         private bool _isLiveMode;
+        private bool _modelsMismatchWarningSent;
 
         /// <summary>
         /// Creates a new instance of the SecurityService class
@@ -46,7 +48,8 @@ namespace QuantConnect.Securities
             ISecurityInitializerProvider securityInitializerProvider,
             IRegisteredSecurityDataTypesProvider registeredTypes,
             SecurityCacheProvider cacheProvider,
-            IPrimaryExchangeProvider primaryExchangeProvider=null)
+            IPrimaryExchangeProvider primaryExchangeProvider = null,
+            IAlgorithm algorithm = null)
         {
             _cashBook = cashBook;
             _registeredTypes = registeredTypes;
@@ -55,6 +58,7 @@ namespace QuantConnect.Securities
             _securityInitializerProvider = securityInitializerProvider;
             _cacheProvider = cacheProvider;
             _primaryExchangeProvider = primaryExchangeProvider;
+            _algorithm = algorithm;
         }
 
         /// <summary>
@@ -196,6 +200,8 @@ namespace QuantConnect.Securities
             // invoke the security initializer
             _securityInitializerProvider.SecurityInitializer.Initialize(security);
 
+            CheckCanonicalSecurityModels(security);
+
             // if leverage was specified then apply to security after the initializer has run, parameters of this
             // method take precedence over the intializer
             if (leverage != Security.NullLeverage)
@@ -231,6 +237,31 @@ namespace QuantConnect.Securities
         public void SetLiveMode(bool isLiveMode)
         {
             _isLiveMode = isLiveMode;
+        }
+
+        /// <summary>
+        /// Checks whether the created security has the same models as its canonical security (in case it has one)
+        /// and sends a one-time warning if it doesn't.
+        /// </summary>
+        private void CheckCanonicalSecurityModels(Security security)
+        {
+            if (!_modelsMismatchWarningSent &&
+                _algorithm != null &&
+                security.Symbol.HasCanonical() &&
+                _algorithm.Securities.TryGetValue(security.Symbol.Canonical, out var canonicalSecurity))
+            {
+                if (security.FillModel.GetType() != canonicalSecurity.FillModel.GetType() ||
+                    security.FeeModel.GetType() != canonicalSecurity.FeeModel.GetType() ||
+                    security.BuyingPowerModel.GetType() != canonicalSecurity.BuyingPowerModel.GetType() ||
+                    security.MarginInterestRateModel.GetType() != canonicalSecurity.MarginInterestRateModel.GetType() ||
+                    security.SlippageModel.GetType() != canonicalSecurity.SlippageModel.GetType() ||
+                    security.VolatilityModel.GetType() != canonicalSecurity.VolatilityModel.GetType() ||
+                    security.SettlementModel.GetType() != canonicalSecurity.SettlementModel.GetType())
+                {
+                    _modelsMismatchWarningSent = true;
+                    _algorithm.Debug($"Warning: Security {security.Symbol} its canonical security {security.Symbol.Canonical} have at least one model of different types (fill, fee, buying power, margin interest rate, slippage, volatility, settlement). To avoid this, consider using a security initializer to set the right models to each security type according to your algorithm's requirements.");
+                }
+            }
         }
     }
 }

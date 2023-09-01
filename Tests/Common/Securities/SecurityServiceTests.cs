@@ -131,9 +131,8 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void CanCreate_ConcreteOptions_WithCorrectSubscriptions()
         {
-            var underlying = SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA);
-            var optionIdentifier = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), underlying, Market.USA, 195.50m, OptionRight.Put, OptionStyle.European);
-            var optionSymbol = new Symbol(optionIdentifier, "SPY", Symbol.Empty);
+            var optionSymbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.European, OptionRight.Put, 195.50m,
+                new DateTime(2015, 09, 18));
 
             var subscriptionTypes = new List<Tuple<Type, TickType>>
             {
