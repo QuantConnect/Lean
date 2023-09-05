@@ -69,6 +69,11 @@ namespace QuantConnect
                     str += Invariant($" and {Math.Round(100 * insight.Weight.Value, 1)}% weight");
                 }
 
+                if (!string.IsNullOrEmpty(insight.Tag))
+                {
+                    str += Invariant($": {insight.Tag}");
+                }
+
                 return str;
             }
 
@@ -88,6 +93,10 @@ namespace QuantConnect
                 if (insight.Weight.HasValue)
                 {
                     str += Invariant($" W:{Math.Round(100 * insight.Weight.Value, 1)}%");
+                }
+                if (!string.IsNullOrEmpty(insight.Tag))
+                {
+                    str += Invariant($". {insight.Tag}");
                 }
 
                 return str;
