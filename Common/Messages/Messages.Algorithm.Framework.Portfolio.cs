@@ -56,7 +56,13 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Algorithm.Framework.Portfolio.PortfolioTarget portfolioTarget)
             {
-                return Invariant($"{portfolioTarget.Symbol}: {portfolioTarget.Quantity.Normalize()}");
+                var str = Invariant($"{portfolioTarget.Symbol}: {portfolioTarget.Quantity.Normalize()}");
+                if (!string.IsNullOrEmpty(portfolioTarget.Tag))
+                {
+                    str += $" ({portfolioTarget.Tag})";
+                }
+
+                return str;
             }
         }
     }
