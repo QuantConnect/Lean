@@ -146,7 +146,8 @@ namespace QuantConnect.Lean.Engine
                         algorithm,
                         registeredTypesProvider,
                         new SecurityCacheProvider(algorithm.Portfolio),
-                        mapFilePrimaryExchangeProvider);
+                        mapFilePrimaryExchangeProvider,
+                        algorithm);
 
                     algorithm.Securities.SetSecurityService(securityService);
 

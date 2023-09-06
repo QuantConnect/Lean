@@ -95,7 +95,8 @@ namespace QuantConnect.Report
                         symbolPropertiesDataBase,
                         Algorithm,
                         RegisteredSecurityDataTypesProvider.Null,
-                        new SecurityCacheProvider(Algorithm.Portfolio)),
+                        new SecurityCacheProvider(Algorithm.Portfolio),
+                        algorithm: Algorithm),
                     dataPermissionManager,
                     new DefaultDataProvider()),
                 Algorithm,
@@ -110,7 +111,8 @@ namespace QuantConnect.Report
                 symbolPropertiesDataBase,
                 Algorithm,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCacheProvider(Algorithm.Portfolio));
+                new SecurityCacheProvider(Algorithm.Portfolio),
+                algorithm: Algorithm);
 
             var transactions = new BacktestingTransactionHandler();
             _resultHandler = new BacktestingResultHandler();
