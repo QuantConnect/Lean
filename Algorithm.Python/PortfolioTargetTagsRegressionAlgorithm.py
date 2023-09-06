@@ -51,19 +51,24 @@ class CustomPortfolioConstructionModel(EqualWeightingPortfolioConstructionModel)
 
     def CreateTargets(self, algorithm: QCAlgorithm, insights: List[Insight]) -> List[IPortfolioTarget]:
         targets = super().CreateTargets(algorithm, insights)
-        return [PortfolioTarget(target.Symbol, target.Quantity, target.Tag) for target in targets]
+        return CustomPortfolioConstructionModel.AddPPortfolioTargetsTags(targets)
 
     @staticmethod
     def GeneratePortfolioTargetTag(target: IPortfolioTarget) -> str:
         return f"Portfolio target tag: {target.Symbol} - {target.Quantity}"
 
+    @staticmethod
+    def AddPPortfolioTargetsTags(targets: List[IPortfolioTarget]) -> List[IPortfolioTarget]:
+        return [PortfolioTarget(target.Symbol, target.Quantity, CustomPortfolioConstructionModel.GeneratePortfolioTargetTag(target))
+                for target in targets]
+
 class CustomRiskManagementModel(MaximumDrawdownPercentPerSecurity):
     def __init__(self):
-
         super().__init__(0.01)
+
     def ManageRisk(self, algorithm: QCAlgorithm, targets: List[IPortfolioTarget]) -> List[IPortfolioTarget]:
         riskManagedTargets = super().ManageRisk(algorithm, targets)
-        return [PortfolioTarget(target.Symbol, target.Quantity, target.Tag) for target in riskManagedTargets]
+        return CustomPortfolioConstructionModel.AddPPortfolioTargetsTags(riskManagedTargets)
 
 class CustomExecutionModel(ImmediateExecutionModel):
     def __init__(self, targetsTagCheckedCallback: Callable) -> None:
