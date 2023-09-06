@@ -80,6 +80,7 @@ namespace QuantConnect.Interfaces
         /// All securities added with <see cref="IAlgorithm.AddSecurity"/> are counted as one,
         /// with the exception of options and futures where every single contract in a chain counts as one.
         /// </remarks>
+        [Obsolete("This property is deprecated. Please observe data subscription limits set by your brokerage to avoid runtime errors.")]
         int DataSubscriptionLimit { get; set; }
 
         /// <summary>
