@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
 "OSCR", "WOLF", "SYF", "GOGL", "HES", "PHM", "CWEB", "ALDX", "BTWN", "AFL", "PPL", "CIM"
 
             };
-            Settings.DataSubscriptionLimit = 1000000;
+            
             SetWarmUp(TimeSpan.FromDays(1));
             foreach(var ticker in equity_symbols)
             {
