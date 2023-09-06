@@ -230,7 +230,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"score-final\":false," +
             "\"score-magnitude\":\"0\"," +
             "\"score-direction\":\"0\"," +
-            "\"estimated-value\":\"0\"}";
+            "\"estimated-value\":\"0\"," +
+            "\"tag\":null}";
 
         private const string jsonWithScore =
             "{" +
@@ -253,7 +254,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"score-final\":true," +
             "\"score-magnitude\":\"1\"," +
             "\"score-direction\":\"1\"," +
-            "\"estimated-value\":\"1113.2484\"}";
+            "\"estimated-value\":\"1113.2484\"," +
+            "\"tag\":null}";
 
         private const string jsonWithMissingCreatedTime =
             "{" +
@@ -275,7 +277,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"score-final\":true," +
             "\"score-magnitude\":\"1\"," +
             "\"score-direction\":\"1\"," +
-            "\"estimated-value\":\"1113.2484\"}";
+            "\"estimated-value\":\"1113.2484\"," +
+            "\"tag\":null}";
 
         private const string jsonWithExpectedOutputFromMissingCreatedTimeValue =
             "{" +
@@ -298,7 +301,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"score-final\":true," +
             "\"score-magnitude\":\"1\"," +
             "\"score-direction\":\"1\"," +
-            "\"estimated-value\":\"1113.2484\"}";
+            "\"estimated-value\":\"1113.2484\"," +
+            "\"tag\":null}";
 
         private const string jsonWithTag =
             "{" +
