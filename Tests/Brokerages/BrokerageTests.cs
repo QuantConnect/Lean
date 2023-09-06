@@ -397,11 +397,13 @@ namespace QuantConnect.Tests.Brokerages
             PlaceOrderWaitForStatus(parameters.CreateLongMarketOrder(GetDefaultQuantity()));
 
             // now go net short
-            var order = PlaceOrderWaitForStatus(parameters.CreateShortOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus);
+            using var orderFilledEvent = new ManualResetEvent(false);
+            var order = PlaceOrderWaitForStatus(parameters.CreateShortOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus,
+                onOrderFilled: () => orderFilledEvent.Set());
 
             if (parameters.ModifyUntilFilled)
             {
-                ModifyOrderUntilFilled(order, parameters);
+                ModifyOrderUntilFilled(order, parameters, orderFilledEvent: orderFilledEvent);
             }
         }
 
@@ -410,15 +412,17 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("");
             Log.Trace("LONG FROM SHORT");
             Log.Trace("");
-            // first fo short
+            // first go short
             PlaceOrderWaitForStatus(parameters.CreateShortMarketOrder(-GetDefaultQuantity()), OrderStatus.Filled);
 
             // now go long
-            var order = PlaceOrderWaitForStatus(parameters.CreateLongOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus);
+            using var orderFilledEvent = new ManualResetEvent(false);
+            var order = PlaceOrderWaitForStatus(parameters.CreateLongOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus,
+                onOrderFilled: () => orderFilledEvent.Set());
 
             if (parameters.ModifyUntilFilled)
             {
-                ModifyOrderUntilFilled(order, parameters);
+                ModifyOrderUntilFilled(order, parameters, orderFilledEvent: orderFilledEvent);
             }
         }
 
@@ -498,19 +502,21 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="order">The order to be modified</param>
         /// <param name="parameters">The order test parameters that define how to modify the order</param>
         /// <param name="secondsTimeout">Maximum amount of time to wait until the order fills</param>
-        protected virtual void ModifyOrderUntilFilled(Order order, OrderTestParameters parameters, double secondsTimeout = 90)
+        protected virtual void ModifyOrderUntilFilled(Order order, OrderTestParameters parameters, double secondsTimeout = 90,
+            ManualResetEvent orderFilledEvent = null)
         {
             if (order.Status == OrderStatus.Filled)
             {
                 return;
             }
 
-            using var filledResetEvent = new ManualResetEvent(false);
+            var filledResetEvent = orderFilledEvent ?? new ManualResetEvent(false);
+
             EventHandler<List<OrderEvent>> brokerageOnOrdersStatusChanged = (sender, args) =>
             {
                 var orderEvent = args[0];
                 order.Status = orderEvent.Status;
-                if (orderEvent.Status == OrderStatus.Filled)
+                if (orderEvent.Status == OrderStatus.Filled && orderFilledEvent == null)
                 {
                     filledResetEvent.Set();
                 }
@@ -531,7 +537,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("MODIFY UNTIL FILLED: " + order);
             Log.Trace("");
             var stopwatch = Stopwatch.StartNew();
-            while (!filledResetEvent.WaitOne(3000) && stopwatch.Elapsed.TotalSeconds < secondsTimeout)
+            while (order.Status != OrderStatus.Filled && !filledResetEvent.WaitOne(3000) && stopwatch.Elapsed.TotalSeconds < secondsTimeout)
             {
                 filledResetEvent.Reset();
                 if (order.Status == OrderStatus.PartiallyFilled) continue;
@@ -560,6 +566,13 @@ namespace QuantConnect.Tests.Brokerages
 
             Brokerage.OrderIdChanged -= brokerageOrderIdChanged;
             Brokerage.OrdersStatusChanged -= brokerageOnOrdersStatusChanged;
+
+            // At this point the order should be filled. If is was filled before this method was called,
+            // the listener above wouldn't have set the new order status, so we do it here.
+            if (order.Status != OrderStatus.Filled && OrderProvider.GetOrderById(order.Id).Status == OrderStatus.Filled)
+            {
+                order.Status = OrderStatus.Filled;
+            }
         }
 
         /// <summary>
@@ -572,10 +585,11 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="allowFailedSubmission">Allow failed order submission</param>
         /// <returns>The same order that was submitted.</returns>
         protected Order PlaceOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled,
-                                                double secondsTimeout = 30.0, bool allowFailedSubmission = false)
+                                                double secondsTimeout = 30.0, bool allowFailedSubmission = false,
+                                                Action onOrderFilled = null)
         {
-            var requiredStatusEvent = new ManualResetEvent(false);
-            var desiredStatusEvent = new ManualResetEvent(false);
+            using var requiredStatusEvent = new ManualResetEvent(false);
+            using var desiredStatusEvent = new ManualResetEvent(false);
             EventHandler<List<OrderEvent>> brokerageOnOrdersStatusChanged = (sender, args) =>
             {
                 var orderEvent = args[0];
@@ -594,6 +608,10 @@ namespace QuantConnect.Tests.Brokerages
                     Log.Trace("EXPECTED: " + orderEvent);
                     Log.Trace("");
                     desiredStatusEvent.Set();
+                }
+                if (orderEvent.Status == OrderStatus.Filled && onOrderFilled != null)
+                {
+                    onOrderFilled();
                 }
             };
             EventHandler<BrokerageOrderIdChangedEvent> brokerageOrderIdChanged = (sender, args) => {
