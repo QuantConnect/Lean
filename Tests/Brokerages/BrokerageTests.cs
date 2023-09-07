@@ -39,6 +39,8 @@ namespace QuantConnect.Tests.Brokerages
         private OrderProvider _orderProvider;
         private SecurityProvider _securityProvider;
 
+        protected ManualResetEvent OrderFillEvent { get; } = new ManualResetEvent(false);
+
         #region Test initialization and cleanup
 
         [SetUp]
@@ -82,6 +84,8 @@ namespace QuantConnect.Tests.Brokerages
                 {
                     DisposeBrokerage(_brokerage);
                 }
+
+                OrderFillEvent.Reset();
             }
         }
 
@@ -129,39 +133,47 @@ namespace QuantConnect.Tests.Brokerages
                 SecurityProvider[accountHolding.Symbol] = CreateSecurity(accountHolding.Symbol);
                 SecurityProvider[accountHolding.Symbol].Holdings.SetHoldings(accountHolding.AveragePrice, accountHolding.Quantity);
             }
-            brokerage.OrdersStatusChanged += (sender, args) =>
-            {
-                Log.Trace("");
-                Log.Trace("ORDER STATUS CHANGED: " + args);
-                Log.Trace("");
+            brokerage.OrdersStatusChanged += HandleFillEvents;
 
-                var orderEvent = args[0];
-
-                // we need to keep this maintained properly
-                if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
-                {
-                    Log.Trace("FILL EVENT: " + orderEvent.FillQuantity + " units of " + orderEvent.Symbol.ToString());
-
-                    Security security;
-                    if (_securityProvider.TryGetValue(orderEvent.Symbol, out security))
-                    {
-                        var holding = _securityProvider[orderEvent.Symbol].Holdings;
-                        holding.SetHoldings(orderEvent.FillPrice, holding.Quantity + orderEvent.FillQuantity);
-                    }
-                    else
-                    {
-                        _securityProvider[orderEvent.Symbol] = CreateSecurity(orderEvent.Symbol);
-                        _securityProvider[orderEvent.Symbol].Holdings.SetHoldings(orderEvent.FillPrice, orderEvent.FillQuantity);
-                    }
-
-                    Log.Trace("--HOLDINGS: " + _securityProvider[orderEvent.Symbol]);
-
-                    // update order mapping
-                    var order = _orderProvider.GetOrderById(orderEvent.OrderId);
-                    order.Status = orderEvent.Status;
-                }
-            };
             return brokerage;
+        }
+
+        private void HandleFillEvents(object sender, List<OrderEvent> ordeEvents)
+        {
+            Log.Trace("");
+            Log.Trace("ORDER STATUS CHANGED: " + ordeEvents);
+            Log.Trace("");
+
+            var orderEvent = ordeEvents[0];
+
+            // we need to keep this maintained properly
+            if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
+            {
+                Log.Trace("FILL EVENT: " + orderEvent.FillQuantity + " units of " + orderEvent.Symbol.ToString());
+
+                if (orderEvent.Status == OrderStatus.Filled)
+                {
+                    OrderFillEvent.Set();
+                }
+
+                Security security;
+                if (_securityProvider.TryGetValue(orderEvent.Symbol, out security))
+                {
+                    var holding = _securityProvider[orderEvent.Symbol].Holdings;
+                    holding.SetHoldings(orderEvent.FillPrice, holding.Quantity + orderEvent.FillQuantity);
+                }
+                else
+                {
+                    _securityProvider[orderEvent.Symbol] = CreateSecurity(orderEvent.Symbol);
+                    _securityProvider[orderEvent.Symbol].Holdings.SetHoldings(orderEvent.FillPrice, orderEvent.FillQuantity);
+                }
+
+                Log.Trace("--HOLDINGS: " + _securityProvider[orderEvent.Symbol]);
+
+                // update order mapping
+                var order = _orderProvider.GetOrderById(orderEvent.OrderId);
+                order.Status = orderEvent.Status;
+            }
         }
 
         public static Security CreateSecurity(Symbol symbol)
@@ -208,6 +220,7 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="brokerage">The brokerage instance to be disposed of</param>
         protected virtual void DisposeBrokerage(IBrokerage brokerage)
         {
+            brokerage.OrdersStatusChanged -= HandleFillEvents;
             brokerage.Disconnect();
             brokerage.DisposeSafely();
         }
@@ -505,15 +518,10 @@ namespace QuantConnect.Tests.Brokerages
                 return;
             }
 
-            using var filledResetEvent = new ManualResetEvent(false);
             EventHandler<List<OrderEvent>> brokerageOnOrdersStatusChanged = (sender, args) =>
             {
                 var orderEvent = args[0];
                 order.Status = orderEvent.Status;
-                if (orderEvent.Status == OrderStatus.Filled)
-                {
-                    filledResetEvent.Set();
-                }
                 if (orderEvent.Status == OrderStatus.Canceled || orderEvent.Status == OrderStatus.Invalid)
                 {
                     Log.Trace("ModifyOrderUntilFilled(): " + order);
@@ -531,9 +539,9 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("MODIFY UNTIL FILLED: " + order);
             Log.Trace("");
             var stopwatch = Stopwatch.StartNew();
-            while (!filledResetEvent.WaitOne(3000) && stopwatch.Elapsed.TotalSeconds < secondsTimeout)
+            while (order.Status != OrderStatus.Filled && !OrderFillEvent.WaitOne(3000) && stopwatch.Elapsed.TotalSeconds < secondsTimeout)
             {
-                filledResetEvent.Reset();
+                OrderFillEvent.Reset();
                 if (order.Status == OrderStatus.PartiallyFilled) continue;
 
                 var marketPrice = GetAskPrice(order.Symbol);
@@ -602,6 +610,8 @@ namespace QuantConnect.Tests.Brokerages
 
             Brokerage.OrderIdChanged += brokerageOrderIdChanged;
             Brokerage.OrdersStatusChanged += brokerageOnOrdersStatusChanged;
+
+            OrderFillEvent.Reset();
 
             OrderProvider.Add(order);
             if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
