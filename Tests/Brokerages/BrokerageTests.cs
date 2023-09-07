@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Brokerages
         private OrderProvider _orderProvider;
         private SecurityProvider _securityProvider;
 
-        private ManualResetEvent _orderFillEvent = new ManualResetEvent(false);
+        protected ManualResetEvent OrderFillEvent { get; } = new ManualResetEvent(false);
 
         #region Test initialization and cleanup
 
@@ -61,17 +61,7 @@ namespace QuantConnect.Tests.Brokerages
             CancelOpenOrders();
             LiquidateHoldings();
             Thread.Sleep(1000);
-
-            // listen to fill events for anyone interested
-            Brokerage.OrdersStatusChanged += (sender, args) =>
-            {
-                var orderEvent = args[0];
-                if (orderEvent.Status == OrderStatus.Filled)
-                {
-                    _orderFillEvent.Set();
                 }
-            };
-        }
 
         [TearDown]
         public void Teardown()
@@ -153,6 +143,11 @@ namespace QuantConnect.Tests.Brokerages
                 if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
                 {
                     Log.Trace("FILL EVENT: " + orderEvent.FillQuantity + " units of " + orderEvent.Symbol.ToString());
+
+                    if (orderEvent.Status == OrderStatus.Filled)
+                    {
+                        OrderFillEvent.Set();
+                    }
 
                     Security security;
                     if (_securityProvider.TryGetValue(orderEvent.Symbol, out security))
@@ -538,9 +533,9 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("MODIFY UNTIL FILLED: " + order);
             Log.Trace("");
             var stopwatch = Stopwatch.StartNew();
-            while (order.Status != OrderStatus.Filled && !_orderFillEvent.WaitOne(3000) && stopwatch.Elapsed.TotalSeconds < secondsTimeout)
+            while (order.Status != OrderStatus.Filled && !OrderFillEvent.WaitOne(3000) && stopwatch.Elapsed.TotalSeconds < secondsTimeout)
             {
-                _orderFillEvent.Reset();
+                OrderFillEvent.Reset();
                 if (order.Status == OrderStatus.PartiallyFilled) continue;
 
                 var marketPrice = GetAskPrice(order.Symbol);
@@ -617,7 +612,7 @@ namespace QuantConnect.Tests.Brokerages
             Brokerage.OrderIdChanged += brokerageOrderIdChanged;
             Brokerage.OrdersStatusChanged += brokerageOnOrdersStatusChanged;
 
-            _orderFillEvent.Reset();
+            OrderFillEvent.Reset();
 
             OrderProvider.Add(order);
             if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
