@@ -84,6 +84,8 @@ namespace QuantConnect.Tests.Brokerages
                 {
                     DisposeBrokerage(_brokerage);
                 }
+
+                OrderFillEvent.Reset();
             }
         }
 
@@ -131,13 +133,18 @@ namespace QuantConnect.Tests.Brokerages
                 SecurityProvider[accountHolding.Symbol] = CreateSecurity(accountHolding.Symbol);
                 SecurityProvider[accountHolding.Symbol].Holdings.SetHoldings(accountHolding.AveragePrice, accountHolding.Quantity);
             }
-            brokerage.OrdersStatusChanged += (sender, args) =>
+            brokerage.OrdersStatusChanged += HandleFillEvents;
+
+            return brokerage;
+        }
+
+        private void HandleFillEvents(object sender, List<OrderEvent> ordeEvents)
             {
                 Log.Trace("");
-                Log.Trace("ORDER STATUS CHANGED: " + args);
+            Log.Trace("ORDER STATUS CHANGED: " + ordeEvents);
                 Log.Trace("");
 
-                var orderEvent = args[0];
+            var orderEvent = ordeEvents[0];
 
                 // we need to keep this maintained properly
                 if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
@@ -167,8 +174,6 @@ namespace QuantConnect.Tests.Brokerages
                     var order = _orderProvider.GetOrderById(orderEvent.OrderId);
                     order.Status = orderEvent.Status;
                 }
-            };
-            return brokerage;
         }
 
         public static Security CreateSecurity(Symbol symbol)
@@ -215,6 +220,7 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="brokerage">The brokerage instance to be disposed of</param>
         protected virtual void DisposeBrokerage(IBrokerage brokerage)
         {
+            brokerage.OrdersStatusChanged -= HandleFillEvents;
             brokerage.Disconnect();
             brokerage.DisposeSafely();
         }
@@ -562,13 +568,6 @@ namespace QuantConnect.Tests.Brokerages
 
             Brokerage.OrderIdChanged -= brokerageOrderIdChanged;
             Brokerage.OrdersStatusChanged -= brokerageOnOrdersStatusChanged;
-
-            // the order might have been filled before this method was called, so the listener above would have not changed the order status.
-            // let's change it then
-            if (order.Status != OrderStatus.Filled && OrderProvider.GetOrderById(order.Id).Status == OrderStatus.Filled)
-            {
-                order.Status = OrderStatus.Filled;
-            }
         }
 
         /// <summary>
