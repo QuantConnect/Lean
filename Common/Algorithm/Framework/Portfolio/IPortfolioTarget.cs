@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,5 +30,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Gets the quantity of this symbol the algorithm should hold
         /// </summary>
         decimal Quantity { get; }
+
+        /// <summary>
+        /// Portfolio target tag with additional information
+        /// </summary>
+        string Tag { get; }
     }
 }

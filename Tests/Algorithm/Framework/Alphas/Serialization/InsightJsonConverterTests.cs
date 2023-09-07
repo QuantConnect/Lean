@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -137,6 +137,78 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             Assert.AreEqual(jsonWithExpectedOutputFromMissingCreatedTimeValue, result);
         }
 
+        [Test]
+        public void SerializesInsightWithTag()
+        {
+            var jObject = JObject.Parse(jsonWithTag);
+            var insight = Insight.FromSerializedInsight(new SerializedInsight
+            {
+                Id = jObject["id"].Value<string>(),
+                GroupId = jObject["group-id"]?.Value<string>(),
+                SourceModel = jObject["source-model"].Value<string>(),
+                GeneratedTime = jObject["generated-time"].Value<double>(),
+                CreatedTime = jObject["created-time"].Value<double>(),
+                CloseTime = jObject["close-time"].Value<double>(),
+                Symbol = jObject["symbol"].Value<string>(),
+                Ticker = jObject["ticker"].Value<string>(),
+                Type = (InsightType)Enum.Parse(typeof(InsightType), jObject["type"].Value<string>(), true),
+                ReferenceValue = jObject["reference"].Value<decimal>(),
+                ReferenceValueFinal = jObject["reference-final"].Value<decimal>(),
+                Direction = (InsightDirection)Enum.Parse(typeof(InsightDirection), jObject["direction"].Value<string>(), true),
+                Period = jObject["period"].Value<double>(),
+                ScoreIsFinal = jObject["score-final"].Value<bool>(),
+                ScoreMagnitude = jObject["score-magnitude"].Value<double>(),
+                ScoreDirection = jObject["score-direction"].Value<double>(),
+                EstimatedValue = jObject["estimated-value"].Value<decimal>(),
+                Tag = jObject["tag"].Value<string>()
+            });
+            var result = JsonConvert.SerializeObject(insight, Formatting.None);
+            Assert.AreEqual(jsonWithTag, result);
+        }
+
+        [Test]
+        public void SerializesInsightWithoutTag()
+        {
+            var jObject = JObject.Parse(jsonWithoutTag);
+            var insight = Insight.FromSerializedInsight(new SerializedInsight
+            {
+                Id = jObject["id"].Value<string>(),
+                GroupId = jObject["group-id"]?.Value<string>(),
+                SourceModel = jObject["source-model"].Value<string>(),
+                GeneratedTime = jObject["generated-time"].Value<double>(),
+                CreatedTime = jObject["created-time"].Value<double>(),
+                CloseTime = jObject["close-time"].Value<double>(),
+                Symbol = jObject["symbol"].Value<string>(),
+                Ticker = jObject["ticker"].Value<string>(),
+                Type = (InsightType)Enum.Parse(typeof(InsightType), jObject["type"].Value<string>(), true),
+                ReferenceValue = jObject["reference"].Value<decimal>(),
+                ReferenceValueFinal = jObject["reference-final"].Value<decimal>(),
+                Direction = (InsightDirection)Enum.Parse(typeof(InsightDirection), jObject["direction"].Value<string>(), true),
+                Period = jObject["period"].Value<double>(),
+                ScoreIsFinal = jObject["score-final"].Value<bool>(),
+                ScoreMagnitude = jObject["score-magnitude"].Value<double>(),
+                ScoreDirection = jObject["score-direction"].Value<double>(),
+                EstimatedValue = jObject["estimated-value"].Value<decimal>(),
+            });
+            var result = JsonConvert.SerializeObject(insight, Formatting.None);
+            Assert.AreEqual(jsonWithoutTag, result);
+        }
+
+        [Test]
+        public void DeserializesInsightWithTag()
+        {
+            var jObject = JObject.Parse(jsonWithTag);
+            var result = JsonConvert.DeserializeObject<Insight>(jsonWithTag);
+            Assert.AreEqual(jObject["tag"].Value<string>(), result.Tag);
+        }
+
+        [Test]
+        public void DeserializesInsightWithoutTag()
+        {
+            var result = JsonConvert.DeserializeObject<Insight>(jsonWithoutTag);
+            Assert.IsNull(result.Tag);
+        }
+
         private const string jsonNoScore =
             "{" +
             "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
@@ -158,7 +230,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"score-final\":false," +
             "\"score-magnitude\":\"0\"," +
             "\"score-direction\":\"0\"," +
-            "\"estimated-value\":\"0\"}";
+            "\"estimated-value\":\"0\"," +
+            "\"tag\":null}";
 
         private const string jsonWithScore =
             "{" +
@@ -181,7 +254,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"score-final\":true," +
             "\"score-magnitude\":\"1\"," +
             "\"score-direction\":\"1\"," +
-            "\"estimated-value\":\"1113.2484\"}";
+            "\"estimated-value\":\"1113.2484\"," +
+            "\"tag\":null}";
 
         private const string jsonWithMissingCreatedTime =
             "{" +
@@ -203,7 +277,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"score-final\":true," +
             "\"score-magnitude\":\"1\"," +
             "\"score-direction\":\"1\"," +
-            "\"estimated-value\":\"1113.2484\"}";
+            "\"estimated-value\":\"1113.2484\"," +
+            "\"tag\":null}";
 
         private const string jsonWithExpectedOutputFromMissingCreatedTimeValue =
             "{" +
@@ -226,7 +301,56 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"score-final\":true," +
             "\"score-magnitude\":\"1\"," +
             "\"score-direction\":\"1\"," +
-            "\"estimated-value\":\"1113.2484\"}";
+            "\"estimated-value\":\"1113.2484\"," +
+            "\"tag\":null}";
+
+        private const string jsonWithTag =
+            "{" +
+            "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
+            "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
+            "\"source-model\":\"mySourceModel-1\"," +
+            "\"generated-time\":1520711961.00055," +
+            "\"created-time\":1520711961.00055," +
+            "\"close-time\":1520711961.00055," +
+            "\"symbol\":\"BTCUSD XJ\"," +
+            "\"ticker\":\"BTCUSD\"," +
+            "\"type\":\"price\"," +
+            "\"reference\":9143.53," +
+            "\"reference-final\":9243.53," +
+            "\"direction\":\"up\"," +
+            "\"period\":5.0," +
+            "\"magnitude\":null," +
+            "\"confidence\":null," +
+            "\"weight\":null," +
+            "\"score-final\":true," +
+            "\"score-magnitude\":\"1\"," +
+            "\"score-direction\":\"1\"," +
+            "\"estimated-value\":\"1113.2484\"," +
+            "\"tag\":\"additional information\"}";
+
+        private const string jsonWithoutTag =
+            "{" +
+            "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
+            "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
+            "\"source-model\":\"mySourceModel-1\"," +
+            "\"generated-time\":1520711961.00055," +
+            "\"created-time\":1520711961.00055," +
+            "\"close-time\":1520711961.00055," +
+            "\"symbol\":\"BTCUSD XJ\"," +
+            "\"ticker\":\"BTCUSD\"," +
+            "\"type\":\"price\"," +
+            "\"reference\":9143.53," +
+            "\"reference-final\":9243.53," +
+            "\"direction\":\"up\"," +
+            "\"period\":5.0," +
+            "\"magnitude\":null," +
+            "\"confidence\":null," +
+            "\"weight\":null," +
+            "\"score-final\":true," +
+            "\"score-magnitude\":\"1\"," +
+            "\"score-direction\":\"1\"," +
+            "\"estimated-value\":\"1113.2484\"," +
+            "\"tag\":null}";
     }
 
 }
