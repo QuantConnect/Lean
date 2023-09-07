@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Brokerages
             CancelOpenOrders();
             LiquidateHoldings();
             Thread.Sleep(1000);
-                }
+        }
 
         [TearDown]
         public void Teardown()
@@ -139,41 +139,41 @@ namespace QuantConnect.Tests.Brokerages
         }
 
         private void HandleFillEvents(object sender, List<OrderEvent> ordeEvents)
-            {
-                Log.Trace("");
+        {
+            Log.Trace("");
             Log.Trace("ORDER STATUS CHANGED: " + ordeEvents);
-                Log.Trace("");
+            Log.Trace("");
 
             var orderEvent = ordeEvents[0];
 
-                // we need to keep this maintained properly
-                if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
+            // we need to keep this maintained properly
+            if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
+            {
+                Log.Trace("FILL EVENT: " + orderEvent.FillQuantity + " units of " + orderEvent.Symbol.ToString());
+
+                if (orderEvent.Status == OrderStatus.Filled)
                 {
-                    Log.Trace("FILL EVENT: " + orderEvent.FillQuantity + " units of " + orderEvent.Symbol.ToString());
-
-                    if (orderEvent.Status == OrderStatus.Filled)
-                    {
-                        OrderFillEvent.Set();
-                    }
-
-                    Security security;
-                    if (_securityProvider.TryGetValue(orderEvent.Symbol, out security))
-                    {
-                        var holding = _securityProvider[orderEvent.Symbol].Holdings;
-                        holding.SetHoldings(orderEvent.FillPrice, holding.Quantity + orderEvent.FillQuantity);
-                    }
-                    else
-                    {
-                        _securityProvider[orderEvent.Symbol] = CreateSecurity(orderEvent.Symbol);
-                        _securityProvider[orderEvent.Symbol].Holdings.SetHoldings(orderEvent.FillPrice, orderEvent.FillQuantity);
-                    }
-
-                    Log.Trace("--HOLDINGS: " + _securityProvider[orderEvent.Symbol]);
-
-                    // update order mapping
-                    var order = _orderProvider.GetOrderById(orderEvent.OrderId);
-                    order.Status = orderEvent.Status;
+                    OrderFillEvent.Set();
                 }
+
+                Security security;
+                if (_securityProvider.TryGetValue(orderEvent.Symbol, out security))
+                {
+                    var holding = _securityProvider[orderEvent.Symbol].Holdings;
+                    holding.SetHoldings(orderEvent.FillPrice, holding.Quantity + orderEvent.FillQuantity);
+                }
+                else
+                {
+                    _securityProvider[orderEvent.Symbol] = CreateSecurity(orderEvent.Symbol);
+                    _securityProvider[orderEvent.Symbol].Holdings.SetHoldings(orderEvent.FillPrice, orderEvent.FillQuantity);
+                }
+
+                Log.Trace("--HOLDINGS: " + _securityProvider[orderEvent.Symbol]);
+
+                // update order mapping
+                var order = _orderProvider.GetOrderById(orderEvent.OrderId);
+                order.Status = orderEvent.Status;
+            }
         }
 
         public static Security CreateSecurity(Symbol symbol)
