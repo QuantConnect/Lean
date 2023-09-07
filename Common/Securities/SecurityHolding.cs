@@ -246,12 +246,12 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Boolean flat indicating if we hold any of the security
+        /// Boolean flag indicating if we hold any of the security
         /// </summary>
         public virtual bool HoldStock => _invested;
 
         /// <summary>
-        /// Boolean flat indicating if we hold any of the security
+        /// Boolean flag indicating if we hold any of the security
         /// </summary>
         /// <remarks>Alias of HoldStock</remarks>
         /// <seealso cref="HoldStock"/>
