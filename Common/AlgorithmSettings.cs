@@ -64,7 +64,8 @@ namespace QuantConnect
         /// All securities added with <see cref="IAlgorithm.AddSecurity"/> are counted as one,
         /// with the exception of options and futures where every single contract in a chain counts as one.
         /// </remarks>
-        public int DataSubscriptionLimit { get; set; }
+        [Obsolete("This property is deprecated. Please observe data subscription limits set by your brokerage to avoid runtime errors.")]
+        public int DataSubscriptionLimit { get; set; } = int.MaxValue;
 
         /// <summary>
         /// Gets/sets the SetHoldings buffers value.
@@ -123,8 +124,6 @@ namespace QuantConnect
         /// </summary>
         public AlgorithmSettings()
         {
-            // default is unlimited
-            DataSubscriptionLimit = int.MaxValue;
             LiquidateEnabled = true;
             FreePortfolioValuePercentage = 0.0025m;
             // Because the free portfolio value has a trailing behavior by default, let's add a default minimum order margin portfolio percentage

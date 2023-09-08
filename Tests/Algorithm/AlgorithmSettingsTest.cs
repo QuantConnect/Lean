@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -49,55 +49,7 @@ namespace QuantConnect.Tests.Algorithm
             // It should NOT send a order to set us flat
             Assert.IsTrue(fakeOrderProcessor.ProcessedOrdersRequests.IsNullOrEmpty());
         }
-
-        [Test]
-        public void SettingDataSubscriptionLimitWorksCorrectly()
-        {
-            var algo = new QCAlgorithm();
-            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
-            algo.Settings.DataSubscriptionLimit = 1;
-
-            var tickers = new[] { "SPY", "AAPL" };
-
-            try
-            {
-                for (int i = 0; i < 2; i++)
-                {
-                    algo.AddEquity(tickers[i]);
-                }
-                Assert.Fail();
-            }
-            catch (Exception e)
-            {
-                // We are expecting it to throw an exception due to DataSubscriptionLimit
-                Assert.IsTrue(e.Message.Contains("DataSubscriptionLimit"));
-                Assert.AreEqual(algo.Securities.Count, 1);
-            }
-        }
-
-        [Test]
-        public void DefaultValueOfDataSubscriptionLimitWorksCorrectly()
-        {
-            var algo = new QCAlgorithm();
-            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
-
-            var tickers = new[] { "SPY", "AAPL" };
-
-            try
-            {
-                for (int i = 0; i < 2; i++)
-                {
-                    algo.AddEquity(tickers[i]);
-                }
-                Assert.AreEqual(algo.Securities.Count, 2);
-            }
-            catch (Exception)
-            {
-                Assert.Fail();
-                // We are NOT expecting it to throw an exception due to DataSubscriptionLimit
-            }
-        }
-
+        
         [Test]
         public void SettingSetHoldingsBufferWorksCorrectly()
         {

@@ -58,7 +58,6 @@ class EmptyEquityAndOptions400Benchmark(QCAlgorithm):
 
         ]
 
-        self.Settings.DataSubscriptionLimit = 1000000
         self.SetWarmUp(TimeSpan.FromDays(1))
         for ticker in  self.equity_symbols:
             option = self.AddOption(ticker)
