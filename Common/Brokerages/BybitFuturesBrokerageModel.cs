@@ -73,6 +73,7 @@ public class BybitFuturesBrokerageModel : BybitBrokerageModel
     {
         var map = DefaultMarketMap.ToDictionary();
         map[SecurityType.CryptoFuture] = marketName;
+        map[SecurityType.Crypto] = marketName; //Todo bybit futures has pairs which are not available on bybit spot, therefore we're getting conversion errors when running an algo
         return map.ToReadOnlyDictionary();
     }
 }
