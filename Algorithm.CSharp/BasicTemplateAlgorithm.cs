@@ -15,7 +15,9 @@
 
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using System;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -28,38 +30,24 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="trading and orders" />
     public class BasicTemplateAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2013, 10, 06);
+            SetEndDate(2013, 10, 07);
 
-            // Find more symbols here: http://quantconnect.com/data
-            // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
-            // Futures Resolution: Tick, Second, Minute
-            // Options Resolution: Minute Only.
-            AddEquity("SPY", Resolution.Minute);
-
-            // There are other assets with similar methods. See "Selecting Options" etc for more details.
-            // AddFuture, AddForex, AddCfd, AddOption
+            var crypto = AddEquity("SPY", Resolution.Tick, Market.USA);
+            var consolidator = Consolidate(crypto.Symbol, Resolution.Tick, TickType.Quote, (Tick tick) => OnTick(tick));
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            if (!Portfolio.Invested)
-            {
-                SetHoldings(_spy, 1);
-                Debug("Purchased Stock");
-            }
+            
+        }
+
+        private void OnTick(Tick tick)
+        {
+
+            //This will never be called when there is no quote tick data available even though TickType.Trade was selected
         }
 
         /// <summary>
