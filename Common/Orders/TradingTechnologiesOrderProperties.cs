@@ -20,6 +20,28 @@ namespace QuantConnect.Orders
     /// </summary>
     public class TradingTechnologiesOrderProperties : OrderProperties
     {
+        /// <summary>
+        /// Instruction for order handling on Broker floor
+        /// </summary>
         public char? HandleInstruction { get; set; }
+
+        /// <summary>
+        /// Order handling instructions
+        /// </summary>
+        public enum HandleInstructions
+        {
+            /// <summary>
+            /// Automated execution order, private, no broker intervention
+            /// </summary>
+            AutomatedExecutionOrderPrivate,
+            /// <summary>
+            /// Automated execution order, public, broker intervention OK
+            /// </summary>
+            AutomatedExecutionOrderPublic,
+            /// <summary>
+            /// Staged order, broker intervention required
+            /// </summary>
+            ManualOrder
+        }
     }
 }
