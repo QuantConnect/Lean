@@ -106,10 +106,10 @@ public class BybitBrokerageModel : DefaultBrokerageModel
             return false;
         }
 
-        if (order.Status is not (OrderStatus.New or OrderStatus.PartiallyFilled))
+        if (order.Status is not (OrderStatus.New or OrderStatus.PartiallyFilled or OrderStatus.Submitted or OrderStatus.UpdateSubmitted))
         {
             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
+                $"Order with status {order.Status} can't be modified");
             return false;
         }
 
