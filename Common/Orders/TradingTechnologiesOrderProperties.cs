@@ -26,22 +26,18 @@ namespace QuantConnect.Orders
         public char? HandleInstruction { get; set; }
 
         /// <summary>
-        /// Order handling instructions
+        /// Automated execution order, private, no broker intervention
         /// </summary>
-        public enum HandleInstructions
-        {
-            /// <summary>
-            /// Automated execution order, private, no broker intervention
-            /// </summary>
-            AutomatedExecutionOrderPrivate,
-            /// <summary>
-            /// Automated execution order, public, broker intervention OK
-            /// </summary>
-            AutomatedExecutionOrderPublic,
-            /// <summary>
-            /// Staged order, broker intervention required
-            /// </summary>
-            ManualOrder
-        }
+        public const char AutomatedExecutionOrderPrivate = '1';
+
+        /// <summary>
+        /// Automated execution order, public, broker, intervention OK
+        /// </summary>
+        public const char AutomatedExecutionOrderPublic = '2';
+
+        /// <summary>
+        /// Staged order, broker intervention required
+        /// </summary>
+        public const char ManualOrder = '3';
     }
 }
