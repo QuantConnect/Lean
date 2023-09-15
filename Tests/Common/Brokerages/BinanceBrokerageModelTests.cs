@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase(0.002, 5500, true)]
         [TestCase(0.003, 4500, true)]
-        [TestCase(0.002, 4500, false)]
+        [TestCase(0.0002, 4500, false)]
         public void CanSubmitLimitOrder_OrderSizeIsLargeEnough(decimal orderQuantity, decimal limitPrice, bool isValidOrderQuantity)
         {
             var order = new Mock<LimitOrder>
@@ -95,8 +95,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCase(0.002, 5500, 5500, true)]
-        [TestCase(0.002, 4500, 5500, false)]
-        [TestCase(0.002, 5500, 4500, false)]
+        [TestCase(0.001, 4500, 5500, false)]
+        [TestCase(0.001, 5500, 4500, false)]
         [TestCase(0.003, 4500, 5500, true)]
         [TestCase(0.003, 5500, 4500, true)]
         public void CanSubmitStopLimitOrder_OrderSizeIsLargeEnough(decimal orderQuantity, decimal stopPrice, decimal limitPrice, bool isValidOrderQuantity)
