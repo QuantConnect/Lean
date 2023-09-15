@@ -2803,7 +2803,6 @@ namespace QuantConnect.Algorithm
             var subscription = GetSubscription(symbol, tickType);
 
             // create requested consolidator
-            
             var consolidator = CreateConsolidator(period, subscription.Type, subscription.TickType);
 
             AddConsolidator(symbol, consolidator, handler);
