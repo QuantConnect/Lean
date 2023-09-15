@@ -148,8 +148,6 @@
   "bybit-api-key": "",
   "bybit-api-url": "https://api.bybit.com",
   "bybit-websocket-url": "wss://stream.bybit.com",
-  "bybit-orderbook-depth": 50,
-  "bybit-futures-oderbook-depth": 50,
 
   // kraken configuration
   "kraken-api-secret": "",
