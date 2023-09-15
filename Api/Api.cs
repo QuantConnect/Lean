@@ -506,7 +506,7 @@ namespace QuantConnect.Api
                     {
                         projectId,
                         backtestId,
-                        chart = chart.Key.Replace(' ', '+')
+                        chart = chart.Key
                     }), ParameterType.RequestBody);
 
                     // Add this chart to our updated collection

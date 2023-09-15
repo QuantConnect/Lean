@@ -15,6 +15,7 @@
 
 using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Api;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Report;
@@ -32,6 +33,25 @@ namespace QuantConnect.Tests.Report
         private const string OrderStringReplace = "{{orderStringReplace}}";
         private const string OrderTypeStringReplace = "{{marketOrderType}}";
         private const string EmptyJson = "{}";
+
+        private const string ValidBacktestResultJson2 = "{\"backtest\":{\"note\":null,\"name\":\"Emotional Black Mosquito\",\"organizationId\":99568,\"projectId\":15863659,\"completed\":true,\"optimizationId\":null,\"backtestId\"" +
+            ":\"2d5e2342b73ffb04bfa6ff4a505e3cad\",\"tradeableDates\":381,\"researchGuide\":{\"minutes\":1,\"backtestCount\":1,\"parameters\":0},\"backtestStart\":\"2022-03-10 00:00:00\",\"backtestEnd\":\"2023-09-14 23:59:59\"," +
+            "\"created\":\"2023-09-15 16:23:31\",\"snapshotId\":15863663,\"status\":\"Completed.\",\"error\":null,\"stacktrace\":null,\"progress\":1,\"profitLoss\":[],\"hasInitializeError\":false,\"charts\":{\"Portfolio Turnover\":" +
+            "{\"Name\":\"Portfolio Turnover\"},\"Drawdown\":{\"Name\":\"Drawdown\",\"ChartType\":0,\"Series\":{\"Equity Drawdown\":{\"Name\":\"Equity Drawdown\",\"Unit\":\"%\",\"Index\":0,\"SeriesType\":0,\"Values\":[{\"x\":1646888400,\"y\":0}" +
+            ",{\"x\":1646974800,\"y\":0}],\"Color\":\"\",\"ScatterMarkerSymbol\":\"none\"}}},\"Exposure\":{\"Name\":\"Exposure\"},\"Universe Analytics\":{\"Name\":\"Universe Analytics\"},\"Strategy Equity\":{\"Name\":\"Strategy Equity\"" +
+            ",\"LastValue\":null},\"Capacity\":{\"Name\":\"Capacity\"},\"Benchmark\":{\"Name\":\"Benchmark\"}},\"parameterSet\":[],\"alphaRuntimeStatistics\":null,\"runtimeStatistics\":{\"Equity\":\"$100,000.00\",\"Fees\":\"-$0.00\"," +
+            "\"Holdings\":\"$0.00\",\"Net Profit\":\"$0.00\",\"Probabilistic Sharpe Ratio\":\"0%\",\"Return\":\"0.00 %\",\"Unrealized\":\"$0.00\",\"Volume\":\"$0.00\"},\"statistics\":{\"Total Trades\":\"0\",\"Average Win\":\"0%\"," +
+            "\"Average Loss\":\"0%\",\"Compounding Annual Return\":\"0%\",\"Drawdown\":\"0%\",\"Expectancy\":\"0\",\"Net Profit\":\"0%\",\"Sharpe Ratio\":\"0\",\"Probabilistic Sharpe Ratio\":\"0%\",\"Loss Rate\":\"0%\",\"Win Rate\"" +
+            ":\"0%\",\"Profit-Loss Ratio\":\"0\",\"Alpha\":\"0\",\"Beta\":\"0\",\"Annual Standard Deviation\":\"0\",\"Annual Variance\":\"0\",\"Information Ratio\":\"-0.309\",\"Tracking Error\":\"0.169\",\"Treynor Ratio\":\"0\"" +
+            ",\"Total Fees\":\"$0.00\",\"Estimated Strategy Capacity\":\"$0\",\"Lowest Capacity Asset\":\"\",\"Portfolio Turnover\":\"0%\"},\"totalPerformance\":{\"TradeStatistics\":{\"StartDateTime\":null,\"EndDateTime\":null," +
+            "\"TotalNumberOfTrades\":0,\"NumberOfWinningTrades\":0,\"NumberOfLosingTrades\":0,\"TotalProfitLoss\":\"0\",\"TotalProfit\":\"0\",\"TotalLoss\":\"0\",\"LargestProfit\":\"0\",\"LargestLoss\":\"0\",\"AverageProfitLoss\"" +
+            ":\"0\",\"AverageProfit\":\"0\",\"AverageLoss\":\"0\",\"AverageTradeDuration\":\"00:00:00\",\"AverageWinningTradeDuration\":\"00:00:00\",\"AverageLosingTradeDuration\":\"00:00:00\",\"MedianTradeDuration\":\"00:00:00\"," +
+            "\"MedianWinningTradeDuration\":\"00:00:00\",\"MedianLosingTradeDuration\":\"00:00:00\",\"MaxConsecutiveWinningTrades\":0,\"MaxConsecutiveLosingTrades\":0,\"ProfitLossRatio\":\"0\",\"WinLossRatio\":\"0\",\"WinRate\":\"0\"," +
+            "\"LossRate\":\"0\",\"AverageMAE\":\"0\",\"AverageMFE\":\"0\",\"LargestMAE\":\"0\",\"LargestMFE\":\"0\",\"MaximumClosedTradeDrawdown\":\"0\",\"MaximumIntraTradeDrawdown\":\"0\",\"ProfitLossStandardDeviation\":\"0\"," +
+            "\"ProfitLossDownsideDeviation\":\"0\",\"ProfitFactor\":\"0\",\"SharpeRatio\":\"0\",\"SortinoRatio\":\"0\",\"ProfitToMaxDrawdownRatio\":\"0\",\"MaximumEndTradeDrawdown\":\"0\",\"AverageEndTradeDrawdown\":\"0\",\"MaximumDrawdownDuration\"" +
+            ":\"00:00:00\",\"TotalFees\":\"0\"},\"PortfolioStatistics\":{\"AverageWinRate\":\"0\",\"AverageLossRate\":\"0\",\"ProfitLossRatio\":\"0\",\"WinRate\":\"0\",\"LossRate\":\"0\",\"Expectancy\":\"0\",\"CompoundingAnnualReturn\":\"0\"" +
+            ",\"Drawdown\":\"0\",\"TotalNetProfit\":\"0\",\"SharpeRatio\":\"0\",\"ProbabilisticSharpeRatio\":\"0\",\"Alpha\":\"0\",\"Beta\":\"0\",\"AnnualStandardDeviation\":\"0\",\"AnnualVariance\":\"0\",\"InformationRatio\":\"-0.3094\"," +
+            "\"TrackingError\":\"0.1686\",\"TreynorRatio\":\"0\",\"PortfolioTurnover\":\"0\"},\"ClosedTrades\":[]},\"signals\":null,\"nodeName\":\"B8-16 node 1ed393c8\"},\"success\":true}";
 
         private const string ValidBacktestResultJson = "{\"RollingWindow\":{\"M1_20131011\":{\"TradeStatistics\":{\"StartDateTime\":null,\"EndDateTime\":null,\"TotalNumberOfTrades\":0,\"NumberOfWinningTrades\":0,\"NumberOfLosingTrades\":0,\"TotalProfitLoss\":\"0\",\"TotalProfit\":\"0\",\"TotalLoss\":\"0\",\"LargestProfit\":\"0\",\"LargestLoss\":\"0\",\"AverageProfitLoss\":\"0\"," +
             "\"AverageProfit\":\"0\",\"AverageLoss\":\"0\",\"AverageTradeDuration\":\"00:00:00\",\"AverageWinningTradeDuration\":\"00:00:00\",\"AverageLosingTradeDuration\":\"00:00:00\",\"MedianTradeDuration\":\"00:00:00\",\"MedianWinningTradeDuration\":\"00:00:00\",\"MedianLosingTradeDuration\":\"00:00:00\",\"MaxConsecutiveWinningTrades\":0,\"MaxConsecutiveLosingTrades\":0," +
@@ -127,6 +147,15 @@ namespace QuantConnect.Tests.Report
         'OrderIds': [1, 2, 3]
     }
 }}";
+        [Test]
+        public void ValidBacktestResultDefaultSerializer()
+        {
+            var result = JsonConvert.DeserializeObject<BacktestResponseWrapper>(ValidBacktestResultJson2).Backtest;
+
+            Assert.AreEqual(7, result.Charts.Count);
+            Assert.IsTrue(result.Charts.Where(x => x.Key == "Drawdown").All(kvp => !kvp.Value.IsEmpty()));
+        }
+
         [Test]
         public void ValidBacktestResult()
         {
