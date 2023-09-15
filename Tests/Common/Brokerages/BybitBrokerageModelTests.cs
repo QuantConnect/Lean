@@ -207,15 +207,13 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(message.Message, Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
         }
 
-     
-
         [TestFixture]
         public class Margin
         {
 
             private readonly Symbol _btcusdt = Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Bybit);
             private Security _security;
-            private BybitBrokerageModel _bybitBrokerageModel = new(AccountType.Margin);
+            private static BybitBrokerageModel BybitBrokerageModel => new(AccountType.Margin);
 
             [SetUp]
             public void Init()
@@ -224,15 +222,23 @@ namespace QuantConnect.Tests.Common.Brokerages
             }
 
             [Test]
+            public void CreatingThrows_ForMarginAccount()
+            {
+                var testDelegate = new TestDelegate(() => _ = BybitBrokerageModel);
+
+                Assert.Throws<NotSupportedException>(testDelegate);
+            }
+            
+            [Test, Ignore("Margin is currently not supported")]
             public void ReturnsSecurityMarginModel_ForMarginAccount()
             {
-                Assert.IsInstanceOf<SecurityMarginModel>(_bybitBrokerageModel.GetBuyingPowerModel(_security));
+                Assert.IsInstanceOf<SecurityMarginModel>(BybitBrokerageModel.GetBuyingPowerModel(_security));
             }
 
-            [Test]
+            [Test, Ignore("Margin is currently not supported")]
             public virtual void Returns10m_IfMarginAccount()
             {
-                Assert.AreEqual(10m, _bybitBrokerageModel.GetLeverage(_security));
+                Assert.AreEqual(10m, BybitBrokerageModel.GetLeverage(_security));
             }
         }
     }
@@ -244,12 +250,12 @@ namespace QuantConnect.Tests.Common.Brokerages
         private static readonly Symbol BTCUSDT = Symbol.Create("BTCUSDT", SecurityType.CryptoFuture, Market.Bybit);
         private Security _security;
 
-        protected virtual BybitBrokerageModel BybitBrokerageModel => new BybitFuturesBrokerageModel();
+        protected virtual BybitFuturesBrokerageModel BybitBrokerageModel => new();
         
         [SetUp]
         public void Init()
         {
-            _security = TestsHelpers.GetSecurity(symbol: BTCUSDT.Value, market: BTCUSDT.ID.Market, quoteCurrency: "USDT");
+            _security = TestsHelpers.GetSecurity(symbol: BTCUSDT.Value, market: BTCUSDT.ID.Market, quoteCurrency: "USDT", securityType: SecurityType.CryptoFuture);
         }
         
         [Test]
@@ -262,11 +268,11 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(OrderStatus.Filled, false)]
         [TestCase(OrderStatus.Invalid, false)]
         [TestCase(OrderStatus.New, true)]
-        [TestCase(OrderStatus.Submitted, false)]
+        [TestCase(OrderStatus.Submitted, true)]
         [TestCase(OrderStatus.None, false)]
         [TestCase(OrderStatus.CancelPending, false)]
         [TestCase(OrderStatus.PartiallyFilled, true)]
-        [TestCase(OrderStatus.UpdateSubmitted, false)]
+        [TestCase(OrderStatus.UpdateSubmitted, true)]
         public void CannotUpdateOrder_IfWrongOrderStatus(OrderStatus status, bool canUpdate)
         {
             var order = new LimitOrder(BTCUSDT, 1, 1000, DateTime.Now) { Status = status };
@@ -293,6 +299,35 @@ namespace QuantConnect.Tests.Common.Brokerages
                 Assert.AreEqual(Messages.DefaultBrokerageModel.InvalidOrderQuantity(_security,request.Quantity.Value), message.Message);
             }
 
+        }
+        
+        
+        [TestFixture]
+        public class Margin
+        {
+
+            private readonly Symbol _btcusdt = Symbol.Create("BTCUSDT", SecurityType.CryptoFuture, Market.Bybit);
+            private Security _security;
+            private BybitFuturesBrokerageModel _bybitBrokerageModel;
+
+            [SetUp]
+            public void Init()
+            {
+                _security = TestsHelpers.GetSecurity(symbol: _btcusdt.Value, market: _btcusdt.ID.Market, quoteCurrency: "USDT");
+                _bybitBrokerageModel = new();
+            }
+
+            [Test]
+            public void ReturnsSecurityMarginModel_ForMarginAccount()
+            {
+                Assert.IsInstanceOf<SecurityMarginModel>(_bybitBrokerageModel.GetBuyingPowerModel(_security));
+            }
+
+            [Test]
+            public virtual void Returns10m_IfMarginAccount()
+            {
+                Assert.AreEqual(10m, _bybitBrokerageModel.GetLeverage(_security));
+            }
         }
     }
 }

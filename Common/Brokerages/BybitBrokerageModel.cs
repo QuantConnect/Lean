@@ -45,6 +45,10 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     /// <param name="accountType">The type of account to be modeled, defaults to <see cref="AccountType.Cash"/></param>
     public BybitBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
     {
+        if (GetType() == typeof(BybitBrokerageModel) && accountType != AccountType.Cash)
+        {
+            throw new NotSupportedException("Margin trading on Bybit spot markets is currently not supported");
+        }
     }
 
     /// <summary>
