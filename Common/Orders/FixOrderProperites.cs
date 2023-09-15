@@ -12,13 +12,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-    
+
 namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Trading Technologies order properties
+    /// FIX (Financial Information Exchange) order properties
     /// </summary>
-    public class TradingTechnologiesOrderProperties : FixOrderProperites
+    public class FixOrderProperites: OrderProperties
     {
+        /// <summary>
+        /// Instruction for order handling on Broker floor
+        /// </summary>
+        public char? HandleInstruction { get; set; }
+
+        /// <summary>
+        /// Automated execution order, private, no broker intervention
+        /// </summary>
+        public const char AutomatedExecutionOrderPrivate = '1';
+
+        /// <summary>
+        /// Automated execution order, public, broker, intervention OK
+        /// </summary>
+        public const char AutomatedExecutionOrderPublic = '2';
+
+        /// <summary>
+        /// Staged order, broker intervention required
+        /// </summary>
+        public const char ManualOrder = '3';
     }
 }
