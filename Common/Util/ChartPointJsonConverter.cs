@@ -60,7 +60,7 @@ namespace QuantConnect.Util
                 }
 
                 var y = jObject["y"];
-                if (y != null && y.Type == JTokenType.Float)
+                if (y != null && (y.Type == JTokenType.Float || y.Type == JTokenType.Integer))
                 {
                     return new ChartPoint(x.Value<long>(), y.Value<decimal>());
                 }
