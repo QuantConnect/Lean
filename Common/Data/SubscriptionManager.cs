@@ -142,10 +142,11 @@ namespace QuantConnect.Data
 
 
         /// <summary>
-        ///     Add a consolidator for the symbol
+        /// Add a consolidator for the symbol
         /// </summary>
         /// <param name="symbol">Symbol of the asset to consolidate</param>
         /// <param name="consolidator">The consolidator</param>
+        /// <param name="tickType">Desired tick type of the subscription</param>
         public void AddConsolidator(Symbol symbol, IDataConsolidator consolidator, TickType? tickType = null)
         {
             // Find the right subscription and add the consolidator to it
@@ -168,14 +169,15 @@ namespace QuantConnect.Data
                 }
             }
 
+            string tickTypeException = null;
             if (tickType != null && !subscriptions.Where(x => x.TickType == tickType).Any())
             {
-                throw new ArgumentException($"No subscription with the requested Tick Type {tickType} was found. Available Tick Types: {string.Join(", ", subscriptions.Select(x => x.TickType))}");
+                tickTypeException = $"No subscription with the requested Tick Type {tickType} was found. Available Tick Types: {string.Join(", ", subscriptions.Select(x => x.TickType))}";
             }
 
-            throw new ArgumentException("Type mismatch found between consolidator and symbol. " +
+            throw new ArgumentException(tickTypeException ?? ("Type mismatch found between consolidator and symbol. " +
                 $"Symbol: {symbol.Value} does not support input type: {consolidator.InputType.Name}. " +
-                $"Supported types: {string.Join(",", subscriptions.Select(x => x.Type.Name))}.");
+                $"Supported types: {string.Join(",", subscriptions.Select(x => x.Type.Name))}."));
         }
 
         /// <summary>
@@ -285,7 +287,7 @@ namespace QuantConnect.Data
 
                 return subscription.TickType == tickType;
             }
-            else if (subscription.TickType != desiredTickType)
+            else if (desiredTickType != null && subscription.TickType != desiredTickType)
             {
                 return false;
             }
