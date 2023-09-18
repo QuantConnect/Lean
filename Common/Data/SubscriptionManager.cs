@@ -146,7 +146,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="symbol">Symbol of the asset to consolidate</param>
         /// <param name="consolidator">The consolidator</param>
-        public void AddConsolidator(Symbol symbol, IDataConsolidator consolidator)
+        public void AddConsolidator(Symbol symbol, IDataConsolidator consolidator, TickType? tickType = null)
         {
             // Find the right subscription and add the consolidator to it
             var subscriptions = Subscriptions.Where(x => x.Symbol == symbol).ToList();
@@ -156,6 +156,16 @@ namespace QuantConnect.Data
                 // If we made it here it is because we never found the symbol in the subscription list
                 throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " +
                     symbol.Value);
+            }
+
+            if (tickType != null)
+            {
+                var subscriptionWithDesiredTickType = subscriptions.Where(x => x.TickType == tickType).SingleOrDefault();
+                if (subscriptionWithDesiredTickType != default && IsSubscriptionValidForConsolidator(subscriptionWithDesiredTickType, consolidator, tickType))
+                {
+                    subscriptionWithDesiredTickType.Consolidators.Add(consolidator);
+                    return;
+                }
             }
 
             foreach (var subscription in subscriptions)
@@ -269,10 +279,10 @@ namespace QuantConnect.Data
         /// <param name="subscription">The subscription configuration</param>
         /// <param name="consolidator">The consolidator</param>
         /// <returns>true if the subscription is valid for the consolidator</returns>
-        public static bool IsSubscriptionValidForConsolidator(SubscriptionDataConfig subscription, IDataConsolidator consolidator)
+        public static bool IsSubscriptionValidForConsolidator(SubscriptionDataConfig subscription, IDataConsolidator consolidator, TickType? desiredTickType = null)
         {
             if (subscription.Type == typeof(Tick) &&
-                LeanData.IsCommonLeanDataType(consolidator.OutputType))
+                LeanData.IsCommonLeanDataType(consolidator.OutputType) && desiredTickType == null)
             {
                 var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(
                     consolidator.OutputType,
