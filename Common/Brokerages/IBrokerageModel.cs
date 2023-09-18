@@ -262,6 +262,9 @@ namespace QuantConnect.Brokerages
 
                 case BrokerageName.RBI: 
                     return new RBIBrokerageModel(accountType);
+                
+                case BrokerageName.Bybit:
+                    return new BybitBrokerageModel(accountType);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
@@ -344,6 +347,9 @@ namespace QuantConnect.Brokerages
 
                 case RBIBrokerageModel _:
                     return BrokerageName.RBI;
+
+                case BybitBrokerageModel _:
+                    return BrokerageName.Bybit;
 
                 case DefaultBrokerageModel _:
                     return BrokerageName.Default;

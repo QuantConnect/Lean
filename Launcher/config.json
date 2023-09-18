@@ -142,6 +142,13 @@
   "binanceus-api-url": "https://api.binance.us",
   "binanceus-websocket-url": "wss://stream.binance.us:9443/ws",
 
+
+  // bybit configuration
+  "bybit-api-secret": "",
+  "bybit-api-key": "",
+  "bybit-api-url": "https://api.bybit.com",
+  "bybit-websocket-url": "wss://stream.bybit.com",
+
   // kraken configuration
   "kraken-api-secret": "",
   "kraken-api-key": "",
@@ -486,6 +493,34 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "QuantConnect.BinanceBrokerage.BinanceUSBrokerage",
       "data-queue-handler": [ "QuantConnect.BinanceBrokerage.BinanceUSBrokerage" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    "live-bybit": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "QuantConnect.BybitBrokerage.BybitBrokerage",
+      "data-queue-handler": [ "QuantConnect.BybitBrokerage.BybitBrokerage" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    "live-futures-bybit": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "QuantConnect.BybitBrokerage.BybitFuturesBrokerage",
+      "data-queue-handler": [ "QuantConnect.BybitBrokerage.BybitFuturesBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
