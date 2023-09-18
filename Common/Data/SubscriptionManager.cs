@@ -158,24 +158,19 @@ namespace QuantConnect.Data
                     symbol.Value);
             }
 
-            if (tickType != null)
-            {
-                var subscriptionWithDesiredTickType = subscriptions.Where(x => x.TickType == tickType).SingleOrDefault();
-                if (subscriptionWithDesiredTickType != default && IsSubscriptionValidForConsolidator(subscriptionWithDesiredTickType, consolidator, tickType))
-                {
-                    subscriptionWithDesiredTickType.Consolidators.Add(consolidator);
-                    return;
-                }
-            }
-
             foreach (var subscription in subscriptions)
             {
                 // we need to be able to pipe data directly from the data feed into the consolidator
-                if (IsSubscriptionValidForConsolidator(subscription, consolidator))
+                if (IsSubscriptionValidForConsolidator(subscription, consolidator, tickType))
                 {
                     subscription.Consolidators.Add(consolidator);
                     return;
                 }
+            }
+
+            if (tickType != null && !subscriptions.Where(x => x.TickType == tickType).Any())
+            {
+                throw new ArgumentException($"No subscription with the requested Tick Type {tickType} was found. Available Tick Types: {string.Join(", ", subscriptions.Select(x => x.TickType))}");
             }
 
             throw new ArgumentException("Type mismatch found between consolidator and symbol. " +
@@ -289,6 +284,10 @@ namespace QuantConnect.Data
                     subscription.Symbol.SecurityType);
 
                 return subscription.TickType == tickType;
+            }
+            else if (subscription.TickType != desiredTickType)
+            {
+                return false;
             }
 
             return consolidator.InputType.IsAssignableFrom(subscription.Type);
