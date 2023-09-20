@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Statistics;
 using Newtonsoft.Json;
+using QuantConnect.Data;
 using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
@@ -246,7 +247,10 @@ namespace QuantConnect.Statistics
 
             var benchmarkAnnualPerformance = GetAnnualPerformance(listBenchmark, tradingDaysPerYear);
             var annualPerformance = GetAnnualPerformance(listPerformance, tradingDaysPerYear);
-            SharpeRatio = AnnualStandardDeviation == 0 ? 0 : (annualPerformance - RiskFreeRate) / AnnualStandardDeviation;
+
+            var interestRateProvider = new InterestRateProvider();
+            var riskFreeRate = equity.Select(x => interestRateProvider.GetInterestRate(x.Key)).Average();
+            SharpeRatio = AnnualStandardDeviation == 0 ? 0 : (annualPerformance - riskFreeRate) / AnnualStandardDeviation;
 
             var benchmarkVariance = listBenchmark.Variance();
             Beta = benchmarkVariance.IsNaNOrZero() ? 0 : (decimal) (listPerformance.Covariance(listBenchmark) / benchmarkVariance);
