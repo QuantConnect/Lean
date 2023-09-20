@@ -2184,7 +2184,9 @@ namespace QuantConnect.Algorithm
             var underlying = symbol.Underlying;
             Security underlyingSecurity;
             List<SubscriptionDataConfig> underlyingConfigs;
-            if (!Securities.TryGetValue(underlying, out underlyingSecurity) || !underlyingSecurity.IsTradable)
+            if (!Securities.TryGetValue(underlying, out underlyingSecurity) ||
+                // The underlying might have been removed, let's see if there's already a subscription for it
+                (!underlyingSecurity.IsTradable && !SubscriptionManager.Subscriptions.Any(x => x.Symbol == underlying)))
             {
                 underlyingSecurity = AddSecurity(underlying, resolution, fillForward, leverage, extendedMarketHours);
                 underlyingConfigs = SubscriptionManager.SubscriptionDataConfigService
