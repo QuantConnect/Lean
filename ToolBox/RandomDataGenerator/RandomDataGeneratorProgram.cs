@@ -99,7 +99,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     // from settings
                     if (security is Option option)
                     {
-                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName, Statistics.PortfolioStatistics.GetRiskFreeRate());
+                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName, Statistics.PortfolioStatistics.GetRiskFreeRate(settings.Start, settings.End));
                     }
                 })),
                 RegisteredSecurityDataTypesProvider.Null,

@@ -28,8 +28,6 @@ namespace QuantConnect.Statistics
     /// </summary>
     public class PortfolioStatistics
     {
-        private const decimal RiskFreeRate = 0;
-
         /// <summary>
         /// The average rate of return for winning trades
         /// </summary>
@@ -255,13 +253,13 @@ namespace QuantConnect.Statistics
             var benchmarkVariance = listBenchmark.Variance();
             Beta = benchmarkVariance.IsNaNOrZero() ? 0 : (decimal) (listPerformance.Covariance(listBenchmark) / benchmarkVariance);
 
-            Alpha = Beta == 0 ? 0 : annualPerformance - (RiskFreeRate + Beta * (benchmarkAnnualPerformance - RiskFreeRate));
+            Alpha = Beta == 0 ? 0 : annualPerformance - (riskFreeRate + Beta * (benchmarkAnnualPerformance - riskFreeRate));
 
             TrackingError = (decimal)Statistics.TrackingError(listPerformance, listBenchmark, (double)tradingDaysPerYear);
 
             InformationRatio = TrackingError == 0 ? 0 : (annualPerformance - benchmarkAnnualPerformance) / TrackingError;
 
-            TreynorRatio = Beta == 0 ? 0 : (annualPerformance - RiskFreeRate) / Beta;
+            TreynorRatio = Beta == 0 ? 0 : (annualPerformance - riskFreeRate) / Beta;
 
             // deannualize a 1 sharpe ratio
             var benchmarkSharpeRatio = 1.0d / Math.Sqrt(252);
@@ -276,11 +274,13 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Gets the current defined risk free annual return rate
+        /// Gets the average risk free annual return rate
         /// </summary>
-        public static decimal GetRiskFreeRate()
+        /// <param name="startDate">Start date to calculate the average</param>
+        /// <param name="endDate">End date to calculate the average</param>
+        public static decimal GetRiskFreeRate(DateTime startDate, DateTime endDate)
         {
-            return RiskFreeRate;
+            return new InterestRateProvider().GetInterestRateAverage(startDate, endDate);
         }
 
         /// <summary>

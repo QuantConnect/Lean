@@ -38,7 +38,7 @@ namespace QuantConnect.Data
         public static decimal DefaultRiskFreeRate { get; } = 0.01m;
 
         private DateTime _lastInterestRateDate;
-        private Dictionary<DateTime, decimal> _riskFreeRateProvider;
+        private Lazy<Dictionary<DateTime, decimal>> _riskFreeRateProvider;
 
         /// <summary>
         /// Create class instance of interest rate provider
@@ -48,6 +48,11 @@ namespace QuantConnect.Data
             LoadInterestRateProvider();
         }
 
+        public decimal GetInterestRateAverage(DateTime startTime, DateTime endTime)
+        {
+            return _riskFreeRateProvider.Value.Where(x => x.Key > startTime && x.Key < endTime.AddDays(1)).Select(x => x.Value).Average();
+        }
+
         /// <summary>
         /// Get interest rate by a given datetime
         /// </summary>
@@ -55,11 +60,11 @@ namespace QuantConnect.Data
         /// <returns>interest rate of the given date</returns>
         public decimal GetInterestRate(DateTime dateTime)
         {
-            if (!_riskFreeRateProvider.TryGetValue(dateTime, out var interestRate))
+            if (!_riskFreeRateProvider.Value.TryGetValue(dateTime, out var interestRate))
             {
                 return dateTime < FirstInterestRateDate
-                    ? _riskFreeRateProvider[FirstInterestRateDate]
-                    : _riskFreeRateProvider[_lastInterestRateDate];
+                    ? _riskFreeRateProvider.Value[FirstInterestRateDate]
+                    : _riskFreeRateProvider.Value[_lastInterestRateDate];
             }
 
             return interestRate;
@@ -72,16 +77,16 @@ namespace QuantConnect.Data
         {
             var directory = Path.Combine(Globals.DataFolder, "alternative", "interest-rate", "usa",
                 "interest-rate.csv");
-            _riskFreeRateProvider = FromCsvFile(directory, out var previousInterestRate);
+            _riskFreeRateProvider = new Lazy<Dictionary<DateTime, decimal>>(FromCsvFile(directory, out var previousInterestRate));
 
             _lastInterestRateDate = DateTime.UtcNow.Date;
 
             // Sparse the discrete data points into continuous credit rate data for every day
             for (var date = FirstInterestRateDate; date <= _lastInterestRateDate; date = date.AddDays(1))
             {
-                if (!_riskFreeRateProvider.TryGetValue(date, out var currentRate))
+                if (!_riskFreeRateProvider.Value.TryGetValue(date, out var currentRate))
                 {
-                    _riskFreeRateProvider[date] = previousInterestRate;
+                    _riskFreeRateProvider.Value[date] = previousInterestRate;
                     continue;
                 }
 
