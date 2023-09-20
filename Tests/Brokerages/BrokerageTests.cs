@@ -141,7 +141,7 @@ namespace QuantConnect.Tests.Brokerages
         private void HandleFillEvents(object sender, List<OrderEvent> ordeEvents)
         {
             Log.Trace("");
-            Log.Trace("ORDER STATUS CHANGED: " + ordeEvents);
+            Log.Trace($"ORDER STATUS CHANGED: {string.Join(",", ordeEvents.Select(x => x.ToString()))}");
             Log.Trace("");
 
             var orderEvent = ordeEvents[0];
