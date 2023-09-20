@@ -146,7 +146,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="symbol">Symbol of the asset to consolidate</param>
         /// <param name="consolidator">The consolidator</param>
-        /// <param name="tickType">Desired tick type of the subscription</param>
+        /// <param name="tickType">Desired tick type for the subscription</param>
         public void AddConsolidator(Symbol symbol, IDataConsolidator consolidator, TickType? tickType = null)
         {
             // Find the right subscription and add the consolidator to it
@@ -275,21 +275,25 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="subscription">The subscription configuration</param>
         /// <param name="consolidator">The consolidator</param>
+        /// <param name="desiredTickType">The desired tick type for the subscription. If not given is null.</param>
         /// <returns>true if the subscription is valid for the consolidator</returns>
         public static bool IsSubscriptionValidForConsolidator(SubscriptionDataConfig subscription, IDataConsolidator consolidator, TickType? desiredTickType = null)
         {
             if (subscription.Type == typeof(Tick) &&
-                LeanData.IsCommonLeanDataType(consolidator.OutputType) && desiredTickType == null)
+                LeanData.IsCommonLeanDataType(consolidator.OutputType))
             {
-                var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(
+                if (desiredTickType == null)
+                {
+                    var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(
                     consolidator.OutputType,
                     subscription.Symbol.SecurityType);
 
-                return subscription.TickType == tickType;
-            }
-            else if (desiredTickType != null && subscription.TickType != desiredTickType)
-            {
-                return false;
+                    return subscription.TickType == tickType;
+                }
+                else if (subscription.TickType != desiredTickType)
+                {
+                    return false;
+                }
             }
 
             return consolidator.InputType.IsAssignableFrom(subscription.Type);
