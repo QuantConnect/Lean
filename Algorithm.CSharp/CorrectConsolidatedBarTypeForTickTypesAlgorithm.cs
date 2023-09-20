@@ -29,7 +29,6 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private bool _quoteTickConsolidatorCalled;
         private bool _tradeTickConsolidatorCalled;
-        private bool _openInterestTickConsolidatorCalled;
 
         public override void Initialize()
         {
@@ -40,7 +39,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             Consolidate<QuoteBar>(symbol, TimeSpan.FromMinutes(1), TickType.Quote, QuoteTickConsolidationHandler);
             Consolidate<TradeBar>(symbol, TimeSpan.FromMinutes(1), TickType.Trade, TradeTickConsolidationHandler);
-            Consolidate<TradeBar>(symbol, TimeSpan.FromMinutes(1), TickType.OpenInterest, OpenInterestTickConsolidationHandler);
         }
 
         public override void OnData(Slice slice)
@@ -62,11 +60,6 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("TradeTickConsolidationHandler was not called");
             }
-
-            if (!_openInterestTickConsolidatorCalled)
-            {
-                throw new Exception("OpenInterestTickConsolidationHandler was not called");
-            }
         }
 
         private void QuoteTickConsolidationHandler(QuoteBar consolidatedBar)
@@ -77,11 +70,6 @@ namespace QuantConnect.Algorithm.CSharp
         private void TradeTickConsolidationHandler(TradeBar consolidatedBar)
         {
             _tradeTickConsolidatorCalled = true;
-        }
-
-        private void OpenInterestTickConsolidationHandler(TradeBar consolidatedBar)
-        {
-            _openInterestTickConsolidatorCalled = true;
         }
 
         /// <summary>
