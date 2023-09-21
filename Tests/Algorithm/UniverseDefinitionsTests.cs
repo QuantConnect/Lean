@@ -25,7 +25,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture, Parallelizable(ParallelScope.All)]
+    [TestFixture]
     public class UniverseDefinitionsTests
     {
         [TestCase(Language.CSharp)]
@@ -73,6 +73,7 @@ def getETFs(algorithm: QCAlgorithm, symbol: Symbol, universeSettings: UniverseSe
         universeDefinitions.ETF('SPY', Market.USA, universeSettings),
         universeDefinitions.ETF('SPY', Market.USA, universeSettings, filterETFs),
         universeDefinitions.ETF('SPY', Market.USA, universeFilterFunc=filterETFs),
+        universeDefinitions.ETF('SPY', universeSettings, filterETFs),
         universeDefinitions.ETF('SPY', universeSettings=universeSettings),
         universeDefinitions.ETF('SPY', universeFilterFunc=filterETFs),
         universeDefinitions.ETF('SPY', universeSettings=universeSettings, universeFilterFunc=filterETFs),
@@ -140,6 +141,7 @@ def getIndexes(algorithm: QCAlgorithm, symbol: Symbol, universeSettings: Univers
         universeDefinitions.Index('SPY', Market.USA, universeSettings),
         universeDefinitions.Index('SPY', Market.USA, universeSettings, filterIndexes),
         universeDefinitions.Index('SPY', Market.USA, universeFilterFunc=filterIndexes),
+        universeDefinitions.Index('SPY', universeSettings, filterIndexes),
         universeDefinitions.Index('SPY', universeSettings=universeSettings),
         universeDefinitions.Index('SPY', universeFilterFunc=filterIndexes),
         universeDefinitions.Index('SPY', universeSettings=universeSettings, universeFilterFunc=filterIndexes),
