@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Logging;
@@ -33,7 +34,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         [Test, Category("TravisExclude")]
         public void DoesNotLeakMemory()
         {
-            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
+            var symbol = Fundamental.CreateUniverseSymbol(Market.USA);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -77,7 +78,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         [Test]
         public void ReturnsExpectedTimestamps()
         {
-            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
+            var symbol = Fundamental.CreateUniverseSymbol(Market.USA);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),

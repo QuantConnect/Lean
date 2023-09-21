@@ -23,6 +23,8 @@ using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Research;
 using QuantConnect.Securities;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests.Research
 {
@@ -89,6 +91,7 @@ namespace QuantConnect.Tests.Research
             using (Py.GIL())
             {
                 var testModule = _module.FundamentalHistoryTest();
+                FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider());
                 var dataFrame = testModule.getFundamentals(input[0], input[1], _startDate, _endDate);
 
                 // Should not be empty
@@ -120,6 +123,7 @@ namespace QuantConnect.Tests.Research
         [TestCaseSource(nameof(DataTestCases))]
         public void CSharpFundamentalData(dynamic input)
         {
+            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider());
             var data = _qb.GetFundamental(input[0], input[1], _startDate, _endDate);
             var currentDate = _startDate;
 
@@ -195,7 +199,7 @@ namespace QuantConnect.Tests.Research
         // Different requests and their expected values
         private static readonly object[] DataTestCases =
         {
-            new object[] {new List<string> {"AAPL"}, null, 13.2725m, new Func<FineFundamental, decimal>(fundamental => fundamental.ValuationRatios.PERatio) },
+            new object[] {new List<string> {"AAPL"}, null, 13.2725m, new Func<FineFundamental, double>(fundamental => fundamental.ValuationRatios.PERatio) },
             new object[] {new List<string> {"AAPL"}, "ValuationRatios.PERatio", 13.2725m},
             new object[] {Symbol.Create("IBM", SecurityType.Equity, Market.USA), "ValuationRatios.BookValuePerShare", 22.5177},
             new object[] {new List<Symbol> {Symbol.Create("AIG", SecurityType.Equity, Market.USA)}, "FinancialStatements.NumberOfShareHolders", 36319}
@@ -216,6 +220,35 @@ namespace QuantConnect.Tests.Research
             // monday,saturday
             new TestCaseData(new DateTime(2014, 3, 31), new DateTime(2014, 4, 12))
         };
+
+        private class TestFundamentalDataProvider : IFundamentalDataProvider
+        {
+            public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, string name)
+            {
+                if (securityIdentifier == SecurityIdentifier.Empty)
+                {
+                    return default;
+                }
+                return Get(time, securityIdentifier, name);
+            }
+
+            private dynamic Get(DateTime time, SecurityIdentifier securityIdentifier, string name)
+            {
+                switch (name)
+                {
+                    case "ValuationRatios.PERatio":
+                        return 13.2725d;
+                    case "ValuationRatios.BookValuePerShare":
+                        return 22.5177d;
+                    case "FinancialStatements.NumberOfShareHolders":
+                        return 36319;
+                }
+                return null;
+            }
+            public void Initialize(IDataProvider dataProvider)
+            {
+            }
+        }
     }
 }
 

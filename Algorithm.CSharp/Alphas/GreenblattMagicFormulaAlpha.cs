@@ -195,11 +195,11 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             private const int _numberOfSymbolsFine = 20;
             private const int _numberOfSymbolsInPortfolio = 10;
             private int _lastMonth = -1;
-            private Dictionary<Symbol, decimal> _dollarVolumeBySymbol;
+            private Dictionary<Symbol, double> _dollarVolumeBySymbol;
 
             public GreenBlattMagicFormulaUniverseSelectionModel() : base(true)
             {
-                _dollarVolumeBySymbol = new Dictionary<Symbol, decimal>();
+                _dollarVolumeBySymbol = new ();
             }
 
             /// <summary>
@@ -245,7 +245,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     where x.CompanyReference.CountryId == "USA"
                     where x.CompanyReference.PrimaryExchangeID == "NYS" || x.CompanyReference.PrimaryExchangeID == "NAS"
                     where (algorithm.Time - x.SecurityReference.IPODate).TotalDays > 180
-                    where x.EarningReports.BasicAverageShares.ThreeMonths * x.EarningReports.BasicEPS.TwelveMonths * x.ValuationRatios.PERatio > 5e8m
+                    where x.EarningReports.BasicAverageShares.ThreeMonths * x.EarningReports.BasicEPS.TwelveMonths * x.ValuationRatios.PERatio > 5e8
                     select x;
 
                 double count = filteredFine.Count();

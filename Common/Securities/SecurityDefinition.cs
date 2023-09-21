@@ -15,8 +15,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Globalization;
+using System.Collections.Generic;
 
 using QuantConnect.Interfaces;
 
@@ -61,6 +62,13 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>For more information about the ISIN standard: https://en.wikipedia.org/wiki/International_Securities_Identification_Number</remarks>
         public string ISIN { get; set; }
+
+        /// <summary>
+        /// A Central Index Key or CIK number is a unique number assigned to an individual, company, filing agent or foreign government by the United States
+        /// Securities and Exchange Commission (SEC). The number is used to identify its filings in several online databases, including EDGAR.
+        /// </summary>
+        /// <remarks>For more information about CIK: https://en.wikipedia.org/wiki/Central_Index_Key</remarks>
+        public int? CIK { get; set; }
 
         /// <summary>
         /// Reads data from the specified file and converts it to a list of SecurityDefinition
@@ -124,7 +132,8 @@ namespace QuantConnect.Securities
                 CUSIP = string.IsNullOrWhiteSpace(csv[1]) ? null : csv[1],
                 CompositeFIGI = string.IsNullOrWhiteSpace(csv[2]) ? null : csv[2],
                 SEDOL = string.IsNullOrWhiteSpace(csv[3]) ? null : csv[3],
-                ISIN = string.IsNullOrWhiteSpace(csv[4]) ? null : csv[4]
+                ISIN = string.IsNullOrWhiteSpace(csv[4]) ? null : csv[4],
+                CIK = (csv.Length <= 5 || string.IsNullOrWhiteSpace(csv[5])) ? null : int.Parse(csv[5], CultureInfo.InvariantCulture)
             };
         }
     }

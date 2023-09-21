@@ -33,9 +33,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Packets;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using System.Threading.Tasks;
 
 namespace QuantConnect.Research
@@ -764,6 +762,7 @@ namespace QuantConnect.Research
             {
                 if (baseData == null) return null;
 
+                // TODO this is expensive and can be cached
                 var info = baseData.GetType().GetProperty(name);
 
                 baseData = info?.GetValue(baseData, null);
@@ -788,46 +787,25 @@ namespace QuantConnect.Research
             //Collection to store our results
             var data = new Dictionary<DateTime, DataDictionary<dynamic>>();
 
-            //Build factory
-            var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
-
             //Get all data for each symbol and fill our dictionary
-            var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
-            Parallel.ForEach(symbols, options, symbol =>
+            foreach (var symbol in symbols)
             {
-                var config = new SubscriptionDataConfig(
-                        typeof(FineFundamental),
-                        symbol,
-                        Resolution.Daily,
-                        TimeZones.NewYork,
-                        TimeZones.NewYork,
-                        false,
-                        false,
-                        false
-                    );
-                var security = Securities.CreateSecurity(symbol, config);
-                var request = new SubscriptionRequest(false, null, security, config, startTime.ConvertToUtc(TimeZones.NewYork), endTime.ConvertToUtc(TimeZones.NewYork));
-                using (var enumerator = factory.CreateEnumerator(request, _dataProvider))
+                var exchangeHours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+                foreach (var date in QuantConnect.Time.EachTradeableDayInTimeZone(exchangeHours, startTime, endTime, TimeZones.NewYork))
                 {
-                    while (enumerator.MoveNext())
-                    {
-                        var currentData = enumerator.Current;
-                        var time = currentData.EndTime;
-                        var dataPoint = string.IsNullOrWhiteSpace(selector)
-                            ? currentData
-                            : GetPropertyValue(currentData, selector);
+                    var currentData = new Fundamental(date, symbol);
+                    var time = currentData.EndTime;
+                    var dataPoint = string.IsNullOrWhiteSpace(selector)
+                        ? currentData
+                        : GetPropertyValue(currentData, selector);
 
-                        lock (data)
-                        {
-                            if (!data.TryGetValue(time, out var dataAtTime))
-                            {
-                                dataAtTime = data[time] = new DataDictionary<dynamic>(time);
-                            }
-                            dataAtTime.Add(currentData.Symbol, dataPoint);
-                        }
+                    if (!data.TryGetValue(time, out var dataAtTime))
+                    {
+                        dataAtTime = data[time] = new DataDictionary<dynamic>(time);
                     }
+                    dataAtTime.Add(currentData.Symbol, dataPoint);
                 }
-            });
+            }
             return data;
         }
 
