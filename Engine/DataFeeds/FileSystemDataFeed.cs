@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -194,7 +195,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return factory.CreateEnumerator(request, _dataProvider);
                 }
             }
-            else if (request.Configuration.Type == typeof(CoarseFundamental))
+            else if (request.Configuration.Type == typeof(CoarseFundamental) || request.Configuration.Type == typeof(Fundamental))
             {
                 factory = new BaseDataCollectionSubscriptionEnumeratorFactory();
             }

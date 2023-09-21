@@ -20,7 +20,6 @@ using System.Numerics;
 using Newtonsoft.Json;
 using ProtoBuf;
 using QuantConnect.Configuration;
-using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
