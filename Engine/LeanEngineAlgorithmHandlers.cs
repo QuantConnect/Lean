@@ -19,6 +19,7 @@ using System.ComponentModel.Composition;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
@@ -228,6 +229,8 @@ namespace QuantConnect.Lean.Engine
                 throw new ArgumentException($"The {typeof(ApiDataProvider)} can only be used with {typeof(LocalZipFactorFileProvider)}" +
                     $" and {typeof(LocalZipMapFileProvider)}, please update 'config.json'");
             }
+
+            FundamentalService.Initialize(result.DataProvider);
 
             return result;
         }
