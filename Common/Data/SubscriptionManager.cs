@@ -142,11 +142,12 @@ namespace QuantConnect.Data
 
 
         /// <summary>
-        ///     Add a consolidator for the symbol
+        /// Add a consolidator for the symbol
         /// </summary>
         /// <param name="symbol">Symbol of the asset to consolidate</param>
         /// <param name="consolidator">The consolidator</param>
-        public void AddConsolidator(Symbol symbol, IDataConsolidator consolidator)
+        /// <param name="tickType">Desired tick type for the subscription</param>
+        public void AddConsolidator(Symbol symbol, IDataConsolidator consolidator, TickType? tickType = null)
         {
             // Find the right subscription and add the consolidator to it
             var subscriptions = Subscriptions.Where(x => x.Symbol == symbol).ToList();
@@ -161,16 +162,22 @@ namespace QuantConnect.Data
             foreach (var subscription in subscriptions)
             {
                 // we need to be able to pipe data directly from the data feed into the consolidator
-                if (IsSubscriptionValidForConsolidator(subscription, consolidator))
+                if (IsSubscriptionValidForConsolidator(subscription, consolidator, tickType))
                 {
                     subscription.Consolidators.Add(consolidator);
                     return;
                 }
             }
 
-            throw new ArgumentException("Type mismatch found between consolidator and symbol. " +
+            string tickTypeException = null;
+            if (tickType != null && !subscriptions.Where(x => x.TickType == tickType).Any())
+            {
+                tickTypeException = $"No subscription with the requested Tick Type {tickType} was found. Available Tick Types: {string.Join(", ", subscriptions.Select(x => x.TickType))}";
+            }
+
+            throw new ArgumentException(tickTypeException ?? ("Type mismatch found between consolidator and symbol. " +
                 $"Symbol: {symbol.Value} does not support input type: {consolidator.InputType.Name}. " +
-                $"Supported types: {string.Join(",", subscriptions.Select(x => x.Type.Name))}.");
+                $"Supported types: {string.Join(",", subscriptions.Select(x => x.Type.Name))}."));
         }
 
         /// <summary>
@@ -268,17 +275,25 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="subscription">The subscription configuration</param>
         /// <param name="consolidator">The consolidator</param>
+        /// <param name="desiredTickType">The desired tick type for the subscription. If not given is null.</param>
         /// <returns>true if the subscription is valid for the consolidator</returns>
-        public static bool IsSubscriptionValidForConsolidator(SubscriptionDataConfig subscription, IDataConsolidator consolidator)
+        public static bool IsSubscriptionValidForConsolidator(SubscriptionDataConfig subscription, IDataConsolidator consolidator, TickType? desiredTickType = null)
         {
             if (subscription.Type == typeof(Tick) &&
                 LeanData.IsCommonLeanDataType(consolidator.OutputType))
             {
-                var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(
+                if (desiredTickType == null)
+                {
+                    var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(
                     consolidator.OutputType,
                     subscription.Symbol.SecurityType);
 
-                return subscription.TickType == tickType;
+                    return subscription.TickType == tickType;
+                }
+                else if (subscription.TickType != desiredTickType)
+                {
+                    return false;
+                }
             }
 
             return consolidator.InputType.IsAssignableFrom(subscription.Type);

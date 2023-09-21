@@ -15,61 +15,62 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Algorithm asserting that consolidated bars are of type <see cref="QuoteBar"/>
-    /// when <see cref="QCAlgorithm.Consolidate()"/> is called with <see cref="TickType.Quote"/>
+    /// This algorithm asserts we can consolidate Tick data with different tick types
     /// </summary>
-    public class CorrectConsolidatedBarTypeForTickTypesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ConsolidateDifferentTickTypesRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private bool _quoteTickConsolidatorCalled;
-        private bool _tradeTickConsolidatorCalled;
+        private bool _thereIsAtLeastOneQuoteTick;
+        private bool _thereIsAtLeastOneTradeTick;
 
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 7);
-            SetEndDate(2013, 10, 7);
+            SetStartDate(2013, 10, 06);
+            SetEndDate(2013, 10, 07);
+            SetCash(1000000);
 
-            var symbol = AddEquity("SPY", Resolution.Tick).Symbol;
+            var equity = AddEquity("SPY", Resolution.Tick, Market.USA);
+            var quoteConsolidator = Consolidate(equity.Symbol, Resolution.Tick, TickType.Quote, (Tick tick) => OnQuoteTick(tick));
+            _thereIsAtLeastOneQuoteTick = false;
 
-            Consolidate<QuoteBar>(symbol, TimeSpan.FromMinutes(1), TickType.Quote, QuoteTickConsolidationHandler);
-            Consolidate<TradeBar>(symbol, TimeSpan.FromMinutes(1), TickType.Trade, TradeTickConsolidationHandler);
+            var tradeConsolidator = Consolidate(equity.Symbol, Resolution.Tick, TickType.Trade, (Tick tick) => OnTradeTick(tick));
+            _thereIsAtLeastOneTradeTick = false;
         }
 
-        public override void OnData(Slice slice)
+        public void OnQuoteTick(Tick tick)
         {
-            if (Time.Hour > 9)
+            _thereIsAtLeastOneQuoteTick = true;
+            if (tick.TickType != TickType.Quote)
             {
-                Quit("Early quit to save time");
+                throw new Exception($"The type of the tick should be Quote, but was {tick.TickType}");
+            }
+        }
+
+        public void OnTradeTick(Tick tick)
+        {
+            _thereIsAtLeastOneTradeTick = true;
+            if (tick.TickType != TickType.Trade)
+            {
+                throw new Exception($"The type of the tick should be Trade, but was {tick.TickType}");
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_quoteTickConsolidatorCalled)
+            if (!_thereIsAtLeastOneQuoteTick)
             {
-                throw new Exception("QuoteTickConsolidationHandler was not called");
+                throw new Exception($"There should have been at least one tick in OnQuoteTick() method, but there wasn't");
             }
 
-            if (!_tradeTickConsolidatorCalled)
+            if (!_thereIsAtLeastOneTradeTick)
             {
-                throw new Exception("TradeTickConsolidationHandler was not called");
+                throw new Exception($"There should have been at least one tick in OnTradeTick() method, but there wasn't");
             }
-        }
-
-        private void QuoteTickConsolidationHandler(QuoteBar consolidatedBar)
-        {
-            _quoteTickConsolidatorCalled = true;
-        }
-
-        private void TradeTickConsolidationHandler(TradeBar consolidatedBar)
-        {
-            _tradeTickConsolidatorCalled = true;
         }
 
         /// <summary>
@@ -85,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 393736;
+        public long DataPoints => 2857175;
 
         /// <summary>
         /// Data Points count of the algorithm history
