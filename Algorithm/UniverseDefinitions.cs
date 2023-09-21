@@ -135,6 +135,21 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a universe for the constituents of the provided <paramref name="etfTicker"/>
+        /// </summary>
+        /// <param name="etfTicker">Ticker of the ETF to get constituents for</param>
+        /// <param name="universeSettings">Universe settings</param>
+        /// <param name="universeFilterFunc">Function to filter universe results</param>
+        /// <returns>New ETF constituents Universe</returns>
+        public Universe ETF(
+            string etfTicker,
+            UniverseSettings universeSettings,
+            PyObject universeFilterFunc)
+        {
+            return ETF(etfTicker, null, universeSettings, universeFilterFunc);
+        }
+
+        /// <summary>
         /// Creates a universe for the constituents of the provided ETF <paramref name="symbol"/>
         /// </summary>
         /// <param name="symbol">ETF Symbol to get constituents for</param>
@@ -245,6 +260,21 @@ namespace QuantConnect.Algorithm
             PyObject universeFilterFunc = null)
         {
             return Index(indexTicker, market, universeSettings, universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
+        }
+
+        /// <summary>
+        /// Creates a universe for the constituents of the provided <paramref name="indexTicker"/>
+        /// </summary>
+        /// <param name="indexTicker">Ticker of the index to get constituents for</param>
+        /// <param name="universeSettings">Universe settings</param>
+        /// <param name="universeFilterFunc">Function to filter universe results</param>
+        /// <returns>New index constituents Universe</returns>
+        public Universe Index(
+            string indexTicker,
+            UniverseSettings universeSettings,
+            PyObject universeFilterFunc)
+        {
+            return Index(indexTicker, null, universeSettings, universeFilterFunc);
         }
 
         /// <summary>
