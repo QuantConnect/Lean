@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -202,7 +202,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <remarks>Other sectors can be defined using <see cref="AssetClassification"/></remarks>
         protected virtual string GetSectorCode(Security security)
         {
-            return security.Fundamentals?.CompanyReference?.IndustryTemplateCode;
+            return security.Fundamentals?.CompanyReference.IndustryTemplateCode;
         }
     }
 }

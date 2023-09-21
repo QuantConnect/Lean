@@ -3117,6 +3117,34 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Converts a CIK identifier into <see cref="Symbol"/> array
+        /// </summary>
+        /// <param name="cik">The CIK identifier of an asset</param>
+        /// <param name="tradingDate">
+        /// The date that the stock being looked up is/was traded at.
+        /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
+        /// </param>
+        /// <returns>Symbols corresponding to the CIK. If no Symbol with a matching CIK was found, returns empty array.</returns>
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public Symbol[] CIK(int cik, DateTime? tradingDate = null)
+        {
+            return _securityDefinitionSymbolResolver.CIK(cik, GetVerifiedTradingDate(tradingDate));
+        }
+
+        /// <summary>
+        /// Converts a <see cref="Symbol"/> into a CIK identifier
+        /// </summary>
+        /// <param name="symbol">The <see cref="Symbol"/></param>
+        /// <returns>CIK corresponding to the Symbol. If no matching CIK is found, returns null.</returns>
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public int? CIK(Symbol symbol)
+        {
+            return _securityDefinitionSymbolResolver.CIK(symbol);
+        }
+
+        /// <summary>
         /// Set the properties and exchange hours for a given key into our databases
         /// </summary>
         /// <param name="key">Key for database storage</param>
