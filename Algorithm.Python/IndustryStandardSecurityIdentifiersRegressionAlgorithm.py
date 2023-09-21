@@ -18,31 +18,35 @@ from AlgorithmImports import *
 ### </summary>
 class IndustryStandardSecurityIdentifiersRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 7)
+        self.SetStartDate(2014, 6, 5)
+        self.SetEndDate(2014, 6, 5)
 
-        spy = self.AddEquity("SPY").Symbol
+        equity = self.AddEquity("AAPL").Symbol
 
-        spyCusip = spy.CUSIP
-        spyCompositeFigi = spy.CompositeFIGI
-        spySedol = spy.SEDOL
-        spyIsin = spy.ISIN
+        cusip = equity.CUSIP
+        compositeFigi = equity.CompositeFIGI
+        sedol = equity.SEDOL
+        isin = equity.ISIN
+        cik = equity.CIK
 
-        self.CheckSymbolRepresentation(spyCusip, "CUSIP")
-        self.CheckSymbolRepresentation(spyCompositeFigi, "Composite FIGI")
-        self.CheckSymbolRepresentation(spySedol, "SEDOL")
-        self.CheckSymbolRepresentation(spyIsin, "ISIN")
+        self.CheckSymbolRepresentation(cusip, "CUSIP")
+        self.CheckSymbolRepresentation(compositeFigi, "Composite FIGI")
+        self.CheckSymbolRepresentation(sedol, "SEDOL")
+        self.CheckSymbolRepresentation(isin, "ISIN")
+        self.CheckSymbolRepresentation(f"{cik}", "CIK")
 
         # Check Symbol API vs QCAlgorithm API
-        self.CheckAPIsSymbolRepresentations(spyCusip, self.CUSIP(spy), "CUSIP");
-        self.CheckAPIsSymbolRepresentations(spyCompositeFigi, self.CompositeFIGI(spy), "Composite FIGI");
-        self.CheckAPIsSymbolRepresentations(spySedol, self.SEDOL(spy), "SEDOL");
-        self.CheckAPIsSymbolRepresentations(spyIsin, self.ISIN(spy), "ISIN");
+        self.CheckAPIsSymbolRepresentations(cusip, self.CUSIP(equity), "CUSIP")
+        self.CheckAPIsSymbolRepresentations(compositeFigi, self.CompositeFIGI(equity), "Composite FIGI")
+        self.CheckAPIsSymbolRepresentations(sedol, self.SEDOL(equity), "SEDOL")
+        self.CheckAPIsSymbolRepresentations(isin, self.ISIN(equity), "ISIN")
+        self.CheckAPIsSymbolRepresentations(f"{cik}", f"{self.CIK(equity)}", "CIK")
 
-        self.Log(f"\nSPY CUSIP: {spyCusip}"
-                 f"\nSPY Composite FIGI: {spyCompositeFigi}"
-                 f"\nSPY SEDOL: {spySedol}"
-                 f"\nSPY ISIN: {spyIsin}")
+        self.Log(f"\nAAPL CUSIP: {cusip}"
+                 f"\nAAPL Composite FIGI: {compositeFigi}"
+                 f"\nAAPL SEDOL: {sedol}"
+                 f"\nAAPL ISIN: {isin}"
+                 f"\nAAPL CIK: {cik}")
 
     def CheckSymbolRepresentation(self, symbol: str, standard: str) -> None:
         if not symbol:

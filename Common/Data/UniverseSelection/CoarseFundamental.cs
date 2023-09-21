@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,9 +14,9 @@
 */
 
 using System;
-using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Globalization;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -29,32 +29,32 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the market for this symbol
         /// </summary>
-        public string Market { get; set; }
+        public string Market => Symbol.ID.Market;
 
         /// <summary>
         /// Gets the day's dollar volume for this symbol
         /// </summary>
-        public decimal DollarVolume { get; set; }
+        public virtual double DollarVolume { get; set; }
 
         /// <summary>
         /// Gets the day's total volume
         /// </summary>
-        public long Volume { get; set; }
+        public virtual long Volume { get; set; }
 
         /// <summary>
         /// Returns whether the symbol has fundamental data for the given date
         /// </summary>
-        public bool HasFundamentalData { get; set; }
+        public virtual bool HasFundamentalData { get; set; }
 
         /// <summary>
         /// Gets the price factor for the given date
         /// </summary>
-        public decimal PriceFactor { get; set; } = 1m;
+        public virtual decimal PriceFactor { get; set; } = 1m;
 
         /// <summary>
         /// Gets the split factor for the given date
         /// </summary>
-        public decimal SplitFactor { get; set; } = 1m;
+        public virtual decimal SplitFactor { get; set; } = 1m;
 
         /// <summary>
         /// Gets the combined factor used to create adjusted prices from raw prices
@@ -119,10 +119,9 @@ namespace QuantConnect.Data.UniverseSelection
                 {
                     Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
                     Time = date,
-                    Market = config.Market,
                     Value = csv[2].ToDecimal(),
                     Volume = csv[3].ToInt64(),
-                    DollarVolume = csv[4].ToDecimal()
+                    DollarVolume = (double)csv[4].ToDecimal()
                 };
 
                 if (csv.Length > 5)
@@ -155,7 +154,6 @@ namespace QuantConnect.Data.UniverseSelection
                 Symbol = Symbol,
                 Time = Time,
                 DollarVolume = DollarVolume,
-                Market = Market,
                 Value = Value,
                 Volume = Volume,
                 DataType = MarketDataType.Auxiliary,
@@ -163,19 +161,6 @@ namespace QuantConnect.Data.UniverseSelection
                 PriceFactor = PriceFactor,
                 SplitFactor = SplitFactor
             };
-        }
-
-        /// <summary>
-        /// Creates the symbol used for coarse fundamental data
-        /// </summary>
-        /// <param name="market">The market</param>
-        /// <returns>A coarse universe symbol for the specified market</returns>
-        public static Symbol CreateUniverseSymbol(string market)
-        {
-            market = market.ToLowerInvariant();
-            var ticker = $"qc-universe-coarse-{market}-{Guid.NewGuid()}";
-            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
-            return new Symbol(sid, ticker);
         }
 
         /// <summary>

@@ -569,31 +569,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the fundamental data associated with the security if there is any, otherwise null.
         /// </summary>
-        public Fundamentals Fundamentals
+        public Fundamental Fundamentals
         {
             get
             {
-                if (Cache.GetData<Fundamentals>() != null)
-                {
-                    return Cache.GetData<Fundamentals>();
-                }
-
-                var coarse = Cache.GetData<CoarseFundamental>();
-                if (coarse == null)
-                {
-                    return null;
-                }
-
-                return new Fundamentals
-                {
-                    Symbol = Symbol,
-                    Value = coarse.Value,
-                    EndTime = coarse.EndTime,
-                    DollarVolume = coarse.DollarVolume,
-                    DataType = coarse.DataType,
-                    Market = coarse.Market,
-                    Volume = coarse.Volume
-                };
+                return new Fundamental(LocalTime, Symbol);
             }
         }
 

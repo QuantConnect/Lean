@@ -106,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
             // we want 50% allocation in each security in our universe
             foreach (var security in _changes.AddedSecurities)
             {
-                if (security.Fundamentals.EarningRatios.EquityPerShareGrowth.OneYear > 0.25m)
+                if (security.Fundamentals.EarningRatios.EquityPerShareGrowth.OneYear > 0.25)
                 {
                     SetHoldings(security.Symbol, 0.5m);
                     Debug("Purchased Stock: " + security.Symbol.Value);
@@ -159,7 +159,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 7239;
+        public long DataPoints => 7244;
 
         /// <summary>
         /// Data Points count of the algorithm history

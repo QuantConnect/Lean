@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -55,12 +55,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         new CoarseFundamental
                         {
                             Symbol = Symbols.AAPL,
-                            HasFundamentalData = true
+                            Time = DateTime.UtcNow
                         },
                         new CoarseFundamental
                         {
                             Symbol = Symbols.SPY,
-                            HasFundamentalData = false
+                            Time = DateTime.UtcNow
                         }
                     }
                 )
@@ -130,7 +130,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             algorithm.AddUniverse(
                 coarse => coarse.Select(c => c.Symbol),
-                fine => fine.Select(f => f.Symbol)
+                fine => fine.Select(f => f.Symbol).Where(x => x.ID.Symbol == "AAPL")
             );
             // OnEndOfTimeStep will add all pending universe additions
             algorithm.OnEndOfTimeStep();
@@ -147,12 +147,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         new CoarseFundamental
                         {
                             Symbol = Symbols.AAPL,
-                            HasFundamentalData = true
+                            Time = DateTime.UtcNow
                         },
                         new CoarseFundamental
                         {
                             Symbol = Symbols.SPY,
-                            HasFundamentalData = false
+                            Time = DateTime.UtcNow
                         }
                     }
                 )
