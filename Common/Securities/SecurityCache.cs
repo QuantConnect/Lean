@@ -314,7 +314,6 @@ namespace QuantConnect.Securities
             {
                 return default(T);
             }
-
             return list[list.Count - 1] as T;
         }
 

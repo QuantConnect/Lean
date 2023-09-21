@@ -410,6 +410,10 @@ namespace QuantConnect
         /// </summary>
         public string ISIN { get { return _securityDefinitionSymbolResolver.Value.ISIN(this); } }
 
+        /// <summary>
+        /// The Central Index Key number (CIK) corresponding to this <see cref="Symbol"/>
+        /// </summary>
+        public int? CIK { get { return _securityDefinitionSymbolResolver.Value.CIK(this); } }
 
         #endregion
 

@@ -287,7 +287,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Universes)]
         public Universe AddUniverse(PyObject pyObject)
         {
-            Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
+            Func<IEnumerable<Fundamental>, object> coarseFunc;
             Universe universe;
 
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,6 +19,8 @@ using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Tests.Common.Data.Fundamental;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,36 +55,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                     EndTime = time,
                     Value = 100,
                     Volume = 1000,
-                    DollarVolume = 100000 * symbol.Value.Substring(3).ToDecimal(),
+                    DollarVolume = 100000 * double.Parse(symbol.Value.Substring(3)),
                     HasFundamentalData = true
                 },
                 (symbol, time) => new FineFundamental
                 {
                     Symbol = symbol,
                     EndTime = time,
-                    Value = 100,
-                    CompanyReference = new CompanyReference
-                    {
-                        CountryId = "USA",
-                        PrimaryExchangeID = "NYS",
-                        IndustryTemplateCode = _industryTemplateCodeDict[symbol.Value[0]]
-                    },
-                    SecurityReference = new SecurityReference
-                    {
-                        IPODate = time.AddDays(-200)
-                    },
-                    CompanyProfile = new CompanyProfile
-                    {
-                        MarketCap = 500000001
-                    },
-                    EarningReports = new EarningReports
-                    {
-                        BasicAverageShares = new BasicAverageShares
-                        {
-                            ThreeMonths = 5000000.01m
-                        }
-                    }
+                    Value = 100
                 },
+                new TestFundamentalDataProvider(_industryTemplateCodeDict),
                 out algorithm,
                 out coarseCountByDateTime,
                 out fineCountByDateTime);
@@ -111,32 +93,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                     EndTime = time,
                     Value = 100,
                     Volume = 1000,
-                    DollarVolume = 100000 * symbol.Value.Substring(3).ToDecimal(),
+                    DollarVolume = 100000 * double.Parse(symbol.Value.Substring(3)),
                     HasFundamentalData = false
                 },
                 (symbol, time) => new FineFundamental
                 {
                     Symbol = symbol,
-                    EndTime = time,
-                    Value = 100,
-                    CompanyReference = new CompanyReference
-                    {
-                        CountryId = "USA",
-                        PrimaryExchangeID = "NYS",
-                        IndustryTemplateCode = _industryTemplateCodeDict[symbol.Value[0]]
-                    },
-                    SecurityReference = new SecurityReference
-                    {
-                        IPODate = time.AddDays(-200)
-                    },
-                    EarningReports = new EarningReports
-                    {
-                        BasicAverageShares = new BasicAverageShares
-                        {
-                            ThreeMonths = 5000000.01m
-                        }
-                    }
+                    EndTime = time
                 },
+                new TestFundamentalDataProvider(_industryTemplateCodeDict),
                 out algorithm,
                 out coarseCountByDateTime,
                 out fineCountByDateTime); ;
@@ -161,7 +126,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                     EndTime = time,
                     Value = 100,
                     Volume = 1000,
-                    DollarVolume = 100000 * symbol.Value.Substring(3).ToDecimal(),
+                    DollarVolume = 100000 * double.Parse(symbol.Value.Substring(3)),
                     HasFundamentalData = true
                 },
                 (symbol, time) => new FineFundamental()
@@ -170,9 +135,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                     EndTime = time,
                     Value = 100
                 },
+                new NullFundamentalDataProvider(),
                 out algorithm,
                 out coarseCountByDateTime,
-                out fineCountByDateTime); ;
+                out fineCountByDateTime);
 
             // Coarse Fundamental called every day.
             Assert.Greater(coarseCountByDateTime.Count, 4);
@@ -181,9 +147,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             Assert.AreEqual(0, fineCountByDateTime.Count);
         }
 
-        private void RunSimulation(Language language, 
+        private void RunSimulation(Language language,
             Func<Symbol, DateTime, CoarseFundamental> getCoarseFundamental,
             Func<Symbol, DateTime, FineFundamental> getFineFundamental,
+            IFundamentalDataProvider fundamentalDataProvider,
             out QCAlgorithm algorithm,
             out Dictionary<DateTime, int> coarseCountByDateTime,
             out Dictionary<DateTime, int> fineCountByDateTime)
@@ -192,6 +159,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             algorithm.SetStartDate(2019, 10, 1);
             algorithm.SetEndDate(2020, 1, 30);
             algorithm.SetDateTime(algorithm.StartDate.AddHours(6));
+
+            FundamentalService.Initialize(TestGlobals.DataProvider, fundamentalDataProvider);
 
             coarseCountByDateTime = new Dictionary<DateTime, int>();
             fineCountByDateTime = new Dictionary<DateTime, int>();
@@ -205,7 +174,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 var time = algorithm.UtcTime;
 
                 var coarse = _symbols.Select(x => getCoarseFundamental(x, time));
-                
+
                 var selectSymbolsResult = SelectCoarse(algorithm, coarse);
 
                 if (!ReferenceEquals(selectSymbolsResult, Universe.Unchanged))
@@ -259,6 +228,48 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                     ? Universe.Unchanged
                     : ((object[])result).Select(x => (Symbol)x);
             };
+        }
+
+        private class TestFundamentalDataProvider : IFundamentalDataProvider
+        {
+            private readonly Dictionary<char, string> _industryTemplateCodeDict;
+
+            public TestFundamentalDataProvider(Dictionary<char, string> industryTemplateCodeDict)
+            {
+                _industryTemplateCodeDict = industryTemplateCodeDict;
+            }
+            public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, string name)
+            {
+                if (securityIdentifier == SecurityIdentifier.Empty)
+                {
+                    return default;
+                }
+                return Get(time, securityIdentifier, name);
+            }
+
+            private dynamic Get(DateTime time, SecurityIdentifier securityIdentifier, string name)
+            {
+                switch (name)
+                {
+                    case "CompanyProfile.MarketCap":
+                        return 500000001;
+                    case "SecurityReference.IPODate":
+                        return time.AddDays(-200);
+                    case "EarningReports.BasicAverageShares.ThreeMonths":
+                        return 5000000.01d;
+                    case "CompanyReference.CountryId":
+                        return "USA";
+                    case "CompanyReference.PrimaryExchangeID":
+                        return "NYS";
+                    case "CompanyReference.IndustryTemplateCode":
+                        return _industryTemplateCodeDict[securityIdentifier.Symbol[0]];
+                }
+                return null;
+            }
+
+            public void Initialize(IDataProvider dataProvider)
+            {
+            }
         }
     }
 }
