@@ -28,6 +28,8 @@ namespace QuantConnect.Statistics
     /// </summary>
     public class PortfolioStatistics
     {
+        private static Lazy<InterestRateProvider> _interestRateProvider = new Lazy<InterestRateProvider>();
+
         /// <summary>
         /// The average rate of return for winning trades
         /// </summary>
@@ -246,8 +248,7 @@ namespace QuantConnect.Statistics
             var benchmarkAnnualPerformance = GetAnnualPerformance(listBenchmark, tradingDaysPerYear);
             var annualPerformance = GetAnnualPerformance(listPerformance, tradingDaysPerYear);
 
-            var interestRateProvider = new InterestRateProvider();
-            var riskFreeRate = equity.Select(x => interestRateProvider.GetInterestRate(x.Key)).Average();
+            var riskFreeRate = GetAverageRiskFreeRate(equity.Select(x => x.Key));
             SharpeRatio = AnnualStandardDeviation == 0 ? 0 : (annualPerformance - riskFreeRate) / AnnualStandardDeviation;
 
             var benchmarkVariance = listBenchmark.Variance();
@@ -280,7 +281,17 @@ namespace QuantConnect.Statistics
         /// <param name="endDate">End date to calculate the average</param>
         public static decimal GetRiskFreeRate(DateTime startDate, DateTime endDate)
         {
-            return new InterestRateProvider().GetInterestRateAverage(startDate, endDate);
+            return GetAverageRiskFreeRate(Enumerable.Range(0, (endDate.AddDays(1) - startDate).Days).Select(x => startDate.AddDays(x)));
+        }
+
+        /// <summary>
+        /// Gets the average Risk Free Rate from the interest rate of the given dates
+        /// </summary>
+        /// <param name="dates">Collection of dates from which the interest rates will be computed
+        /// and then the average of them</param>
+        public static decimal GetAverageRiskFreeRate(IEnumerable<DateTime> dates)
+        {
+            return dates.Select(x => _interestRateProvider.Value.GetInterestRate(x)).Average();
         }
 
         /// <summary>
