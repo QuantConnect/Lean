@@ -30,6 +30,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         private readonly RollingWindow<IndicatorDataPoint> _window;
 
         /// <summary>
+        /// The symbol's asset rate of change indicator
+        /// </summary>
+        public RateOfChange ROC { get {  return _roc; } }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ReturnsSymbolData"/> class
         /// </summary>
         /// <param name="symbol">The symbol of the data that updates the indicators</param>

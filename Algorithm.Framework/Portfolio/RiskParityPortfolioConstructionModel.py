@@ -42,7 +42,7 @@ class RiskParityPortfolioConstructionModel(PortfolioConstructionModel):
         super().__init__()
         if portfolioBias == PortfolioBias.Short:
             raise ArgumentException("Long position must be allowed in RiskParityPortfolioConstructionModel.")
-        
+
         self.lookback = lookback
         self.period = period
         self.resolution = resolution
@@ -102,6 +102,7 @@ class RiskParityPortfolioConstructionModel(PortfolioConstructionModel):
         for removed in changes.RemovedSecurities:
             symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
             symbolData.Reset()
+            algorithm.UnregisterIndicator(symbolData.roc)
 
         # initialize data for added securities
         symbols = [ x.Symbol for x in changes.AddedSecurities ]
@@ -116,6 +117,7 @@ class RiskParityPortfolioConstructionModel(PortfolioConstructionModel):
                 symbolData = self.RiskParitySymbolData(symbol, self.lookback, self.period)
                 symbolData.WarmUpIndicators(history.loc[ticker])
                 self.symbolDataBySymbol[symbol] = symbolData
+                algorithm.RegisterIndicator(symbol, symbolData.roc, self.resolution)
 
     class RiskParitySymbolData:
         '''Contains data specific to a symbol required by this model'''

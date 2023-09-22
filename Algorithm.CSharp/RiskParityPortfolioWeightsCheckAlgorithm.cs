@@ -24,10 +24,13 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.DataLibrary.Tests
 {
     /// <summary>
-    /// Example algorithm of using RiskParityPortfolioConstructionModel
+    /// Example algorithm of using RiskParityPortfolioConstructionModel.
+    /// Reproduces https://github.com/QuantConnect/Lean/issues/7476
     /// </summary>
-    public class RiskParityPortfolioAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class RiskParityPortfolioWeightsCheckAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private CustomRiskParityPortfolioConstructionModel _portfolioConstructionModel;
+
         public override void Initialize()
         {
             SetStartDate(2021, 2, 21);
@@ -39,7 +42,43 @@ namespace QuantConnect.DataLibrary.Tests
             AddEquity("AAPL", Resolution.Daily);
 
             AddAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1)));
-            SetPortfolioConstruction(new RiskParityPortfolioConstructionModel());
+
+            _portfolioConstructionModel = new CustomRiskParityPortfolioConstructionModel();
+            SetPortfolioConstruction(_portfolioConstructionModel);
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            foreach (var kvp in _portfolioConstructionModel.Weights)
+            {
+                var weights = kvp.Value;
+                if (weights.Count < 2)
+                {
+                    throw new Exception($"Expected multiple different weigths from the PCM for {kvp.Key}");
+                }
+            }
+        }
+
+        private class CustomRiskParityPortfolioConstructionModel : RiskParityPortfolioConstructionModel
+        {
+            public Dictionary<Symbol, HashSet<double>> Weights { get; } = new();
+
+            protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
+            {
+                var result = base.DetermineTargetPercent(activeInsights);
+                foreach (var kvp in result)
+                {
+                    if (!Weights.TryGetValue(kvp.Key.Symbol, out var symbolWeigths))
+                    {
+                        symbolWeigths = new HashSet<double>();
+                        Weights[kvp.Key.Symbol] = symbolWeigths;
+                    }
+
+                    symbolWeigths.Add(kvp.Value);
+                }
+
+                return result;
+            }
         }
 
         /// <summary>
@@ -50,7 +89,7 @@ namespace QuantConnect.DataLibrary.Tests
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
