@@ -16,7 +16,7 @@ from AlgorithmImports import *
 from OptionModelsConsistencyRegressionAlgorithm import OptionModelsConsistencyRegressionAlgorithm
 
 ### <summary>
-### Regression algorithm asserting that when setting custom models for canonical index options, a one-time warning is sent
+### Algorithm asserting that when setting custom models for canonical index options, a one-time warning is sent
 ### informing the user that the contracts models are different (not the custom ones).
 ### </summary>
 class IndexOptionModelsConsistencyRegressionAlgorithm(OptionModelsConsistencyRegressionAlgorithm):

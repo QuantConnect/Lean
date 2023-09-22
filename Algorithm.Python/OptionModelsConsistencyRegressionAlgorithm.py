@@ -18,25 +18,12 @@ from System import Action
 from QuantConnect.Logging import *
 
 ### <summary>
-### Regression algorithm asserting that when setting custom models for canonical securities, a one-time warning is sent
+### Algorithm asserting that when setting custom models for canonical securities, a one-time warning is sent
 ### informing the user that the contracts models are different (not the custom ones).
 ### </summary>
 class OptionModelsConsistencyRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self) -> None:
-        self.warning_sent = False
-
-        # Set a functional log handler in order to be able to assert on the warning message
-        self.original_log_handler = Log.LogHandler
-        Log.LogHandler = CompositeLogHandler(
-            [
-                Log.LogHandler,
-                FunctionalLogHandler(
-                    Action[String](lambda debug_message: None),
-                    Action[String](self.CheckWarningMessage),
-                    Action[String](lambda error_message: None))
-            ])
-
         security = self.InitializeAlgorithm()
         self.SetModels(security)
 
@@ -63,17 +50,6 @@ class OptionModelsConsistencyRegressionAlgorithm(QCAlgorithm):
         security.SetBuyingPowerModel(CustomBuyingPowerModel())
         security.SetSlippageModel(CustomSlippageModel())
         security.SetVolatilityModel(CustomVolatilityModel())
-
-    def OnEndOfAlgorithm(self) -> None:
-        Log.LogHandler = self.original_log_handler
-
-        if not self.warning_sent:
-            raise Exception("On-time warning about canonical models mismatch was not sent.")
-
-    def CheckWarningMessage(self, message: str) -> None:
-        if ("Debug: Warning: Security " in message and
-            "To avoid this, consider using a security initializer to set the right models to each security type according to your algorithm's requirements." in message):
-            self.warning_sent = True
 
 class CustomSecurityInitializer(BrokerageModelSecurityInitializer):
     def __init__(self, brokerage_model: BrokerageModel, security_seeder: SecuritySeeder):

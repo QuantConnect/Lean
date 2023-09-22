@@ -13,48 +13,23 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Orders.Fills;
-using System;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Volatility;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting that when setting custom models for canonical options, a one-time warning is sent
+    /// Algorithm asserting that when setting custom models for canonical options, a one-time warning is sent
     /// informing the user that the contracts models are different (not the custom ones).
     /// </summary>
-    public class OptionModelsConsistencyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionModelsConsistencyRegressionAlgorithm : QCAlgorithm
     {
-        private ILogHandler _originalLogHandler;
-
-        protected bool WarningSent { get; set; }
-
         public override void Initialize()
         {
-            // Set a functional log handler in order to be able to assert on the warning message
-            _originalLogHandler = Logging.Log.LogHandler;
-            Logging.Log.LogHandler = new CompositeLogHandler(new ILogHandler[]
-            {
-                Logging.Log.LogHandler,
-                new FunctionalLogHandler(
-                    (debugMessage) => { },
-                    (traceMessage) =>
-                    {
-                        if (traceMessage.Contains("Debug: Warning: Security ") &&
-                            traceMessage.EndsWith("To avoid this, consider using a security initializer to set the right models to each security type according to your algorithm's requirements."))
-                        {
-                            WarningSent = true;
-                        }
-                    },
-                    (errorMessage) => { })
-            });
-
             var security = InitializeAlgorithm();
             SetModels(security);
 
@@ -81,16 +56,6 @@ namespace QuantConnect.Algorithm.CSharp
             security.SetSlippageModel(new CustomSlippageModel());
             security.SetVolatilityModel(new CustomVolatilityModel());
             security.SettlementModel = new CustomSettlementModel();
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            Logging.Log.LogHandler = _originalLogHandler;
-
-            if (!WarningSent)
-            {
-                throw new Exception("On-time warning about canonical models mismatch was not sent.");
-            }
         }
 
         public class CustomFillModel : FillModel

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,7 @@
 
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.Results;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests
 {
@@ -43,16 +44,23 @@ namespace QuantConnect.Tests
         /// </summary>
         public readonly BacktestingResultHandler Results;
 
+        /// <summary>
+        /// The logs generated during the algorithm's execution
+        /// </summary>
+        public readonly List<string> Logs;
+
         public AlgorithmRunnerResults(
             string algorithm,
             Language language,
             AlgorithmManager manager,
-            BacktestingResultHandler results)
+            BacktestingResultHandler results,
+            List<string> logs)
         {
             Algorithm = algorithm;
             Language = language;
             AlgorithmManager = manager;
             Results = results;
+            Logs = logs;
         }
     }
 }
