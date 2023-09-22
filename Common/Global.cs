@@ -1266,7 +1266,7 @@ namespace QuantConnect
         Backtesting,
 
         /// <summary>
-        /// Research (1)
+        /// Research (3)
         /// </summary>
         Research
     }
