@@ -281,7 +281,7 @@ namespace QuantConnect.Statistics
         /// <param name="endDate">End date to calculate the average</param>
         public static decimal GetRiskFreeRate(DateTime startDate, DateTime endDate)
         {
-            return GetAverageRiskFreeRate(Enumerable.Range(0, (endDate.AddDays(1) - startDate).Days).Select(x => startDate.AddDays(x)));
+            return GetAverageRiskFreeRate(Time.EachDay(startDate, endDate));
         }
 
         /// <summary>
