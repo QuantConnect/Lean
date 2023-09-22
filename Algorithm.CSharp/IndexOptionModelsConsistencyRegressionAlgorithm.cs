@@ -20,7 +20,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting that when setting custom models for canonical index options, a one-time warning is sent
+    /// Algorithm asserting that when setting custom models for canonical index options, a one-time warning is sent
     /// informing the user that the contracts models are different (not the custom ones).
     /// </summary>
     public class IndexOptionModelsConsistencyRegressionAlgorithm : OptionModelsConsistencyRegressionAlgorithm
