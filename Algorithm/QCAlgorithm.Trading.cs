@@ -792,6 +792,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets, one for each leg</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public List<OrderTicket> ComboMarketOrder(List<Leg> legs, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             return SubmitComboOrder(legs, quantity, 0, asynchronous, tag, orderProperties);
@@ -806,6 +807,7 @@ namespace QuantConnect.Algorithm
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets, one for each leg</returns>
         /// <exception cref="ArgumentException">If not every leg has a defined limit price</exception>
+        [DocumentationAttribute(TradingAndOrders)]
         public List<OrderTicket> ComboLegLimitOrder(List<Leg> legs, int quantity, string tag = "", IOrderProperties orderProperties = null)
         {
             if (legs.Any(x => x.OrderPrice == null || x.OrderPrice == 0))
@@ -827,6 +829,7 @@ namespace QuantConnect.Algorithm
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets, one for each leg</returns>
         /// <exception cref="ArgumentException">If the order type is neither ComboMarket, ComboLimit nor ComboLegLimit</exception>
+        [DocumentationAttribute(TradingAndOrders)]
         public List<OrderTicket> ComboLimitOrder(List<Leg> legs, int quantity, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             if (limitPrice == 0)
@@ -954,6 +957,7 @@ namespace QuantConnect.Algorithm
         /// <param name="request">The request to submit</param>
         /// <remarks>Will run order prechecks, which include making sure the algorithm is not warming up, security is added and has data among others</remarks>
         /// <returns>The order ticket</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket SubmitOrderRequest(SubmitOrderRequest request)
         {
             var response = PreOrderChecks(request);

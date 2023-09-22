@@ -44,6 +44,8 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Sets pandas converter
         /// </summary>
+        [DocumentationAttribute(ConsolidatingData)]
+        [DocumentationAttribute(HandlingData)]
         public void SetPandasConverter()
         {
             PandasConverter = new PandasConverter();

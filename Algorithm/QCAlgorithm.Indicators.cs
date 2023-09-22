@@ -2376,6 +2376,8 @@ namespace QuantConnect.Algorithm
         /// Will deregister an indicator and it's associated consolidator instance so they stop receiving data updates
         /// </summary>
         /// <param name="indicator">The indicator instance to deregister</param>
+        [DocumentationAttribute(ConsolidatingData)]
+        [DocumentationAttribute(Indicators)]
         public void DeregisterIndicator(IndicatorBase indicator)
         {
             foreach (var consolidator in indicator.Consolidators)

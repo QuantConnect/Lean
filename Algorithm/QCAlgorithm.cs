@@ -1659,6 +1659,7 @@ namespace QuantConnect.Algorithm
         /// Sets the algorithm running mode
         /// </summary>
         /// <param name="algorithmMode">Algorithm mode</param>
+        [DocumentationAttribute(HandlingData)]
         public void SetAlgorithmMode(AlgorithmMode algorithmMode)
         {
             if (!_locked)
@@ -1672,6 +1673,7 @@ namespace QuantConnect.Algorithm
         /// Sets the algorithm deployment target
         /// </summary>
         /// <param name="deploymentTarget">Deployment target</param>
+        [DocumentationAttribute(HandlingData)]
         public void SetDeploymentTarget(DeploymentTarget deploymentTarget)
         {
             if (!_locked)
@@ -1962,6 +1964,7 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">The requested leverage for the </param>
         /// <returns>The new option security instance</returns>
         /// <exception cref="KeyNotFoundException"></exception>
+        [DocumentationAttribute(AddingData)]
         public Option AddOption(Symbol underlying, string targetOption, Resolution? resolution = null,
             string market = null, bool fillForward = true, decimal leverage = Security.NullLeverage)
         {
@@ -3170,6 +3173,7 @@ namespace QuantConnect.Algorithm
         /// Sets the statistics service instance to be used by the algorithm
         /// </summary>
         /// <param name="statisticsService">The statistics service instance</param>
+        [DocumentationAttribute(StatisticsTag)]
         public void SetStatisticsService(IStatisticsService statisticsService)
         {
             if (_statisticsService == null)
