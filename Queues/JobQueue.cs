@@ -185,14 +185,8 @@ namespace QuantConnect.Queues
                             //live holdings & cash balance not required for data handler
                             continue;
                         }
-                        else if (!liveJob.BrokerageData.ContainsKey(data.Key))
-                        {
-                            liveJob.BrokerageData.Add(data.Key, data.Value);
-                        }
-                        else
-                        {
-                            throw new ArgumentException($"JobQueue.NextJob(): Key already exists in BrokerageData -- {data.Key}");
-                        }
+
+                        liveJob.BrokerageData.TryAdd(data.Key, data.Value);
                     }
                 }
                 return liveJob;
