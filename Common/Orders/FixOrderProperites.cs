@@ -26,6 +26,11 @@ namespace QuantConnect.Orders
         public char? HandleInstruction { get; set; }
 
         /// <summary>
+        /// Free format text string
+        /// </summary>
+        public string Notes { get; set; }
+
+        /// <summary>
         /// Automated execution order, private, no broker intervention
         /// </summary>
         public const char AutomatedExecutionOrderPrivate = '1';
