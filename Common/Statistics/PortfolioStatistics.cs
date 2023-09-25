@@ -291,7 +291,8 @@ namespace QuantConnect.Statistics
         /// and then the average of them</param>
         public static decimal GetAverageRiskFreeRate(IEnumerable<DateTime> dates)
         {
-            return dates.Select(x => _interestRateProvider.Value.GetInterestRate(x)).Average();
+            var interestRates = dates.Select(x => _interestRateProvider.Value.GetInterestRate(x));
+            return interestRates.Any() ? interestRates.Average() : 0;
         }
 
         /// <summary>

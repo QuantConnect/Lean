@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common
                     {"Drawdown", "2.200%"},
                     {"Expectancy", "0"},
                     {"Net Profit", "1.736%"},
-                    {"Sharpe Ratio", "8.894"},
+                    {"Sharpe Ratio", "8.646"},
                     {"Probabilistic Sharpe Ratio", "67.609%"},
                     {"Loss Rate", "0%"},
                     {"Win Rate", "0%"},
@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Common
                     {"Annual Variance", "0.049"},
                     {"Information Ratio", "-14.547"},
                     {"Tracking Error", "0.001"},
-                    {"Treynor Ratio", "1.979"},
+                    {"Treynor Ratio", "1.924"},
                     {"Total Fees", "$3.45"},
                     {"OrderListHash", "46d026d39478ff13853319c2f891af39"}
                 },
