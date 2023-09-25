@@ -475,6 +475,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     case SubscriptionTransportMedium.Rest:
                         break;
 
+                    case SubscriptionTransportMedium.ObjectStore:
+                        break;
+
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

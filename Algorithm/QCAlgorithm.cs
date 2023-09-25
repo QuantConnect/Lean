@@ -634,6 +634,8 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(MachineLearning)]
         public ObjectStore ObjectStore { get; private set; }
 
+        public static ObjectStore ObjStore { get; private set; }
+
         /// <summary>
         /// The current statistics for the running algorithm.
         /// </summary>
@@ -2946,6 +2948,7 @@ namespace QuantConnect.Algorithm
         public void SetObjectStore(IObjectStore objectStore)
         {
             ObjectStore = new ObjectStore(objectStore);
+            ObjStore = ObjectStore;
         }
 
         /// <summary>
