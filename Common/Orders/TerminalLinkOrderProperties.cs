@@ -31,5 +31,30 @@ namespace QuantConnect.Orders
         /// preconfigured or a value customized by the broker.
         /// </summary>
         public string HandlingInstruction { get; set; }
+
+        /// <summary>
+        /// Custom user order notes 1
+        /// </summary>
+        public string CustomNotes1 { get; set; }
+
+        /// <summary>
+        /// Custom user order notes 2
+        /// </summary>
+        public string CustomNotes2 { get; set; }
+
+        /// <summary>
+        /// Custom user order notes 3
+        /// </summary>
+        public string CustomNotes3 { get; set; }
+
+        /// <summary>
+        /// Custom user order notes 4
+        /// </summary>
+        public string CustomNotes4 { get; set; }
+
+        /// <summary>
+        /// Custom user order notes 5
+        /// </summary>
+        public string CustomNotes5 { get; set; }
     }
 }
