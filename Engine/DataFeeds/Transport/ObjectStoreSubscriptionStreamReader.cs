@@ -14,8 +14,9 @@
  *
 */
 
+using System;
 using System.IO;
-
+using Ionic.Zip;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
@@ -45,7 +46,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
                 {
                     var data = _objectStore.ReadBytes(_key);
                     var stream = new MemoryStream(data);
-                    _streamReader = new StreamReader(stream);
+
+                    if (_key.EndsWith(".zip", StringComparison.InvariantCulture))
+                    {
+                        using var zipFile = ZipFile.Read(stream);
+                        // we only support single file zip files for now
+                        var zipEntry = zipFile[0];
+                        var tempStream = new MemoryStream();
+                        zipEntry.Extract(tempStream);
+                        tempStream.Position = 0;
+                        _streamReader = new StreamReader(tempStream);
+                    }
+                    else
+                    {
+                        _streamReader = new StreamReader(stream);
+                    }
                 }
 
                 return _streamReader;
