@@ -9,14 +9,14 @@
   "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+  "algorithm-type-name": "BasicTemplateAlgorithm",
 
   // Algorithm language selector - options CSharp, Python
   "algorithm-language": "CSharp",
 
   //Physical DLL location
   "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
-  //"algorithm-location": "../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py",
+  //"algorithm-location": "../../../Algorithm.Python/ObjectStoreExampleAlgorithm.py",
 
   //Research notebook
   //"composer-dll-directory": ".",
@@ -645,7 +645,7 @@
 
     "live-rbi": {
       "live-mode": true,
-      
+
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "RBIBrokerage",
       "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue" ],
