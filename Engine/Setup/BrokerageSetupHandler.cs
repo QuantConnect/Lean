@@ -268,9 +268,6 @@ namespace QuantConnect.Lean.Engine.Setup
                         // set the future chain provider
                         algorithm.SetFutureChainProvider(futureChainProvider);
 
-                        // set the object store
-                        algorithm.SetObjectStore(parameters.ObjectStore);
-                        
                         //Initialise the algorithm, get the required data:
                         algorithm.Initialize();
 

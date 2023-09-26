@@ -170,6 +170,9 @@ namespace QuantConnect.Lean.Engine
 
                     synchronizer.Initialize(algorithm, dataManager);
 
+                    // Set the algorithm's object store before initializing the data feed, which might use it
+                    algorithm.SetObjectStore(AlgorithmHandlers.ObjectStore);
+
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
                     AlgorithmHandlers.DataFeed.Initialize(
                         algorithm,

@@ -175,9 +175,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     // set the future chain provider
                     algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider(parameters.DataCacheProvider)));
 
-                    // set the object store
-                    algorithm.SetObjectStore(parameters.ObjectStore);
-
                     // before we call initialize
                     BaseSetupHandler.LoadBacktestJobAccountCurrency(algorithm, job);
 
