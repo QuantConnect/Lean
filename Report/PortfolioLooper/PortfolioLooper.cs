@@ -75,9 +75,9 @@ namespace QuantConnect.Report
             _cacheProvider = new ZipDataCacheProvider(new DefaultDataProvider(), false);
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
 
+            Algorithm = new PortfolioLooperAlgorithm((decimal)startingCash, orders, algorithmConfiguration);
             var dataPermissionManager = new DataPermissionManager();
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, _cacheProvider, mapFileProvider, factorFileProvider, (_) => { }, false, dataPermissionManager, Algorithm.ObjectStore));
-            Algorithm = new PortfolioLooperAlgorithm((decimal)startingCash, orders, algorithmConfiguration);
             Algorithm.SetHistoryProvider(historyProvider);
 
             // Dummy LEAN datafeed classes and initializations that essentially do nothing
