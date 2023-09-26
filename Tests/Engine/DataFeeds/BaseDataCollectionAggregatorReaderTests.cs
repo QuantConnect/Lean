@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var date = DateTime.MinValue;
             var path = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, resolution, TickType.Trade);
             source = new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile);
-            return new BaseDataCollectionAggregatorReader(cache, config, date, liveMode);
+            return new BaseDataCollectionAggregatorReader(cache, config, date, liveMode, null);
         }
 
         private class TestBaseDataCollection : BaseDataCollection

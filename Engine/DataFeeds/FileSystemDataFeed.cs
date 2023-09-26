@@ -80,6 +80,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _mapFileProvider,
                 _factorFileProvider,
                 _cacheProvider,
+                algorithm.ObjectStore,
                 enablePriceScaling: false);
 
             IsActive = true;
@@ -196,7 +197,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else if (request.Configuration.Type == typeof(CoarseFundamental))
             {
-                factory = new BaseDataCollectionSubscriptionEnumeratorFactory();
+                factory = new BaseDataCollectionSubscriptionEnumeratorFactory(_algorithm.ObjectStore);
             }
             else if (request.Configuration.Type == typeof(ZipEntryName))
             {

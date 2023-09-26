@@ -22,7 +22,9 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Lean.Engine.Storage;
 using QuantConnect.Securities;
+using QuantConnect.Storage;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -46,7 +48,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 TestGlobals.FactorFileProvider,
                 null,
                 false,
-                new DataPermissionManager()));
+                new DataPermissionManager(),
+                null));
             var symbol = Symbol.CreateOption(
                 "FOXA",
                 Market.USA,
@@ -100,7 +103,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 TestGlobals.FactorFileProvider,
                 null,
                 false,
-                new DataPermissionManager()));
+                new DataPermissionManager(),
+                null));
             var symbol = Symbol.Create("WM",SecurityType.Equity,Market.USA);
 
             var result = historyProvider.GetHistory(

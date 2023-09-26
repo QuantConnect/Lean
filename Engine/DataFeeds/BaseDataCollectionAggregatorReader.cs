@@ -37,8 +37,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public BaseDataCollectionAggregatorReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
-            : base(dataCacheProvider, config, date, isLiveMode)
+        public BaseDataCollectionAggregatorReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date,
+            bool isLiveMode, IObjectStore objectStore)
+            : base(dataCacheProvider, config, date, isLiveMode, objectStore)
         {
             _collectionType = config.Type;
         }

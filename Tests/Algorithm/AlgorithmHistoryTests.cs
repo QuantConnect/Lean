@@ -2933,7 +2933,8 @@ tradeBar = TradeBar
                 _factorFileProvider,
                 null,
                 false,
-                new DataPermissionManager()));
+                new DataPermissionManager(),
+                algorithm.ObjectStore));
             return algorithm;
         }
 

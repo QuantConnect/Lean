@@ -25,6 +25,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     /// </summary>
     public class ObjectStoreSubscriptionStreamReader : IStreamReader
     {
+        private IObjectStore _objectStore;
+        private string _key;
+        private StreamReader _streamReader;
+
         /// <summary>
         /// Gets whether or not this stream reader should be rate limited
         /// </summary>
@@ -33,7 +37,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <summary>
         /// Direct access to the StreamReader instance
         /// </summary>
-        public StreamReader StreamReader { get; private set; }
+        public StreamReader StreamReader
+        {
+            get
+            {
+                if (_streamReader == null && !string.IsNullOrEmpty(_key) && _objectStore.ContainsKey(_key))
+                {
+                    var data = _objectStore.ReadBytes(_key);
+                    var stream = new MemoryStream(data);
+                    _streamReader = new StreamReader(stream);
+                }
+
+                return _streamReader;
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ObjectStoreSubscriptionStreamReader"/> class.
@@ -42,12 +59,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="key">The object store key the data should be fetched from</param>
         public ObjectStoreSubscriptionStreamReader(IObjectStore objectStore, string key)
         {
-            if (objectStore.ContainsKey(key))
-            {
-                var data = objectStore.ReadBytes(key);
-                var stream = new MemoryStream(data);
-                StreamReader = new StreamReader(stream);
-            }
+            _objectStore = objectStore;
+            _key = key;
         }
 
         /// <summary>
@@ -79,10 +92,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// </summary>
         public void Dispose()
         {
-            if (StreamReader != null)
+            if (_streamReader != null)
             {
-                StreamReader.Dispose();
-                StreamReader = null;
+                _streamReader.Dispose();
+                _streamReader = null;
             }
         }
     }

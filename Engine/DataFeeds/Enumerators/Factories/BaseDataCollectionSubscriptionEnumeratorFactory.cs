@@ -31,6 +31,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// <remarks>This enumerator factory is currently only used in backtesting with coarse data</remarks>
     public class BaseDataCollectionSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
+        private IObjectStore _objectStore;
+
+        /// <summary>
+        /// Instanciates a new <see cref="BaseDataCollectionSubscriptionEnumeratorFactory"/>
+        /// </summary>
+        /// <param name="objectStore">The object store to use</param>
+        public BaseDataCollectionSubscriptionEnumeratorFactory(IObjectStore objectStore)
+        {
+            _objectStore = objectStore;
+        }
+
         /// <summary>
         /// Creates an enumerator to read the specified request
         /// </summary>
@@ -64,7 +75,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 foreach (var date in tradableDays)
                 {
                     var source = sourceFactory.GetSource(configuration, date, false);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date, false, sourceFactory, dataProvider);
+                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date, false, sourceFactory,
+                        dataProvider, _objectStore);
                     var coarseFundamentalForDate = factory.Read(source);
                     //  shift all date of emitting the file forward one day to model emitting coarse midnight the next day.
                     yield return new BaseDataCollection(date.AddDays(1), configuration.Symbol, coarseFundamentalForDate);

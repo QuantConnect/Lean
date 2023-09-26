@@ -41,17 +41,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="factory">The base data instance factory</param>
         /// <param name="dataProvider">The data provider to use</param>
         /// <returns>A new <see cref="ISubscriptionDataSourceReader"/> that can read the specified <paramref name="source"/></returns>
-        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode, BaseData factory, IDataProvider dataProvider)
+        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode, BaseData factory, IDataProvider dataProvider, IObjectStore objectStore)
         {
             ISubscriptionDataSourceReader reader;
             switch (source.Format)
             {
                 case FileFormat.Csv:
-                    reader = new TextSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
+                    reader = new TextSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode, objectStore);
                     break;
 
                 case FileFormat.UnfoldingCollection:
-                    reader = new CollectionSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
+                    reader = new CollectionSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode, objectStore);
                     break;
 
                 case FileFormat.ZipEntryName:
@@ -59,10 +59,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
 
                 case FileFormat.Index:
-                    return new IndexSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode, dataProvider);
+                    return new IndexSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode, dataProvider, objectStore);
 
                 case FileFormat.FoldingCollection:
-                    reader = new BaseDataCollectionAggregatorReader(dataCacheProvider, config, date, isLiveMode);
+                    reader = new BaseDataCollectionAggregatorReader(dataCacheProvider, config, date, isLiveMode, objectStore);
                     break;
 
                 default:

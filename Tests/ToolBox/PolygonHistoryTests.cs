@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.ToolBox
             Log.LogHandler = new CompositeLogHandler();
 
             _historyProvider = new PolygonDataQueueHandler(false);
-            _historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null));
+            _historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null, false, null, null));
 
         }
 
@@ -147,7 +147,7 @@ namespace QuantConnect.Tests.ToolBox
             new TestCaseData(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Kraken), Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), false),
             new TestCaseData(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitstamp), Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), false),
             new TestCaseData(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.HitBTC), Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), false),
-    
+
             // invalid security type/tick type combination, no error, empty result
             new TestCaseData(Symbols.EURUSD, Resolution.Tick, TickType.Trade, TimeSpan.FromSeconds(15), true),
             new TestCaseData(Symbols.BTCUSD, Resolution.Second, TickType.Quote, Time.OneMinute, true),
@@ -216,7 +216,7 @@ namespace QuantConnect.Tests.ToolBox
 
             Log.Trace("Data points retrieved: " + _historyProvider.DataPointCount);
 
-            // Data goes in chronological order 
+            // Data goes in chronological order
             Assert.That(historicalData, Is.Ordered.By("Time"));
 
             if (isNonEmptyResult)

@@ -42,8 +42,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             SubscriptionDataConfig config,
             DateTime date,
             bool isLiveMode,
-            IDataProvider dataProvider)
-        : base(dataCacheProvider, isLiveMode)
+            IDataProvider dataProvider,
+            IObjectStore objectStore)
+        : base(dataCacheProvider, isLiveMode, objectStore)
         {
             _config = config;
             _date = date;
@@ -103,7 +104,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             _date,
                             IsLiveMode,
                             _factory,
-                            _dataProvider);
+                            _dataProvider,
+                            ObjectStore);
 
                         var enumerator = dataReader.Read(dataSource).GetEnumerator();
                         while (enumerator.MoveNext())

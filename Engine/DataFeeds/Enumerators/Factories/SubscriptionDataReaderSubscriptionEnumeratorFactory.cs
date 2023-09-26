@@ -41,6 +41,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly int _startDateLimitedWarningsMaxCount = 10;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly bool _enablePriceScaling;
+        private readonly IObjectStore _objectStore;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataReaderSubscriptionEnumeratorFactory"/> class
@@ -49,13 +50,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="mapFileProvider">The map file provider</param>
         /// <param name="factorFileProvider">The factor file provider</param>
         /// <param name="cacheProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
-        /// Specify null to default to <see cref="SubscriptionRequest.TradableDaysInDataTimeZone"/></param>
+        /// <param name="objectStore">The object store to use</param>
         /// <param name="enablePriceScaling">Applies price factor</param>
         public SubscriptionDataReaderSubscriptionEnumeratorFactory(IResultHandler resultHandler,
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IDataCacheProvider cacheProvider,
+            IObjectStore objectStore,
             bool enablePriceScaling = true
             )
         {
@@ -66,6 +67,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _numericalPrecisionLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
             _startDateLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
             _enablePriceScaling = enablePriceScaling;
+            _objectStore = objectStore;
         }
 
         /// <summary>
@@ -81,8 +83,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 _mapFileProvider,
                 _factorFileProvider,
                 _dataCacheProvider,
-                dataProvider
-                );
+                dataProvider,
+                _objectStore);
 
             dataReader.InvalidConfigurationDetected += (sender, args) => { _resultHandler.ErrorMessage(args.Message); };
             dataReader.StartDateLimited += (sender, args) =>

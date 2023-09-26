@@ -76,7 +76,7 @@ namespace QuantConnect.Report
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
 
             var dataPermissionManager = new DataPermissionManager();
-            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, _cacheProvider, mapFileProvider, factorFileProvider, (_) => { }, false, dataPermissionManager));
+            historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, _cacheProvider, mapFileProvider, factorFileProvider, (_) => { }, false, dataPermissionManager, Algorithm.ObjectStore));
             Algorithm = new PortfolioLooperAlgorithm((decimal)startingCash, orders, algorithmConfiguration);
             Algorithm.SetHistoryProvider(historyProvider);
 

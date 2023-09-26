@@ -1578,7 +1578,8 @@ actualDictionary.update({'IBM': 5})
                         TestGlobals.FactorFileProvider,
                         (_) => {},
                         false,
-                        new DataPermissionManager()));
+                        new DataPermissionManager(),
+                        algo.ObjectStore));
 
                 algo.SetStartDate(DateTime.UtcNow.AddDays(-1));
 

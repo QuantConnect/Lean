@@ -164,7 +164,8 @@ namespace QuantConnect.Tests.Algorithm
                 TestGlobals.FactorFileProvider,
                 null,
                 false,
-                new DataPermissionManager()));
+                new DataPermissionManager(),
+                algo.ObjectStore));
             algo.SetStartDate(2013, 10, 08);
             algo.AddEquity("SPY", Resolution.Minute);
 

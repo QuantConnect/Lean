@@ -39,6 +39,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected IDataCacheProvider DataCacheProvider { get; }
 
         /// <summary>
+        /// The object store to use
+        /// </summary>
+        protected IObjectStore ObjectStore { get; }
+
+        /// <summary>
         /// Event fired when the specified source is considered invalid, this may
         /// be from a missing file or failure to download a remote source
         /// </summary>
@@ -47,10 +52,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        protected BaseSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, bool isLiveMode)
+        protected BaseSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, bool isLiveMode, IObjectStore objectStore)
         {
             DataCacheProvider = dataCacheProvider;
             IsLiveMode = isLiveMode;
+            ObjectStore = objectStore;
         }
 
         /// <summary>
@@ -85,7 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         break;
 
                     case SubscriptionTransportMedium.ObjectStore:
-                        reader = new ObjectStoreSubscriptionStreamReader(QCAlgorithm.ObjStore, subscriptionDataSource.Source);
+                        reader = new ObjectStoreSubscriptionStreamReader(ObjectStore, subscriptionDataSource.Source);
                         break;
 
                     default:

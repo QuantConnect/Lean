@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var securityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(), SecuritySeeder.Null);
             var universe = new CoarseFundamentalUniverse(universeSettings, x => new List<Symbol>{ Symbols.AAPL });
 
-            var factory = new BaseDataCollectionSubscriptionEnumeratorFactory();
+            var factory = new BaseDataCollectionSubscriptionEnumeratorFactory(null);
 
             GC.Collect();
             var ramUsageBeforeLoop = OS.TotalPhysicalMemoryUsed;
@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var securityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(), SecuritySeeder.Null);
             var universe = new CoarseFundamentalUniverse(universeSettings, x => new List<Symbol> { Symbols.AAPL });
 
-            var factory = new BaseDataCollectionSubscriptionEnumeratorFactory();
+            var factory = new BaseDataCollectionSubscriptionEnumeratorFactory(null);
 
             var dateStart = new DateTime(2014, 3, 26);
             var dateEnd = new DateTime(2014, 3, 27);

@@ -32,18 +32,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly TimeSpan _minimumIntervalCheck;
         private readonly ITimeProvider _timeProvider;
         private readonly Func<DateTime, DateTime> _dateAdjustment;
+        private readonly IObjectStore _objectStore;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LiveCustomDataSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="timeProvider">Time provider from data feed</param>
+        /// <param name="objectStore">The object store to use</param>
         /// <param name="dateAdjustment">Func that allows adjusting the datetime to use</param>
         /// <param name="minimumIntervalCheck">Allows specifying the minimum interval between each enumerator refresh and data check, default is 30 minutes</param>
-        public LiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, Func<DateTime, DateTime> dateAdjustment = null, TimeSpan? minimumIntervalCheck = null)
+        public LiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, IObjectStore objectStore,
+            Func<DateTime, DateTime> dateAdjustment = null, TimeSpan? minimumIntervalCheck = null)
         {
             _timeProvider = timeProvider;
             _dateAdjustment = dateAdjustment;
             _minimumIntervalCheck = minimumIntervalCheck ?? TimeSpan.FromMinutes(30);
+            _objectStore = objectStore;
         }
 
         /// <summary>
@@ -188,7 +192,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             IDataProvider dataProvider
             )
         {
-            return SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, true, baseDataInstance, dataProvider);
+            return SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, true, baseDataInstance, dataProvider, _objectStore);
         }
 
         private bool SourceRequiresFastForward(SubscriptionDataSource source)

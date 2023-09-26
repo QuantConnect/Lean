@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _cacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null,
                 TestGlobals.DataProvider, _cacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
-                null, true, new DataPermissionManager()));
+                null, true, new DataPermissionManager(), _algorithm.ObjectStore));
             _algorithm.SetHistoryProvider(historyProvider);
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _algorithm.Settings.FreePortfolioValue = 0;

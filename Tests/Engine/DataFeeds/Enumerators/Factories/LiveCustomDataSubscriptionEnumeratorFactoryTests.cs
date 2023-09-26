@@ -508,7 +508,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             private readonly ISubscriptionDataSourceReader _dataSourceReader;
 
             public TestableLiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, ISubscriptionDataSourceReader dataSourceReader, TimeSpan? minimumIntervalCheck = null)
-                : base(timeProvider, minimumIntervalCheck: minimumIntervalCheck)
+                : base(timeProvider, null, minimumIntervalCheck: minimumIntervalCheck)
             {
                 _dataSourceReader = dataSourceReader;
             }

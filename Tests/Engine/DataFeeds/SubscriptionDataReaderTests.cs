@@ -60,14 +60,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 false,
                 false,
                 false);
-            var dataReader = new SubscriptionDataReader(config,
+            using var dataReader = new SubscriptionDataReader(config,
                 new HistoryRequest(config, entry.ExchangeHours, start, end),
                 TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
                 new TestDataCacheProvider
                 { Data = data },
-                TestGlobals.DataProvider
-                );
+                TestGlobals.DataProvider,
+                null);
 
             Assert.IsTrue(dataReader.MoveNext());
             Assert.AreEqual(shouldEmitSecondDataPoint, dataReader.MoveNext());
