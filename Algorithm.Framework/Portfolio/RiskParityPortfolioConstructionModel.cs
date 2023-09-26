@@ -230,7 +230,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // clean up data for removed securities
             foreach (var removed in changes.RemovedSecurities)
             {
-                _symbolDataDict.Remove(removed.Symbol);
+                _symbolDataDict.Remove(removed.Symbol, out var removedSymbolData);
+                algorithm.UnregisterIndicator(removedSymbolData.ROC);
             }
 
             if (changes.AddedSecurities.Count == 0)
@@ -245,6 +246,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 {
                     var symbolData = new ReturnsSymbolData(added.Symbol, _lookback, _period);
                     _symbolDataDict[added.Symbol] = symbolData;
+                    algorithm.RegisterIndicator(added.Symbol, symbolData.ROC, _resolution);
                 }
             }
 
