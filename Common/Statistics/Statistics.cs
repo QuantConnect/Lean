@@ -120,7 +120,7 @@ namespace QuantConnect.Statistics
             )
         {
             //Initialise the response:
-            double riskFreeRate = 0;
+            double riskFreeRate = 0; // TODO
             decimal totalClosedTrades = 0;
             decimal totalWins = 0;
             decimal totalLosses = 0;

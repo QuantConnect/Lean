@@ -55,7 +55,7 @@ namespace QuantConnect.Data
         /// <returns>interest rate of the given date</returns>
         public decimal GetInterestRate(DateTime dateTime)
         {
-            if (!_riskFreeRateProvider.TryGetValue(dateTime, out var interestRate))
+            if (!_riskFreeRateProvider.TryGetValue(dateTime.Date, out var interestRate))
             {
                 return dateTime < FirstInterestRateDate
                     ? _riskFreeRateProvider[FirstInterestRateDate]
