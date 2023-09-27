@@ -220,6 +220,7 @@ namespace QuantConnect.Securities
             return GetSecurityDefinitions()
                 .Where(x => x.CIK != null && x.CIK == cik)
                 .Select(securityDefinition => SecurityDefinitionToSymbol(securityDefinition, tradingDate))
+                .Where(x => x != null)
                 .ToArray();
         }
 
