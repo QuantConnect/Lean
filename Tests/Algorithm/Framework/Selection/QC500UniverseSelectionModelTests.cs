@@ -160,7 +160,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             algorithm.SetEndDate(2020, 1, 30);
             algorithm.SetDateTime(algorithm.StartDate.AddHours(6));
 
-            FundamentalService.Initialize(TestGlobals.DataProvider, fundamentalDataProvider);
+            FundamentalService.Initialize(TestGlobals.DataProvider, fundamentalDataProvider, false);
 
             coarseCountByDateTime = new Dictionary<DateTime, int>();
             fineCountByDateTime = new Dictionary<DateTime, int>();
@@ -267,7 +267,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 return null;
             }
 
-            public void Initialize(IDataProvider dataProvider)
+            public void Initialize(IDataProvider dataProvider, bool liveMode)
             {
             }
         }

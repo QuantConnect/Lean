@@ -31,9 +31,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// Initializes the service
         /// </summary>
         /// <param name="dataProvider">The data provider instance to use</param>
-        public static void Initialize(IDataProvider dataProvider)
+        /// <param name="liveMode">True if running in live mode</param>
+        public static void Initialize(IDataProvider dataProvider, bool liveMode)
         {
-            Initialize(dataProvider, Config.Get("fundamental-data-provider", nameof(CoarseFundamentalDataProvider)));
+            Initialize(dataProvider, Config.Get("fundamental-data-provider", nameof(CoarseFundamentalDataProvider)), liveMode);
         }
 
         /// <summary>
@@ -41,9 +42,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="dataProvider">The data provider instance to use</param>
         /// <param name="fundamentalDataProvider">The fundamental data provider</param>
-        public static void Initialize(IDataProvider dataProvider, string fundamentalDataProvider)
+        /// <param name="liveMode">True if running in live mode</param>
+        public static void Initialize(IDataProvider dataProvider, string fundamentalDataProvider, bool liveMode)
         {
-            Initialize(dataProvider, Composer.Instance.GetExportedValueByTypeName<IFundamentalDataProvider>(fundamentalDataProvider));
+            Initialize(dataProvider, Composer.Instance.GetExportedValueByTypeName<IFundamentalDataProvider>(fundamentalDataProvider), liveMode);
         }
 
         /// <summary>
@@ -51,10 +53,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="dataProvider">The data provider instance to use</param>
         /// <param name="fundamentalDataProvider">The fundamental data provider</param>
-        public static void Initialize(IDataProvider dataProvider, IFundamentalDataProvider fundamentalDataProvider)
+        /// <param name="liveMode">True if running in live mode</param>
+        public static void Initialize(IDataProvider dataProvider, IFundamentalDataProvider fundamentalDataProvider, bool liveMode)
         {
             _fundamentalDataProvider = fundamentalDataProvider;
-            _fundamentalDataProvider.Initialize(dataProvider);
+            _fundamentalDataProvider.Initialize(dataProvider, liveMode);
         }
 
         /// <summary>

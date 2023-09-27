@@ -22,7 +22,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
     internal class NullFundamentalDataProvider : IFundamentalDataProvider
     {
         public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, string name) => default;
-        public void Initialize(IDataProvider dataProvider)
+        public void Initialize(IDataProvider dataProvider, bool liveMode)
         {
         }
     }

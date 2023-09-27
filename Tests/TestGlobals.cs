@@ -54,7 +54,7 @@ namespace QuantConnect.Tests
 
                 MapFileProvider.Initialize(DataProvider);
                 FactorFileProvider.Initialize(MapFileProvider, DataProvider);
-                FundamentalService.Initialize(DataProvider, new NullFundamentalDataProvider());
+                FundamentalService.Initialize(DataProvider, new NullFundamentalDataProvider(), false);
             }
         }
     }

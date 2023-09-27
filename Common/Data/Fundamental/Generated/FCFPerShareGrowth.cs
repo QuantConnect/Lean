@@ -39,12 +39,6 @@ namespace QuantConnect.Data.Fundamental
         public double OneYear => FundamentalService.Get<double>(Time, SecurityIdentifier, "EarningRatios.FCFPerShareGrowth.OneYear");
 
         /// <summary>
-        /// Gets/sets the ThreeMonths period value for the field
-        /// </summary>
-        [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(Time, SecurityIdentifier, "EarningRatios.FCFPerShareGrowth.ThreeMonths");
-
-        /// <summary>
         /// Gets/sets the ThreeYears period value for the field
         /// </summary>
         [JsonProperty("3Y")]
@@ -84,7 +78,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("3Y",ThreeYears), new Tuple<string, double>("5Y",FiveYears) })
+            foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear), new Tuple<string, double>("3Y",ThreeYears), new Tuple<string, double>("5Y",FiveYears) })
             {
                 if(kvp.Item2 != NoValue)
                 {
