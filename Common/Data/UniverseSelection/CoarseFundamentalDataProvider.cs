@@ -35,7 +35,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// Initializes the service
         /// </summary>
         /// <param name="dataProvider">The data provider instance to use</param>
-        public void Initialize(IDataProvider dataProvider)
+        /// <param name="liveMode">True if running in live mode</param>
+        public void Initialize(IDataProvider dataProvider, bool liveMode)
         {
             _dataProvider = dataProvider;
         }
@@ -50,35 +51,38 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>The fundamental information</returns>
         public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, string name)
         {
-            if(time == _date)
+            lock(_coarseFundamental)
             {
-                return GetProperty<T>(securityIdentifier, name);
-            }
-            _date = time;
-
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), new Symbol(securityIdentifier, securityIdentifier.Symbol), Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-            var source = _factory.GetSource(config, time, false);
-            var fileStream = _dataProvider.Fetch(source.Source);
-
-            if (fileStream == null)
-            {
-                return default;
-            }
-            _coarseFundamental.Clear();
-            using (var reader = new StreamReader(fileStream))
-            {
-                while (!reader.EndOfStream)
+                if (time == _date)
                 {
-                    var line = reader.ReadLine();
-                    var coarse = _factory.Reader(config, line, time, false) as CoarseFundamental;
-                    if (coarse != null)
+                    return GetProperty<T>(securityIdentifier, name);
+                }
+                _date = time;
+
+                var config = new SubscriptionDataConfig(typeof(CoarseFundamental), new Symbol(securityIdentifier, securityIdentifier.Symbol), Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+                var source = _factory.GetSource(config, time, false);
+                var fileStream = _dataProvider.Fetch(source.Source);
+
+                if (fileStream == null)
+                {
+                    return default;
+                }
+                _coarseFundamental.Clear();
+                using (var reader = new StreamReader(fileStream))
+                {
+                    while (!reader.EndOfStream)
                     {
-                        _coarseFundamental[coarse.Symbol.ID] = coarse;
+                        var line = reader.ReadLine();
+                        var coarse = _factory.Reader(config, line, time, false) as CoarseFundamental;
+                        if (coarse != null)
+                        {
+                            _coarseFundamental[coarse.Symbol.ID] = coarse;
+                        }
                     }
                 }
-            }
 
-            return GetProperty<T>(securityIdentifier, name);
+                return GetProperty<T>(securityIdentifier, name);
+            }
         }
 
         private dynamic GetProperty<T>(SecurityIdentifier securityIdentifier, string property)

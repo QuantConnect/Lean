@@ -120,9 +120,9 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
             return null;
         }
 
-        public void Initialize(IDataProvider dataProvider)
+        public void Initialize(IDataProvider dataProvider, bool liveMode)
         {
-            _coarseFundamentalData.Initialize(dataProvider);
+            _coarseFundamentalData.Initialize(dataProvider, liveMode);
         }
     }
 }

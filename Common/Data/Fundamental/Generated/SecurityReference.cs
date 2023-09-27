@@ -55,15 +55,6 @@ namespace QuantConnect.Data.Fundamental
         public string CurrencyId => FundamentalService.Get<string>(_time, _securityIdentifier, "SecurityReference.CurrencyId");
 
         /// <summary>
-        /// <remarks> Morningstar DataId: 1005 </remarks>
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: 1005
-        /// </remarks>
-        [JsonProperty("1005")]
-        public string Valoren => FundamentalService.Get<string>(_time, _securityIdentifier, "SecurityReference.Valoren");
-
-        /// <summary>
         /// The initial day that the share begins trading on a public exchange.
         /// </summary>
         /// <remarks>

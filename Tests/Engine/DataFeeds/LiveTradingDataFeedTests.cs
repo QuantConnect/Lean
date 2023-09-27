@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             TestCustomData.ReturnNull = false;
             TestCustomData.ThrowException = false;
 
-            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProviderTrue());
+            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProviderTrue(), false);
         }
 
         [TearDown]
@@ -3188,7 +3188,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 return null;
             }
-            public void Initialize(IDataProvider dataProvider)
+            public void Initialize(IDataProvider dataProvider, bool liveMode)
             {
             }
         }
