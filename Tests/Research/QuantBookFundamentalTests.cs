@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Research
             using (Py.GIL())
             {
                 var testModule = _module.FundamentalHistoryTest();
-                FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider());
+                FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(), false);
                 var dataFrame = testModule.getFundamentals(input[0], input[1], _startDate, _endDate);
 
                 // Should not be empty
@@ -123,7 +123,7 @@ namespace QuantConnect.Tests.Research
         [TestCaseSource(nameof(DataTestCases))]
         public void CSharpFundamentalData(dynamic input)
         {
-            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider());
+            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(), false);
             var data = _qb.GetFundamental(input[0], input[1], _startDate, _endDate);
             var currentDate = _startDate;
 
@@ -245,7 +245,7 @@ namespace QuantConnect.Tests.Research
                 }
                 return null;
             }
-            public void Initialize(IDataProvider dataProvider)
+            public void Initialize(IDataProvider dataProvider, bool liveMode)
             {
             }
         }

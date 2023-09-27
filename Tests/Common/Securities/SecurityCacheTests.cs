@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common.Securities
         [SetUp]
         public void Setup()
         {
-            FundamentalService.Initialize(TestGlobals.DataProvider, new NullFundamentalDataProvider());
+            FundamentalService.Initialize(TestGlobals.DataProvider, new NullFundamentalDataProvider(), false);
         }
 
         [TestCase(MarketDataType.TradeBar, 10, true)]

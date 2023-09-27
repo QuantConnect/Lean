@@ -27,7 +27,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// Initializes the service
         /// </summary>
         /// <param name="dataProvider">The data provider instance to use</param>
-        void Initialize(IDataProvider dataProvider);
+        /// <param name="liveMode">True if running in live mode</param>
+        void Initialize(IDataProvider dataProvider, bool liveMode);
 
         /// <summary>
         /// Will fetch the requested fundamental information for the requested time and symbol

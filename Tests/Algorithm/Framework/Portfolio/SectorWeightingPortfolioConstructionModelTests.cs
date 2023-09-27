@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 Algorithm.Securities.Add(symbol, security);
             }
 
-            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(industryTemplateCodeDict));
+            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(industryTemplateCodeDict), false);
         }
 
         [Test]
@@ -327,7 +327,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 }
                 return null;
             }
-            public void Initialize(IDataProvider dataProvider)
+            public void Initialize(IDataProvider dataProvider, bool liveMode)
             {
             }
         }
