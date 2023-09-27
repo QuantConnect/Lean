@@ -205,6 +205,7 @@ namespace QuantConnect.Lean.Engine
             var objectStoreTypeName = Config.Get("object-store", "LocalObjectStore");
             var dataPermissionManager = Config.Get("data-permission-manager", "DataPermissionManager");
 
+            var liveMode = Config.GetBool("live-mode");
             var result = new LeanEngineAlgorithmHandlers(
                 composer.GetExportedValueByTypeName<IResultHandler>(resultHandlerTypeName),
                 composer.GetExportedValueByTypeName<ISetupHandler>(setupHandlerTypeName),
@@ -216,7 +217,7 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IDataProvider>(dataProviderTypeName),
                 composer.GetExportedValueByTypeName<IObjectStore>(objectStoreTypeName),
                 composer.GetExportedValueByTypeName<IDataPermissionManager>(dataPermissionManager),
-                Config.GetBool("live-mode"),
+                liveMode,
                 researchMode
                 );
 
@@ -230,7 +231,7 @@ namespace QuantConnect.Lean.Engine
                     $" and {typeof(LocalZipMapFileProvider)}, please update 'config.json'");
             }
 
-            FundamentalService.Initialize(result.DataProvider);
+            FundamentalService.Initialize(result.DataProvider, liveMode);
 
             return result;
         }

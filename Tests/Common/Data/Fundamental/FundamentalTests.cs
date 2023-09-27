@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
         [SetUp]
         public void Setup()
         {
-            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider());
+            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(), false);
         }
 
         [Test]
