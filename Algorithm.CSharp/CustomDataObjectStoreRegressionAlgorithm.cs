@@ -16,8 +16,10 @@
 using System;
 using System.Globalization;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -32,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private Symbol _customSymbol;
 
-        private bool _receivedCustomData;
+        private List<ExampleCustomData> _receivedData = new();
 
         public override void Initialize()
         {
@@ -42,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             ExampleCustomData.CustomDataKey = CustomDataKey;
 
-            _customSymbol = AddData<ExampleCustomData>("ExampleCustomData", Resolution.Second).Symbol;
+            _customSymbol = AddData<ExampleCustomData>("ExampleCustomData", Resolution.Hour).Symbol;
 
             // Saving data here for demonstration and regression testing purposes.
             // In real scenarios, data has to be saved to the object store before the algorithm starts.
@@ -53,19 +55,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (slice.ContainsKey(_customSymbol))
             {
-                _receivedCustomData = true;
                 var customData = slice.Get<ExampleCustomData>(_customSymbol);
-
                 if (customData.Price == 0)
                 {
                     throw new Exception("Custom data price was not expected to be zero");
                 }
+
+                _receivedData.Add(customData);
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_receivedCustomData)
+            if (_receivedData.Count == 0)
             {
                 throw new Exception("Custom data was not fetched");
             }
@@ -74,6 +76,22 @@ namespace QuantConnect.Algorithm.CSharp
             if (customSecurity == null || customSecurity.Price == 0)
             {
                 throw new Exception("Expected the custom security to be added to the algorithm securities and to have a price that is not zero");
+            }
+
+            // Make sure history requests work as expected
+            var history = History<ExampleCustomData>(_customSymbol, StartDate, EndDate, Resolution.Hour).ToList();
+
+            if (history.Count != _receivedData.Count)
+            {
+                throw new Exception("History request returned different data than expected");
+            }
+
+            for (var i = 0; i < history.Count; i++)
+            {
+                if (!history[i].Equals(_receivedData[i]))
+                {
+                    throw new Exception("History request returned different data than expected");
+                }
             }
         }
 
@@ -112,6 +130,18 @@ namespace QuantConnect.Algorithm.CSharp
 
                 return data;
             }
+
+            public bool Equals(ExampleCustomData other)
+            {
+                return other != null &&
+                    Symbol == other.Symbol &&
+                    Time == other.Time &&
+                    Value == other.Value &&
+                    Open == other.Open &&
+                    High == other.High &&
+                    Low == other.Low &&
+                    Close == other.Close;
+            }
         }
 
         /// <summary>
@@ -132,7 +162,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 0;
+        public virtual int AlgorithmHistoryDataPoints => 49;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

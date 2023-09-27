@@ -31,22 +31,40 @@ class CustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
         # In real scenarios, data has to be saved to the object store before the algorithm starts.
         self.SaveDataToObjectStore()
 
-        self.receivedCustomData = False
+        self.receivedData = []
 
     def OnData(self, slice: Slice):
         if slice.ContainsKey(self.customSymbol):
-            self.receivedCustomData = True
             customData = slice.Get(ExampleCustomData, self.customSymbol)
             if customData.Price == 0:
                 raise Exception("Custom data price was not expected to be zero")
 
+            self.receivedData.append(customData)
+
     def OnEndOfAlgorithm(self):
-        if not self.receivedCustomData:
+        if not self.receivedData:
             raise Exception("Custom data was not fetched")
 
         customSecurity = self.Securities[self.customSymbol]
         if customSecurity is None or customSecurity.Price == 0:
             Exception("Expected the custom security to be added to the algorithm securities and to have a price that is not zero")
+
+        # Make sure history requests work as expected
+        history = self.History(ExampleCustomData, self.customSymbol, self.StartDate, self.EndDate, Resolution.Hour)
+
+        if history.shape[0] != len(self.receivedData):
+            raise Exception("History request returned more or less data than expected")
+
+        for i in range(len(self.receivedData)):
+            receivedData = self.receivedData[i]
+            if (history.index[i][0] != receivedData.Symbol or
+                history.index[i][1] != receivedData.Time or
+                history[["value"]].values[i][0] != receivedData.Value or
+                history[["open"]].values[i][0] != receivedData.Open or
+                history[["high"]].values[i][0] != receivedData.High or
+                history[["low"]].values[i][0] != receivedData.Low or
+                history[["close"]].values[i][0] != receivedData.Close):
+                raise Exception("History request returned different data than expected")
 
     def GetCustomDataKey(self):
         return "CustomData/ExampleCustomData"
