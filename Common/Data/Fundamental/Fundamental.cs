@@ -59,6 +59,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         public Fundamental()
         {
+            DataType = MarketDataType.Auxiliary;
         }
 
         /// <summary>
@@ -69,6 +70,7 @@ namespace QuantConnect.Data.Fundamental
         public Fundamental(DateTime time, Symbol symbol)
             : base(time, symbol)
         {
+            DataType = MarketDataType.Auxiliary;
         }
 
         /// <summary>
