@@ -471,7 +471,7 @@ namespace QuantConnect.Algorithm
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, isFilteredSubscription: false);
+            var config = new SubscriptionDataConfig(typeof(Fundamental), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, isFilteredSubscription: false);
             return AddUniverse(new UserDefinedUniverse(config, universeSettings, resolution.ToTimeSpan(), selector));
         }
 
@@ -633,6 +633,10 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private SubscriptionDataConfig GetCustomUniverseConfiguration(Type dataType, string name, Resolution resolution, string market)
         {
+            if (dataType == typeof(CoarseFundamental) || dataType == typeof(FineFundamental))
+            {
+                dataType = typeof(Fundamental);
+            }
             // same as 'AddData<>' 'T' type will be treated as custom/base data type with always open market hours
             var universeSymbol = QuantConnect.Symbol.Create(name, SecurityType.Base, market, baseDataType: dataType);
             var marketHoursDbEntry = MarketHoursDatabase.GetEntry(universeSymbol, new[] { dataType });
