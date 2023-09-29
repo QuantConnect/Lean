@@ -15,10 +15,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Data;
+using System.Collections.Generic;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm
@@ -344,9 +345,9 @@ namespace QuantConnect.Algorithm
             universeSettings ??= _algorithm.UniverseSettings;
 
             var symbol = Symbol.Create("us-equity-dollar-volume-top-" + count, SecurityType.Equity, Market.USA);
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
+            var config = new SubscriptionDataConfig(typeof(Fundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
             return new FuncUniverse(config, universeSettings, selectionData => (
-                from c in selectionData.OfType<CoarseFundamental>()
+                from c in selectionData.OfType<Fundamental>()
                 orderby c.DollarVolume descending
                 select c.Symbol).Take(count)
                 );

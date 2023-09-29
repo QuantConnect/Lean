@@ -26,10 +26,9 @@ namespace QuantConnect.Data.UniverseSelection
     public class CoarseFundamentalDataProvider : IFundamentalDataProvider
     {
         private DateTime _date;
+        private IDataProvider _dataProvider;
         private readonly Dictionary<SecurityIdentifier, CoarseFundamental> _coarseFundamental = new();
 
-        private readonly CoarseFundamental _factory = new();
-        private IDataProvider _dataProvider;
 
         /// <summary>
         /// Initializes the service
@@ -59,21 +58,20 @@ namespace QuantConnect.Data.UniverseSelection
                 }
                 _date = time;
 
-                var config = new SubscriptionDataConfig(typeof(CoarseFundamental), new Symbol(securityIdentifier, securityIdentifier.Symbol), Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-                var source = _factory.GetSource(config, time, false);
-                var fileStream = _dataProvider.Fetch(source.Source);
-
+                var path = Path.Combine(Globals.DataFolder, "equity", "usa", "fundamental", "coarse", $"{time:yyyyMMdd}.csv");
+                var fileStream = _dataProvider.Fetch(path);
                 if (fileStream == null)
                 {
                     return default;
                 }
+
                 _coarseFundamental.Clear();
                 using (var reader = new StreamReader(fileStream))
                 {
                     while (!reader.EndOfStream)
                     {
                         var line = reader.ReadLine();
-                        var coarse = _factory.Reader(config, line, time, false) as CoarseFundamental;
+                        var coarse = Read(line, time);
                         if (coarse != null)
                         {
                             _coarseFundamental[coarse.Symbol.ID] = coarse;
@@ -83,6 +81,40 @@ namespace QuantConnect.Data.UniverseSelection
 
                 return GetProperty<T>(securityIdentifier, name);
             }
+        }
+
+        public static CoarseFundamentalSource Read(string line, DateTime date)
+        {
+            try
+            {
+                var csv = line.Split(',');
+                var coarse = new CoarseFundamentalSource
+                {
+                    Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
+                    Time = date,
+                    Value = csv[2].ToDecimal(),
+                    VolumeSetter = csv[3].ToInt64(),
+                    DollarVolumeSetter = (double)csv[4].ToDecimal()
+                };
+
+                if (csv.Length > 5)
+                {
+                    coarse.HasFundamentalDataSetter = csv[5].ConvertInvariant<bool>();
+                }
+
+                if (csv.Length > 7)
+                {
+                    coarse.PriceFactorSetter = csv[6].ToDecimal();
+                    coarse.SplitFactorSetter = csv[7].ToDecimal();
+                }
+
+                return coarse;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+
         }
 
         private dynamic GetProperty<T>(SecurityIdentifier securityIdentifier, string property)
@@ -113,6 +145,43 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             return default(T);
+        }
+
+        /// <summary>
+        /// Coarse fundamental with setters
+        /// </summary>
+        public class CoarseFundamentalSource : CoarseFundamental
+        {
+            public long VolumeSetter;
+            public double DollarVolumeSetter;
+            public decimal PriceFactorSetter = 1;
+            public decimal SplitFactorSetter = 1;
+            public bool HasFundamentalDataSetter;
+
+            /// <summary>
+            /// Gets the day's dollar volume for this symbol
+            /// </summary>
+            public override double DollarVolume => DollarVolumeSetter;
+
+            /// <summary>
+            /// Gets the day's total volume
+            /// </summary>
+            public override long Volume => VolumeSetter;
+
+            /// <summary>
+            /// Returns whether the symbol has fundamental data for the given date
+            /// </summary>
+            public override bool HasFundamentalData => HasFundamentalDataSetter;
+
+            /// <summary>
+            /// Gets the price factor for the given date
+            /// </summary>
+            public override decimal PriceFactor => PriceFactorSetter;
+
+            /// <summary>
+            /// Gets the split factor for the given date
+            /// </summary>
+            public override decimal SplitFactor => SplitFactorSetter;
         }
     }
 }

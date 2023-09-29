@@ -30,6 +30,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using DateTime = System.DateTime;
 using Log = QuantConnect.Logging.Log;
 using QuantConnect.Data.UniverseSelection;
+using static QuantConnect.Data.UniverseSelection.CoarseFundamentalDataProvider;
 
 namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 {
@@ -260,15 +261,16 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var hasFundamentalData = CheckFundamentalData(date, sidContext.SID);
 
             // sid,symbol,close,volume,dollar volume,has fundamental data,price factor,split factor
-            return new CoarseFundamental
+            return new CoarseFundamentalSource
             {
                 Symbol = new Symbol(sidContext.SID, ticker),
                 Value = tradeBar.Close.Normalize(),
                 Time = date,
-                DollarVolume = dollarVolume,
-                PriceFactor = priceFactor,
-                SplitFactor = splitFactor,
-                HasFundamentalData = hasFundamentalData
+                VolumeSetter = decimal.ToInt64(tradeBar.Volume),
+                DollarVolumeSetter = dollarVolume,
+                PriceFactorSetter = priceFactor,
+                SplitFactorSetter = splitFactor,
+                HasFundamentalDataSetter = hasFundamentalData
             };
         }
 
@@ -276,14 +278,11 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// Checks if there is fundamental data for
         /// </summary>
         /// <param name="date">The date.</param>
-        /// <param name="sid">The ticker.</param>
-        /// <returns></returns>
+        /// <param name="sid">The security identifier.</param>
+        /// <returns>True if fundamental data is available</returns>
         private static bool CheckFundamentalData(DateTime date, SecurityIdentifier sid)
         {
-            lock (_lock)
-            {
-                return !string.IsNullOrEmpty(FundamentalService.Get<string>(date, sid, HasFundamentalSource));
-            }
+            return !string.IsNullOrEmpty(FundamentalService.Get<string>(date, sid, HasFundamentalSource));
         }
 
         /// <summary>

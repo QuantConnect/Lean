@@ -24,6 +24,7 @@ using QuantConnect.Tests.Common.Data.Fundamental;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static QuantConnect.Data.UniverseSelection.CoarseFundamentalDataProvider;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Selection
 {
@@ -49,14 +50,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             Dictionary<DateTime, int> fineCountByDateTime;
 
             RunSimulation(language,
-                (symbol, time) => new CoarseFundamental
+                (symbol, time) => new CoarseFundamentalSource
                 {
                     Symbol = symbol,
                     EndTime = time,
                     Value = 100,
-                    Volume = 1000,
-                    DollarVolume = 100000 * double.Parse(symbol.Value.Substring(3)),
-                    HasFundamentalData = true
+                    VolumeSetter = 1000,
+                    DollarVolumeSetter = 100000 * double.Parse(symbol.Value.Substring(3)),
+                    HasFundamentalDataSetter = true
                 },
                 (symbol, time) => new FineFundamental
                 {
@@ -87,14 +88,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             Dictionary<DateTime, int> fineCountByDateTime;
 
             RunSimulation(language,
-                (symbol, time) => new CoarseFundamental
+                (symbol, time) => new CoarseFundamentalSource
                 {
                     Symbol = symbol,
                     EndTime = time,
-                    Value = 100,
-                    Volume = 1000,
-                    DollarVolume = 100000 * double.Parse(symbol.Value.Substring(3)),
-                    HasFundamentalData = false
                 },
                 (symbol, time) => new FineFundamental
                 {
@@ -120,14 +117,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             Dictionary<DateTime, int> fineCountByDateTime;
 
             RunSimulation(language,
-                (symbol, time) => new CoarseFundamental
+                (symbol, time) => new CoarseFundamentalSource
                 {
                     Symbol = symbol,
                     EndTime = time,
                     Value = 100,
-                    Volume = 1000,
-                    DollarVolume = 100000 * double.Parse(symbol.Value.Substring(3)),
-                    HasFundamentalData = true
+                    VolumeSetter = 1000,
+                    DollarVolumeSetter = 100000 * double.Parse(symbol.Value.Substring(3)),
+                    HasFundamentalDataSetter = true
                 },
                 (symbol, time) => new FineFundamental()
                 {
