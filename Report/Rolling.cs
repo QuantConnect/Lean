@@ -74,7 +74,6 @@ namespace QuantConnect.Report
         /// <param name="equityCurve">Equity curve to calculate rolling sharpe for</param>
         /// <param name="months">Number of months to calculate the rolling period for</param>
         /// <returns>Rolling sharpe ratio</returns>
-        /// TODO
         public static Series<DateTime, double> Sharpe(Series<DateTime, double> equityCurve, int months)
         {
             var riskFreeRate = (double)PortfolioStatistics.GetAverageRiskFreeRate(equityCurve.Keys);
