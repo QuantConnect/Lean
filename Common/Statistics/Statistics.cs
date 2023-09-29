@@ -31,83 +31,6 @@ namespace QuantConnect.Statistics
     public class Statistics
     {
         /// <summary>
-        /// Retrieve a static S-P500 Benchmark for the statistics calculations. Update the benchmark once per day.
-        /// </summary>
-        public static SortedDictionary<DateTime, decimal> YahooSPYBenchmark
-        {
-            get
-            {
-                var benchmark = new SortedDictionary<DateTime, decimal>();
-                var url = "http://real-chart.finance.yahoo.com/table.csv?s=SPY&a=11&b=31&c=1997&d=" + (DateTime.Now.Month - 1) + "&e=" + DateTime.Now.Day + "&f=" + DateTime.Now.Year + "&g=d&ignore=.csv";
-                using (var net = new WebClient())
-                {
-                    net.Proxy = WebRequest.GetSystemWebProxy();
-                    var data = net.DownloadString(url);
-                    var first = true;
-                    using (var sr = new StreamReader(data.ToStream()))
-                    {
-                        while (sr.Peek() >= 0)
-                        {
-                            var line = sr.ReadLine();
-                            if (first)
-                            {
-                                first = false;
-                                continue;
-                            }
-                            if (line == null) continue;
-                            var csv = line.Split(',');
-                            benchmark.Add(Parse.DateTime(csv[0]), csv[6].ConvertInvariant<decimal>());
-                        }
-                    }
-                }
-                return benchmark;
-            }
-        }
-
-        /// <summary>
-        /// Convert the charting data into an equity array.
-        /// </summary>
-        /// <remarks>This is required to convert the equity plot into a usable form for the statistics calculation</remarks>
-        /// <param name="points">ChartPoints Array</param>
-        /// <returns>SortedDictionary of the equity decimal values ordered in time</returns>
-        private static SortedDictionary<DateTime, decimal> ChartPointToDictionary(IEnumerable<ChartPoint> points)
-        {
-            var dictionary = new SortedDictionary<DateTime, decimal>();
-            try
-            {
-                foreach (var point in points)
-                {
-                    var x = Time.UnixTimeStampToDateTime(point.x);
-                    if (!dictionary.ContainsKey(x))
-                    {
-                        dictionary.Add(x, point.y);
-                    }
-                    else
-                    {
-                        dictionary[x] = point.y;
-                    }
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-            return dictionary;
-        }
-
-        /// <summary>
-        /// Return profit loss ratio safely avoiding divide by zero errors.
-        /// </summary>
-        /// <param name="averageWin"></param>
-        /// <param name="averageLoss"></param>
-        /// <returns></returns>
-        public static decimal ProfitLossRatio(decimal averageWin, decimal averageLoss)
-        {
-            if (averageLoss == 0) return -1;
-            return Math.Round(averageWin / Math.Abs(averageLoss), 2);
-        }
-
-        /// <summary>
         /// Drawdown maximum percentage.
         /// </summary>
         /// <param name="equityOverTime"></param>
@@ -134,48 +57,6 @@ namespace QuantConnect.Statistics
             }
             return dd;
         }
-
-        /// <summary>
-        /// Drawdown maximum value
-        /// </summary>
-        /// <param name="equityOverTime">Array of portfolio value over time.</param>
-        /// <param name="rounding">Round the drawdown statistics.</param>
-        /// <returns>Draw down percentage over period.</returns>
-        public static decimal DrawdownValue(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
-        {
-            //Initialise:
-            var priceMaximum = 0;
-            var previousMinimum = 0;
-            var previousMaximum = 0;
-
-            try
-            {
-                var lPrices = equityOverTime.Values.ToList();
-
-                for (var id = 0; id < lPrices.Count; id++)
-                {
-                    if (lPrices[id] >= lPrices[priceMaximum])
-                    {
-                        priceMaximum = id;
-                    }
-                    else
-                    {
-                        if ((lPrices[priceMaximum] - lPrices[id]) > (lPrices[previousMaximum] - lPrices[previousMinimum]))
-                        {
-                            previousMaximum = priceMaximum;
-                            previousMinimum = id;
-                        }
-                    }
-                }
-                return Math.Round((lPrices[previousMaximum] - lPrices[previousMinimum]), rounding);
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-            return 0;
-        } // End Drawdown:
-
 
         /// <summary>
         /// Annual compounded returns statistic based on the final-starting capital and years.
@@ -236,30 +117,6 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Algorithm "beta" statistic - the covariance between the algorithm and benchmark performance, divided by benchmark's variance
-        /// </summary>
-        /// <param name="algoPerformance">Collection of double values for algorithm daily performance.</param>
-        /// <param name="benchmarkPerformance">Collection of double benchmark daily performance values.</param>
-        /// <remarks>Invokes the variance and covariance extensions in the MathNet Statistics class</remarks>
-        /// <returns>Value for beta</returns>
-        public static double Beta(List<double> algoPerformance, List<double> benchmarkPerformance)
-        {
-            return algoPerformance.Covariance(benchmarkPerformance) / benchmarkPerformance.Variance();
-        }
-
-        /// <summary>
-        /// Algorithm "Alpha" statistic - abnormal returns over the risk free rate and the relationshio (beta) with the benchmark returns.
-        /// </summary>
-        /// <param name="algoPerformance">Collection of double algorithm daily performance values.</param>
-        /// <param name="benchmarkPerformance">Collection of double benchmark daily performance values.</param>
-        /// <param name="riskFreeRate">Risk free rate of return for the T-Bonds.</param>
-        /// <returns>Value for alpha</returns>
-        public static double Alpha(List<double> algoPerformance, List<double> benchmarkPerformance, double riskFreeRate)
-        {
-            return AnnualPerformance(algoPerformance) - (riskFreeRate + Beta(algoPerformance, benchmarkPerformance) * (AnnualPerformance(benchmarkPerformance) - riskFreeRate));
-        }
-
-        /// <summary>
         /// Tracking error volatility (TEV) statistic - a measure of how closely a portfolio follows the index to which it is benchmarked
         /// </summary>
         /// <remarks>If algo = benchmark, TEV = 0</remarks>
@@ -284,20 +141,6 @@ namespace QuantConnect.Statistics
             return Math.Sqrt(AnnualVariance(performanceDifference, tradingDaysPerYear));
         }
 
-
-        /// <summary>
-        /// Information ratio - risk adjusted return
-        /// </summary>
-        /// <param name="algoPerformance">Collection of doubles for the daily algorithm daily performance</param>
-        /// <param name="benchmarkPerformance">Collection of doubles for the benchmark daily performance</param>
-        /// <remarks>(risk = tracking error volatility, a volatility measures that considers the volatility of both algo and benchmark)</remarks>
-        /// <seealso cref="TrackingError"/>
-        /// <returns>Value for information ratio</returns>
-        public static double InformationRatio(List<double> algoPerformance, List<double> benchmarkPerformance)
-        {
-            return (AnnualPerformance(algoPerformance) - AnnualPerformance(benchmarkPerformance)) / (TrackingError(algoPerformance, benchmarkPerformance));
-        }
-
         /// <summary>
         /// Sharpe ratio with respect to risk free rate: measures excess of return per unit of risk.
         /// </summary>
@@ -308,18 +151,6 @@ namespace QuantConnect.Statistics
         public static double SharpeRatio(List<double> algoPerformance, double riskFreeRate)
         {
             return (AnnualPerformance(algoPerformance) - riskFreeRate) / (AnnualStandardDeviation(algoPerformance));
-        }
-
-        /// <summary>
-        /// Treynor ratio statistic is a measurement of the returns earned in excess of that which could have been earned on an investment that has no diversifiable risk
-        /// </summary>
-        /// <param name="algoPerformance">Collection of double algorithm daily performance values</param>
-        /// <param name="benchmarkPerformance">Collection of double benchmark daily performance values</param>
-        /// <param name="riskFreeRate">Risk free rate of return</param>
-        /// <returns>double Treynor ratio</returns>
-        public static double TreynorRatio(List<double> algoPerformance, List<double> benchmarkPerformance, double riskFreeRate)
-        {
-            return (AnnualPerformance(algoPerformance) - riskFreeRate) / (Beta(algoPerformance, benchmarkPerformance));
         }
 
         /// <summary>
