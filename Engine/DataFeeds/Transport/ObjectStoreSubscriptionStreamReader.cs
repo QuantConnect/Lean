@@ -18,6 +18,7 @@ using System;
 using System.IO;
 using Ionic.Zip;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
@@ -56,6 +57,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
                         zipEntry.Extract(tempStream);
                         tempStream.Position = 0;
                         _streamReader = new StreamReader(tempStream);
+
+                        stream.DisposeSafely();
                     }
                     else
                     {
