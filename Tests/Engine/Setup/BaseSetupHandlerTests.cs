@@ -38,6 +38,8 @@ namespace QuantConnect.Tests.Engine.Setup
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
             var zipCache = new ZipDataCacheProvider(new DefaultDataProvider());
 
+            var algorithm = new BrokerageSetupHandlerTests.TestAlgorithm { UniverseSettings = { Resolution = Resolution.Minute } };
+
             historyProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
                 null,
@@ -47,9 +49,8 @@ namespace QuantConnect.Tests.Engine.Setup
                 TestGlobals.FactorFileProvider,
                 null,
                 false,
-                new DataPermissionManager()));
-
-            var algorithm = new BrokerageSetupHandlerTests.TestAlgorithm { UniverseSettings = { Resolution = Resolution.Minute } };
+                new DataPermissionManager(),
+                algorithm.ObjectStore));
             algorithm.SetHistoryProvider(historyProvider);
 
             // Pick a date range where we do NOT have BTCUSD minute data

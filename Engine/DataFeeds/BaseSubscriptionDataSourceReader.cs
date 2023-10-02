@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,6 +19,7 @@ using System.ComponentModel;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
+using QuantConnect.Algorithm;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -38,6 +39,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected IDataCacheProvider DataCacheProvider { get; }
 
         /// <summary>
+        /// The object store to use
+        /// </summary>
+        protected IObjectStore ObjectStore { get; }
+
+        /// <summary>
         /// Event fired when the specified source is considered invalid, this may
         /// be from a missing file or failure to download a remote source
         /// </summary>
@@ -46,10 +52,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        protected BaseSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, bool isLiveMode)
+        protected BaseSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, bool isLiveMode, IObjectStore objectStore)
         {
             DataCacheProvider = dataCacheProvider;
             IsLiveMode = isLiveMode;
+            ObjectStore = objectStore;
         }
 
         /// <summary>
@@ -81,6 +88,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     case SubscriptionTransportMedium.Rest:
                         reader = new RestSubscriptionStreamReader(subscriptionDataSource.Source, subscriptionDataSource.Headers, IsLiveMode);
+                        break;
+
+                    case SubscriptionTransportMedium.ObjectStore:
+                        reader = new ObjectStoreSubscriptionStreamReader(ObjectStore, subscriptionDataSource.Source);
                         break;
 
                     default:

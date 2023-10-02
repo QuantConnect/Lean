@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Algorithm
             using var cacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null,
                 TestGlobals.DataProvider, cacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
-                null, true, new DataPermissionManager()));
+                null, true, new DataPermissionManager(), _algorithm.ObjectStore));
             _algorithm.SetHistoryProvider(historyProvider);
 
             _algorithm.SetDateTime(new DateTime(2013, 10, 11, 15, 0, 0));

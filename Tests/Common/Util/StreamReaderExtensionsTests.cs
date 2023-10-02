@@ -330,7 +330,8 @@ namespace QuantConnect.Tests.Common.Util
                     zipCache,
                     config,
                     date,
-                    false);
+                    false,
+                    null);
                 var source = streamReaderType.GetBaseDataInstance().GetSource(config, date, false);
                 // warmup
                 streamReaderCount = reader.Read(source).Count();
@@ -365,7 +366,8 @@ namespace QuantConnect.Tests.Common.Util
                     zipCache,
                     config,
                     date,
-                    false);
+                    false,
+                    null);
                 var source = readLineReaderType.GetBaseDataInstance().GetSource(config, date, false);
                 // warmup
                 getLineReaderCount = reader.Read(source).Count();

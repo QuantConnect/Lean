@@ -188,7 +188,8 @@ namespace QuantConnect.Research
                         algorithmHandlers.FactorFileProvider,
                         null,
                         true,
-                        algorithmHandlers.DataPermissionsManager
+                        algorithmHandlers.DataPermissionsManager,
+                        ObjectStore
                     )
                 );
 
@@ -789,7 +790,7 @@ namespace QuantConnect.Research
             var data = new Dictionary<DateTime, DataDictionary<dynamic>>();
 
             //Build factory
-            var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
+            var factory = new FineFundamentalSubscriptionEnumeratorFactory(false, ObjectStore);
 
             //Get all data for each symbol and fill our dictionary
             var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };

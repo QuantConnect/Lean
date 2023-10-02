@@ -61,13 +61,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 TestGlobals.FactorFileProvider,
                 i => { },
                 true,
-                new DataPermissionManager()));
+                new DataPermissionManager(),
+                _algorithm.ObjectStore));
 
             _simplexTestArray = new List<double> {0.2d, 0.5d, 0.4d, -0.1d, 0d};
             _simplexExpectedArray1 = new double[] {1d/6, 7d/15, 11d/30, 0d, 0d};
             _simplexExpectedArray2 = new double[] {0d, 0.3d, 0.2d, 0d, 0d};
         }
-        
+
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
         public void DoesNotReturnTargetsIfSecurityPriceIsZero(Language language)
@@ -121,12 +122,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0, 1, 94, 0)]
         [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 0.5, -1, 47, 47)]
         [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0.5, -1, 47, 47)]
-        public void CorrectWeightings(Language language, 
-                                      InsightDirection direction1, 
-                                      InsightDirection direction2, 
-                                      double? magnitude1, 
-                                      double? magnitude2, 
-                                      decimal expectedQty1, 
+        public void CorrectWeightings(Language language,
+                                      InsightDirection direction1,
+                                      InsightDirection direction2,
+                                      double? magnitude1,
+                                      double? magnitude2,
+                                      decimal expectedQty1,
                                       decimal expectedQty2)
         {
             var targets = GeneratePortfolioTargets(language, direction1, direction2, magnitude1, magnitude2);
@@ -166,7 +167,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null),
             };
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
-            
+
             var history = _algorithm.History<TradeBar>(new[] {aapl.Symbol, spy.Symbol}, 2, Resolution.Daily);
             var aaplHist = history.Select(slice => slice[aapl.Symbol].Close);
             var spyHist = history.Select(slice => slice[spy.Symbol].Close);
@@ -192,7 +193,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null),
                 new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null),
             };
-            
+
             var history = _algorithm.History<TradeBar>(new[] {aapl.Symbol, spy.Symbol}, 2, Resolution.Daily);
             var aaplHist = history.Select(slice => slice[aapl.Symbol].Close);
             var spyHist = history.Select(slice => slice[spy.Symbol].Close);
@@ -204,7 +205,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 const string name = nameof(MeanReversionPortfolioConstructionModel);
                 var model = Py.Import(name).GetAttr(name).Invoke(((int)Resolution.Daily).ToPython(), ((int)PortfolioBias.LongShort).ToPython(), 1.ToPython(), 2.ToPython());
                 model.InvokeMethod("OnSecuritiesChanged", _algorithm.ToPython(), SecurityChangesTests.AddedNonInternal(aapl, spy).ToPython());
-                
+
                 var result = PyList.AsList(model.InvokeMethod("GetPriceRelatives", insights.ToPython()));
                 var resultArray = result.Select(x => Math.Round(Convert.ToDouble(x), 8)).ToArray();
                 var expected = new double[] {aaplRelative, spyRelative};
@@ -228,7 +229,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, -0.5, null),
             };
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
-            
+
             var result = model.TestGetPriceRelatives(insights);
             var expected = new double[] {2d, 0.5d};
             Assert.AreEqual(expected, result);
@@ -253,7 +254,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 const string name = nameof(MeanReversionPortfolioConstructionModel);
                 var model = Py.Import(name).GetAttr(name).Invoke(((int)Resolution.Daily).ToPython());
                 model.InvokeMethod("OnSecuritiesChanged", _algorithm.ToPython(), SecurityChangesTests.AddedNonInternal(aapl, spy).ToPython());
-                
+
                 var result = PyList.AsList(model.InvokeMethod("GetPriceRelatives", insights.ToPython()));
                 var resultArray = result.Select(x => Convert.ToDouble(x)).ToArray();
                 var expected = new double[] {2d, 0.5d};

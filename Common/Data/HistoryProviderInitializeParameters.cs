@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -72,6 +72,11 @@ namespace QuantConnect.Data
         public IDataPermissionManager DataPermissionManager { get; }
 
         /// <summary>
+        /// The object store
+        /// </summary>
+        public IObjectStore ObjectStore { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="HistoryProviderInitializeParameters"/> class from the specified parameters
         /// </summary>
         /// <param name="job">The job</param>
@@ -83,6 +88,7 @@ namespace QuantConnect.Data
         /// <param name="statusUpdateAction">Function used to send status updates</param>
         /// <param name="parallelHistoryRequestsEnabled">True if parallel history requests are enabled</param>
         /// <param name="dataPermissionManager">The data permission manager to use</param>
+        /// <param name="objectStore">The object store to use</param>
         public HistoryProviderInitializeParameters(
             AlgorithmNodePacket job,
             IApi api,
@@ -92,7 +98,8 @@ namespace QuantConnect.Data
             IFactorFileProvider factorFileProvider,
             Action<int> statusUpdateAction,
             bool parallelHistoryRequestsEnabled,
-            IDataPermissionManager dataPermissionManager)
+            IDataPermissionManager dataPermissionManager,
+            IObjectStore objectStore)
         {
             Job = job;
             Api = api;
@@ -103,6 +110,7 @@ namespace QuantConnect.Data
             StatusUpdateAction = statusUpdateAction;
             ParallelHistoryRequestsEnabled = parallelHistoryRequestsEnabled;
             DataPermissionManager = dataPermissionManager;
+            ObjectStore = objectStore;
         }
     }
 }

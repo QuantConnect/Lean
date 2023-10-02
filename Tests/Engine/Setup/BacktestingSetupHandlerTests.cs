@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Engine.Setup
             var realTimeHandler = new BacktestingRealTimeHandler();
             var resultHandler = new TestResultHandler();
             Assert.IsFalse(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, _algorithm, null, packet,
-                resultHandler, null, realTimeHandler, null, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
+                resultHandler, null, realTimeHandler, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
 
             resultHandler.Exit();
             realTimeHandler.Exit();

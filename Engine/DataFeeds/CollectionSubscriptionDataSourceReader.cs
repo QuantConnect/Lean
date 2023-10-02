@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -38,8 +38,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public CollectionSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
-            :base(dataCacheProvider, isLiveMode)
+        public CollectionSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode, IObjectStore objectStore)
+            :base(dataCacheProvider, isLiveMode, objectStore)
         {
             _date = date;
             _config = config;

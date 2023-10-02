@@ -333,7 +333,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 TestGlobals.FactorFileProvider,
                 null,
                 false,
-                new DataPermissionManager()));
+                new DataPermissionManager(),
+                Algorithm.ObjectStore));
         }
 
         /// <summary>

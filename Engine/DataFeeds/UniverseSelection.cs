@@ -169,7 +169,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             addToSymbolCache: false);
 
                         var localStartTime = dateTimeUtc.ConvertFromUtc(config.ExchangeTimeZone).AddDays(-1);
-                        var factory = new FineFundamentalSubscriptionEnumeratorFactory(_algorithm.LiveMode, x => new[] { localStartTime });
+                        var factory = new FineFundamentalSubscriptionEnumeratorFactory(_algorithm.LiveMode, _algorithm.ObjectStore,
+                            x => new[] { localStartTime });
                         var request = new SubscriptionRequest(true, universe, security, new SubscriptionDataConfig(config), localStartTime, localStartTime);
                         using (var enumerator = factory.CreateEnumerator(request, _dataProvider))
                         {

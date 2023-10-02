@@ -602,7 +602,12 @@ namespace QuantConnect
         /// <summary>
         /// The subscription's data is streamed (3)
         /// </summary>
-        Streaming
+        Streaming,
+
+        /// <summary>
+        /// The subscription's data comes from the object store (4)
+        /// </summary>
+        ObjectStore
     }
 
     /// <summary>

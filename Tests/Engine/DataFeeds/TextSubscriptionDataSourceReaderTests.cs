@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -58,7 +58,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SingleEntryDataCacheProvider(new DefaultDataProvider()),
                 _config,
                 _initialDate,
-                false);
+                false,
+                null);
             var source = (new TradeBar()).GetSource(_config, _initialDate, false);
 
             var dataBars = reader.Read(source).First();
@@ -85,7 +86,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 dataCacheProvider,
                 config,
                 _initialDate,
-                false);
+                false,
+                null);
             var source = (new TradeBar()).GetSource(config, _initialDate, false);
             dataCacheProvider.Data = "20000101 00:00,1,1,1,1,1";
             var dataBars = reader.Read(source).First();
@@ -114,7 +116,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 dataCacheProvider,
                 config,
                 _initialDate,
-                false);
+                false,
+                null);
             var source = (new TradeBar()).GetSource(config, _initialDate, false);
             dataCacheProvider.Data = "20000101 00:00,1,1,1,1,1";
             var dataBars = reader.Read(source).First();
@@ -134,7 +137,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SingleEntryDataCacheProvider(new DefaultDataProvider()),
                 _config,
                 _initialDate,
-                false);
+                false,
+                null);
             var source = (new TradeBar()).GetSource(_config, _initialDate, false);
 
             var dataBars = reader.Read(source).ToList();
@@ -164,7 +168,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SingleEntryDataCacheProvider(new DefaultDataProvider()),
                 _config,
                 _initialDate,
-                false);
+                false,
+                null);
             var source = (new TradeBar()).GetSource(_config, _initialDate, false);
             var dataBars = reader.Read(source).First();
 
@@ -176,7 +181,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SingleEntryDataCacheProvider(new DefaultDataProvider()),
                 _config,
                 initialDate2,
-                false);
+                false,
+                null);
             var source2 = (new TradeBar()).GetSource(_config, initialDate2, false);
             var dataBars2 = reader2.Read(source2).First();
 
@@ -188,7 +194,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SingleEntryDataCacheProvider(new DefaultDataProvider()),
                 _config,
                 initialDate3,
-                false);
+                false,
+                null);
             var source3 = (new TradeBar()).GetSource(_config, initialDate3, false);
             var dataBars3 = reader3.Read(source3).First();
 
@@ -215,7 +222,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SingleEntryDataCacheProvider(new DefaultDataProvider(), isDataEphemeral: false),
                 _config,
                 new DateTime(2013, 10, 07),
-                false);
+                false,
+                null);
             var source = (new TradeBar()).GetSource(_config, new DateTime(2013, 10, 07), false);
 
             // first call should cache
@@ -258,7 +266,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     true,
                     true,
                     false);
-                var reader = new TextSubscriptionDataSourceReader(cacheProvider, fakeConfig, Time.EndOfTime, false);
+                var reader = new TextSubscriptionDataSourceReader(cacheProvider, fakeConfig, Time.EndOfTime, false, null);
 
                 var source = factory.GetSource(fakeConfig, Time.BeginningOfTime, false);
                 datas.Add(reader.Read(source));
@@ -324,7 +332,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     true,
                     true,
                     false);
-                var reader = new TextSubscriptionDataSourceReader(cacheProvider, fakeConfig, Time.EndOfTime, false);
+                var reader = new TextSubscriptionDataSourceReader(cacheProvider, fakeConfig, Time.EndOfTime, false, null);
 
                 var source = factory.GetSource(fakeConfig, Time.BeginningOfTime, false);
                 datas.Add(reader.Read(source));

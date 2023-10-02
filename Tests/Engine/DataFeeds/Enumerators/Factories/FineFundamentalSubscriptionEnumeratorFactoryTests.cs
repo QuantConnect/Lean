@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var request = new SubscriptionRequest(false, null, security, config, parameters.StartDate, parameters.EndDate);
             var fileProvider = new DefaultDataProvider();
 
-            var factory = new FineFundamentalSubscriptionEnumeratorFactory(parameters.LiveMode);
+            var factory = new FineFundamentalSubscriptionEnumeratorFactory(parameters.LiveMode, null);
             var enumerator = factory.CreateEnumerator(request, fileProvider);
             while (enumerator.MoveNext())
             {
@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             );
             var request = new SubscriptionRequest(false, null, security, config, startDate, endDate);
             var fileProvider = new DefaultDataProvider();
-            var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
+            var factory = new FineFundamentalSubscriptionEnumeratorFactory(false, null);
             var enumerator = factory.CreateEnumerator(request, fileProvider);
             enumerator.MoveNext();
             var fine = (FineFundamental)enumerator.Current;
@@ -153,7 +153,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             );
             var request = new SubscriptionRequest(false, null, security, config, startDate, endDate);
             var fileProvider = new DefaultDataProvider();
-            var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
+            var factory = new FineFundamentalSubscriptionEnumeratorFactory(false, null);
 
             GC.Collect();
             var ramUsageBeforeLoop = OS.TotalPhysicalMemoryUsed;

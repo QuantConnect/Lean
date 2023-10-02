@@ -55,7 +55,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 TestGlobals.FactorFileProvider,
                 null,
                 false,
-                new DataPermissionManager()));
+                new DataPermissionManager(),
+                null));
         }
 
         [TearDown]

@@ -437,7 +437,7 @@ namespace QuantConnect.Tests.ToolBox
         /// <summary>
         /// Fake brokerage that just uses Local Disk Data to do history requests
         /// </summary>
-        internal class LocalHistoryBrokerage : NullBrokerage 
+        internal class LocalHistoryBrokerage : NullBrokerage
         {
             private readonly IDataCacheProvider _dataCacheProvider;
             private readonly IHistoryProvider _historyProvider;
@@ -464,7 +464,8 @@ namespace QuantConnect.Tests.ToolBox
                         factorFileProvider,
                         null,
                         true,
-                        dataPermissionManager
+                        dataPermissionManager,
+                        null
                     )
                 );
             }

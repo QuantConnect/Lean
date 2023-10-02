@@ -59,9 +59,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 TestGlobals.FactorFileProvider,
                 i => { },
                 true,
-                new DataPermissionManager()));
+                new DataPermissionManager(),
+                _algorithm.ObjectStore));
         }
-        
+
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
         public void DoesNotReturnTargetsIfSecurityPriceIsZero(Language language)
@@ -108,7 +109,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null),
                 new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, null, null)
             };
-            
+
             foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
             {
                 if (target.Quantity == 0)
@@ -142,7 +143,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new Insight(_nowUtc.AddDays(2), aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null),
                 new Insight(_nowUtc.AddDays(2), spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null)
             };
-            
+
             _algorithm.Insights.AddRange(insights);
 
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToArray();

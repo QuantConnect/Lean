@@ -56,7 +56,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 config,
                 _initialDate,
                 false,
-                TestGlobals.DataProvider));
+                TestGlobals.DataProvider,
+                null));
         }
 
         [Test]
@@ -77,7 +78,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 config,
                 _initialDate,
                 false,
-                TestGlobals.DataProvider);
+                TestGlobals.DataProvider,
+                null);
             var source = (new TradeBar()).GetSource(config, _initialDate, false);
             _dataCacheProvider.Data = "20000101 00:00,2,2,2,2,2";
             var dataBars = reader.Read(source).First();

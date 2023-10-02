@@ -44,6 +44,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataCacheProvider _dataCacheProvider;
+        private IObjectStore _objectStore;
         private bool _parallelHistoryRequestsEnabled;
         private bool _initialized;
 
@@ -68,6 +69,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             _mapFileProvider = parameters.MapFileProvider;
             _dataCacheProvider = parameters.DataCacheProvider;
             _factorFileProvider = parameters.FactorFileProvider;
+            _objectStore = parameters.ObjectStore;
             DataPermissionManager = parameters.DataPermissionManager;
             _parallelHistoryRequestsEnabled = parameters.ParallelHistoryRequestsEnabled;
 
@@ -120,8 +122,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _mapFileProvider,
                 _factorFileProvider,
                 _dataCacheProvider,
-                _dataProvider
-                );
+                _dataProvider,
+                _objectStore);
 
             dataReader.InvalidConfigurationDetected += (sender, args) => { OnInvalidConfigurationDetected(args); };
             dataReader.NumericalPrecisionLimited += (sender, args) => { OnNumericalPrecisionLimited(args); };

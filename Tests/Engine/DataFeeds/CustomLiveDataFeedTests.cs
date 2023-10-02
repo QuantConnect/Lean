@@ -33,6 +33,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
+using QuantConnect.Lean.Engine.Storage;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -295,6 +296,84 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(14 * symbols.Count, dataPointsEmitted);
         }
 
+        [Test]
+        public void LiveDataFeedSourcesDataFromObjectStore()
+        {
+            using var api = new Api.Api();
+            RemoteFileSubscriptionStreamReader.SetDownloadProvider(api);
+
+            var startDate = new DateTime(2017, 4, 2);
+            var endDate = new DateTime(2017, 4, 23);
+            var algorithm = new QCAlgorithm();
+
+            var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
+            timeProvider.SetCurrentTime(startDate);
+
+            CreateDataFeed();
+            var dataManager = new DataManagerStub(algorithm, _feed);
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+
+            using var store = new LocalObjectStore();
+            store.Initialize(0, 0, "", new Controls { StoragePermissions = FileAccess.ReadWrite });
+            algorithm.SetObjectStore(store);
+            algorithm.ObjectStore.Save("CustomData/CustomIBM", "2017-04-03,173.82\n2017-04-04,173.52\n2017-04-05,174.7\n2017-04-06,173.47\n2017-04-07,172.08\n2017-04-10,172.53\n2017-04-11,170.65\n2017-04-12,171.04\n2017-04-13,169.92\n2017-04-17,169.75\n2017-04-18,170.79\n2017-04-19,161.76\n2017-04-20,161.32\n2017-04-21,162.05\n2017-04-24,161.29\n2017-04-25,161.78\n2017-04-26,160.53\n2017-04-27,160.29\n2017-04-28,160.5");
+
+            var symbol = algorithm.AddData<TestableObjectStoreCustomData>("IBM", Resolution.Daily).Symbol;
+
+            using var cancellationTokenSource = new CancellationTokenSource();
+
+            var dataPointsEmitted = 0;
+            var slicesEmitted = 0;
+
+            RunLiveDataFeed(algorithm, startDate, new[] { symbol }, timeProvider, dataManager);
+
+            // create a timer to advance time much faster than realtime and to simulate live Quandl data file updates
+            var timerInterval = TimeSpan.FromMilliseconds(100);
+            var timer = Ref.Create<Timer>(null);
+            timer.Value = new Timer(state =>
+            {
+                // stop the timer to prevent reentrancy
+                timer.Value.Change(Timeout.Infinite, Timeout.Infinite);
+
+                var currentTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
+
+                if (currentTime.Date > endDate.Date)
+                {
+                    _feed.Exit();
+                    cancellationTokenSource.Cancel();
+                    return;
+                }
+
+                timeProvider.Advance(TimeSpan.FromHours(3));
+
+                // restart the timer
+                timer.Value.Change(timerInterval, timerInterval);
+
+            }, null, TimeSpan.FromSeconds(2), timerInterval);
+
+            try
+            {
+                foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
+                {
+                    if (timeSlice.Slice.HasData)
+                    {
+                        slicesEmitted++;
+                        dataPointsEmitted += timeSlice.Slice.Values.Count;
+                        Assert.AreEqual(symbol, timeSlice.Slice.Values.Single().Symbol, $"Slice doesn't contain {symbol}");
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                Log.Trace($"Error: {exception}");
+            }
+
+            timer.Value.Dispose();
+            dataManager.RemoveAllSubscriptions();
+            Assert.AreEqual(14, slicesEmitted);
+            Assert.AreEqual(slicesEmitted, dataPointsEmitted);
+        }
+
         private void CreateDataFeed(
             FuncDataQueueHandler funcDataQueueHandler = null)
         {
@@ -388,6 +467,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 };
 
                 return data;
+            }
+        }
+
+        public class TestableObjectStoreCustomData : TestableRemoteCustomData
+        {
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                return new SubscriptionDataSource("CustomData/CustomIBM", SubscriptionTransportMedium.ObjectStore, FileFormat.Csv);
             }
         }
     }

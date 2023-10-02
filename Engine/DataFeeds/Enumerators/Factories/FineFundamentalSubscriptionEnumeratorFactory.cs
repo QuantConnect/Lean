@@ -41,17 +41,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
         private readonly bool _isLiveMode;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
+        private readonly IObjectStore _objectStore;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FineFundamentalSubscriptionEnumeratorFactory"/> class.
         /// </summary>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
+        /// <param name="objectStore">The object store to use</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to the enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDaysInDataTimeZone"/></param>
-        public FineFundamentalSubscriptionEnumeratorFactory(bool isLiveMode, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        public FineFundamentalSubscriptionEnumeratorFactory(bool isLiveMode, IObjectStore objectStore,
+            Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
         {
             _isLiveMode = isLiveMode;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDaysInDataTimeZone);
+            _objectStore = objectStore;
         }
 
         /// <summary>
@@ -71,7 +75,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 foreach (var date in tradableDays)
                 {
                     var fineFundamentalSource = GetSource(FineFundamental, fineFundamentalConfiguration, date);
-                    var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode, FineFundamental, dataProvider);
+                    var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode, FineFundamental, dataProvider, _objectStore);
                     var fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault();
 
                     // directly do not emit null points. Null points won't happen when used with Coarse data since we are pre filtering based on Coarse.HasFundamentalData
