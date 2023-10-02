@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -73,10 +73,10 @@ namespace QuantConnect.Report
         /// </summary>
         /// <param name="equityCurve">Equity curve to calculate rolling sharpe for</param>
         /// <param name="months">Number of months to calculate the rolling period for</param>
-        /// <param name="riskFreeRate">Risk free rate</param>
         /// <returns>Rolling sharpe ratio</returns>
-        public static Series<DateTime, double> Sharpe(Series<DateTime, double> equityCurve, int months, double riskFreeRate = 0.0)
+        public static Series<DateTime, double> Sharpe(Series<DateTime, double> equityCurve, int months)
         {
+            var riskFreeRate = (double)PortfolioStatistics.GetAverageRiskFreeRate(equityCurve.Keys);
             if (equityCurve.IsEmpty)
             {
                 return equityCurve;

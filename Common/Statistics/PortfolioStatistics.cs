@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Statistics;
 using Newtonsoft.Json;
+using QuantConnect.Data;
 using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
@@ -27,7 +28,7 @@ namespace QuantConnect.Statistics
     /// </summary>
     public class PortfolioStatistics
     {
-        private const decimal RiskFreeRate = 0;
+        private static Lazy<InterestRateProvider> _interestRateProvider = new Lazy<InterestRateProvider>();
 
         /// <summary>
         /// The average rate of return for winning trades
@@ -246,18 +247,20 @@ namespace QuantConnect.Statistics
 
             var benchmarkAnnualPerformance = GetAnnualPerformance(listBenchmark, tradingDaysPerYear);
             var annualPerformance = GetAnnualPerformance(listPerformance, tradingDaysPerYear);
-            SharpeRatio = AnnualStandardDeviation == 0 ? 0 : (annualPerformance - RiskFreeRate) / AnnualStandardDeviation;
+
+            var riskFreeRate = GetAverageRiskFreeRate(equity.Select(x => x.Key));
+            SharpeRatio = AnnualStandardDeviation == 0 ? 0 : (annualPerformance - riskFreeRate) / AnnualStandardDeviation;
 
             var benchmarkVariance = listBenchmark.Variance();
             Beta = benchmarkVariance.IsNaNOrZero() ? 0 : (decimal) (listPerformance.Covariance(listBenchmark) / benchmarkVariance);
 
-            Alpha = Beta == 0 ? 0 : annualPerformance - (RiskFreeRate + Beta * (benchmarkAnnualPerformance - RiskFreeRate));
+            Alpha = Beta == 0 ? 0 : annualPerformance - (riskFreeRate + Beta * (benchmarkAnnualPerformance - riskFreeRate));
 
             TrackingError = (decimal)Statistics.TrackingError(listPerformance, listBenchmark, (double)tradingDaysPerYear);
 
             InformationRatio = TrackingError == 0 ? 0 : (annualPerformance - benchmarkAnnualPerformance) / TrackingError;
 
-            TreynorRatio = Beta == 0 ? 0 : (annualPerformance - RiskFreeRate) / Beta;
+            TreynorRatio = Beta == 0 ? 0 : (annualPerformance - riskFreeRate) / Beta;
 
             // deannualize a 1 sharpe ratio
             var benchmarkSharpeRatio = 1.0d / Math.Sqrt(252);
@@ -272,11 +275,24 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Gets the current defined risk free annual return rate
+        /// Gets the average risk free annual return rate
         /// </summary>
-        public static decimal GetRiskFreeRate()
+        /// <param name="startDate">Start date to calculate the average</param>
+        /// <param name="endDate">End date to calculate the average</param>
+        public static decimal GetRiskFreeRate(DateTime startDate, DateTime endDate)
         {
-            return RiskFreeRate;
+            return GetAverageRiskFreeRate(Time.EachDay(startDate, endDate));
+        }
+
+        /// <summary>
+        /// Gets the average Risk Free Rate from the interest rate of the given dates
+        /// </summary>
+        /// <param name="dates">Collection of dates from which the interest rates will be computed
+        /// and then the average of them</param>
+        public static decimal GetAverageRiskFreeRate(IEnumerable<DateTime> dates)
+        {
+            var interestRates = dates.Select(x => _interestRateProvider.Value.GetInterestRate(x)).DefaultIfEmpty(0);
+            return interestRates.Average();
         }
 
         /// <summary>
