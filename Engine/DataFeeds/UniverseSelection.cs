@@ -129,7 +129,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var fineCollection = new BaseDataCollection();
 
                     // if the input is already fundamental data we just need to filter it and pass it through
-                    var hasFundamentalData = universeData.Data.Count > 0 && universeData.Data[1] is Fundamental;
+                    var hasFundamentalData = universeData.Data.Count > 0 && universeData.Data[0] is Fundamental;
                     if(hasFundamentalData)
                     {
                         // Remove selected symbols that does not have fine fundamental data

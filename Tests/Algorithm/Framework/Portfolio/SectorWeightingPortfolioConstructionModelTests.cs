@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 // This procedure shows that the model ignores the securities without it
                 if (!string.IsNullOrEmpty(sectorCode))
                 {
-                    security.SetMarketPrice(new Fundamentals
+                    security.SetMarketPrice(new Fundamental
                     {
                         Symbol = symbol,
                         Time = Algorithm.Time,

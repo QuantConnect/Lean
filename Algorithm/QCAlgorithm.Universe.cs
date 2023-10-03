@@ -635,7 +635,7 @@ namespace QuantConnect.Algorithm
         {
             if (dataType == typeof(CoarseFundamental) || dataType == typeof(FineFundamental))
             {
-                dataType = typeof(Fundamental);
+                dataType = typeof(Fundamentals);
             }
             // same as 'AddData<>' 'T' type will be treated as custom/base data type with always open market hours
             var universeSymbol = QuantConnect.Symbol.Create(name, SecurityType.Base, market, baseDataType: dataType);

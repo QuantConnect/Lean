@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
@@ -35,9 +36,44 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2014, 03, 24);
+            SetStartDate(2014, 03, 25);
             SetEndDate(2014, 04, 07);
-            SetCash(50000);
+
+            AddEquity("SPY");
+            AddEquity("AAPL");
+
+            var history = History<Fundamental>(Securities.Keys, new TimeSpan(1, 0, 0, 0)).ToList();
+            if(history.Count != 1)
+            {
+                throw new Exception($"Unexpected {nameof(Fundamental)} history count {history.Count}! Expected 1");
+            }
+
+            if (history[0].Values.Count != 2)
+            {
+                throw new Exception($"Unexpected {nameof(Fundamental)} data count {history[0].Values.Count}, expected 2!");
+            }
+
+            foreach (var ticker in new[] {"AAPL", "SPY"})
+            {
+                if (!history[0].TryGetValue(ticker, out var fundamental) || fundamental.Price == 0)
+                {
+                    throw new Exception($"Unexpected {ticker} fundamental data");
+                }
+            }
+
+            var history2 = History<Fundamentals>(new TimeSpan(1, 0, 0, 0)).ToList();
+            if (history2.Count != 1)
+            {
+                throw new Exception($"Unexpected {nameof(Fundamentals)} history count {history.Count}! Expected 1");
+            }
+            if (history2[0].Single().Value.Data.Count < 7000)
+            {
+                throw new Exception($"Unexpected {nameof(Fundamentals)} data count {history.Count}! Expected > 7000");
+            }
+            if (history2[0].Single().Value.Data.Any(x => x.GetType() != typeof(Fundamental)))
+            {
+                throw new Exception($"Unexpected {nameof(Fundamentals)} data type!");
+            }
 
             AddUniverse(FundamentalSelectionFunction);
         }
@@ -47,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         {
             // select only symbols with fundamental data and sort descending by daily dollar volume
             var sortedByDollarVolume = fundamental
-                .Where(x => x.HasFundamentalData)
+                .Where(x => x.Price > 1)
                 .OrderByDescending(x => x.DollarVolume);
 
             // sort descending by P/E ratio
@@ -103,12 +139,12 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 78073;
+        public long DataPoints => 85867;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 3;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -118,27 +154,27 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
             {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.243%"},
+            {"Compounding Annual Return", "-0.223%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-0.010%"},
-            {"Sharpe Ratio", "-0.36"},
-            {"Probabilistic Sharpe Ratio", "37.988%"},
+            {"Net Profit", "-0.009%"},
+            {"Sharpe Ratio", "-6.313"},
+            {"Probabilistic Sharpe Ratio", "12.055%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.001"},
-            {"Beta", "0.034"},
-            {"Annual Standard Deviation", "0.005"},
+            {"Alpha", "-0.019"},
+            {"Beta", "0.027"},
+            {"Annual Standard Deviation", "0.004"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0.985"},
-            {"Tracking Error", "0.094"},
-            {"Treynor Ratio", "-0.052"},
+            {"Information Ratio", "1.749"},
+            {"Tracking Error", "0.095"},
+            {"Treynor Ratio", "-0.876"},
             {"Total Fees", "$2.00"},
             {"Estimated Strategy Capacity", "$2200000000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.26%"},
-            {"OrderListHash", "6e9253ada006812a3e2d368d02b15f48"}
+            {"Portfolio Turnover", "0.28%"},
+            {"OrderListHash", "34bb9933f9d242713c0ec14c4ee586b6"}
         };
     }
 }

@@ -23,11 +23,32 @@ from AlgorithmImports import *
 class FundamentalRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2014, 3, 24)
+        self.SetStartDate(2014, 3, 25)
         self.SetEndDate(2014, 4, 7)
-        self.SetCash(50000)
 
         self.UniverseSettings.Resolution = Resolution.Daily
+
+        self.AddEquity("SPY")
+        self.AddEquity("AAPL")
+
+        history = self.History(Fundamental, TimeSpan(1, 0, 0, 0))
+        if len(history) != 2:
+            raise ValueError(f"Unexpected Fundamental history count {len(history)}! Expected 2")
+
+        for ticker in [ "AAPL", "SPY" ]:
+            data = history.loc[ticker]
+            if data["value"][0] == 0:
+                raise ValueError(f"Unexpected {data} fundamental data")
+
+        history2 = self.History(Fundamentals, TimeSpan(1, 0, 0, 0))
+        if len(history2) != 1:
+            raise ValueError(f"Unexpected Fundamentals history count {len(history2)}! Expected 1")
+        data = history2["data"][0]
+        if len(data) < 7000:
+            raise ValueError(f"Unexpected Fundamentals data count {len(data)}! Expected > 7000")
+        for fundamental in data:
+            if type(fundamental) is not Fundamental:
+                raise ValueError(f"Unexpected Fundamentals data type! {fundamental}")
 
         self.AddUniverse(self.SelectionFunction)
 
@@ -37,7 +58,7 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
     # return a list of three fixed symbol objects
     def SelectionFunction(self, fundamental):
         # sort descending by daily dollar volume
-        sortedByDollarVolume = sorted([x for x in fundamental if x.HasFundamentalData],
+        sortedByDollarVolume = sorted([x for x in fundamental if x.Price > 1],
             key=lambda x: x.DollarVolume, reverse=True)
 
         # sort descending by P/E ratio

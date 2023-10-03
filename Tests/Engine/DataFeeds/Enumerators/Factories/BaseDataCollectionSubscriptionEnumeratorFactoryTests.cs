@@ -34,8 +34,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         [Test, Category("TravisExclude")]
         public void DoesNotLeakMemory()
         {
-            var symbol = Fundamental.CreateUniverseSymbol(Market.USA);
-            var config = new SubscriptionDataConfig(typeof(Fundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var symbol = Fundamentals.CreateUniverseSymbol(Market.USA);
+            var config = new SubscriptionDataConfig(typeof(Fundamentals), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         [Test]
         public void ReturnsExpectedTimestamps()
         {
-            var symbol = Fundamental.CreateUniverseSymbol(Market.USA);
+            var symbol = Fundamentals.CreateUniverseSymbol(Market.USA);
             var config = new SubscriptionDataConfig(typeof(Fundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
