@@ -1117,6 +1117,11 @@ namespace QuantConnect.Lean.Engine.Results
                                      || symbol.SecurityType == QuantConnect.SecurityType.Forex
                                      || Algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol)
                                          .Any(config => config.ExtendedMarketHours || config.Resolution == Resolution.Daily);
+                if (_sampleChartAlways)
+                {
+                    // we set it once to true
+                    return;
+                }
 
                 if (!_exchangeHours.ContainsKey(securityChange.Symbol.ID.Market))
                 {
