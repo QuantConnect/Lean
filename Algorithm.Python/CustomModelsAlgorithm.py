@@ -117,3 +117,56 @@ class CustomBuyingPowerModel(BuyingPowerModel):
         hasSufficientBuyingPowerForOrderResult = HasSufficientBuyingPowerForOrderResult(True)
         self.algorithm.Log(f"CustomBuyingPowerModel: {hasSufficientBuyingPowerForOrderResult.IsSufficient}")
         return hasSufficientBuyingPowerForOrderResult
+
+# The simple fill model shows how to implement a simpler version of 
+# the most popular order fills: Market, Stop Market and Limit
+class SimpleCustomFillModel(FillModel):
+    def __init__(self):
+        super().__init__()
+
+    def _create_order_event(self, asset, order):
+        utcTime = Extensions.ConvertToUtc(asset.LocalTime, asset.Exchange.TimeZone)
+        return OrderEvent(order, utcTime, OrderFee.Zero)
+
+    def _set_order_event_to_filled(self, fill, fill_price, fill_quantity):
+        fill.Status = OrderStatus.Filled
+        fill.FillQuantity = fill_quantity
+        fill.FillPrice = fill_price
+        return fill
+
+    def MarketFill(self, asset, order):
+        fill = self._create_order_event(asset, order)
+        if order.Status == OrderStatus.Canceled: return fill
+
+        return self._set_order_event_to_filled(fill, 
+            asset.Cache.AskPrice \
+                if order.Direction == OrderDirection.Buy else asset.Cache.BidPrice,
+            order.Quantity)
+
+    def StopMarketFill(self, asset, order):
+        fill = self._create_order_event(asset, order)
+        if order.Status == OrderStatus.Canceled: return fill
+        stop_price = order.StopPrice
+
+        trade_bar = asset.Cache.GetData[TradeBar]()
+        if order.Direction == OrderDirection.Sell and trade_bar.Low < stop_price:
+            return self._set_order_event_to_filled(fill, stop_price, order.Quantity)
+
+        if order.Direction == OrderDirection.Buy and trade_bar.High > stop_price:
+            return self._set_order_event_to_filled(fill, stop_price, order.Quantity)
+
+        return fill
+
+    def LimitFill(self, asset, order):
+        fill = self._create_order_event(asset, order)
+        if order.Status == OrderStatus.Canceled: return fill
+        limit_price = order.LimitPrice
+
+        trade_bar = asset.Cache.GetData[TradeBar]()
+        if order.Direction == OrderDirection.Sell and trade_bar.High > limit_price:
+            return self._set_order_event_to_filled(fill, limit_price, order.Quantity)
+
+        if order.Direction == OrderDirection.Buy and trade_bar.Low < limit_price:
+            return self._set_order_event_to_filled(fill, limit_price, order.Quantity)
+
+        return fill

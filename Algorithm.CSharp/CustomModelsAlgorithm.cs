@@ -178,6 +178,79 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
+        /// The simple fill model shows how to implement a simpler version of 
+        /// the most popular order fills: Market, Stop Market and Limit
+        /// </summary>
+        public class SimpleCustomFillModel : FillModel
+        {
+            private static OrderEvent CreateOrderEvent(Security asset, Order order)
+            {
+                var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
+                return new OrderEvent(order, utcTime, OrderFee.Zero);
+            }
+
+            private static OrderEvent SetOrderEventToFilled(OrderEvent fill, decimal fillPrice, decimal fillQuantity)
+            {
+                fill.Status = OrderStatus.Filled;
+                fill.FillQuantity = fillQuantity;
+                fill.FillPrice = fillPrice;
+                return fill;
+            }
+
+            public override OrderEvent MarketFill(Security asset, MarketOrder order)
+            {
+                var fill = CreateOrderEvent(asset, order);
+                if (order.Status == OrderStatus.Canceled) return fill;
+
+                return SetOrderEventToFilled(fill,
+                    order.Direction == OrderDirection.Buy
+                        ? asset.Cache.AskPrice
+                        : asset.Cache.BidPrice,
+                    order.Quantity);
+            }
+
+            public override OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
+            {
+                var fill = CreateOrderEvent(asset, order);
+                if (order.Status == OrderStatus.Canceled) return fill;
+
+                var stopPrice = order.StopPrice;
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+
+                return order.Direction switch
+                {
+                    OrderDirection.Buy => tradeBar.Low < stopPrice
+                        ? SetOrderEventToFilled(fill, stopPrice, order.Quantity)
+                        : fill,
+                    OrderDirection.Sell => tradeBar.High > stopPrice
+                        ? SetOrderEventToFilled(fill, stopPrice, order.Quantity)
+                        : fill,
+                    _ => fill
+                };
+            }
+
+            public override OrderEvent LimitFill(Security asset, LimitOrder order)
+            {
+                var fill = CreateOrderEvent(asset, order);
+                if (order.Status == OrderStatus.Canceled) return fill;
+
+                var limitPrice = order.LimitPrice;
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+
+                return order.Direction switch
+                {
+                    OrderDirection.Buy => tradeBar.High > limitPrice
+                        ? SetOrderEventToFilled(fill, limitPrice, order.Quantity)
+                        : fill,
+                    OrderDirection.Sell => tradeBar.Low < limitPrice
+                        ? SetOrderEventToFilled(fill, limitPrice, order.Quantity)
+                        : fill,
+                    _ => fill
+                };
+            }
+        }
+
+        /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
         public bool CanRunLocally { get; } = true;
