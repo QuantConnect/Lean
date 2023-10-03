@@ -196,7 +196,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return factory.CreateEnumerator(request, _dataProvider);
                 }
             }
-            else if (request.Configuration.Type == typeof(CoarseFundamental) || request.Configuration.Type == typeof(Fundamental))
+            else if (request.Configuration.Type == typeof(Fundamentals))
             {
                 factory = new BaseDataCollectionSubscriptionEnumeratorFactory(_algorithm.ObjectStore);
             }

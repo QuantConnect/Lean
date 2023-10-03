@@ -92,7 +92,7 @@ class HistoryAlgorithm(QCAlgorithm):
 
         # get the last 10 bars worth of Custom data for the specified symbols at the configured resolution (daily)
         allCustomData = self.History(CustomDataEquity, self.Securities.Keys, 14)
-        self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, 14)", allCustomData, 10)
+        self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, 14)", allCustomData, 20)
 
         # NOTE: Using different resolutions require that they are properly implemented in your data type. If your
         #  custom data source has different resolutions, it would need to be implemented in the GetSource and 
@@ -106,7 +106,7 @@ class HistoryAlgorithm(QCAlgorithm):
 
         # get the last calendar year's worth of all customData data
         allCustomData = self.History(CustomDataEquity, self.Securities.Keys, timedelta(365))
-        self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, timedelta(365))", allCustomData, 10)
+        self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, timedelta(365))", allCustomData, 20)
 
         # we can also access the return value from the multiple symbol functions to request a single
         # symbol and then loop over it

@@ -59,7 +59,6 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         public Fundamental()
         {
-            DataType = MarketDataType.Auxiliary;
         }
 
         /// <summary>
@@ -70,7 +69,6 @@ namespace QuantConnect.Data.Fundamental
         public Fundamental(DateTime time, Symbol symbol)
             : base(time, symbol)
         {
-            DataType = MarketDataType.Auxiliary;
         }
 
         /// <summary>
@@ -83,47 +81,40 @@ namespace QuantConnect.Data.Fundamental
         }
 
         /// <summary>
-        /// 
+        /// Will read a new instance from the given line
         /// </summary>
-        /// <param name="config"></param>
-        /// <param name="line"></param>
-        /// <param name="date"></param>
-        /// <param name="isLiveMode"></param>
-        /// <returns></returns>
+        /// <param name="config">The associated requested configuration</param>
+        /// <param name="line">The line to parse</param>
+        /// <param name="date">The current time</param>
+        /// <param name="isLiveMode">True if live mode</param>
+        /// <returns>A new instance or null</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             try
             {
                 var csv = line.Split(',');
-                var symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]);
-                return new Fundamental(date, symbol);
+                var sid = SecurityIdentifier.Parse(csv[0]);
+                // This use case/Reader implementation is only for history, where the user requests specific symbols only
+                // and because we use the same source file as the universe Fundamentals we need to filter out other symbols
+                if (sid == config.Symbol.ID)
+                {
+                    return new Fundamental(date, new Symbol(sid, csv[1]));
+                }
             }
-            catch (Exception)
+            catch
             {
-                return null;
+                // pass
             }
+            return null;
         }
 
         /// <summary>
-        /// 
+        /// Will clone the current instance
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The cloned instance</returns>
         public override BaseData Clone()
         {
             return new Fundamental(Time, Symbol);
-        }
-
-        /// <summary>
-        /// Creates the symbol used for coarse fundamental data
-        /// </summary>
-        /// <param name="market">The market</param>
-        /// <returns>A coarse universe symbol for the specified market</returns>
-        public static Symbol CreateUniverseSymbol(string market)
-        {
-            market = market.ToLowerInvariant();
-            var ticker = $"qc-universe-fundamental-{market}-{Guid.NewGuid()}";
-            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
-            return new Symbol(sid, ticker);
         }
     }
 }
