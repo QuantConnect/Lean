@@ -21,6 +21,10 @@ for baseDirectory in ["Algorithm.CSharp/Benchmarks", "Algorithm.Python/Benchmark
 		if algorithmFile.endswith(("py", "cs")):
 
 			algorithmName = Path(algorithmFile).stem
+
+			if "Fine" in algorithmName:
+				# we skip fundamental benchmarks for now
+				continue
 			algorithmLocation = "QuantConnect.Algorithm.CSharp.dll" if language == "CSharp" else os.path.join("../../../", baseDirectory, algorithmFile)
 			print(f'Start running algorithm {algorithmName} language {language}...')
 

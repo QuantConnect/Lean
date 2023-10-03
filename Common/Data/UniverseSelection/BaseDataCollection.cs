@@ -101,7 +101,15 @@ namespace QuantConnect.Data.UniverseSelection
             _endTime = endTime;
             Underlying = underlying;
             FilteredContracts = filteredContracts;
-            Data = data ?? new List<BaseData>();
+            if(data != null && data.Count == 1 && data[0] is BaseDataCollection)
+            {
+                // we were given a base data collection, let's be nice and fetch it's data
+                Data = ((BaseDataCollection)data[0]).Data;
+            }
+            else
+            {
+                Data = data ?? new List<BaseData>();
+            }
         }
 
         /// <summary>

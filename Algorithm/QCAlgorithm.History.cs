@@ -24,6 +24,7 @@ using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Python;
 using Python.Runtime;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm
 {
@@ -803,44 +804,10 @@ namespace QuantConnect.Algorithm
             return result.Memoize();
         }
 
-        [DocumentationAttribute(HistoricalData)]
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
-            var sentMessage = false;
-            var hasPythonDataRequest = false;
             // filter out any universe securities that may have made it this far
-            var filteredRequests = requests.Where(hr => HistoryRequestValid(hr.Symbol)).ToList();
-            for (var i = 0; i < filteredRequests.Count; i++)
-            {
-                var request  = filteredRequests[i];
-                // prevent future requests
-                if (request.EndTimeUtc > UtcTime)
-                {
-                    var endTimeUtc = UtcTime;
-                    var startTimeUtc = request.StartTimeUtc;
-                    if (request.StartTimeUtc > request.EndTimeUtc)
-                    {
-                        startTimeUtc = request.EndTimeUtc;
-                    }
-
-                    filteredRequests[i] = new HistoryRequest(startTimeUtc, endTimeUtc,
-                        request.DataType, request.Symbol, request.Resolution, request.ExchangeHours,
-                        request.DataTimeZone, request.FillForwardResolution, request.IncludeExtendedMarketHours,
-                        request.IsCustomData, request.DataNormalizationMode, request.TickType, request.DataMappingMode,
-                        request.ContractDepthOffset);
-
-                    if (!sentMessage)
-                    {
-                        sentMessage = true;
-                        Debug("Request for future history modified to end now.");
-                    }
-                }
-
-                if (!hasPythonDataRequest)
-                {
-                    hasPythonDataRequest = request.IsCustomData && typeof(PythonData).IsAssignableFrom(request.DataType);
-                }
-            }
+            var filteredRequests = GetFilterestRequests(requests, out var hasPythonDataRequest);
 
             // filter out future data to prevent look ahead bias
             var history = HistoryProvider.GetHistory(filteredRequests, timeZone);
@@ -852,6 +819,61 @@ namespace QuantConnect.Algorithm
             }
 
             return history;
+        }
+
+        private List<HistoryRequest> GetFilterestRequests(IEnumerable<HistoryRequest> requests, out bool hasPythonDataRequest)
+        {
+            List<HistoryRequest> result = new();
+            hasPythonDataRequest = false;
+            var sentMessage = false;
+            // filter out any universe securities that may have made it this far
+            Dictionary<Type, HistoryRequest> baseDataCollectionTypes = null;
+            foreach (var request in requests.Where(hr => HistoryRequestValid(hr.Symbol)))
+            {
+                if (request.DataType.IsAssignableTo(typeof(BaseDataCollection)))
+                {
+                    baseDataCollectionTypes ??= new();
+                    if (!baseDataCollectionTypes.TryAdd(request.DataType, request))
+                    {
+                        // for base data collection types we allow a single history request at the time, these are universe types which return all available data
+                        continue;
+                    }
+                }
+
+                // prevent future requests
+                if (request.EndTimeUtc > UtcTime)
+                {
+                    var endTimeUtc = UtcTime;
+                    var startTimeUtc = request.StartTimeUtc;
+                    if (request.StartTimeUtc > request.EndTimeUtc)
+                    {
+                        startTimeUtc = request.EndTimeUtc;
+                    }
+
+                    result.Add(new HistoryRequest(startTimeUtc, endTimeUtc,
+                        request.DataType, request.Symbol, request.Resolution, request.ExchangeHours,
+                        request.DataTimeZone, request.FillForwardResolution, request.IncludeExtendedMarketHours,
+                        request.IsCustomData, request.DataNormalizationMode, request.TickType, request.DataMappingMode,
+                        request.ContractDepthOffset));
+
+                    if (!sentMessage)
+                    {
+                        sentMessage = true;
+                        Debug("Request for future history modified to end now.");
+                    }
+                }
+                else
+                {
+                    result.Add(request);
+                }
+
+                if (!hasPythonDataRequest)
+                {
+                    hasPythonDataRequest = request.IsCustomData && typeof(PythonData).IsAssignableFrom(request.DataType);
+                }
+            }
+
+            return result;
         }
 
         /// <summary>
