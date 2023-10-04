@@ -193,7 +193,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(AddingData)]
         public Security AddData(Type dataType, Symbol underlying, Resolution? resolution = null, DateTimeZone timeZone = null, bool fillForward = false, decimal leverage = 1.0m)
         {
-            var symbol = QuantConnect.Symbol.CreateBase(dataType, underlying, Market.USA);
+            var symbol = QuantConnect.Symbol.CreateBase(dataType, underlying, underlying.ID.Market);
             return AddDataImpl(dataType, symbol, resolution, timeZone, fillForward, leverage);
         }
 
