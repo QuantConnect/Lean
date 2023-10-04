@@ -22,6 +22,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
+using static QLNet.Callability;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -174,6 +175,89 @@ namespace QuantConnect.Algorithm.CSharp
                 _algorithm.Log($"CustomBuyingPowerModel: {hasSufficientBuyingPowerForOrderResult.IsSufficient}");
 
                 return hasSufficientBuyingPowerForOrderResult;
+            }
+        }
+
+        /// <summary>
+        /// The simple fill model shows how to implement a simpler version of 
+        /// the most popular order fills: Market, Stop Market and Limit
+        /// </summary>
+        public class SimpleCustomFillModel : FillModel
+        {
+            private static OrderEvent CreateOrderEvent(Security asset, Order order)
+            {
+                var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
+                return new OrderEvent(order, utcTime, OrderFee.Zero);
+            }
+
+            private static OrderEvent SetOrderEventToFilled(OrderEvent fill, decimal fillPrice, decimal fillQuantity)
+            {
+                fill.Status = OrderStatus.Filled;
+                fill.FillQuantity = fillQuantity;
+                fill.FillPrice = fillPrice;
+                return fill;
+            }
+
+            private static TradeBar GetTradeBar(Security asset, OrderDirection orderDirection)
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null) return tradeBar;
+                
+                // Tick-resolution data doesn't have TradeBar, use the asset price
+                var price = asset.Price;
+                return new TradeBar(asset.LocalTime, asset.Symbol, price, price, price, price, 0);
+            }
+
+            public override OrderEvent MarketFill(Security asset, MarketOrder order)
+            {
+                var fill = CreateOrderEvent(asset, order);
+                if (order.Status == OrderStatus.Canceled) return fill;
+
+                return SetOrderEventToFilled(fill,
+                    order.Direction == OrderDirection.Buy
+                        ? asset.Cache.AskPrice
+                        : asset.Cache.BidPrice,
+                    order.Quantity);
+            }
+
+            public override OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
+            {
+                var fill = CreateOrderEvent(asset, order);
+                if (order.Status == OrderStatus.Canceled) return fill;
+
+                var stopPrice = order.StopPrice;
+                var tradeBar = GetTradeBar(asset, order.Direction);
+                
+                return order.Direction switch
+                {
+                    OrderDirection.Buy => tradeBar.Low < stopPrice
+                        ? SetOrderEventToFilled(fill, stopPrice, order.Quantity)
+                        : fill,
+                    OrderDirection.Sell => tradeBar.High > stopPrice
+                        ? SetOrderEventToFilled(fill, stopPrice, order.Quantity)
+                        : fill,
+                    _ => fill
+                };
+            }
+
+            public override OrderEvent LimitFill(Security asset, LimitOrder order)
+            {
+                var fill = CreateOrderEvent(asset, order);
+                if (order.Status == OrderStatus.Canceled) return fill;
+
+                var limitPrice = order.LimitPrice;
+                var tradeBar = GetTradeBar(asset, order.Direction);
+
+                return order.Direction switch
+                {
+                    OrderDirection.Buy => tradeBar.High > limitPrice
+                        ? SetOrderEventToFilled(fill, limitPrice, order.Quantity)
+                        : fill,
+                    OrderDirection.Sell => tradeBar.Low < limitPrice
+                        ? SetOrderEventToFilled(fill, limitPrice, order.Quantity)
+                        : fill,
+                    _ => fill
+                };
             }
         }
 
