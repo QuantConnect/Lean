@@ -260,7 +260,10 @@ namespace QuantConnect.Securities
             }
             else if (data.DataType != MarketDataType.Auxiliary)
             {
-                Price = data.Price;
+                if(data.DataType != MarketDataType.Base || data.Price != 0)
+                {
+                    Price = data.Price;
+                }
             }
         }
 

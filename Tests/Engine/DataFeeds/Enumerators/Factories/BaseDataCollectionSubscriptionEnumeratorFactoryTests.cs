@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         public void ReturnsExpectedTimestamps()
         {
             var symbol = Fundamentals.CreateUniverseSymbol(Market.USA);
-            var config = new SubscriptionDataConfig(typeof(Fundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var config = new SubscriptionDataConfig(typeof(Fundamentals), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 config,
