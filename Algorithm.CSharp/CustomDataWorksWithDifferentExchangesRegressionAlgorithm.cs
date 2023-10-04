@@ -28,9 +28,8 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _noDataPointsReceived;
         public override void Initialize()
         {
-            SetStartDate(2014, 05, 02); // Set Start Date
-            SetEndDate(2014, 05, 03); // Set Start Date
-            SetAccountCurrency("USD", 10000);
+            SetStartDate(2014, 05, 02);
+            SetEndDate(2014, 05, 03);
 
             var market1 = AddForex("EURUSD", Resolution.Hour, Market.FXCM);
             AddData<ExampleCustomData>(market1.Symbol, Resolution.Hour, TimeZones.Utc, false);
@@ -44,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             _noDataPointsReceived = true;
-            if (slice.Count != ActiveSecurities.Count) // There are not enough custom data points for the whole algo period
+            if (slice.Count != ActiveSecurities.Count)
             {
                 throw new Exception($"{ActiveSecurities.Count.ToString().ToCamelCase()} data points were expected, but only {slice.Count} were received");
             }
