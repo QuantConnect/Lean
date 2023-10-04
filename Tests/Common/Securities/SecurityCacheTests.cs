@@ -216,7 +216,7 @@ namespace QuantConnect.Tests.Common.Securities
                     Assert.AreEqual(cache.GetAll<Tick>().Count(x => x.TickType == TickType.Trade), 0);
                     break;
                 case SecuritySeedData.Fundamentals:
-                    Assert.IsNull(cache.GetData());
+                    Assert.IsNotNull(cache.GetData());
                     Assert.IsNotNull(cache.GetData<Fundamental>());
                     cache.Reset();
                     Assert.IsFalse(cache.HasData(typeof(Fundamental)));
