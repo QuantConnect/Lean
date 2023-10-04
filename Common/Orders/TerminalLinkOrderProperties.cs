@@ -14,6 +14,8 @@
  *
 */
 
+using System.Collections.Generic;
+
 namespace QuantConnect.Orders
 {
     /// <summary>
@@ -56,5 +58,80 @@ namespace QuantConnect.Orders
         /// Custom user order notes 5
         /// </summary>
         public string CustomNotes5 { get; set; }
+
+        /// <summary>
+        /// The EMSX account
+        /// </summary>
+        public string Account { get; set; }
+
+        /// <summary>
+        /// The EMSX broker code
+        /// </summary>
+        public string Broker { get; set; }
+
+        /// <summary>
+        /// The EMSX order strategy details.
+        /// Strategy parameters must be appended in the correct order as expected by EMSX.
+        /// </summary>
+        public StrategyParameters Strategy { get; set; }
+
+        /// <summary>
+        /// Models an EMSX order strategy parameter
+        /// </summary>
+        public class StrategyParameters
+        {
+            public string Name { get; set; }
+
+            public List<StrategyField> Fields { get; set; }
+
+            /// <summary>
+            /// Creates a new TerminalLink order strategy instance
+            /// </summary>
+            /// <param name="name">The strategy name</param>
+            /// <param name="fields">The strategy fields</param>
+            public StrategyParameters(string name, List<StrategyField> fields)
+            {
+                Name = name;
+                Fields = fields;
+            }
+        }
+
+        /// <summary>
+        /// Models an EMSX order strategy field
+        /// </summary>
+        public class StrategyField
+        {
+            public string Value { get; set; }
+
+            public bool HasValue { get; set; }
+
+            /// <summary>
+            /// Creates a new TerminalLink order strategy field instance.
+            /// If no value is passed in, the field is marked as not carrying a value.
+            /// </summary>
+            /// <param name="value">The optional strategy field value</param>
+            public StrategyField(string value = null)
+            {
+                Value = value;
+                HasValue = !string.IsNullOrEmpty(value);
+            }
+
+            /// <summary>
+            /// Create a new strategy field that carries a value.
+            /// </summary>
+            /// <param name="value">The field value</param>
+            public static StrategyField WithValue(string value)
+            {
+                return new StrategyField(value);
+            }
+
+            /// <summary>
+            /// Create a new strategy field that does not carry a value.
+            /// </summary>
+            public static StrategyField WithoutValue()
+            {
+                return new StrategyField();
+            }
+        }
     }
 }
