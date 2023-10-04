@@ -80,8 +80,14 @@ namespace QuantConnect.Orders
         /// </summary>
         public class StrategyParameters
         {
+            /// <summary>
+            /// The strategy name
+            /// </summary>
             public string Name { get; set; }
 
+            /// <summary>
+            /// The strategy fields
+            /// </summary>
             public List<StrategyField> Fields { get; set; }
 
             /// <summary>
@@ -101,36 +107,32 @@ namespace QuantConnect.Orders
         /// </summary>
         public class StrategyField
         {
+            /// <summary>
+            /// The strategy field value
+            /// </summary>
             public string Value { get; set; }
 
+            /// <summary>
+            /// Whether the strategy field carries a value
+            /// </summary>
             public bool HasValue { get; set; }
 
             /// <summary>
-            /// Creates a new TerminalLink order strategy field instance.
-            /// If no value is passed in, the field is marked as not carrying a value.
+            /// Creates a new TerminalLink order strategy field carrying a value.
             /// </summary>
-            /// <param name="value">The optional strategy field value</param>
-            public StrategyField(string value = null)
+            /// <param name="value">The strategy field value</param>
+            public StrategyField(string value)
             {
                 Value = value;
-                HasValue = !string.IsNullOrEmpty(value);
+                HasValue = true;
             }
 
             /// <summary>
-            /// Create a new strategy field that carries a value.
+            /// Creates a new TerminalLink order strategy field without a value.
             /// </summary>
-            /// <param name="value">The field value</param>
-            public static StrategyField WithValue(string value)
+            public StrategyField()
             {
-                return new StrategyField(value);
-            }
-
-            /// <summary>
-            /// Create a new strategy field that does not carry a value.
-            /// </summary>
-            public static StrategyField WithoutValue()
-            {
-                return new StrategyField();
+                HasValue = false;
             }
         }
     }

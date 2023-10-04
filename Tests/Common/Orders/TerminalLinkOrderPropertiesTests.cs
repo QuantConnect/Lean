@@ -33,10 +33,10 @@ from AlgorithmImports import *
 
 def getOrderProperties() -> TerminalLinkOrderProperties:
     strategyFields = [
-        TerminalLinkOrderProperties.StrategyField.WithValue(""09:30:00""),
-        TerminalLinkOrderProperties.StrategyField.WithValue(""10:30:00""),
-        TerminalLinkOrderProperties.StrategyField.WithoutValue(),
-        TerminalLinkOrderProperties.StrategyField.WithoutValue()
+        TerminalLinkOrderProperties.StrategyField(""09:30:00""),
+        TerminalLinkOrderProperties.StrategyField(""10:30:00""),
+        TerminalLinkOrderProperties.StrategyField(),
+        TerminalLinkOrderProperties.StrategyField()
     ]
 
     properties = TerminalLinkOrderProperties()
