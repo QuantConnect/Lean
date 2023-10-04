@@ -36,13 +36,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             var market2 = AddForex("EURUSD", Resolution.Hour, Market.Oanda);
             AddData<ExampleCustomData>(market2.Symbol, Resolution.Hour, TimeZones.Utc, false);
-            _noDataPointsReceived = false;
+            _noDataPointsReceived = true;
         }
 
 
         public override void OnData(Slice slice)
         {
-            _noDataPointsReceived = true;
+            _noDataPointsReceived = false;
             if (slice.Count != ActiveSecurities.Count)
             {
                 throw new Exception($"{ActiveSecurities.Count.ToString().ToCamelCase()} data points were expected, but only {slice.Count} were received");
@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_noDataPointsReceived)
+            if (_noDataPointsReceived)
             {
                 throw new Exception($"No points were received");
             }
