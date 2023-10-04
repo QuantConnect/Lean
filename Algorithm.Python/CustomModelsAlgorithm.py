@@ -134,6 +134,14 @@ class SimpleCustomFillModel(FillModel):
         fill.FillPrice = fill_price
         return fill
 
+    def _get_trade_bar(self, asset, orderDirection):
+        trade_bar = asset.Cache.GetData[TradeBar]()
+        if trade_bar: return trade_bar
+
+        # Tick-resolution data doesn't have TradeBar, use the asset price
+        price = asset.Price
+        return TradeBar(asset.LocalTime, asset.Symbol, price, price, price, price, 0)
+
     def MarketFill(self, asset, order):
         fill = self._create_order_event(asset, order)
         if order.Status == OrderStatus.Canceled: return fill
@@ -146,9 +154,10 @@ class SimpleCustomFillModel(FillModel):
     def StopMarketFill(self, asset, order):
         fill = self._create_order_event(asset, order)
         if order.Status == OrderStatus.Canceled: return fill
+        
         stop_price = order.StopPrice
-
-        trade_bar = asset.Cache.GetData[TradeBar]()
+        trade_bar = self._get_trade_bar(asset, order.Direction)
+        
         if order.Direction == OrderDirection.Sell and trade_bar.Low < stop_price:
             return self._set_order_event_to_filled(fill, stop_price, order.Quantity)
 
@@ -160,9 +169,10 @@ class SimpleCustomFillModel(FillModel):
     def LimitFill(self, asset, order):
         fill = self._create_order_event(asset, order)
         if order.Status == OrderStatus.Canceled: return fill
-        limit_price = order.LimitPrice
 
-        trade_bar = asset.Cache.GetData[TradeBar]()
+        limit_price = order.LimitPrice
+        trade_bar = self._get_trade_bar(asset, order.Direction)
+
         if order.Direction == OrderDirection.Sell and trade_bar.High > limit_price:
             return self._set_order_event_to_filled(fill, limit_price, order.Quantity)
 

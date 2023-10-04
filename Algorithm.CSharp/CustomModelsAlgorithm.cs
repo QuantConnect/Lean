@@ -22,6 +22,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
+using static QLNet.Callability;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -197,6 +198,16 @@ namespace QuantConnect.Algorithm.CSharp
                 return fill;
             }
 
+            private static TradeBar GetTradeBar(Security asset, OrderDirection orderDirection)
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+                if (tradeBar != null) return tradeBar;
+                
+                // Tick-resolution data doesn't have TradeBar, use the asset price
+                var price = asset.Price;
+                return new TradeBar(asset.LocalTime, asset.Symbol, price, price, price, price, 0);
+            }
+
             public override OrderEvent MarketFill(Security asset, MarketOrder order)
             {
                 var fill = CreateOrderEvent(asset, order);
@@ -215,8 +226,8 @@ namespace QuantConnect.Algorithm.CSharp
                 if (order.Status == OrderStatus.Canceled) return fill;
 
                 var stopPrice = order.StopPrice;
-                var tradeBar = asset.Cache.GetData<TradeBar>();
-
+                var tradeBar = GetTradeBar(asset, order.Direction);
+                
                 return order.Direction switch
                 {
                     OrderDirection.Buy => tradeBar.Low < stopPrice
@@ -235,7 +246,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (order.Status == OrderStatus.Canceled) return fill;
 
                 var limitPrice = order.LimitPrice;
-                var tradeBar = asset.Cache.GetData<TradeBar>();
+                var tradeBar = GetTradeBar(asset, order.Direction);
 
                 return order.Direction switch
                 {
