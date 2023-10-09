@@ -141,6 +141,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(isHoliday, holidays.Contains(holidayDate));
         }
 
+        [TestCase("ES", Market.CME, "1/16/2012", true)]
         [TestCase("2YY", Market.CBOT, "4/7/2023", true)]
         [TestCase("MYM", Market.CBOT, "4/7/2023", true)]
         [TestCase("YM", Market.CBOT, "4/7/2023", true)]
@@ -157,7 +158,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("DY", Market.CME, "4/7/2023", false)]
         [TestCase("GNF", Market.CME, "4/6/2023", true)]
         [TestCase("GDK", Market.CME, "4/6/2023", true)]
-        public void CorrectlyReadsCMEGroupFutureGoodFridayEarlyCloses(string futureTicker, string market, string date, bool isEarlyClose)
+        public void CorrectlyReadsCMEGroupFutureEarlyCloses(string futureTicker, string market, string date, bool isEarlyClose)
         {
             var provider = MarketHoursDatabase.FromDataFolder();
             var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
@@ -167,6 +168,11 @@ namespace QuantConnect.Tests.Common.Securities
             var earlyCloses = futureEntry.ExchangeHours.EarlyCloses;
             var earlyCloseDate = DateTime.Parse(date, CultureInfo.InvariantCulture);
             Assert.AreEqual(isEarlyClose, earlyCloses.Keys.Contains(earlyCloseDate));
+            if (isEarlyClose)
+            {
+                var holidays = futureEntry.ExchangeHours.Holidays;
+                Assert.IsFalse(holidays.Contains(earlyCloseDate));
+            }
         }
 
         [TestCase("2YY", Market.CBOT, true)]
