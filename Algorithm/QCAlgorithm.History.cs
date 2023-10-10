@@ -878,7 +878,7 @@ namespace QuantConnect.Algorithm
 
                 foreach (var config in GetMatchingSubscriptions(x, requestedType, resolution))
                 {
-                    var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x), resolution,
+                    var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x, requestedType), resolution,
                         fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
                     requests.Add(request);
                 }
@@ -908,7 +908,7 @@ namespace QuantConnect.Algorithm
             return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
             {
                 var res = GetResolution(symbol, resolution);
-                var exchange = GetExchangeHours(symbol);
+                var exchange = GetExchangeHours(symbol, requestedType);
                 var configs = GetMatchingSubscriptions(symbol, requestedType, resolution).ToList();
                 if (configs.Count == 0)
                 {
@@ -930,14 +930,15 @@ namespace QuantConnect.Algorithm
 
         private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null)
         {
-            var matchingSubscriptions = SubscriptionManager.SubscriptionDataConfigService
-                 // we add internal subscription so that history requests are covered, this allows us to warm them up too
-                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs:true)
+            var subscriptions = SubscriptionManager.SubscriptionDataConfigService
+                // we add internal subscription so that history requests are covered, this allows us to warm them up too
+                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
                 // find all subscriptions matching the requested type with a higher resolution than requested
                 .OrderByDescending(s => s.Resolution)
                 // lets make sure to respect the order of the data types
-                .ThenByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType))
-                .Where(s => SubscriptionDataConfigTypeFilter(type, s.Type));
+                .ThenByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
+
+            var matchingSubscriptions = subscriptions.Where(s => SubscriptionDataConfigTypeFilter(type, s.Type));
 
             var internalConfig = new List<SubscriptionDataConfig>();
             var userConfig = new List<SubscriptionDataConfig>();
@@ -985,6 +986,24 @@ namespace QuantConnect.Algorithm
                 var entry = MarketHoursDatabase.GetEntry(symbol, new []{ type });
                 resolution = GetResolution(symbol, resolution);
 
+                if (!LeanData.IsCommonLeanDataType(type) && !type.IsAbstract && !subscriptions.Any(x => x.Symbol == symbol))
+                {
+                    // we were giving a specific type let's fetch it
+                    return new[] { new SubscriptionDataConfig(
+                        type,
+                        symbol,
+                        resolution.Value,
+                        entry.DataTimeZone,
+                        entry.ExchangeHours.TimeZone,
+                        UniverseSettings.FillForward,
+                        UniverseSettings.ExtendedMarketHours,
+                        true,
+                        false,
+                        LeanData.GetCommonTickTypeForCommonDataTypes(type, symbol.SecurityType),
+                        true,
+                        UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType))};
+                }
+
                 return SubscriptionManager
                     .LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution.Value, symbol.IsCanonical())
                     .Where(tuple => SubscriptionDataConfigTypeFilter(type, tuple.Item1))
@@ -1016,14 +1035,17 @@ namespace QuantConnect.Algorithm
             return targetType.IsAssignableFrom(configType) && (!targetIsGenericType || configType != typeof(OpenInterest));
         }
 
-        private SecurityExchangeHours GetExchangeHours(Symbol symbol)
+        private SecurityExchangeHours GetExchangeHours(Symbol symbol, Type type = null)
         {
-            return GetMarketHours(symbol).ExchangeHours;
+            return GetMarketHours(symbol, type).ExchangeHours;
         }
 
-        private MarketHoursDatabase.Entry GetMarketHours(Symbol symbol)
+        private MarketHoursDatabase.Entry GetMarketHours(Symbol symbol, Type type = null)
         {
-            var hoursEntry = MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            var hoursEntry = type != null
+                ? MarketHoursDatabase.GetEntry(symbol, new[] { type })
+                : MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+
 
             // user can override the exchange hours in algorithm, i.e. HistoryAlgorithm
             Security security;

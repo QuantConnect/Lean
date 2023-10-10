@@ -2895,6 +2895,73 @@ tradeBar = TradeBar
             Assert.AreEqual(marketOpen, requestStart);
         }
 
+        // This reproduces https://github.com/QuantConnect/Lean/issues/7504
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void DefaultAlwaysOpenMarketHoursForBaseSecurityType(Language language)
+        {
+            var start = new DateTime(2013, 10, 8);
+            var end = start.AddDays(1);
+            var algorithm = GetAlgorithm(end);
+
+            if (language == Language.CSharp)
+            {
+                var spy = algorithm.AddEquity("SPY").Symbol;
+                // We will try to fetch history without a subscription
+                var customSymbol = Symbol.CreateBase(typeof(CustomData), spy);
+
+                List<CustomData> history = null;
+                Assert.DoesNotThrow(() => history = algorithm.History<CustomData>(customSymbol, start, end, Resolution.Minute).ToList());
+                Console.WriteLine(history.Count);
+                Assert.IsNotEmpty(history);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    dynamic getHistory = PyModule.FromString("testModule",
+                        @"
+from AlgorithmImports import *
+from QuantConnect.Tests import *
+
+class TestPythonCustomData(PythonData):
+    def GetSource(self, config, date, isLiveMode):
+        fileName = LeanData.GenerateZipFileName(Symbols.SPY, date, config.Resolution, config.TickType)
+        source = f'{Globals.DataFolder}equity/usa/minute/spy/{fileName}'
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
+
+    def Reader(self, config, line, date, isLiveMode):
+        data = line.split(',')
+
+        result = TestPythonCustomData()
+        result.DataType = MarketDataType.Base
+        result.Symbol = config.Symbol
+        result.Time = date.date() + timedelta(milliseconds=int(data[0]))
+        result.Value = float(data[4])
+        result[""Open""] = float(data[1])
+        result[""High""] = float(data[2])
+        result[""Low""] = float(data[3])
+        result[""Close""] = float(data[4])
+
+        return result
+
+def getHistory(algorithm, start, end):
+    spy = algorithm.AddEquity(""SPY"").Symbol
+    customSymbol = Symbol.CreateBase(TestPythonCustomData, spy, Market.USA)
+
+    return algorithm.History(TestPythonCustomData, customSymbol, start, end, Resolution.Minute)
+        ").GetAttr("getHistory");
+
+                    algorithm.SetPandasConverter();
+
+                    dynamic history = null;
+                    Assert.DoesNotThrow(() => history = getHistory(algorithm, start, end));
+                    Assert.IsNotNull(history);
+                    Assert.Greater(history.shape[0].As<int>(), 0);
+                }
+            }
+        }
+
         private static TestCaseData[] GetHistoryWithDataNormalizationModeTestCases()
         {
             var equityStart = new DateTime(2014, 06, 05); // There is an AAPL split on 2014/06/06

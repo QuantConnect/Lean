@@ -1058,7 +1058,7 @@ namespace QuantConnect.Algorithm
             resolution = GetResolution(symbol, resolution);
             CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution);
 
-            var marketHours = GetMarketHours(symbol);
+            var marketHours = GetMarketHours(symbol, type.CreateType());
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
                 marketHours.DataTimeZone, extendedMarketHours);
             return History(type, symbol, start, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
