@@ -531,9 +531,9 @@ namespace QuantConnect.Securities.Option
         /// using the specified min and max strike and expiration range values
         /// </summary>
         /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
-        /// would exclude contracts expiring in more than 10 days</param>
-        /// <param name="maxExpiry">The maxmium time until expiry to include, for example, TimeSpan.FromDays(10)
         /// would exclude contracts expiring in less than 10 days</param>
+        /// <param name="maxExpiry">The maximum time until expiry to include, for example, TimeSpan.FromDays(10)
+        /// would exclude contracts expiring in more than 10 days</param>
         public void SetFilter(TimeSpan minExpiry, TimeSpan maxExpiry)
         {
             SetFilter(universe => universe.Expiration(minExpiry, maxExpiry));
@@ -550,9 +550,9 @@ namespace QuantConnect.Securities.Option
         /// an upper bound of on strike under market price, where a +1 would be an upper bound of one strike
         /// over market price</param>
         /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
-        /// would exclude contracts expiring in more than 10 days</param>
-        /// <param name="maxExpiry">The maxmium time until expiry to include, for example, TimeSpan.FromDays(10)
         /// would exclude contracts expiring in less than 10 days</param>
+        /// <param name="maxExpiry">The maximum time until expiry to include, for example, TimeSpan.FromDays(10)
+        /// would exclude contracts expiring in more than 10 days</param>
         public void SetFilter(int minStrike, int maxStrike, TimeSpan minExpiry, TimeSpan maxExpiry)
         {
             SetFilter(universe => universe
@@ -571,9 +571,9 @@ namespace QuantConnect.Securities.Option
         /// an upper bound of on strike under market price, where a +1 would be an upper bound of one strike
         /// over market price</param>
         /// <param name="minExpiryDays">The minimum time, expressed in days, until expiry to include, for example, 10
-        /// would exclude contracts expiring in more than 10 days</param>
-        /// <param name="maxExpiryDays">The maximum time, expressed in days, until expiry to include, for example, 10
         /// would exclude contracts expiring in less than 10 days</param>
+        /// <param name="maxExpiryDays">The maximum time, expressed in days, until expiry to include, for example, 10
+        /// would exclude contracts expiring in more than 10 days</param>
         public void SetFilter(int minStrike, int maxStrike, int minExpiryDays, int maxExpiryDays)
         {
             SetFilter(universe => universe
