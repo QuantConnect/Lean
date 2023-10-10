@@ -117,6 +117,10 @@ namespace QuantConnect.Securities.Option
                 // expired options have no price
                 if (contract.Time.Date > contract.Expiry.Date)
                 {
+                    if (Log.DebuggingEnabled)
+                    {
+                        Log.Debug($"QLOptionPriceModel.Evaluate(). Expired {contract.Symbol}. Time > Expiry: {contract.Time.Date} > {contract.Expiry.Date}");
+                    }
                     return OptionPriceModelResult.None;
                 }
 
@@ -127,6 +131,11 @@ namespace QuantConnect.Securities.Option
 
                 if (spot <= 0d || premium <= 0d)
                 {
+                    if (Log.DebuggingEnabled)
+                    {
+                        Log.Debug($"QLOptionPriceModel.Evaluate(). Non-positive prices for {contract.Symbol}. Premium: {premium}. Underlying price {spot}");
+                    }
+
                     return OptionPriceModelResult.None;
                 }
 
@@ -195,6 +204,10 @@ namespace QuantConnect.Securities.Option
                 {
                     // A Newton-Raphson optimization estimate of the implied volatility
                     impliedVol = ImpliedVolatilityEstimation(premium, initialGuess, maturity, riskFreeDiscount, forwardPrice, payoff, out blackCalculator);
+                    if (Log.DebuggingEnabled)
+                    {
+                        Log.Debug($"QLOptionPriceModel.Evaluate(). Cannot calculate Implied Volatility for {contract.Symbol}. Implied volatility from Newton-Raphson optimization: {impliedVol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}.");
+                    }
                 }
 
                 // Update the Black Vol Term Structure with the Implied Volatility to improve Greek calculation
@@ -208,6 +221,7 @@ namespace QuantConnect.Securities.Option
                 decimal tryGetGreekOrReevaluate(Func<double> greek, Func<BlackCalculator, double> black)
                 {
                     double result;
+                    var isApproximation = false;
                     try
                     {
                         result = greek();
@@ -228,9 +242,29 @@ namespace QuantConnect.Securities.Option
                             blackCalculator = CreateBlackCalculator(forwardPrice, riskFreeDiscount, vol, payoff);
                         }
 
+                        isApproximation = true;
                         result = black(blackCalculator);
                     }
-                    return result.IsNaNOrInfinity() ? 0m : result.SafeDecimalCast();
+
+                    if (result.IsNaNOrInfinity())
+                    {
+                        if (Log.DebuggingEnabled)
+                        {
+                            Log.Debug($"QLOptionPriceModel.Evaluate(). NaN or Infinity greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}");
+                        }
+
+                        return 0m;
+                    }
+
+                    var value = result.SafeDecimalCast();
+
+                    if (value == decimal.Zero && Log.DebuggingEnabled)
+                    {
+                        Log.Debug($"QLOptionPriceModel.Evaluate(). Zero-value greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}");
+                        return value;
+                    }
+
+                    return value;
                 }
 
                 // producing output with lazy calculations of greeks
