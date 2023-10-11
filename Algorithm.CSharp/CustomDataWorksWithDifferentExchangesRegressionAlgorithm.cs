@@ -32,10 +32,18 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 05, 03);
 
             var market1 = AddForex("EURUSD", Resolution.Hour, Market.FXCM);
-            AddData<ExampleCustomData>(market1.Symbol, Resolution.Hour, TimeZones.Utc, false);
+            var firstCustomSecurity = AddData<ExampleCustomData>(market1.Symbol, Resolution.Hour, TimeZones.Utc, false);
+            if (firstCustomSecurity.Exchange.TimeZone != TimeZones.Utc)
+            {
+                throw new Exception($"The time zone of security {firstCustomSecurity} should be {TimeZones.Utc}, but it was {firstCustomSecurity.Exchange.TimeZone}");
+            }
 
             var market2 = AddForex("EURUSD", Resolution.Hour, Market.Oanda);
-            AddData<ExampleCustomData>(market2.Symbol, Resolution.Hour, TimeZones.Utc, false);
+            var secondCustomSecurity = AddData<ExampleCustomData>(market2.Symbol, Resolution.Hour, TimeZones.Utc, false);
+            if (secondCustomSecurity.Exchange.TimeZone != TimeZones.Utc)
+            {
+                throw new Exception($"The time zone of security {secondCustomSecurity} should be {TimeZones.Utc}, but it was {secondCustomSecurity.Exchange.TimeZone}");
+            }
             _noDataPointsReceived = true;
         }
 
@@ -137,7 +145,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Close = csv[4].ToDecimal()
             };
 
-            _hours = (_hours + 1) % 18;
+            _hours = (_hours + 1) % 22;
             return data;
         }
     }

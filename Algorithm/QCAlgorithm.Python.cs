@@ -263,7 +263,7 @@ namespace QuantConnect.Algorithm
             if (timeZone != null)
             {
                 // user set time zone
-                MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, alias, SecurityType.Base, timeZone);
+                MarketHoursDatabase.SetEntryAlwaysOpen(symbol.ID.Market, alias, SecurityType.Base, timeZone);
             }
 
             //Add this new generic data as a tradeable security:
