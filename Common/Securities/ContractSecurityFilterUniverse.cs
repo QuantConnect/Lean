@@ -229,9 +229,9 @@ namespace QuantConnect.Securities
         /// Applies filter selecting options contracts based on a range of expiration dates relative to the current day
         /// </summary>
         /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
-        /// would exclude contracts expiring in more than 10 days</param>
-        /// <param name="maxExpiry">The maximum time until expiry to include, for example, TimeSpan.FromDays(10)
         /// would exclude contracts expiring in less than 10 days</param>
+        /// <param name="maxExpiry">The maximum time until expiry to include, for example, TimeSpan.FromDays(10)
+        /// would exclude contracts expiring in more than 10 days</param>
         /// <returns>Universe with filter applied</returns>
         public virtual T Expiration(TimeSpan minExpiry, TimeSpan maxExpiry)
         {
@@ -256,9 +256,9 @@ namespace QuantConnect.Securities
         /// Applies filter selecting contracts based on a range of expiration dates relative to the current day
         /// </summary>
         /// <param name="minExpiryDays">The minimum time, expressed in days, until expiry to include, for example, 10
-        /// would exclude contracts expiring in more than 10 days</param>
-        /// <param name="maxExpiryDays">The maximum time, expressed in days, until expiry to include, for example, 10
         /// would exclude contracts expiring in less than 10 days</param>
+        /// <param name="maxExpiryDays">The maximum time, expressed in days, until expiry to include, for example, 10
+        /// would exclude contracts expiring in more than 10 days</param>
         /// <returns>Universe with filter applied</returns>
         public T Expiration(int minExpiryDays, int maxExpiryDays)
         {
