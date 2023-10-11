@@ -97,11 +97,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             // get the last year's worth of all configured custom data at the configured resolution (daily)
             var allCustomData = History<CustomData>(TimeSpan.FromDays(365));
-            AssertHistoryCount("History<CustomData>(TimeSpan.FromDays(365))", allCustomData, 250, IBM);
+            AssertHistoryCount("History<CustomData>(TimeSpan.FromDays(365))", allCustomData, 250, IBM, SPY);
 
             // get the last 14 bars worth of custom data for the specified symbols at the configured resolution (daily)
             allCustomData = History<CustomData>(Securities.Keys, 14);
-            AssertHistoryCount("History<CustomData>(Securities.Keys, 14)", allCustomData, 14, IBM);
+            AssertHistoryCount("History<CustomData>(Securities.Keys, 14)", allCustomData, 14, IBM, SPY);
 
             // NOTE: Using different resolutions require that they are properly implemented in your data type. If your
             // custom data source has different resolutions, it would need to be implemented in the GetSource and Reader
@@ -115,7 +115,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // get the last calendar year's worth of all custom data
             allCustomData = History<CustomData>(Securities.Keys, TimeSpan.FromDays(365));
-            AssertHistoryCount("History<CustomData>(Securities.Keys, TimeSpan.FromDays(365))", allCustomData, 250, IBM);
+            AssertHistoryCount("History<CustomData>(Securities.Keys, TimeSpan.FromDays(365))", allCustomData, 250, IBM, SPY);
 
             // the return is a series of dictionaries containing all custom data at each time
             // we can loop over it to get the individual dictionaries

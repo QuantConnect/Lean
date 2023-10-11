@@ -986,7 +986,7 @@ namespace QuantConnect.Algorithm
                 var entry = MarketHoursDatabase.GetEntry(symbol, new []{ type });
                 resolution = GetResolution(symbol, resolution);
 
-                if (!LeanData.IsCommonLeanDataType(type) && !type.IsAbstract && !subscriptions.Any(x => x.Symbol == symbol))
+                if (!LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
                 {
                     // we were giving a specific type let's fetch it
                     return new[] { new SubscriptionDataConfig(
