@@ -1022,16 +1022,38 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
-            var requestedType = type.CreateType();
-            var requests = CreateDateRangeHistoryRequests(new [] {  symbol }, requestedType, start, end, resolution, fillForward,
+            return History(type.CreateType(), symbol, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
+                dataNormalizationMode, contractDepthOffset);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>pandas.DataFrame containing the requested historical data</returns>
+        private PyObject History(Type type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution, bool? fillForward,
+            bool? extendedMarketHours, DataMappingMode? dataMappingMode, DataNormalizationMode? dataNormalizationMode,
+            int? contractDepthOffset)
+        {
+            var requests = CreateDateRangeHistoryRequests(new[] { symbol }, type, start, end, resolution, fillForward,
                 extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
             if (requests.IsNullOrEmpty())
             {
                 throw new ArgumentException($"No history data could be fetched. " +
-                    $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {requestedType.Name}");
+                    $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {type.Name}");
             }
 
-            return GetDataFrame(History(requests), requestedType);
+            return GetDataFrame(History(requests), type);
         }
 
         /// <summary>
@@ -1058,10 +1080,11 @@ namespace QuantConnect.Algorithm
             resolution = GetResolution(symbol, resolution);
             CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution);
 
-            var marketHours = GetMarketHours(symbol);
+            var managedType = type.CreateType();
+            var marketHours = GetMarketHours(symbol, managedType);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
                 marketHours.DataTimeZone, extendedMarketHours);
-            return History(type, symbol, start, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
+            return History(managedType, symbol, start, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
                 contractDepthOffset);
         }
 
