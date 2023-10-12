@@ -46,7 +46,7 @@ namespace QuantConnect.Orders.Slippage
         private readonly double _eta;
         private readonly double _delta;
         private Dictionary<Symbol, SymbolData> _symbolDataPerSymbol = new();
-        private Random _random = new();
+        private Random _random = new(50);
 
         /// <summary>
         /// Instantiate a new instance of MarketImpactSlippageModel

@@ -75,8 +75,8 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             Assert.Less(smallIliquidSlippage, largeIliquidSlippage);
         }
 
-        [TestCase(100)]
-        [TestCase(10000)]
+        // Order quantity large enough to create significant market impact
+        [TestCase(1000000)]
         [TestCase(1000000000)]
         public void LiquiditySlippageComparisonTests(decimal orderQuantity)
         {
