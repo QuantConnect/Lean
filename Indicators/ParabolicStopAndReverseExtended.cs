@@ -41,7 +41,11 @@ namespace QuantConnect.Indicators
         /// <param name="afStart">Acceleration factor start value</param>
         /// <param name="afIncrement">Acceleration factor increment value</param>
         /// <param name="afMax">Acceleration factor max value</param>
-        public ParabolicStopAndReverseExtended(string name, decimal afStart = 0.02m, decimal afIncrement = 0.02m, decimal afMax = 0.2m)
+        public ParabolicStopAndReverseExtended(
+            string name, 
+            decimal afStart = 0.02m, 
+            decimal afIncrement = 0.02m, 
+            decimal afMax = 0.2m)
             : base(name)
         {
             _afInit = afStart;
