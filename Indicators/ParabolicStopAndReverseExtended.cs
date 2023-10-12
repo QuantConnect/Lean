@@ -94,9 +94,9 @@ namespace QuantConnect.Indicators
             decimal afStartLong = 0.02m, 
             decimal afIncrementLong = 0.02m, 
             decimal afMaxLong = 0.2m
-        ): this($"PSAR({sarStart},{offsetOnReverse},"+"{afStartShort},{afIncrementShort},{afMaxShort},"+
+        ): this($"EXSAR({sarStart},{offsetOnReverse},"+"{afStartShort},{afIncrementShort},{afMaxShort},"+
                 "{afStartLong},{afIncrementLong},{afMaxLong})", 
-                sarStart,offsetOnReverse,afStartShort,afIncrementShort,afMaxShort, 
+                sarStart, offsetOnReverse, afStartShort, afIncrementShort, afMaxShort, 
                 afStartLong, afIncrementLong, afMaxLong)
         {
         }
