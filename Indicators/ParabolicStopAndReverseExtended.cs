@@ -52,27 +52,18 @@ namespace QuantConnect.Indicators
         /// <param name="afStartLong">The starting acceleration factor for long positions</param>
         /// <param name="afIncrementLong">The increment value for the acceleration factor for long positions</param>
         /// <param name="afMaxLong">The maximum value for the acceleration factor for long positions</param>
-        public ParabolicStopAndReverseExtended
-        (
-            string name, 
-            decimal sarStart = 0.0m, 
-            decimal offsetOnReverse = 0.0m, 
-            decimal afStartShort = 0.02m, 
-            decimal afIncrementShort = 0.02m, 
-            decimal afMaxShort = 0.2m, 
-            decimal afStartLong = 0.02m, 
-            decimal afIncrementLong = 0.02m, 
-            decimal afMaxLong = 0.2m
-        ) : base(name)
+        public ParabolicStopAndReverseExtended(string name, decimal sarStart = 0.0m, decimal offsetOnReverse = 0.0m, 
+            decimal afStartShort = 0.02m, decimal afIncrementShort = 0.02m, decimal afMaxShort = 0.2m, 
+            decimal afStartLong = 0.02m, decimal afIncrementLong = 0.02m, decimal afMaxLong = 0.2m) : base(name)
         {
-        _sarInit = sarStart;
-        _offsetOnReverse = offsetOnReverse;  
-        _afInitShort = afStartShort;
-        _afIncrementShort = afIncrementShort;
-        _afMaxShort  = afMaxShort; 
-        _afInitLong = afStartLong;
-        _afIncrementLong = afIncrementLong;
-        _afMaxLong = afMaxLong; 
+            _sarInit = sarStart;
+            _offsetOnReverse = offsetOnReverse;  
+            _afInitShort = afStartShort;
+            _afIncrementShort = afIncrementShort;
+            _afMaxShort  = afMaxShort; 
+            _afInitLong = afStartLong;
+            _afIncrementLong = afIncrementLong;
+            _afMaxLong = afMaxLong; 
         }
 
         /// <summary>
@@ -86,19 +77,11 @@ namespace QuantConnect.Indicators
         /// <param name="afStartLong">The starting acceleration factor for long positions</param>
         /// <param name="afIncrementLong">The increment value for the acceleration factor for long positions</param>
         /// <param name="afMaxLong">The maximum value for the acceleration factor for long positions</param>
-        public ParabolicStopAndReverseExtended(
-            decimal sarStart = 0.0m, 
-            decimal offsetOnReverse = 0.0m, 
-            decimal afStartShort = 0.02m, 
-            decimal afIncrementShort = 0.02m, 
-            decimal afMaxShort = 0.2m, 
-            decimal afStartLong = 0.02m, 
-            decimal afIncrementLong = 0.02m, 
-            decimal afMaxLong = 0.2m
-        ): this($"EXSAR({sarStart},{offsetOnReverse},"+"{afStartShort},{afIncrementShort},{afMaxShort},"+
-                "{afStartLong},{afIncrementLong},{afMaxLong})", 
-                sarStart, offsetOnReverse, afStartShort, afIncrementShort, afMaxShort, 
-                afStartLong, afIncrementLong, afMaxLong)
+        public ParabolicStopAndReverseExtended( decimal sarStart = 0.0m, decimal offsetOnReverse = 0.0m, 
+            decimal afStartShort = 0.02m, decimal afIncrementShort = 0.02m, decimal afMaxShort = 0.2m, 
+            decimal afStartLong = 0.02m, decimal afIncrementLong = 0.02m, decimal afMaxLong = 0.2m) 
+            : this($"SAREXT({sarStart},{offsetOnReverse},{afStartShort},{afIncrementShort},{afMaxShort},{afStartLong},{afIncrementLong},{afMaxLong})", 
+            sarStart, offsetOnReverse, afStartShort, afIncrementShort, afMaxShort, afStartLong, afIncrementLong, afMaxLong)
         {
         }
 
@@ -296,7 +279,7 @@ namespace QuantConnect.Indicators
                 if (_sar > currentBar.Low)
                     _sar = currentBar.Low;
             }
-            
+
             //No switch
             else
             {

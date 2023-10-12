@@ -1307,6 +1307,33 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Parabolic SAR Extended indicator
+        /// </summary>
+        /// <param name="symbol">The symbol whose SAREXT we seek</param>
+        /// <param name="sarStart">The starting value for the Stop and Reverse indicator</param>
+        /// <param name="offsetOnReverse">The offset value to be applied on reverse </param>
+        /// <param name="afStartShort">The starting acceleration factor for short positions</param>
+        /// <param name="afIncrementShort">The increment value for the acceleration factor for short positions</param>
+        /// <param name="afMaxShort">The maximum value for the acceleration factor for short positions</param>
+        /// <param name="afStartLong">The starting acceleration factor for long positions</param>
+        /// <param name="afIncrementLong">The increment value for the acceleration factor for long positions</param>
+        /// <param name="afMaxLong">The maximum value for the acceleration factor for long positions</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>A ParabolicStopAndReverseExtended configured with the specified periods</returns>
+        [DocumentationAttribute(Indicators)]
+        public ParabolicStopAndReverseExtended SAREXT(Symbol symbol, decimal sarStart = 0.0m, decimal offsetOnReverse = 0.0m, decimal afStartShort = 0.02m, 
+            decimal afIncrementShort = 0.02m, decimal afMaxShort = 0.2m, decimal afStartLong = 0.02m, decimal afIncrementLong = 0.02m, decimal afMaxLong = 0.2m,
+            Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"SAREXT({sarStart},{offsetOnReverse},{afStartShort},{afIncrementShort},{afMaxShort},{afStartLong},{afIncrementLong},{afMaxLong})", resolution);
+            var parabolicStopAndReverseExt = new ParabolicStopAndReverseExtended(name, sarStart, offsetOnReverse, afStartShort, afIncrementShort, afMaxShort, afStartLong, afIncrementLong, afMaxLong);
+            InitializeIndicator(symbol, parabolicStopAndReverseExt, resolution, selector);
+            
+            return parabolicStopAndReverseExt;
+        }
+
+        /// <summary>
         /// Creates a new RegressionChannel indicator which will compute the LinearRegression, UpperChannel and LowerChannel lines, the intercept and slope
         /// </summary>
         /// <param name="symbol">The symbol whose RegressionChannel we seek</param>
