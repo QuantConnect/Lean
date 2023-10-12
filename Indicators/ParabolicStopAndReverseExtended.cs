@@ -16,6 +16,8 @@
 using System;
 using QuantConnect.Data.Market;
 
+// test comment 
+
 namespace QuantConnect.Indicators
 {
     /// <summary>
