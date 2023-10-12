@@ -39,7 +39,7 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.21" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.22" />
     <PackageReference Include="CoinAPI.WebSocket.V1" Version="1.6.7" />
     <PackageReference Include="Common.Logging" Version="3.4.1" />
     <PackageReference Include="Common.Logging.Core" Version="3.4.1" />
