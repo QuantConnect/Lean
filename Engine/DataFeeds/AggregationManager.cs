@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,7 +26,7 @@ using System.Linq;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Aggregates ticks and bars based on given subscriptions. 
+    /// Aggregates ticks and bars based on given subscriptions.
     /// Current implementation is based on <see cref="IDataConsolidator"/> that consolidates ticks and put them into enumerator.
     /// </summary>
     public class AggregationManager : IDataAggregator
@@ -47,44 +47,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Add(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            IDataConsolidator consolidator;
-            var period = dataConfig.Resolution.ToTimeSpan();
-            var isPeriodBased = false;
-            switch (dataConfig.Type.Name)
-            {
-                case nameof(QuoteBar):
-                    isPeriodBased = dataConfig.Resolution != Resolution.Tick;
-                    consolidator = new TickQuoteBarConsolidator(period);
-                    break;
-
-                case nameof(TradeBar):
-                    isPeriodBased = dataConfig.Resolution != Resolution.Tick;
-                    consolidator = new TickConsolidator(period);
-                    break;
-
-                case nameof(OpenInterest):
-                    isPeriodBased = dataConfig.Resolution != Resolution.Tick;
-                    consolidator = new OpenInterestConsolidator(period);
-                    break;
-
-                case nameof(Tick):
-                    consolidator = FilteredIdentityDataConsolidator.ForTickType(dataConfig.TickType);
-                    break;
-
-                case nameof(Split):
-                    consolidator = new IdentityDataConsolidator<Split>();
-                    break;
-
-                case nameof(Dividend):
-                    consolidator = new IdentityDataConsolidator<Dividend>();
-                    break;
-
-                default:
-                    // streaming custom data subscriptions can pass right through
-                    consolidator = new FilteredIdentityDataConsolidator<BaseData>(data => data.GetType() == dataConfig.Type);
-                    break;
-            }
-
+            var consolidator = GetConsolidator(dataConfig);
+            var isPeriodBased = (dataConfig.Type.Name == nameof(QuoteBar) ||
+                    dataConfig.Type.Name == nameof(TradeBar) ||
+                    dataConfig.Type.Name == nameof(OpenInterest)) &&
+                dataConfig.Resolution != Resolution.Tick;
             var enumerator = new ScannableEnumerator<BaseData>(consolidator, dataConfig.ExchangeTimeZone, TimeProvider, newDataAvailableHandler, isPeriodBased);
 
             _enumerators.AddOrUpdate(
@@ -161,5 +128,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Dispose of the aggregation manager.
         /// </summary>
         public void Dispose() { }
+
+        /// <summary>
+        /// Gets the consolidator to aggregate data for the given config
+        /// </summary>
+        protected virtual IDataConsolidator GetConsolidator(SubscriptionDataConfig config)
+        {
+            var period = config.Resolution.ToTimeSpan();
+            if (config.Type == typeof(QuoteBar))
+            {
+                return new TickQuoteBarConsolidator(period);
+            }
+            if (config.Type == typeof(TradeBar))
+            {
+                return new TickConsolidator(period);
+            }
+            if (config.Type == typeof(OpenInterest))
+            {
+                return new OpenInterestConsolidator(period);
+            }
+            if (config.Type == typeof(Tick))
+            {
+                return FilteredIdentityDataConsolidator.ForTickType(config.TickType);
+            }
+            if (config.Type == typeof(Split))
+            {
+                return new IdentityDataConsolidator<Split>();
+            }
+            if (config.Type == typeof(Dividend))
+            {
+                return new IdentityDataConsolidator<Dividend>();
+            }
+
+            // streaming custom data subscriptions can pass right through
+            return new FilteredIdentityDataConsolidator<BaseData>(data => data.GetType() == config.Type);
+        }
     }
 }
