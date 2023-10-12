@@ -16,8 +16,6 @@
 using System;
 using QuantConnect.Data.Market;
 
-// test comment 
-
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -33,7 +31,7 @@ namespace QuantConnect.Indicators
         private decimal _outputSar;
         private decimal _afShort;
         private decimal _afLong;
-        private readonly decimal _sarStart; 
+        private readonly decimal _sarInit; 
         private readonly decimal _offsetOnReverse;  
         private readonly decimal _afInitShort;
         private readonly decimal _afIncrementShort;
@@ -54,7 +52,8 @@ namespace QuantConnect.Indicators
         /// <param name="afStartLong">The starting acceleration factor for long positions</param>
         /// <param name="afIncrementLong">The increment value for the acceleration factor for long positions</param>
         /// <param name="afMaxLong">The maximum value for the acceleration factor for long positions</param>
-        public ParabolicStopAndReverseExtended(
+        public ParabolicStopAndReverseExtended
+        (
             string name, 
             decimal sarStart = 0.0m, 
             decimal offsetOnReverse = 0.0m, 
@@ -66,7 +65,7 @@ namespace QuantConnect.Indicators
             decimal afMaxLong = 0.2m
         ) : base(name)
         {
-        _sarStart = sarStart;
+        _sarInit = sarStart;
         _offsetOnReverse = offsetOnReverse;  
         _afInitShort = afStartShort;
         _afIncrementShort = afIncrementShort;
@@ -135,7 +134,13 @@ namespace QuantConnect.Indicators
             {
                 _previousBar = input;
 
-                // return a value that's close to where we will be, returning 0 doesn't make sense
+                // Makes sense to return _sarInit when its non-negative
+                if(_sarInit > 0)
+                    return _sarInit; 
+                else if(_sarInit < 0)
+                    return Math.Abs(_sarInit);
+
+                // Otherwise use default
                 return input.Close;
             }
 
@@ -144,10 +149,11 @@ namespace QuantConnect.Indicators
             {
                 Init(input);
                 _previousBar = input;
-                return _sar;
-            }
 
-            if (_isLong)
+                // SAREX should be negative if in short position 
+                return _isLong ? _sar : -_sar;
+            }
+            if (_isLong)   
             {
                 HandleLongPosition(input);
             }
@@ -165,22 +171,30 @@ namespace QuantConnect.Indicators
         /// Initialize the indicator values 
         /// </summary>
         private void Init(IBaseDataBar currentBar)
-        {
-            // init position
-            _isLong = currentBar.Close >= _previousBar.Close;
-
-
-            // init sar and Extreme price
+        { 
+            // initialize starting sar value 
+           if (_sarInit > 0)
+           {
+                _isLong = true;
+                _sar = _sarInit;
+           }
+           else if (_sarInit < 0)
+           {
+                _isLong = false;
+                _sar = Math.Abs(_sarInit); 
+           }
+           // same set up as standard PSAR when _sarInit = 0 
+           else
+           {
+                _isLong = currentBar.Close >= _previousBar.Close; 
+                _sar = _isLong ? _previousBar.Low : _previousBar.High;
+           }
+            
+            // initialize extreme point 
             if (_isLong)
-            {
-                _ep = Math.Min(currentBar.High, _previousBar.High);
-                _sar = _previousBar.Low;
-            }
+                _ep = Math.Max(currentBar.High, _previousBar.High);
             else
-            {
                 _ep = Math.Min(currentBar.Low, _previousBar.Low);
-                _sar = _previousBar.High;
-            }
         }
 
         /// <summary>
@@ -202,21 +216,22 @@ namespace QuantConnect.Indicators
                     _sar = currentBar.High;
 
                 // Output the overide SAR 
-                _outputSar = _sar;
+                if(_offsetOnReverse != 0.0m)
+                    _sar += _sar * _offsetOnReverse;
+                _outputSar = -_sar;
 
                 // Adjust af and ep
-                _af = _afInit;
+                _afShort = _afInitShort;
                 _ep = currentBar.Low;
 
                 // Calculate the new SAR
-                _sar = _sar + _af * (_ep - _sar);
+                _sar = _sar + _afShort * (_ep - _sar);
 
                 // Make sure the new SAR is within yesterday's and today's range.
                 if (_sar < _previousBar.High)
                     _sar = _previousBar.High;
                 if (_sar < currentBar.High)
                     _sar = currentBar.High;
-
             }
 
             // No switch
@@ -229,13 +244,13 @@ namespace QuantConnect.Indicators
                 if (currentBar.High > _ep)
                 {
                     _ep = currentBar.High;
-                    _af += _afIncrement;
-                    if (_af > _afMax)
-                        _af = _afMax;
+                    _afLong += _afIncrementLong;
+                    if (_afLong > _afMaxLong)
+                        _afLong = _afMaxLong;
                 }
 
                 // Calculate the new SAR
-                _sar = _sar + _af * (_ep - _sar);
+                _sar = _sar + _afLong * (_ep - _sar);
 
                 // Make sure the new SAR is within yesterday's and today's range.
                 if (_sar > _previousBar.Low)
@@ -264,14 +279,16 @@ namespace QuantConnect.Indicators
                     _sar = currentBar.Low;
 
                 // Output the overide SAR 
+                if(_offsetOnReverse != 0.0m)
+                    _sar -= _sar * _offsetOnReverse;
                 _outputSar = _sar;
 
                 // Adjust af and ep
-                _af = _afInit;
+                _afLong = _afInitLong;
                 _ep = currentBar.High;
 
                 // Calculate the new SAR
-                _sar = _sar + _af * (_ep - _sar);
+                _sar = _sar + _afLong * (_ep - _sar);
 
                 // Make sure the new SAR is within yesterday's and today's range.
                 if (_sar > _previousBar.Low)
@@ -279,24 +296,24 @@ namespace QuantConnect.Indicators
                 if (_sar > currentBar.Low)
                     _sar = currentBar.Low;
             }
-
+            
             //No switch
             else
             {
                 // Output the SAR (was calculated in the previous iteration)
-                _outputSar = _sar;
+                _outputSar = -_sar;
 
                 // Adjust af and ep.
                 if (currentBar.Low < _ep)
                 {
                     _ep = currentBar.Low;
-                    _af += _afIncrement;
-                    if (_af > _afMax)
-                        _af = _afMax;
+                    _afShort += _afIncrementShort;
+                    if (_afShort > _afMaxShort)
+                        _afShort = _afMaxShort;
                 }
 
                 // Calculate the new SAR
-                _sar = _sar + _af * (_ep - _sar);
+                _sar = _sar + _afShort * (_ep - _sar);
 
                 // Make sure the new SAR is within yesterday's and today's range.
                 if (_sar < _previousBar.High)
