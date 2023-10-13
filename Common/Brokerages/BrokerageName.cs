@@ -150,6 +150,11 @@ namespace QuantConnect.Brokerages
         /// Transaction and submit/execution rules will use Bybit models
         /// </summary>
         Bybit,
-        
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use Eze models
+        /// </summary>
+        Eze,
+
     }
 }

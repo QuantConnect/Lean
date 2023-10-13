@@ -66,7 +66,8 @@ namespace QuantConnect
             Tuple.Create(FTX, 34),
             Tuple.Create(FTXUS, 35),
             Tuple.Create(BinanceUS, 36),
-            Tuple.Create(Bybit, 37)
+            Tuple.Create(Bybit, 37),
+            Tuple.Create(Eze, 38)
         };
 
         static Market()
@@ -235,6 +236,11 @@ namespace QuantConnect
         /// Bybit
         /// </summary>
         public const string Bybit = "bybit";
+
+        /// <summary>
+        /// Eze
+        /// </summary>
+        public const string Eze = "eze";
 
         /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.
