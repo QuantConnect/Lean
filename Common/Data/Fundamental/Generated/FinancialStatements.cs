@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using Python.Runtime;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
@@ -25,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Definition of the FinancialStatements class
     /// </summary>
-    public readonly struct FinancialStatements
+    public class FinancialStatements : ReusuableCLRObject
     {
         /// <summary>
         /// The exact date that is given in the financial statements for each quarter's end.
@@ -34,7 +35,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20001
         /// </remarks>
         [JsonProperty("20001")]
-        public DateTime PeriodEndingDate => FundamentalService.Get<DateTime>(_time, _securityIdentifier, "FinancialStatements.PeriodEndingDate");
+        public DateTime PeriodEndingDate => FundamentalService.Get<DateTime>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_PeriodEndingDate);
 
         /// <summary>
         /// Specific date on which a company released its filing to the public.
@@ -43,7 +44,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20002
         /// </remarks>
         [JsonProperty("20002")]
-        public DateTime FileDate => FundamentalService.Get<DateTime>(_time, _securityIdentifier, "FinancialStatements.FileDate");
+        public DateTime FileDate => FundamentalService.Get<DateTime>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_FileDate);
 
         /// <summary>
         /// The accession number is a unique number that EDGAR assigns to each submission as the submission is received.
@@ -52,7 +53,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20003
         /// </remarks>
         [JsonProperty("20003")]
-        public string AccessionNumber => FundamentalService.Get<string>(_time, _securityIdentifier, "FinancialStatements.AccessionNumber");
+        public string AccessionNumber => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_AccessionNumber);
 
         /// <summary>
         /// The type of filing of the report: for instance, 10-K (annual report) or 10-Q (quarterly report).
@@ -61,7 +62,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20004
         /// </remarks>
         [JsonProperty("20004")]
-        public string FormType => FundamentalService.Get<string>(_time, _securityIdentifier, "FinancialStatements.FormType");
+        public string FormType => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_FormType);
 
         /// <summary>
         /// The name of the auditor that performed the financial statement audit for the given period.
@@ -70,7 +71,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28000
         /// </remarks>
         [JsonProperty("28000")]
-        public string PeriodAuditor => FundamentalService.Get<string>(_time, _securityIdentifier, "FinancialStatements.PeriodAuditor");
+        public string PeriodAuditor => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_PeriodAuditor);
 
         /// <summary>
         /// Auditor opinion code will be one of the following for each annual period: Code Meaning UQ Unqualified Opinion UE Unqualified Opinion with Explanation QM Qualified - Due to change in accounting method QL Qualified - Due to litigation OT Qualified Opinion - Other AO Adverse Opinion DS Disclaim an opinion UA Unaudited
@@ -79,7 +80,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28001
         /// </remarks>
         [JsonProperty("28001")]
-        public string AuditorReportStatus => FundamentalService.Get<string>(_time, _securityIdentifier, "FinancialStatements.AuditorReportStatus");
+        public string AuditorReportStatus => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_AuditorReportStatus);
 
         /// <summary>
         /// Which method of inventory valuation was used - LIFO, FIFO, Average, Standard costs, Net realizable value, Others, LIFO and FIFO, FIFO and Average, FIFO and other, LIFO and Average, LIFO and other, Average and other, 3 or more methods, None
@@ -88,7 +89,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28002
         /// </remarks>
         [JsonProperty("28002")]
-        public string InventoryValuationMethod => FundamentalService.Get<string>(_time, _securityIdentifier, "FinancialStatements.InventoryValuationMethod");
+        public string InventoryValuationMethod => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_InventoryValuationMethod);
 
         /// <summary>
         /// The number of shareholders on record
@@ -97,7 +98,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28003
         /// </remarks>
         [JsonProperty("28003")]
-        public long NumberOfShareHolders => FundamentalService.Get<long>(_time, _securityIdentifier, "FinancialStatements.NumberOfShareHolders");
+        public long NumberOfShareHolders => FundamentalService.Get<long>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders);
 
         /// <summary>
         /// The nature of the period covered by an individual set of financial results. The output can be: Quarter, Semi-annual or Annual. Assuming a 12-month fiscal year, quarter typically covers a three-month period, semi-annual a six-month period, and annual a twelve-month period. Annual could cover results collected either from preliminary results or an annual report
@@ -106,7 +107,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28006
         /// </remarks>
         [JsonProperty("28006")]
-        public string PeriodType => FundamentalService.Get<string>(_time, _securityIdentifier, "FinancialStatements.PeriodType");
+        public string PeriodType => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_PeriodType);
 
         /// <summary>
         /// The sum of Tier 1 and Tier 2 Capital. Tier 1 capital consists of common shareholders equity, perpetual preferred shareholders equity with non-cumulative dividends, retained earnings, and minority interests in the equity accounts of consolidated subsidiaries. Tier 2 capital consists of subordinated debt, intermediate-term preferred stock, cumulative and long-term preferred stock, and a portion of a bank's allowance for loan and lease losses.
@@ -115,35 +116,39 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28004
         /// </remarks>
         [JsonProperty("28004")]
-        public TotalRiskBasedCapital TotalRiskBasedCapital => new(_time, _securityIdentifier);
+        public TotalRiskBasedCapital TotalRiskBasedCapital => _totalRiskBasedCapital ??= new(_timeProvider, _securityIdentifier);
+        private TotalRiskBasedCapital _totalRiskBasedCapital;
 
         /// <summary>
         /// The instance of the IncomeStatement class
         /// </summary>
 
-        public IncomeStatement IncomeStatement => new(_time, _securityIdentifier);
+        public IncomeStatement IncomeStatement => _incomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private IncomeStatement _incomeStatement;
 
         /// <summary>
         /// The instance of the BalanceSheet class
         /// </summary>
 
-        public BalanceSheet BalanceSheet => new(_time, _securityIdentifier);
+        public BalanceSheet BalanceSheet => _balanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private BalanceSheet _balanceSheet;
 
         /// <summary>
         /// The instance of the CashFlowStatement class
         /// </summary>
 
-        public CashFlowStatement CashFlowStatement => new(_time, _securityIdentifier);
+        public CashFlowStatement CashFlowStatement => _cashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private CashFlowStatement _cashFlowStatement;
 
-        private readonly DateTime _time;
+        private readonly ITimeProvider _timeProvider;
         private readonly SecurityIdentifier _securityIdentifier;
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public FinancialStatements(DateTime time, SecurityIdentifier securityIdentifier)
+        public FinancialStatements(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
         {
-            _time = time;
+            _timeProvider = timeProvider;
             _securityIdentifier = securityIdentifier;
         }
     }

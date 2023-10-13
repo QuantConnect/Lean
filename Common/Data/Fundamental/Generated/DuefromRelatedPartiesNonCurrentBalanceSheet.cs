@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using Python.Runtime;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
@@ -36,18 +37,18 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.DuefromRelatedPartiesNonCurrent.ThreeMonths");
+        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_DuefromRelatedPartiesNonCurrent_ThreeMonths);
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public double TwelveMonths => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.DuefromRelatedPartiesNonCurrent.TwelveMonths");
+        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_DuefromRelatedPartiesNonCurrent_TwelveMonths);
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.DuefromRelatedPartiesNonCurrent.TwelveMonths") != NoValue;
+        public override bool HasValue => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_DuefromRelatedPartiesNonCurrent_TwelveMonths) != NoValue;
 
         /// <summary>
         /// Returns the default value for the field
@@ -56,7 +57,7 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.DuefromRelatedPartiesNonCurrent.TwelveMonths");
+                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_DuefromRelatedPartiesNonCurrent_TwelveMonths);
                 if (defaultValue != NoValue)
                 {
                     return defaultValue;
@@ -87,7 +88,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(Time, SecurityIdentifier, $"FinancialStatements.BalanceSheet.DuefromRelatedPartiesNonCurrent.{ConvertPeriod(period)}");
+        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"FinancialStatements_BalanceSheet_DuefromRelatedPartiesNonCurrent_{ConvertPeriod(period)}"));
 
         /// <summary>
         /// Creates a new empty instance
@@ -99,7 +100,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public DuefromRelatedPartiesNonCurrentBalanceSheet(DateTime time, SecurityIdentifier securityIdentifier) : base(time, securityIdentifier)
+        public DuefromRelatedPartiesNonCurrentBalanceSheet(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

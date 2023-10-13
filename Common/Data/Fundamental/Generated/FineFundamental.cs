@@ -15,9 +15,6 @@
 */
 
 using System;
-using System.Linq;
-using Newtonsoft.Json;
-using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
@@ -27,50 +24,52 @@ namespace QuantConnect.Data.Fundamental
     /// </summary>
     public partial class FineFundamental : CoarseFundamental
     {
+        private readonly FundamentalInstanceProvider _fundamentalInstanceProvider;
+
         /// <summary>
         /// The instance of the CompanyReference class
         /// </summary>
-        public CompanyReference CompanyReference => new(Time, Symbol.ID);
+        public CompanyReference CompanyReference => _fundamentalInstanceProvider.GetCompanyReference(Time);
 
         /// <summary>
         /// The instance of the SecurityReference class
         /// </summary>
-        public SecurityReference SecurityReference => new(Time, Symbol.ID);
+        public SecurityReference SecurityReference => _fundamentalInstanceProvider.GetSecurityReference(Time);
 
         /// <summary>
         /// The instance of the FinancialStatements class
         /// </summary>
-        public FinancialStatements FinancialStatements => new(Time, Symbol.ID);
+        public FinancialStatements FinancialStatements => _fundamentalInstanceProvider.GetFinancialStatements(Time);
 
         /// <summary>
         /// The instance of the EarningReports class
         /// </summary>
-        public EarningReports EarningReports => new(Time, Symbol.ID);
+        public EarningReports EarningReports => _fundamentalInstanceProvider.GetEarningReports(Time);
 
         /// <summary>
         /// The instance of the OperationRatios class
         /// </summary>
-        public OperationRatios OperationRatios => new(Time, Symbol.ID);
+        public OperationRatios OperationRatios => _fundamentalInstanceProvider.GetOperationRatios(Time);
 
         /// <summary>
         /// The instance of the EarningRatios class
         /// </summary>
-        public EarningRatios EarningRatios => new(Time, Symbol.ID);
+        public EarningRatios EarningRatios => _fundamentalInstanceProvider.GetEarningRatios(Time);
 
         /// <summary>
         /// The instance of the ValuationRatios class
         /// </summary>
-        public ValuationRatios ValuationRatios => new(Time, Symbol.ID);
+        public ValuationRatios ValuationRatios => _fundamentalInstanceProvider.GetValuationRatios(Time);
 
         /// <summary>
         /// The instance of the CompanyProfile class
         /// </summary>
-        public CompanyProfile CompanyProfile => new(Time, Symbol.ID);
+        public CompanyProfile CompanyProfile => _fundamentalInstanceProvider.GetCompanyProfile(Time);
 
         /// <summary>
         /// The instance of the AssetClassification class
         /// </summary>
-        public AssetClassification AssetClassification => new(Time, Symbol.ID);
+        public AssetClassification AssetClassification => _fundamentalInstanceProvider.GetAssetClassification(Time);
 
         /// <summary>
         /// Creates a new empty instance
@@ -82,10 +81,11 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public FineFundamental(DateTime time, Symbol symbol)
+        public FineFundamental(DateTime time, Symbol symbol, FundamentalInstanceProvider fundamentalInstanceProvider)
         {
             Time = time;
             Symbol = symbol;
+            _fundamentalInstanceProvider = fundamentalInstanceProvider;
         }
     }
 }

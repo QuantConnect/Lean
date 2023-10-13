@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using Python.Runtime;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
@@ -36,24 +37,24 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneYear period value for the field
         /// </summary>
         [JsonProperty("1Y")]
-        public double OneYear => FundamentalService.Get<double>(Time, SecurityIdentifier, "EarningRatios.FCFPerShareGrowth.OneYear");
+        public double OneYear => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_FCFPerShareGrowth_OneYear);
 
         /// <summary>
         /// Gets/sets the ThreeYears period value for the field
         /// </summary>
         [JsonProperty("3Y")]
-        public double ThreeYears => FundamentalService.Get<double>(Time, SecurityIdentifier, "EarningRatios.FCFPerShareGrowth.ThreeYears");
+        public double ThreeYears => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_FCFPerShareGrowth_ThreeYears);
 
         /// <summary>
         /// Gets/sets the FiveYears period value for the field
         /// </summary>
         [JsonProperty("5Y")]
-        public double FiveYears => FundamentalService.Get<double>(Time, SecurityIdentifier, "EarningRatios.FCFPerShareGrowth.FiveYears");
+        public double FiveYears => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_FCFPerShareGrowth_FiveYears);
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => FundamentalService.Get<double>(Time, SecurityIdentifier, "EarningRatios.FCFPerShareGrowth.OneYear") != NoValue;
+        public override bool HasValue => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_FCFPerShareGrowth_OneYear) != NoValue;
 
         /// <summary>
         /// Returns the default value for the field
@@ -62,7 +63,7 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(Time, SecurityIdentifier, "EarningRatios.FCFPerShareGrowth.OneYear");
+                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_FCFPerShareGrowth_OneYear);
                 if (defaultValue != NoValue)
                 {
                     return defaultValue;
@@ -93,7 +94,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(Time, SecurityIdentifier, $"EarningRatios.FCFPerShareGrowth.{ConvertPeriod(period)}");
+        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"EarningRatios_FCFPerShareGrowth_{ConvertPeriod(period)}"));
 
         /// <summary>
         /// Creates a new empty instance
@@ -105,7 +106,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public FCFPerShareGrowth(DateTime time, SecurityIdentifier securityIdentifier) : base(time, securityIdentifier)
+        public FCFPerShareGrowth(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

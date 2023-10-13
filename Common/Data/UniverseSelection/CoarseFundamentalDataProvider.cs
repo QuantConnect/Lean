@@ -17,6 +17,7 @@ using System;
 using System.IO;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -46,11 +47,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// <typeparam name="T">The expected data type</typeparam>
         /// <param name="time">The time to request this data for</param>
         /// <param name="securityIdentifier">The security identifier</param>
-        /// <param name="name">The name of the fundamental property</param>
+        /// <param name="enumName">The name of the fundamental property</param>
         /// <returns>The fundamental information</returns>
-        public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, string name)
+        public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
         {
-            lock(_coarseFundamental)
+            var name = Enum.GetName(enumName);
+            lock (_coarseFundamental)
             {
                 if (time == _date)
                 {

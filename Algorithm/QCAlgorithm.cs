@@ -50,6 +50,7 @@ using Index = QuantConnect.Securities.Index.Index;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Algorithm
 {
@@ -3142,6 +3143,30 @@ namespace QuantConnect.Algorithm
         public int? CIK(Symbol symbol)
         {
             return _securityDefinitionSymbolResolver.CIK(symbol);
+        }
+
+        /// <summary>
+        /// Get the fundamental data for the requested symbol at the current time
+        /// </summary>
+        /// <param name="symbol">The <see cref="Symbol"/></param>
+        /// <returns>The fundamental data for the Symbol</returns>
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public Fundamental Fundamentals(Symbol symbol)
+        {
+            return new Fundamental(Time, symbol) { EndTime = Time };
+        }
+
+        /// <summary>
+        /// Get the fundamental data for the requested symbols at the current time
+        /// </summary>
+        /// <param name="symbols">The <see cref="Symbol"/></param>
+        /// <returns>The fundamental data for the symbols</returns>
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public List<Fundamental> Fundamentals(List<Symbol> symbols)
+        {
+            return symbols.Select(symbol => Fundamentals(symbol)).ToList();
         }
 
         /// <summary>

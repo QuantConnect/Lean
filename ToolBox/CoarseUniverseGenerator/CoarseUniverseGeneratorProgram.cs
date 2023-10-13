@@ -31,6 +31,7 @@ using DateTime = System.DateTime;
 using Log = QuantConnect.Logging.Log;
 using QuantConnect.Data.UniverseSelection;
 using static QuantConnect.Data.UniverseSelection.CoarseFundamentalDataProvider;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 {
@@ -42,7 +43,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <summary>
         /// Has fundamental data source
         /// </summary>
-        public const string HasFundamentalSource = "CompanyReference.CompanyId";
+        public const FundamentalProperty HasFundamentalSource = FundamentalProperty.CompanyReference_CompanyId;
 
         private static readonly object _lock = new object();
         private readonly DirectoryInfo _dailyDataFolder;

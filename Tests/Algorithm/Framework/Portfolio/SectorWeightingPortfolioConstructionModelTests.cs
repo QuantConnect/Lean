@@ -306,7 +306,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             {
                 _industryTemplateCodeDict = industryTemplateCodeDict;
             }
-            public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, string name)
+            public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
             {
                 if (securityIdentifier == SecurityIdentifier.Empty)
                 {
@@ -314,11 +314,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 }
                 return Get(time, securityIdentifier, name);
             }
-            private dynamic Get(DateTime time, SecurityIdentifier securityIdentifier, string name)
+            private dynamic Get(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
             {
+                var name = Enum.GetName(enumName);
                 switch (name)
                 {
-                    case "CompanyReference.IndustryTemplateCode":
+                    case "CompanyReference_IndustryTemplateCode":
                         if(_industryTemplateCodeDict.TryGetValue(securityIdentifier, out var result))
                         {
                             return result;

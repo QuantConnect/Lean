@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using Python.Runtime;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
@@ -36,36 +37,36 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public double OneMonth => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.DividendsPayable.OneMonth");
+        public double OneMonth => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_DividendsPayable_OneMonth);
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public double TwoMonths => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.DividendsPayable.TwoMonths");
+        public double TwoMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_DividendsPayable_TwoMonths);
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.DividendsPayable.ThreeMonths");
+        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_DividendsPayable_ThreeMonths);
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.DividendsPayable.NineMonths");
+        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_DividendsPayable_NineMonths);
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public double TwelveMonths => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.DividendsPayable.TwelveMonths");
+        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_DividendsPayable_TwelveMonths);
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.DividendsPayable.TwelveMonths") != NoValue;
+        public override bool HasValue => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_DividendsPayable_TwelveMonths) != NoValue;
 
         /// <summary>
         /// Returns the default value for the field
@@ -74,7 +75,7 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.DividendsPayable.TwelveMonths");
+                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_DividendsPayable_TwelveMonths);
                 if (defaultValue != NoValue)
                 {
                     return defaultValue;
@@ -105,7 +106,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(Time, SecurityIdentifier, $"FinancialStatements.BalanceSheet.DividendsPayable.{ConvertPeriod(period)}");
+        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"FinancialStatements_BalanceSheet_DividendsPayable_{ConvertPeriod(period)}"));
 
         /// <summary>
         /// Creates a new empty instance
@@ -117,7 +118,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public DividendsPayableBalanceSheet(DateTime time, SecurityIdentifier securityIdentifier) : base(time, securityIdentifier)
+        public DividendsPayableBalanceSheet(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using Python.Runtime;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
@@ -36,12 +37,12 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the FiveYears period value for the field
         /// </summary>
         [JsonProperty("5Y")]
-        public double FiveYears => FundamentalService.Get<double>(Time, SecurityIdentifier, "OperationRatios.PostTaxMargin5YrAvg.FiveYears");
+        public double FiveYears => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_PostTaxMargin5YrAvg_FiveYears);
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => FundamentalService.Get<double>(Time, SecurityIdentifier, "OperationRatios.PostTaxMargin5YrAvg.FiveYears") != NoValue;
+        public override bool HasValue => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_PostTaxMargin5YrAvg_FiveYears) != NoValue;
 
         /// <summary>
         /// Returns the default value for the field
@@ -50,7 +51,7 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(Time, SecurityIdentifier, "OperationRatios.PostTaxMargin5YrAvg.FiveYears");
+                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_PostTaxMargin5YrAvg_FiveYears);
                 if (defaultValue != NoValue)
                 {
                     return defaultValue;
@@ -81,7 +82,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(Time, SecurityIdentifier, $"OperationRatios.PostTaxMargin5YrAvg.{ConvertPeriod(period)}");
+        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"OperationRatios_PostTaxMargin5YrAvg_{ConvertPeriod(period)}"));
 
         /// <summary>
         /// Creates a new empty instance
@@ -93,7 +94,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public PostTaxMargin5YrAvg(DateTime time, SecurityIdentifier securityIdentifier) : base(time, securityIdentifier)
+        public PostTaxMargin5YrAvg(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

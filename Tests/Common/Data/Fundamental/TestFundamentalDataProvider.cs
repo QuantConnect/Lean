@@ -17,6 +17,7 @@ using System;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Tests.Common.Data.Fundamental
 {
@@ -58,13 +59,14 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
             { "NB R735QTJ8XC9X", 181116782342 },
         };
 
-        public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, string name)
+        public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
         {
             if (securityIdentifier == SecurityIdentifier.Empty)
             {
                 return default;
             }
 
+            var name = Enum.GetName(enumName);
             switch (name)
             {
                 case nameof(CoarseFundamental.Price):
@@ -74,7 +76,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
                 case nameof(CoarseFundamental.PriceFactor):
                 case nameof(CoarseFundamental.SplitFactor):
                 case nameof(CoarseFundamental.DollarVolume):
-                    return _coarseFundamentalData.Get<T>(time, securityIdentifier, name);
+                    return _coarseFundamentalData.Get<T>(time, securityIdentifier, enumName);
                 default:
                     return Get(time, securityIdentifier, name);
             }
@@ -86,31 +88,31 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
             {
                 case nameof(CoarseFundamental.HasFundamentalData):
                     return true;
-                case "CompanyProfile.MarketCap":
+                case "CompanyProfile_MarketCap":
                     if(_marketCap.TryGetValue(securityIdentifier.ToString(), out var marketCap))
                     {
                         return marketCap;
                     }
                     return 0L;
-                case "CompanyProfile.HeadquarterCity":
+                case "CompanyProfile_HeadquarterCity":
                     if (securityIdentifier.Symbol == "AAPL")
                     {
                         return "Cupertino";
                     }
                     return string.Empty;
-                case "CompanyReference.IndustryTemplateCode":
+                case "CompanyReference_IndustryTemplateCode":
                     if(_industryTemplateCode.TryGetValue(securityIdentifier.ToString(), out var  industryTemplateCode))
                     {
                         return industryTemplateCode;
                     }
                     return string.Empty;
-                case "EarningRatios.EquityPerShareGrowth.OneYear":
+                case "EarningRatios_EquityPerShareGrowth_OneYear":
                     if(_equityPerShareGrowthOneYear.TryGetValue(securityIdentifier.ToString(), out var ePSG))
                     {
                         return ePSG;
                     }
                     return 0d;
-                case "ValuationRatios.PERatio":
+                case "ValuationRatios_PERatio":
                     if (_pERatio.TryGetValue(securityIdentifier.ToString(), out var peRatio))
                     {
                         return peRatio;
