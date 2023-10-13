@@ -17,6 +17,7 @@ using System;
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -68,7 +69,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbol">The symbol instance</param>
         /// <param name="name">The name of the fundamental property</param>
         /// <returns>The fundamental information</returns>
-        public static T Get<T>(DateTime time, Symbol symbol, string name) => Get<T>(time, symbol.ID, name);
+        public static T Get<T>(DateTime time, Symbol symbol, FundamentalProperty name) => Get<T>(time, symbol.ID, name);
 
         /// <summary>
         /// Will fetch the requested fundamental information for the requested time and symbol
@@ -78,7 +79,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="securityIdentifier">The security identifier</param>
         /// <param name="name">The name of the fundamental property</param>
         /// <returns>The fundamental information</returns>
-        public static T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, string name)
+        public static T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
         {
             return _fundamentalDataProvider.Get<T>(time.Date, securityIdentifier, name);
         }

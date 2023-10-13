@@ -27,32 +27,32 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Gets the day's dollar volume for this symbol
         /// </summary>
-        public override double DollarVolume => FundamentalService.Get<double>(Time, Symbol.ID, "DollarVolume");
+        public override double DollarVolume => FundamentalService.Get<double>(Time, Symbol.ID, FundamentalProperty.DollarVolume);
 
         /// <summary>
         /// Gets the day's total volume
         /// </summary>
-        public override long Volume => FundamentalService.Get<long>(Time, Symbol.ID, "Volume");
+        public override long Volume => FundamentalService.Get<long>(Time, Symbol.ID, FundamentalProperty.Volume);
 
         /// <summary>
         /// Returns whether the symbol has fundamental data for the given date
         /// </summary>
-        public override bool HasFundamentalData => FundamentalService.Get<bool>(Time, Symbol.ID, "HasFundamentalData");
+        public override bool HasFundamentalData => FundamentalService.Get<bool>(Time, Symbol.ID, FundamentalProperty.HasFundamentalData);
 
         /// <summary>
         /// Gets the price factor for the given date
         /// </summary>
-        public override decimal PriceFactor => FundamentalService.Get<decimal>(Time, Symbol.ID, "PriceFactor");
+        public override decimal PriceFactor => FundamentalService.Get<decimal>(Time, Symbol.ID, FundamentalProperty.PriceFactor);
 
         /// <summary>
         /// Gets the split factor for the given date
         /// </summary>
-        public override decimal SplitFactor => FundamentalService.Get<decimal>(Time, Symbol.ID, "SplitFactor");
+        public override decimal SplitFactor => FundamentalService.Get<decimal>(Time, Symbol.ID, FundamentalProperty.SplitFactor);
 
         /// <summary>
         /// Gets the raw price
         /// </summary>
-        public override decimal Value => FundamentalService.Get<decimal>(Time, Symbol.ID, "Value");
+        public override decimal Value => FundamentalService.Get<decimal>(Time, Symbol.ID, FundamentalProperty.Value);
 
         /// <summary>
         /// Creates a new empty instance
@@ -67,7 +67,7 @@ namespace QuantConnect.Data.Fundamental
         /// <param name="time">The current time</param>
         /// <param name="symbol">The associated symbol</param>
         public Fundamental(DateTime time, Symbol symbol)
-            : base(time, symbol)
+            : base(time, symbol, FundamentalInstanceProvider.Get(symbol))
         {
         }
 

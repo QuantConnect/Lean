@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using System;
 using System.Linq;
+using Python.Runtime;
 using System.Collections.Generic;
 
 namespace QuantConnect.Data.Fundamental
@@ -22,7 +22,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Abstract base class for multi-period fields
     /// </summary>
-    public abstract class MultiPeriodField
+    public abstract class MultiPeriodField : ReusuableCLRObject
     {
         /// <summary>
         /// No Value
@@ -30,14 +30,14 @@ namespace QuantConnect.Data.Fundamental
         public const double NoValue = double.MinValue;
 
         /// <summary>
+        /// The time provider instance to use
+        /// </summary>
+        protected ITimeProvider TimeProvider { get; }
+
+        /// <summary>
         /// The default period
         /// </summary>
         protected abstract string DefaultPeriod { get; }
-
-        /// <summary>
-        /// The current time
-        /// </summary>
-        protected DateTime Time { get; set; }
 
         /// <summary>
         /// The target security identifier
@@ -64,11 +64,11 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="time"></param>
+        /// <param name="timeProvider"></param>
         /// <param name="securityIdentifier"></param>
-        protected MultiPeriodField(DateTime time, SecurityIdentifier securityIdentifier)
+        protected MultiPeriodField(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
         {
-            Time = time;
+            TimeProvider = timeProvider;
             SecurityIdentifier = securityIdentifier;
         }
 

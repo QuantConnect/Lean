@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using Python.Runtime;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
@@ -36,18 +37,18 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneYear period value for the field
         /// </summary>
         [JsonProperty("1Y")]
-        public double OneYear => FundamentalService.Get<double>(Time, SecurityIdentifier, "OperationRatios.NetIncomePerEmployee.OneYear");
+        public double OneYear => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_NetIncomePerEmployee_OneYear);
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(Time, SecurityIdentifier, "OperationRatios.NetIncomePerEmployee.ThreeMonths");
+        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_NetIncomePerEmployee_ThreeMonths);
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => FundamentalService.Get<double>(Time, SecurityIdentifier, "OperationRatios.NetIncomePerEmployee.OneYear") != NoValue;
+        public override bool HasValue => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_NetIncomePerEmployee_OneYear) != NoValue;
 
         /// <summary>
         /// Returns the default value for the field
@@ -56,7 +57,7 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(Time, SecurityIdentifier, "OperationRatios.NetIncomePerEmployee.OneYear");
+                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_NetIncomePerEmployee_OneYear);
                 if (defaultValue != NoValue)
                 {
                     return defaultValue;
@@ -87,7 +88,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(Time, SecurityIdentifier, $"OperationRatios.NetIncomePerEmployee.{ConvertPeriod(period)}");
+        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"OperationRatios_NetIncomePerEmployee_{ConvertPeriod(period)}"));
 
         /// <summary>
         /// Creates a new empty instance
@@ -99,7 +100,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public NetIncomePerEmployee(DateTime time, SecurityIdentifier securityIdentifier) : base(time, securityIdentifier)
+        public NetIncomePerEmployee(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

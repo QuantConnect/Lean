@@ -301,7 +301,8 @@ namespace QuantConnect.Algorithm
             }
             else if (pyObject.TryConvertToDelegate(out coarseFunc))
             {
-                return AddUniverse(coarseFunc.ConvertToUniverseSelectionSymbolDelegate());
+                //return AddUniverse(coarseFunc.ConvertToUniverseSelectionSymbolDelegate());
+                return AddUniverse(new FundamentalUniverse(UniverseSettings, pyObject));
             }
             else
             {

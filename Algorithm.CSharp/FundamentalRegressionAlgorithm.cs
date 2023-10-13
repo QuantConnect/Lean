@@ -42,6 +42,26 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
             AddEquity("SPY");
             AddEquity("AAPL");
 
+            // Request fundamental data for symbols at current algorithm time
+            var ibm = QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var ibmFundamental = Fundamentals(ibm);
+            if (Time != StartDate || Time != ibmFundamental.EndTime)
+            {
+                throw new Exception($"Unexpected {nameof(Fundamental)} time {ibmFundamental.EndTime}");
+            }
+            if (ibmFundamental.Price == 0)
+            {
+                throw new Exception($"Unexpected {nameof(Fundamental)} IBM price!");
+            }
+
+            var nb = QuantConnect.Symbol.Create("NB", SecurityType.Equity, Market.USA);
+            var fundamentals = Fundamentals(new List<Symbol>{ nb, ibm }).ToList();
+            if (fundamentals.Count != 2)
+            {
+                throw new Exception($"Unexpected {nameof(Fundamental)} count {fundamentals.Count}! Expected 2");
+            }
+
+            // Request historical fundamental data for symbols
             var history = History<Fundamental>(Securities.Keys, new TimeSpan(1, 0, 0, 0)).ToList();
             if(history.Count != 1)
             {
@@ -61,6 +81,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
                 }
             }
 
+            // Request historical fundamental data for all symbols
             var history2 = History<Fundamentals>(new TimeSpan(1, 0, 0, 0)).ToList();
             if (history2.Count != 1)
             {

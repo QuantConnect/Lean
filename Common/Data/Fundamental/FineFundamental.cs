@@ -65,7 +65,7 @@ namespace QuantConnect.Data.Fundamental
         /// <returns></returns>
         public override BaseData Clone()
         {
-            return new FineFundamental(Time, Symbol);
+            return new FineFundamental(Time, Symbol, _fundamentalInstanceProvider);
         }
 
         /// <summary>

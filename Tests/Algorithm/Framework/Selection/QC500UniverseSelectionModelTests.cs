@@ -235,7 +235,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             {
                 _industryTemplateCodeDict = industryTemplateCodeDict;
             }
-            public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, string name)
+            public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
             {
                 if (securityIdentifier == SecurityIdentifier.Empty)
                 {
@@ -244,21 +244,22 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 return Get(time, securityIdentifier, name);
             }
 
-            private dynamic Get(DateTime time, SecurityIdentifier securityIdentifier, string name)
+            private dynamic Get(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
             {
+                var name = Enum.GetName(enumName);
                 switch (name)
                 {
-                    case "CompanyProfile.MarketCap":
+                    case "CompanyProfile_MarketCap":
                         return 500000001;
-                    case "SecurityReference.IPODate":
+                    case "SecurityReference_IPODate":
                         return time.AddDays(-200);
-                    case "EarningReports.BasicAverageShares.ThreeMonths":
+                    case "EarningReports_BasicAverageShares_ThreeMonths":
                         return 5000000.01d;
-                    case "CompanyReference.CountryId":
+                    case "CompanyReference_CountryId":
                         return "USA";
-                    case "CompanyReference.PrimaryExchangeID":
+                    case "CompanyReference_PrimaryExchangeID":
                         return "NYS";
-                    case "CompanyReference.IndustryTemplateCode":
+                    case "CompanyReference_IndustryTemplateCode":
                         return _industryTemplateCodeDict[securityIdentifier.Symbol[0]];
                 }
                 return null;

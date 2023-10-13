@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using Python.Runtime;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
@@ -36,30 +37,30 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public double TwoMonths => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.OtherEquityAdjustments.TwoMonths");
+        public double TwoMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_OtherEquityAdjustments_TwoMonths);
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.OtherEquityAdjustments.ThreeMonths");
+        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_OtherEquityAdjustments_ThreeMonths);
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public double SixMonths => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.OtherEquityAdjustments.SixMonths");
+        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_OtherEquityAdjustments_SixMonths);
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public double TwelveMonths => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.OtherEquityAdjustments.TwelveMonths");
+        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_OtherEquityAdjustments_TwelveMonths);
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.OtherEquityAdjustments.TwelveMonths") != NoValue;
+        public override bool HasValue => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_OtherEquityAdjustments_TwelveMonths) != NoValue;
 
         /// <summary>
         /// Returns the default value for the field
@@ -68,7 +69,7 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(Time, SecurityIdentifier, "FinancialStatements.BalanceSheet.OtherEquityAdjustments.TwelveMonths");
+                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_OtherEquityAdjustments_TwelveMonths);
                 if (defaultValue != NoValue)
                 {
                     return defaultValue;
@@ -99,7 +100,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(Time, SecurityIdentifier, $"FinancialStatements.BalanceSheet.OtherEquityAdjustments.{ConvertPeriod(period)}");
+        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"FinancialStatements_BalanceSheet_OtherEquityAdjustments_{ConvertPeriod(period)}"));
 
         /// <summary>
         /// Creates a new empty instance
@@ -111,7 +112,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public OtherEquityAdjustmentsBalanceSheet(DateTime time, SecurityIdentifier securityIdentifier) : base(time, securityIdentifier)
+        public OtherEquityAdjustmentsBalanceSheet(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

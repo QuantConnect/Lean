@@ -223,7 +223,7 @@ namespace QuantConnect.Tests.Research
 
         private class TestFundamentalDataProvider : IFundamentalDataProvider
         {
-            public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, string name)
+            public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
             {
                 if (securityIdentifier == SecurityIdentifier.Empty)
                 {
@@ -232,15 +232,16 @@ namespace QuantConnect.Tests.Research
                 return Get(time, securityIdentifier, name);
             }
 
-            private dynamic Get(DateTime time, SecurityIdentifier securityIdentifier, string name)
+            private dynamic Get(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
             {
+                var name = Enum.GetName(enumName);
                 switch (name)
                 {
-                    case "ValuationRatios.PERatio":
+                    case "ValuationRatios_PERatio":
                         return 13.2725d;
-                    case "ValuationRatios.BookValuePerShare":
+                    case "ValuationRatios_BookValuePerShare":
                         return 22.5177d;
-                    case "FinancialStatements.NumberOfShareHolders":
+                    case "FinancialStatements_NumberOfShareHolders":
                         return 36319;
                 }
                 return null;
