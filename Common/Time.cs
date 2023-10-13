@@ -49,7 +49,12 @@ namespace QuantConnect
         public static TimeSpan EndOfTimeTimeSpan = new TimeSpan(EndOfTime.Ticks);
 
         /// <summary>
-        /// Provides a value far enough in the past that can be used as a lower bound on dates
+        /// Provides a common and normalized start time for Lean data
+        /// </summary>
+        public static readonly DateTime Start = new DateTime(1998, 1, 2);
+
+        /// <summary>
+        /// Provides a value far enough in the past that can be used as a lower bound on dates, 12/30/1899
         /// </summary>
         /// <value>
         /// DateTime.FromOADate(0)

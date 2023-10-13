@@ -59,10 +59,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                     DollarVolumeSetter = 100000 * double.Parse(symbol.Value.Substring(3)),
                     HasFundamentalDataSetter = true
                 },
-                (symbol, time) => new FineFundamental
+                (symbol, time) => new FineFundamental(time, symbol)
                 {
-                    Symbol = symbol,
-                    EndTime = time,
                     Value = 100
                 },
                 new TestFundamentalDataProvider(_industryTemplateCodeDict),
@@ -93,11 +91,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                     Symbol = symbol,
                     EndTime = time,
                 },
-                (symbol, time) => new FineFundamental
-                {
-                    Symbol = symbol,
-                    EndTime = time
-                },
+                (symbol, time) => new FineFundamental(time, symbol),
                 new TestFundamentalDataProvider(_industryTemplateCodeDict),
                 out algorithm,
                 out coarseCountByDateTime,
@@ -126,10 +120,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                     DollarVolumeSetter = 100000 * double.Parse(symbol.Value.Substring(3)),
                     HasFundamentalDataSetter = true
                 },
-                (symbol, time) => new FineFundamental()
+                (symbol, time) => new FineFundamental(time, symbol)
                 {
-                    Symbol = symbol,
-                    EndTime = time,
                     Value = 100
                 },
                 new NullFundamentalDataProvider(),

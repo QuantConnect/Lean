@@ -45,11 +45,14 @@ namespace QuantConnect.Data.Fundamental
         /// <returns>The unique instance provider</returns>
         public static FundamentalInstanceProvider Get(Symbol symbol)
         {
-            if (!_cache.TryGetValue(symbol.ID, out var result))
+            lock(_cache)
             {
-                _cache[symbol.ID] = result = new FundamentalInstanceProvider(symbol);
+                if (!_cache.TryGetValue(symbol.ID, out var result))
+                {
+                    _cache[symbol.ID] = result = new FundamentalInstanceProvider(symbol);
+                }
+                return result;
             }
-            return result;
         }
 
         /// <summary>

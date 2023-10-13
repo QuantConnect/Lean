@@ -76,6 +76,17 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         public FineFundamental()
         {
+            _fundamentalInstanceProvider = FundamentalInstanceProvider.Get(Symbol.Empty);
+        }
+
+        /// <summary>
+        /// Creates a new instance for the given time and security
+        /// </summary>
+        public FineFundamental(DateTime time, Symbol symbol)
+        {
+            Time = time;
+            Symbol = symbol;
+            _fundamentalInstanceProvider = FundamentalInstanceProvider.Get(symbol);
         }
 
         /// <summary>

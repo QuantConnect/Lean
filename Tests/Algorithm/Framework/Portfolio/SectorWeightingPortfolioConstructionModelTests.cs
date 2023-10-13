@@ -76,10 +76,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 // This procedure shows that the model ignores the securities without it
                 if (!string.IsNullOrEmpty(sectorCode))
                 {
-                    security.SetMarketPrice(new Fundamental
+                    security.SetMarketPrice(new Fundamental(Algorithm.Time, symbol)
                     {
-                        Symbol = symbol,
-                        Time = Algorithm.Time,
                         Value = price
                     });
                     industryTemplateCodeDict[symbol.ID] = kvp.Value.Item2;

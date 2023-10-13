@@ -67,7 +67,7 @@ namespace QuantConnect.Data.Fundamental
         /// <param name="time">The current time</param>
         /// <param name="symbol">The associated symbol</param>
         public Fundamental(DateTime time, Symbol symbol)
-            : base(time, symbol, FundamentalInstanceProvider.Get(symbol))
+            : base(time, symbol)
         {
         }
 

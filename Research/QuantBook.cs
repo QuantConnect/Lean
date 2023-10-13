@@ -782,7 +782,7 @@ namespace QuantConnect.Research
         private Dictionary<DateTime, DataDictionary<dynamic>> GetAllFundamental(IEnumerable<Symbol> symbols, string selector, DateTime? start = null, DateTime? end = null)
         {
             //SubscriptionRequest does not except nullable DateTimes, so set a startTime and endTime
-            var startTime = start.HasValue ? (DateTime)start : QuantConnect.Time.BeginningOfTime;
+            var startTime = start.HasValue ? (DateTime)start : QuantConnect.Time.Start;
             var endTime = end.HasValue ? (DateTime) end : DateTime.UtcNow.Date;
 
             //Collection to store our results

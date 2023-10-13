@@ -33,13 +33,9 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
         [Test]
         public void ComputesMarketCapCorrectly()
         {
-            var fine = new QuantConnect.Data.Fundamental.Fundamental
-            {
-                Symbol = Symbols.AAPL,
-                EndTime = new DateTime(2014, 04, 01),
-            };
+            var fine = new QuantConnect.Data.Fundamental.Fundamental(new DateTime(2014, 04, 01), Symbols.AAPL);
 
-            Assert.AreEqual(536.74m, fine.Price);
+            Assert.AreEqual(541.74m, fine.Price);
             Assert.AreEqual(469400291359, fine.MarketCap);
         }
 

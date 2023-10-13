@@ -424,7 +424,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 // sample the entire charts with a 12 hours resolution
                 var dailySampler = new SeriesSampler(TimeSpan.FromHours(12));
-                chartComplete = dailySampler.SampleCharts(chartComplete, Time.BeginningOfTime, Time.EndOfTime);
+                chartComplete = dailySampler.SampleCharts(chartComplete, Time.Start, Time.EndOfTime);
 
                 var result = new LiveResult(new LiveResultParameters(chartComplete,
                     new Dictionary<int, Order>(TransactionHandler.Orders),
