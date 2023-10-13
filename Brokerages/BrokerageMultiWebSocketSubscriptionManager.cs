@@ -42,8 +42,8 @@ namespace QuantConnect.Brokerages
 
         private const int ConnectionTimeout = 30000;
 
-        private readonly object _locker = new();
-        private readonly List<BrokerageMultiWebSocketEntry> _webSocketEntries = new();
+        protected readonly object _locker = new();
+        protected readonly List<BrokerageMultiWebSocketEntry> _webSocketEntries = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BrokerageMultiWebSocketSubscriptionManager"/> class
@@ -197,7 +197,7 @@ namespace QuantConnect.Brokerages
             }
         }
 
-        private BrokerageMultiWebSocketEntry GetWebSocketEntryBySymbol(Symbol symbol)
+        protected virtual BrokerageMultiWebSocketEntry GetWebSocketEntryBySymbol(Symbol symbol)
         {
             lock (_locker)
             {
@@ -213,7 +213,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Adds a symbol to an existing or new websocket connection
         /// </summary>
-        private IWebSocket GetWebSocketForSymbol(Symbol symbol)
+        protected virtual IWebSocket GetWebSocketForSymbol(Symbol symbol)
         {
             BrokerageMultiWebSocketEntry entry;
 
@@ -270,12 +270,12 @@ namespace QuantConnect.Brokerages
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void EventHandler(object _, WebSocketMessage message)
+        protected void EventHandler(object _, WebSocketMessage message)
         {
             _messageHandler(message);
         }
 
-        private void Connect(IWebSocket webSocket)
+        protected void Connect(IWebSocket webSocket)
         {
             var connectedEvent = new ManualResetEvent(false);
             EventHandler onOpenAction = (_, _) =>
@@ -307,12 +307,12 @@ namespace QuantConnect.Brokerages
             }
         }
 
-        private void Disconnect(IWebSocket webSocket)
+        protected void Disconnect(IWebSocket webSocket)
         {
             webSocket.Close();
         }
 
-        private void OnOpen(object sender, EventArgs e)
+        protected void OnOpen(object sender, EventArgs e)
         {
             var webSocket = (IWebSocket)sender;
 
