@@ -35,6 +35,7 @@ using System.IO;
 using System.Linq;
 using QuantConnect.Packets;
 using System.Threading.Tasks;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Research
 {
@@ -796,9 +797,15 @@ namespace QuantConnect.Research
                 {
                     var currentData = new Fundamental(date, symbol);
                     var time = currentData.EndTime;
-                    var dataPoint = string.IsNullOrWhiteSpace(selector)
-                        ? currentData
-                        : GetPropertyValue(currentData, selector);
+                    object dataPoint = currentData;
+                    if (!string.IsNullOrWhiteSpace(selector))
+                    {
+                        dataPoint = GetPropertyValue(currentData, selector);
+                        if (BaseFundamentalDataProvider.IsNone(dataPoint))
+                        {
+                            dataPoint = null;
+                        }
+                    }
 
                     if (!data.TryGetValue(time, out var dataAtTime))
                     {

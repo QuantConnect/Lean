@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,21 +14,40 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Securities;
+using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
     /// <summary>
     /// Provides a base class for defining equity coarse/fine fundamental selection models
     /// </summary>
-    public abstract class FundamentalUniverseSelectionModel : UniverseSelectionModel
+    public class FundamentalUniverseSelectionModel : UniverseSelectionModel
     {
+        private readonly bool _fundamentalData;
         private readonly bool _filterFineData;
         private readonly UniverseSettings _universeSettings;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FundamentalUniverseSelectionModel"/> class
+        /// </summary>
+        public FundamentalUniverseSelectionModel()
+            : this(null)
+        {
+            _fundamentalData = true;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FundamentalUniverseSelectionModel"/> class
+        /// </summary>
+        public FundamentalUniverseSelectionModel(UniverseSettings universeSettings)
+        {
+            _fundamentalData = true;
+            _universeSettings = universeSettings;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FundamentalUniverseSelectionModel"/> class
@@ -57,12 +76,21 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>The universe defined by this model</returns>
         public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
-            var universe = CreateCoarseFundamentalUniverse(algorithm);
-            if (_filterFineData)
+            if (_fundamentalData)
             {
-                universe = new FineFundamentalFilteredUniverse(universe, fine => SelectFine(algorithm, fine));
+                var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
+                yield return new FundamentalUniverse(universeSettings, fundamental => Select(algorithm, fundamental));
             }
-            yield return universe;
+            else
+            {
+                // for backwards compatibility
+                var universe = CreateCoarseFundamentalUniverse(algorithm);
+                if (_filterFineData)
+                {
+                    universe = new FineFundamentalFilteredUniverse(universe, fine => SelectFine(algorithm, fine));
+                }
+                yield return universe;
+            }
         }
 
         /// <summary>
@@ -87,12 +115,26 @@ namespace QuantConnect.Algorithm.Framework.Selection
         }
 
         /// <summary>
+        /// Defines the fundamental selection function.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="fundamental">The fundamental data used to perform filtering</param>
+        /// <returns>An enumerable of symbols passing the filter</returns>
+        public virtual IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
+        {
+            throw new NotImplementedException("Please overrride the 'Select' fundamental function");
+        }
+
+        /// <summary>
         /// Defines the coarse fundamental selection function.
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="coarse">The coarse fundamental data used to perform filtering</param>
         /// <returns>An enumerable of symbols passing the filter</returns>
-        public abstract IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse);
+        public virtual IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
+        {
+            throw new NotImplementedException("Please overrride the 'Select' fundamental function");
+        }
 
         /// <summary>
         /// Defines the fine fundamental selection function.

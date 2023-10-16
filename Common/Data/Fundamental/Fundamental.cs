@@ -116,5 +116,13 @@ namespace QuantConnect.Data.Fundamental
         {
             return new Fundamental(Time, Symbol);
         }
+
+        /// <summary>
+        /// Gets the default resolution for this data and security type
+        /// </summary>
+        public override Resolution DefaultResolution()
+        {
+            return Resolution.Daily;
+        }
     }
 }

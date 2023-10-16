@@ -147,6 +147,23 @@ namespace QuantConnect.Tests.Research
             }
         }
 
+        [Test]
+        public void PyReturnNoneTest()
+        {
+            using (Py.GIL())
+            {
+                var start = new DateTime(2023, 10, 10);
+                var symbol = Symbol.Create("AIG", SecurityType.Equity, Market.USA);
+                var testModule = _module.FundamentalHistoryTest();
+                var data = testModule.getFundamentals(symbol, "ValuationRatios.PERatio", start, start.AddDays(5));
+                Assert.AreNotEqual(true, (bool)data.empty);
+
+                var subdataframe = data.loc[start.AddDays(1).ToPython()];
+                PyObject result = subdataframe[symbol.ID.ToString()];
+                Assert.IsNull(result.As<object>());
+            }
+        }
+
         [TestCaseSource(nameof(NullRequestTestCases))]
         public void PyReturnNullTest(dynamic input)
         {

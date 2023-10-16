@@ -15,7 +15,6 @@
 
 using System;
 using System.IO;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 
@@ -24,22 +23,10 @@ namespace QuantConnect.Data.UniverseSelection
     /// <summary>
     /// Coarse base fundamental data provider
     /// </summary>
-    public class CoarseFundamentalDataProvider : IFundamentalDataProvider
+    public class CoarseFundamentalDataProvider : BaseFundamentalDataProvider
     {
         private DateTime _date;
-        private IDataProvider _dataProvider;
         private readonly Dictionary<SecurityIdentifier, CoarseFundamental> _coarseFundamental = new();
-
-
-        /// <summary>
-        /// Initializes the service
-        /// </summary>
-        /// <param name="dataProvider">The data provider instance to use</param>
-        /// <param name="liveMode">True if running in live mode</param>
-        public void Initialize(IDataProvider dataProvider, bool liveMode)
-        {
-            _dataProvider = dataProvider;
-        }
 
         /// <summary>
         /// Will fetch the requested fundamental information for the requested time and symbol
@@ -49,7 +36,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="securityIdentifier">The security identifier</param>
         /// <param name="enumName">The name of the fundamental property</param>
         /// <returns>The fundamental information</returns>
-        public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
+        public override T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
         {
             var name = Enum.GetName(enumName);
             lock (_coarseFundamental)
@@ -61,10 +48,10 @@ namespace QuantConnect.Data.UniverseSelection
                 _date = time;
 
                 var path = Path.Combine(Globals.DataFolder, "equity", "usa", "fundamental", "coarse", $"{time:yyyyMMdd}.csv");
-                var fileStream = _dataProvider.Fetch(path);
+                var fileStream = DataProvider.Fetch(path);
                 if (fileStream == null)
                 {
-                    return default;
+                    return GetDefault<T>();
                 }
 
                 _coarseFundamental.Clear();
@@ -123,7 +110,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             if (!_coarseFundamental.TryGetValue(securityIdentifier, out var coarse))
             {
-                return default(T);
+                return GetDefault<T>();
             }
 
             switch (property)
@@ -146,7 +133,7 @@ namespace QuantConnect.Data.UniverseSelection
                     return false;
             }
 
-            return default(T);
+            return GetDefault<T>();
         }
 
         /// <summary>
