@@ -966,9 +966,9 @@ namespace QuantConnect.Algorithm
             int? contractDepthOffset = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            CheckPeriodBasedHistoryRequestResolution(symbols, resolution);
-
             var requestedType = type.CreateType();
+            CheckPeriodBasedHistoryRequestResolution(symbols, resolution, requestedType);
+
             var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution, fillForward, extendedMarketHours,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
 
@@ -1074,10 +1074,10 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
-            resolution = GetResolution(symbol, resolution);
-            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution);
-
             var managedType = type.CreateType();
+            resolution = GetResolution(symbol, resolution, managedType);
+            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution, managedType);
+
             var marketHours = GetMarketHours(symbol, managedType);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
                 marketHours.DataTimeZone, extendedMarketHours);

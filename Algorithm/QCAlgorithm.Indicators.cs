@@ -2399,7 +2399,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public void WarmUpIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            resolution = GetResolution(symbol, resolution);
+            resolution = GetResolution(symbol, resolution, null);
             var period = resolution.Value.ToTimeSpan();
             WarmUpIndicator(symbol, indicator, period, selector);
         }
@@ -2442,7 +2442,7 @@ namespace QuantConnect.Algorithm
         public void WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, Resolution? resolution = null, Func<IBaseData, T> selector = null)
             where T : class, IBaseData
         {
-            resolution = GetResolution(symbol, resolution);
+            resolution = GetResolution(symbol, resolution, typeof(T));
             var period = resolution.Value.ToTimeSpan();
             WarmUpIndicator(symbol, indicator, period, selector);
         }

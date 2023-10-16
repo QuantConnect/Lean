@@ -16,6 +16,7 @@
 using System.Linq;
 using Python.Runtime;
 using System.Collections.Generic;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
 {
@@ -27,7 +28,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// No Value
         /// </summary>
-        public const double NoValue = double.MinValue;
+        public static double NoValue = BaseFundamentalDataProvider.GetDefault<double>();
 
         /// <summary>
         /// The time provider instance to use

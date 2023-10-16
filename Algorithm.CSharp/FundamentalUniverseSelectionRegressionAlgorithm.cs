@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
-using System;
 using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Demonstration of how to define a universe using the fundamental data
     /// </summary>
-    public class FundamentalRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FundamentalUniverseSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const int NumberOfSymbolsFundamental = 2;
 
@@ -43,79 +43,27 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("SPY");
             AddEquity("AAPL");
 
-            // Request fundamental data for symbols at current algorithm time
-            var ibm = QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA);
-            var ibmFundamental = Fundamentals(ibm);
-            if (Time != StartDate || Time != ibmFundamental.EndTime)
-            {
-                throw new Exception($"Unexpected {nameof(Fundamental)} time {ibmFundamental.EndTime}");
-            }
-            if (ibmFundamental.Price == 0)
-            {
-                throw new Exception($"Unexpected {nameof(Fundamental)} IBM price!");
-            }
-
-            var nb = QuantConnect.Symbol.Create("NB", SecurityType.Equity, Market.USA);
-            var fundamentals = Fundamentals(new List<Symbol>{ nb, ibm }).ToList();
-            if (fundamentals.Count != 2)
-            {
-                throw new Exception($"Unexpected {nameof(Fundamental)} count {fundamentals.Count}! Expected 2");
-            }
-
-            // Request historical fundamental data for symbols
-            var history = History<Fundamental>(Securities.Keys, new TimeSpan(1, 0, 0, 0)).ToList();
-            if(history.Count != 1)
-            {
-                throw new Exception($"Unexpected {nameof(Fundamental)} history count {history.Count}! Expected 1");
-            }
-
-            if (history[0].Values.Count != 2)
-            {
-                throw new Exception($"Unexpected {nameof(Fundamental)} data count {history[0].Values.Count}, expected 2!");
-            }
-
-            foreach (var ticker in new[] {"AAPL", "SPY"})
-            {
-                if (!history[0].TryGetValue(ticker, out var fundamental) || fundamental.Price == 0)
-                {
-                    throw new Exception($"Unexpected {ticker} fundamental data");
-                }
-            }
-
-            // Request historical fundamental data for all symbols
-            var history2 = History<Fundamentals>(new TimeSpan(1, 0, 0, 0)).ToList();
-            if (history2.Count != 1)
-            {
-                throw new Exception($"Unexpected {nameof(Fundamentals)} history count {history.Count}! Expected 1");
-            }
-            if (history2[0].Single().Value.Data.Count < 7000)
-            {
-                throw new Exception($"Unexpected {nameof(Fundamentals)} data count {history.Count}! Expected > 7000");
-            }
-            if (history2[0].Single().Value.Data.Any(x => x.GetType() != typeof(Fundamental)))
-            {
-                throw new Exception($"Unexpected {nameof(Fundamentals)} data type!");
-            }
-
-            AddUniverse(FundamentalSelectionFunction);
+            SetUniverseSelection(new FundamentalUniverseSelectionModelTest());
         }
 
-        // sort the data by daily dollar volume and take the top 'NumberOfSymbolsCoarse'
-        public IEnumerable<Symbol> FundamentalSelectionFunction(IEnumerable<Fundamental> fundamental)
+        private class FundamentalUniverseSelectionModelTest : FundamentalUniverseSelectionModel
         {
-            // select only symbols with fundamental data and sort descending by daily dollar volume
-            var sortedByDollarVolume = fundamental
-                .Where(x => x.Price > 1)
-                .OrderByDescending(x => x.DollarVolume);
+            public override IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
+            {
+                // select only symbols with fundamental data and sort descending by daily dollar volume
+                var sortedByDollarVolume = fundamental
+                    .Where(x => x.Price > 1)
+                    .OrderByDescending(x => x.DollarVolume);
 
-            // sort descending by P/E ratio
-            var sortedByPeRatio = sortedByDollarVolume.OrderByDescending(x => x.ValuationRatios.PERatio);
+                // sort descending by P/E ratio
+                var sortedByPeRatio = sortedByDollarVolume.OrderByDescending(x => x.ValuationRatios.PERatio);
 
-            // take the top entries from our sorted collection
-            var topFine = sortedByPeRatio.Take(NumberOfSymbolsFundamental);
+                // take the top entries from our sorted collection
+                var topFine = sortedByPeRatio.Take(NumberOfSymbolsFundamental);
 
-            // we need to return only the symbol objects
-            return topFine.Select(x => x.Symbol);
+                // we need to return only the symbol objects
+                return topFine.Select(x => x.Symbol);
+            }
         }
 
         public override void OnData(Slice slice)
@@ -165,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 3;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
