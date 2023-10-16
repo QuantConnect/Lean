@@ -54,7 +54,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_EBITDAGrowth_OneYear) != NoValue;
+        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_EBITDAGrowth_OneYear));
 
         /// <summary>
         /// Returns the default value for the field
@@ -64,7 +64,7 @@ namespace QuantConnect.Data.Fundamental
             get
             {
                 var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_EBITDAGrowth_OneYear);
-                if (defaultValue != NoValue)
+                if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
                 {
                     return defaultValue;
                 }
@@ -81,7 +81,7 @@ namespace QuantConnect.Data.Fundamental
             var result = new Dictionary<string, double>();
             foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear), new Tuple<string, double>("3Y",ThreeYears), new Tuple<string, double>("5Y",FiveYears) })
             {
-                if(kvp.Item2 != NoValue)
+                if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
                     result[kvp.Item1] = kvp.Item2;
                 }

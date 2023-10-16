@@ -87,7 +87,8 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.IsTrue(result.All(fundamentals =>
                 {
                     Assert.AreEqual(1, fundamentals.Count);
-                    return fundamentals.Values.All(x => x.FinancialStatements.CashFlowStatement.CashFlowFromContinuingFinancingActivities == double.MinValue);
+                    Assert.IsTrue(fundamentals.Values.All(x => !x.FinancialStatements.CashFlowStatement.CashFlowFromContinuingFinancingActivities.HasValue));
+                    return fundamentals.Values.All(x => double.IsNaN(x.FinancialStatements.CashFlowStatement.CashFlowFromContinuingFinancingActivities));
                 }));
             }
             else
@@ -113,7 +114,7 @@ def getHistory(algorithm, symbol):
                         var index = subDataFrame.index[i];
                         var series = subDataFrame.loc[index];
                         var cashFlow = (double)series.financialstatements.CashFlowStatement.CashFlowFromContinuingFinancingActivities.Value;
-                        Assert.AreEqual(double.MinValue, cashFlow);
+                        Assert.AreEqual(double.NaN, cashFlow);
                     }
                 }
             }

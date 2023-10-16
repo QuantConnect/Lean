@@ -72,7 +72,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_NormalizedEBITDA_TwelveMonths) != NoValue;
+        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_NormalizedEBITDA_TwelveMonths));
 
         /// <summary>
         /// Returns the default value for the field
@@ -82,7 +82,7 @@ namespace QuantConnect.Data.Fundamental
             get
             {
                 var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_NormalizedEBITDA_TwelveMonths);
-                if (defaultValue != NoValue)
+                if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
                 {
                     return defaultValue;
                 }
@@ -99,7 +99,7 @@ namespace QuantConnect.Data.Fundamental
             var result = new Dictionary<string, double>();
             foreach (var kvp in new[] { new Tuple<string, double>("1M",OneMonth), new Tuple<string, double>("2M",TwoMonths), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
             {
-                if(kvp.Item2 != NoValue)
+                if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
                     result[kvp.Item1] = kvp.Item2;
                 }

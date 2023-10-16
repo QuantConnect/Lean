@@ -57,46 +57,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the combined factor used to create adjusted prices from raw prices
         /// </summary>
-        public decimal PriceScaleFactor
-        {
-            get
-            {
-                var priceFactor = PriceFactor;
-                if (BaseFundamentalDataProvider.IsNone(typeof(decimal), priceFactor))
-                {
-                    return priceFactor;
-                }
-                var splitFactor = SplitFactor;
-                if (BaseFundamentalDataProvider.IsNone(typeof(decimal), splitFactor))
-                {
-                    return splitFactor;
-                }
-
-                return splitFactor * priceFactor;
-            }
-        }
+        public decimal PriceScaleFactor => PriceFactor * SplitFactor;
 
         /// <summary>
         /// Gets the split and dividend adjusted price
         /// </summary>
-        public decimal AdjustedPrice
-        {
-            get
-            {
-                var price = Price;
-                if (BaseFundamentalDataProvider.IsNone(typeof(decimal), price))
-                {
-                    return price;
-                }
-                var scaleFactor = PriceScaleFactor;
-                if (BaseFundamentalDataProvider.IsNone(typeof(decimal), scaleFactor))
-                {
-                    return scaleFactor;
-                }
-
-                return price * scaleFactor;
-            }
-        }
+        public decimal AdjustedPrice => Price * PriceScaleFactor;
 
         /// <summary>
         /// The end time of this data.

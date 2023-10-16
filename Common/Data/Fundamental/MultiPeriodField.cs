@@ -28,7 +28,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// No Value
         /// </summary>
-        public static double NoValue = BaseFundamentalDataProvider.GetDefault<double>();
+        public static double NoValue { get; } = BaseFundamentalDataProvider.GetDefault<double>();
 
         /// <summary>
         /// The time provider instance to use
@@ -82,7 +82,7 @@ namespace QuantConnect.Data.Fundamental
         /// Returns true if the field contains a value for the requested period
         /// </summary>
         /// <returns>True if the field contains a value for the requested period</returns>
-        public virtual bool HasPeriodValue(string period) => GetPeriodValue(period) != NoValue;
+        public virtual bool HasPeriodValue(string period) => !BaseFundamentalDataProvider.IsNone(typeof(double), GetPeriodValue(period));
 
         /// <summary>
         /// Gets the value of the field for the requested period

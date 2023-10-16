@@ -18,6 +18,7 @@ using System.Linq;
 using NUnit.Framework;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Common.Data.Fundamental
 {
@@ -116,13 +117,13 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
             public double OneYear { get; set; } = NoValue;
             public double ThreeYears { get; set; } = NoValue;
             public double FiveYears { get; set; } = NoValue;
-            public override bool HasValue => OneYear != NoValue;
+            public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), OneYear);
             public override double Value
             {
                 get
                 {
                     var defaultValue = OneYear;
-                    if (defaultValue != NoValue)
+                    if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
                     {
                         return defaultValue;
                     }
@@ -152,7 +153,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
                 var result = new Dictionary<string, double>();
                 foreach (var kvp in new[] { new Tuple<string, double>("1Y", OneYear), new Tuple<string, double>("3M", ThreeMonths), new Tuple<string, double>("3Y", ThreeYears), new Tuple<string, double>("5Y", FiveYears) })
                 {
-                    if (kvp.Item2 != double.MinValue)
+                    if (!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                     {
                         result[kvp.Item1] = kvp.Item2;
                     }
