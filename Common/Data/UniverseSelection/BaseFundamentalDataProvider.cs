@@ -70,11 +70,11 @@ namespace QuantConnect.Data.UniverseSelection
         {
             if (typeof(T) == typeof(double))
             {
-                return (T)Convert.ChangeType(double.MinValue, typeof(T), CultureInfo.InvariantCulture);
+                return (T)Convert.ChangeType(double.NaN, typeof(T), CultureInfo.InvariantCulture);
             }
             else if (typeof(T) == typeof(decimal))
             {
-                return (T)Convert.ChangeType(-999999999999m, typeof(T), CultureInfo.InvariantCulture);
+                return (T)Convert.ChangeType(decimal.Zero, typeof(T), CultureInfo.InvariantCulture);
             }
             return default;
         }
@@ -93,11 +93,11 @@ namespace QuantConnect.Data.UniverseSelection
         {
             if (type == typeof(double))
             {
-                return double.MinValue == (double)value;
+                return ((double)value).IsNaNOrInfinity();
             }
             else if (type == typeof(decimal))
             {
-                return -999999999999m == (decimal)value;
+                return decimal.Zero == (decimal)value;
             }
             return false;
         }
