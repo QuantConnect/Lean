@@ -13,18 +13,19 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using Python.Runtime;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.Market;
+using Python.Runtime;
+using NUnit.Framework;
 using QuantConnect.Logging;
 using QuantConnect.Research;
 using QuantConnect.Securities;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Tests.Common.Data.Fundamental;
 
 namespace QuantConnect.Tests.Research
 {
@@ -45,6 +46,8 @@ namespace QuantConnect.Tests.Research
 
             SymbolCache.Clear();
             MarketHoursDatabase.Reset();
+
+            FundamentalService.Initialize(TestGlobals.DataProvider, new NullFundamentalDataProvider(), false);
 
             // Using a date that we have data for in the repo
             _startDate = new DateTime(2014, 3, 31);
