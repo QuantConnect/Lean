@@ -33,12 +33,13 @@ namespace QuantConnect.Brokerages
         private readonly string _webSocketUrl;
         private readonly int _maximumSymbolsPerWebSocket;
         private readonly int _maximumWebSocketConnections;
-        private readonly Func<WebSocketClientWrapper> _webSocketFactory;
+        private readonly Func<Symbol,WebSocketClientWrapper> _webSocketFactory;
         private readonly Func<IWebSocket, Symbol, bool> _subscribeFunc;
         private readonly Func<IWebSocket, Symbol, bool> _unsubscribeFunc;
         private readonly Action<WebSocketMessage> _messageHandler;
         private readonly RateGate _connectionRateLimiter;
         private readonly System.Timers.Timer _reconnectTimer;
+        private readonly Dictionary<Symbol, int> _symbolWeights;
 
         private const int ConnectionTimeout = 30000;
 
@@ -63,7 +64,7 @@ namespace QuantConnect.Brokerages
             int maximumSymbolsPerWebSocket,
             int maximumWebSocketConnections,
             Dictionary<Symbol, int> symbolWeights,
-            Func<WebSocketClientWrapper> webSocketFactory,
+            Func<Symbol, WebSocketClientWrapper> webSocketFactory,
             Func<IWebSocket, Symbol, bool> subscribeFunc,
             Func<IWebSocket, Symbol, bool> unsubscribeFunc,
             Action<WebSocketMessage> messageHandler,
@@ -78,17 +79,7 @@ namespace QuantConnect.Brokerages
             _unsubscribeFunc = unsubscribeFunc;
             _messageHandler = messageHandler;
             _connectionRateLimiter = connectionRateLimiter;
-
-            if (_maximumWebSocketConnections > 0)
-            {
-                // symbol weighting enabled, create all websocket instances
-                for (var i = 0; i < _maximumWebSocketConnections; i++)
-                {
-                    var webSocket = CreateWebSocket();
-
-                    _webSocketEntries.Add(new BrokerageMultiWebSocketEntry(symbolWeights, webSocket));
-                }
-            }
+            _symbolWeights = symbolWeights;
 
             // Some exchanges (e.g. Binance) require a daily restart for websocket connections
             if (webSocketConnectionDuration != TimeSpan.Zero)
@@ -123,6 +114,36 @@ namespace QuantConnect.Brokerages
 
                 Log.Trace($"BrokerageMultiWebSocketSubscriptionManager(): WebSocket connections will be restarted every: {webSocketConnectionDuration}");
             }
+        }
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BrokerageMultiWebSocketSubscriptionManager"/> class
+        /// </summary>
+        /// <param name="webSocketUrl">The URL for websocket connections</param>
+        /// <param name="maximumSymbolsPerWebSocket">The maximum number of symbols per websocket connection</param>
+        /// <param name="maximumWebSocketConnections">The maximum number of websocket connections allowed (if zero, symbol weighting is disabled)</param>
+        /// <param name="symbolWeights">A dictionary for the symbol weights</param>
+        /// <param name="webSocketFactory">A function which returns a new websocket instance</param>
+        /// <param name="subscribeFunc">A function which subscribes a symbol</param>
+        /// <param name="unsubscribeFunc">A function which unsubscribes a symbol</param>
+        /// <param name="messageHandler">The websocket message handler</param>
+        /// <param name="webSocketConnectionDuration">The maximum duration of the websocket connection, TimeSpan.Zero for no duration limit</param>
+        /// <param name="connectionRateLimiter">The rate limiter for creating new websocket connections</param>
+        public BrokerageMultiWebSocketSubscriptionManager(
+            string webSocketUrl,
+            int maximumSymbolsPerWebSocket,
+            int maximumWebSocketConnections,
+            Dictionary<Symbol, int> symbolWeights,
+            Func<WebSocketClientWrapper> webSocketFactory,
+            Func<IWebSocket, Symbol, bool> subscribeFunc,
+            Func<IWebSocket, Symbol, bool> unsubscribeFunc,
+            Action<WebSocketMessage> messageHandler,
+            TimeSpan webSocketConnectionDuration,
+            RateGate connectionRateLimiter = null)
+            : this(webSocketUrl, maximumSymbolsPerWebSocket, maximumWebSocketConnections, symbolWeights, (_) => webSocketFactory(),
+                  subscribeFunc, unsubscribeFunc, messageHandler, webSocketConnectionDuration, connectionRateLimiter)
+        {
         }
 
         /// <summary>
@@ -197,7 +218,7 @@ namespace QuantConnect.Brokerages
             }
         }
 
-        protected virtual BrokerageMultiWebSocketEntry GetWebSocketEntryBySymbol(Symbol symbol)
+        private BrokerageMultiWebSocketEntry GetWebSocketEntryBySymbol(Symbol symbol)
         {
             lock (_locker)
             {
@@ -211,36 +232,64 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Checks whether or not the websocket entry is full
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual bool IsWebSocketEntryFull(BrokerageMultiWebSocketEntry entry)
+        {
+            return entry.SymbolCount >= _maximumSymbolsPerWebSocket;
+        }
+
+        /// <summary>
+        /// Checks whether or not the symbol can be added to the websocket entry
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual bool IsWebSocketEntryForSymbol(BrokerageMultiWebSocketEntry entry, Symbol symbol)
+        {
+            // All websockets are the same in this implementation, so any entry will do
+            return true;
+        }
+
+        /// <summary>
         /// Adds a symbol to an existing or new websocket connection
         /// </summary>
-        protected virtual IWebSocket GetWebSocketForSymbol(Symbol symbol)
+        private IWebSocket GetWebSocketForSymbol(Symbol symbol)
         {
             BrokerageMultiWebSocketEntry entry;
 
             lock (_locker)
             {
-                if (_webSocketEntries.All(x => x.SymbolCount >= _maximumSymbolsPerWebSocket))
+                var entries = _webSocketEntries.Where(entry => IsWebSocketEntryForSymbol(entry, symbol) && !IsWebSocketEntryFull(entry)).ToList();
+                if (entries.Count == 0)
                 {
+                    Dictionary<Symbol, int> symbolWeights = null;
                     if (_maximumWebSocketConnections > 0)
                     {
-                        throw new NotSupportedException($"Maximum symbol count reached for the current configuration [MaxSymbolsPerWebSocket={_maximumSymbolsPerWebSocket}, MaxWebSocketConnections:{_maximumWebSocketConnections}]");
+                        if (_webSocketEntries.Count >= _maximumWebSocketConnections)
+                        {
+                            throw new NotSupportedException($"Maximum symbol count reached for the current configuration [MaxSymbolsPerWebSocket={_maximumSymbolsPerWebSocket}, MaxWebSocketConnections:{_maximumWebSocketConnections}]");
+                        }
+
+                        symbolWeights = _symbolWeights;
                     }
 
                     // symbol limit reached on all, create new websocket instance
-                    var webSocket = CreateWebSocket();
-
-                    _webSocketEntries.Add(new BrokerageMultiWebSocketEntry(webSocket));
+                    var webSocket = CreateWebSocket(symbol);
+                    entry = new BrokerageMultiWebSocketEntry(symbolWeights, webSocket);
+                    _webSocketEntries.Add(entry);
                 }
+                else
+                {
+                    // sort by weight ascending, taking into account the symbol limit per websocket
+                    entries.Sort((x, y) =>
+                        x.SymbolCount >= _maximumSymbolsPerWebSocket
+                        ? 1
+                        : y.SymbolCount >= _maximumSymbolsPerWebSocket
+                            ? -1
+                            : Math.Sign(x.TotalWeight - y.TotalWeight));
 
-                // sort by weight ascending, taking into account the symbol limit per websocket
-                _webSocketEntries.Sort((x, y) =>
-                    x.SymbolCount >= _maximumSymbolsPerWebSocket
-                    ? 1
-                    : y.SymbolCount >= _maximumSymbolsPerWebSocket
-                        ? -1
-                        : Math.Sign(x.TotalWeight - y.TotalWeight));
-
-                entry = _webSocketEntries.First();
+                    entry = entries.First();
+                }
             }
 
             if (!entry.WebSocket.IsOpen)
@@ -258,24 +307,29 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// When we create a websocket we will subscribe to it's events once and initialize it
         /// </summary>
+        /// <param name="symbol">The symbol waiting to be subscribed to the new websocket</param>
         /// <remarks>Note that the websocket is no connected yet <see cref="Connect(IWebSocket)"/></remarks>
-        private IWebSocket CreateWebSocket()
+        private IWebSocket CreateWebSocket(Symbol symbol)
         {
-            var webSocket = _webSocketFactory();
+            var webSocket = _webSocketFactory(symbol);
             webSocket.Open += OnOpen;
             webSocket.Message += EventHandler;
-            webSocket.Initialize(_webSocketUrl);
+
+            if (!string.IsNullOrEmpty(_webSocketUrl))
+            {
+                webSocket.Initialize(_webSocketUrl);
+            }
 
             return webSocket;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void EventHandler(object _, WebSocketMessage message)
+        private void EventHandler(object _, WebSocketMessage message)
         {
             _messageHandler(message);
         }
 
-        protected void Connect(IWebSocket webSocket)
+        private void Connect(IWebSocket webSocket)
         {
             var connectedEvent = new ManualResetEvent(false);
             EventHandler onOpenAction = (_, _) =>
@@ -307,12 +361,12 @@ namespace QuantConnect.Brokerages
             }
         }
 
-        protected void Disconnect(IWebSocket webSocket)
+        private void Disconnect(IWebSocket webSocket)
         {
             webSocket.Close();
         }
 
-        protected void OnOpen(object sender, EventArgs e)
+        private void OnOpen(object sender, EventArgs e)
         {
             var webSocket = (IWebSocket)sender;
 
