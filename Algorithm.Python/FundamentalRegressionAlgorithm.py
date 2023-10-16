@@ -72,7 +72,7 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
     # return a list of three fixed symbol objects
     def SelectionFunction(self, fundamental):
         # sort descending by daily dollar volume
-        sortedByDollarVolume = sorted([x for x in fundamental if x.Price > 1],
+        sortedByDollarVolume = sorted([x for x in fundamental if x.HasFundamentalData and x.Price > 1],
             key=lambda x: x.DollarVolume, reverse=True)
 
         # sort descending by P/E ratio

@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 
-namespace QuantConnect.Algorithm.CSharp.Benchmarks
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Demonstration of how to define a universe using the fundamental data
@@ -104,7 +104,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         {
             // select only symbols with fundamental data and sort descending by daily dollar volume
             var sortedByDollarVolume = fundamental
-                .Where(x => x.Price > 1)
+                .Where(x => x.Price > 1 && x.HasFundamentalData)
                 .OrderByDescending(x => x.DollarVolume);
 
             // sort descending by P/E ratio
