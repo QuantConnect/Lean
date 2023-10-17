@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Common.Data.Fundamental;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Research
 {
@@ -46,6 +47,8 @@ namespace QuantConnect.Tests.Research
 
             SymbolCache.Clear();
             MarketHoursDatabase.Reset();
+
+            Config.Set("fundamental-data-provider", "NullFundamentalDataProvider");
 
             // Using a date that we have data for in the repo
             _startDate = new DateTime(2014, 3, 31);
@@ -153,7 +156,6 @@ namespace QuantConnect.Tests.Research
         {
             using (Py.GIL())
             {
-                FundamentalService.Initialize(TestGlobals.DataProvider, new NullFundamentalDataProvider(), false);
                 var start = new DateTime(2023, 10, 10);
                 var symbol = Symbol.Create("AIG", SecurityType.Equity, Market.USA);
                 var testModule = _module.FundamentalHistoryTest();
