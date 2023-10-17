@@ -43,7 +43,8 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             Market.FTX,
             Market.FTXUS,
             Market.Kraken,
-            Market.BinanceUS
+            Market.BinanceUS,
+            Market.Bybit
         }.ToHashSet();
 
         private readonly DirectoryInfo _rawDataFolder;
