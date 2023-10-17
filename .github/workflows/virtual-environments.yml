@@ -35,7 +35,7 @@ jobs:
             # Run Python Package Tests
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests" --blame-hang-timeout 120seconds --blame-crash
             # Run Pomegranate & Neuralprophet Python Package Test
-            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.PomegranateTest|Neuralprophet" --blame-hang-timeout 120seconds --blame-crash
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.PomegranateTest|Neuralprophet|Finrl|AutoGluon" --blame-hang-timeout 120seconds --blame-crash
             # Run StableBaselines Python Package Test
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.StableBaselinesTest" --blame-hang-timeout 120seconds --blame-crash
             # Run AxPlatform Python Package Test
