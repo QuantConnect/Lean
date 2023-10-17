@@ -79,7 +79,7 @@ namespace QuantConnect.Indicators
         /// <param name="afStartLong">The starting acceleration factor for long positions</param>
         /// <param name="afIncrementLong">The increment value for the acceleration factor for long positions</param>
         /// <param name="afMaxLong">The maximum value for the acceleration factor for long positions</param>
-        public ParabolicStopAndReverseExtended( decimal sarStart = 0.0m, decimal offsetOnReverse = 0.0m, 
+        public ParabolicStopAndReverseExtended(decimal sarStart = 0.0m, decimal offsetOnReverse = 0.0m, 
             decimal afStartShort = 0.02m, decimal afIncrementShort = 0.02m, decimal afMaxShort = 0.2m, 
             decimal afStartLong = 0.02m, decimal afIncrementLong = 0.02m, decimal afMaxLong = 0.2m) 
             : this($"SAREXT({sarStart},{offsetOnReverse},{afStartShort},{afIncrementShort},{afMaxShort},{afStartLong},{afIncrementLong},{afMaxLong})", 
@@ -115,18 +115,17 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             // On first iteration we can’t produce an SAR value so we save the current bar and return zero
-            if (Samples == 1)
-            {
-                _previousBar = input;
+            if (Samples == 1){
 
+                 _previousBar = input;
                 // Makes sense to return _sarInit when its non-negative
                 if(_sarInit > 0)
                     return _sarInit; 
                 else if(_sarInit < 0)
-                    return Math.Abs(_sarInit);
-
-                // Otherwise use default
-                return input.Close;
+                    return Math.Abs(_sarInit); 
+            
+                // Otherwise, return default
+                return input.Close; 
             }
 
             // On second iteration we initiate the position the extreme point and the SAR
@@ -134,9 +133,6 @@ namespace QuantConnect.Indicators
             {
                 Init(input);
                 _previousBar = input;
-
-                // SAREX should be negative if in short position 
-                return _isLong ? _sar : -_sar;
             }
             if (_isLong)   
             {
@@ -177,9 +173,9 @@ namespace QuantConnect.Indicators
             
             // initialize extreme point 
             if (_isLong)
-                _ep = Math.Max(currentBar.High, _previousBar.High);
+                _ep = currentBar.High; //  Math.Max(currentBar.High, _previousBar.High);
             else
-                _ep = Math.Min(currentBar.Low, _previousBar.Low);
+                _ep = currentBar.Low; // Math.Min(currentBar.Low, _previousBar.Low);
         }
 
         /// <summary>
@@ -218,7 +214,6 @@ namespace QuantConnect.Indicators
                 if (_sar < currentBar.High)
                     _sar = currentBar.High;
             }
-
             // No switch
             else
             {

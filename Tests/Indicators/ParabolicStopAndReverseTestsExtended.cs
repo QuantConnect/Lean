@@ -32,5 +32,61 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "spy_sarext.txt";
 
         protected override string TestColumnName => "SAREXT"; 
+
+        [Test]
+        public void ComparesWithExternalDataWithParams1() 
+        {
+            var sarext = new ParabolicStopAndReverseExtended(sarStart : 0.0m, offsetOnReverse : 0.0m, 
+                afStartShort : 0.03m, afIncrementShort : 0.02m, afMaxShort : 0.4m, 
+                afStartLong : 0.02m, afIncrementLong : 0.01m, afMaxLong : 0.3m);
+            TestHelper.TestIndicator(
+                sarext,
+                TestFileName,
+                "SAREXT_PARAM1",
+                (ind, expected) => Assert.AreEqual(expected, (double)sarext.Current.Value, delta: 1e-4)
+            );
+        }
+        
+        [Test]
+        public void ComparesWithExternalDataWithParams2() 
+        {
+            var sarext = new ParabolicStopAndReverseExtended(sarStart : 100m, offsetOnReverse : 0.0m, 
+                afStartShort : 0.03m, afIncrementShort : 0.02m, afMaxShort : 0.4m, 
+                afStartLong : 0.02m, afIncrementLong : 0.01m, afMaxLong : 0.3m);
+            TestHelper.TestIndicator(
+                sarext,
+                TestFileName,
+                "SAREXT_PARAM2",
+                (ind, expected) => Assert.AreEqual(expected, (double)sarext.Current.Value, delta: 1e-4)
+            );
+        }
+
+        [Test]
+        public void ComparesWithExternalDataWithParams3() 
+        {
+            var sarext = new ParabolicStopAndReverseExtended(sarStart : -95m, offsetOnReverse : 0.0m, 
+                afStartShort : 0.03m, afIncrementShort : 0.02m, afMaxShort : 0.4m, 
+                afStartLong : 0.02m, afIncrementLong : 0.01m, afMaxLong : 0.3m);
+            TestHelper.TestIndicator(
+                sarext,
+                TestFileName,
+                "SAREXT_PARAM3",
+                (ind, expected) => Assert.AreEqual(expected, (double)sarext.Current.Value, delta: 1e-4)
+            );
+        }
+
+        [Test]
+        public void ComparesWithExternalDataWithParams4() 
+        {
+            var sarext = new ParabolicStopAndReverseExtended(sarStart : 100m, offsetOnReverse : 0.02m, 
+                afStartShort : 0.03m, afIncrementShort : 0.02m, afMaxShort : 0.4m, 
+                afStartLong : 0.02m, afIncrementLong : 0.01m, afMaxLong : 0.3m);
+            TestHelper.TestIndicator(
+                sarext,
+                TestFileName,
+                "SAREXT_PARAM4",
+                (ind, expected) => Assert.AreEqual(expected, (double)sarext.Current.Value, delta: 1e-4)
+            );
+        }
     }
 }
