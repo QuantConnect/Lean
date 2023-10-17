@@ -22,6 +22,13 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
     public class BaseFundamentalDataProviderTests
     {
         [Test]
+        public void NoValueNull()
+        {
+            Assert.IsTrue(BaseFundamentalDataProvider.IsNone(null));
+            Assert.IsTrue(BaseFundamentalDataProvider.IsNone(null, null));
+        }
+
+        [Test]
         public void NoValueDouble()
         {
             var noValue = BaseFundamentalDataProvider.GetDefault<double>();

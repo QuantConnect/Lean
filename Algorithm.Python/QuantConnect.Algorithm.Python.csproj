@@ -42,6 +42,7 @@
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.23" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="FundamentalUniverseSelectionAlgorithm.py" />
     <Content Include="AccumulativeInsightPortfolioRegressionAlgorithm.py" />
     <Content Include="CustomDataTypeHistoryAlgorithm.py" />
     <Content Include="CorrectConsolidatedBarTypeForTickTypesAlgorithm.py" />

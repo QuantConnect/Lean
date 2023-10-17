@@ -16,8 +16,12 @@
 
 namespace QuantConnect.Data.Fundamental
 {
+    /// <summary>
+    /// The fundamental property to access
+    /// </summary>
     public enum FundamentalProperty
     {
+#pragma warning disable CS1591, CA1707
         Market,
         DollarVolume,
         Volume,
@@ -3560,5 +3564,6 @@ namespace QuantConnect.Data.Fundamental
         AssetClassification_ValueScore,
         AssetClassification_NACE,
         AssetClassification_CANNAICS,
+#pragma warning restore CS1591, CA1707
     }
 }

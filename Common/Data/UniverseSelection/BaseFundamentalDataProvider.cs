@@ -83,7 +83,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// True if the given value is none
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNone(object value) => IsNone(value.GetType(), value);
+        public static bool IsNone(object value) => IsNone(value?.GetType(), value);
 
         /// <summary>
         /// True if the given value is none
@@ -91,7 +91,11 @@ namespace QuantConnect.Data.UniverseSelection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNone(Type type, object value)
         {
-            if (type == typeof(double))
+            if (type == null || value == null)
+            {
+                return true;
+            }
+            else if(type == typeof(double))
             {
                 return ((double)value).IsNaNOrInfinity();
             }

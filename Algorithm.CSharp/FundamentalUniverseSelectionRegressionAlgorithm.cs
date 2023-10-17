@@ -14,20 +14,18 @@
 */
 
 using System.Linq;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
+using QuantConnect.Data;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Demonstration of how to define a universe using the fundamental data
     /// </summary>
-    public class FundamentalUniverseSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FundamentalUniverseSelectionRegressionAlgorithm : FundamentalRegressionAlgorithm
     {
         private const int NumberOfSymbolsFundamental = 2;
 
@@ -96,54 +94,8 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
-        /// </summary>
-        public bool CanRunLocally { get; } = true;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate which languages this algorithm is written in.
-        /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
-
-        /// <summary>
-        /// Data Points count of all timeslices of algorithm
-        /// </summary>
-        public long DataPoints => 85867;
-
-        /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
-        /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Trades", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.223%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "-0.009%"},
-            {"Sharpe Ratio", "-6.313"},
-            {"Probabilistic Sharpe Ratio", "12.055%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.019"},
-            {"Beta", "0.027"},
-            {"Annual Standard Deviation", "0.004"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "1.749"},
-            {"Tracking Error", "0.095"},
-            {"Treynor Ratio", "-0.876"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$2200000000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.28%"},
-            {"OrderListHash", "34bb9933f9d242713c0ec14c4ee586b6"}
-        };
+        public override int AlgorithmHistoryDataPoints => 0;
     }
 }

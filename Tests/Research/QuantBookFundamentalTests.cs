@@ -47,8 +47,6 @@ namespace QuantConnect.Tests.Research
             SymbolCache.Clear();
             MarketHoursDatabase.Reset();
 
-            FundamentalService.Initialize(TestGlobals.DataProvider, new NullFundamentalDataProvider(), false);
-
             // Using a date that we have data for in the repo
             _startDate = new DateTime(2014, 3, 31);
             _endDate = new DateTime(2014, 3, 31);
@@ -155,6 +153,7 @@ namespace QuantConnect.Tests.Research
         {
             using (Py.GIL())
             {
+                FundamentalService.Initialize(TestGlobals.DataProvider, new NullFundamentalDataProvider(), false);
                 var start = new DateTime(2023, 10, 10);
                 var symbol = Symbol.Create("AIG", SecurityType.Equity, Market.USA);
                 var testModule = _module.FundamentalHistoryTest();
