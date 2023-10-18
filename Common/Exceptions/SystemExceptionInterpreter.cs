@@ -43,7 +43,7 @@ namespace QuantConnect.Exceptions
         /// <param name="exception">The exception to be interpreted</param>
         /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
-        public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
+        public virtual Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {
             var sanitized = new SanitizedException(exception.Message, exception.StackTrace);
 
