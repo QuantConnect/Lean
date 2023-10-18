@@ -184,13 +184,20 @@ namespace QuantConnect.Orders.Slippage
             _consolidator.DataConsolidated += OnDataConsolidated;
             algorithm.SubscriptionManager.AddConsolidator(symbol, _consolidator);
 
+            var configs = algorithm
+                .SubscriptionManager
+                .SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true);
+            var configToUse = configs.OrderBy(x => x.TickType).First();
+            var dataTimeZone = configToUse.DataTimeZone;
+
             var historyRequest = new HistoryRequest(algorithm.UtcTime - TimeSpan.FromDays(370),
                                                     algorithm.UtcTime,
                                                     typeof(TradeBar),
                                                     symbol,
                                                     Resolution.Daily,
                                                     algorithm.Securities[symbol].Exchange.Hours,
-                                                    algorithm.Securities[symbol].Exchange.TimeZone,
+                                                    dataTimeZone,
                                                     Resolution.Daily,
                                                     false,
                                                     false,
