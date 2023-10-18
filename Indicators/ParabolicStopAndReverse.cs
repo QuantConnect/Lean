@@ -126,7 +126,6 @@ namespace QuantConnect.Indicators
             // init position
             _isLong = currentBar.Close >= _previousBar.Close;
 
-
             // init sar and Extreme price
             if (_isLong)
             {

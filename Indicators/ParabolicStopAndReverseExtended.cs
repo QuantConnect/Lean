@@ -60,10 +60,10 @@ namespace QuantConnect.Indicators
         {
             _sarInit = sarStart;
             _offsetOnReverse = offsetOnReverse;  
-            _afInitShort = afStartShort;
+            _afShort = _afInitShort = afStartShort;
             _afIncrementShort = afIncrementShort;
             _afMaxShort  = afMaxShort; 
-            _afInitLong = afStartLong;
+            _afLong = _afInitLong = afStartLong;
             _afIncrementLong = afIncrementLong;
             _afMaxLong = afMaxLong; 
         }
@@ -127,13 +127,12 @@ namespace QuantConnect.Indicators
                 // Otherwise, return default
                 return input.Close; 
             }
-
             // On second iteration we initiate the position the extreme point and the SAR
             if (Samples == 2)
             {
                 Init(input);
-                _previousBar = input;
-            }
+                _previousBar = input; 
+            } 
             if (_isLong)   
             {
                 HandleLongPosition(input);
@@ -142,10 +141,8 @@ namespace QuantConnect.Indicators
             {
                 HandleShortPosition(input);
             }
-
-            _previousBar = input;
-
-            return _outputSar;
+            _previousBar = input; 
+            return _outputSar; 
         }
 
         /// <summary>
@@ -167,15 +164,28 @@ namespace QuantConnect.Indicators
            // same set up as standard PSAR when _sarInit = 0 
            else
            {
-                _isLong = currentBar.Close >= _previousBar.Close; 
+                _isLong = !HasNegativeDM(currentBar); 
+                //_isLong = currentBar.Close >= _previousBar.Close; 
                 _sar = _isLong ? _previousBar.Low : _previousBar.High;
            }
-            
+
             // initialize extreme point 
-            if (_isLong)
-                _ep = currentBar.High; //  Math.Max(currentBar.High, _previousBar.High);
-            else
-                _ep = currentBar.Low; // Math.Min(currentBar.Low, _previousBar.Low);
+            if(_isLong) 
+                _ep =  currentBar.High; 
+            else  
+                _ep =  currentBar.Low;
+
+        }
+
+        /// <summary>
+        /// Returns true if DM- > 0 between today and yesterday's tradebar (false otherwise)
+        /// </summary>
+        private bool HasNegativeDM(IBaseDataBar currentBar){
+            if(currentBar.Low >= _previousBar.Low)
+                return false;
+            decimal diff1 = currentBar.High - _previousBar.High; 
+            decimal diff2 = _previousBar.Low - currentBar.Low; 
+            return diff1 < diff2; 
         }
 
         /// <summary>
@@ -276,7 +286,6 @@ namespace QuantConnect.Indicators
                 if (_sar > currentBar.Low)
                     _sar = currentBar.Low;
             }
-
             //No switch
             else
             {
@@ -294,7 +303,6 @@ namespace QuantConnect.Indicators
 
                 // Calculate the new SAR
                 _sar = _sar + _afShort * (_ep - _sar);
-
                 // Make sure the new SAR is within yesterday's and today's range.
                 if (_sar < _previousBar.High)
                     _sar = _previousBar.High;
