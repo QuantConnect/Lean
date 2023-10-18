@@ -41,12 +41,12 @@ namespace QuantConnect.Orders.Slippage
     public class MarketImpactSlippageModel : ISlippageModel
     {
         private readonly IAlgorithm _algorithm;
+        private readonly bool _nonNegative;
         private readonly double _alpha;
         private readonly double _beta;
         private readonly double _gamma;
         private readonly double _eta;
         private readonly double _delta;
-        private readonly bool _nonNegOnly;
         private readonly Dictionary<Symbol, SymbolData> _symbolDataPerSymbol = new();
         private readonly Random _random;
 
@@ -54,16 +54,16 @@ namespace QuantConnect.Orders.Slippage
         /// Instantiate a new instance of MarketImpactSlippageModel
         /// </summary>
         /// <param name="algorithm">IAlgorithm instance</param>
+        /// <param name="randomSeed">Random seed for generating gaussian noise</param>
         /// <param name="alpha">Exponent of the permanent impact function</param>
         /// <param name="beta">Exponent of the temporary impact function</param>
         /// <param name="gamma">Coefficient of the permanent impact function</param>
         /// <param name="eta">Coefficient of the temporary impact function</param>
         /// <param name="delta">Liquidity scaling factor for permanent impact</param>
-        /// <param name="nonNegOnly">Indicator whether only non-negative slippage allowed</param>
-        /// <param name="randomSeed">Random seed for generating gaussian noise</param>
-        public MarketImpactSlippageModel(IAlgorithm algorithm, double alpha = 0.891d, double beta = 0.600d,
-                                         double gamma = 0.314d, double eta = 0.142d, double delta = 0.267d,
-                                         bool nonNegOnly = true, int randomSeed = 50)
+        /// <param name="nonNegative">Indicator whether only non-negative slippage allowed</param>
+        public MarketImpactSlippageModel(IAlgorithm algorithm, bool nonNegative = true, double alpha = 0.891d,
+                                         double beta = 0.600d, double gamma = 0.314d, double eta = 0.142d, 
+                                         double delta = 0.267d, int randomSeed = 50)
         {
             _algorithm = algorithm;
             _alpha = alpha;
@@ -71,7 +71,7 @@ namespace QuantConnect.Orders.Slippage
             _gamma = gamma;
             _eta = eta;
             _delta = delta;
-            _nonNegOnly = nonNegOnly;
+            _nonNegative = nonNegative;
             _random = new(randomSeed);
         }
 
@@ -86,7 +86,7 @@ namespace QuantConnect.Orders.Slippage
                 _symbolDataPerSymbol.Add(asset.Symbol, symbolData);
             }
 
-            if (symbolData.AvgVolume == 0d)
+            if (symbolData.AverageVolume == 0d)
             {
                 return 0m;
             }
@@ -96,20 +96,20 @@ namespace QuantConnect.Orders.Slippage
             // expected valid time for impact (+ half an hour)
             var timePost = time + 1d / 13d;
             // normalized volume of execution
-            var nu = (double)order.AbsoluteQuantity / time / symbolData.AvgVolume;
+            var nu = (double)order.AbsoluteQuantity / time / symbolData.AverageVolume;
             // liquidity adjustment for temporary market impact, if any
             var liquidityAdjustment = asset.Fundamentals != null ?
-                                      Math.Pow(asset.Fundamentals.CompanyProfile.SharesOutstanding / symbolData.AvgVolume, _delta) :
+                                      Math.Pow(asset.Fundamentals.CompanyProfile.SharesOutstanding / symbolData.AverageVolume, _delta) :
                                       1d;
             // noise adjustment factor
             var noise = symbolData.Sigma * Math.Sqrt(timePost);
 
-            // temporary market impact
-            var permImpact = symbolData.Sigma * time * G(nu) * liquidityAdjustment + SampleGaussian() * noise;
             // permanent market impact
-            var tempImpact = symbolData.Sigma * H(nu) + SampleGaussian() * noise;
+            var permanentImpact = symbolData.Sigma * time * G(nu) * liquidityAdjustment + SampleGaussian() * noise;
+            // temporary market impact
+            var temporaryImpact = symbolData.Sigma * H(nu) + SampleGaussian() * noise;
             // realized market impact
-            var realizedImpact = tempImpact + permImpact * 0.5d;
+            var realizedImpact = temporaryImpact + permanentImpact * 0.5d;
 
             // estimate the slippage by temporary impact
             return SlippageFromImpactEstimation(realizedImpact);
@@ -118,21 +118,21 @@ namespace QuantConnect.Orders.Slippage
         /// <summary>
         /// The permanent market impact function
         /// </summary>
-        /// <param name="absOrderQuantity">The absolute, normalized order quantity</param>
+        /// <param name="absoluteOrderQuantity">The absolute, normalized order quantity</param>
         /// <return>Unadjusted permanent market impact factor</return>
-        private double G(double absOrderQuantity)
+        private double G(double absoluteOrderQuantity)
         {
-            return _gamma * Math.Pow(absOrderQuantity, _alpha);
+            return _gamma * Math.Pow(absoluteOrderQuantity, _alpha);
         }
 
         /// <summary>
         /// The temporary market impact function
         /// </summary>
-        /// <param name="absOrderQuantity">The absolute, normalized order quantity</param>
+        /// <param name="absoluteOrderQuantity">The absolute, normalized order quantity</param>
         /// <return>Unadjusted temporary market impact factor</return>
-        private double H(double absOrderQuantity)
+        private double H(double absoluteOrderQuantity)
         {
-            return _eta * Math.Pow(absOrderQuantity, _beta);
+            return _eta * Math.Pow(absoluteOrderQuantity, _beta);
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace QuantConnect.Orders.Slippage
             // The percentage of impact that an order is averagely being affected is random from 0.0 to 1.0
             var ultimateSlippage = (impact * _random.NextDouble()).SafeDecimalCast();
 
-            if (_nonNegOnly)
+            if (_nonNegative)
             {
                 return Math.Max(0m, ultimateSlippage);
             }
@@ -153,13 +153,13 @@ namespace QuantConnect.Orders.Slippage
             return ultimateSlippage;
         }
 
-        private double SampleGaussian(double mean = 0d, double stddev = 1d)
+        private double SampleGaussian(double location = 0d, double scale = 1d)
         {
-            var x1 = 1 - _random.NextDouble();
-            var x2 = 1 - _random.NextDouble();
+            var randomVariable1 = 1 - _random.NextDouble();
+            var randomVariable2 = 1 - _random.NextDouble();
 
-            var y1 = Math.Sqrt(-2.0 * Math.Log(x1)) * Math.Cos(2.0 * Math.PI * x2);
-            return y1 * stddev + mean;
+            var deviation = Math.Sqrt(-2.0 * Math.Log(randomVariable1)) * Math.Cos(2.0 * Math.PI * randomVariable2);
+            return deviation * scale + location;
         }
     }
 
@@ -173,7 +173,7 @@ namespace QuantConnect.Orders.Slippage
 
         public double Sigma { get; internal set; }
 
-        public double AvgVolume { get; internal set; }
+        public double AverageVolume { get; internal set; }
 
         public SymbolData(IAlgorithm algorithm, Symbol symbol)
         {
@@ -190,13 +190,13 @@ namespace QuantConnect.Orders.Slippage
                                                     symbol,
                                                     Resolution.Daily,
                                                     algorithm.Securities[symbol].Exchange.Hours,
-                                                    algorithm.TimeZone,
+                                                    algorithm.Securities[symbol].Exchange.TimeZone,
                                                     Resolution.Daily,
                                                     false,
                                                     false,
                                                     DataNormalizationMode.Adjusted,
                                                     TickType.Trade);
-            foreach (var bar in algorithm.HistoryProvider.GetHistory(new List<HistoryRequest> { historyRequest }, TimeZones.NewYork))
+            foreach (var bar in algorithm.HistoryProvider.GetHistory(new List<HistoryRequest> { historyRequest }, algorithm.TimeZone))
             {
                 _consolidator.Update(bar.Bars[symbol]);
             }
@@ -223,7 +223,7 @@ namespace QuantConnect.Orders.Slippage
 
             var variance = rocp.Variance();
             Sigma = Math.Sqrt(variance);
-            AvgVolume = (double)_volumes.ToArray().Average();
+            AverageVolume = (double)_volumes.ToArray().Average();
         }
 
         public void Dispose()
