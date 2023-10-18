@@ -191,6 +191,15 @@ namespace QuantConnect.Lean.Engine.Setup
                         algorithm.SetEndDate(job.PeriodFinish.Value);
                     }
 
+                    if(job.MaxPeriodFinish.HasValue)
+                    {
+                        if(algorithm.EndDate > job.MaxPeriodFinish.Value)
+                        {
+                            Log.Trace($"BacktestingSetupHandler.Setup(): setting end date to {job.MaxPeriodFinish.Value:yyyyMMdd}");
+                            algorithm.SetEndDate(job.MaxPeriodFinish.Value);
+                        }
+                    }
+
                     // after we call initialize
                     BaseSetupHandler.LoadBacktestJobCashAmount(algorithm, job);
 
