@@ -46,6 +46,7 @@ namespace QuantConnect.Orders.Slippage
         private readonly double _gamma;
         private readonly double _eta;
         private readonly double _delta;
+        private readonly bool _nonNegOnly;
         private readonly Dictionary<Symbol, SymbolData> _symbolDataPerSymbol = new();
         private readonly Random _random;
 
@@ -58,10 +59,11 @@ namespace QuantConnect.Orders.Slippage
         /// <param name="gamma">Coefficient of the permanent impact function</param>
         /// <param name="eta">Coefficient of the temporary impact function</param>
         /// <param name="delta">Liquidity scaling factor for permanent impact</param>
+        /// <param name="nonNegOnly">Indicator whether only non-negative slippage allowed</param>
         /// <param name="randomSeed">Random seed for generating gaussian noise</param>
         public MarketImpactSlippageModel(IAlgorithm algorithm, double alpha = 0.891d, double beta = 0.600d,
                                          double gamma = 0.314d, double eta = 0.142d, double delta = 0.267d,
-                                         int randomSeed = 50)
+                                         bool nonNegOnly = true, int randomSeed = 50)
         {
             _algorithm = algorithm;
             _alpha = alpha;
@@ -69,6 +71,7 @@ namespace QuantConnect.Orders.Slippage
             _gamma = gamma;
             _eta = eta;
             _delta = delta;
+            _nonNegOnly = nonNegOnly;
             _random = new(randomSeed);
         }
 
@@ -140,7 +143,14 @@ namespace QuantConnect.Orders.Slippage
         private decimal SlippageFromImpactEstimation(double impact)
         {
             // The percentage of impact that an order is averagely being affected is random from 0.0 to 1.0
-            return (impact * _random.NextDouble()).SafeDecimalCast();
+            var ultimateSlippage = (impact * _random.NextDouble()).SafeDecimalCast();
+
+            if (_nonNegOnly)
+            {
+                return Math.Max(0m, ultimateSlippage);
+            }
+
+            return ultimateSlippage;
         }
 
         private double SampleGaussian(double mean = 0d, double stddev = 1d)

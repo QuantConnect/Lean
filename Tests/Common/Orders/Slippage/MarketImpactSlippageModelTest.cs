@@ -89,5 +89,22 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             // We expect same size order on liquid asset has less slippage than illquid asset
             Assert.Less(liquidSlippage, illquidSlippage);
         }
+
+        // Order quantity large enough to create significant market impact
+        [TestCase(1)]
+        [TestCase(1000)]
+        [TestCase(1000000000)]
+        public void NonNegativeSlippageTests(decimal orderQuantity)
+        {
+            var liquidOrder = new MarketOrder(_liquidEquity.Symbol, orderQuantity, new DateTime(2013, 10, 11, 14, 50, 0));
+            var liquidSlippage = _slippageModel.GetSlippageApproximation(_liquidEquity, liquidOrder);
+
+            Assert.GreaterOrEqual(liquidSlippage, 0m);
+
+            var illquidOrder = new MarketOrder(_illiquidEquity.Symbol, orderQuantity, new DateTime(2013, 10, 11, 14, 50, 0));
+            var illquidSlippage = _slippageModel.GetSlippageApproximation(_illiquidEquity, illquidOrder);
+
+            Assert.GreaterOrEqual(illquidSlippage, 0m);
+        }
     }
 }
