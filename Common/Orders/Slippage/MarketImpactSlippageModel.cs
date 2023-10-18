@@ -31,7 +31,8 @@ namespace QuantConnect.Orders.Slippage
     /// i.e. consume the volume listed in the order book
     /// </summary>
     /// <remark>Almgren, R., Thum, C., Hauptmann, E., & Li, H. (2005). 
-    /// Direct estimation of equity market impact. Risk, 18(7), 58-62.</remark>
+    /// Direct estimation of equity market impact. Risk, 18(7), 58-62.
+    /// Available from: https://www.ram-ai.com/sites/default/files/2022-06/costestim.pdf</remark>
     /// <remark>The default parameters are calibrated around 2 decades ago,
     /// the trading time effect is not accounted (volume near market open/close is larger),
     /// the market regime is not taken into account,
@@ -39,26 +40,28 @@ namespace QuantConnect.Orders.Slippage
     /// so it is recommend to recalibrate with reference to the original paper.</remark>
     public class MarketImpactSlippageModel : ISlippageModel
     {
-        private IAlgorithm _algorithm;
+        private readonly IAlgorithm _algorithm;
         private readonly double _alpha;
         private readonly double _beta;
         private readonly double _gamma;
         private readonly double _eta;
         private readonly double _delta;
-        private Dictionary<Symbol, SymbolData> _symbolDataPerSymbol = new();
-        private Random _random = new(50);
+        private readonly Dictionary<Symbol, SymbolData> _symbolDataPerSymbol = new();
+        private readonly Random _random;
 
         /// <summary>
         /// Instantiate a new instance of MarketImpactSlippageModel
         /// </summary>
         /// <param name="algorithm">IAlgorithm instance</param>
-        /// <param name="alpha">exponent of the permanent impact function</param>
-        /// <param name="beta">exponent of the temporary impact function</param>
-        /// <param name="gamma">coefficient of the permanent impact function</param>
-        /// <param name="eta">coefficient of the temporary impact functio</param>
-        /// <param name="delta">the liquidity scaling factor for permanent impact</param>
+        /// <param name="alpha">Exponent of the permanent impact function</param>
+        /// <param name="beta">Exponent of the temporary impact function</param>
+        /// <param name="gamma">Coefficient of the permanent impact function</param>
+        /// <param name="eta">Coefficient of the temporary impact function</param>
+        /// <param name="delta">Liquidity scaling factor for permanent impact</param>
+        /// <param name="randomSeed">Random seed for generating gaussian noise</param>
         public MarketImpactSlippageModel(IAlgorithm algorithm, double alpha = 0.891d, double beta = 0.600d,
-                                         double gamma = 0.314d, double eta = 0.142d, double delta = 0.267d)
+                                         double gamma = 0.314d, double eta = 0.142d, double delta = 0.267d,
+                                         int randomSeed = 50)
         {
             _algorithm = algorithm;
             _alpha = alpha;
@@ -66,6 +69,7 @@ namespace QuantConnect.Orders.Slippage
             _gamma = gamma;
             _eta = eta;
             _delta = delta;
+            _random = new(randomSeed);
         }
 
         /// <summary>
@@ -75,12 +79,17 @@ namespace QuantConnect.Orders.Slippage
         {
             if (!_symbolDataPerSymbol.TryGetValue(asset.Symbol, out var symbolData))
             {
-                _symbolDataPerSymbol.Add(asset.Symbol, new SymbolData(_algorithm, asset.Symbol));
-                symbolData = _symbolDataPerSymbol[asset.Symbol];
+                symbolData = new SymbolData(_algorithm, asset.Symbol);
+                _symbolDataPerSymbol.Add(asset.Symbol, symbolData);
+            }
+
+            if (symbolData.AvgVolume == 0d)
+            {
+                return 0m;
             }
 
             // time taken for execution, we add 700ms to mimic time slippage of filling (convert to by trading day)
-            var time = ((TimeSpan)(_algorithm.UtcTime - order.CreatedTime + TimeSpan.FromMilliseconds(700))).TotalDays * 24d / 6.5d;
+            var time = (_algorithm.UtcTime - order.CreatedTime.AddMilliseconds(700)).TotalDays * 24d / 6.5d;
             // expected valid time for impact (+ half an hour)
             var timePost = time + 1d / 13d;
             // normalized volume of execution
@@ -93,11 +102,11 @@ namespace QuantConnect.Orders.Slippage
             var noise = symbolData.Sigma * Math.Sqrt(timePost);
 
             // temporary market impact
-            var permImpact = symbolData.Sigma * time * G(nu) * liquidityAdjustment + SampleGaussian(_random) * noise;
+            var permImpact = symbolData.Sigma * time * G(nu) * liquidityAdjustment + SampleGaussian() * noise;
             // permanent market impact
-            var tempImpact = symbolData.Sigma * H(nu) + SampleGaussian(_random) * noise + permImpact * 0.5d;
+            var tempImpact = symbolData.Sigma * H(nu) + SampleGaussian() * noise;
             // realized market impact
-            var realizedImpact = tempImpact + permImpact;
+            var realizedImpact = tempImpact + permImpact * 0.5d;
 
             // estimate the slippage by temporary impact
             return SlippageFromImpactEstimation(realizedImpact);
@@ -108,9 +117,9 @@ namespace QuantConnect.Orders.Slippage
         /// </summary>
         /// <param name="absOrderQuantity">The absolute, normalized order quantity</param>
         /// <return>Unadjusted permanent market impact factor</return>
-        protected double G(double absOrderQuantity)
+        private double G(double absOrderQuantity)
         {
-            return _gamma * Math.Pow((double)absOrderQuantity, _alpha);
+            return _gamma * Math.Pow(absOrderQuantity, _alpha);
         }
 
         /// <summary>
@@ -118,41 +127,39 @@ namespace QuantConnect.Orders.Slippage
         /// </summary>
         /// <param name="absOrderQuantity">The absolute, normalized order quantity</param>
         /// <return>Unadjusted temporary market impact factor</return>
-        protected double H(double absOrderQuantity)
+        private double H(double absOrderQuantity)
         {
-            return _eta * Math.Pow((double)absOrderQuantity, _beta);
+            return _eta * Math.Pow(absOrderQuantity, _beta);
         }
 
         /// <summary>
-        /// The temporary market impact function
+        /// Estimate the slippage size from impact
         /// </summary>
-        /// <param name="tempImpact">The temporary market impact</param>
+        /// <param name="impact">The market impact of the order</param>
         /// <return>Slippage estimation</return>
-        protected virtual decimal SlippageFromImpactEstimation(double tempImpact)
+        private decimal SlippageFromImpactEstimation(double impact)
         {
-            // We assume an exponential distribution on the order book
-            // the order with high volume of "no slippage/impact" zone as 0, mid point of max slippage as infinity
-            // we use lambda=2.5 as parameter, so the average slippage will be (1 - 1/2.5) of the impact
-            return Convert.ToDecimal(tempImpact) * 0.6m;
+            // The percentage of impact that an order is averagely being affected is random from 0.0 to 1.0
+            return (impact * _random.NextDouble()).SafeDecimalCast();
         }
 
-        private double SampleGaussian(Random random, double mean = 0d, double stddev = 1d)
+        private double SampleGaussian(double mean = 0d, double stddev = 1d)
         {
-            double x1 = 1 - random.NextDouble();
-            double x2 = 1 - random.NextDouble();
+            var x1 = 1 - _random.NextDouble();
+            var x2 = 1 - _random.NextDouble();
 
-            double y1 = Math.Sqrt(-2.0 * Math.Log(x1)) * Math.Cos(2.0 * Math.PI * x2);
+            var y1 = Math.Sqrt(-2.0 * Math.Log(x1)) * Math.Cos(2.0 * Math.PI * x2);
             return y1 * stddev + mean;
         }
     }
 
     internal class SymbolData
     {
-        private IAlgorithm _algorithm;
-        private Symbol _symbol;
-        private TradeBarConsolidator _consolidator;
-        private RollingWindow<decimal> _volumes = new(10);
-        private RollingWindow<decimal> _prices = new(252);
+        private readonly IAlgorithm _algorithm;
+        private readonly Symbol _symbol;
+        private readonly TradeBarConsolidator _consolidator;
+        private readonly RollingWindow<decimal> _volumes = new(10);
+        private readonly RollingWindow<decimal> _prices = new(252);
 
         public double Sigma { get; internal set; }
 
