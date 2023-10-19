@@ -101,7 +101,6 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.True(exception.Message.Contains("Value cannot be null. (Parameter 'key')", StringComparison.InvariantCulture));
             Assert.True(exception.Message.Contains("at dotnet_error", StringComparison.InvariantCulture));
             Assert.True(exception.Message.Contains("self.MarketOrder(None", StringComparison.InvariantCulture));
-            Assert.True(exception.Message.Contains("self.MarketOrder(None", StringComparison.InvariantCulture));
             Assert.True(exception.Message.Contains($"in {_pythonModuleName}.py: line ", StringComparison.InvariantCulture));
         }
 
