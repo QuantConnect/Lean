@@ -129,7 +129,7 @@ namespace QuantConnect.Indicators
             // init sar and Extreme price
             if (_isLong)
             {
-                _ep = Math.Max(currentBar.High, _previousBar.High);
+                _ep = Math.Min(currentBar.High, _previousBar.High);
                 _sar = _previousBar.Low;
             }
             else
