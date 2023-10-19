@@ -27,14 +27,14 @@ namespace QuantConnect.Exceptions
         /// <summary>
         /// Determines the order that an instance of this class should be called
         /// </summary>
-        public virtual int Order => int.MaxValue - 1;
+        public override int Order => int.MaxValue - 1;
 
         /// <summary>
         /// Determines if this interpreter should be applied to the specified exception. f
         /// </summary>
         /// <param name="exception">The exception to check</param>
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
-        public virtual bool CanInterpret(Exception exception) => exception?.GetType() == typeof(ClrBubbledException);
+        public override bool CanInterpret(Exception exception) => exception?.GetType() == typeof(ClrBubbledException);
 
         /// <summary>
         /// Interprets the specified exception into a new exception
