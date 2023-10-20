@@ -826,7 +826,9 @@ from AlgorithmImports import *
 def Test(slice):
     slice.clear()").GetAttr("Test");
 
-                Assert.Throws<InvalidOperationException>(() => test(GetPythonSlice()), "Slice is read-only: cannot clear the collection");
+                Assert.That(() => test(GetPythonSlice()),
+                    Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<InvalidOperationException>(),
+                    "Slice is read-only: cannot clear the collection");
             }
         }
 
@@ -842,7 +844,9 @@ from AlgorithmImports import *
 def Test(slice):
     slice.popitem()").GetAttr("Test");
 
-                Assert.Throws<NotSupportedException>(() => test(GetPythonSlice()), "Slice is read-only: cannot pop an item from the collection");
+                Assert.That(() => test(GetPythonSlice()),
+                    Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<NotSupportedException>(),
+                    $"Slice is read-only: cannot pop the value for {Symbols.SPY} from the collection");
             }
         }
 
@@ -858,7 +862,9 @@ from AlgorithmImports import *
 def Test(slice, symbol):
     slice.pop(symbol)").GetAttr("Test");
 
-                Assert.Throws<InvalidOperationException>(() => test(GetPythonSlice(), Symbols.SPY), $"Slice is read-only: cannot pop the value for {Symbols.SPY} from the collection");
+                Assert.That(() => test(GetPythonSlice(), Symbols.SPY),
+                    Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<InvalidOperationException>(),
+                    $"Slice is read-only: cannot pop the value for {Symbols.SPY} from the collection");
             }
         }
 
@@ -874,7 +880,9 @@ from AlgorithmImports import *
 def Test(slice, symbol, default_value):
     slice.pop(symbol, default_value)").GetAttr("Test");
 
-                Assert.Throws<InvalidOperationException>(() => test(GetPythonSlice(), Symbols.SPY, null), $"Slice is read-only: cannot pop the value for {Symbols.SPY} from the collection");
+                Assert.That(() => test(GetPythonSlice(), Symbols.SPY, null),
+                    Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<InvalidOperationException>(),
+                    $"Slice is read-only: cannot pop the value for {Symbols.SPY} from the collection");
             }
         }
 
@@ -891,7 +899,9 @@ def Test(slice, symbol):
     item = { symbol: 1 }
     slice.update(item)").GetAttr("Test");
 
-                Assert.Throws<InvalidOperationException>(() => test(GetPythonSlice(), Symbols.SPY), "Slice is read-only: cannot update the collection");
+                Assert.That(() => test(GetPythonSlice(), Symbols.SPY),
+                    Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<InvalidOperationException>(),
+                    "Slice is read-only: cannot update the collection");
             }
         }
 
@@ -1336,7 +1346,8 @@ def Test(slice, symbol):
     return slice.setdefault(symbol)").GetAttr("Test");
 
                 var symbol = Symbols.EURUSD;
-                Assert.Throws<KeyNotFoundException>(() => test(GetPythonSlice(), symbol),
+                Assert.That(() => test(GetPythonSlice(), symbol),
+                    Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<KeyNotFoundException>(),
                     $"Slice is read-only: cannot set default value to  for {symbol}");
             }
         }

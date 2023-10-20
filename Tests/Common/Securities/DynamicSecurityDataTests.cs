@@ -357,7 +357,8 @@ from AlgorithmImports import *
 def Test(dynamicData):
     data = dynamicData.Get(TradeBar)").GetAttr("Test");
 
-                Assert.Throws<KeyNotFoundException>(() => test(securityData));
+                Assert.That(() => test(securityData),
+                    Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<KeyNotFoundException>());
             }
         }
 

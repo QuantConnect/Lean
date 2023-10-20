@@ -88,8 +88,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             if (bias == PortfolioBias.Short)
             {
-                var exception = Assert.Throws<ArgumentException>(() => GetPortfolioConstructionModel(language, bias, Resolution.Daily));
-                Assert.That(exception.Message, Is.EqualTo("Long position must be allowed in RiskParityPortfolioConstructionModel."));
+                var throwsConstraint = language == Language.CSharp
+                    ? Throws.InstanceOf<ArgumentException>()
+                    : Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<ArgumentException>();
+                Assert.That(() => GetPortfolioConstructionModel(language, bias, Resolution.Daily),
+                    throwsConstraint.And.Message.EqualTo("Long position must be allowed in RiskParityPortfolioConstructionModel."));
                 return;
             }
 

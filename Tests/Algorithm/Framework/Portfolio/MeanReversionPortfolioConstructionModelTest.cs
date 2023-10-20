@@ -92,8 +92,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             if (bias == PortfolioBias.Short)
             {
-                var exception = Assert.Throws<ArgumentException>(() => GetPortfolioConstructionModel(language, bias, Resolution.Daily));
-                Assert.That(exception.Message, Is.EqualTo("Long position must be allowed in MeanReversionPortfolioConstructionModel."));
+                var throwsConstraint = language == Language.CSharp
+                    ? Throws.InstanceOf<ArgumentException>()
+                    : Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<ArgumentException>();
+                Assert.That(() => GetPortfolioConstructionModel(language, bias, Resolution.Daily),
+                    throwsConstraint.And.Message.EqualTo("Long position must be allowed in MeanReversionPortfolioConstructionModel."));
                 return;
             }
 
@@ -304,8 +307,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
                 if (regulator <= 0)
                 {
-                    var exception = Assert.Throws<ArgumentException>(() => model.InvokeMethod("SimplexProjection", _simplexTestArray.ToPython(), new PyFloat(regulator)));
-                    Assert.That(exception.Message, Is.EqualTo("Total must be > 0 for Euclidean Projection onto the Simplex."));
+                    Assert.That(() => model.InvokeMethod("SimplexProjection", _simplexTestArray.ToPython(), new PyFloat(regulator)),
+                        Throws.InstanceOf<ClrBubbledException>()
+                            .With.InnerException.InstanceOf<ArgumentException>()
+                            .And.Message.EqualTo("Total must be > 0 for Euclidean Projection onto the Simplex."));
                     return;
                 }
 
