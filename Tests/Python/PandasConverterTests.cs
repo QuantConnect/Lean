@@ -3627,9 +3627,9 @@ def Test3():
                 dynamic test2 = tests.GetAttr("Test2");
                 dynamic test3 = tests.GetAttr("Test3");
 
-                Assert.Throws<ArgumentException>(() => test1());
-                Assert.Throws<ArgumentException>(() => test2());
-                Assert.Throws<ArgumentException>(() => test3());
+                Assert.That(() => test1(), Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<ArgumentException>());
+                Assert.That(() => test2(), Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<ArgumentException>());
+                Assert.That(() => test3(), Throws.InstanceOf<ClrBubbledException>().With.InnerException.InstanceOf<ArgumentException>());
             }
         }
 
