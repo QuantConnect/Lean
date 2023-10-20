@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 13948;
+        public virtual long DataPoints => 14036;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -129,30 +129,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "122"},
+            {"Total Trades", "124"},
             {"Average Win", "0.09%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-0.486%"},
+            {"Compounding Annual Return", "-0.490%"},
             {"Drawdown", "0.500%"},
-            {"Expectancy", "-0.837"},
-            {"Net Profit", "-0.490%"},
-            {"Sharpe Ratio", "-6.437"},
+            {"Expectancy", "-0.838"},
+            {"Net Profit", "-0.494%"},
+            {"Sharpe Ratio", "-6.454"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "98%"},
             {"Win Rate", "2%"},
-            {"Profit-Loss Ratio", "8.94"},
+            {"Profit-Loss Ratio", "9.03"},
             {"Alpha", "-0.011"},
-            {"Beta", "-0.001"},
+            {"Beta", "-0"},
             {"Annual Standard Deviation", "0.002"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.397"},
+            {"Information Ratio", "-1.398"},
             {"Tracking Error", "0.089"},
-            {"Treynor Ratio", "16.362"},
-            {"Total Fees", "$272.54"},
+            {"Treynor Ratio", "24.18"},
+            {"Total Fees", "$276.84"},
             {"Estimated Strategy Capacity", "$1000.00"},
             {"Lowest Capacity Asset", "ES VRJST036ZY0X"},
-            {"Portfolio Turnover", "3.27%"},
-            {"OrderListHash", "324809cfc40b5bff9461d6cad5e12339"}
+            {"Portfolio Turnover", "3.32%"},
+            {"OrderListHash", "2c2a99ef3a3ca29a464d97f385d0cda5"}
         };
     }
 }

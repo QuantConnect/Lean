@@ -43,37 +43,37 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 16247;
+        public override long DataPoints => 16263;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "152"},
+            {"Total Trades", "154"},
             {"Average Win", "0.09%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-0.644%"},
-            {"Drawdown", "0.600%"},
+            {"Compounding Annual Return", "-0.648%"},
+            {"Drawdown", "0.700%"},
             {"Expectancy", "-0.872"},
-            {"Net Profit", "-0.649%"},
-            {"Sharpe Ratio", "-6.343"},
+            {"Net Profit", "-0.653%"},
+            {"Sharpe Ratio", "-6.358"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "99%"},
             {"Win Rate", "1%"},
-            {"Profit-Loss Ratio", "8.76"},
+            {"Profit-Loss Ratio", "8.82"},
             {"Alpha", "-0.012"},
             {"Beta", "-0.001"},
             {"Annual Standard Deviation", "0.002"},
             {"Annual Variance", "0"},
             {"Information Ratio", "-1.409"},
             {"Tracking Error", "0.089"},
-            {"Treynor Ratio", "10.18"},
-            {"Total Fees", "$338.96"},
+            {"Treynor Ratio", "9.551"},
+            {"Total Fees", "$343.26"},
             {"Estimated Strategy Capacity", "$1000.00"},
             {"Lowest Capacity Asset", "ES VRJST036ZY0X"},
-            {"Portfolio Turnover", "4.07%"},
-            {"OrderListHash", "dc803d068159572f745078503c2676c2"}
+            {"Portfolio Turnover", "4.12%"},
+            {"OrderListHash", "d3df9cf10bcbf04063b861576bd4fed1"}
         };
     }
 }

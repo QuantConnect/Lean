@@ -41,21 +41,21 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 227220;
+        public override long DataPoints => 228535;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1970"},
+            {"Total Trades", "1984"},
             {"Average Win", "0.01%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-4.641%"},
+            {"Compounding Annual Return", "-4.671%"},
             {"Drawdown", "4.700%"},
             {"Expectancy", "-0.911"},
-            {"Net Profit", "-4.675%"},
-            {"Sharpe Ratio", "-7.136"},
+            {"Net Profit", "-4.704%"},
+            {"Sharpe Ratio", "-7.166"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "97%"},
             {"Win Rate", "3%"},
@@ -64,14 +64,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "-0.008"},
             {"Annual Standard Deviation", "0.005"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.699"},
+            {"Information Ratio", "-1.701"},
             {"Tracking Error", "0.09"},
-            {"Treynor Ratio", "5.039"},
-            {"Total Fees", "$4495.98"},
+            {"Treynor Ratio", "5.034"},
+            {"Total Fees", "$4526.08"},
             {"Estimated Strategy Capacity", "$3000.00"},
             {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
-            {"Portfolio Turnover", "56.20%"},
-            {"OrderListHash", "103b251600e888289fa9b47c356114df"}
+            {"Portfolio Turnover", "56.53%"},
+            {"OrderListHash", "99cd4a868b1a6cd68e1066572da56193"}
         };
     }
 }
