@@ -145,11 +145,15 @@ namespace QuantConnect.Brokerages
         /// Transaction and submit/execution rules will use RBI models
         /// </summary>
         RBI,
-        
+
         /// <summary>
         /// Transaction and submit/execution rules will use Bybit models
         /// </summary>
         Bybit,
-        
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use Bybit Futures models
+        /// </summary>
+        BybitFutures,
     }
 }

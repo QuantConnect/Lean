@@ -253,18 +253,21 @@ namespace QuantConnect.Brokerages
 
                 case BrokerageName.FTXUS:
                     return new FTXUSBrokerageModel(accountType);
-                
+
                 case BrokerageName.Wolverine:
                     return new WolverineBrokerageModel(accountType);
 
                 case BrokerageName.TDAmeritrade:
                     return new TDAmeritradeBrokerageModel(accountType);
 
-                case BrokerageName.RBI: 
+                case BrokerageName.RBI:
                     return new RBIBrokerageModel(accountType);
-                
+
                 case BrokerageName.Bybit:
                     return new BybitBrokerageModel(accountType);
+
+                case BrokerageName.BybitFutures:
+                    return new BybitFuturesBrokerageModel(accountType);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
@@ -347,6 +350,9 @@ namespace QuantConnect.Brokerages
 
                 case RBIBrokerageModel _:
                     return BrokerageName.RBI;
+
+                case BybitFuturesBrokerageModel _:
+                    return BrokerageName.BybitFutures;
 
                 case BybitBrokerageModel _:
                     return BrokerageName.Bybit;

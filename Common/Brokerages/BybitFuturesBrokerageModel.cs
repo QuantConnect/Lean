@@ -1,4 +1,4 @@
-﻿/*
+/*
 * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 *
@@ -32,7 +32,7 @@ public class BybitFuturesBrokerageModel : BybitBrokerageModel
     /// Gets a map of the default markets to be used for each security type
     /// </summary>
     public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.Bybit);
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BybitFuturesBrokerageModel"/> class
     /// </summary>
@@ -41,8 +41,7 @@ public class BybitFuturesBrokerageModel : BybitBrokerageModel
     {
         if (accountType == AccountType.Cash)
         {
-            throw new InvalidOperationException(
-                $"{SecurityType.CryptoFuture} can only be traded using a {AccountType.Margin} account type");
+            throw new NotSupportedException($"{SecurityType.CryptoFuture} can only be traded using a {AccountType.Margin} account type");
         }
     }
 
@@ -83,7 +82,7 @@ public class BybitFuturesBrokerageModel : BybitBrokerageModel
 
         return base.GetMarginInterestRateModel(security);
     }
-    
+
     private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)
     {
         var map = DefaultMarketMap.ToDictionary();
