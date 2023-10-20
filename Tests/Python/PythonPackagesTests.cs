@@ -25,6 +25,115 @@ namespace QuantConnect.Tests.Python
     public class PythonPackagesTests
     {
         [Test]
+        public void Functime()
+        {
+            AssertCode(
+                @"
+import polars as pl
+from functime.cross_validation import train_test_split
+from functime.feature_extraction import add_fourier_terms
+from functime.forecasting import linear_model
+from functime.preprocessing import scale
+from functime.metrics import mase
+
+def RunTest():
+    # Load commodities price data
+    y = pl.read_parquet(""https://github.com/descendant-ai/functime/raw/main/data/commodities.parquet"")
+    entity_col, time_col = y.columns[:2]
+
+    # Time series split
+    y_train, y_test = y.pipe(train_test_split(test_size=3))
+
+    # Fit-predict
+    forecaster = linear_model(freq=""1mo"", lags=24)
+    forecaster.fit(y=y_train)
+    y_pred = forecaster.predict(fh=3)
+
+    # functime ❤️ functional design
+    # fit-predict in a single line
+    y_pred = linear_model(freq=""1mo"", lags=24)(y=y_train, fh=3)
+
+    # Score forecasts in parallel
+    scores = mase(y_true=y_test, y_pred=y_pred, y_train=y_train)
+
+    # Forecast with target transforms and feature transforms
+    forecaster = linear_model(
+        freq=""1mo"",
+        lags=24,
+        target_transform=scale(),
+        feature_transform=add_fourier_terms(sp=12, K=6)
+    )
+
+    # Forecast with exogenous regressors!
+    # Just pass them into X
+    X = (
+        y.select([entity_col, time_col])
+        .pipe(add_fourier_terms(sp=12, K=6)).collect()
+    )
+    X_train, X_future = y.pipe(train_test_split(test_size=3))
+    forecaster = linear_model(freq=""1mo"", lags=24)
+    forecaster.fit(y=y_train, X=X_train)
+    y_pred = forecaster.predict(fh=3, X=X_future)");
+        }
+
+        [Test]
+        public void Mlforecast()
+        {
+            AssertCode(
+                @"
+import pandas as pd
+import lightgbm as lgb
+
+from mlforecast import MLForecast
+from sklearn.linear_model import LinearRegression
+
+def RunTest():
+    df = pd.read_csv('https://datasets-nixtla.s3.amazonaws.com/air-passengers.csv', parse_dates=['ds'])
+    mlf = MLForecast(
+        models = [LinearRegression(), lgb.LGBMRegressor()],
+        lags=[1, 12],
+        freq = 'M'
+    )
+    mlf.fit(df)
+    mlf.predict(12)");
+        }
+
+        [Test]
+        public void Mapie()
+        {
+            AssertCode(
+                @"
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.datasets import make_regression
+from sklearn.model_selection import train_test_split
+
+from mapie.regression import MapieRegressor
+
+def RunTest():
+    X, y = make_regression(n_samples=500, n_features=1)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
+
+    regressor = LinearRegression()
+
+    mapie_regressor = MapieRegressor(estimator=regressor, method='plus', cv=5)
+
+    mapie_regressor = mapie_regressor.fit(X_train, y_train)
+    y_pred, y_pis = mapie_regressor.predict(X_test, alpha=[0.05, 0.32])");
+        }
+
+        [Test]
+        public void H20()
+        {
+            AssertCode(
+                @"
+import h2o
+
+def RunTest():
+    h2o.init(ip = ""localhost"", port = 54321)");
+        }
+
+        [Test]
         public void Langchain()
         {
             AssertCode(
@@ -1161,7 +1270,6 @@ def RunTest():
             AssertCode(
                 @"
 from ortools.linear_solver import pywraplp
-from ortools.init import pywrapinit
 
 def RunTest():
 	# Create the linear solver with the GLOP backend.
@@ -1172,6 +1280,34 @@ def RunTest():
 	y = solver.NumVar(0, 2, 'y')
 
 	print('Number of variables =', solver.NumVariables())");
+        }
+
+        [Test, Explicit("Installed in specific environment")]
+        public void AutoGluon()
+        {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Pomegranate");
+            AssertCode(
+                @"
+from autogluon.tabular import TabularDataset, TabularPredictor
+
+def RunTest():
+    train_data = TabularDataset('https://autogluon.s3.amazonaws.com/datasets/Inc/train.csv')
+    test_data = TabularDataset('https://autogluon.s3.amazonaws.com/datasets/Inc/test.csv')
+    predictor = TabularPredictor(label='class').fit(train_data, time_limit=5)  # Fit models for 5s
+    leaderboard = predictor.leaderboard(test_data)");
+        }
+
+        [Test, Explicit("Installed in specific environment")]
+        public void Finrl()
+        {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Pomegranate");
+            AssertCode(
+                @"
+import finrl
+
+def RunTest():
+    if finrl.__package__ != 'finrl':
+        raise ValueError('Unexpected package!')");
         }
 
         [Test, Explicit("Installed in specific environment. Requires older torch")]
@@ -2159,38 +2295,36 @@ def RunTest():
         /// <param name="module">The module we are testing</param>
         /// <param name="version">The module version</param>
         [TestCase("pulp", "2.7.0", "VERSION")]
-        [TestCase("pymc", "5.5.0", "__version__")]
+        [TestCase("pymc", "5.6.1", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
         [TestCase("wrapt", "1.14.1", "__version__")]
-        [TestCase("tslearn", "0.5.3.2", "__version__")]
+        [TestCase("tslearn", "0.6.2", "__version__")]
         [TestCase("tweepy", "4.14.0", "__version__")]
         [TestCase("pywt", "1.4.1", "__version__")]
         [TestCase("umap", "0.5.3", "__version__")]
         [TestCase("dtw", "1.3.0", "__version__")]
-        [TestCase("mplfinance", "0.12.9b7", "__version__")]
+        [TestCase("mplfinance", "0.12.10b0", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
-        [TestCase("ipywidgets", "8.0.6", "__version__")]
+        [TestCase("ipywidgets", "8.1.1", "__version__")]
         [TestCase("astropy", "5.2.2", "__version__")]
-        [TestCase("gluonts", "0.13.2", "__version__")]
+        [TestCase("gluonts", "0.13.7", "__version__")]
         [TestCase("gplearn", "0.4.2", "__version__")]
-        [TestCase("h2o", "3.40.0.4", "__version__")]
-        [TestCase("featuretools", "1.26.0", "__version__")]
-        [TestCase("pennylane", "0.30.0", "version()")]
-        [TestCase("pyfolio", "0.9.2", "__version__")]
-        [TestCase("altair", "5.0.1", "__version__")]
-        [TestCase("modin", "0.22.2", "__version__")]
+        [TestCase("featuretools", "1.27.0", "__version__")]
+        [TestCase("pennylane", "0.32.0", "version()")]
+        [TestCase("pyfolio", "0.9.5", "__version__")]
+        [TestCase("altair", "5.1.2", "__version__")]
+        [TestCase("modin", "0.22.3", "__version__")]
         [TestCase("persim", "0.3.1", "__version__")]
-        [TestCase("pydmd", "0.4.1.post2306", "__version__")]
+        [TestCase("pydmd", "0.4.1.post2308", "__version__")]
         [TestCase("pandas_ta", "0.3.14b0", "__version__")]
-        [TestCase("finrl", "finrl", "__package__")]
         [TestCase("tensortrade", "1.0.3", "__version__")]
-        [TestCase("quantstats", "0.0.61", "__version__")]
+        [TestCase("quantstats", "0.0.62", "__version__")]
         [TestCase("autokeras", "1.1.0", "__version__")]
-        [TestCase("panel", "1.1.1", "__version__")]
+        [TestCase("panel", "1.2.3", "__version__")]
         [TestCase("pyheat", "pyheat", "__name__")]
-        [TestCase("tensorflow_decision_forests", "1.3.0", "__version__")]
-        [TestCase("tensorflow_ranking", "0.5.1.dev", "__version__")]
-        [TestCase("pomegranate", "1.0.0", "__version__")]
+        [TestCase("tensorflow_decision_forests", "1.5.0", "__version__")]
+        [TestCase("tensorflow_ranking", "0.5.3.dev", "__version__")]
+        [TestCase("pomegranate", "1.0.3", "__version__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssertCode(
