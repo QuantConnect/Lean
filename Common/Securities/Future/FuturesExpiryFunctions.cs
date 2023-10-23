@@ -412,7 +412,11 @@ namespace QuantConnect.Securities.Future
                     // the third Friday of the calendar month immediately following the month in which the contract expires".
                     var nextThirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time.AddMonths(1));
                     var expiryDate = nextThirdFriday.AddDays(-30);
-                    var holidays = MarketHoursDatabase.FromDataFolder().GetEntry(Market.CFE, Futures.Indices.VIX, SecurityType.Future).ExchangeHours.Holidays;
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CBOE, Futures.Indices.VIX, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
                     // If the next third Friday or the Wednesday are holidays, then it is moved to the previous day.
                     if (holidays.Contains(expiryDate) || holidays.Contains(nextThirdFriday))
                     {

@@ -26827,6 +26827,111 @@
       "saturday": [],
       "holidays": []
     },
+    "Future-cboe-VX": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1:00:00:00",
+          "state": "premarket"
+        }
+      ],
+      "monday": [
+        {
+          "start": "1:00:00:00",
+          "end": "08:30:00",
+          "state": "premarket"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1:00:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "1:00:00:00",
+          "end": "08:30:00",
+          "state": "premarket"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1:00:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "1:00:00:00",
+          "end": "08:30:00",
+          "state": "premarket"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1:00:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "1:00:00:00",
+          "end": "08:30:00",
+          "state": "premarket"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1:00:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "friday": [
+        {
+          "start": "1:00:00:00",
+          "end": "08:30:00",
+          "state": "premarket"
+        },
+        {
+          "start": "08:30:00",
+          "end": "15:00:00",
+          "state": "market"
+        }
+      ],
+      "holidays": [
+        "1/2/2023",
+        "1/16/2023",
+        "2/20/2023",
+        "4/7/2023",
+        "5/29/2023",
+        "6/19/2023",
+        "7/4/2023",
+        "9/4/2023",
+        "11/23/2023",
+        "12/25/2023",
+        "1/1/2024"
+      ],
+      "earlyCloses": {}
+    },
     "Future-cme-NKD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
