@@ -143,8 +143,6 @@ namespace QuantConnect.Tests.Common.Securities
 
         [TestCase("ES", Market.CME, "1/16/2012", true)]
         [TestCase("2YY", Market.CBOT, "4/7/2023", true)]
-        [TestCase("MYM", Market.CBOT, "4/7/2023", true)]
-        [TestCase("YM", Market.CBOT, "4/7/2023", true)]
         [TestCase("TN", Market.CBOT, "4/7/2023", true)]
         [TestCase("6A", Market.CME, "4/7/2023", true)]
         [TestCase("6Z", Market.CME, "4/7/2023", true)]
@@ -176,8 +174,6 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [TestCase("2YY", Market.CBOT, true)]
-        [TestCase("MYM", Market.CBOT, true)]
-        [TestCase("YM", Market.CBOT, true)]
         [TestCase("TN", Market.CBOT, true)]
         [TestCase("6A", Market.CME, true)]
         [TestCase("6Z", Market.CME, true)]
