@@ -502,7 +502,11 @@ namespace QuantConnect.Tests.Common.Securities
             var friday = new LocalMarketHours(DayOfWeek.Friday, TimeSpan.Zero, new TimeSpan(17, 0, 0));
             var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
 
-            var holidays = USHoliday.Dates.Select(x => x.Date).ToList();
+            var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                        .ExchangeHours
+                        .Holidays;
+
             holidays.Remove(new DateTime(2019, 1, 1));  // not a forex holiday
 
             var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2018, 12, 31), new TimeSpan(17, 0, 0) } };
@@ -553,7 +557,11 @@ namespace QuantConnect.Tests.Common.Securities
 
             var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2016, 11, 25), new TimeSpan(13, 0, 0) } };
             var lateOpens = new Dictionary<DateTime, TimeSpan>() { { new DateTime(2016, 11, 25), new TimeSpan(10, 0, 0) } };
-            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
+            var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                        .ExchangeHours
+                        .Holidays;
+            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
             }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
@@ -597,7 +605,11 @@ namespace QuantConnect.Tests.Common.Securities
             var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2013, 11, 28), new TimeSpan(10, 30, 0) },
                 { new DateTime(2013, 11, 29), new TimeSpan(12, 15, 0)} };
             var lateOpens = new Dictionary<DateTime, TimeSpan>();
-            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
+            var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                        .ExchangeHours
+                        .Holidays;
+            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
             }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
@@ -644,7 +656,11 @@ namespace QuantConnect.Tests.Common.Securities
             var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2013, 11, 28), new TimeSpan(10, 30, 0) },
                 { new DateTime(2013, 11, 29), new TimeSpan(12, 15, 0)} };
             var lateOpens = new Dictionary<DateTime, TimeSpan>();
-            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
+            var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                        .ExchangeHours
+                        .Holidays;
+            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
             }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);

@@ -25,6 +25,7 @@ using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Util;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -566,7 +567,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var date in Time.EachDay(start, end))
             {
-                if (USHoliday.Dates.Contains(date) || date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+                if (MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                        .ExchangeHours
+                        .Holidays.Contains(date) || date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
                 {
                     continue;
                 }

@@ -43,15 +43,20 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         /// <param name="time">The current Time</param>
         /// <param name="n">Number of business days succeeding current time. Use negative value for preceding business days</param>
-        /// <param name="useEquityHolidays">Use LEAN's <see cref="USHoliday"/> definitions as holidays to exclude</param>
+        /// <param name="useEquityHolidays">Use US Equity Holidays to exclude</param>
         /// <param name="holidayList">Enumerable of holidays to exclude. These should be sourced from the <see cref="MarketHoursDatabase"/></param>
         /// <returns>The date-time after adding n business days</returns>
         public static DateTime AddBusinessDays(DateTime time, int n, bool useEquityHolidays = true, IEnumerable<DateTime> holidayList = null)
         {
             var holidays = GetDatesFromDateTimeList(holidayList);
+            var mhdbUSHolidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                        .ExchangeHours
+                        .Holidays;
+
             if (useEquityHolidays)
             {
-                holidays.AddRange(USHoliday.Dates);
+                holidays.AddRange(mhdbUSHolidays);
             }
 
             if (n < 0)
@@ -153,15 +158,19 @@ namespace QuantConnect.Securities.Future
             var daysCounted = calculatedTime.IsCommonBusinessDay() ? 1 : 0;
             var i = 0;
             var holidays = GetDatesFromDateTimeList(holidayList);
+            var mhdbUSHolidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                        .ExchangeHours
+                        .Holidays;
 
             // Check for holiday up here in case we want the first business day and it is a holiday so that we don't skip over it.
             // We also want to make sure that we don't stop on a weekend.
-            while (daysCounted < nthBusinessDay || holidays.Contains(calculatedTime) || USHoliday.Dates.Contains(calculatedTime) || !calculatedTime.IsCommonBusinessDay())
+            while (daysCounted < nthBusinessDay || holidays.Contains(calculatedTime) || mhdbUSHolidays.Contains(calculatedTime) || !calculatedTime.IsCommonBusinessDay())
             {
                 // The asset continues trading on days contained within `USHoliday.Dates`, but
                 // the last trade date is affected by those holidays. We check for
                 // both MHDB entries and holidays to get accurate business days
-                if (holidays.Contains(calculatedTime) || USHoliday.Dates.Contains(calculatedTime))
+                if (holidays.Contains(calculatedTime) || mhdbUSHolidays.Contains(calculatedTime))
                 {
                     // Catches edge case where first day is on a friday
                     if (i == 0 && calculatedTime.DayOfWeek == DayOfWeek.Friday)
@@ -277,7 +286,10 @@ namespace QuantConnect.Securities.Future
         /// <returns>True if the time is not a holidays, otherwise returns false</returns>
         public static bool NotHoliday(DateTime time)
         {
-            return time.IsCommonBusinessDay() && !USHoliday.Dates.Contains(time.Date);
+            return time.IsCommonBusinessDay() && MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                        .ExchangeHours
+                        .Holidays.Contains(time.Date);
         }
 
         /// <summary>
@@ -327,7 +339,10 @@ namespace QuantConnect.Securities.Future
                 {
                     publicationDate = publicationDate.AddDays(-1);
                 }
-                while (USHoliday.Dates.Contains(publicationDate) || publicationDate.DayOfWeek == DayOfWeek.Saturday);
+                while (MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                        .ExchangeHours
+                        .Holidays.Contains(publicationDate) || publicationDate.DayOfWeek == DayOfWeek.Saturday);
             }
             else
             {

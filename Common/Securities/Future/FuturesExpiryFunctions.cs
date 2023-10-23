@@ -413,7 +413,7 @@ namespace QuantConnect.Securities.Future
                     var nextThirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time.AddMonths(1));
                     var expiryDate = nextThirdFriday.AddDays(-30);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CBOE, Futures.Indices.VIX, SecurityType.Future)
+                        .GetEntry(Market.CFE, Futures.Indices.VIX, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -2418,11 +2418,10 @@ namespace QuantConnect.Securities.Future
                         .Holidays;
                     var i = 0;
 
-                    while (i < 3 || !twentyFifthDayInPriorMonth.IsCommonBusinessDay() || USHoliday.Dates.Contains(twentyFifthDayInPriorMonth) || holidays.Contains(twentyFifthDayInPriorMonth))
+                    while (i < 3 || !twentyFifthDayInPriorMonth.IsCommonBusinessDay() || holidays.Contains(twentyFifthDayInPriorMonth))
                     {
                         if (twentyFifthDayInPriorMonth.IsCommonBusinessDay() &&
-                            !holidays.Contains(twentyFifthDayInPriorMonth) &&
-                            !USHoliday.Dates.Contains(twentyFifthDayInPriorMonth))
+                            !holidays.Contains(twentyFifthDayInPriorMonth))
                         {
                             i++;
                         }

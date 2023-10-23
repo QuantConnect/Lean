@@ -234,7 +234,11 @@ namespace QuantConnect.Tests.Common
 
             var earlyCloses = new Dictionary<DateTime, TimeSpan>();
             var lateOpens = new Dictionary<DateTime, TimeSpan>();
-            return new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
+            var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                        .ExchangeHours
+                        .Holidays;
+            return new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
             }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
