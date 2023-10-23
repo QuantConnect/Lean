@@ -47,6 +47,7 @@ namespace QuantConnect.ToolBox.CoinApi
             { Market.FTXUS, "FTXUS" },
             { Market.Kraken, "KRAKEN" },
             { Market.BinanceUS, "BINANCEUS" },
+            { Market.Bybit, "BYBIT" },
         };
         private static readonly Dictionary<string, string> MapExchangeIdsToMarkets =
             MapMarketsToExchangeIds.ToDictionary(x => x.Value, x => x.Key);
@@ -115,6 +116,8 @@ namespace QuantConnect.ToolBox.CoinApi
         {
             MapExchangeIdsToMarkets["BINANCEFTS"] = Market.Binance;
             MapExchangeIdsToMarkets["BINANCEFTSC"] = Market.Binance;
+
+            MapExchangeIdsToMarkets["BYBITSPOT"] = Market.Bybit;
 
             LoadSymbolMap(MapExchangeIdsToMarkets.Keys.ToArray());
         }

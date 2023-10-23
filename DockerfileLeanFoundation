@@ -1,11 +1,11 @@
 #
-#   LEAN Foundation Docker Container 20201214
+#   LEAN Foundation Docker Container
 #   Cross platform deployment for multiple brokerages
 #   Intended to be used in conjunction with Dockerfile. This is just the foundation common OS+Dependencies required.
 #
 
 # Use base system for cleaning up wayward processes
-FROM phusion/baseimage:focal-1.0.0
+FROM phusion/baseimage:jammy-1.0.1
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
@@ -22,13 +22,7 @@ RUN apt-get update && apt-get -y install wget curl unzip \
    && rm -rf /var/lib/apt/lists/*
 
 # Install dotnet 6 sdk & runtime
-RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
-    dpkg -i packages-microsoft-prod.deb && \
-    apt-get update; \
-    apt-get install -y apt-transport-https && \
-    apt-get update && \
-    apt-get install -y dotnet-sdk-6.0 && \
-    rm packages-microsoft-prod.deb && \
+RUN apt-get update && apt-get install -y dotnet-sdk-6.0 && \
     apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
 
 # Set PythonDLL variable for PythonNet
@@ -40,194 +34,208 @@ ENV PATH="/opt/miniconda3/bin:${PATH}"
 RUN wget -q https://cdn.quantconnect.com/miniconda/${CONDA} && \
     bash ${CONDA} -b -p /opt/miniconda3 && rm -rf ${CONDA}
 
+# Install java runtime for h2o lib
+RUN wget https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.deb \
+    && dpkg -i jdk-17_linux-x64_bin.deb \
+    && update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-17-oracle-x64/bin/java 1 \
+    && rm jdk-17_linux-x64_bin.deb
+
 # Avoid pip install read timeouts
 ENV PIP_DEFAULT_TIMEOUT=120
 
 # Install all packages
 RUN pip install --no-cache-dir      \
-    cython==0.29.35                 \
+    cython==0.29.36                 \
     pandas==1.5.3                   \
     scipy==1.10.1                   \
     numpy==1.23.5                   \
     wrapt==1.14.1                   \
     astropy==5.2.2                  \
     beautifulsoup4==4.12.2          \
-    dill==0.3.6                     \
-    jsonschema==4.17.3              \
-    lxml==4.9.2                     \
-    msgpack==1.0.5                  \
+    dill==0.3.7                     \
+    jsonschema==4.19.1              \
+    lxml==4.9.3                     \
+    msgpack==1.0.7                  \
     numba==0.56.4                   \
     xarray==2023.1.0                \
-    plotly==5.15.0                  \
+    plotly==5.17.0                  \
     jupyterlab==3.4.4               \
-    tensorflow==2.12.0              \
+    tensorflow==2.13.1              \
     docutils==0.20.1                \
-    cvxopt==1.3.1                   \
-    gensim==4.3.1                   \
-    keras==2.12.0                   \
-    lightgbm==3.3.5                 \
-    mpi4py==3.1.4                   \
+    cvxopt==1.3.2                   \
+    gensim==4.3.2                   \
+    keras==2.13.1                   \
+    lightgbm==4.1.0                 \
+    mpi4py==3.1.5                   \
     nltk==3.8.1                     \
     graphviz==0.20.1                \
-    cmdstanpy==1.1.0                \
+    cmdstanpy==1.2.0                \
     copulae==0.7.8                  \
-    featuretools==1.26.0            \
+    featuretools==1.27.0            \
     PuLP==2.7.0                     \
-    pymc==5.5.0                     \
+    pymc==5.6.1                     \
     rauth==0.7.3                    \
     scikit-learn==1.2.2             \
     scikit-multiflow==0.5.3         \
     scikit-optimize==0.9.0          \
-    aesara==2.9.0                   \
+    aesara==2.9.2                   \
     tsfresh==0.20.1                 \
-    tslearn==0.5.3.2                \
+    tslearn==0.6.2                  \
     tweepy==4.14.0                  \
     PyWavelets==1.4.1               \
     umap-learn==0.5.3               \
-    fastai==2.7.12                  \
+    fastai==2.7.13                  \
     arch==5.6.0                     \
-    copulas==0.9.0                  \
+    copulas==0.9.2                  \
     creme==0.6.1                    \
     cufflinks==0.17.3               \
-    gym==0.21                       \
-    ipywidgets==8.0.6               \
-    deap==1.3.3                     \
-    cvxpy==1.3.2                    \
+    gym==0.26.2                     \
+    ipywidgets==8.1.1               \
+    deap==1.4.1                     \
+    cvxpy==1.4.1                    \
     pykalman==0.9.5                 \
     pyportfolioopt==1.5.5           \
     pmdarima==2.0.3                 \
-    pyro-ppl==1.8.5                 \
+    pyro-ppl==1.8.6                 \
     riskparityportfolio==0.4        \
     sklearn-json==0.1.0             \
     statsmodels==0.13.5             \
-    QuantLib==1.30                  \
-    xgboost==1.7.6                  \
+    QuantLib==1.31.1                \
+    xgboost==2.0.0                  \
     dtw-python==1.3.0               \
-    gluonts==0.13.2                 \
+    gluonts==0.13.7                 \
     gplearn==0.4.2                  \
     jax==0.4.13                     \
     jaxlib==0.4.13                  \
     keras-rl==0.4.2                 \
-    pennylane==0.30.0               \
-    PennyLane-Lightning==0.31.0     \
-    pennylane-qiskit==0.29.0        \
-    qiskit==0.43.2                  \
+    pennylane==0.32.0               \
+    PennyLane-Lightning==0.32.0     \
+    pennylane-qiskit==0.32.0        \
+    qiskit==0.44.2                  \
     neural-tangents==0.6.2          \
-    mplfinance==0.12.9b7            \
+    mplfinance==0.12.10b0           \
     hmmlearn==0.3.0                 \
-    catboost==1.2                   \
+    catboost==1.2.2                 \
     fastai2==0.0.30                 \
     scikit-tda==1.0.0               \
     ta==0.10.2                      \
-    seaborn==0.12.2                 \
-    optuna==3.2.0                   \
-    findiff==0.9.2                  \
-    sktime==0.20.0                  \
+    seaborn==0.13.0                 \
+    optuna==3.4.0                   \
+    findiff==0.10.0                 \
+    sktime==0.24.0                  \
     hyperopt==0.2.7                 \
     bayesian-optimization==1.4.3    \
     pingouin==0.5.3                 \
     quantecon==0.7.1                \
-    matplotlib==3.7.1               \
+    matplotlib==3.7.3               \
     sdeint==0.3.0                   \
-    pandas_market_calendars==4.1.4  \
-    dgl==1.1.1                      \
+    pandas_market_calendars==4.3.1  \
+    dgl==1.1.2                      \
     ruptures==1.1.8                 \
-    simpy==4.0.1                    \
+    simpy==4.0.2                    \
     scikit-learn-extra==0.3.0       \
-    ray==2.5.1                      \
-    "ray[tune]"==2.5.1              \
-    "ray[rllib]"==2.5.1             \
+    ray==2.7.1                      \
+    "ray[tune]"==2.7.1              \
+    "ray[rllib]"==2.7.1             \
     fastText==0.9.2                 \
-    h2o==3.40.0.4                   \
-    prophet==1.1.4                  \
-    torch==2.0.1                    \
-    torchvision==0.15.2             \
+    h2o==3.44.0.1                   \
+    prophet==1.1.5                  \
+    torch==2.1.0                    \
+    torchvision==0.16.0             \
     ax-platform==0.3.3              \
     alphalens-reloaded==0.4.3       \
     pyfolio-reloaded==0.9.5         \
-    altair==5.0.1                   \
+    altair==5.1.2                   \
     stellargraph==1.2.1             \
-    modin==0.22.2                   \
+    modin==0.22.3                   \
     persim==0.3.1                   \
     ripser==0.6.4                   \
-    pydmd==0.4.1.post2306           \
-    EMD-signal==1.5.1               \
-    spacy==3.5.3                    \
+    pydmd==0.4.1.post2308           \
+    EMD-signal==1.5.2               \
+    spacy==3.7.2                    \
     pandas-ta==0.3.14b              \
     pytorch-ignite==0.4.12          \
-    finrl==0.3.1                    \
     tensorly==0.8.1                 \
-    mlxtend==0.22.0                 \
-    shap==0.41.0                    \
+    mlxtend==0.23.0                 \
+    shap==0.43.0                    \
     lime==0.2.0.1                   \
-    tensorflow-probability==0.20.1  \
+    tensorflow-probability==0.21.0  \
     mpmath==1.3.0                   \
     tensortrade==1.0.3              \
-    polars==0.18.4                  \
+    polars==0.19.8                  \
     stockstats==0.5.4               \
     autokeras==1.1.0                \
-    QuantStats==0.0.61              \
+    QuantStats==0.0.62              \
     hurst==0.0.5                    \
-    numerapi==2.14.0                \
+    numerapi==2.16.1                \
     pymdptoolbox==4.0-b3            \
     fuzzy-c-means==1.6.3            \
-    panel==1.1.1                    \
-    hvplot==0.8.4                   \
-    line-profiler==4.0.3            \
+    panel==1.2.3                    \
+    hvplot==0.9.0                   \
+    line-profiler==4.1.1            \
     py-heat==0.0.6                  \
     py-heat-magic==0.0.2            \
     bokeh==3.1.1                    \
-    tensorflow-decision-forests==1.3.0 \
+    tensorflow-decision-forests==1.5.0 \
     river==0.14.0                   \
-    stumpy==1.11.1                  \
-    pyvinecopulib==0.6.2            \
-    ijson==3.2.2                    \
+    stumpy==1.12.0                  \
+    pyvinecopulib==0.6.3            \
+    ijson==3.2.3                    \
     jupyter-resource-usage==0.7.2   \
-    injector==0.20.1                \
+    injector==0.21.0                \
     openpyxl==3.1.2                 \
     xlrd==2.0.1                     \
-    mljar-supervised==1.0.0         \
+    mljar-supervised==1.0.2         \
     dm-tree==0.1.8                  \
     lz4==4.3.2                      \
-    ortools==9.6.2534               \
+    ortools==9.7.2996               \
     py_vollib==1.0.1                \
-    tensorflow-addons==0.20.0       \
+    tensorflow-addons==0.21.0       \
     thundergbm==0.3.17              \
     yellowbrick==1.5                \
     livelossplot==0.5.5             \
-    gymnasium==0.26.3               \
-    interpret==0.4.2                \
-    DoubleML==0.6.3                 \
+    gymnasium==0.28.1               \
+    interpret==0.4.4                \
+    DoubleML==0.7.0                 \
     jupyter-bokeh==3.0.7            \
-    imbalanced-learn==0.10.1        \
-    scikeras==0.11.0                \
-    openai==0.27.8                  \
-    openai[embeddings]==0.27.8      \
-    openai[wandb]==0.27.8           \
+    imbalanced-learn==0.11.0        \
+    scikeras==0.12.0                \
+    openai==0.28.1                  \
+    openai[embeddings]==0.28.1      \
+    openai[wandb]==0.28.1           \
     lazypredict==0.2.12             \
     fracdiff==0.9.0                 \
     darts==0.24.0                   \
-    fastparquet==2023.4.0           \
+    fastparquet==2023.8.0           \
     tables==3.8.0                   \
     dimod==0.12.3                   \
     dwave-samplers==1.0.0           \
-    python-statemachine==2.1.0      \
+    python-statemachine==2.1.2      \
     pymannkendall==1.4.3            \
-    Pyomo==6.6.1                    \
-    gpflow==2.8.1                   \
-    pyarrow==12.0.1                 \
+    Pyomo==6.6.2                    \
+    gpflow==2.9.0                   \
+    pyarrow==13.0.0                 \
     dwave-ocean-sdk==6.1.1          \
-    chardet==5.1.0                  \
-    stable-baselines3==1.8.0        \
+    chardet==5.2.0                  \
+    stable-baselines3==2.1.0        \
     pystan==3.7.0                   \
     FixedEffectModel==0.0.5         \
     tick==0.7.0.1                   \
-    transformers==4.30.2            \
-    Rbeast==0.1.13                  \
-    langchain==0.0.218              \
-    tensorflow-ranking==0.5.1       \
-    pomegranate==1.0.0              \
-    tigramite==5.2.1.8
+    transformers==4.34.0            \
+    Rbeast==0.1.16                  \
+    langchain==0.0.316              \
+    tensorflow-ranking==0.5.3       \
+    pomegranate==1.0.3              \
+    tigramite==5.2.3.1              \
+    MAPIE==0.7.0                    \
+    mlforecast==0.9.3               \
+    functime==0.8.2                 \
+    tensorrt==8.6.1.post1
+
+RUN conda install -c conda-forge -y cudatoolkit=11.8.0 && conda install -c nvidia -y cuda-compiler=12.2.2
+ENV XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/miniconda3/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/miniconda3/pkgs/cudatoolkit-11.8.0-h6a678d5_0/lib/:/opt/miniconda3/lib/python3.8/site-packages/nvidia/cudnn/lib/:/opt/miniconda3/lib/python3.8/site-packages/tensorrt_libs/
+ENV CUDA_MODULE_LOADING=LAZY
 
 # Install dwave tool
 RUN dwave install --all -y
@@ -237,20 +245,20 @@ RUN conda install -c conda-forge ipopt==3.14.12 \
     && conda clean -y --all
 
 # We install need to install separately else fails to find numpy
-RUN pip install --no-cache-dir Riskfolio-Lib==4.4.0 iisignature==0.24
+RUN pip install --no-cache-dir Riskfolio-Lib==4.4.2 iisignature==0.24
 
 # Install spacy models
 RUN python -m spacy download en_core_web_md && python -m spacy download en_core_web_sm
 
 RUN conda install -y -c conda-forge \
-    openmpi=4.1.5                   \
+    openmpi=4.1.6                   \
     && conda clean -y --all
 
 # Install PyTorch Geometric
 RUN TORCH=$(python -c "import torch; print(torch.__version__)") && \
     CUDA=$(python -c "import torch; print('cu' + torch.version.cuda.replace('.', ''))") && \
     pip install --no-cache-dir -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html \
-    torch-scatter==2.1.1 torch-sparse==0.6.17 torch-cluster==1.6.1 torch-spline-conv==1.2.2 torch-geometric==2.3.1
+    torch-scatter==2.1.2 torch-sparse==0.6.18 torch-cluster==1.6.3 torch-spline-conv==1.2.2 torch-geometric==2.4.0
 
 # Install nltk data
 RUN python -m nltk.downloader -d /usr/share/nltk_data punkt && \
@@ -294,6 +302,8 @@ RUN python -m venv /Foundation-Pomegranate --system-site-packages && . /Foundati
     nbeats-keras==1.8.0                 \
     nbeats-pytorch==1.8.0               \
     neuralprophet[live]==0.6.2          \
+    autogluon==0.8.2                    \
+    finrl==0.3.1                        \
     && python -m ipykernel install --name=Foundation-Pomegranate \
     && deactivate
 

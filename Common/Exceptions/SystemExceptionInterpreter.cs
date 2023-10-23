@@ -28,14 +28,14 @@ namespace QuantConnect.Exceptions
         /// <summary>
         /// Determines the order that an instance of this class should be called
         /// </summary>
-        public int Order => int.MaxValue;
+        public virtual int Order => int.MaxValue;
 
         /// <summary>
         /// Determines if this interpreter should be applied to the specified exception. f
         /// </summary>
         /// <param name="exception">The exception to check</param>
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
-        public bool CanInterpret(Exception exception) => true;
+        public virtual bool CanInterpret(Exception exception) => true;
 
         /// <summary>
         /// Interprets the specified exception into a new exception
@@ -43,7 +43,7 @@ namespace QuantConnect.Exceptions
         /// <param name="exception">The exception to be interpreted</param>
         /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
-        public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
+        public virtual Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {
             var sanitized = new SanitizedException(exception.Message, exception.StackTrace);
 
