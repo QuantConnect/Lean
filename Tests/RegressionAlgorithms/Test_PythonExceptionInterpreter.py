@@ -28,3 +28,6 @@ class Test_PythonExceptionInterpreter(QCAlgorithm):
 
     def zero_division_error(self):
         x = 1 / 0
+
+    def dotnet_error(self):
+        self.MarketOrder(None, 1);
