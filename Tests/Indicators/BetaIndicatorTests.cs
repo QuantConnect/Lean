@@ -33,14 +33,14 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            var indicator = new Beta("testBetaIndicator", 5, "AMZN 2T", "SPX 2T");
+            var indicator = new Beta("testBetaIndicator", "AMZN 2T", "SPX 2T", 5);
             return indicator;
         }
 
         [Test]
         public override void TimeMovesForward()
         {
-            var indicator = new Beta("testBetaIndicator", 5, Symbols.IBM, Symbols.SPY);
+            var indicator = new Beta("testBetaIndicator",  Symbols.IBM, Symbols.SPY, 5);
 
             for (var i = 10; i > 0; i--)
             {
@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void WarmsUpProperly()
         {
-            var indicator = new Beta("testBetaIndicator", 5, Symbols.IBM, Symbols.SPY);
+            var indicator = new Beta("testBetaIndicator", Symbols.IBM, Symbols.SPY, 5);
             var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
             if (!period.HasValue)
@@ -145,7 +145,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void EqualBetaValue()
         {
-            var indicator = new Beta("testBetaIndicator", 5, Symbols.AAPL, Symbols.SPX);
+            var indicator = new Beta("testBetaIndicator", Symbols.AAPL, Symbols.SPX, 5);
 
             for (int i = 0 ; i < 3 ; i++)
             {
@@ -159,7 +159,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void NotEqualBetaValue()
         {
-            var indicator = new Beta("testBetaIndicator", 5, Symbols.AAPL, Symbols.SPX);
+            var indicator = new Beta("testBetaIndicator", Symbols.AAPL, Symbols.SPX, 5);
 
             for (int i = 0; i < 3; i++)
             {
