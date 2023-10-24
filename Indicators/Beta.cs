@@ -32,32 +32,32 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// RollingWindow to store the data points of the target symbol
         /// </summary>
-        private RollingWindow<decimal> _targetDataPoints;
+        private readonly RollingWindow<decimal> _targetDataPoints;
 
         /// <summary>
         /// RollingWindow to store the data points of the reference symbol
         /// </summary>
-        private RollingWindow<decimal> _referenceDataPoints;
+        private readonly RollingWindow<decimal> _referenceDataPoints;
 
         /// <summary>
         /// Symbol of the reference used
         /// </summary>
-        private Symbol _referenceSymbol;
+        private readonly Symbol _referenceSymbol;
 
         /// <summary>
         /// Symbol of the target used
         /// </summary>
-        private Symbol _targetSymbol;
+        private readonly Symbol _targetSymbol;
 
         /// <summary>
         /// RollingWindow of returns of the target symbol in the given period
         /// </summary>
-        private RollingWindow<double> _targetReturns;
+        private readonly RollingWindow<double> _targetReturns;
 
         /// <summary>
         /// RollingWindow of returns of the reference symbol in the given period
         /// </summary>
-        private RollingWindow<double> _referenceReturns;
+        private readonly RollingWindow<double> _referenceReturns;
 
         /// <summary>
         /// Beta of the target used in relation with the reference
@@ -75,20 +75,20 @@ namespace QuantConnect.Indicators
         public override bool IsReady => _targetDataPoints.Samples >= WarmUpPeriod && _referenceDataPoints.Samples >= WarmUpPeriod;
 
         /// <summary>
-        /// Creates a new Beta indicator with the specified name, period, target and 
-        /// reference values
+        /// Creates a new Beta indicator with the specified name, target, reference,  
+        /// and period values
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The period of this indicator</param>
         /// <param name="targetSymbol">The target symbol of this indicator</param>
+        /// <param name="period">The period of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
-        public Beta(string name, int period, Symbol targetSymbol, Symbol referenceSymbol)
+        public Beta(string name, Symbol targetSymbol, Symbol referenceSymbol, int period)
             : base(name)
         {
             // Assert the period is greater than two, otherwise the beta can not be computed
             if (period < 2)
             {
-                throw new Exception($"Period parameter for Beta indicator must be greater than 2 but was {period}");
+                throw new ArgumentException($"Period parameter for Beta indicator must be greater than 2 but was {period}");
             }
 
             WarmUpPeriod = period + 1;
@@ -101,6 +101,32 @@ namespace QuantConnect.Indicators
             _targetReturns = new RollingWindow<double>(period);
             _referenceReturns = new RollingWindow<double>(period);
             _beta = 0;
+        }
+
+        /// <summary>
+        /// Creates a new Beta indicator with the specified target, reference,  
+        /// and period values
+        /// </summary>
+        /// <param name="targetSymbol">The target symbol of this indicator</param>
+        /// <param name="period">The period of this indicator</param>
+        /// <param name="referenceSymbol">The reference symbol of this indicator</param>
+        public Beta(Symbol targetSymbol, Symbol referenceSymbol, int period)
+            : this($"B({period})", targetSymbol, referenceSymbol, period)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new Beta indicator with the specified name, period, target and 
+        /// reference values
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="period">The period of this indicator</param>
+        /// <param name="targetSymbol">The target symbol of this indicator</param>
+        /// <param name="referenceSymbol">The reference symbol of this indicator</param>
+        /// <remarks>Constructor overload for backward compatibility.</remarks>
+        public Beta(string name, int period, Symbol targetSymbol, Symbol referenceSymbol)
+            : this(name, targetSymbol, referenceSymbol, period)
+        {
         }
 
         /// <summary>
@@ -124,9 +150,10 @@ namespace QuantConnect.Indicators
             else if(inputSymbol == _referenceSymbol)
             {
                 _referenceDataPoints.Add(input.Close);
-            }else
+            }
+            else
             {
-                throw new Exception("The given symbol was not target or reference symbol");
+                throw new ArgumentException("The given symbol was not target or reference symbol");
             }
 
             if (_targetDataPoints.Samples == _referenceDataPoints.Samples && _referenceDataPoints.Count > 1)
