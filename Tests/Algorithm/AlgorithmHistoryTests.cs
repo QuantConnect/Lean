@@ -281,7 +281,7 @@ def getTradesOnlyHistory(algorithm, symbol, start):
 def getTickHistory(algorithm, symbol):
     " + testCase).GetAttr("getTickHistory");
 
-                        Assert.Throws<InvalidOperationException>(() => getTickHistory(_algorithm, spy));
+                        Assert.Throws<ClrBubbledException>(() => getTickHistory(_algorithm, spy));
                     }
                 }
             }
