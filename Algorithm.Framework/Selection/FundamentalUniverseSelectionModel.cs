@@ -157,6 +157,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>An enumerable of symbols passing the filter</returns>
         public virtual IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
         {
+            if(_selector == null)
+            {
+                throw new NotImplementedException("If inheriting, please overrride the 'Select' fundamental function, else provide it as a constructor parameter");
+            }
             return _selector(fundamental);
         }
 
