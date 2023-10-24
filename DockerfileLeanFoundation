@@ -218,6 +218,7 @@ RUN pip install --no-cache-dir      \
     dwave-ocean-sdk==6.1.1          \
     chardet==5.2.0                  \
     stable-baselines3==2.1.0        \
+    Shimmy==1.3.0                   \
     pystan==3.7.0                   \
     FixedEffectModel==0.0.5         \
     tick==0.7.0.1                   \

@@ -81,7 +81,7 @@ RUN pip install --no-cache-dir      \
     PuLP==2.7.0                     \
     pymc==5.6.1                     \
     rauth==0.7.3                    \
-    scikit-learn==1.2.2             \
+    scikit-learn==1.3.2             \
     scikit-multiflow==0.5.3         \
     scikit-optimize==0.9.0          \
     aesara==2.9.2                   \
@@ -150,7 +150,7 @@ RUN pip install --no-cache-dir      \
     shap==0.43.0                    \
     lime==0.2.0.1                   \
     mpmath==1.3.0                   \
-    polars==0.19.8                  \
+    polars==0.19.11                 \
     stockstats==0.5.4               \
     QuantStats==0.0.62              \
     hurst==0.0.5                    \
@@ -201,6 +201,7 @@ RUN pip install --no-cache-dir      \
     dwave-ocean-sdk==6.1.1          \
     chardet==5.2.0                  \
     stable-baselines3==2.1.0        \
+    Shimmy==1.3.0                   \
     FixedEffectModel==0.0.5         \
     transformers==4.34.0            \
     langchain==0.0.316              \
