@@ -17,6 +17,8 @@ using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Tests.Common.Data.Fundamental;
 
 namespace QuantConnect.Tests
 {
@@ -52,6 +54,7 @@ namespace QuantConnect.Tests
 
                 MapFileProvider.Initialize(DataProvider);
                 FactorFileProvider.Initialize(MapFileProvider, DataProvider);
+                FundamentalService.Initialize(DataProvider, new NullFundamentalDataProvider(), false);
             }
         }
     }

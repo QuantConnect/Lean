@@ -287,7 +287,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Universes)]
         public Universe AddUniverse(PyObject pyObject)
         {
-            Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
+            Func<IEnumerable<Fundamental>, object> coarseFunc;
             Universe universe;
 
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
@@ -301,7 +301,7 @@ namespace QuantConnect.Algorithm
             }
             else if (pyObject.TryConvertToDelegate(out coarseFunc))
             {
-                return AddUniverse(coarseFunc.ConvertToUniverseSelectionSymbolDelegate());
+                return AddUniverse(new FundamentalUniverse(UniverseSettings, pyObject));
             }
             else
             {
@@ -852,6 +852,13 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
+            if (tickers.TryConvert<Type>(out var type))
+            {
+                var requests = CreateBarCountHistoryRequests(Securities.Keys, type, periods, resolution, fillForward, extendedMarketHours,
+                    dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                return GetDataFrame(History(requests.Where(x => x != null)), type);
+            }
+
             var symbols = tickers.ConvertToSymbolEnumerable();
             return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
                 contractDepthOffset));
@@ -876,9 +883,7 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
-            var symbols = tickers.ConvertToSymbolEnumerable();
-            return GetDataFrame(History(symbols, span, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset));
+            return History(tickers, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
         }
 
         /// <summary>
@@ -900,24 +905,16 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
+            if (tickers.TryConvert<Type>(out var type))
+            {
+                var requests = CreateDateRangeHistoryRequests(Securities.Keys, type, start, end, resolution, fillForward, extendedMarketHours,
+                    dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                return GetDataFrame(History(requests.Where(x => x != null)), type);
+            }
+
             var symbols = tickers.ConvertToSymbolEnumerable();
             return GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset));
-        }
-
-        /// <summary>
-        /// Gets the historical data for the specified symbol between the specified dates. The symbol must exist in the Securities collection.
-        /// </summary>
-        /// <param name="tickers">The symbols to retrieve historical data for</param>
-        /// <param name="start">The start time in the algorithm's time zone</param>
-        /// <param name="end">The end time in the algorithm's time zone</param>
-        /// <param name="resolution">The resolution to request</param>
-        /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
-        [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
-        {
-            var symbols = tickers.ConvertToSymbolEnumerable();
-            return GetDataFrame(History(symbols, start, end, resolution));
         }
 
         /// <summary>
@@ -969,9 +966,9 @@ namespace QuantConnect.Algorithm
             int? contractDepthOffset = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            CheckPeriodBasedHistoryRequestResolution(symbols, resolution);
-
             var requestedType = type.CreateType();
+            CheckPeriodBasedHistoryRequestResolution(symbols, resolution, requestedType);
+
             var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution, fillForward, extendedMarketHours,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
 
@@ -1077,10 +1074,10 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
-            resolution = GetResolution(symbol, resolution);
-            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution);
-
             var managedType = type.CreateType();
+            resolution = GetResolution(symbol, resolution, managedType);
+            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution, managedType);
+
             var marketHours = GetMarketHours(symbol, managedType);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
                 marketHours.DataTimeZone, extendedMarketHours);

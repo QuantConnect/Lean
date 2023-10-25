@@ -147,12 +147,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                         catch (InvalidOperationException)
                         {
-                            startTimeUtc = Time.BeginningOfTime;
+                            startTimeUtc = Time.Start;
                         }
 
-                        if (startTimeUtc <= Time.BeginningOfTime)
+                        if (startTimeUtc < Time.Start)
                         {
-                            startTimeUtc = new DateTime(1998, 1, 2);
+                            startTimeUtc = Time.Start;
                         }
 
                         endTimeUtc = endTimeUtcLimit;

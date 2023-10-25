@@ -14,9 +14,8 @@
 */
 
 using System;
-using System.IO;
 using Newtonsoft.Json;
-using static QuantConnect.StringExtensions;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.Fundamental
 {
@@ -41,36 +40,14 @@ namespace QuantConnect.Data.Fundamental
         /// For ADR share classes, market cap is price * (ordinary shares outstanding / adr ratio).
         /// </summary>
         [JsonIgnore]
-        public long MarketCap => CompanyProfile?.MarketCap ?? 0;
-
-
-        /// <summary>
-        /// Creates the universe symbol used for fine fundamental data
-        /// </summary>
-        /// <param name="market">The market</param>
-        /// <param name="addGuid">True, will add a random GUID to allow uniqueness</param>
-        /// <returns>A fine universe symbol for the specified market</returns>
-        public static Symbol CreateUniverseSymbol(string market, bool addGuid = true)
-        {
-            market = market.ToLowerInvariant();
-            var ticker = $"qc-universe-fine-{market}";
-            if (addGuid)
-            {
-                ticker += $"-{Guid.NewGuid()}";
-            }
-            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
-            return new Symbol(sid, ticker);
-        }
+        public long MarketCap => CompanyProfile.MarketCap;
 
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var basePath = Globals.GetDataFolderPath(Invariant($"equity/{config.Market}/fundamental/fine"));
-            var source = Path.Combine(basePath, Invariant($"{config.Symbol.Value.ToLowerInvariant()}/{date:yyyyMMdd}.zip"));
-
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            throw new InvalidOperationException();
         }
 
         /// <summary>
@@ -79,13 +56,32 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var data = JsonConvert.DeserializeObject<FineFundamental>(line);
+            throw new InvalidOperationException();
+        }
 
-            data.DataType = MarketDataType.Auxiliary;
-            data.Symbol = config.Symbol;
-            data.Time = date;
+        /// <summary>
+        /// Clones this fine data instance
+        /// </summary>
+        /// <returns></returns>
+        public override BaseData Clone()
+        {
+            return new FineFundamental(Time, Symbol, _fundamentalInstanceProvider);
+        }
 
-            return data;
+        /// <summary>
+        /// This is a daily data set
+        /// </summary>
+        public override List<Resolution> SupportedResolutions()
+        {
+            return DailyResolution;
+        }
+
+        /// <summary>
+        /// This is a daily data set
+        /// </summary>
+        public override Resolution DefaultResolution()
+        {
+            return Resolution.Daily;
         }
     }
 }

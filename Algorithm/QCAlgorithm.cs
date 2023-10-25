@@ -50,6 +50,7 @@ using Index = QuantConnect.Securities.Index.Index;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Algorithm
 {
@@ -1859,7 +1860,7 @@ namespace QuantConnect.Algorithm
                     {
                         // add the expected configurations of the canonical symbol right away, will allow it to warmup and indicators register to them
                         var dataTypes = SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Future,
-                            GetResolution(symbol, resolution), isCanonical: false);
+                            GetResolution(symbol, resolution, null), isCanonical: false);
                         var continuousUniverseSettings = new UniverseSettings(settings)
                         {
                             ExtendedMarketHours = extendedMarketHours,
@@ -3114,6 +3115,58 @@ namespace QuantConnect.Algorithm
         public string SEDOL(Symbol symbol)
         {
             return _securityDefinitionSymbolResolver.SEDOL(symbol);
+        }
+
+        /// <summary>
+        /// Converts a CIK identifier into <see cref="Symbol"/> array
+        /// </summary>
+        /// <param name="cik">The CIK identifier of an asset</param>
+        /// <param name="tradingDate">
+        /// The date that the stock being looked up is/was traded at.
+        /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
+        /// </param>
+        /// <returns>Symbols corresponding to the CIK. If no Symbol with a matching CIK was found, returns empty array.</returns>
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public Symbol[] CIK(int cik, DateTime? tradingDate = null)
+        {
+            return _securityDefinitionSymbolResolver.CIK(cik, GetVerifiedTradingDate(tradingDate));
+        }
+
+        /// <summary>
+        /// Converts a <see cref="Symbol"/> into a CIK identifier
+        /// </summary>
+        /// <param name="symbol">The <see cref="Symbol"/></param>
+        /// <returns>CIK corresponding to the Symbol. If no matching CIK is found, returns null.</returns>
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public int? CIK(Symbol symbol)
+        {
+            return _securityDefinitionSymbolResolver.CIK(symbol);
+        }
+
+        /// <summary>
+        /// Get the fundamental data for the requested symbol at the current time
+        /// </summary>
+        /// <param name="symbol">The <see cref="Symbol"/></param>
+        /// <returns>The fundamental data for the Symbol</returns>
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public Fundamental Fundamentals(Symbol symbol)
+        {
+            return new Fundamental(Time, symbol) { EndTime = Time };
+        }
+
+        /// <summary>
+        /// Get the fundamental data for the requested symbols at the current time
+        /// </summary>
+        /// <param name="symbols">The <see cref="Symbol"/></param>
+        /// <returns>The fundamental data for the symbols</returns>
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public List<Fundamental> Fundamentals(List<Symbol> symbols)
+        {
+            return symbols.Select(symbol => Fundamentals(symbol)).ToList();
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,13 +17,17 @@ class FundamentalUniverseSelectionModel:
     '''Provides a base class for defining equity coarse/fine fundamental selection models'''
     
     def __init__(self,
-                 filterFineData,
+                 filterFineData = None,
                  universeSettings = None):
         '''Initializes a new instance of the FundamentalUniverseSelectionModel class
         Args:
-            filterFineData: True to also filter using fine fundamental data, false to only filter on coarse data
+            filterFineData: [Obsolete] Fine and Coarse selection are merged
             universeSettings: The settings used when adding symbols to the algorithm, specify null to use algorithm.UniverseSettings'''
         self.filterFineData = filterFineData
+        if self.filterFineData == None:
+            self._fundamentalData = True
+        else:
+            self._fundamentalData = False
         self.universeSettings = universeSettings
 
 
@@ -33,10 +37,15 @@ class FundamentalUniverseSelectionModel:
             algorithm: The algorithm instance to create universes for
         Returns:
             The universe defined by this model'''
-        universe = self.CreateCoarseFundamentalUniverse(algorithm)
-        if self.filterFineData:
-            universe = FineFundamentalFilteredUniverse(universe, lambda fine: self.SelectFine(algorithm, fine))
-        return [universe]
+        if self._fundamentalData:
+            universeSettings = algorithm.UniverseSettings if self.universeSettings is None else self.universeSettings
+            universe = FundamentalUniverse(universeSettings, lambda fundamental: self.Select(algorithm, fundamental))
+            return [universe]
+        else:
+            universe = self.CreateCoarseFundamentalUniverse(algorithm)
+            if self.filterFineData:
+                universe = FineFundamentalFilteredUniverse(universe, lambda fine: self.SelectFine(algorithm, fine))
+            return [universe]
 
 
     def CreateCoarseFundamentalUniverse(self, algorithm):
@@ -63,6 +72,16 @@ class FundamentalUniverseSelectionModel:
         return self.SelectCoarse(algorithm, coarse)
 
 
+    def Select(self, algorithm, fundamental):
+        '''Defines the fundamental selection function.
+        Args:
+            algorithm: The algorithm instance
+            fundamental: The fundamental data used to perform filtering
+        Returns:
+            An enumerable of symbols passing the filter'''
+        raise NotImplementedError("Please overrride the 'Select' fundamental function")
+
+
     def SelectCoarse(self, algorithm, coarse):
         '''Defines the coarse fundamental selection function.
         Args:
@@ -70,7 +89,7 @@ class FundamentalUniverseSelectionModel:
             coarse: The coarse fundamental data used to perform filtering
         Returns:
             An enumerable of symbols passing the filter'''
-        raise NotImplementedError("SelectCoarse must be implemented")
+        raise NotImplementedError("Please overrride the 'Select' fundamental function")
 
 
     def SelectFine(self, algorithm, fine):

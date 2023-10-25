@@ -190,6 +190,41 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Get's the CIK value associated with the given <see cref="Symbol"/>
+        /// </summary>
+        /// <param name="symbol">The Lean <see cref="Symbol"/></param>
+        /// <returns>The Central Index Key number (CIK) corresponding to the given Lean <see cref="Symbol"/> if any, else null</returns>
+        public int? CIK(Symbol symbol)
+        {
+            return SymbolToSecurityDefinition(symbol)?.CIK;
+        }
+
+        /// <summary>
+        /// Converts CIK into a Lean <see cref="Symbol"/> array
+        /// </summary>
+        /// <param name="cik">
+        /// The Central Index Key (CIK) of a company
+        /// </param>
+        /// <param name="tradingDate">
+        /// The date that the stock was trading at with the CIK provided. This is used
+        /// to get the ticker of the symbol on this date.
+        /// </param>
+        /// <returns>The Lean Symbols corresponding to the CIK on the trading date provided</returns>
+        public Symbol[] CIK(int cik, DateTime tradingDate)
+        {
+            if (cik == 0)
+            {
+                return Array.Empty<Symbol>();
+            }
+
+            return GetSecurityDefinitions()
+                .Where(x => x.CIK != null && x.CIK == cik)
+                .Select(securityDefinition => SecurityDefinitionToSymbol(securityDefinition, tradingDate))
+                .Where(x => x != null)
+                .ToArray();
+        }
+
+        /// <summary>
         /// Converts a SecurityDefinition to a <see cref="Symbol" />
         /// </summary>
         /// <param name="securityDefinition">Security definition</param>

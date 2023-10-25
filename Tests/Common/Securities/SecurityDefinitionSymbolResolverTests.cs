@@ -47,10 +47,10 @@ namespace QuantConnect.Tests.Common.Securities
             _instance = SecurityDefinitionSymbolResolver.GetInstance(TestGlobals.DataProvider, securityDatabaseFilePath);
 
             var securityDatabaseLines = string.Join("\n",
-                "AAPL R735QTJ8XC9X,03783310,BBG000B9XRY4,2046251,US0378331005",
-                "GOOG T1AZ164W5VTX,38259P50,BBG000BHSKN9,B020QX2,US38259P5089",
-                "GOOCV VP83T1ZUHROL,38259P70,BBG002W96FT9,BKM4JZ7,US38259P7069",
-                "QQQ RIWIV7K5Z9LX,73935A10,BBG000BSWKH7,BDQYP67,US46090E1038");
+                "AAPL R735QTJ8XC9X,03783310,BBG000B9XRY4,2046251,US0378331005,320193",
+                "GOOG T1AZ164W5VTX,38259P50,BBG000BHSKN9,B020QX2,US38259P5089,",
+                "GOOCV VP83T1ZUHROL,38259P70,BBG002W96FT9,BKM4JZ7,US38259P7069,",
+                "QQQ RIWIV7K5Z9LX,73935A10,BBG000BSWKH7,BDQYP67,US46090E1038,");
             File.WriteAllText(securityDatabaseFilePath,securityDatabaseLines);
         }
 
@@ -70,6 +70,21 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsNull(_instance.CUSIP("78462F103", date));
             Assert.IsNull(_instance.CompositeFIGI("BBG001S72SM3", date));
             Assert.IsNull(_instance.SEDOL("BDDXTY3", date));
+            Assert.IsEmpty(_instance.CIK(-9999, date));
+        }
+
+        [Test]
+        public void ResolveCIK()
+        {
+            var aaplCik = 320193;
+            var date = DateTime.UtcNow;
+            // AAPL
+            var aapl = _instance.CIK(aaplCik, date);
+            Assert.IsNotNull(aapl[0]);
+            Assert.AreEqual(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), aapl[0]);
+
+            var cik = _instance.CIK(aapl[0]);
+            Assert.AreEqual(aaplCik, cik);
         }
 
         [TestCase("03783310", 2021, 9, 9, "AAPL", Market.USA)]
