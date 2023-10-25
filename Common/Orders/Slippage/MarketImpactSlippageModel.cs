@@ -57,8 +57,8 @@ namespace QuantConnect.Orders.Slippage
         /// </summary>
         /// <param name="algorithm">IAlgorithm instance</param>
         /// <param name="nonNegative">Indicator whether only non-negative slippage allowed</param>
-        /// <param name="latency">Latency of order received by exchange and filled in seconds(s)</param>
-        /// <param name="impactTime">The market impact time, from order filled to equilibrium, in second(s)</param>
+        /// <param name="latency">time between order submitted and filled, in seconds(s)</param>
+        /// <param name="impactTime">time between order filled and new equilibrium established, in second(s)</param>
         /// <param name="alpha">Exponent of the permanent impact function</param>
         /// <param name="beta">Exponent of the temporary impact function</param>
         /// <param name="gamma">Coefficient of the permanent impact function</param>
@@ -162,7 +162,7 @@ namespace QuantConnect.Orders.Slippage
             // The percentage of impact that an order is averagely being affected is random from 0.0 to 1.0
             var ultimateSlippage = (impact * _random.NextDouble()).SafeDecimalCast();
             // Impact at max can be the asset's price
-            ultimateSlippage = Math.Clamp(ultimateSlippage, -1m, 1m);
+            ultimateSlippage = Math.Min(ultimateSlippage, 1m);
 
             if (_nonNegative)
             {

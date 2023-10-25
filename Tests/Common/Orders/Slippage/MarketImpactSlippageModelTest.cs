@@ -191,9 +191,8 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
                 var order = new MarketOrder(asset.Symbol, orderQuantity, new DateTime(2015, 6, 10, 14, 00, 0));
                 var slippage = _slippageModel.GetSlippageApproximation(asset, order);
 
-                // Slippage is at max the asset's price
+                // Slippage is at max the asset's price, no limit on negative slippage
                 Assert.LessOrEqual(slippage, asset.Price);
-                Assert.GreaterOrEqual(slippage, -asset.Price);
             }
         }
 
