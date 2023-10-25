@@ -18,16 +18,20 @@ class MarketImpactSlippageModelRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2013, 10, 7)
         self.SetEndDate(2013, 10, 13)
+        self.SetCash(10000000)
 
-        self.security = self.AddEquity("SPY", Resolution.Minute)
-        self.security.SetSlippageModel(MarketImpactSlippageModel(self))
+        spy = self.AddEquity("SPY", Resolution.Daily)
+        aapl = self.AddEquity("AAPL", Resolution.Daily)
+
+        spy.SetSlippageModel(MarketImpactSlippageModel(self))
+        aapl.SetSlippageModel(MarketImpactSlippageModel(self))
 
         self.SetWarmUp(1)
 
     def OnData(self, data):
-        if not self.Portfolio.Invested:
-            self.SetHoldings(self.security.Symbol, 1.0)
+        self.SetHoldings("SPY", 0.5)
+        self.SetHoldings("AAPL", -0.5)
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
-            self.Debug(f"Price: {self.security.Price}, filled price: {orderEvent.FillPrice}")
+            self.Debug(f"Price: {self.Securities[orderEvent.Symbol].Price}, filled price: {orderEvent.FillPrice}")

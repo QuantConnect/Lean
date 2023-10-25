@@ -94,8 +94,6 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
         // Test for buy & sell orders
         [TestCase(100000)]
         [TestCase(-100000)]
-        [TestCase(500000000)]
-        [TestCase(-500000000)]
         public void VolatileSlippageComparisonTests(decimal orderQuantity)
         {
             var highVolAsset = _securities[0];
@@ -134,22 +132,22 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
         }
 
         // To test whether the slippage matches our expectation
-        [TestCase(1000, 0, 0.03554)]
-        [TestCase(1000, 1, 0.83588)]
-        [TestCase(1000, 2, 1012.88157)]
-        [TestCase(10, 3, 158.03355)]
-        [TestCase(-1000, 0, 0.03554)]
-        [TestCase(-1000, 1, 0.83588)]
-        [TestCase(-1000, 2, 1012.88157)]
-        [TestCase(-10, 3, 158.03355)]
-        [TestCase(1000000, 0, 9.86666)]
-        [TestCase(1000000, 1, 63.45814)]
-        [TestCase(1000000, 2, 63989.12877)]
-        [TestCase(10000, 3, 10051.77226)]
-        [TestCase(-1000000, 0, 9.86666)]
-        [TestCase(-1000000, 1, 63.45814)]
-        [TestCase(-1000000, 2, 63989.12877)]
-        [TestCase(-10000, 3, 10051.77226)]
+        [TestCase(100, 0, 0.0)]
+        [TestCase(100, 1, 0.0808)]
+        [TestCase(1, 2, 15.5061)]
+        [TestCase(1, 3, 38.7598)]
+        [TestCase(-100, 0, 0.0)]
+        [TestCase(-100, 1, 0.0808)]
+        [TestCase(-1, 2, 15.5061)]
+        [TestCase(-1, 3, 38.7598)]
+        [TestCase(10000, 0, 0.5075)]
+        [TestCase(10000, 1, 3.8421)]
+        [TestCase(100, 2, 100.0)]
+        [TestCase(100, 3, 100.0)]
+        [TestCase(-10000, 0, 0.5075)]
+        [TestCase(-10000, 1, 3.8421)]
+        [TestCase(-100, 2, 100.0)]
+        [TestCase(-100, 3, 100.0)]
         public void SlippageExpectationTests(decimal orderQuantity, int index, double expected)
         {
             var asset = _securities[index];
@@ -165,8 +163,8 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
         [TestCase(-1)]
         [TestCase(1000)]
         [TestCase(-1000)]
-        [TestCase(1000000000)]
-        [TestCase(-1000000000)]
+        [TestCase(1000000)]
+        [TestCase(-1000000)]
         public void NonNegativeSlippageTests(decimal orderQuantity)
         {
             // Test on all liquid/illquid stocks/other asset classes
@@ -176,6 +174,26 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
                 var slippage = _slippageModel.GetSlippageApproximation(asset, order);
 
                 Assert.GreaterOrEqual(slippage, 0m);
+            }
+        }
+
+        // Large order size to hit the threshold
+        // Test on buy & sell orders
+        [TestCase(10000)]
+        [TestCase(-10000)]
+        [TestCase(1000000000)]
+        [TestCase(-1000000000)]
+        public void MaxSlippageValueTests(decimal orderQuantity)
+        {
+            // Test on all liquid/illquid stocks/other asset classes
+            foreach (var asset in _securities)
+            {
+                var order = new MarketOrder(asset.Symbol, orderQuantity, new DateTime(2015, 6, 10, 14, 00, 0));
+                var slippage = _slippageModel.GetSlippageApproximation(asset, order);
+
+                // Slippage is at max the asset's price
+                Assert.LessOrEqual(slippage, asset.Price);
+                Assert.GreaterOrEqual(slippage, -asset.Price);
             }
         }
 

@@ -18,14 +18,11 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Slippage;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     public class MarketImpactSlippageModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Security _security;
-
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -33,9 +30,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 13);
+            SetCash(10000000);
 
-            _security = AddEquity("SPY", Resolution.Minute);
-            _security.SetSlippageModel(new MarketImpactSlippageModel(this));
+            var spy = AddEquity("SPY", Resolution.Daily);
+            var aapl = AddEquity("AAPL", Resolution.Daily);
+
+            spy.SetSlippageModel(new MarketImpactSlippageModel(this));
+            aapl.SetSlippageModel(new MarketImpactSlippageModel(this));
 
             SetWarmUp(1);
         }
@@ -46,10 +47,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested)
-            {
-                SetHoldings(_security.Symbol, 1);
-            }
+            SetHoldings("SPY", 0.5d);
+            SetHoldings("AAPL", -0.5d);
         }
 
         /// <summary>
@@ -60,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Status == OrderStatus.Filled)
             { 
-                Debug($"Price: {_security.Price}, filled price: {orderEvent.FillPrice}");
+                Debug($"Price: {Securities[orderEvent.Symbol].Price}, filled price: {orderEvent.FillPrice}");
             }
             
         }
@@ -78,42 +77,42 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 3954;
+        public long DataPoints => 64;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 253;
+        public int AlgorithmHistoryDataPoints => 506;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "7"},
             {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "283.540%"},
-            {"Drawdown", "2.200%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "1.734%"},
-            {"Sharpe Ratio", "8.852"},
-            {"Probabilistic Sharpe Ratio", "67.609%"},
-            {"Loss Rate", "0%"},
+            {"Average Loss", "-0.04%"},
+            {"Compounding Annual Return", "-92.580%"},
+            {"Drawdown", "4.200%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-3.500%"},
+            {"Sharpe Ratio", "-2.93"},
+            {"Probabilistic Sharpe Ratio", "7.358%"},
+            {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.005"},
-            {"Beta", "0.996"},
-            {"Annual Standard Deviation", "0.222"},
-            {"Annual Variance", "0.049"},
-            {"Information Ratio", "-14.571"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "1.97"},
-            {"Total Fees", "$3.44"},
-            {"Estimated Strategy Capacity", "$50000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "19.91%"},
-            {"OrderListHash", "9f371fc1756ab0245268afd5603c80ed"}
+            {"Alpha", "-3.354"},
+            {"Beta", "1.243"},
+            {"Annual Standard Deviation", "0.306"},
+            {"Annual Variance", "0.094"},
+            {"Information Ratio", "-20.211"},
+            {"Tracking Error", "0.142"},
+            {"Treynor Ratio", "-0.722"},
+            {"Total Fees", "$1858.96"},
+            {"Estimated Strategy Capacity", "$330000000.00"},
+            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
+            {"Portfolio Turnover", "21.04%"},
+            {"OrderListHash", "9df53bf7cc621a3c9e0cf4771abef461"}
         };
     }
 }

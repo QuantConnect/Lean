@@ -43,6 +43,7 @@ namespace QuantConnect.Orders.Slippage
         private readonly IAlgorithm _algorithm;
         private readonly bool _nonNegative;
         private readonly double _latency;
+        private readonly double _impactTime;
         private readonly double _alpha;
         private readonly double _beta;
         private readonly double _gamma;
@@ -57,6 +58,7 @@ namespace QuantConnect.Orders.Slippage
         /// <param name="algorithm">IAlgorithm instance</param>
         /// <param name="nonNegative">Indicator whether only non-negative slippage allowed</param>
         /// <param name="latency">Latency of order received by exchange and filled in seconds(s)</param>
+        /// <param name="impactTime">The market impact time, from order filled to equilibrium, in second(s)</param>
         /// <param name="alpha">Exponent of the permanent impact function</param>
         /// <param name="beta">Exponent of the temporary impact function</param>
         /// <param name="gamma">Coefficient of the permanent impact function</param>
@@ -64,12 +66,23 @@ namespace QuantConnect.Orders.Slippage
         /// <param name="delta">Liquidity scaling factor for permanent impact</param>
         /// <param name="randomSeed">Random seed for generating gaussian noise</param>
         public MarketImpactSlippageModel(IAlgorithm algorithm, bool nonNegative = true, double latency = 0.075d,
-                                         double alpha = 0.891d, double beta = 0.600d, double gamma = 0.314d, 
-                                         double eta = 0.142d, double delta = 0.267d, int randomSeed = 50)
+                                         double impactTime = 1800d, double alpha = 0.891d, double beta = 0.600d, 
+                                         double gamma = 0.314d, double eta = 0.142d, double delta = 0.267d, 
+                                         int randomSeed = 50)
         {
+            if (latency <= 0)
+            {
+                throw new Exception("Latency cannot be less than or equal to 0.");
+            }
+            if (impactTime <= 0)
+            {
+                throw new Exception("impactTime cannot be less than or equal to 0.");
+            }
+
             _algorithm = algorithm;
             _nonNegative = nonNegative;
             _latency = latency;
+            _impactTime = impactTime;
             _alpha = alpha;
             _beta = beta;
             _gamma = gamma;
@@ -90,7 +103,7 @@ namespace QuantConnect.Orders.Slippage
 
             if (_symbolData == null)
             {
-                _symbolData = new SymbolData(_algorithm, asset.Symbol);
+                _symbolData = new SymbolData(_algorithm, asset, _latency, _impactTime);
             }
 
             if (_symbolData.AverageVolume == 0d)
@@ -98,24 +111,18 @@ namespace QuantConnect.Orders.Slippage
                 return 0m;
             }
 
-            // execution time is defined as time difference between order submission and filling here, 
-            // default with 75ms latency (https://www.interactivebrokers.com/download/salesPDFs/10-PDF0513.pdf)
-            // it should be in unit of "trading days", so we need to divide by normal trade day's length
-            var normalTradeDayLength = asset.Exchange.Hours.RegularMarketDuration.TotalDays;
-            var time = TimeSpan.FromSeconds(_latency).TotalDays / normalTradeDayLength;
-            // expected valid time for impact (+ half an hour on the execution time)
-            var timePost = time + 1d / 13d;
+            
             // normalized volume of execution
-            var nu = (double)order.AbsoluteQuantity / time / _symbolData.AverageVolume;
+            var nu = (double)order.AbsoluteQuantity / _symbolData.ExecutionTime / _symbolData.AverageVolume;
             // liquidity adjustment for temporary market impact, if any
             var liquidityAdjustment = asset.Fundamentals != null ?
                                       Math.Pow(asset.Fundamentals.CompanyProfile.SharesOutstanding / _symbolData.AverageVolume, _delta) :
                                       1d;
             // noise adjustment factor
-            var noise = _symbolData.Sigma * Math.Sqrt(timePost);
+            var noise = _symbolData.Sigma * Math.Sqrt(_symbolData.ImpactTime);
 
             // permanent market impact
-            var permanentImpact = _symbolData.Sigma * time * G(nu) * liquidityAdjustment + SampleGaussian() * noise;
+            var permanentImpact = _symbolData.Sigma * _symbolData.ExecutionTime * G(nu) * liquidityAdjustment + SampleGaussian() * noise;
             // temporary market impact
             var temporaryImpact = _symbolData.Sigma * H(nu) + SampleGaussian() * noise;
             // realized market impact
@@ -154,6 +161,8 @@ namespace QuantConnect.Orders.Slippage
         {
             // The percentage of impact that an order is averagely being affected is random from 0.0 to 1.0
             var ultimateSlippage = (impact * _random.NextDouble()).SafeDecimalCast();
+            // Impact at max can be the asset's price
+            ultimateSlippage = Math.Clamp(ultimateSlippage, -1m, 1m);
 
             if (_nonNegative)
             {
@@ -185,31 +194,44 @@ namespace QuantConnect.Orders.Slippage
 
         public double AverageVolume { get; internal set; }
 
-        public SymbolData(IAlgorithm algorithm, Symbol symbol)
+        public double ExecutionTime { get; internal set; }
+
+        public double ImpactTime { get; internal set; }
+
+        public SymbolData(IAlgorithm algorithm, Security asset, double latency, double impactTime)
         {
             _algorithm = algorithm;
-            _symbol = symbol;
+            _symbol = asset.Symbol;
 
             _consolidator = new TradeBarConsolidator(TimeSpan.FromDays(1));
             _consolidator.DataConsolidated += OnDataConsolidated;
-            algorithm.SubscriptionManager.AddConsolidator(symbol, _consolidator);
+            algorithm.SubscriptionManager.AddConsolidator(_symbol, _consolidator);
 
             var configs = algorithm
                 .SubscriptionManager
                 .SubscriptionDataConfigService
-                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true);
-            var configToUse = configs.OrderBy(x => x.TickType).First();
+                .GetSubscriptionDataConfigs(_symbol, includeInternalConfigs: true);
+            var configToUse = configs.Where(x => x.TickType == TickType.Trade).First();
 
             var historyRequestFactory = new HistoryRequestFactory(algorithm);
             var historyRequest = historyRequestFactory.CreateHistoryRequest(configToUse,
                                                                             algorithm.Time - TimeSpan.FromDays(370),
                                                                             algorithm.Time,
-                                                                            algorithm.Securities[symbol].Exchange.Hours,
+                                                                            algorithm.Securities[_symbol].Exchange.Hours,
                                                                             Resolution.Daily);
             foreach (var bar in algorithm.HistoryProvider.GetHistory(new List<HistoryRequest> { historyRequest }, algorithm.TimeZone))
             {
-                _consolidator.Update(bar.Bars[symbol]);
+                _consolidator.Update(bar.Bars[_symbol]);
             }
+
+            // execution time is defined as time difference between order submission and filling here, 
+            // default with 75ms latency (https://www.interactivebrokers.com/download/salesPDFs/10-PDF0513.pdf)
+            // it should be in unit of "trading days", so we need to divide by normal trade day's length
+            var normalTradeDayLength = asset.Exchange.Hours.RegularMarketDuration.TotalDays;
+            ExecutionTime = TimeSpan.FromSeconds(latency).TotalDays / normalTradeDayLength;
+            // expected valid time for impact
+            var adjustedImpactTime = TimeSpan.FromSeconds(impactTime).TotalDays / normalTradeDayLength;
+            ImpactTime = ExecutionTime + adjustedImpactTime;
         }
 
         public void OnDataConsolidated(object _, TradeBar bar)
