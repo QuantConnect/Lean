@@ -212,6 +212,12 @@ namespace QuantConnect.Queues
                 PythonVirtualEnvironment = Config.Get("python-venv"),
                 DeploymentTarget = DeploymentTarget.LocalPlatform,
             };
+
+            var maxPeriodFinish = Config.Get("max-period-finish");
+            if (!string.IsNullOrEmpty(maxPeriodFinish))
+            {
+                backtestJob.MaxPeriodFinish = Time.ParseDate(maxPeriodFinish);
+            }
             // Only set optimization id when backtest is for optimization
             if (!optimizationId.IsNullOrEmpty())
             {
