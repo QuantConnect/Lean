@@ -66,6 +66,9 @@ class BybitCryptoFuturesRegressionAlgorithm(QCAlgorithm):
             if cachedInterestRate != interestRate.Value:
                 raise Exception(f"Unexpected cached margin interest rate for {interestRate.Key}!")
 
+        if not self.slow.IsReady:
+            return
+
         if self.fast > self.slow:
             if not self.Portfolio.Invested and self.Transactions.OrdersCount == 0:
                 ticket = self.Buy(self.btcUsd.Symbol, 1000)
@@ -111,29 +114,28 @@ class BybitCryptoFuturesRegressionAlgorithm(QCAlgorithm):
 
                 if self.Portfolio.TotalProfit != 0:
                     raise Exception(f"Unexpected TotalProfit {self.Portfolio.TotalProfit}")
-        else:
-            # let's revert our position
-            if self.Time.hour > 10 and self.Transactions.OrdersCount == 3:
-                self.Sell(self.btcUsd.Symbol, 300)
+        # let's revert our position
+        elif self.Transactions.OrdersCount == 3:
+            self.Sell(self.btcUsd.Symbol, 300)
 
-                btcUsdHoldings = self.btcUsd.Holdings
-                if abs(btcUsdHoldings.AbsoluteHoldingsCost - 100 * 2) > 1:
-                    raise Exception(f"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}")
+            btcUsdHoldings = self.btcUsd.Holdings
+            if abs(btcUsdHoldings.AbsoluteHoldingsCost - 100 * 2) > 1:
+                raise Exception(f"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}")
 
-                self.Sell(self.btcUsdt.Symbol, 0.03)
+            self.Sell(self.btcUsdt.Symbol, 0.03)
 
-                # USDT futures value is based on it's price
-                holdingsValueUsdt = self.btcUsdt.Price * self.btcUsdt.SymbolProperties.ContractMultiplier * 0.02
-                if abs(self.btcUsdt.Holdings.AbsoluteHoldingsCost - holdingsValueUsdt) > 1:
-                    raise Exception(f"Unexpected holdings cost {self.btcUsdt.Holdings.HoldingsCost}")
+            # USDT futures value is based on it's price
+            holdingsValueUsdt = self.btcUsdt.Price * self.btcUsdt.SymbolProperties.ContractMultiplier * 0.02
+            if abs(self.btcUsdt.Holdings.AbsoluteHoldingsCost - holdingsValueUsdt) > 1:
+                raise Exception(f"Unexpected holdings cost {self.btcUsdt.Holdings.HoldingsCost}")
 
-                # position just opened should be just spread here
-                profit = self.Portfolio.TotalUnrealizedProfit
-                if (5 - abs(profit)) < 0:
-                    raise Exception(f"Unexpected TotalUnrealizedProfit {self.Portfolio.TotalUnrealizedProfit}")
-                # we barely did any difference on the previous trade
-                if (5 - abs(self.Portfolio.TotalProfit)) < 0:
-                    raise Exception(f"Unexpected TotalProfit {self.Portfolio.TotalProfit}")
+            # position just opened should be just spread here
+            profit = self.Portfolio.TotalUnrealizedProfit
+            if (5 - abs(profit)) < 0:
+                raise Exception(f"Unexpected TotalUnrealizedProfit {self.Portfolio.TotalUnrealizedProfit}")
+            # we barely did any difference on the previous trade
+            if (5 - abs(self.Portfolio.TotalProfit)) < 0:
+                raise Exception(f"Unexpected TotalProfit {self.Portfolio.TotalProfit}")
 
     def OnOrderEvent(self, orderEvent):
         self.Debug("{} {}".format(self.Time, orderEvent.ToString()))

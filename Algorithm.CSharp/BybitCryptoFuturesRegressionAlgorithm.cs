@@ -92,6 +92,11 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
+            if (!_slow.IsReady)
+            {
+                return;
+            }
+
             if (_fast > _slow)
             {
                 if (!Portfolio.Invested && Transactions.OrdersCount == 0)
@@ -159,43 +164,40 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
             }
-            else
+            // let's revert our position
+            else if (Transactions.OrdersCount == 3)
             {
-                // let's revert our position
-                if (Time.Hour > 10 && Transactions.OrdersCount == 3)
+                Sell(_btcUsd.Symbol, 300);
+
+                var btcUsdHoldings = _btcUsd.Holdings;
+
+                if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost - 100 * 2) > 1)
                 {
-                    Sell(_btcUsd.Symbol, 300);
+                    throw new Exception($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
+                }
 
-                    var btcUsdHoldings = _btcUsd.Holdings;
+                Sell(_btcUsdt.Symbol, 0.03);
 
-                    if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost - 100 * 2) > 1)
-                    {
-                        throw new Exception($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
-                    }
+                var btcUsdtHoldings = _btcUsdt.Holdings;
 
-                    Sell(_btcUsdt.Symbol, 0.03);
+                // USDT futures value is based on it's price
+                var holdingsValueUsdt = _btcUsdt.Price * _btcUsdt.SymbolProperties.ContractMultiplier * 0.02m;
 
-                    var btcUsdtHoldings = _btcUsdt.Holdings;
+                if (Math.Abs(btcUsdtHoldings.AbsoluteHoldingsCost - holdingsValueUsdt) > 1)
+                {
+                    throw new Exception($"Unexpected holdings cost {btcUsdtHoldings.HoldingsCost}");
+                }
 
-                    // USDT futures value is based on it's price
-                    var holdingsValueUsdt = _btcUsdt.Price * _btcUsdt.SymbolProperties.ContractMultiplier * 0.02m;
-
-                    if (Math.Abs(btcUsdtHoldings.AbsoluteHoldingsCost - holdingsValueUsdt) > 1)
-                    {
-                        throw new Exception($"Unexpected holdings cost {btcUsdtHoldings.HoldingsCost}");
-                    }
-
-                    // position just opened should be just spread here
-                    var profit = Portfolio.TotalUnrealizedProfit;
-                    if ((5 - Math.Abs(profit)) < 0)
-                    {
-                        throw new Exception($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
-                    }
-                    // we barely did any difference on the previous trade
-                    if ((5 - Math.Abs(Portfolio.TotalProfit)) < 0)
-                    {
-                        throw new Exception($"Unexpected TotalProfit {Portfolio.TotalProfit}");
-                    }
+                // position just opened should be just spread here
+                var profit = Portfolio.TotalUnrealizedProfit;
+                if ((5 - Math.Abs(profit)) < 0)
+                {
+                    throw new Exception($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
+                }
+                // we barely did any difference on the previous trade
+                if ((5 - Math.Abs(Portfolio.TotalProfit)) < 0)
+                {
+                    throw new Exception($"Unexpected TotalProfit {Portfolio.TotalProfit}");
                 }
             }
         }
@@ -229,7 +231,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 8627;
+        public long DataPoints => 8625;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -260,11 +262,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.61"},
-            {"Estimated Strategy Capacity", "$350000000.00"},
+            {"Total Fees", "$0.60"},
+            {"Estimated Strategy Capacity", "$200000000.00"},
             {"Lowest Capacity Asset", "BTCUSDT 2V3"},
-            {"Portfolio Turnover", "1.10%"},
-            {"OrderListHash", "38d1a52ca732530a13bac0c0286132f0"}
+            {"Portfolio Turnover", "1.08%"},
+            {"OrderListHash", "7aad0274476dca1c5f866f28afc68662"}
         };
     }
 }
