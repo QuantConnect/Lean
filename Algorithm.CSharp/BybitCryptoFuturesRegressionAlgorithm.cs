@@ -48,17 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Set strategy cash (USD)
             SetCash(100000);
 
-            try
-            {
-                SetBrokerageModel(BrokerageName.BybitFutures, AccountType.Cash);
-                throw new Exception("Expected Cash accounts to not be supported by Bybit");
-            }
-            catch (NotSupportedException)
-            {
-                // Expected, only margin accounts are supported by Bytbit brokerage model
-            }
-
-            SetBrokerageModel(BrokerageName.BybitFutures, AccountType.Margin);
+            SetBrokerageModel(BrokerageName.Bybit, AccountType.Margin);
 
             AddCrypto("BTCUSDT", Resolution.Minute);
 

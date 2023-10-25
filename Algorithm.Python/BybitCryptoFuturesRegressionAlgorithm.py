@@ -28,14 +28,7 @@ class BybitCryptoFuturesRegressionAlgorithm(QCAlgorithm):
         # Set strategy cash (USD)
         self.SetCash(100000)
 
-        try:
-            self.SetBrokerageModel(BrokerageName.BybitFutures, AccountType.Cash)
-            raise Exception("Expected Cash accounts to not be supported by Bybit")
-        except NotSupportedException as e:
-            # Expected, only margin accounts are supported by Bytbit brokerage model
-            pass
-
-        self.SetBrokerageModel(BrokerageName.BybitFutures, AccountType.Margin)
+        self.SetBrokerageModel(BrokerageName.Bybit, AccountType.Margin)
 
         # Translate lines 44-59 to Python:
 

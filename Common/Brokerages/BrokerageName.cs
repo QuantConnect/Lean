@@ -149,11 +149,6 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use Bybit models
         /// </summary>
-        Bybit,
-
-        /// <summary>
-        /// Transaction and submit/execution rules will use Bybit Futures models
-        /// </summary>
-        BybitFutures,
+        Bybit
     }
 }

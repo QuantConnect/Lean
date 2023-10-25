@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
         private static QCAlgorithm GetAlgorithm()
         {
             var algo = new AlgorithmStub();
-            algo.SetBrokerageModel(BrokerageName.BybitFutures, AccountType.Margin);
+            algo.SetBrokerageModel(BrokerageName.Bybit, AccountType.Margin);
             algo.SetFinishedWarmingUp();
             return algo;
         }

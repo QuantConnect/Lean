@@ -35,13 +35,6 @@ class BybitCryptoRegressionAlgorithm(QCAlgorithm):
         # will be replaced with the amount in your actual account.
         self.SetCash("BTC", 1)
 
-        try:
-            self.SetBrokerageModel(BrokerageName.Bybit, AccountType.Margin)
-            raise Exception("Expected Margin accounts to not be supported by Bybit")
-        except NotSupportedException as e:
-            # Expected, only cash accounts are supported by Bytbit brokerage model
-            pass
-
         self.SetBrokerageModel(BrokerageName.Bybit, AccountType.Cash)
 
         self.btcUsdt = self.AddCrypto("BTCUSDT").Symbol

@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [Test]
         public void GetFeeModelTest()
         {
-            var model = new BybitFuturesBrokerageModel(AccountType.Margin);
+            var model = new BybitBrokerageModel(AccountType.Margin);
             Assert.IsInstanceOf<BybitFuturesFeeModel>(model.GetFeeModel(security));
         }
 

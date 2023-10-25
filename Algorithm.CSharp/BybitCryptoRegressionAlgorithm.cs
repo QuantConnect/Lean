@@ -51,16 +51,6 @@ namespace QuantConnect.Algorithm.CSharp
             // will be replaced with the amount in your actual account.
             SetCash("BTC", 1m);
 
-            try
-            {
-                SetBrokerageModel(BrokerageName.Bybit, AccountType.Margin);
-                throw new Exception("Expected Margin accounts to not be supported by Bybit");
-            }
-            catch (NotSupportedException)
-            {
-                // Expected, only cash accounts are supported by Bytbit brokerage model
-            }
-
             SetBrokerageModel(BrokerageName.Bybit, AccountType.Cash);
 
             _btcUsdt = AddCrypto("BTCUSDT").Symbol;
