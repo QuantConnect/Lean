@@ -148,8 +148,6 @@
   "bybit-api-key": "",
   "bybit-api-url": "https://api.bybit.com",
   "bybit-websocket-url": "wss://stream.bybit.com",
-  "bybit-maximum-websocket-connections": 128,
-  "bybit-maximum-symbols-per-connection": 16,
 
   // kraken configuration
   "kraken-api-secret": "",
