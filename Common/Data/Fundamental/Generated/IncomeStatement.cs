@@ -35,7 +35,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20423
         /// </remarks>
         [JsonProperty("20423")]
-        public DateTime ISFileDate => FundamentalService.Get<DateTime>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_ISFileDate);
+        public IncomeStatementFileDate ISFileDate => _iSFileDate ??= new(_timeProvider, _securityIdentifier);
+        private IncomeStatementFileDate _iSFileDate;
 
         /// <summary>
         /// The non-cash expense recognized on intangible assets over the benefit period of the asset.

@@ -35,7 +35,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20001
         /// </remarks>
         [JsonProperty("20001")]
-        public DateTime PeriodEndingDate => FundamentalService.Get<DateTime>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_PeriodEndingDate);
+        public FinancialStatementsPeriodEndingDate PeriodEndingDate => _periodEndingDate ??= new(_timeProvider, _securityIdentifier);
+        private FinancialStatementsPeriodEndingDate _periodEndingDate;
 
         /// <summary>
         /// Specific date on which a company released its filing to the public.
@@ -44,7 +45,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20002
         /// </remarks>
         [JsonProperty("20002")]
-        public DateTime FileDate => FundamentalService.Get<DateTime>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_FileDate);
+        public FinancialStatementsFileDate FileDate => _fileDate ??= new(_timeProvider, _securityIdentifier);
+        private FinancialStatementsFileDate _fileDate;
 
         /// <summary>
         /// The accession number is a unique number that EDGAR assigns to each submission as the submission is received.
@@ -53,7 +55,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20003
         /// </remarks>
         [JsonProperty("20003")]
-        public string AccessionNumber => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_AccessionNumber);
+        public FinancialStatementsAccessionNumber AccessionNumber => _accessionNumber ??= new(_timeProvider, _securityIdentifier);
+        private FinancialStatementsAccessionNumber _accessionNumber;
 
         /// <summary>
         /// The type of filing of the report: for instance, 10-K (annual report) or 10-Q (quarterly report).
@@ -62,7 +65,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20004
         /// </remarks>
         [JsonProperty("20004")]
-        public string FormType => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_FormType);
+        public FinancialStatementsFormType FormType => _formType ??= new(_timeProvider, _securityIdentifier);
+        private FinancialStatementsFormType _formType;
 
         /// <summary>
         /// The name of the auditor that performed the financial statement audit for the given period.
@@ -71,7 +75,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28000
         /// </remarks>
         [JsonProperty("28000")]
-        public string PeriodAuditor => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_PeriodAuditor);
+        public PeriodAuditor PeriodAuditor => _periodAuditor ??= new(_timeProvider, _securityIdentifier);
+        private PeriodAuditor _periodAuditor;
 
         /// <summary>
         /// Auditor opinion code will be one of the following for each annual period: Code Meaning UQ Unqualified Opinion UE Unqualified Opinion with Explanation QM Qualified - Due to change in accounting method QL Qualified - Due to litigation OT Qualified Opinion - Other AO Adverse Opinion DS Disclaim an opinion UA Unaudited
@@ -80,7 +85,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28001
         /// </remarks>
         [JsonProperty("28001")]
-        public string AuditorReportStatus => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_AuditorReportStatus);
+        public AuditorReportStatus AuditorReportStatus => _auditorReportStatus ??= new(_timeProvider, _securityIdentifier);
+        private AuditorReportStatus _auditorReportStatus;
 
         /// <summary>
         /// Which method of inventory valuation was used - LIFO, FIFO, Average, Standard costs, Net realizable value, Others, LIFO and FIFO, FIFO and Average, FIFO and other, LIFO and Average, LIFO and other, Average and other, 3 or more methods, None
@@ -89,7 +95,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28002
         /// </remarks>
         [JsonProperty("28002")]
-        public string InventoryValuationMethod => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_InventoryValuationMethod);
+        public InventoryValuationMethod InventoryValuationMethod => _inventoryValuationMethod ??= new(_timeProvider, _securityIdentifier);
+        private InventoryValuationMethod _inventoryValuationMethod;
 
         /// <summary>
         /// The number of shareholders on record
@@ -98,7 +105,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28003
         /// </remarks>
         [JsonProperty("28003")]
-        public long NumberOfShareHolders => FundamentalService.Get<long>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders);
+        public NumberOfShareHolders NumberOfShareHolders => _numberOfShareHolders ??= new(_timeProvider, _securityIdentifier);
+        private NumberOfShareHolders _numberOfShareHolders;
 
         /// <summary>
         /// The nature of the period covered by an individual set of financial results. The output can be: Quarter, Semi-annual or Annual. Assuming a 12-month fiscal year, quarter typically covers a three-month period, semi-annual a six-month period, and annual a twelve-month period. Annual could cover results collected either from preliminary results or an annual report
@@ -107,7 +115,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28006
         /// </remarks>
         [JsonProperty("28006")]
-        public string PeriodType => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_PeriodType);
+        public FinancialStatementsPeriodType PeriodType => _periodType ??= new(_timeProvider, _securityIdentifier);
+        private FinancialStatementsPeriodType _periodType;
 
         /// <summary>
         /// The sum of Tier 1 and Tier 2 Capital. Tier 1 capital consists of common shareholders equity, perpetual preferred shareholders equity with non-cumulative dividends, retained earnings, and minority interests in the equity accounts of consolidated subsidiaries. Tier 2 capital consists of subordinated debt, intermediate-term preferred stock, cumulative and long-term preferred stock, and a portion of a bank's allowance for loan and lease losses.

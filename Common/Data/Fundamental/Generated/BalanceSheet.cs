@@ -35,7 +35,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23542
         /// </remarks>
         [JsonProperty("23542")]
-        public DateTime BSFileDate => FundamentalService.Get<DateTime>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_BSFileDate);
+        public BalanceSheetFileDate BSFileDate => _bSFileDate ??= new(_timeProvider, _securityIdentifier);
+        private BalanceSheetFileDate _bSFileDate;
 
         /// <summary>
         /// Any money that a company owes its suppliers for goods and services purchased on credit and is expected to pay within the next year or operating cycle.
