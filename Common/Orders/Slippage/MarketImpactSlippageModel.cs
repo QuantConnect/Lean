@@ -57,8 +57,8 @@ namespace QuantConnect.Orders.Slippage
         /// </summary>
         /// <param name="algorithm">IAlgorithm instance</param>
         /// <param name="nonNegative">Indicator whether only non-negative slippage allowed</param>
-        /// <param name="latency">time between order submitted and filled, in seconds(s)</param>
-        /// <param name="impactTime">time between order filled and new equilibrium established, in second(s)</param>
+        /// <param name="latency">Time between order submitted and filled, in seconds(s)</param>
+        /// <param name="impactTime">Time between order filled and new equilibrium established, in second(s)</param>
         /// <param name="alpha">Exponent of the permanent impact function</param>
         /// <param name="beta">Exponent of the temporary impact function</param>
         /// <param name="gamma">Coefficient of the permanent impact function</param>
