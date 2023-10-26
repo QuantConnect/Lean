@@ -26,12 +26,10 @@ class MarketImpactSlippageModelRegressionAlgorithm(QCAlgorithm):
         spy.SetSlippageModel(MarketImpactSlippageModel(self))
         aapl.SetSlippageModel(MarketImpactSlippageModel(self))
 
-        self.SetWarmUp(1)
-
     def OnData(self, data):
         self.SetHoldings("SPY", 0.5)
         self.SetHoldings("AAPL", -0.5)
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
-            self.Debug(f"Price: {self.Securities[orderEvent.Symbol].Price}, filled price: {orderEvent.FillPrice}")
+            self.Debug(f"Price: {self.Securities[orderEvent.Symbol].Price}, filled price: {orderEvent.FillPrice}, quantity: {orderEvent.FillQuantity}")

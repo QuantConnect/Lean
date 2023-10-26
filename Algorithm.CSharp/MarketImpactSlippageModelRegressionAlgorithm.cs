@@ -37,8 +37,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             spy.SetSlippageModel(new MarketImpactSlippageModel(this));
             aapl.SetSlippageModel(new MarketImpactSlippageModel(this));
-
-            SetWarmUp(1);
         }
 
         /// <summary>
@@ -59,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Status == OrderStatus.Filled)
             { 
-                Debug($"Price: {Securities[orderEvent.Symbol].Price}, filled price: {orderEvent.FillPrice}");
+                Debug($"Price: {Securities[orderEvent.Symbol].Price}, filled price: {orderEvent.FillPrice}, quantity: {orderEvent.FillQuantity}");
             }
             
         }
