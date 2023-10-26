@@ -223,7 +223,7 @@ namespace QuantConnect.Tests.Research
             new object[] {new List<string> {"AAPL"}, null, 13.2725m, new Func<FineFundamental, double>(fundamental => fundamental.ValuationRatios.PERatio) },
             new object[] {new List<string> {"AAPL"}, "ValuationRatios.PERatio", 13.2725m},
             new object[] {Symbol.Create("IBM", SecurityType.Equity, Market.USA), "ValuationRatios.BookValuePerShare", 22.5177},
-            new object[] {new List<Symbol> {Symbol.Create("AIG", SecurityType.Equity, Market.USA)}, "FinancialStatements.NumberOfShareHolders", 36319}
+            new object[] {new List<Symbol> {Symbol.Create("AIG", SecurityType.Equity, Market.USA)}, "FinancialStatements.NumberOfShareHolders.Value", 36319}
         };
 
         // Different requests that should return null
@@ -262,7 +262,7 @@ namespace QuantConnect.Tests.Research
                         return 13.2725d;
                     case "ValuationRatios_BookValuePerShare":
                         return 22.5177d;
-                    case "FinancialStatements_NumberOfShareHolders":
+                    case "FinancialStatements_NumberOfShareHolders_TwelveMonths":
                         return 36319;
                 }
                 return null;
