@@ -274,7 +274,7 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
         private class CustomExanteBrokerageModel : ExanteBrokerageModel {}
         private class CustomFTXUSBrokerageModel : FTXUSBrokerageModel {}
         private class CustomFTXBrokerageModel : FTXBrokerageModel {}
-        private  class CustomBybitBrokerageModel : BybitBrokerageModel {}
+        private  class CustomBybitBrokerageModel : BybitBrokerageModel { }
         private class CustomDefaultBrokerageModel : DefaultBrokerageModel {}
 
         private static TestCaseData[] GetCustomBrokerageNameTestCases()
