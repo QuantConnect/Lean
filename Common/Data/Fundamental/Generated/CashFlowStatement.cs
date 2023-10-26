@@ -35,7 +35,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26296
         /// </remarks>
         [JsonProperty("26296")]
-        public DateTime CFFileDate => FundamentalService.Get<DateTime>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_CFFileDate);
+        public CashFlowFileDate CFFileDate => _cFFileDate ??= new(_timeProvider, _securityIdentifier);
+        private CashFlowFileDate _cFFileDate;
 
         /// <summary>
         /// The systematic and rational apportionment of the acquisition cost of intangible operational assets to future periods in which the benefits contribute to revenue. This field is to include Amortization and any variation where Amortization is the first account listed in the line item, excluding Amortization of Intangibles.

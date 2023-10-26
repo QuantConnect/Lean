@@ -23,12 +23,12 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Abstract base class for multi-period fields
     /// </summary>
-    public abstract class MultiPeriodField : ReusuableCLRObject
+    public abstract class MultiPeriodField<T> : ReusuableCLRObject
     {
         /// <summary>
         /// No Value
         /// </summary>
-        public static double NoValue { get; } = BaseFundamentalDataProvider.GetDefault<double>();
+        public static T NoValue { get; } = BaseFundamentalDataProvider.GetDefault<T>();
 
         /// <summary>
         /// The time provider instance to use
@@ -53,7 +53,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public virtual double Value => GetPeriodValues().Select(x => x.Value).DefaultIfEmpty(NoValue).FirstOrDefault();
+        public virtual T Value => GetPeriodValues().Select(x => x.Value).DefaultIfEmpty(NoValue).FirstOrDefault();
 
         /// <summary>
         /// Creates an empty instance
@@ -76,20 +76,20 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Gets a dictionary of period names and values for the field
         /// </summary>
-        public abstract IReadOnlyDictionary<string, double> GetPeriodValues();
+        public abstract IReadOnlyDictionary<string, T> GetPeriodValues();
 
         /// <summary>
         /// Returns true if the field contains a value for the requested period
         /// </summary>
         /// <returns>True if the field contains a value for the requested period</returns>
-        public virtual bool HasPeriodValue(string period) => !BaseFundamentalDataProvider.IsNone(typeof(double), GetPeriodValue(period));
+        public virtual bool HasPeriodValue(string period) => !BaseFundamentalDataProvider.IsNone(typeof(T), GetPeriodValue(period));
 
         /// <summary>
         /// Gets the value of the field for the requested period
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public abstract double GetPeriodValue(string period);
+        public abstract T GetPeriodValue(string period);
 
         /// <summary>
         /// Gets the list of available period names for the field
@@ -157,17 +157,63 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public static implicit operator decimal(MultiPeriodField instance)
+        public static implicit operator T(MultiPeriodField<T> instance)
         {
-            return (decimal)instance.Value;
+            return instance.Value;
+        }
+    }
+
+    public abstract class MultiPeriodField : MultiPeriodField<double>
+    {
+        /// <summary>
+        /// Creates an empty instance
+        /// </summary>
+        protected MultiPeriodField()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="timeProvider"></param>
+        /// <param name="securityIdentifier"></param>
+        protected MultiPeriodField(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        {
         }
 
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public static implicit operator double(MultiPeriodField instance)
+        public static implicit operator decimal(MultiPeriodField instance)
         {
-            return instance.Value;
+            return (decimal)instance.Value;
+        }
+    }
+
+    public abstract class MultiPeriodFieldLong : MultiPeriodField<long>
+    {
+        /// <summary>
+        /// Creates an empty instance
+        /// </summary>
+        protected MultiPeriodFieldLong()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="timeProvider"></param>
+        /// <param name="securityIdentifier"></param>
+        protected MultiPeriodFieldLong(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        {
+        }
+
+        /// <summary>
+        /// Returns the default value for the field
+        /// </summary>
+        public static implicit operator decimal(MultiPeriodFieldLong instance)
+        {
+            return (decimal)instance.Value;
         }
     }
 }

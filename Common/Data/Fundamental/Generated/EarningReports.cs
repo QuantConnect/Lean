@@ -35,7 +35,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20001
         /// </remarks>
         [JsonProperty("20001")]
-        public DateTime PeriodEndingDate => FundamentalService.Get<DateTime>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.EarningReports_PeriodEndingDate);
+        public EarningReportsPeriodEndingDate PeriodEndingDate => _periodEndingDate ??= new(_timeProvider, _securityIdentifier);
+        private EarningReportsPeriodEndingDate _periodEndingDate;
 
         /// <summary>
         /// Specific date on which a company released its filing to the public.
@@ -44,7 +45,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20002
         /// </remarks>
         [JsonProperty("20002")]
-        public DateTime FileDate => FundamentalService.Get<DateTime>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.EarningReports_FileDate);
+        public EarningReportsFileDate FileDate => _fileDate ??= new(_timeProvider, _securityIdentifier);
+        private EarningReportsFileDate _fileDate;
 
         /// <summary>
         /// The accession number is a unique number that EDGAR assigns to each submission as the submission is received.
@@ -53,7 +55,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20003
         /// </remarks>
         [JsonProperty("20003")]
-        public string AccessionNumber => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.EarningReports_AccessionNumber);
+        public EarningReportsAccessionNumber AccessionNumber => _accessionNumber ??= new(_timeProvider, _securityIdentifier);
+        private EarningReportsAccessionNumber _accessionNumber;
 
         /// <summary>
         /// The type of filing of the report: for instance, 10-K (annual report) or 10-Q (quarterly report).
@@ -62,7 +65,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20004
         /// </remarks>
         [JsonProperty("20004")]
-        public string FormType => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.EarningReports_FormType);
+        public EarningReportsFormType FormType => _formType ??= new(_timeProvider, _securityIdentifier);
+        private EarningReportsFormType _formType;
 
         /// <summary>
         /// The nature of the period covered by an individual set of financial results. The output can be: Quarter, Semi-annual or Annual. Assuming a 12-month fiscal year, quarter typically covers a three-month period, semi-annual a six-month period, and annual a twelve-month period. Annual could cover results collected either from preliminary results or an annual report
@@ -71,7 +75,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28006
         /// </remarks>
         [JsonProperty("28006")]
-        public string PeriodType => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.EarningReports_PeriodType);
+        public EarningReportsPeriodType PeriodType => _periodType ??= new(_timeProvider, _securityIdentifier);
+        private EarningReportsPeriodType _periodType;
 
         /// <summary>
         /// Basic EPS from Continuing Operations is the earnings from continuing operations reported by the company divided by the weighted average number of common shares outstanding.
