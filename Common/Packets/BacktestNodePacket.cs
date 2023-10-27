@@ -62,10 +62,16 @@ namespace QuantConnect.Packets
         public DateTime? PeriodFinish;
 
         /// <summary>
-        /// Backtest maximum end date as defined in the Initialize() method.
+        /// Backtest maximum end date
         /// </summary>
-        [JsonProperty(PropertyName = "dtMaxPeriodFinish")]
-        public DateTime? MaxPeriodFinish;
+        [JsonProperty(PropertyName = "dtOutOfSampleMaxEndDate")]
+        public DateTime? OutOfSampleMaxEndDate;
+
+        /// <summary>
+        /// The backtest out of sample day count
+        /// </summary>
+        [JsonProperty(PropertyName = "iOutOfSampleDays")]
+        public int OutOfSampleDays;
 
         /// <summary>
         /// Estimated number of trading days in this backtest task based on the start-end dates.

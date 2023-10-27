@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common
             algorithm.SetParameters(parameters);
 
 
-            var algorithmConfiguration = AlgorithmConfiguration.Create(algorithm);
+            var algorithmConfiguration = AlgorithmConfiguration.Create(algorithm, null);
 
             Assert.AreEqual(currency, algorithmConfiguration.AccountCurrency);
             Assert.AreEqual(brokerageName, algorithmConfiguration.BrokerageName);

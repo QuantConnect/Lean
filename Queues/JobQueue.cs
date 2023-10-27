@@ -213,11 +213,13 @@ namespace QuantConnect.Queues
                 DeploymentTarget = DeploymentTarget.LocalPlatform,
             };
 
-            var maxPeriodFinish = Config.Get("max-period-finish");
-            if (!string.IsNullOrEmpty(maxPeriodFinish))
+            var outOfSampleMaxEndDate = Config.Get("out-of-sample-max-end-date");
+            if (!string.IsNullOrEmpty(outOfSampleMaxEndDate))
             {
-                backtestJob.MaxPeriodFinish = Time.ParseDate(maxPeriodFinish);
+                backtestJob.OutOfSampleMaxEndDate = Time.ParseDate(outOfSampleMaxEndDate);
             }
+            backtestJob.OutOfSampleDays = Config.GetInt("out-of-sample-days");
+
             // Only set optimization id when backtest is for optimization
             if (!optimizationId.IsNullOrEmpty())
             {

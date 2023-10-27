@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using Newtonsoft.Json;
+using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Brokerages;
 using System.Collections.Generic;
@@ -53,15 +55,43 @@ namespace QuantConnect
         public IReadOnlyDictionary<string, string> Parameters;
 
         /// <summary>
+        /// Backtest maximum end date
+        /// </summary>
+        [JsonProperty(PropertyName = "OutOfSampleMaxEndDate")]
+        public DateTime? OutOfSampleMaxEndDate;
+
+        /// <summary>
+        /// The backtest out of sample day count
+        /// </summary>
+        [JsonProperty(PropertyName = "OutOfSampleDays")]
+        public int OutOfSampleDays;
+
+        /// <summary>
+        /// The backtest start date
+        /// </summary>
+        [JsonProperty(PropertyName = "StartDate")]
+        public DateTime StartDate;
+
+        /// <summary>
+        /// The backtest end date
+        /// </summary>
+        [JsonProperty(PropertyName = "EndDate")]
+        public DateTime EndDate;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmConfiguration"/> class
         /// </summary>
-        public AlgorithmConfiguration(string accountCurrency, BrokerageName brokerageName, AccountType accountType,
-            IReadOnlyDictionary<string, string> parameters)
+        public AlgorithmConfiguration(string accountCurrency, BrokerageName brokerageName, AccountType accountType, IReadOnlyDictionary<string, string> parameters,
+            DateTime startDate, DateTime endDate, DateTime? outOfSampleMaxEndDate, int outOfSampleDays = 0)
         {
+            OutOfSampleMaxEndDate = outOfSampleMaxEndDate;
+            OutOfSampleDays = outOfSampleDays;
             AccountCurrency = accountCurrency;
             BrokerageName = brokerageName;
             AccountType = accountType;
             Parameters = parameters;
+            StartDate = startDate;
+            EndDate = endDate;
         }
 
         /// <summary>
@@ -75,14 +105,19 @@ namespace QuantConnect
         /// Provides a convenience method for creating a <see cref="AlgorithmConfiguration"/> for a given algorithm.
         /// </summary>
         /// <param name="algorithm">Algorithm for which the configuration object is being created</param>
+        /// <param name="backtestNodePacket">The associated backtest node packet if any</param>
         /// <returns>A new AlgorithmConfiguration object for the specified algorithm</returns>
-        public static AlgorithmConfiguration Create(IAlgorithm algorithm)
+        public static AlgorithmConfiguration Create(IAlgorithm algorithm, BacktestNodePacket backtestNodePacket)
         {
             return new AlgorithmConfiguration(
                 algorithm.AccountCurrency,
                 BrokerageModel.GetBrokerageName(algorithm.BrokerageModel),
                 algorithm.BrokerageModel.AccountType,
-                algorithm.GetParameters());
+                algorithm.GetParameters(),
+                algorithm.StartDate,
+                algorithm.EndDate,
+                backtestNodePacket?.OutOfSampleMaxEndDate,
+                backtestNodePacket?.OutOfSampleDays ?? 0);
         }
     }
 }
