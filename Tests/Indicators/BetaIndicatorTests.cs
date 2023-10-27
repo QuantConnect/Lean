@@ -23,7 +23,7 @@ using static QuantConnect.Tests.Indicators.TestHelper;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class BetaIndicatorTests : CommonIndicatorTests<TradeBar>
+    public class BetaIndicatorTests : CommonIndicatorTests<IBaseDataBar>
     {
         protected override string TestFileName => "bi_datatest.csv";
 
@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Indicators
 
         private DateTime _reference = new DateTime(2020, 1, 1);
 
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
             var indicator = new Beta("testBetaIndicator", "AMZN 2T", "SPX 2T", 5);
             return indicator;
