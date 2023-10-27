@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Optimizer.Objectives;
@@ -96,6 +97,18 @@ namespace QuantConnect.Optimizer
         /// </summary>
         [JsonProperty(PropertyName = "optimizationStrategySettings", TypeNameHandling = TypeNameHandling.All)]
         public OptimizationStrategySettings OptimizationStrategySettings;
+
+        /// <summary>
+        /// Backtest out of sample maximum end date
+        /// </summary>
+        [JsonProperty(PropertyName = "outOfSampleMaxEndDate")]
+        public DateTime? OutOfSampleMaxEndDate;
+
+        /// <summary>
+        /// The backtest out of sample day count
+        /// </summary>
+        [JsonProperty(PropertyName = "outOfSampleDays")]
+        public int OutOfSampleDays;
 
         /// <summary>
         /// Creates a new instance

@@ -212,6 +212,14 @@ namespace QuantConnect.Queues
                 PythonVirtualEnvironment = Config.Get("python-venv"),
                 DeploymentTarget = DeploymentTarget.LocalPlatform,
             };
+
+            var outOfSampleMaxEndDate = Config.Get("out-of-sample-max-end-date");
+            if (!string.IsNullOrEmpty(outOfSampleMaxEndDate))
+            {
+                backtestJob.OutOfSampleMaxEndDate = Time.ParseDate(outOfSampleMaxEndDate);
+            }
+            backtestJob.OutOfSampleDays = Config.GetInt("out-of-sample-days");
+
             // Only set optimization id when backtest is for optimization
             if (!optimizationId.IsNullOrEmpty())
             {
