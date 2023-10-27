@@ -27,7 +27,7 @@ namespace QuantConnect.Indicators
     /// It is common practice to use the SPX index as a benchmark of the overall reference market when it comes to Beta 
     /// calculations.
     /// </summary>
-    public class Beta : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public class Beta : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// RollingWindow to store the data points of the target symbol
@@ -140,7 +140,7 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input value of this indicator on this time step.
         /// It can be either from the target or the reference symbol</param>
         /// <returns>The beta value of the target used in relation with the reference</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             var inputSymbol = input.Symbol;
             if (inputSymbol == _targetSymbol)

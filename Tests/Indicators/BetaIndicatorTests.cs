@@ -23,7 +23,7 @@ using static QuantConnect.Tests.Indicators.TestHelper;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class BetaIndicatorTests : CommonIndicatorTests<TradeBar>
+    public class BetaIndicatorTests : CommonIndicatorTests<IBaseDataBar>
     {
         protected override string TestFileName => "bi_datatest.csv";
 
@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Indicators
 
         private DateTime _reference = new DateTime(2020, 1, 1);
 
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
             var indicator = new Beta("testBetaIndicator", "AMZN 2T", "SPX 2T", 5);
             return indicator;
@@ -140,6 +140,21 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreNotEqual(0, indicator.Samples);
             firstVolumeRenkoConsolidator.Dispose();
             secondVolumeRenkoConsolidator.Dispose();
+        }
+
+
+        [Test]
+        public void AcceptsQuoteBarsAsInput()
+        {
+            var indicator = new Beta("testBetaIndicator", Symbols.IBM, Symbols.SPY, 5);
+
+            for (var i = 10; i > 0; i--)
+            {
+                indicator.Update(new QuoteBar { Symbol = Symbols.IBM, Ask = new Bar(1, 2, 1, 500), Bid = new Bar(1, 2, 1, 500), Time = _reference.AddDays(1 + i) });
+                indicator.Update(new QuoteBar { Symbol = Symbols.SPY, Ask = new Bar(1, 2, 1, 500), Time = _reference.AddDays(1 + i) });
+            }
+
+            Assert.AreEqual(2, indicator.Samples);
         }
 
         [Test]

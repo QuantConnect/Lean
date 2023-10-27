@@ -316,7 +316,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The Beta indicator for the given parameters</returns>
         [DocumentationAttribute(Indicators)]
-        public Beta B(Symbol target, Symbol reference, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        public Beta B(Symbol target, Symbol reference, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(QuantConnect.Symbol.None, $"B({period})", resolution);
             var beta = new Beta(name, target, reference, period);
