@@ -466,6 +466,8 @@ namespace QuantConnect.Securities
             // If the earlyCloseTime is between a segment, change the close time with it
             // and add it after the segments prior to the earlyCloseTime
             // Otherwise, just take the segments prior to the earlyCloseTime
+            LocalMarketHours newMarketHours = null;
+            List<MarketHoursSegment> segmentsEarlyClose = null;
             if (_earlyCloses.TryGetValue(localDateTime.Date, out var earlyCloseTime))
             {
                 var index = marketHours.Segments.Count;
@@ -487,27 +489,33 @@ namespace QuantConnect.Securities
                     }
                 }
 
-                var newSegments = new List<MarketHoursSegment>(marketHours.Segments.Take(index));
+                segmentsEarlyClose = new List<MarketHoursSegment>(marketHours.Segments.Take(index));
                 if (newSegment != null)
                 {
-                    newSegments.Add(newSegment);
+                    segmentsEarlyClose.Add(newSegment);
                 }
-                marketHours = new LocalMarketHours(localDateTime.DayOfWeek, newSegments);
+                newMarketHours = new LocalMarketHours(localDateTime.DayOfWeek, segmentsEarlyClose);
+            }
+
+            if (segmentsEarlyClose != null && (!_lateOpens.TryGetValue(localDateTime.Date, out var lateOpenTime) || earlyCloseTime >= lateOpenTime))
+            {
+                marketHours = newMarketHours;
             }
 
             // If the lateOpenTime is between a segment, change the start time with it
             // and add it before the segments previous to the lateOpenTime
             // Otherwise, just take the segments previous to the lateOpenTime
-            if (_lateOpens.TryGetValue(localDateTime.Date, out var lateOpenTime))
+            List<MarketHoursSegment> segmentsLateOpen = null;
+            if (_lateOpens.TryGetValue(localDateTime.Date, out lateOpenTime))
             {
                 var index = 0;
-                var newSegments = new List<MarketHoursSegment>();
+                segmentsLateOpen = new List<MarketHoursSegment>();
                 for(var i = 0; i < marketHours.Segments.Count; i++)
                 {
                     var segment = marketHours.Segments[i];
                     if (segment.Start <= lateOpenTime && lateOpenTime <= segment.End)
                     {
-                        newSegments.Add(new (segment.State, lateOpenTime, segment.End));
+                        segmentsLateOpen.Add(new (segment.State, lateOpenTime, segment.End));
                         index = i + 1;
                         break;
                     }
@@ -518,8 +526,14 @@ namespace QuantConnect.Securities
                     }
                 }
 
-                newSegments.AddRange(marketHours.Segments.TakeLast(marketHours.Segments.Count - index));
-                marketHours = new LocalMarketHours(localDateTime.DayOfWeek, newSegments);
+                segmentsLateOpen.AddRange(marketHours.Segments.TakeLast(marketHours.Segments.Count - index));
+                marketHours = new LocalMarketHours(localDateTime.DayOfWeek, segmentsLateOpen);
+            }
+
+            if (segmentsEarlyClose != null && _lateOpens.TryGetValue(localDateTime.Date, out lateOpenTime) && earlyCloseTime <= lateOpenTime)
+            {
+                segmentsEarlyClose.AddRange(segmentsLateOpen);
+                marketHours = new LocalMarketHours(localDateTime.DayOfWeek, segmentsEarlyClose);
             }
 
             return marketHours;
