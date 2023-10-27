@@ -101,7 +101,11 @@ namespace QuantConnect.Data.UniverseSelection
             }
             else if (type == typeof(decimal))
             {
-                return decimal.Zero == (decimal)value;
+                return default(decimal) == (decimal)value;
+            }
+            else if (type == typeof(DateTime))
+            {
+                return default(DateTime) == (DateTime)value;
             }
             return false;
         }
