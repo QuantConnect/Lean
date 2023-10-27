@@ -142,6 +142,21 @@ namespace QuantConnect.Tests.Indicators
             secondVolumeRenkoConsolidator.Dispose();
         }
 
+
+        [Test]
+        public void AcceptsQuoteBarsAsInput()
+        {
+            var indicator = new Beta("testBetaIndicator", Symbols.IBM, Symbols.SPY, 5);
+
+            for (var i = 10; i > 0; i--)
+            {
+                indicator.Update(new QuoteBar { Symbol = Symbols.IBM, Ask = new Bar(1, 2, 1, 500), Bid = new Bar(1, 2, 1, 500), Time = _reference.AddDays(1 + i) });
+                indicator.Update(new QuoteBar { Symbol = Symbols.SPY, Ask = new Bar(1, 2, 1, 500), Time = _reference.AddDays(1 + i) });
+            }
+
+            Assert.AreEqual(2, indicator.Samples);
+        }
+
         [Test]
         public void EqualBetaValue()
         {
