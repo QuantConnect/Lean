@@ -18,11 +18,13 @@ using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Data.Fundamental;
 using QuantConnect.Tests.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
@@ -47,6 +49,8 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
                 TestGlobals.DataProvider, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
                 null, true, new DataPermissionManager(), _algorithm.ObjectStore));
             _algorithm.SetHistoryProvider(historyProvider);
+
+            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(), false);
 
             var optionContract = Symbol.CreateOption(Symbols.AAPL, Market.USA,
                 OptionStyle.American, OptionRight.Call, 100, new DateTime(2016, 1, 15));

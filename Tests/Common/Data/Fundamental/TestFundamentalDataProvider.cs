@@ -59,6 +59,12 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
             { "NB R735QTJ8XC9X", 181116782342 },
         };
 
+        private readonly Dictionary<string, long> _sharesOutstanding = new()
+        {
+            { "SPY R735QTJ8XC9X", 1331000000 },
+            { "AAPL R735QTJ8XC9X", 22337000000000 },
+        };
+
         public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
         {
             if (securityIdentifier == SecurityIdentifier.Empty)
@@ -100,6 +106,12 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
                         return "Cupertino";
                     }
                     return string.Empty;
+                case "CompanyProfile_SharesOutstanding":
+                    if (_sharesOutstanding.TryGetValue(securityIdentifier.ToString(), out var sharesOutstanding))
+                    {
+                        return sharesOutstanding;
+                    }
+                    return 0L;
                 case "CompanyReference_IndustryTemplateCode":
                     if(_industryTemplateCode.TryGetValue(securityIdentifier.ToString(), out var  industryTemplateCode))
                     {

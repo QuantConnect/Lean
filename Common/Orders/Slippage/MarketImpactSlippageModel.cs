@@ -114,7 +114,7 @@ namespace QuantConnect.Orders.Slippage
             // normalized volume of execution
             var nu = (double)order.AbsoluteQuantity / _symbolData.ExecutionTime / _symbolData.AverageVolume;
             // liquidity adjustment for temporary market impact, if any
-            var liquidityAdjustment = asset.Fundamentals?.CompanyProfile?.SharesOutstanding != null ?
+            var liquidityAdjustment = asset.Fundamentals.HasFundamentalData && asset.Fundamentals.CompanyProfile.SharesOutstanding != default ?
                                       Math.Pow(asset.Fundamentals.CompanyProfile.SharesOutstanding / _symbolData.AverageVolume, _delta) :
                                       1d;
             // noise adjustment factor

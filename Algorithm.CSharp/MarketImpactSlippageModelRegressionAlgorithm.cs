@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "7"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.04%"},
-            {"Compounding Annual Return", "-92.580%"},
+            {"Compounding Annual Return", "-92.581%"},
             {"Drawdown", "4.200%"},
             {"Expectancy", "-1"},
             {"Net Profit", "-3.500%"},
@@ -103,14 +103,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "1.243"},
             {"Annual Standard Deviation", "0.306"},
             {"Annual Variance", "0.094"},
-            {"Information Ratio", "-20.211"},
+            {"Information Ratio", "-20.209"},
             {"Tracking Error", "0.142"},
             {"Treynor Ratio", "-0.722"},
-            {"Total Fees", "$1858.96"},
+            {"Total Fees", "$1858.97"},
             {"Estimated Strategy Capacity", "$330000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
             {"Portfolio Turnover", "21.04%"},
-            {"OrderListHash", "9df53bf7cc621a3c9e0cf4771abef461"}
+            {"OrderListHash", "b9d6a8805e81d79c97316b1532df52cf"}
         };
     }
 }
