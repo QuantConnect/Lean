@@ -21,12 +21,7 @@ using QuantConnect.Data;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// In technical analysis Beta indicator is used to measure volatility or risk of a target (ETF) relative to the overall 
-    /// risk (volatility) of the reference (market indexes). The Beta indicators compares target's price movement to the 
-    /// movements of the indexes over the same period of time.
-    /// 
-    /// It is common practice to use the SPX index as a benchmark of the overall reference market when it comes to Beta 
-    /// calculations.
+    /// Alpha is a measure of residual risk of an investment relative to some market index 
     /// </summary>
     public class Alpha : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
@@ -112,11 +107,6 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Computes the next value for this indicator from the given state.
-        /// 
-        /// As this indicator is receiving data points from two different symbols,
-        /// it's going to compute the next value when the amount of data points
-        /// of each of them is the same. Otherwise, it will return the last Alpha
-        /// value computed
         /// </summary>
         /// <param name="input">The input value of this indicator on this time step.
         /// It can be either from the target or the reference symbol</param>
