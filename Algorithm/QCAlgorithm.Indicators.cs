@@ -193,6 +193,27 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a Alpha indicator for the given target symbol in relation with the reference used.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="target">The target symbol whose Beta value we want</param>
+        /// <param name="reference">The reference symbol to compare with the target symbol</param>
+        /// <param name="period">The period of the Beta indicator</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Beta indicator for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public Alpha A(Symbol target, Symbol reference, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"A({period})", resolution);
+            var alpha = new Alpha(name, target, reference, period);
+            InitializeIndicator(target, alpha, resolution, selector);
+            InitializeIndicator(reference, alpha, resolution, selector);
+
+            return alpha;
+        }
+
+        /// <summary>
         /// Creates a new AbsolutePriceOscillator indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose APO we want</param>
