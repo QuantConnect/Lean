@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data.UniverseSelection;
 
@@ -43,6 +44,16 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
             var noValue = BaseFundamentalDataProvider.GetDefault<decimal>();
 
             Assert.AreEqual(0, noValue);
+            Assert.IsTrue(BaseFundamentalDataProvider.IsNone(noValue));
+        }
+
+        [Test]
+        public void DatetimeNoTz()
+        {
+            var noValue = BaseFundamentalDataProvider.GetDefault<DateTime>();
+
+            Assert.AreEqual(DateTime.MinValue, noValue);
+            Assert.AreEqual(DateTimeKind.Unspecified, noValue.Kind);
             Assert.IsTrue(BaseFundamentalDataProvider.IsNone(noValue));
         }
     }
