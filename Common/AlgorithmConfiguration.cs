@@ -15,6 +15,7 @@
 
 using System;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Brokerages;
@@ -70,12 +71,14 @@ namespace QuantConnect
         /// The backtest start date
         /// </summary>
         [JsonProperty(PropertyName = "StartDate")]
+        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
         public DateTime StartDate;
 
         /// <summary>
         /// The backtest end date
         /// </summary>
         [JsonProperty(PropertyName = "EndDate")]
+        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
         public DateTime EndDate;
 
         /// <summary>
