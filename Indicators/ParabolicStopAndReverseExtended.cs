@@ -119,11 +119,8 @@ namespace QuantConnect.Indicators
 
                  _previousBar = input;
                 // Makes sense to return _sarInit when its non-zero
-                if(_sarInit > 0)
-                    return _sarInit; 
-                else if(_sarInit < 0)
-                    return Math.Abs(_sarInit); 
-            
+                if (_sarInit != 0) 
+                    return Math.Abs(_sarInit);
                 // Otherwise, return default
                 return input.Close; 
             }
@@ -177,9 +174,9 @@ namespace QuantConnect.Indicators
         private bool HasNegativeDM(IBaseDataBar currentBar){
             if (currentBar.Low >= _previousBar.Low)
                 return false;
-            decimal diff1 = currentBar.High - _previousBar.High; 
-            decimal diff2 = _previousBar.Low - currentBar.Low; 
-            return diff1 < diff2; 
+            var highDiff = currentBar.High - _previousBar.High; 
+            decimal lowDiff = _previousBar.Low - currentBar.Low; 
+            return highDiff< lowDiff; 
         }
 
         /// <summary>
