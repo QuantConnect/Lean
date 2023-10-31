@@ -194,9 +194,16 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase(SecurityType.Crypto, typeof(BybitFeeModel))]
         [TestCase(SecurityType.CryptoFuture, typeof(BybitFuturesFeeModel))]
+        [TestCase(SecurityType.Base, typeof(ConstantFeeModel))]
         public void ReturnCorrectFeeModel(SecurityType securityType, Type expectedFeeModelType)
         {
-            var security = securityType == SecurityType.Crypto ? _crypto : _cryptoFuture;
+            var security = securityType switch
+            {
+                SecurityType.Crypto => _crypto,
+                SecurityType.CryptoFuture => _cryptoFuture,
+                _ => TestsHelpers.GetSecurity(symbol: "BTCUSDT", securityType: SecurityType.Base, market: Market.Bybit, quoteCurrency: "USDT")
+            };
+
             Assert.IsInstanceOf(expectedFeeModelType, BybitBrokerageModel.GetFeeModel(security));
         }
 
