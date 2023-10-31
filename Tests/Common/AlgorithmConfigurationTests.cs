@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common
 
             var serialized = JsonConvert.SerializeObject(algorithmConfiguration);
 
-            Assert.AreEqual("{\"AccountCurrency\":\"GBP\",\"Brokerage\":12,\"AccountType\":1,\"Parameters\":{\"a\":\"A\",\"b\":\"B\"},\"OutOfSampleMaxEndDate\":\"2023-01-01T00:00:00\",\"OutOfSampleDays\":30,\"StartDate\":\"1998-01-01 00:00:00\",\"EndDate\":\"2023-10-26 23:59:59\"}", serialized);
+            Assert.AreEqual($"{{\"AccountCurrency\":\"GBP\",\"Brokerage\":12,\"AccountType\":1,\"Parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"OutOfSampleMaxEndDate\":\"2023-01-01T00:00:00\",\"OutOfSampleDays\":30,\"StartDate\":\"1998-01-01 00:00:00\",\"EndDate\":\"{algorithm.EndDate.ToString(DateFormat.UI)}\"}}", serialized);
         }
 
         private static TestCaseData[] AlgorithmConfigurationTestCases => new[]

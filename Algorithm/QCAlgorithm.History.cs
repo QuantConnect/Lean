@@ -807,24 +807,25 @@ namespace QuantConnect.Algorithm
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
             // filter out any universe securities that may have made it this far
-            var filteredRequests = GetFilterestRequests(requests, out var hasPythonDataRequest);
+            var filteredRequests = GetFilterestRequests(requests);
 
             // filter out future data to prevent look ahead bias
             var history = HistoryProvider.GetHistory(filteredRequests, timeZone);
 
-            if (hasPythonDataRequest && PythonEngine.IsInitialized)
+            if (PythonEngine.IsInitialized)
             {
                 // add protection against potential python deadlocks
+                // with parallel history requests we reuse the data stack threads to serve the history calls because of this we need to make sure to release
+                // the GIL before waiting on the history request because there could be a work/job in the data stack queues which needs the GIL
                 return WrapPythonDataHistory(history);
             }
 
             return history;
         }
 
-        private List<HistoryRequest> GetFilterestRequests(IEnumerable<HistoryRequest> requests, out bool hasPythonDataRequest)
+        private List<HistoryRequest> GetFilterestRequests(IEnumerable<HistoryRequest> requests)
         {
             List<HistoryRequest> result = new();
-            hasPythonDataRequest = false;
             var sentMessage = false;
             // filter out any universe securities that may have made it this far
             Dictionary<Type, HistoryRequest> baseDataCollectionTypes = null;
@@ -865,11 +866,6 @@ namespace QuantConnect.Algorithm
                 else
                 {
                     result.Add(request);
-                }
-
-                if (!hasPythonDataRequest)
-                {
-                    hasPythonDataRequest = request.IsCustomData && typeof(PythonData).IsAssignableFrom(request.DataType);
                 }
             }
 
@@ -1209,20 +1205,19 @@ namespace QuantConnect.Algorithm
         {
             using var enumerator = history.GetEnumerator();
 
-            var hasData = true;
-            while (hasData)
+            using (Py.GIL())
             {
-                // TODO: we don't really need the GIL. We should find a way to check whether we have the lock and only call this wrapper method if we do.
-                using (Py.GIL())
+                var hasData = true;
+                while (hasData)
                 {
                     var state = PythonEngine.BeginAllowThreads();
                     hasData = enumerator.MoveNext();
                     PythonEngine.EndAllowThreads(state);
-                }
 
-                if (hasData)
-                {
-                    yield return enumerator.Current;
+                    if (hasData)
+                    {
+                        yield return enumerator.Current;
+                    }
                 }
             }
         }
