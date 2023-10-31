@@ -16,8 +16,6 @@
 using System;
 using QuantConnect.Data.Market;
 
-// add a comment
-
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -175,8 +173,8 @@ namespace QuantConnect.Indicators
             if (currentBar.Low >= _previousBar.Low)
                 return false;
             var highDiff = currentBar.High - _previousBar.High; 
-            decimal lowDiff = _previousBar.Low - currentBar.Low; 
-            return highDiff< lowDiff; 
+            var lowDiff = _previousBar.Low - currentBar.Low; 
+            return highDiff < lowDiff; 
         }
 
         /// <summary>
