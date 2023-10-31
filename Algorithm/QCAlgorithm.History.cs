@@ -1205,19 +1205,18 @@ namespace QuantConnect.Algorithm
         {
             using var enumerator = history.GetEnumerator();
 
-            using (Py.GIL())
+            var hasData = true;
+            while (hasData)
             {
-                var hasData = true;
-                while (hasData)
+                using (Py.GIL())
                 {
                     var state = PythonEngine.BeginAllowThreads();
                     hasData = enumerator.MoveNext();
                     PythonEngine.EndAllowThreads(state);
-
-                    if (hasData)
-                    {
-                        yield return enumerator.Current;
-                    }
+                }
+                if (hasData)
+                {
+                    yield return enumerator.Current;
                 }
             }
         }
