@@ -1208,6 +1208,7 @@ namespace QuantConnect.Algorithm
             var hasData = true;
             while (hasData)
             {
+                // When yielding in tasks there's no guarantee it will continue in the same thread, but we need that guarantee
                 using (Py.GIL())
                 {
                     var state = PythonEngine.BeginAllowThreads();
