@@ -73,6 +73,7 @@ public class BybitBrokerageModel : DefaultBrokerageModel
         {
             SecurityType.Crypto => new BybitFeeModel(),
             SecurityType.CryptoFuture => new BybitFuturesFeeModel(),
+            SecurityType.Base => base.GetFeeModel(security),
             _ => throw new ArgumentOutOfRangeException(nameof(security), security, $"Not supported security type {security.Type}")
         };
     }
@@ -157,7 +158,7 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     /// <returns>True if the brokerage could process the order, false otherwise</returns>
     public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
     {
-        if (security.Type != SecurityType.Crypto && security.Type != SecurityType.CryptoFuture)
+        if (security.Type != SecurityType.Crypto && security.Type != SecurityType.CryptoFuture && security.Type != SecurityType.Base)
         {
             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                 Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
