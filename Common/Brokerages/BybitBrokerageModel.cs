@@ -73,6 +73,7 @@ public class BybitBrokerageModel : DefaultBrokerageModel
         {
             SecurityType.Crypto => new BybitFeeModel(),
             SecurityType.CryptoFuture => new BybitFuturesFeeModel(),
+            SecurityType.Base => base.GetFeeModel(security),
             _ => throw new ArgumentOutOfRangeException(nameof(security), security, $"Not supported security type {security.Type}")
         };
     }
