@@ -3020,6 +3020,45 @@ def getHistory(algorithm, start, end):
             }
         }
 
+        [Test]
+        public void PythonCustomDataThrowing()
+        {
+            var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
+            algorithm.SetHistoryProvider(new ThrowingHistoryProvider());
+
+            using (Py.GIL())
+            {
+                PythonInitializer.Initialize();
+                algorithm.SetPandasConverter();
+
+                var testModule = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def getHistory(algorithm, symbol, period):
+    return algorithm.History(symbol, period, Resolution.Minute)
+    ");
+                dynamic getDateRangeHistory = testModule.GetAttr("getHistory");
+
+                Assert.Throws<ClrBubbledException>(() => getDateRangeHistory(algorithm, Symbols.AAPL, 10));
+            }
+        }
+
+        private class ThrowingHistoryProvider : HistoryProviderBase
+        {
+            public override int DataPointCount => 0;
+
+            public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            {
+                throw new Exception("Expected exception");
+                yield return null;
+            }
+
+            public override void Initialize(HistoryProviderInitializeParameters parameters)
+            {
+            }
+        }
+
         private static TestCaseData[] GetHistoryWithDataNormalizationModeTestCases()
         {
             var equityStart = new DateTime(2014, 06, 05); // There is an AAPL split on 2014/06/06

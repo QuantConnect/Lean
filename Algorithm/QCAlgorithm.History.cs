@@ -1205,19 +1205,26 @@ namespace QuantConnect.Algorithm
         {
             using var enumerator = history.GetEnumerator();
 
-            using (Py.GIL())
+            var hasData = true;
+            while (hasData)
             {
-                var hasData = true;
-                while (hasData)
+                // When yielding in tasks there's no guarantee it will continue in the same thread, but we need that guarantee
+                using (Py.GIL())
                 {
                     var state = PythonEngine.BeginAllowThreads();
-                    hasData = enumerator.MoveNext();
-                    PythonEngine.EndAllowThreads(state);
-
-                    if (hasData)
+                    try
                     {
-                        yield return enumerator.Current;
+                        hasData = enumerator.MoveNext();
                     }
+                    finally
+                    {
+                        // we always need to reset the state so that we can dispose of the GIL
+                        PythonEngine.EndAllowThreads(state);
+                    }
+                }
+                if (hasData)
+                {
+                    yield return enumerator.Current;
                 }
             }
         }
