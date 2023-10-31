@@ -45,14 +45,24 @@ namespace QuantConnect.Data.Fundamental
         /// <returns>The unique instance provider</returns>
         public static FundamentalInstanceProvider Get(Symbol symbol)
         {
-            lock(_cache)
+            FundamentalInstanceProvider result = null;
+            lock (_cache)
             {
-                if (!_cache.TryGetValue(symbol.ID, out var result))
-                {
-                    _cache[symbol.ID] = result = new FundamentalInstanceProvider(symbol);
-                }
-                return result;
+                _cache.TryGetValue(symbol.ID, out result);
             }
+
+            if (result == null)
+            {
+                // we create the fundamental instance provider without holding the cache lock, this is because it uses the pygil
+                // Deadlock case: if the main thread has PyGil and wants to take lock on cache (security.Fundamentals use case) and the data
+                // stack thread takes the lock on the cache (creating new fundamentals) and next wants the pygil deadlock!
+                result = new FundamentalInstanceProvider(symbol);
+                lock (_cache)
+                {
+                    _cache[symbol.ID] = result;
+                }
+            }
+            return result;
         }
 
         /// <summary>
