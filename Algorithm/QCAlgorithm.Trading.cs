@@ -1176,7 +1176,9 @@ namespace QuantConnect.Algorithm
             }
 
             // Check for splits
-            if (request.SecurityType.IsOption() && CurrentSlice.Splits.TryGetValue(request.Symbol.Underlying, out _))
+            if (request.SecurityType.IsOption() &&
+                CurrentSlice.Splits.Count > 0 &&
+                CurrentSlice.Splits.TryGetValue(request.Symbol.Underlying, out _))
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.OptionOrderOnStockSplit,
                     "Options orders are not allowed when a split occurred for its underlying stock");
