@@ -28,6 +28,8 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -1459,6 +1461,28 @@ namespace QuantConnect.Tests.Algorithm
             Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
         }
 
+        [Test]
+        public void OptionOrdersAreNotAllowedDuringASplit()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+            var aapl = algo.AddEquity("AAPL");
+            var applOptionContract = algo.AddOptionContract(
+                Symbol.CreateOption(aapl.Symbol, Market.USA, OptionStyle.American, OptionRight.Call, 40m, new DateTime(2014, 07, 19)));
+
+            var splitDate = new DateTime(2014, 06, 09);
+            aapl.SetMarketPrice(new IndicatorDataPoint(splitDate, 650m));
+            applOptionContract.SetMarketPrice(new IndicatorDataPoint(splitDate, 5m));
+
+            algo.SetCurrentSlice(new Slice(splitDate, new[] { new Split(aapl.Symbol, splitDate, 650m, 1 / 7, SplitType.SplitOccurred) }, splitDate));
+
+            var ticket = algo.MarketOrder(applOptionContract.Symbol, 1);
+            Assert.AreEqual(OrderStatus.Invalid, ticket.Status);
+            Assert.IsTrue(ticket.SubmitRequest.Response.IsError);
+            Assert.AreEqual(OrderResponseErrorCode.OptionOrderOnStockSplit, ticket.SubmitRequest.Response.ErrorCode);
+            Assert.IsTrue(ticket.SubmitRequest.Response.ErrorMessage.Contains(
+                "Options orders are not allowed when a split occurred for its underlying stock", StringComparison.InvariantCulture));
+        }
+
         [TestCase(OrderType.MarketOnOpen)]
         [TestCase(OrderType.MarketOnClose)]
         public void GoodTilDateTimeInForceNotSupportedForMOOAndMOCOrders(OrderType orderType)
@@ -1631,6 +1655,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.Transactions.SetOrderProcessor(_fakeOrderProcessor);
             msft = algo.Securities[Symbols.MSFT];
             msft.SetLeverage(leverage);
+            algo.SetCurrentSlice(new Slice(DateTime.MinValue, Enumerable.Empty<BaseData>(), DateTime.MinValue));
             return algo;
         }
 
