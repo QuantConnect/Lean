@@ -32,6 +32,7 @@ namespace QuantConnect.Algorithm
         private bool _isMarketOnOpenOrderWarningSent;
         private bool _isMarketOnOpenOrderRestrictedForFuturesWarningSent;
         private bool _isGtdTfiForMooAndMocOrdersValidationWarningSent;
+        private bool _isOptionsOrderOnStockSplitWarningSent;
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
@@ -1178,9 +1179,16 @@ namespace QuantConnect.Algorithm
             // Check for splits. Option are selected before the security price is split-adjusted, so in this time step
             // we don't allow option orders to make sure they are properly filtered using the right security price.
             if (request.SecurityType.IsOption() &&
+                CurrentSlice != null &&
                 CurrentSlice.Splits.Count > 0 &&
                 CurrentSlice.Splits.TryGetValue(request.Symbol.Underlying, out _))
             {
+                if (!_isOptionsOrderOnStockSplitWarningSent)
+                {
+                    Debug("Warning: Options orders are not allowed when a split occurred for its underlying stock");
+                    _isOptionsOrderOnStockSplitWarningSent = true;
+                }
+
                 return OrderResponse.Error(request, OrderResponseErrorCode.OptionOrderOnStockSplit,
                     "Options orders are not allowed when a split occurred for its underlying stock");
             }
