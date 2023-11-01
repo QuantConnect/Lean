@@ -241,7 +241,6 @@ namespace QuantConnect.Tests.Brokerages
                 if (holding.Quantity == 0) continue;
                 Log.Trace("Liquidating: " + holding);
                 var order = new MarketOrder(holding.Symbol, -holding.Quantity, DateTime.UtcNow);
-                _orderProvider.Add(order);
                 PlaceOrderWaitForStatus(order, OrderStatus.Filled);
             }
         }

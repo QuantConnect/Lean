@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// PandasConverter for this Algorithm
         /// </summary>
-        public PandasConverter PandasConverter { get; private set; }
+        public virtual PandasConverter PandasConverter { get; private set; }
 
         /// <summary>
         /// Sets pandas converter
