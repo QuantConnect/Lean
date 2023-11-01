@@ -1175,7 +1175,8 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("Can not set a limit price using market combo orders");
             }
 
-            // Check for splits
+            // Check for splits. Option are selected before the security price is split-adjusted, so in this time step
+            // we don't allow option orders to make sure they are properly filtered using the right security price.
             if (request.SecurityType.IsOption() &&
                 CurrentSlice.Splits.Count > 0 &&
                 CurrentSlice.Splits.TryGetValue(request.Symbol.Underlying, out _))
