@@ -14,13 +14,13 @@
  *
 */
 
+using QuantConnect.Python;
 using QuantConnect.Algorithm;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Common.Securities;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -44,6 +44,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var orderProcessor = new FakeOrderProcessor();
             orderProcessor.TransactionManager = Transactions;
             Transactions.SetOrderProcessor(orderProcessor);
+            PythonInitializer.Initialize();
             SetPandasConverter();
         }
 
