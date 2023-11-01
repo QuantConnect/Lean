@@ -1175,6 +1175,13 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("Can not set a limit price using market combo orders");
             }
 
+            // Check for splits
+            if (request.SecurityType.IsOption() && CurrentSlice.Splits.TryGetValue(request.Symbol.Underlying, out _))
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.OptionOrderOnStockSplit,
+                    "Options orders are not allowed when a split occurred for its underlying stock");
+            }
+
             // passes all initial order checks
             return OrderResponse.Success(request);
         }

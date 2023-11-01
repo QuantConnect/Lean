@@ -188,6 +188,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Exercise time before expiry for European options (-33)
         /// </summary>
-        EuropeanOptionNotExpiredOnExercise = -33
+        EuropeanOptionNotExpiredOnExercise = -33,
+
+        /// <summary>
+        /// Option order is invalid due to underlying stock split (-34)
+        /// </summary>
+        OptionOrderOnStockSplit = -34
     }
 }
