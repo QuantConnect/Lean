@@ -156,8 +156,6 @@
   "eze-locale": "",
   "eze-password": "",
   "eze-user-name": "",
-  "eze-trading-route": "",
-  "eze-trading-account": "",
 
   // kraken configuration
   "kraken-api-secret": "",

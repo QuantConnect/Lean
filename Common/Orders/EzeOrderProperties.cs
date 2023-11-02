@@ -35,20 +35,20 @@ namespace QuantConnect.Orders
         /// <summary>
         /// User message/notes
         /// </summary>
-        public string UserMessage { get; internal set; }
+        public string Notes { get; internal set; }
 
         /// <summary>
-        /// 
+        /// Initializes a new instance of the <see cref="EzeOrderProperties"/> class
         /// </summary>
-        /// <param name="route"></param>
-        /// <param name="account"></param>
-        /// <param name="exchange"></param>
-        /// <param name="userMessage"></param>
-        public EzeOrderProperties(string route, string account, Exchange exchange, string userMessage = "") : base(exchange)
+        /// <param name="route">Trading route name (America, Europe, Asia)</param>
+        /// <param name="account">Trading account with specific permission</param>
+        /// <param name="exchange">Exchange name</param>
+        /// <param name="notes">Some notes about order</param>
+        public EzeOrderProperties(string route, string account, Exchange exchange, string notes = "") : base(exchange)
         {
             Route = route;
             Account = account;
-            UserMessage = userMessage;
+            Notes = notes;
         }
     }
 }
