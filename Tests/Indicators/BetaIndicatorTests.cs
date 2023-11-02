@@ -23,7 +23,7 @@ using static QuantConnect.Tests.Indicators.TestHelper;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class BetaIndicatorTests : CommonIndicatorTests<TradeBar>
+    public class BetaIndicatorTests : CommonIndicatorTests<IBaseDataBar>
     {
         protected override string TestFileName => "bi_datatest.csv";
 
@@ -31,16 +31,16 @@ namespace QuantConnect.Tests.Indicators
 
         private DateTime _reference = new DateTime(2020, 1, 1);
 
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            var indicator = new Beta("testBetaIndicator", 5, "AMZN 2T", "SPX 2T");
+            var indicator = new Beta("testBetaIndicator", "AMZN 2T", "SPX 2T", 5);
             return indicator;
         }
 
         [Test]
         public override void TimeMovesForward()
         {
-            var indicator = new Beta("testBetaIndicator", 5, Symbols.IBM, Symbols.SPY);
+            var indicator = new Beta("testBetaIndicator",  Symbols.IBM, Symbols.SPY, 5);
 
             for (var i = 10; i > 0; i--)
             {
@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void WarmsUpProperly()
         {
-            var indicator = new Beta("testBetaIndicator", 5, Symbols.IBM, Symbols.SPY);
+            var indicator = new Beta("testBetaIndicator", Symbols.IBM, Symbols.SPY, 5);
             var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
             if (!period.HasValue)
@@ -142,10 +142,25 @@ namespace QuantConnect.Tests.Indicators
             secondVolumeRenkoConsolidator.Dispose();
         }
 
+
+        [Test]
+        public void AcceptsQuoteBarsAsInput()
+        {
+            var indicator = new Beta("testBetaIndicator", Symbols.IBM, Symbols.SPY, 5);
+
+            for (var i = 10; i > 0; i--)
+            {
+                indicator.Update(new QuoteBar { Symbol = Symbols.IBM, Ask = new Bar(1, 2, 1, 500), Bid = new Bar(1, 2, 1, 500), Time = _reference.AddDays(1 + i) });
+                indicator.Update(new QuoteBar { Symbol = Symbols.SPY, Ask = new Bar(1, 2, 1, 500), Time = _reference.AddDays(1 + i) });
+            }
+
+            Assert.AreEqual(2, indicator.Samples);
+        }
+
         [Test]
         public void EqualBetaValue()
         {
-            var indicator = new Beta("testBetaIndicator", 5, Symbols.AAPL, Symbols.SPX);
+            var indicator = new Beta("testBetaIndicator", Symbols.AAPL, Symbols.SPX, 5);
 
             for (int i = 0 ; i < 3 ; i++)
             {
@@ -159,7 +174,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void NotEqualBetaValue()
         {
-            var indicator = new Beta("testBetaIndicator", 5, Symbols.AAPL, Symbols.SPX);
+            var indicator = new Beta("testBetaIndicator", Symbols.AAPL, Symbols.SPX, 5);
 
             for (int i = 0; i < 3; i++)
             {

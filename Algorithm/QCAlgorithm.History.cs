@@ -24,6 +24,7 @@ using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Python;
 using Python.Runtime;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm
 {
@@ -331,7 +332,7 @@ namespace QuantConnect.Algorithm
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
             where T : IBaseData
         {
-            CheckPeriodBasedHistoryRequestResolution(symbols, resolution);
+            CheckPeriodBasedHistoryRequestResolution(symbols, resolution, typeof(T));
             var requests = CreateBarCountHistoryRequests(symbols, typeof(T), periods, resolution, fillForward, extendedMarketHours, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset);
             return GetDataTypedHistory<T>(requests);
@@ -408,8 +409,8 @@ namespace QuantConnect.Algorithm
         {
             if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
 
-            resolution = GetResolution(symbol, resolution);
-            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution);
+            resolution = GetResolution(symbol, resolution, typeof(TradeBar));
+            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution, typeof(TradeBar));
             var marketHours = GetMarketHours(symbol);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
                 marketHours.DataTimeZone, extendedMarketHours);
@@ -439,8 +440,8 @@ namespace QuantConnect.Algorithm
             int? contractDepthOffset = null)
             where T : IBaseData
         {
-            resolution = GetResolution(symbol, resolution);
-            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution);
+            resolution = GetResolution(symbol, resolution, typeof(T));
+            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution, typeof(T));
             var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution, fillForward, extendedMarketHours,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
             return GetDataTypedHistory<T>(requests, symbol);
@@ -518,7 +519,7 @@ namespace QuantConnect.Algorithm
                 Error("Calling History<TradeBar> method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }
 
-            var resolutionToUse = resolution ?? GetResolution(symbol, resolution);
+            var resolutionToUse = resolution ?? GetResolution(symbol, resolution, typeof(TradeBar));
             if (resolutionToUse == Resolution.Tick)
             {
                 throw new InvalidOperationException("Calling History<TradeBar> method with Resolution.Tick will return an empty result." +
@@ -573,7 +574,7 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
-            CheckPeriodBasedHistoryRequestResolution(symbols, resolution);
+            CheckPeriodBasedHistoryRequestResolution(symbols, resolution, null);
             return History(CreateBarCountHistoryRequests(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset)).Memoize();
         }
@@ -803,16 +804,43 @@ namespace QuantConnect.Algorithm
             return result.Memoize();
         }
 
-        [DocumentationAttribute(HistoricalData)]
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
-            var sentMessage = false;
-            var hasPythonDataRequest = false;
             // filter out any universe securities that may have made it this far
-            var filteredRequests = requests.Where(hr => HistoryRequestValid(hr.Symbol)).ToList();
-            for (var i = 0; i < filteredRequests.Count; i++)
+            var filteredRequests = GetFilterestRequests(requests);
+
+            // filter out future data to prevent look ahead bias
+            var history = HistoryProvider.GetHistory(filteredRequests, timeZone);
+
+            if (PythonEngine.IsInitialized)
             {
-                var request  = filteredRequests[i];
+                // add protection against potential python deadlocks
+                // with parallel history requests we reuse the data stack threads to serve the history calls because of this we need to make sure to release
+                // the GIL before waiting on the history request because there could be a work/job in the data stack queues which needs the GIL
+                return WrapPythonDataHistory(history);
+            }
+
+            return history;
+        }
+
+        private List<HistoryRequest> GetFilterestRequests(IEnumerable<HistoryRequest> requests)
+        {
+            List<HistoryRequest> result = new();
+            var sentMessage = false;
+            // filter out any universe securities that may have made it this far
+            Dictionary<Type, HistoryRequest> baseDataCollectionTypes = null;
+            foreach (var request in requests.Where(hr => HistoryRequestValid(hr.Symbol)))
+            {
+                if (request.DataType.IsAssignableTo(typeof(BaseDataCollection)))
+                {
+                    baseDataCollectionTypes ??= new();
+                    if (!baseDataCollectionTypes.TryAdd(request.DataType, request))
+                    {
+                        // for base data collection types we allow a single history request at the time, these are universe types which return all available data
+                        continue;
+                    }
+                }
+
                 // prevent future requests
                 if (request.EndTimeUtc > UtcTime)
                 {
@@ -823,11 +851,11 @@ namespace QuantConnect.Algorithm
                         startTimeUtc = request.EndTimeUtc;
                     }
 
-                    filteredRequests[i] = new HistoryRequest(startTimeUtc, endTimeUtc,
+                    result.Add(new HistoryRequest(startTimeUtc, endTimeUtc,
                         request.DataType, request.Symbol, request.Resolution, request.ExchangeHours,
                         request.DataTimeZone, request.FillForwardResolution, request.IncludeExtendedMarketHours,
                         request.IsCustomData, request.DataNormalizationMode, request.TickType, request.DataMappingMode,
-                        request.ContractDepthOffset);
+                        request.ContractDepthOffset));
 
                     if (!sentMessage)
                     {
@@ -835,23 +863,13 @@ namespace QuantConnect.Algorithm
                         Debug("Request for future history modified to end now.");
                     }
                 }
-
-                if (!hasPythonDataRequest)
+                else
                 {
-                    hasPythonDataRequest = request.IsCustomData && typeof(PythonData).IsAssignableFrom(request.DataType);
+                    result.Add(request);
                 }
             }
 
-            // filter out future data to prevent look ahead bias
-            var history = HistoryProvider.GetHistory(filteredRequests, timeZone);
-
-            if (hasPythonDataRequest && PythonEngine.IsInitialized)
-            {
-                // add protection against potential python deadlocks
-                return WrapPythonDataHistory(history);
-            }
-
-            return history;
+            return result;
         }
 
         /// <summary>
@@ -907,7 +925,7 @@ namespace QuantConnect.Algorithm
         {
             return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
             {
-                var res = GetResolution(symbol, resolution);
+                var res = GetResolution(symbol, resolution, requestedType);
                 var exchange = GetExchangeHours(symbol, requestedType);
                 var configs = GetMatchingSubscriptions(symbol, requestedType, resolution).ToList();
                 if (configs.Count == 0)
@@ -984,7 +1002,7 @@ namespace QuantConnect.Algorithm
             else
             {
                 var entry = MarketHoursDatabase.GetEntry(symbol, new []{ type });
-                resolution = GetResolution(symbol, resolution);
+                resolution = GetResolution(symbol, resolution, type);
 
                 if (!LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
                 {
@@ -1057,7 +1075,7 @@ namespace QuantConnect.Algorithm
             return hoursEntry;
         }
 
-        private Resolution GetResolution(Symbol symbol, Resolution? resolution)
+        private Resolution GetResolution(Symbol symbol, Resolution? resolution, Type type)
         {
             Security security;
             if (Securities.TryGetValue(symbol, out security))
@@ -1089,7 +1107,27 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                return resolution ?? UniverseSettings.Resolution;
+                if(resolution != null)
+                {
+                    return resolution.Value;
+                }
+
+                if (type == null || LeanData.IsCommonLeanDataType(type) || type.IsAbstract)
+                {
+                    return UniverseSettings.Resolution;
+                }
+
+                try
+                {
+                    // for custom data types let's try to fetch the default resolution from the type definition
+                    var instance = type.GetBaseDataInstance();
+                    return instance.DefaultResolution();
+                }
+                catch
+                {
+                    // just in case
+                    return UniverseSettings.Resolution;
+                }
             }
         }
 
@@ -1120,9 +1158,9 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Throws if a period bases history request is made for tick resolution, which is not allowed.
         /// </summary>
-        private void CheckPeriodBasedHistoryRequestResolution(IEnumerable<Symbol> symbols, Resolution? resolution)
+        private void CheckPeriodBasedHistoryRequestResolution(IEnumerable<Symbol> symbols, Resolution? resolution, Type requestedType)
         {
-            if (symbols.Any(symbol => GetResolution(symbol, resolution) == Resolution.Tick))
+            if (symbols.Any(symbol => GetResolution(symbol, resolution, requestedType) == Resolution.Tick))
             {
                 throw new InvalidOperationException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
             }
@@ -1170,14 +1208,20 @@ namespace QuantConnect.Algorithm
             var hasData = true;
             while (hasData)
             {
-                // TODO: we don't really need the GIL. We should find a way to check whether we have the lock and only call this wrapper method if we do.
+                // When yielding in tasks there's no guarantee it will continue in the same thread, but we need that guarantee
                 using (Py.GIL())
                 {
                     var state = PythonEngine.BeginAllowThreads();
-                    hasData = enumerator.MoveNext();
-                    PythonEngine.EndAllowThreads(state);
+                    try
+                    {
+                        hasData = enumerator.MoveNext();
+                    }
+                    finally
+                    {
+                        // we always need to reset the state so that we can dispose of the GIL
+                        PythonEngine.EndAllowThreads(state);
+                    }
                 }
-
                 if (hasData)
                 {
                     yield return enumerator.Current;

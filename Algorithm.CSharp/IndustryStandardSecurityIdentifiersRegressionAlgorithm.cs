@@ -28,31 +28,35 @@ namespace QuantConnect.Algorithm.CSharp
     {
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 07);
+            SetStartDate(2014, 06, 05);
+            SetEndDate(2014, 06, 05);
 
-            var spy = AddEquity("SPY").Symbol;
+            var equity = AddEquity("AAPL").Symbol;
 
-            var spyCusip = spy.CUSIP;
-            var spyCompositeFigi = spy.CompositeFIGI;
-            var spySedol = spy.SEDOL;
-            var spyIsin = spy.ISIN;
+            var cusip = equity.CUSIP;
+            var compositeFigi = equity.CompositeFIGI;
+            var sedol = equity.SEDOL;
+            var isin = equity.ISIN;
+            var cik = equity.CIK;
 
-            CheckSymbolRepresentation(spyCusip, "CUSIP");
-            CheckSymbolRepresentation(spyCompositeFigi, "Composite FIGI");
-            CheckSymbolRepresentation(spySedol, "SEDOL");
-            CheckSymbolRepresentation(spyIsin, "ISIN");
+            CheckSymbolRepresentation(cusip, "CUSIP");
+            CheckSymbolRepresentation(compositeFigi, "Composite FIGI");
+            CheckSymbolRepresentation(sedol, "SEDOL");
+            CheckSymbolRepresentation(isin, "ISIN");
+            CheckSymbolRepresentation($"{cik}", "CIK");
 
             // Check Symbol API vs QCAlgorithm API
-            CheckAPIsSymbolRepresentations(spyCusip, CUSIP(spy), "CUSIP");
-            CheckAPIsSymbolRepresentations(spyCompositeFigi, CompositeFIGI(spy), "Composite FIGI");
-            CheckAPIsSymbolRepresentations(spySedol, SEDOL(spy), "SEDOL");
-            CheckAPIsSymbolRepresentations(spyIsin, ISIN(spy), "ISIN");
+            CheckAPIsSymbolRepresentations(cusip, CUSIP(equity), "CUSIP");
+            CheckAPIsSymbolRepresentations(compositeFigi, CompositeFIGI(equity), "Composite FIGI");
+            CheckAPIsSymbolRepresentations(sedol, SEDOL(equity), "SEDOL");
+            CheckAPIsSymbolRepresentations(isin, ISIN(equity), "ISIN");
+            CheckAPIsSymbolRepresentations($"{cik}", $"{CIK(equity)}", "CIK");
 
-            Log($"\nSPY CUSIP: {spyCusip}" +
-                $"\nSPY Composite FIGI: {spyCompositeFigi}" +
-                $"\nSPY SEDOL: {spySedol}" +
-                $"\nSPY ISIN: {spyIsin}");
+            Log($"\nAAPL CUSIP: {cusip}" +
+                $"\nAAPL Composite FIGI: {compositeFigi}" +
+                $"\nAAPL SEDOL: {sedol}" +
+                $"\nAAPL ISIN: {isin}" +
+                $"\nAAPL CIK: {cik}");
         }
 
         private static void CheckSymbolRepresentation(string symbol, string standard)

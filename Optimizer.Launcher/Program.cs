@@ -64,6 +64,13 @@ namespace QuantConnect.Optimizer.Launcher
                     Channel = channel,
                 };
 
+                var outOfSampleMaxEndDate = Config.Get("out-of-sample-max-end-date");
+                if (!string.IsNullOrEmpty(outOfSampleMaxEndDate))
+                {
+                    packet.OutOfSampleMaxEndDate = Time.ParseDate(outOfSampleMaxEndDate);
+                }
+                packet.OutOfSampleDays = Config.GetInt("out-of-sample-days");
+
                 var optimizerType = Config.Get("optimization-launcher", typeof(ConsoleLeanOptimizer).Name);
                 var optimizer = (LeanOptimizer)Activator.CreateInstance(Composer.Instance.GetExportedTypes<LeanOptimizer>().Single(x => x.Name == optimizerType), packet);
 

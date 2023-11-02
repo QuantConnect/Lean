@@ -61,7 +61,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _date = date;
             _config = config;
             _shouldCacheDataPoints = !_config.IsCustomData && _config.Resolution >= Resolution.Hour
-                && _config.Type != typeof(FineFundamental) && _config.Type != typeof(CoarseFundamental)
+                && _config.Type != typeof(FineFundamental) && _config.Type != typeof(CoarseFundamental) && _config.Type != typeof(Fundamental) && _config.Type != typeof(Fundamentals)
                 && !DataCacheProvider.IsDataEphemeral;
 
             _implementsStreamReader = _config.Type.ImplementsStreamReader();

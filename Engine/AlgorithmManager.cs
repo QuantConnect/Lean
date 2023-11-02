@@ -838,11 +838,17 @@ namespace QuantConnect.Lean.Engine
             {
                 if (split.Type != SplitType.Warning)
                 {
-                    Log.Trace($"AlgorithmManager.HandleSplitSymbols(): {_algorithm.Time} - Security split occurred: Split Factor: {split} Reference Price: {split.ReferencePrice}");
+                    if (Log.DebuggingEnabled)
+                    {
+                        Log.Debug($"AlgorithmManager.HandleSplitSymbols(): {_algorithm.Time} - Security split occurred: Split Factor: {split} Reference Price: {split.ReferencePrice}");
+                    }
                     continue;
                 }
 
-                Log.Trace($"AlgorithmManager.HandleSplitSymbols(): {_algorithm.Time} - Security split warning: {split}");
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug($"AlgorithmManager.HandleSplitSymbols(): {_algorithm.Time} - Security split warning: {split}");
+                }
 
                 if (!splitWarnings.Any(x => x.Symbol == split.Symbol && x.Type == SplitType.Warning))
                 {

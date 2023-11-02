@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,10 +14,7 @@
 */
 
 using System;
-using System.IO;
 using NUnit.Framework;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Common.Data.UniverseSelection
@@ -28,21 +25,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test, TestCaseSource(nameof(TestParameters))]
         public void ParsesCoarseCsvLine(string line, bool hasFundamentalData, decimal price, decimal priceFactor, decimal splitFactor, decimal adjustedPrice)
         {
-            var cf = new CoarseFundamental();
-
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
-                Symbols.AAPL,
-                Resolution.Second,
-                TimeZones.NewYork,
-                TimeZones.NewYork,
-                false,
-                false,
-                false,
-                false,
-                TickType.Trade,
-                false);
-
-            cf = (CoarseFundamental)cf.Reader(config, line, DateTime.MinValue, false);
+            var cf = (CoarseFundamental)CoarseFundamentalDataProvider.Read(line, DateTime.MinValue);
 
             Assert.AreEqual(hasFundamentalData, cf.HasFundamentalData);
             Assert.AreEqual(price, cf.Price);

@@ -22,7 +22,9 @@ using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Data.Fundamental;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -32,6 +34,12 @@ namespace QuantConnect.Tests.Common.Securities
         private static readonly DateTime ReferenceTime = new DateTime(2000, 01, 01);
 
         private readonly Random _rng = new Random(Seed: 123);
+
+        [SetUp]
+        public void Setup()
+        {
+            FundamentalService.Initialize(TestGlobals.DataProvider, new NullFundamentalDataProvider(), false);
+        }
 
         [TestCase(MarketDataType.TradeBar, 10, true)]
         [TestCase(MarketDataType.TradeBar, 10, false)]
@@ -208,10 +216,10 @@ namespace QuantConnect.Tests.Common.Securities
                     Assert.AreEqual(cache.GetAll<Tick>().Count(x => x.TickType == TickType.Trade), 0);
                     break;
                 case SecuritySeedData.Fundamentals:
-                    Assert.IsNull(cache.GetData());
-                    Assert.IsNotNull(cache.GetData<Fundamentals>());
+                    Assert.IsNotNull(cache.GetData());
+                    Assert.IsNotNull(cache.GetData<Fundamental>());
                     cache.Reset();
-                    Assert.IsFalse(cache.HasData(typeof(Fundamentals)));
+                    Assert.IsFalse(cache.HasData(typeof(Fundamental)));
                     break;
                 default:
                     Assert.IsNotNull(cache.GetData());
@@ -378,7 +386,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void AddDataFundamentals_DoesNotChangeCacheValues(SecurityCache cache, SecuritySeedData seedType)
         {
             var map = new Dictionary<string, string>();
-            AddDataAndAssertChanges(cache, seedType, SecuritySeedData.Fundamentals, new Fundamentals
+            AddDataAndAssertChanges(cache, seedType, SecuritySeedData.Fundamentals, new Fundamental(ReferenceTime, Symbols.AAPL)
             {
                 Value = 111,
                 EndTime = ReferenceTime
@@ -601,7 +609,7 @@ namespace QuantConnect.Tests.Common.Securities
             });
 
             var fundamentals = new SecurityCache();
-            fundamentals.AddData(new Fundamentals
+            fundamentals.AddData(new Fundamental(ReferenceTime, Symbols.AAPL)
             {
                 Value = 23
             });

@@ -316,10 +316,10 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The Beta indicator for the given parameters</returns>
         [DocumentationAttribute(Indicators)]
-        public Beta B(Symbol target, Symbol reference, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        public Beta B(Symbol target, Symbol reference, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(QuantConnect.Symbol.None, $"B({period})", resolution);
-            var beta = new Beta(name, period, target, reference);
+            var beta = new Beta(name, target, reference, period);
             InitializeIndicator(target, beta, resolution, selector);
             InitializeIndicator(reference, beta, resolution, selector);
 
@@ -2399,7 +2399,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public void WarmUpIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            resolution = GetResolution(symbol, resolution);
+            resolution = GetResolution(symbol, resolution, null);
             var period = resolution.Value.ToTimeSpan();
             WarmUpIndicator(symbol, indicator, period, selector);
         }
@@ -2442,7 +2442,7 @@ namespace QuantConnect.Algorithm
         public void WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, Resolution? resolution = null, Func<IBaseData, T> selector = null)
             where T : class, IBaseData
         {
-            resolution = GetResolution(symbol, resolution);
+            resolution = GetResolution(symbol, resolution, typeof(T));
             var period = resolution.Value.ToTimeSpan();
             WarmUpIndicator(symbol, indicator, period, selector);
         }

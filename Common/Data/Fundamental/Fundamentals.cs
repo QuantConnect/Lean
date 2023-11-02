@@ -19,36 +19,26 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Defines a merged viw of <see cref="FineFundamental"/> and <see cref="CoarseFundamental"/>
+    /// Lean fundamentals universe data class
     /// </summary>
-    public class Fundamentals : FineFundamental
+    public class Fundamentals : BaseDataCollection
     {
-        /// <summary>
-        /// Gets the market for this symbol
-        /// </summary>
-        public string Market { get; set; }
+        private static readonly Fundamental _factory = new();
 
         /// <summary>
-        /// Gets the day's dollar volume for this symbol
-        /// </summary>
-        public decimal DollarVolume { get; set; }
-
-        /// <summary>
-        /// Gets the day's total volume
-        /// </summary>
-        public long Volume { get; set; }
-
-        /// <summary>
-        /// Returns whether the symbol has fundamental data for the given date
-        /// </summary>
-        public bool HasFundamentalData { get; set; }
-
-        /// <summary>
-        /// Default constructor
+        /// Creates a new instance
         /// </summary>
         public Fundamentals()
         {
-            DataType = MarketDataType.Auxiliary;
+        }
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="time">The current time</param>
+        /// <param name="symbol">The associated symbol</param>
+        public Fundamentals(DateTime time, Symbol symbol) : base(time, symbol)
+        {
         }
 
         /// <summary>
@@ -56,16 +46,52 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            throw new NotImplementedException($"{nameof(Fundamentals)}.{nameof(GetSource)} is never intended to be invoked.");
+            var path = _factory.GetSource(config, date, isLiveMode).Source;
+            return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.FoldingCollection);
         }
 
         /// <summary>
-        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
-        /// each time it is called. The returned object is assumed to be time stamped in the config.ExchangeTimeZone.
+        /// Will read a new instance from the given line
         /// </summary>
+        /// <param name="config">The associated requested configuration</param>
+        /// <param name="line">The line to parse</param>
+        /// <param name="date">The current time</param>
+        /// <param name="isLiveMode">True if live mode</param>
+        /// <returns>A new instance or null</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            throw new NotImplementedException($"{nameof(Fundamentals)}.{nameof(Reader)} is never intended to be invoked.");
+            try
+            {
+                var csv = line.Split(',');
+                var symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]);
+                return new Fundamental(date, symbol);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Will clone the current instance
+        /// </summary>
+        /// <returns>The cloned instance</returns>
+        public override BaseData Clone()
+        {
+            return new Fundamentals(Time, Symbol) { Data = Data, EndTime = EndTime };
+        }
+
+        /// <summary>
+        /// Creates the symbol used for coarse fundamental data
+        /// </summary>
+        /// <param name="market">The market</param>
+        /// <returns>A coarse universe symbol for the specified market</returns>
+        public static Symbol CreateUniverseSymbol(string market)
+        {
+            market = market.ToLowerInvariant();
+            var ticker = $"qc-universe-fundamental-{market}-{Guid.NewGuid()}";
+            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
+            return new Symbol(sid, ticker);
         }
     }
 }

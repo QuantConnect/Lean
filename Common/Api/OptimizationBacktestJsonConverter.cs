@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -70,6 +71,27 @@ namespace QuantConnect.Api
 
                 writer.WritePropertyName("exitCode");
                 writer.WriteValue(optimizationBacktest.ExitCode);
+            }
+
+            if (optimizationBacktest.StartDate != default)
+            {
+                writer.WritePropertyName("startDate");
+                writer.WriteValue(optimizationBacktest.StartDate.ToStringInvariant(DateFormat.UI));
+            }
+
+            if (optimizationBacktest.EndDate != default)
+            {
+                writer.WritePropertyName("endDate");
+                writer.WriteValue(optimizationBacktest.EndDate.ToStringInvariant(DateFormat.UI));
+            }
+
+            if (optimizationBacktest.OutOfSampleMaxEndDate != null)
+            {
+                writer.WritePropertyName("outOfSampleMaxEndDate");
+                writer.WriteValue(optimizationBacktest.OutOfSampleMaxEndDate.ToStringInvariant(DateFormat.UI));
+
+                writer.WritePropertyName("outOfSampleDays");
+                writer.WriteValue(optimizationBacktest.OutOfSampleDays);
             }
 
             if (!optimizationBacktest.Statistics.IsNullOrEmpty())
@@ -128,6 +150,11 @@ namespace QuantConnect.Api
             var progress = jObject["progress"].Value<decimal>();
             var exitCode = jObject["exitCode"].Value<int>();
 
+            var outOfSampleDays = jObject["outOfSampleDays"]?.Value<int>() ?? default;
+            var startDate = jObject["startDate"]?.Value<DateTime>() ?? default;
+            var endDate = jObject["endDate"]?.Value<DateTime>() ?? default;
+            var outOfSampleMaxEndDate = jObject["outOfSampleMaxEndDate"]?.Value<DateTime>();
+
             var jStatistics = jObject["statistics"];
             var statistics = new Dictionary<string, string>
             {
@@ -168,7 +195,11 @@ namespace QuantConnect.Api
                 Progress = progress,
                 ExitCode = exitCode,
                 Statistics = statistics,
-                Equity = equity
+                Equity = equity,
+                EndDate = endDate,
+                StartDate = startDate,
+                OutOfSampleDays = outOfSampleDays,
+                OutOfSampleMaxEndDate = outOfSampleMaxEndDate,
             };
 
             return optimizationBacktest;

@@ -13,16 +13,20 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using Python.Runtime;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.Market;
+using Python.Runtime;
+using NUnit.Framework;
 using QuantConnect.Logging;
 using QuantConnect.Research;
 using QuantConnect.Securities;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Tests.Common.Data.Fundamental;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Research
 {
@@ -43,6 +47,8 @@ namespace QuantConnect.Tests.Research
 
             SymbolCache.Clear();
             MarketHoursDatabase.Reset();
+
+            Config.Set("fundamental-data-provider", "NullFundamentalDataProvider");
 
             // Using a date that we have data for in the repo
             _startDate = new DateTime(2014, 3, 31);
@@ -89,6 +95,7 @@ namespace QuantConnect.Tests.Research
             using (Py.GIL())
             {
                 var testModule = _module.FundamentalHistoryTest();
+                FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(), false);
                 var dataFrame = testModule.getFundamentals(input[0], input[1], _startDate, _endDate);
 
                 // Should not be empty
@@ -120,6 +127,7 @@ namespace QuantConnect.Tests.Research
         [TestCaseSource(nameof(DataTestCases))]
         public void CSharpFundamentalData(dynamic input)
         {
+            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(), false);
             var data = _qb.GetFundamental(input[0], input[1], _startDate, _endDate);
             var currentDate = _startDate;
 
@@ -140,6 +148,23 @@ namespace QuantConnect.Tests.Research
                     }
                     Assert.AreEqual(currentDate, day.Time);
                 }
+            }
+        }
+
+        [Test]
+        public void PyReturnNoneTest()
+        {
+            using (Py.GIL())
+            {
+                var start = new DateTime(2023, 10, 10);
+                var symbol = Symbol.Create("AIG", SecurityType.Equity, Market.USA);
+                var testModule = _module.FundamentalHistoryTest();
+                var data = testModule.getFundamentals(symbol, "ValuationRatios.PERatio", start, start.AddDays(5));
+                Assert.AreNotEqual(true, (bool)data.empty);
+
+                var subdataframe = data.loc[start.AddDays(1).ToPython()];
+                PyObject result = subdataframe[symbol.ID.ToString()];
+                Assert.IsNull(result.As<object>());
             }
         }
 
@@ -195,10 +220,10 @@ namespace QuantConnect.Tests.Research
         // Different requests and their expected values
         private static readonly object[] DataTestCases =
         {
-            new object[] {new List<string> {"AAPL"}, null, 13.2725m, new Func<FineFundamental, decimal>(fundamental => fundamental.ValuationRatios.PERatio) },
+            new object[] {new List<string> {"AAPL"}, null, 13.2725m, new Func<FineFundamental, double>(fundamental => fundamental.ValuationRatios.PERatio) },
             new object[] {new List<string> {"AAPL"}, "ValuationRatios.PERatio", 13.2725m},
             new object[] {Symbol.Create("IBM", SecurityType.Equity, Market.USA), "ValuationRatios.BookValuePerShare", 22.5177},
-            new object[] {new List<Symbol> {Symbol.Create("AIG", SecurityType.Equity, Market.USA)}, "FinancialStatements.NumberOfShareHolders", 36319}
+            new object[] {new List<Symbol> {Symbol.Create("AIG", SecurityType.Equity, Market.USA)}, "FinancialStatements.NumberOfShareHolders.Value", 36319}
         };
 
         // Different requests that should return null
@@ -216,6 +241,36 @@ namespace QuantConnect.Tests.Research
             // monday,saturday
             new TestCaseData(new DateTime(2014, 3, 31), new DateTime(2014, 4, 12))
         };
+
+        private class TestFundamentalDataProvider : IFundamentalDataProvider
+        {
+            public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
+            {
+                if (securityIdentifier == SecurityIdentifier.Empty)
+                {
+                    return default;
+                }
+                return Get(time, securityIdentifier, name);
+            }
+
+            private dynamic Get(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
+            {
+                var name = Enum.GetName(enumName);
+                switch (name)
+                {
+                    case "ValuationRatios_PERatio":
+                        return 13.2725d;
+                    case "ValuationRatios_BookValuePerShare":
+                        return 22.5177d;
+                    case "FinancialStatements_NumberOfShareHolders_TwelveMonths":
+                        return 36319;
+                }
+                return null;
+            }
+            public void Initialize(IDataProvider dataProvider, bool liveMode)
+            {
+            }
+        }
     }
 }
 

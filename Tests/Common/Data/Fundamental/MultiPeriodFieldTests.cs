@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,25 +13,27 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using NUnit.Framework;
+using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Common.Data.Fundamental
 {
     [TestFixture]
     public class MultiPeriodFieldTests
     {
-        private NormalizedBasicEPSGrowth _field;
+        private TestMultiPeriodField _field;
 
         [SetUp]
         public void SetUp()
         {
-            _field = new NormalizedBasicEPSGrowth();
-            _field.SetPeriodValue("3M", 1);
-            _field.SetPeriodValue("1Y", 5);
-            _field.SetPeriodValue("2Y", 2);
+            _field = new TestMultiPeriodField();
+            _field.ThreeMonths = 1;
+            _field.OneYear = 5;
+            _field.FiveYears = 2;
         }
 
         [Test]
@@ -57,25 +59,26 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
         {
             Assert.IsFalse(_field.HasPeriodValue("3Y"));
 
-            Assert.AreEqual(0, _field.GetPeriodValue("3Y"));
-            Assert.AreEqual(0, _field.ThreeYears);
+            Assert.AreEqual(MultiPeriodField.NoValue, _field.GetPeriodValue("3Y"));
+            Assert.AreEqual(MultiPeriodField.NoValue, _field.ThreeYears);
         }
 
         [Test]
         public void ReturnsCorrectPeriodNamesAndValues()
         {
-            Assert.AreEqual(new[] { "3M", "1Y", "2Y" }, _field.GetPeriodNames());
+            Assert.AreEqual(new[] { "1Y", "3M", "5Y" }, _field.GetPeriodNames());
 
-            Assert.AreEqual(new[] { "3M", "1Y", "2Y" }, _field.GetPeriodValues().Keys);
+            Assert.AreEqual(new[] { "1Y", "3M", "5Y" }, _field.GetPeriodValues().Keys);
 
-            Assert.AreEqual(new[] { 1, 5, 2 }, _field.GetPeriodValues().Values);
+            Assert.AreEqual(new[] { 5, 1, 2 }, _field.GetPeriodValues().Values);
         }
 
         [Test]
         public void ReturnsFirstPeriodIfNoDefaultAvailable()
         {
-            var data = new Dictionary<string, decimal> { { "3M", 1 }, { "2Y", 2 } };
-            var field = new NormalizedBasicEPSGrowth(data);
+            var field = new TestMultiPeriodField();
+            field.ThreeMonths = 1;
+            field.FiveYears = 2;
 
             Assert.IsFalse(field.HasValue);
 
@@ -86,122 +89,77 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
         [Test]
         public void EmptyStore()
         {
-            var field = new NormalizedBasicEPSGrowth();
+            var field = new TestMultiPeriodField();
             Assert.IsFalse(field.HasValue);
-            Assert.AreEqual(0, field.Value);
-            Assert.AreEqual(0, field.FiveYears);
-            Assert.AreEqual(0, field.OneYear);
+            Assert.AreEqual(MultiPeriodField.NoValue, field.Value);
+            Assert.AreEqual(MultiPeriodField.NoValue, field.FiveYears);
+            Assert.AreEqual(MultiPeriodField.NoValue, field.OneYear);
             Assert.AreEqual(Enumerable.Empty<string>(), field.GetPeriodNames());
-            Assert.AreEqual(0,
-                field.GetPeriodValue(QuantConnect.Data.Fundamental.Period.OneYear));
-            Assert.AreEqual(0,
-                field.GetPeriodValue(QuantConnect.Data.Fundamental.Period.TenYears));
+            Assert.AreEqual(MultiPeriodField.NoValue, field.GetPeriodValue(QuantConnect.Data.Fundamental.Period.OneYear));
+            Assert.AreEqual(MultiPeriodField.NoValue, field.GetPeriodValue(QuantConnect.Data.Fundamental.Period.TenYears));
             Assert.AreEqual(0, field.GetPeriodValues().Count);
             Assert.IsFalse(field.HasPeriodValue(QuantConnect.Data.Fundamental.Period.OneYear));
             Assert.IsFalse(field.HasPeriodValue(QuantConnect.Data.Fundamental.Period.TenYears));
         }
 
         [Test]
-        public void EmptyStoreSetPeriodValue()
-        {
-            var field = new NormalizedBasicEPSGrowth();
-            // add the default value
-            field.SetPeriodValue(QuantConnect.Data.Fundamental.Period.OneYear, 1);
-
-            Assert.IsTrue(field.HasValue);
-            Assert.AreEqual(1, field.Value);
-            Assert.AreEqual(QuantConnect.Data.Fundamental.Period.OneYear, field.GetPeriodNames().Single());
-
-            var values = field.GetPeriodValues();
-            Assert.AreEqual(1, values.Count);
-            Assert.AreEqual(1, values.First().Value);
-            Assert.AreEqual(QuantConnect.Data.Fundamental.Period.OneYear, values.First().Key);
-        }
-
-        [Test]
-        public void SetPeriodValue()
-        {
-            var field = new NormalizedBasicEPSGrowth();
-            // add the default value
-            field.SetPeriodValue(QuantConnect.Data.Fundamental.Period.OneYear, 1);
-            field.SetPeriodValue(QuantConnect.Data.Fundamental.Period.TenYears, 10);
-
-            Assert.IsTrue(field.HasValue);
-            Assert.AreEqual(1, field.Value);
-            var names = field.GetPeriodNames().ToList();
-            Assert.AreEqual(QuantConnect.Data.Fundamental.Period.OneYear, names[0]);
-            Assert.AreEqual(QuantConnect.Data.Fundamental.Period.TenYears, names[1]);
-
-            var values = field.GetPeriodValues();
-            Assert.AreEqual(2, values.Count);
-            Assert.AreEqual(1, values[QuantConnect.Data.Fundamental.Period.OneYear]);
-            Assert.AreEqual(10, values[QuantConnect.Data.Fundamental.Period.TenYears]);
-        }
-
-        [Test]
-        public void EmptyStoreUpdateValues()
-        {
-            var field = new NormalizedBasicEPSGrowth();
-
-            // update the default value
-            var data = new Dictionary<string, decimal> { { QuantConnect.Data.Fundamental.Period.OneYear, 2 } };
-            field.UpdateValues(new NormalizedBasicEPSGrowth(data));
-
-            Assert.IsTrue(field.HasValue);
-            Assert.AreEqual(2, field.Value);
-            Assert.AreEqual(QuantConnect.Data.Fundamental.Period.OneYear, field.GetPeriodNames().Single());
-
-            var values = field.GetPeriodValues();
-            Assert.AreEqual(1, values.Count);
-            Assert.AreEqual(2, values.First().Value);
-            Assert.AreEqual(QuantConnect.Data.Fundamental.Period.OneYear, values.First().Key);
-        }
-
-        [Test]
         public void EmptyStoreToString()
         {
-            var field = new NormalizedBasicEPSGrowth();
+            var field = new TestMultiPeriodField();
             Assert.AreEqual("", field.ToString());
         }
 
-        [Test]
-        public void NonEmptyStoreToString()
+        private class TestMultiPeriodField : MultiPeriodField
         {
-            var field = new NormalizedBasicEPSGrowth();
-            field.SetPeriodValue(QuantConnect.Data.Fundamental.Period.OneYear, 1);
-            field.SetPeriodValue(QuantConnect.Data.Fundamental.Period.TenYears, 10);
+            protected override string DefaultPeriod => "OneYear";
 
-            Assert.AreEqual($"{QuantConnect.Data.Fundamental.Period.OneYear}:1;" +
-                            $"{QuantConnect.Data.Fundamental.Period.TenYears}:10", field.ToString());
-        }
+            public double ThreeMonths { get; set; } = NoValue;
+            public double OneYear { get; set; } = NoValue;
+            public double ThreeYears { get; set; } = NoValue;
+            public double FiveYears { get; set; } = NoValue;
+            public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), OneYear);
+            public override double Value
+            {
+                get
+                {
+                    var defaultValue = OneYear;
+                    if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
+                    {
+                        return defaultValue;
+                    }
+                    return base.Value;
+                }
+            }
 
-        [Test]
-        public void UpdateValues()
-        {
-            var field = new NormalizedBasicEPSGrowth();
-            // add the default value
-            field.SetPeriodValue(QuantConnect.Data.Fundamental.Period.OneYear, 1);
+            public override double GetPeriodValue(string period)
+            {
+                switch(period)
+                {
+                    case QuantConnect.Data.Fundamental.Period.ThreeMonths:
+                        return ThreeMonths;
+                    case QuantConnect.Data.Fundamental.Period.OneYear:
+                        return OneYear;
+                    case QuantConnect.Data.Fundamental.Period.ThreeYears:
+                        return ThreeYears;
+                    case QuantConnect.Data.Fundamental.Period.FiveYears:
+                        return FiveYears;
+                    default:
+                        return NoValue;
+                }
+            }
 
-            // update the default value
-            var data = new Dictionary<string, decimal> { { QuantConnect.Data.Fundamental.Period.OneYear, 2 } };
-            field.UpdateValues(new NormalizedBasicEPSGrowth(data));
-
-            Assert.IsTrue(field.HasValue);
-            Assert.AreEqual(2, field.Value);
-            Assert.AreEqual(QuantConnect.Data.Fundamental.Period.OneYear, field.GetPeriodNames().Single());
-
-            var values = field.GetPeriodValues();
-            Assert.AreEqual(1, values.Count);
-            Assert.AreEqual(2, values.First().Value);
-            Assert.AreEqual(QuantConnect.Data.Fundamental.Period.OneYear, values.First().Key);
-        }
-
-        [Test]
-        public void UpdateValuesWithNull()
-        {
-            var field = new NormalizedBasicEPSGrowth();
-            Assert.DoesNotThrow(() => field.UpdateValues(new NormalizedBasicEPSGrowth(null)));
-
+            public override IReadOnlyDictionary<string, double> GetPeriodValues()
+            {
+                var result = new Dictionary<string, double>();
+                foreach (var kvp in new[] { new Tuple<string, double>("1Y", OneYear), new Tuple<string, double>("3M", ThreeMonths), new Tuple<string, double>("3Y", ThreeYears), new Tuple<string, double>("5Y", FiveYears) })
+                {
+                    if (!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
+                    {
+                        result[kvp.Item1] = kvp.Item2;
+                    }
+                }
+                return result;
+            }
         }
     }
 }

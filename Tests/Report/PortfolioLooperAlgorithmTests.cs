@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Report
                         RegisteredSecurityDataTypesProvider.Null,
                         new SecurityCacheProvider(algorithm.Portfolio)),
                     dataPermissionManager,
-                    new DefaultDataProvider()),
+                    TestGlobals.DataProvider),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Report
         public void SetsTheRightAlgorithmConfiguration(string currency, BrokerageName brokerageName, AccountType accountType)
         {
             var algorithm = CreateAlgorithm(new List<Order>(),
-                new AlgorithmConfiguration(currency, brokerageName, accountType, new Dictionary<string, string>()));
+                new AlgorithmConfiguration(currency, brokerageName, accountType, new Dictionary<string, string>(), DateTime.MinValue, DateTime.MinValue, null));
             algorithm.Initialize();
 
             Assert.AreEqual(currency, algorithm.AccountCurrency);

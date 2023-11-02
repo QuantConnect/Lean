@@ -191,6 +191,7 @@ namespace QuantConnect.Python
         {
             foreach (var member in _members)
             {
+                // TODO field/property.GetValue is expensive
                 var key = member.Name.ToLowerInvariant();
                 var endTime = ((IBaseData)baseData).EndTime;
                 var propertyMember = member as PropertyInfo;

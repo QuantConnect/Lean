@@ -32,6 +32,9 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Lean.Engine.HistoricalData;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Tests.Common.Data.Fundamental;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -60,12 +63,61 @@ namespace QuantConnect.Tests.Algorithm
             _mapFileProvider = TestGlobals.MapFileProvider;
             _factorFileProvider = TestGlobals.FactorFileProvider;
             _cacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
+            FundamentalService.Initialize(_dataProvider, new NullFundamentalDataProvider(), false);
         }
 
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
             _cacheProvider.DisposeSafely();
+        }
+
+        [TestCase(Language.Python)]
+        [TestCase(Language.CSharp)]
+        public void FundamentalHistory(Language language)
+        {
+            var start = new DateTime(2014, 04, 07);
+            _algorithm = GetAlgorithm(start);
+
+            if (language == Language.CSharp)
+            {
+                var result = _algorithm.History<Fundamental>(new[] { Symbols.SPY }, 10).ToList();
+
+                Assert.AreEqual(10, result.Count);
+                Assert.IsTrue(result.All(fundamentals =>
+                {
+                    Assert.AreEqual(1, fundamentals.Count);
+                    Assert.IsTrue(fundamentals.Values.All(x => !x.FinancialStatements.CashFlowStatement.CashFlowFromContinuingFinancingActivities.HasValue));
+                    return fundamentals.Values.All(x => double.IsNaN(x.FinancialStatements.CashFlowStatement.CashFlowFromContinuingFinancingActivities));
+                }));
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var getHistory = PyModule.FromString("testModule",
+                        @"
+from AlgorithmImports import *
+
+def getHistory(algorithm, symbol):
+    return algorithm.History(Fundamental, symbol, 10)
+        ").GetAttr("getHistory");
+                    _algorithm.SetPandasConverter();
+
+                    var result = getHistory.Invoke(_algorithm.ToPython(), Symbols.SPY.ToPython());
+                    Assert.AreEqual(10, result.GetAttr("shape")[0].As<int>());
+
+                    dynamic subDataFrame = result.GetAttr("loc")[Symbols.SPY.ID.ToString()];
+
+                    for (var i = 0; i < 10; i++)
+                    {
+                        var index = subDataFrame.index[i];
+                        var series = subDataFrame.loc[index];
+                        var cashFlow = (double)series.financialstatements.CashFlowStatement.CashFlowFromContinuingFinancingActivities.Value;
+                        Assert.AreEqual(double.NaN, cashFlow);
+                    }
+                }
+            }
         }
 
         [TestCase(Resolution.Daily, Language.CSharp, 2)]
@@ -219,12 +271,18 @@ def getTradesOnlyHistory(algorithm, symbol, start):
                 using (Py.GIL())
                 {
                     _algorithm.SetPandasConverter();
-                    using var pyTickType = typeof(Tick).ToPython();
-                    using var pySymbols = new PyList(new [] { spy.ToPython() });
-                    Assert.Throws<InvalidOperationException>(() => _algorithm.History(pyTickType, spy, 1));
-                    Assert.Throws<InvalidOperationException>(() => _algorithm.History(pyTickType, spy, 1, Resolution.Tick));
-                    Assert.Throws<InvalidOperationException>(() => _algorithm.History(pyTickType, pySymbols, 1));
-                    Assert.Throws<InvalidOperationException>(() => _algorithm.History(pyTickType, pySymbols, 1, Resolution.Tick));
+
+                    foreach (var testCase in new[] { "return algorithm.History(Tick, symbol, 1)", "return algorithm.History(Tick, symbol, 1)",
+                        "return algorithm.History(Tick, [ symbol ], 1)", "return algorithm.History(Tick, [ symbol ], 1, Resolution.Tick)" } )
+                    {
+                        dynamic getTickHistory = PyModule.FromString("testModule",
+                            @"from AlgorithmImports import *
+
+def getTickHistory(algorithm, symbol):
+    " + testCase).GetAttr("getTickHistory");
+
+                        Assert.Throws<ClrBubbledException>(() => getTickHistory(_algorithm, spy));
+                    }
                 }
             }
         }
@@ -2959,6 +3017,45 @@ def getHistory(algorithm, start, end):
                     Assert.IsNotNull(history);
                     Assert.Greater(history.shape[0].As<int>(), 0);
                 }
+            }
+        }
+
+        [Test]
+        public void PythonCustomDataThrowing()
+        {
+            var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
+            algorithm.SetHistoryProvider(new ThrowingHistoryProvider());
+
+            using (Py.GIL())
+            {
+                PythonInitializer.Initialize();
+                algorithm.SetPandasConverter();
+
+                var testModule = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def getHistory(algorithm, symbol, period):
+    return algorithm.History(symbol, period, Resolution.Minute)
+    ");
+                dynamic getDateRangeHistory = testModule.GetAttr("getHistory");
+
+                Assert.Throws<ClrBubbledException>(() => getDateRangeHistory(algorithm, Symbols.AAPL, 10));
+            }
+        }
+
+        private class ThrowingHistoryProvider : HistoryProviderBase
+        {
+            public override int DataPointCount => 0;
+
+            public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            {
+                throw new Exception("Expected exception");
+                yield return null;
+            }
+
+            public override void Initialize(HistoryProviderInitializeParameters parameters)
+            {
             }
         }
 

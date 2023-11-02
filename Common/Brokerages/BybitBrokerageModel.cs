@@ -1,4 +1,4 @@
-﻿/*
+/*
 * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 *
@@ -19,6 +19,7 @@ using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages;
@@ -38,17 +39,12 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     /// </summary>
     public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.Bybit);
 
-
     /// <summary>
     /// Initializes a new instance of the <see cref="BybitBrokerageModel"/> class
     /// </summary>
     /// <param name="accountType">The type of account to be modeled, defaults to <see cref="AccountType.Cash"/></param>
     public BybitBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
     {
-        if (GetType() == typeof(BybitBrokerageModel) && accountType != AccountType.Cash)
-        {
-            throw new NotSupportedException("Margin trading on Bybit spot markets is currently not supported");
-        }
     }
 
     /// <summary>
@@ -62,10 +58,10 @@ public class BybitBrokerageModel : DefaultBrokerageModel
         {
             return 1m;
         }
-        
+
         return 10;
     }
-    
+
     /// <summary>
     /// Provides Bybit fee model
     /// </summary>
@@ -73,9 +69,31 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     /// <returns></returns>
     public override IFeeModel GetFeeModel(Security security)
     {
-        return new BybitFeeModel();
+        return security.Type switch
+        {
+            SecurityType.Crypto => new BybitFeeModel(),
+            SecurityType.CryptoFuture => new BybitFuturesFeeModel(),
+            SecurityType.Base => base.GetFeeModel(security),
+            _ => throw new ArgumentOutOfRangeException(nameof(security), security, $"Not supported security type {security.Type}")
+        };
     }
 
+    /// <summary>
+    /// Gets a new margin interest rate model for the security
+    /// </summary>
+    /// <param name="security">The security to get a margin interest rate model for</param>
+    /// <returns>The margin interest rate model for this brokerage</returns>
+    public override IMarginInterestRateModel GetMarginInterestRateModel(Security security)
+    {
+        // only applies for perpetual futures
+        if (security.Type == SecurityType.CryptoFuture &&
+            security.Symbol.ID.Date == SecurityIdentifier.DefaultDate)
+        {
+            return new BybitFutureMarginInterestRateModel();
+        }
+
+        return base.GetMarginInterestRateModel(security);
+    }
 
     /// <summary>
     /// Get the benchmark for this model
@@ -88,7 +106,6 @@ public class BybitBrokerageModel : DefaultBrokerageModel
         return SecurityBenchmark.CreateInstance(securities, symbol);
         //todo default conversion?
     }
-
 
     /// <summary>
     /// Returns true if the brokerage could accept this order update. This takes into account
@@ -123,12 +140,10 @@ public class BybitBrokerageModel : DefaultBrokerageModel
                 Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, request.Quantity.Value));
             return false;
         }
-        
+
         message = null;
         return true;
     }
-
-
 
     /// <summary>
     /// Returns true if the brokerage could accept this order. This takes into account
@@ -143,7 +158,7 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     /// <returns>True if the brokerage could process the order, false otherwise</returns>
     public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
     {
-        if (security.Type != SecurityType.Crypto && security.Type != SecurityType.CryptoFuture)
+        if (security.Type != SecurityType.Crypto && security.Type != SecurityType.CryptoFuture && security.Type != SecurityType.Base)
         {
             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                 Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
@@ -177,7 +192,6 @@ public class BybitBrokerageModel : DefaultBrokerageModel
             return false;
         }
 
-
         return base.CanSubmitOrder(security, order, out message);
     }
 
@@ -192,11 +206,12 @@ public class BybitBrokerageModel : DefaultBrokerageModel
         return !security.SymbolProperties.MinimumOrderSize.HasValue ||
                orderQuantity > security.SymbolProperties.MinimumOrderSize;
     }
-    
+
     private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)
     {
         var map = DefaultMarketMap.ToDictionary();
         map[SecurityType.Crypto] = marketName;
+        map[SecurityType.CryptoFuture] = marketName;
         return map.ToReadOnlyDictionary();
     }
 }
