@@ -278,7 +278,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     foreach (var dataCollection in timeSlice.UniverseData.Values)
                     {
-                        if (!dataCollection.ShouldCache()) continue;
+                        if (!dataCollection.ShouldCacheToSecurity()) continue;
 
                         foreach (var data in dataCollection.Data)
                         {

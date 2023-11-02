@@ -223,7 +223,7 @@ namespace QuantConnect.Data
         /// Indicates whether this contains data that should be stored in the security cache
         /// </summary>
         /// <returns>Whether this contains data that should be stored in the security cache</returns>
-        public virtual bool ShouldCache()
+        public virtual bool ShouldCacheToSecurity()
         {
             return true;
         }

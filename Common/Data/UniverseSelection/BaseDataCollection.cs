@@ -116,9 +116,9 @@ namespace QuantConnect.Data.UniverseSelection
         /// Indicates whether this contains data that should be stored in the security cache
         /// </summary>
         /// <returns>Whether this contains data that should be stored in the security cache</returns>
-        public override bool ShouldCache()
+        public override bool ShouldCacheToSecurity()
         {
-            return Data.Count > 0 && Data[0].ShouldCache();
+            return Data.Count > 0 && Data[0].ShouldCacheToSecurity();
         }
 
         /// <summary>

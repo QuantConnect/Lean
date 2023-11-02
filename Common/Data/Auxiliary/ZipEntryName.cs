@@ -35,7 +35,7 @@ namespace QuantConnect.Data.Auxiliary
         /// Indicates whether this contains data that should be stored in the security cache
         /// </summary>
         /// <returns>Whether this contains data that should be stored in the security cache</returns>
-        public override bool ShouldCache()
+        public override bool ShouldCacheToSecurity()
         {
             return false;
         }
