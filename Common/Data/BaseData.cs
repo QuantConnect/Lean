@@ -220,6 +220,15 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Indicates whether this contains data that should be stored in the security cache
+        /// </summary>
+        /// <returns>Whether this contains data that should be stored in the security cache</returns>
+        public virtual bool ShouldCache()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Gets the default resolution for this data and security type
         /// </summary>
         /// <remarks>This is a method and not a property so that python
