@@ -20,5 +20,35 @@ namespace QuantConnect.Orders
     /// </summary>
     public class EzeOrderProperties: OrderProperties
     {
+        /// <summary>
+        /// Route name as shown in Eze EMS.
+        /// America | Europe | Asia
+        /// </summary>
+        public string Route { get; internal set; }
+
+        /// <summary>
+        /// Semi-colon separated values that represent either Trade or Neutral accounts the user has permission 
+        /// e.g.,TAL;TEST;USER1;TRADE or TAL;TEST;USER2;NEUTRAL
+        /// </summary>
+        public string Account { get; internal set; }
+
+        /// <summary>
+        /// User message/notes
+        /// </summary>
+        public string UserMessage { get; internal set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="route"></param>
+        /// <param name="account"></param>
+        /// <param name="exchange"></param>
+        /// <param name="userMessage"></param>
+        public EzeOrderProperties(string route, string account, Exchange exchange, string userMessage = "") : base(exchange)
+        {
+            Route = route;
+            Account = account;
+            UserMessage = userMessage;
+        }
     }
 }
