@@ -33,6 +33,7 @@ namespace QuantConnect.Brokerages
             new[]
             {
                 SecurityType.Equity,
+                SecurityType.Option,
                 SecurityType.Future,
                 SecurityType.FutureOption,
                 SecurityType.Index
