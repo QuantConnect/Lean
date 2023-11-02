@@ -66,7 +66,7 @@ namespace QuantConnect
             Tuple.Create(FTX, 34),
             Tuple.Create(FTXUS, 35),
             Tuple.Create(BinanceUS, 36),
-            Tuple.Create(Bybit, 37),
+            Tuple.Create(Bybit, 37)
         };
 
         static Market()
