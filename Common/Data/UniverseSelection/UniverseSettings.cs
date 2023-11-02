@@ -75,6 +75,11 @@ namespace QuantConnect.Data.UniverseSelection
         public List<Tuple<Type, TickType>> SubscriptionDataTypes;
 
         /// <summary>
+        /// True if universe selection can run asynchronous
+        /// </summary>
+        public bool? Asynchronous;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSettings"/> class
         /// </summary>
         /// <param name="resolution">The resolution</param>
@@ -86,8 +91,9 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
+        /// <param name="asynchronous">True if universe selection can run asynchronous</param>
         public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours, TimeSpan minimumTimeInUniverse, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
-            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest, int contractDepthOffset = 0)
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest, int contractDepthOffset = 0, bool? asynchronous = null)
         {
             Resolution = resolution;
             Leverage = leverage;
@@ -97,6 +103,7 @@ namespace QuantConnect.Data.UniverseSelection
             ExtendedMarketHours = extendedMarketHours;
             MinimumTimeInUniverse = minimumTimeInUniverse;
             DataNormalizationMode = dataNormalizationMode;
+            Asynchronous = asynchronous;
         }
 
         /// <summary>
@@ -113,6 +120,7 @@ namespace QuantConnect.Data.UniverseSelection
             MinimumTimeInUniverse = universeSettings.MinimumTimeInUniverse;
             DataNormalizationMode = universeSettings.DataNormalizationMode;
             SubscriptionDataTypes = universeSettings.SubscriptionDataTypes;
+            Asynchronous = universeSettings.Asynchronous;
         }
     }
 }

@@ -52,6 +52,25 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// True if this universe filter can run async in the data stack
+        /// </summary>
+        public virtual bool Asynchronous
+        {
+            get
+            {
+                if(UniverseSettings.Asynchronous.HasValue)
+                {
+                    return UniverseSettings.Asynchronous.Value;
+                }
+                return false;
+            }
+            set
+            {
+                UniverseSettings.Asynchronous = value;
+            }
+        }
+
+        /// <summary>
         /// Event fired when the universe selection has changed
         /// </summary>
         public event EventHandler SelectionChanged;
@@ -176,15 +195,21 @@ namespace QuantConnect.Data.UniverseSelection
                 return Enumerable.Empty<Symbol>();
             }
 
-            var result = SelectSymbols(utcTime, data);
-            if (ReferenceEquals(result, Unchanged))
+            var selections = data.FilteredContracts;
+            if (selections == null)
             {
-                data.FilteredContracts = _previousSelections;
-                return Unchanged;
+                // only trigger selection if it hasn't already been run
+                var result = SelectSymbols(utcTime, data);
+                if (ReferenceEquals(result, Unchanged))
+                {
+                    data.FilteredContracts = _previousSelections;
+                    return Unchanged;
+                }
+
+                selections = result.ToHashSet();
+                data.FilteredContracts = selections;
             }
 
-            var selections = result.ToHashSet();
-            data.FilteredContracts = selections;
             var hasDiffs = _previousSelections.AreDifferent(selections);
             _previousSelections = selections;
             if (!hasDiffs)

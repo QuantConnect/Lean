@@ -523,7 +523,7 @@ namespace QuantConnect.Securities.Option
         /// over market price</param>
         public void SetFilter(int minStrike, int maxStrike)
         {
-            SetFilter(universe => universe.Strikes(minStrike, maxStrike));
+            SetFilterImp(universe => universe.Strikes(minStrike, maxStrike));
         }
 
         /// <summary>
@@ -536,7 +536,7 @@ namespace QuantConnect.Securities.Option
         /// would exclude contracts expiring in more than 10 days</param>
         public void SetFilter(TimeSpan minExpiry, TimeSpan maxExpiry)
         {
-            SetFilter(universe => universe.Expiration(minExpiry, maxExpiry));
+            SetFilterImp(universe => universe.Expiration(minExpiry, maxExpiry));
         }
 
         /// <summary>
@@ -555,7 +555,7 @@ namespace QuantConnect.Securities.Option
         /// would exclude contracts expiring in more than 10 days</param>
         public void SetFilter(int minStrike, int maxStrike, TimeSpan minExpiry, TimeSpan maxExpiry)
         {
-            SetFilter(universe => universe
+            SetFilterImp(universe => universe
                 .Strikes(minStrike, maxStrike)
                 .Expiration(minExpiry, maxExpiry));
         }
@@ -576,7 +576,7 @@ namespace QuantConnect.Securities.Option
         /// would exclude contracts expiring in more than 10 days</param>
         public void SetFilter(int minStrike, int maxStrike, int minExpiryDays, int maxExpiryDays)
         {
-            SetFilter(universe => universe
+            SetFilterImp(universe => universe
                 .Strikes(minStrike, maxStrike)
                 .Expiration(minExpiryDays, maxExpiryDays));
         }
@@ -593,6 +593,7 @@ namespace QuantConnect.Securities.Option
                 var result = universeFunc(optionUniverse);
                 return result.ApplyTypesFilter();
             });
+            ContractFilter.Asynchronous = false;
         }
 
         /// <summary>
@@ -631,6 +632,7 @@ namespace QuantConnect.Securities.Option
                 }
                 return optionUniverse.ApplyTypesFilter();
             });
+            ContractFilter.Asynchronous = false;
         }
 
         /// <summary>
@@ -644,6 +646,16 @@ namespace QuantConnect.Securities.Option
             }
 
             base.SetDataNormalizationMode(mode);
+        }
+
+        private void SetFilterImp(Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc)
+        {
+            ContractFilter = new FuncSecurityDerivativeFilter(universe =>
+            {
+                var optionUniverse = universe as OptionFilterUniverse;
+                var result = universeFunc(optionUniverse);
+                return result.ApplyTypesFilter();
+            });
         }
     }
 }
