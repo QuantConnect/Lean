@@ -7,7 +7,6 @@
 
 # Visual Studio Project Items:
 *.suo
-*.DS_Store
 
 # Precompiled Headers
 *.gch
