@@ -203,6 +203,11 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [TestCase("ES", Market.CME)]
+        [TestCase("30Y", Market.CBOT)]
+        [TestCase("M6B", Market.CME)]
+        [TestCase("BTC", Market.CME)]
+        [TestCase("ABT", Market.NYMEX)]
+        [TestCase("AUP", Market.COMEX)]
         public void EarlyClosesResumesAgainIfLateOpen(string futureTicker, string market)
         {
             var provider = MarketHoursDatabase.FromDataFolder();
@@ -210,9 +215,10 @@ namespace QuantConnect.Tests.Common.Securities
             var future = Symbol.Create(ticker, SecurityType.Future, market);
 
             var futureEntry = provider.GetEntry(market, ticker, future.SecurityType);
-            var earlyCloseDate = DateTime.Parse("7/3/2023", CultureInfo.InvariantCulture);
+            var earlyCloseDate = DateTime.Parse("9/4/2023", CultureInfo.InvariantCulture);
             var earlyCloseHour = futureEntry.ExchangeHours.EarlyCloses[earlyCloseDate];
             var lateOpenHour = futureEntry.ExchangeHours.LateOpens[earlyCloseDate];
+
             Assert.AreEqual(earlyCloseHour, futureEntry.ExchangeHours.GetMarketHours(earlyCloseDate).GetMarketClose(new TimeSpan(0, 0, 0), true));
             Assert.AreEqual(lateOpenHour, futureEntry.ExchangeHours.GetMarketHours(earlyCloseDate).GetMarketOpen(earlyCloseHour, true));
         }
