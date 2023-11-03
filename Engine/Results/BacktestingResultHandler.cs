@@ -310,6 +310,9 @@ namespace QuantConnect.Lean.Engine.Results
 
                     // Store Order Events in a separate file
                     StoreOrderEvents(Algorithm?.UtcTime ?? DateTime.UtcNow, result.Results.OrderEvents);
+
+                    // Store traded securities subscription configs in a separate file
+                    StoreTradedSubscriptions(result.Results.OrderEvents);
                 }
                 else
                 {

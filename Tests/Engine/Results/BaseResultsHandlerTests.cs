@@ -16,17 +16,17 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using Castle.DynamicProxy;
 using Moq;
 using Moq.Protected;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -186,6 +186,65 @@ namespace QuantConnect.Tests.Engine.Results
             }
         }
 
+        [Test]
+        public void StoresTradedSecuritiesSubscriptionDataConfigs()
+        {
+            var algorithmId = "test-algorithm";
+            var mockResultHandler = new Mock<MockableBaseResultHandler>(algorithmId);
+            mockResultHandler.CallBase = true;
+            var protectedMockResultHandler = mockResultHandler.Protected();
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var spy = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+            algorithm.AddEquity("SPY", Resolution.Hour);
+            algorithm.AddEquity("SPY", Resolution.Minute);
+
+            var es = algorithm.AddFuture("ES", Resolution.Minute).Symbol;
+            algorithm.AddFuture("ES", Resolution.Second);
+            algorithm.AddFuture("ES", Resolution.Tick);
+
+            // This will not be traded
+            algorithm.AddIndex("SPX");
+
+            protectedMockResultHandler.SetupGet<IAlgorithm>("Algorithm").Returns(algorithm).Verifiable();
+
+            var orderEvents = new List<OrderEvent>()
+            {
+                new OrderEvent(1, spy, new DateTime(2023, 11, 3, 11, 0, 0), OrderStatus.Filled, OrderDirection.Buy, 300, 10, OrderFee.Zero),
+                new OrderEvent(2, spy, new DateTime(2023, 11, 3, 12, 0, 0), OrderStatus.Canceled, OrderDirection.Sell, 310, 5, OrderFee.Zero),
+                new OrderEvent(3, es, new DateTime(2023, 11, 3, 13, 0, 0), OrderStatus.Submitted, OrderDirection.Buy, 4300, 10, OrderFee.Zero),
+                new OrderEvent(3, es, new DateTime(2023, 11, 3, 13, 0, 1), OrderStatus.Filled, OrderDirection.Buy, 4300, 10, OrderFee.Zero),
+            };
+
+            mockResultHandler.Object.StoreTradedSubscriptions(orderEvents);
+
+            // Verification
+
+            // Algorithm should be accessed twice, once per each symbol with an order event
+            protectedMockResultHandler.VerifyGet<IAlgorithm>("Algorithm", Times.Exactly(2));
+
+            var filePath = mockResultHandler.Object.GetResultsPath($"{algorithmId}-traded-securities-subscriptions.json");
+            Assert.IsTrue(File.Exists(filePath));
+
+            var resultJson = JArray.Parse(File.ReadAllText(filePath));
+
+            Assert.AreEqual(2, resultJson.Count);
+
+            var spyJsonSubscription = resultJson[0] as JObject;
+            Assert.AreEqual(spy, spyJsonSubscription["symbol"].ToObject<Symbol>());
+            CollectionAssert.AreEqual(
+                new List<TickType>() { TickType.Trade, TickType.Quote },
+                spyJsonSubscription["tick-types"].ToObject<List<TickType>>());
+
+            var esJsonSubscription = resultJson[1] as JObject;
+            Assert.AreEqual(es, esJsonSubscription["symbol"].ToObject<Symbol>());
+            CollectionAssert.AreEqual(
+                new List<TickType>() { TickType.Quote },
+                esJsonSubscription["tick-types"].ToObject<List<TickType>>());
+        }
+
         private class BaseResultsHandlerTestable : BaseResultsHandler
         {
             public BaseResultsHandlerTestable(string algorithmId)
@@ -220,6 +279,40 @@ namespace QuantConnect.Tests.Engine.Results
 
             protected override void AddToLogStore(string message)
             {
+            }
+        }
+
+        public class MockableBaseResultHandler : BaseResultsHandler
+        {
+            public MockableBaseResultHandler(string algorithmId)
+            {
+                AlgorithmId = algorithmId;
+            }
+
+            new public void StoreTradedSubscriptions(List<OrderEvent> orderEvents)
+            {
+                base.StoreTradedSubscriptions(orderEvents);
+            }
+
+            new public string GetResultsPath(string filename)
+            {
+                return base.GetResultsPath(filename);
+            }
+
+            protected override void Run()
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, ISeriesPoint value,
+                string unit = "$")
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override void StoreResult(Packet packet)
+            {
+                throw new NotImplementedException();
             }
         }
 

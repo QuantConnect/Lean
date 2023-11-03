@@ -869,6 +869,8 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         // we store order events separately
                         StoreOrderEvents(_currentUtcDate, live.Results.OrderEvents);
+                        // we store traded securities subscription configs in a separate file
+                        StoreTradedSubscriptions(live.Results.OrderEvents);
                         // lets null the orders events so that they aren't stored again and generate a giant file
                         live.Results.OrderEvents = null;
                     }

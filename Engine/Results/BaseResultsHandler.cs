@@ -23,6 +23,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.Serialization;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -242,6 +243,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected OrderEventJsonConverter OrderEventJsonConverter { get; set; }
 
         /// <summary>
+        /// The subscription data configuration json converter instance to use
+        /// </summary>
+        protected SubscriptionDataConfigJsonConverter SubscriptionDataConfigJsonConverter { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
@@ -350,6 +356,34 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Stores the traded securities subscription configurations
+        /// </summary>
+        /// <param name="orderEvents">The order events to use to get the traded securities</param>
+        protected virtual void StoreTradedSubscriptions(List<OrderEvent> orderEvents)
+        {
+            if (orderEvents.Count <= 0)
+            {
+                return;
+            }
+
+            var filename = $"{AlgorithmId}-traded-securities-subscriptions.json";
+            var path = GetResultsPath(filename);
+
+            var subscriptionConfigs = orderEvents
+                .Select(orderEvent => orderEvent.Symbol)
+                .Distinct()
+                .Select(symbol => new SerializedSubscriptionDataConfig(Algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: false)
+                    // Get the highest resolution config for each symbol
+                    .GroupBy(config => config.Resolution)
+                    .OrderBy(grouping => grouping.Key)
+                    .First()));
+
+            var data = JsonConvert.SerializeObject(subscriptionConfigs, Formatting.Indented);
+            File.WriteAllText(path, data);
+        }
+
+        /// <summary>
         /// Gets the orders generated starting from the provided <see cref="ITransactionHandler.OrderEvents"/> position
         /// </summary>
         /// <returns>The delta orders</returns>
@@ -404,6 +438,7 @@ namespace QuantConnect.Lean.Engine.Results
             ProjectId = job.ProjectId;
             RamAllocation = job.RamAllocation.ToStringInvariant();
             OrderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
+            SubscriptionDataConfigJsonConverter = new SubscriptionDataConfigJsonConverter();
             _updateRunner = new Thread(Run, 0) { IsBackground = true, Name = "Result Thread" };
             _updateRunner.Start();
             State["Hostname"] = _hostName;
