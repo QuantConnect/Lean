@@ -55,11 +55,11 @@ namespace QuantConnect.Indicators
         /// Period required for calcualte correlation
         /// </summary>
         private decimal _period;
+ 
         /// <summary>
         /// Correlation type
         /// </summary>
         private readonly CorrelationIndicatorType _correlationType;
-
 
         /// <summary>
         /// Symbol of the reference used
@@ -70,16 +70,6 @@ namespace QuantConnect.Indicators
         /// Symbol of the target used
         /// </summary>
         private readonly Symbol _targetSymbol;
-
-        /// <summary>
-        /// RollingWindow of returns of the target symbol in the given period
-        /// </summary>
-        private readonly RollingWindow<double> _targetReturns;
-
-        /// <summary>
-        /// RollingWindow of returns of the reference symbol in the given period
-        /// </summary>
-        private readonly RollingWindow<double> _referenceReturns;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -120,8 +110,6 @@ namespace QuantConnect.Indicators
             _targetDataPoints = new RollingWindow<decimal>(period);
             _referenceDataPoints = new RollingWindow<decimal>(period);
 
-            _targetReturns = new RollingWindow<double>(period);
-            _referenceReturns = new RollingWindow<double>(period);
         }
 
         /// <summary>
@@ -133,22 +121,7 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="correlationType">Correlation type</param>
         public CorrelationIndicator(Symbol targetSymbol, Symbol referenceSymbol, int period, CorrelationIndicatorType correlationType = CorrelationIndicatorType.Pearson)
-            : this($"B({period})", targetSymbol, referenceSymbol, period, correlationType)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new Correlation indicator with the specified name, period, target and 
-        /// reference values
-        /// </summary>
-        /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The period of this indicator</param>
-        /// <param name="targetSymbol">The target symbol of this indicator</param>
-        /// <param name="referenceSymbol">The reference symbol of this indicator</param>
-        /// <param name="correlationType">Correlation type</param>
-        /// <remarks>Constructor overload for backward compatibility.</remarks>
-        public CorrelationIndicator(string name, int period, Symbol targetSymbol, Symbol referenceSymbol, CorrelationIndicatorType correlationType = CorrelationIndicatorType.Pearson)
-            : this(name, targetSymbol, referenceSymbol, period, correlationType)
+            : this($"Correlation({period})", targetSymbol, referenceSymbol, period, correlationType)
         {
         }
 
@@ -181,9 +154,6 @@ namespace QuantConnect.Indicators
 
             if (_targetDataPoints.Samples == _referenceDataPoints.Samples && _referenceDataPoints.Count > 1)
             {
-                _targetReturns.Add(GetNewReturn(_targetDataPoints));
-                _referenceReturns.Add(GetNewReturn(_referenceDataPoints));
-
                 ComputeCorrelation();
             }
             return _correlation;
@@ -195,26 +165,23 @@ namespace QuantConnect.Indicators
         /// <param name="rollingWindow">The collection of data points from which we want
         /// to compute the return</param>
         /// <returns>The returns with the new given data point</returns>
-        private static double GetNewReturn(RollingWindow<decimal> rollingWindow)
+        private static decimal GetNewReturn(RollingWindow<decimal> rollingWindow)
         {
-            return (double) ((rollingWindow[0] / rollingWindow[1]) - 1);
+            return ((rollingWindow[0] / rollingWindow[1]) - 1);
         }
 
         /// <summary>
-        /// Computes the correlation value of the target in relation with the reference
-        /// using the target and reference returns
+        /// Computes the correlation value usuing symbols values
+        /// correlation values assing into _correlation property
         /// </summary>
         private void ComputeCorrelation()
         {
-
             if (_targetDataPoints.Count < _period || _referenceDataPoints.Count < _period)
             {
                 _correlation = 0;
                 return;
             }
-            double _corr = 0;
-           
-
+            var _corr = 0.0;
             if (_correlationType == CorrelationIndicatorType.Pearson)
             {
                 _corr = Correlation.Pearson(_targetDataPoints.Select(d=>(double)d).ToList(), _referenceDataPoints.Select(d => (double)d).ToList());
@@ -227,7 +194,7 @@ namespace QuantConnect.Indicators
             {
                 _corr = 0;
             }
-            _correlation = (decimal)_corr;
+            _correlation = Extensions.SafeDecimalCast(_corr);
         }
 
         /// <summary>
@@ -237,9 +204,6 @@ namespace QuantConnect.Indicators
         {
             _targetDataPoints.Reset();
             _referenceDataPoints.Reset();
-
-            _targetReturns.Reset();
-            _referenceReturns.Reset();
             _correlation = 0;
             base.Reset();
         }
