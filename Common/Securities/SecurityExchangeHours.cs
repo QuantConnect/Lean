@@ -156,7 +156,9 @@ namespace QuantConnect.Securities
         /// <returns>True if the exchange is considered open at the specified time, false otherwise</returns>
         public bool IsOpen(DateTime localDateTime, bool extendedMarketHours)
         {
-            if (_holidays.Contains(localDateTime.Date.Ticks) || IsTimeAfterEarlyClose(localDateTime) || IsTimeBeforeLateOpen(localDateTime))
+            if (_holidays.Contains(localDateTime.Date.Ticks)
+                || IsTimeAfterEarlyClose(localDateTime)
+                || (!_earlyCloses.ContainsKey(localDateTime.Date) && IsTimeBeforeLateOpen(localDateTime))) // It could be the case there was an early close before a late open
             {
                 return false;
             }
@@ -497,6 +499,10 @@ namespace QuantConnect.Securities
                 newMarketHours = new LocalMarketHours(localDateTime.DayOfWeek, segmentsEarlyClose);
             }
 
+            // It could be the case we have a late open after an early close (the market resumes after the early close), in that case, we should take
+            // the segments before the early close and the the segments after the late opens and append them. Therefore, if that's not the case, this is,
+            // if there was an early close but there is not a late open or it's before the early close, we need to update the variable marketHours with
+            // the value of newMarketHours, so that it contains the segments before the early close
             if (segmentsEarlyClose != null && (!_lateOpens.TryGetValue(localDateTime.Date, out var lateOpenTime) || earlyCloseTime >= lateOpenTime))
             {
                 marketHours = newMarketHours;
@@ -530,6 +536,8 @@ namespace QuantConnect.Securities
                 marketHours = new LocalMarketHours(localDateTime.DayOfWeek, segmentsLateOpen);
             }
 
+            // Since it could be the case we have a late open after an early close (the market resumes after the early close), we need to take
+            // the segments before the early close and the segments after the late open and append them to obtain the expected market hours
             if (segmentsEarlyClose != null && _lateOpens.TryGetValue(localDateTime.Date, out lateOpenTime) && earlyCloseTime <= lateOpenTime)
             {
                 segmentsEarlyClose.AddRange(segmentsLateOpen);
