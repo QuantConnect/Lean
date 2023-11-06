@@ -167,6 +167,7 @@ namespace QuantConnect.Lean.Engine
                         AlgorithmHandlers.DataPermissionsManager);
 
                     algorithm.SubscriptionManager.SetDataManager(dataManager);
+                    AlgorithmHandlers.DataMonitor.SetSubscriptionManager(algorithm.SubscriptionManager);
 
                     synchronizer.Initialize(algorithm, dataManager);
 

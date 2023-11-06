@@ -16,10 +16,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Serialization;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -53,6 +56,9 @@ namespace QuantConnect.Data
 
         private readonly object _threadLock = new();
 
+        private SubscriptionManager _subscriptionManager;
+        private readonly HashSet<Symbol> _tradedSymbols = new();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitor"/> class
         /// </summary>
@@ -61,6 +67,15 @@ namespace QuantConnect.Data
             _resultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
             _succeededDataRequestsFileName = GetFilePath("succeeded-data-requests.txt");
             _failedDataRequestsFileName = GetFilePath("failed-data-requests.txt");
+        }
+
+        /// <summary>
+        /// Set the <see cref="SubscriptionManager"/> instance to use to select the traded subscriptions
+        /// </summary>
+        /// <param name="subscriptionManager">The subscription manager to use</param>
+        public void SetSubscriptionManager(SubscriptionManager subscriptionManager)
+        {
+            _subscriptionManager = subscriptionManager;
         }
 
         /// <summary>
@@ -111,6 +126,19 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Registers a new order event to select the trade subscriptions
+        /// </summary>
+        public void OnOrderEvent(object sender, OrderEvent orderEvent)
+        {
+            if (_exited)
+            {
+                return;
+            }
+
+            _tradedSymbols.Add(orderEvent.Symbol);
+        }
+
+        /// <summary>
         /// Terminates the data monitor generating a final report
         /// </summary>
         public void Exit()
@@ -126,6 +154,7 @@ namespace QuantConnect.Data
             _failedDataRequestsWriter?.Close();
 
             StoreDataMonitorReport(GenerateReport());
+            StoreTradedSubscriptions();
 
             _succeededDataRequestsWriter.DisposeSafely();
             _failedDataRequestsWriter.DisposeSafely();
@@ -236,6 +265,28 @@ namespace QuantConnect.Data
 
             var path = GetFilePath("data-monitor-report.json");
             var data = JsonConvert.SerializeObject(report, Formatting.None);
+            File.WriteAllText(path, data);
+        }
+
+        /// <summary>
+        /// Stores the traded securities subscription configurations
+        /// </summary>
+        private void StoreTradedSubscriptions()
+        {
+            var configs = Enumerable.Empty<SerializedSubscriptionDataConfig>();
+            if (_subscriptionManager != null)
+            {
+                configs = _tradedSymbols.Select(symbol =>
+                    new SerializedSubscriptionDataConfig(_subscriptionManager.SubscriptionDataConfigService
+                        .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: false)
+                        // Get the highest resolution config for each symbol
+                        .GroupBy(config => config.Resolution)
+                        .OrderBy(grouping => grouping.Key)
+                        .First()));
+            }
+
+            var path = GetFilePath("traded-securities-subscriptions.json");
+            var data = JsonConvert.SerializeObject(configs, Formatting.Indented);
             File.WriteAllText(path, data);
         }
 
