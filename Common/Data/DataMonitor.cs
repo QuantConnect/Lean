@@ -59,11 +59,14 @@ namespace QuantConnect.Data
         private SubscriptionManager _subscriptionManager;
         private readonly HashSet<Symbol> _tradedSymbols = new();
 
+        protected ITimeProvider _timeProvider;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitor"/> class
         /// </summary>
         public DataMonitor()
         {
+            _timeProvider = new RealTimeProvider();
             _resultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
             _succeededDataRequestsFileName = GetFilePath("succeeded-data-requests.txt");
             _failedDataRequestsFileName = GetFilePath("failed-data-requests.txt");
@@ -238,13 +241,13 @@ namespace QuantConnect.Data
             {
                 // First time we calculate the request rate.
                 // We don't have a previous value to compare to so we just store the current value.
-                _lastRequestRateCalculationTime = DateTime.UtcNow;
+                _lastRequestRateCalculationTime = _timeProvider.GetUtcNow();
                 _prevRequestsCount = requestsCount;
                 return;
             }
 
             var requestsCountDelta = requestsCount - _prevRequestsCount;
-            var now = DateTime.UtcNow;
+            var now = _timeProvider.GetUtcNow();
             var timeDelta = now - _lastRequestRateCalculationTime;
 
             _requestRates.Add(Math.Round(requestsCountDelta / timeDelta.TotalSeconds));
@@ -256,7 +259,7 @@ namespace QuantConnect.Data
         /// Stores the data monitor report
         /// </summary>
         /// <param name="report">The data monitor report to be stored<param>
-        private void StoreDataMonitorReport(DataMonitorReport report)
+        protected void StoreDataMonitorReport(DataMonitorReport report)
         {
             if (report == null)
             {
@@ -271,7 +274,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Stores the traded securities subscription configurations
         /// </summary>
-        private void StoreTradedSubscriptions()
+        protected void StoreTradedSubscriptions()
         {
             var configs = Enumerable.Empty<SerializedSubscriptionDataConfig>();
             if (_subscriptionManager != null)
@@ -286,14 +289,14 @@ namespace QuantConnect.Data
             }
 
             var path = GetFilePath("traded-securities-subscriptions.json");
-            var data = JsonConvert.SerializeObject(configs, Formatting.Indented);
+            var data = JsonConvert.SerializeObject(configs, Formatting.None);
             File.WriteAllText(path, data);
         }
 
-        private string GetFilePath(string filename)
+        protected string GetFilePath(string filename)
         {
             var baseFilename = Path.GetFileNameWithoutExtension(filename);
-            var timestamp = DateTime.UtcNow.ToStringInvariant("yyyyMMddHHmmssfff");
+            var timestamp = _timeProvider.GetUtcNow().ToStringInvariant("yyyyMMddHHmmssfff");
             var extension = Path.GetExtension(filename);
             return Path.Combine(_resultsDestinationFolder, $"{baseFilename}-{timestamp}{extension}");
         }

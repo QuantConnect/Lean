@@ -23,7 +23,6 @@ using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.Serialization;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -243,11 +242,6 @@ namespace QuantConnect.Lean.Engine.Results
         protected OrderEventJsonConverter OrderEventJsonConverter { get; set; }
 
         /// <summary>
-        /// The subscription data configuration json converter instance to use
-        /// </summary>
-        protected SubscriptionDataConfigJsonConverter SubscriptionDataConfigJsonConverter { get; set; }
-
-        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
@@ -410,7 +404,6 @@ namespace QuantConnect.Lean.Engine.Results
             ProjectId = job.ProjectId;
             RamAllocation = job.RamAllocation.ToStringInvariant();
             OrderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
-            SubscriptionDataConfigJsonConverter = new SubscriptionDataConfigJsonConverter();
             _updateRunner = new Thread(Run, 0) { IsBackground = true, Name = "Result Thread" };
             _updateRunner.Start();
             State["Hostname"] = _hostName;
