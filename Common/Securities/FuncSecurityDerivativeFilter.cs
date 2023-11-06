@@ -26,6 +26,11 @@ namespace QuantConnect.Securities
         private readonly Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> _filter;
 
         /// <summary>
+        /// True if this universe filter can run async in the data stack
+        /// </summary>
+        public bool Asynchronous { get; set; } = true;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="FuncSecurityDerivativeFilter"/> class
         /// </summary>
         /// <param name="filter">The functional implementation of the <see cref="Filter"/> method</param>

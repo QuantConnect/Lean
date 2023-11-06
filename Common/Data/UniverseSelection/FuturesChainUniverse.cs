@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
@@ -31,6 +30,21 @@ namespace QuantConnect.Data.UniverseSelection
     {
         private readonly UniverseSettings _universeSettings;
         private DateTime _cacheDate;
+
+        /// <summary>
+        /// True if this universe filter can run async in the data stack
+        /// </summary>
+        public override bool Asynchronous
+        {
+            get
+            {
+                if (UniverseSettings.Asynchronous.HasValue)
+                {
+                    return UniverseSettings.Asynchronous.Value;
+                }
+                return Future.ContractFilter.Asynchronous;
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuturesChainUniverse"/> class
@@ -67,7 +81,7 @@ namespace QuantConnect.Data.UniverseSelection
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
             // date change detection needs to be done in exchange time zone
-            var localEndTime = data.EndTime.ConvertFromUtc(Future.Exchange.TimeZone);
+            var localEndTime = utcTime.ConvertFromUtc(Future.Exchange.TimeZone);
             var exchangeDate = localEndTime.Date;
             if (_cacheDate == exchangeDate)
             {

@@ -44,6 +44,8 @@ class FundamentalUniverseSelectionModel:
         else:
             universe = self.CreateCoarseFundamentalUniverse(algorithm)
             if self.filterFineData:
+                if universe.UniverseSettings.Asynchronous:
+                    raise ValueError("Asynchronous universe setting is not supported for coarse & fine selections, please use the new Fundamental single pass selection")
                 universe = FineFundamentalFilteredUniverse(universe, lambda fine: self.SelectFine(algorithm, fine))
             return [universe]
 

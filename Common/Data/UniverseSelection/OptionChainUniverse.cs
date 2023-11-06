@@ -35,6 +35,21 @@ namespace QuantConnect.Data.UniverseSelection
         private DateTime _cacheDate;
 
         /// <summary>
+        /// True if this universe filter can run async in the data stack
+        /// </summary>
+        public override bool Asynchronous
+        {
+            get
+            {
+                if (UniverseSettings.Asynchronous.HasValue)
+                {
+                    return UniverseSettings.Asynchronous.Value;
+                }
+                return Option.ContractFilter.Asynchronous;
+            }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OptionChainUniverse"/> class
         /// </summary>
         /// <param name="option">The canonical option chain security</param>
@@ -71,7 +86,7 @@ namespace QuantConnect.Data.UniverseSelection
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
             // date change detection needs to be done in exchange time zone
-            var localEndTime = data.EndTime.ConvertFromUtc(Option.Exchange.TimeZone);
+            var localEndTime = utcTime.ConvertFromUtc(Option.Exchange.TimeZone);
             var exchangeDate = localEndTime.Date;
             if (_cacheDate == exchangeDate)
             {

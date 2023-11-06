@@ -225,7 +225,7 @@ namespace QuantConnect.Securities.Future
         /// would exclude contracts expiring in more than 10 days</param>
         public void SetFilter(TimeSpan minExpiry, TimeSpan maxExpiry)
         {
-            SetFilter(universe => universe.Expiration(minExpiry, maxExpiry));
+            SetFilterImp(universe => universe.Expiration(minExpiry, maxExpiry));
         }
 
         /// <summary>
@@ -238,7 +238,7 @@ namespace QuantConnect.Securities.Future
         /// would exclude contracts expiring in more than 10 days</param>
         public void SetFilter(int minExpiryDays, int maxExpiryDays)
         {
-            SetFilter(universe => universe.Expiration(minExpiryDays, maxExpiryDays));
+            SetFilterImp(universe => universe.Expiration(minExpiryDays, maxExpiryDays));
         }
 
         /// <summary>
@@ -247,14 +247,8 @@ namespace QuantConnect.Securities.Future
         /// <param name="universeFunc">new universe selection function</param>
         public void SetFilter(Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc)
         {
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func = universe =>
-            {
-                var futureUniverse = universe as FutureFilterUniverse;
-                var result = universeFunc(futureUniverse);
-                return result.ApplyTypesFilter();
-            };
-
-            ContractFilter = new FuncSecurityDerivativeFilter(func);
+            SetFilterImp(universeFunc);
+            ContractFilter.Asynchronous = false;
         }
 
         /// <summary>
@@ -265,6 +259,17 @@ namespace QuantConnect.Securities.Future
         {
             var pyUniverseFunc = PythonUtil.ToFunc<FutureFilterUniverse, FutureFilterUniverse>(universeFunc);
             SetFilter(pyUniverseFunc);
+        }
+
+        private void SetFilterImp(Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc)
+        {
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func = universe =>
+            {
+                var futureUniverse = universe as FutureFilterUniverse;
+                var result = universeFunc(futureUniverse);
+                return result.ApplyTypesFilter();
+            };
+            ContractFilter = new FuncSecurityDerivativeFilter(func);
         }
     }
 }

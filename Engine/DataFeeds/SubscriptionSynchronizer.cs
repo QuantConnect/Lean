@@ -180,7 +180,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 }
                                 else
                                 {
-                                    collection = new BaseDataCollection(frontierUtc, frontierUtc, subscription.Configuration.Symbol, packetData, packetBaseDataCollection?.Underlying, null);
+                                    collection = new BaseDataCollection(frontierUtc, frontierUtc, subscription.Configuration.Symbol, packetData, packetBaseDataCollection?.Underlying, packetBaseDataCollection?.FilteredContracts);
                                     if (universeData == null)
                                     {
                                         universeData = new Dictionary<Universe, BaseDataCollection>();

@@ -118,6 +118,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 var universe = CreateCoarseFundamentalUniverse(algorithm);
                 if (_filterFineData)
                 {
+                    if (universe.UniverseSettings.Asynchronous.HasValue && universe.UniverseSettings.Asynchronous.Value)
+                    {
+                        throw new ArgumentException("Asynchronous universe setting is not supported for coarse & fine selections, please use the new Fundamental single pass selection");
+                    }
 #pragma warning disable CS0618 // Type or member is obsolete
                     universe = new FineFundamentalFilteredUniverse(universe, fine => SelectFine(algorithm, fine));
 #pragma warning restore CS0618 // Type or member is obsolete
