@@ -22,7 +22,6 @@ namespace QuantConnect.Orders
     {
         /// <summary>
         /// Route name as shown in Eze EMS.
-        /// America | Europe | Asia
         /// </summary>
         public string Route { get; internal set; }
 
@@ -40,7 +39,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Initializes a new instance of the <see cref="EzeOrderProperties"/> class
         /// </summary>
-        /// <param name="route">Trading route name (America, Europe, Asia)</param>
+        /// <param name="route">Trading route name</param>
         /// <param name="account">Trading account with specific permission</param>
         /// <param name="exchange">Exchange name</param>
         /// <param name="notes">Some notes about order</param>
