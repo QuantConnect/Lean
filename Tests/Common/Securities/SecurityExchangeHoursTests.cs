@@ -411,6 +411,41 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void MarketIsOpenAfterEarlyCloseIfLateOpen()
+        {
+            var exchangeHours = CreateUsFutureSecurityExchangeHours(true);
+
+            var localDateTime = new DateTime(2013, 11, 29, 16, 45, 0);
+            Assert.IsTrue(exchangeHours.IsOpen(localDateTime, false));
+        }
+
+        [Test]
+        public void MarketResumesAfterEarlyCloseIfLateOpen()
+        {
+            var exchangeHours = CreateUsFutureSecurityExchangeHours(true);
+            var localDateTime = new DateTime(2013, 11, 28, 0, 0, 0);
+            var nextDay = new DateTime(2013, 11, 29, 0, 0, 0);
+            var earlyClose = new TimeSpan(10, 30, 0);
+            var lateOpen = new TimeSpan(19, 0, 0);
+
+            var minutes = 0;
+            while (localDateTime < nextDay)
+            {
+                if (localDateTime.TimeOfDay < earlyClose || lateOpen < localDateTime.TimeOfDay)
+                {
+                    Assert.IsTrue(exchangeHours.IsOpen(localDateTime, false));
+                }
+                else
+                {
+                    Assert.IsFalse(exchangeHours.IsOpen(localDateTime, false));
+                }
+
+                minutes++;
+                localDateTime = localDateTime.AddMinutes(minutes);
+            }
+        }
+
+        [Test]
         public void MarketIsOpenAfterLateOpen()
         {
             var exchangeHours = CreateForexSecurityExchangeHours();
@@ -608,14 +643,15 @@ namespace QuantConnect.Tests.Common.Securities
             Dictionary<DateTime, TimeSpan> lateOpens = null;
             if (addLateOpens)
             {
-                lateOpens = new Dictionary<DateTime, TimeSpan> { { new DateTime(2013, 11, 29), new TimeSpan(19, 0, 0) } };
+                lateOpens = new Dictionary<DateTime, TimeSpan> { { new DateTime(2013, 11, 28), new TimeSpan(19, 00, 0) }, { new DateTime(2013, 11, 29), new TimeSpan(16, 40, 0) } };
             }
             else
             {
                 lateOpens = new Dictionary<DateTime, TimeSpan>();
             }
 
-            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
+            var holidays = USHoliday.Dates.Select(x => x.Date).Where(x => !earlyCloses.ContainsKey(x)).ToList();
+            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
             }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
