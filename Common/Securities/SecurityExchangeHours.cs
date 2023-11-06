@@ -156,11 +156,7 @@ namespace QuantConnect.Securities
         /// <returns>True if the exchange is considered open at the specified time, false otherwise</returns>
         public bool IsOpen(DateTime localDateTime, bool extendedMarketHours)
         {
-            var isTimeAfterEarlyClose = IsTimeAfterEarlyClose(localDateTime, out var earlyClose);
-            var isTimeBeforeLateOpen = IsTimeBeforeLateOpen(localDateTime, out var lateOpen);
-            if (_holidays.Contains(localDateTime.Date.Ticks)
-                || ((lateOpen == default || localDateTime.TimeOfDay <= lateOpen) && isTimeAfterEarlyClose)
-                || ((earlyClose == default || earlyClose <= localDateTime.TimeOfDay) && isTimeBeforeLateOpen)) // It could be the case there was an early close before a late open
+            if (_holidays.Contains(localDateTime.Date.Ticks))
             {
                 return false;
             }
@@ -546,22 +542,6 @@ namespace QuantConnect.Securities
             }
 
             return new LocalMarketHours(localDateTime.DayOfWeek, marketHoursSegments);
-        }
-
-        /// <summary>
-        /// Helper to determine if the current time is after a market early close
-        /// </summary>
-        private bool IsTimeAfterEarlyClose(DateTime localDateTime, out TimeSpan earlyCloseTime)
-        {
-            return _earlyCloses.TryGetValue(localDateTime.Date, out earlyCloseTime) && localDateTime.TimeOfDay >= earlyCloseTime;
-        }
-
-        /// <summary>
-        /// Helper to determine if the current time is before a market late open
-        /// </summary>
-        private bool IsTimeBeforeLateOpen(DateTime localDateTime, out TimeSpan lateOpenTime)
-        {
-            return _lateOpens.TryGetValue(localDateTime.Date, out lateOpenTime) && localDateTime.TimeOfDay <= lateOpenTime;
         }
 
         /// <summary>
