@@ -32,7 +32,7 @@ namespace QuantConnect.Indicators
     /// regarding the risk and behavior of the target security in relation to market trends.
     /// </summary>
 
-    public class Correlation : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public class Correlation : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// RollingWindow to store the data points of the target symbol
@@ -134,7 +134,7 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input value of this indicator on this time step.
         /// It can be either from the target or the reference symbol</param>
         /// <returns>The correlation value of the target used in relation with the reference</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             var inputSymbol = input.Symbol;
             if (inputSymbol == _targetSymbol)

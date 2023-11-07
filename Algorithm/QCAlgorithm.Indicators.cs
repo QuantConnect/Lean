@@ -366,6 +366,28 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a Correlation indicator for the given target symbol in relation with the reference used.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="target">The target symbol of this indicator</param>
+        /// <param name="reference">The reference symbol of this indicator</param>
+        /// <param name="period">The period of this indicator</param>
+        /// <param name="correlationType">Correlation type</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Correlation indicator for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public Correlation Corr(Symbol target, Symbol reference, int period, CorrelationType correlationType = CorrelationType.Pearson, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"Correlation({period})", resolution);
+            var corr = new QuantConnect.Indicators.Correlation(name, target, reference, period);
+            InitializeIndicator(target, corr, resolution, selector);
+            InitializeIndicator(reference, corr, resolution, selector);
+
+            return corr;
+        }
+
+        /// <summary>
         /// Creates a new CommodityChannelIndex indicator. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>

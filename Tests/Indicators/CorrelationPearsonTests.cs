@@ -24,7 +24,7 @@ using static QuantConnect.Tests.Indicators.TestHelper;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class CorrelationPearsonTests : CommonIndicatorTests<TradeBar>
+    public class CorrelationPearsonTests : CommonIndicatorTests<IBaseDataBar>
     { 
         protected override string TestFileName => "spy_qqq_corr.csv";
         
@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected CorrelationType _correlationType = CorrelationType.Pearson;
         protected override string TestColumnName => (_correlationType==CorrelationType.Pearson)?"Correlation_Pearson":"Correlation_Spearman";
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
             var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.SPY, "QQQ RIWIV7K5Z9LX", 252, _correlationType);
             return indicator;
