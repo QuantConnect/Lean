@@ -24,11 +24,11 @@ using static QuantConnect.Tests.Indicators.TestHelper;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class CorrelationIndicatorSpearmanTests : CorrelationIndicatorPearsonTests
+    public class CorrelationSpearmanTests : CorrelationPearsonTests
     { 
-        public CorrelationIndicatorSpearmanTests()
+        public CorrelationSpearmanTests()
         {
-            _correlationType = CorrelationIndicatorType.Spearman;
+            _correlationType = CorrelationType.Spearman;
         }
         
     }

@@ -18,7 +18,7 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// Defines the different types of Correlation
     /// </summary>  
-    public enum CorrelationIndicatorType
+    public enum CorrelationType
     {
         /// <summary>
         /// Pearson Correlation (Product-Moment Correlation):
@@ -30,12 +30,14 @@ namespace QuantConnect.Indicators
         /// </summary>
         Pearson,
         /// <summary>
-        /// Pearson Correlation (Product-Moment Correlation):
-        /// Measures the linear relationship between two datasets. The coefficient ranges from -1 to 1.
-        /// A value of 1 indicates a perfect positive linear relationship, -1 indicates a perfect
-        /// negative linear relationship, and 0 indicates no linear relationship.
-        /// It assumes that both datasets are normally distributed and the relationship is linear.
-        /// It is sensitive to outliers which can affect the correlation significantly.
+        /// Spearman Correlation (Rank Correlation):
+        /// Measures the strength and direction of the monotonic relationship between two datasets.
+        /// Instead of calculating the coefficient using raw data, it uses the rank of the data points.
+        /// This method is non-parametric and does not assume a normal distribution of the datasets.
+        /// It's useful when the data is not normally distributed or when the relationship is not linear.
+        /// Spearman's correlation is less sensitive to outliers than Pearson's correlation.
+        /// The coefficient also ranges from -1 to 1 with similar interpretations for the values,
+        /// but it reflects monotonic relationships rather than only linear ones.
         /// </summary>
         Spearman
 

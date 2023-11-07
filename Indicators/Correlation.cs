@@ -15,8 +15,6 @@
 
 using System;
 using QuantConnect.Data.Market;
-using MathNet.Numerics.Statistics;
-using System.Linq;
 
 namespace QuantConnect.Indicators
 {
@@ -34,7 +32,7 @@ namespace QuantConnect.Indicators
     /// regarding the risk and behavior of the target security in relation to market trends.
     /// </summary>
 
-    public class CorrelationIndicator : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public class Correlation : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// RollingWindow to store the data points of the target symbol
@@ -59,7 +57,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Correlation type
         /// </summary>
-        private readonly CorrelationIndicatorType _correlationType;
+        private readonly CorrelationType _correlationType;
 
         /// <summary>
         /// Symbol of the reference used
@@ -90,7 +88,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="correlationType">Correlation type</param>
-        public CorrelationIndicator(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, CorrelationIndicatorType correlationType = CorrelationIndicatorType.Pearson)
+        public Correlation(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, CorrelationType correlationType = CorrelationType.Pearson)
             : base(name)
         {
             // Assert the period is greater than two, otherwise the correlation can not be computed
@@ -120,7 +118,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="correlationType">Correlation type</param>
-        public CorrelationIndicator(Symbol targetSymbol, Symbol referenceSymbol, int period, CorrelationIndicatorType correlationType = CorrelationIndicatorType.Pearson)
+        public Correlation(Symbol targetSymbol, Symbol referenceSymbol, int period, CorrelationType correlationType = CorrelationType.Pearson)
             : this($"Correlation({period})", targetSymbol, referenceSymbol, period, correlationType)
         {
         }
@@ -149,7 +147,7 @@ namespace QuantConnect.Indicators
             }
             else
             {
-                throw new ArgumentException("The given symbol was not target or reference symbol");
+               throw new ArgumentException("The given symbol was not target or reference symbol");
             }
             ComputeCorrelation();
             return _correlation;
@@ -167,13 +165,13 @@ namespace QuantConnect.Indicators
                 return;
             }
             var _corr = 0.0;
-            if (_correlationType == CorrelationIndicatorType.Pearson)
+            if (_correlationType == CorrelationType.Pearson)
             {
-                _corr = Correlation.Pearson(_targetDataPoints, _referenceDataPoints);
+                _corr = MathNet.Numerics.Statistics.Correlation.Pearson(_targetDataPoints, _referenceDataPoints);
             }
-            if (_correlationType == CorrelationIndicatorType.Spearman)
+            if (_correlationType == CorrelationType.Spearman)
             {
-                _corr = Correlation.Spearman(_targetDataPoints, _referenceDataPoints);
+                _corr = MathNet.Numerics.Statistics.Correlation.Spearman(_targetDataPoints, _referenceDataPoints);
             }
             if (_corr.IsNaNOrZero())
             {

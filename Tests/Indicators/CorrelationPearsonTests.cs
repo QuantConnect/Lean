@@ -24,24 +24,24 @@ using static QuantConnect.Tests.Indicators.TestHelper;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class CorrelationIndicatorPearsonTests : CommonIndicatorTests<TradeBar>
+    public class CorrelationPearsonTests : CommonIndicatorTests<TradeBar>
     { 
         protected override string TestFileName => "spy_qqq_corr.csv";
         
         private DateTime _reference = new DateTime(2020, 1, 1);
 
-        protected CorrelationIndicatorType _correlationType = CorrelationIndicatorType.Pearson;
-        protected override string TestColumnName => (_correlationType==CorrelationIndicatorType.Pearson)?"Correlation_Pearson":"Correlation_Spearman";
+        protected CorrelationType _correlationType = CorrelationType.Pearson;
+        protected override string TestColumnName => (_correlationType==CorrelationType.Pearson)?"Correlation_Pearson":"Correlation_Spearman";
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            var indicator = new CorrelationIndicator("testCorrelationIndicator", Symbols.SPY, "QQQ RIWIV7K5Z9LX", 252, _correlationType);
+            var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.SPY, "QQQ RIWIV7K5Z9LX", 252, _correlationType);
             return indicator;
         }
 
         [Test]
         public override void TimeMovesForward()
         {
-            var indicator = new CorrelationIndicator("testCorrelationIndicator",  Symbols.IBM, Symbols.SPY, 5, _correlationType);
+            var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator",  Symbols.IBM, Symbols.SPY, 5, _correlationType);
 
             for (var i = 10; i > 0; i--)
             {
@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void WarmsUpProperly()
         {
-            var indicator = new CorrelationIndicator("testCorrelationIndicator", Symbols.IBM, Symbols.SPY, 5, _correlationType);
+            var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.IBM, Symbols.SPY, 5, _correlationType);
             var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
             if (!period.HasValue)
@@ -153,7 +153,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void EqualCorrelationValue()
         {
-            var indicator = new CorrelationIndicator("testCorrelationIndicator", Symbols.AAPL, Symbols.SPX, 3, _correlationType);
+            var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.AAPL, Symbols.SPX, 3, _correlationType);
 
             for (int i = 0 ; i < 3 ; i++)
             {
@@ -167,7 +167,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void NotEqualCorrelationValue()
         {
-            var indicator = new CorrelationIndicator("testCorrelationIndicator", Symbols.AAPL, Symbols.SPX, 3, _correlationType);
+            var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.AAPL, Symbols.SPX, 3, _correlationType);
 
             for (int i = 0; i < 3; i++)
             {
