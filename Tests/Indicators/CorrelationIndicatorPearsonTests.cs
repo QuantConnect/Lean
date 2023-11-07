@@ -27,11 +27,11 @@ namespace QuantConnect.Tests.Indicators
     public class CorrelationIndicatorPearsonTests : CommonIndicatorTests<TradeBar>
     { 
         protected override string TestFileName => "spy_qqq_corr.csv";
-        protected override string TestColumnName => "Correlation_Pearson";
-
+        
         private DateTime _reference = new DateTime(2020, 1, 1);
 
         protected CorrelationIndicatorType _correlationType = CorrelationIndicatorType.Pearson;
+        protected override string TestColumnName => (_correlationType==CorrelationIndicatorType.Pearson)?"Correlation_Pearson":"Correlation_Spearman";
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             var indicator = new CorrelationIndicator("testCorrelationIndicator", Symbols.SPY, "QQQ RIWIV7K5Z9LX", 252, _correlationType);

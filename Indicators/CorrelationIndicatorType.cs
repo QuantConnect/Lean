@@ -21,11 +21,21 @@ namespace QuantConnect.Indicators
     public enum CorrelationIndicatorType
     {
         /// <summary>
-        /// Pearson Correlation
+        /// Pearson Correlation (Product-Moment Correlation):
+        /// Measures the linear relationship between two datasets. The coefficient ranges from -1 to 1.
+        /// A value of 1 indicates a perfect positive linear relationship, -1 indicates a perfect
+        /// negative linear relationship, and 0 indicates no linear relationship.
+        /// It assumes that both datasets are normally distributed and the relationship is linear.
+        /// It is sensitive to outliers which can affect the correlation significantly.
         /// </summary>
         Pearson,
         /// <summary>
-        /// Spearman Correlation
+        /// Pearson Correlation (Product-Moment Correlation):
+        /// Measures the linear relationship between two datasets. The coefficient ranges from -1 to 1.
+        /// A value of 1 indicates a perfect positive linear relationship, -1 indicates a perfect
+        /// negative linear relationship, and 0 indicates no linear relationship.
+        /// It assumes that both datasets are normally distributed and the relationship is linear.
+        /// It is sensitive to outliers which can affect the correlation significantly.
         /// </summary>
         Spearman
 

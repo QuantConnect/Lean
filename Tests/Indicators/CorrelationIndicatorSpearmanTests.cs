@@ -26,7 +26,6 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class CorrelationIndicatorSpearmanTests : CorrelationIndicatorPearsonTests
     { 
-        protected override string TestColumnName => "Correlation_Spearman";
         public CorrelationIndicatorSpearmanTests()
         {
             _correlationType = CorrelationIndicatorType.Spearman;

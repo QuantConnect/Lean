@@ -39,12 +39,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// RollingWindow to store the data points of the target symbol
         /// </summary>
-        private readonly RollingWindow<decimal> _targetDataPoints;
+        private readonly RollingWindow<double> _targetDataPoints;
 
         /// <summary>
         /// RollingWindow to store the data points of the reference symbol
         /// </summary>
-        private readonly RollingWindow<decimal> _referenceDataPoints;
+        private readonly RollingWindow<double> _referenceDataPoints;
 
         /// <summary>
         /// Correlation of the target used in relation with the reference
@@ -107,8 +107,8 @@ namespace QuantConnect.Indicators
 
             _correlationType = correlationType;
 
-            _targetDataPoints = new RollingWindow<decimal>(period);
-            _referenceDataPoints = new RollingWindow<decimal>(period);
+            _targetDataPoints = new RollingWindow<double>(period);
+            _referenceDataPoints = new RollingWindow<double>(period);
 
         }
 
@@ -141,33 +141,18 @@ namespace QuantConnect.Indicators
             var inputSymbol = input.Symbol;
             if (inputSymbol == _targetSymbol)
             {
-                _targetDataPoints.Add(input.Close);
-            } 
-            else if(inputSymbol == _referenceSymbol)
+                _targetDataPoints.Add((double)input.Value);
+            }
+            else if (inputSymbol == _referenceSymbol)
             {
-                _referenceDataPoints.Add(input.Close);
+                _referenceDataPoints.Add((double)input.Value);
             }
             else
             {
                 throw new ArgumentException("The given symbol was not target or reference symbol");
             }
-
-            if (_targetDataPoints.Samples == _referenceDataPoints.Samples && _referenceDataPoints.Count > 1)
-            {
-                ComputeCorrelation();
-            }
+            ComputeCorrelation();
             return _correlation;
-        }
-
-        /// <summary>
-        /// Computes the returns with the new given data point and the last given data point
-        /// </summary>
-        /// <param name="rollingWindow">The collection of data points from which we want
-        /// to compute the return</param>
-        /// <returns>The returns with the new given data point</returns>
-        private static decimal GetNewReturn(RollingWindow<decimal> rollingWindow)
-        {
-            return ((rollingWindow[0] / rollingWindow[1]) - 1);
         }
 
         /// <summary>
@@ -184,11 +169,11 @@ namespace QuantConnect.Indicators
             var _corr = 0.0;
             if (_correlationType == CorrelationIndicatorType.Pearson)
             {
-                _corr = Correlation.Pearson(_targetDataPoints.Select(d=>(double)d).ToList(), _referenceDataPoints.Select(d => (double)d).ToList());
+                _corr = Correlation.Pearson(_targetDataPoints, _referenceDataPoints);
             }
             if (_correlationType == CorrelationIndicatorType.Spearman)
             {
-                _corr = Correlation.Spearman(_targetDataPoints.Select(d => (double)d).ToList(), _referenceDataPoints.Select(d => (double)d).ToList());
+                _corr = Correlation.Spearman(_targetDataPoints, _referenceDataPoints);
             }
             if (_corr.IsNaNOrZero())
             {
