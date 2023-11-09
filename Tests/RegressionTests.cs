@@ -90,6 +90,7 @@ namespace QuantConnect.Tests
                 { "TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError },
                 { "OnOrderEventExceptionRegression", AlgorithmStatus.RuntimeError },
                 { "WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError },
+                { "CoarseFineAsyncUniverseRegressionAlgorithm", AlgorithmStatus.Running },
                 { "BasicTemplateIndexDailyAlgorithm", AlgorithmStatus.Running },
                 { "BasicTemplateIndexOptionsDailyAlgorithm", AlgorithmStatus.Running },
                 { "ScaledRawDataNormalizationModeNotAllowedSecuritiesAlgorithm", AlgorithmStatus.Running }

@@ -278,10 +278,11 @@ namespace QuantConnect.Lean.Engine
                 {
                     foreach (var dataCollection in timeSlice.UniverseData.Values)
                     {
+                        if (!dataCollection.ShouldCacheToSecurity()) continue;
+
                         foreach (var data in dataCollection.Data)
                         {
-                            Security security;
-                            if (algorithm.Securities.TryGetValue(data.Symbol, out security))
+                            if (algorithm.Securities.TryGetValue(data.Symbol, out var security))
                             {
                                 security.Cache.StoreData(new[] { data }, data.GetType());
                             }

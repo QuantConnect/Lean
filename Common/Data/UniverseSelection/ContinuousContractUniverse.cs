@@ -42,6 +42,12 @@ namespace QuantConnect.Data.UniverseSelection
         public override UniverseSettings UniverseSettings { get; }
 
         /// <summary>
+        /// True if this universe filter can run async in the data stack
+        /// TODO: see IContinuousSecurity.Mapped
+        /// </summary>
+        public override bool Asynchronous => false;
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         public ContinuousContractUniverse(Security security, UniverseSettings universeSettings, bool liveMode, SubscriptionDataConfig universeConfig)
@@ -84,6 +90,7 @@ namespace QuantConnect.Data.UniverseSelection
 
             if (_currentSymbol != null)
             {
+                // TODO: this won't work with async universe selection
                 ((IContinuousSecurity)_security).Mapped = _currentSymbol;
                 yield return _currentSymbol;
             }

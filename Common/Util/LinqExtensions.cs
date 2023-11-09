@@ -309,7 +309,11 @@ namespace QuantConnect.Util
         /// <returns>True if there are any differences between the two sets, false otherwise</returns>
         public static bool AreDifferent<T>(this ISet<T> left, ISet<T> right)
         {
-            return left.Except(right).Any() || right.Except(left).Any();
+            if(ReferenceEquals(left, right))
+            {
+                return false;
+            }
+            return !left.SetEquals(right);
         }
 
         /// <summary>

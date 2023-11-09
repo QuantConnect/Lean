@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets or sets the contracts selected by the universe
         /// </summary>
-        public IReadOnlyCollection<Symbol> FilteredContracts { get; set; }
+        public HashSet<Symbol> FilteredContracts { get; set; }
 
         /// <summary>
         /// Gets the data list
@@ -80,7 +80,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="data">The data to add to this collection</param>
         /// <param name="underlying">The associated underlying price data if any</param>
         /// <param name="filteredContracts">The contracts selected by the universe</param>
-        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, IEnumerable<BaseData> data = null, BaseData underlying = null, IReadOnlyCollection<Symbol> filteredContracts = null)
+        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, IEnumerable<BaseData> data = null, BaseData underlying = null, HashSet<Symbol> filteredContracts = null)
             : this(time, endTime, symbol, data != null ? data.ToList() : new List<BaseData>(), underlying, filteredContracts)
         {
         }
@@ -94,7 +94,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="data">The data to add to this collection</param>
         /// <param name="underlying">The associated underlying price data if any</param>
         /// <param name="filteredContracts">The contracts selected by the universe</param>
-        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, List<BaseData> data, BaseData underlying, IReadOnlyCollection<Symbol> filteredContracts)
+        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, List<BaseData> data, BaseData underlying, HashSet<Symbol> filteredContracts)
         {
             Symbol = symbol;
             Time = time;
@@ -110,6 +110,15 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 Data = data ?? new List<BaseData>();
             }
+        }
+
+        /// <summary>
+        /// Indicates whether this contains data that should be stored in the security cache
+        /// </summary>
+        /// <returns>Whether this contains data that should be stored in the security cache</returns>
+        public override bool ShouldCacheToSecurity()
+        {
+            return Data.Count > 0 && Data[0].ShouldCacheToSecurity();
         }
 
         /// <summary>
