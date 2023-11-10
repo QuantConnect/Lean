@@ -23,18 +23,18 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Route name as shown in Eze EMS.
         /// </summary>
-        public string Route { get; internal set; }
+        public string Route { get; set; }
 
         /// <summary>
         /// Semi-colon separated values that represent either Trade or Neutral accounts the user has permission 
         /// e.g.,TAL;TEST;USER1;TRADE or TAL;TEST;USER2;NEUTRAL
         /// </summary>
-        public string Account { get; internal set; }
+        public string Account { get; set; }
 
         /// <summary>
         /// User message/notes
         /// </summary>
-        public string Notes { get; internal set; }
+        public string Notes { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EzeOrderProperties"/> class
