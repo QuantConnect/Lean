@@ -149,6 +149,19 @@ namespace QuantConnect.Tests.Indicators
             firstVolumeRenkoConsolidator.Dispose();
             secondVolumeRenkoConsolidator.Dispose();
         }
+        [Test]
+        public void AcceptsQuoteBarsAsInput()
+        {
+            var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.IBM, Symbols.SPY, 5, _correlationType);
+
+            for (var i = 10; i > 0; i--)
+            {
+                indicator.Update(new QuoteBar { Symbol = Symbols.IBM, Ask = new Bar(1, 2, 1, 500), Bid = new Bar(1, 2, 1, 500), Time = _reference.AddDays(1 + i) });
+                indicator.Update(new QuoteBar { Symbol = Symbols.SPY, Ask = new Bar(1, 2, 1, 500), Time = _reference.AddDays(1 + i) });
+            }
+
+            Assert.AreEqual(2, indicator.Samples);
+        }
 
         [Test]
         public void EqualCorrelationValue()
