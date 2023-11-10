@@ -405,15 +405,16 @@ namespace QuantConnect.Securities.Future
                     return priorBusinessDay.Add(TimeSpan.FromHours(21));
                 })
             },
-            // CBOE Volatility Index Futures (VIX): https://cfe.cboe.com/cfe-products/vx-cboe-volatility-index-vix-futures/contract-specifications
+            // CBOE Volatility Index Futures (VIX): https://www.cboe.com/tradable_products/vix/vix_futures/specifications/
             {Symbol.Create(Futures.Indices.VIX, SecurityType.Future, Market.CFE), (time =>
                 {
                     // Trading can occur up to 9:00 a.m. Eastern Time (ET) on the "Wednesday that is 30 days prior to
                     // the third Friday of the calendar month immediately following the month in which the contract expires".
                     var nextThirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time.AddMonths(1));
                     var expiryDate = nextThirdFriday.AddDays(-30);
+                    var holidays = MarketHoursDatabase.FromDataFolder().GetEntry(Market.CFE, Futures.Indices.VIX, SecurityType.Future).ExchangeHours.Holidays;
                     // If the next third Friday or the Wednesday are holidays, then it is moved to the previous day.
-                    if (USHoliday.Dates.Contains(expiryDate) || USHoliday.Dates.Contains(nextThirdFriday))
+                    if (holidays.Contains(expiryDate) || holidays.Contains(nextThirdFriday))
                     {
                         expiryDate = expiryDate.AddDays(-1);
                     }
