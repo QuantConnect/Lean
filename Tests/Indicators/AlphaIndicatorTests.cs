@@ -197,5 +197,32 @@ namespace QuantConnect.Tests.Indicators
 
             }
         }
+
+        [Test]
+        public void RiskFreeRate()
+        {
+            decimal riskFreeRate = 0.0002m;
+            int period = 5;
+            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, period, riskFreeRate);
+
+            for (int i = 0; i <= period; i++)
+            {
+                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 100 + i, Time = _reference.AddDays(1 + i) });
+
+                Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
+
+                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 200 + i * 3, Time = _reference.AddDays(1 + i) });
+
+                if (i < period)
+                {
+                    Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
+                }
+                else
+                {
+                    Assert.AreEqual(0.003096821, (double)indicator.Current.Value, 0.0000000001);
+                }
+
+            }
+        }
     }
 }

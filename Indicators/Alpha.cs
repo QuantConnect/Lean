@@ -72,6 +72,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         private readonly Beta _beta;
 
+        private readonly decimal _riskFreeRate;
+
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
@@ -90,7 +92,8 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="alphaPeriod">The Alpha period of this indicator</param>
         /// <param name="betaPeriod">The Beta period of this indicator</param>
-        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod)
+        /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
+        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal riskFreeRate = 0.0m)
             : base(name)
         {
             // Assert that the target and reference symbols are not the same
@@ -125,6 +128,7 @@ namespace QuantConnect.Indicators
             WarmUpPeriod = alphaPeriod >= betaPeriod ? alphaPeriod + 1 : betaPeriod + 1;
 
             _alpha = 0m;
+            _riskFreeRate = riskFreeRate;
         }
 
         /// <summary>
@@ -133,8 +137,8 @@ namespace QuantConnect.Indicators
         /// <param name="targetSymbol">The target symbol of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
-        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int period)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{period})", targetSymbol, referenceSymbol, period, period)
+        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int period, decimal riskFreeRate = 0.0m)
+            : this($"ALPHA({targetSymbol},{referenceSymbol},{period},{riskFreeRate})", targetSymbol, referenceSymbol, period, period, riskFreeRate)
         {
         }
 
@@ -145,8 +149,8 @@ namespace QuantConnect.Indicators
         /// <param name="targetSymbol"></param>
         /// <param name="referenceSymbol"></param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
-        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int period)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{period})", targetSymbol, referenceSymbol, period, period)
+        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, decimal riskFreeRate = 0.0m)
+            : this($"ALPHA({targetSymbol},{referenceSymbol},{period},{riskFreeRate})", targetSymbol, referenceSymbol, period, period, riskFreeRate)
         {
         }
         
@@ -203,7 +207,7 @@ namespace QuantConnect.Indicators
             var targetMean = _targetReturns.Average();
             var referenceMean = _referenceReturns.Average();
 
-            _alpha = targetMean - _beta.Current.Value * referenceMean;
+            _alpha = targetMean - (_riskFreeRate + _beta.Current.Value * (referenceMean - _riskFreeRate));
         }
 
         /// <summary>
