@@ -16,10 +16,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Serialization;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -31,8 +34,8 @@ namespace QuantConnect.Data
     {
         private bool _exited;
 
-        private TextWriter _succeededDataRequestsWriter;
-        private TextWriter _failedDataRequestsWriter;
+        private Lazy<TextWriter> _succeededDataRequestsWriter;
+        private Lazy<TextWriter> _failedDataRequestsWriter;
 
         private long _succeededDataRequestsCount;
         private long _failedDataRequestsCount;
@@ -53,14 +56,32 @@ namespace QuantConnect.Data
 
         private readonly object _threadLock = new();
 
+        private SubscriptionManager _subscriptionManager;
+        private readonly Dictionary<Symbol, List<SubscriptionDataConfig>> _tradedSecuritiesSubscriptions = new();
+
+        /// <summary>
+        /// Time provider instance used to get the current time (for testing purposes)
+        /// </summary>
+        protected ITimeProvider TimeProvider { get; set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitor"/> class
         /// </summary>
         public DataMonitor()
         {
+            TimeProvider = new RealTimeProvider();
             _resultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
             _succeededDataRequestsFileName = GetFilePath("succeeded-data-requests.txt");
             _failedDataRequestsFileName = GetFilePath("failed-data-requests.txt");
+        }
+
+        /// <summary>
+        /// Set the <see cref="SubscriptionManager"/> instance to use to select the traded subscriptions
+        /// </summary>
+        /// <param name="subscriptionManager">The subscription manager to use</param>
+        public void SetSubscriptionManager(SubscriptionManager subscriptionManager)
+        {
+            _subscriptionManager = subscriptionManager;
         }
 
         /// <summary>
@@ -87,7 +108,7 @@ namespace QuantConnect.Data
 
             if (e.Succeded)
             {
-                WriteLineToFile(_succeededDataRequestsWriter, path, _succeededDataRequestsFileName);
+                WriteLineToFile(_succeededDataRequestsWriter.Value, path, _succeededDataRequestsFileName);
                 Interlocked.Increment(ref _succeededDataRequestsCount);
                 if (isUniverseData)
                 {
@@ -96,7 +117,7 @@ namespace QuantConnect.Data
             }
             else
             {
-                WriteLineToFile(_failedDataRequestsWriter, path, _failedDataRequestsFileName);
+                WriteLineToFile(_failedDataRequestsWriter.Value, path, _failedDataRequestsFileName);
                 Interlocked.Increment(ref _failedDataRequestsCount);
                 if (isUniverseData)
                 {
@@ -111,25 +132,63 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Registers a new order event to select the trade subscriptions
+        /// </summary>
+        public void OnOrderEvent(object sender, OrderEvent orderEvent)
+        {
+            if (_exited)
+            {
+                return;
+            }
+
+            if (!_tradedSecuritiesSubscriptions.ContainsKey(orderEvent.Symbol))
+            {
+                _tradedSecuritiesSubscriptions[orderEvent.Symbol] = _subscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(orderEvent.Symbol, includeInternalConfigs: false)
+                    .ToList();
+            }
+        }
+
+        /// <summary>
         /// Terminates the data monitor generating a final report
         /// </summary>
         public void Exit()
         {
-            if (_exited || _requestRateCalculationThread == null)
+            if (_exited)
             {
                 return;
             }
             _exited = true;
 
-            _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
-            _succeededDataRequestsWriter?.Close();
-            _failedDataRequestsWriter?.Close();
+            if (_requestRateCalculationThread != null)
+            {
+                _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
 
-            StoreDataMonitorReport(GenerateReport());
+                var succeededDataRequestWriterWasCreated = _succeededDataRequestsWriter?.IsValueCreated ?? false;
+                if (succeededDataRequestWriterWasCreated)
+                {
+                    _succeededDataRequestsWriter.Value.Close();
+                }
+                var failedDataRequestsWriterWasCreated = _failedDataRequestsWriter?.IsValueCreated ?? false;
+                if (failedDataRequestsWriterWasCreated)
+                {
+                    _failedDataRequestsWriter.Value.Close();
+                }
 
-            _succeededDataRequestsWriter.DisposeSafely();
-            _failedDataRequestsWriter.DisposeSafely();
-            _cancellationTokenSource.DisposeSafely();
+                StoreDataMonitorReport(GenerateReport());
+
+                if (failedDataRequestsWriterWasCreated)
+                {
+                    _succeededDataRequestsWriter.Value.DisposeSafely();
+                }
+                if (failedDataRequestsWriterWasCreated)
+                {
+                    _failedDataRequestsWriter.Value.DisposeSafely();
+                }
+                _cancellationTokenSource.DisposeSafely();
+            }
+
+            StoreTradedSubscriptions();
         }
 
         public void Dispose()
@@ -163,8 +222,8 @@ namespace QuantConnect.Data
                     return;
                 }
                 // we create the files on demand
-                _succeededDataRequestsWriter = OpenStream(_succeededDataRequestsFileName);
-                _failedDataRequestsWriter = OpenStream(_failedDataRequestsFileName);
+                _succeededDataRequestsWriter = new(() => OpenStream(_succeededDataRequestsFileName));
+                _failedDataRequestsWriter = new(() => OpenStream(_failedDataRequestsFileName));
 
                 _cancellationTokenSource = new CancellationTokenSource();
 
@@ -209,13 +268,13 @@ namespace QuantConnect.Data
             {
                 // First time we calculate the request rate.
                 // We don't have a previous value to compare to so we just store the current value.
-                _lastRequestRateCalculationTime = DateTime.UtcNow;
+                _lastRequestRateCalculationTime = TimeProvider.GetUtcNow();
                 _prevRequestsCount = requestsCount;
                 return;
             }
 
             var requestsCountDelta = requestsCount - _prevRequestsCount;
-            var now = DateTime.UtcNow;
+            var now = TimeProvider.GetUtcNow();
             var timeDelta = now - _lastRequestRateCalculationTime;
 
             _requestRates.Add(Math.Round(requestsCountDelta / timeDelta.TotalSeconds));
@@ -227,7 +286,7 @@ namespace QuantConnect.Data
         /// Stores the data monitor report
         /// </summary>
         /// <param name="report">The data monitor report to be stored<param>
-        private void StoreDataMonitorReport(DataMonitorReport report)
+        protected void StoreDataMonitorReport(DataMonitorReport report)
         {
             if (report == null)
             {
@@ -239,10 +298,30 @@ namespace QuantConnect.Data
             File.WriteAllText(path, data);
         }
 
-        private string GetFilePath(string filename)
+        /// <summary>
+        /// Stores the traded securities subscription configurations
+        /// </summary>
+        protected void StoreTradedSubscriptions()
+        {
+            var configs = Enumerable.Empty<SerializedSubscriptionDataConfig>();
+            if (_subscriptionManager != null)
+            {
+                configs = _tradedSecuritiesSubscriptions.Values.Select(x => new SerializedSubscriptionDataConfig(x
+                    // Get the highest resolution config for each symbol
+                    .GroupBy(config => config.Resolution)
+                    .OrderBy(grouping => grouping.Key)
+                    .First()));
+            }
+
+            var path = GetFilePath("traded-securities-subscriptions.json");
+            var data = JsonConvert.SerializeObject(configs, Formatting.None);
+            File.WriteAllText(path, data);
+        }
+
+        protected string GetFilePath(string filename)
         {
             var baseFilename = Path.GetFileNameWithoutExtension(filename);
-            var timestamp = DateTime.UtcNow.ToStringInvariant("yyyyMMddHHmmssfff");
+            var timestamp = TimeProvider.GetUtcNow().ToStringInvariant("yyyyMMddHHmmssfff");
             var extension = Path.GetExtension(filename);
             return Path.Combine(_resultsDestinationFolder, $"{baseFilename}-{timestamp}{extension}");
         }
