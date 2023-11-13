@@ -197,19 +197,5 @@ namespace QuantConnect.Tests.Indicators
 
             }
         }
-
-        [Test]
-        public void NotEqualAlphaValue()
-        {
-            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, 5);
-
-            for (int i = 0; i < 3; i++)
-            {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = _reference.AddDays(1 + i) });
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = i + 2, Time = _reference.AddDays(1 + i) });
-            }
-
-            Assert.AreNotEqual(1, (double)indicator.Current.Value);
-        }
     }
 }

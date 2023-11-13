@@ -15,9 +15,7 @@
 
 using System;
 using QuantConnect.Data.Market;
-using MathNet.Numerics.Statistics;
 using System.Linq;
-using MathNet.Numerics.Distributions;
 
 namespace QuantConnect.Indicators
 {
@@ -35,16 +33,6 @@ namespace QuantConnect.Indicators
     public class Alpha : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// RollingWindow to store the data points of the target symbol
-        /// </summary>
-        private readonly RollingWindow<decimal> _targetDataPoints;
-
-        /// <summary>
-        /// RollingWindow to store the data points of the reference symbol
-        /// </summary>
-        private readonly RollingWindow<decimal> _referenceDataPoints;
-
-        /// <summary>
         /// Symbol of the reference used
         /// </summary>
         private readonly Symbol _referenceSymbol;
@@ -55,29 +43,34 @@ namespace QuantConnect.Indicators
         private readonly Symbol _targetSymbol;
 
         /// <summary>
+        /// Rate of change of the target symbol
+        /// </summary>
+        private readonly RateOfChange _targetROC;
+
+        /// <summary>
+        /// Rate of change of the reference symbol
+        /// </summary>
+        private readonly RateOfChange _referenceROC;
+
+        /// <summary>
         /// RollingWindow of returns of the target symbol in the given period for the alpha
         /// </summary>
-        private readonly RollingWindow<double> _targetAlphaReturns;
+        private readonly RollingWindow<decimal> _targetReturns;
 
         /// <summary>
         /// RollingWindow of returns of the reference symbol in the given period for the alpha
         /// </summary>
-        private readonly RollingWindow<double> _referenceAlphaReturns;
-
-        /// <summary>
-        /// RollingWindow of returns of the target symbol in the given period for the beta
-        /// </summary>
-        private readonly RollingWindow<double> _targetBetaReturns;
-
-        /// <summary>
-        /// RollingWindow of returns of the reference symbol in the given period for the beta
-        /// </summary>
-        private readonly RollingWindow<double> _referenceBetaReturns;
+        private readonly RollingWindow<decimal> _referenceReturns;
 
         /// <summary>
         /// Alpha of the target used in relation with the reference
         /// </summary>
         private decimal _alpha;
+
+        /// <summary>
+        /// Beta of the target used in relation with the reference
+        /// </summary>
+        private readonly Beta _beta;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -87,7 +80,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _targetDataPoints.Samples >= WarmUpPeriod && _referenceDataPoints.Samples >= WarmUpPeriod;
+        public override bool IsReady => _targetReturns.IsReady && _beta.IsReady && _referenceReturns.IsReady;
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified name, target, reference, and period values
@@ -121,16 +114,15 @@ namespace QuantConnect.Indicators
             _targetSymbol = targetSymbol;
             _referenceSymbol = referenceSymbol;
 
-            _targetDataPoints = new RollingWindow<decimal>(2);
-            _referenceDataPoints = new RollingWindow<decimal>(2);
+            _targetROC = new RateOfChange($"{name}_TargetROC", 1);
+            _referenceROC = new RateOfChange($"{name}_ReferenceROC", 1);
 
-            _targetAlphaReturns = new RollingWindow<double>(alphaPeriod);
-            _referenceAlphaReturns = new RollingWindow<double>(alphaPeriod);
+            _targetReturns = new RollingWindow<decimal>(alphaPeriod);
+            _referenceReturns = new RollingWindow<decimal>(alphaPeriod);
 
-            _targetBetaReturns = new RollingWindow<double>(betaPeriod);
-            _referenceBetaReturns = new RollingWindow<double>(betaPeriod);
+            _beta = new Beta($"{name}_Beta", _targetSymbol, _referenceSymbol, betaPeriod);
             
-            WarmUpPeriod = alphaPeriod + 1;
+            WarmUpPeriod = alphaPeriod >= betaPeriod ? alphaPeriod + 1 : betaPeriod + 1;
 
             _alpha = 0m;
         }
@@ -166,50 +158,35 @@ namespace QuantConnect.Indicators
         /// <exception cref="ArgumentException"></exception>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            var inputSymbol = input.Symbol;
+            if (input is null)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+            Symbol inputSymbol = input.Symbol;
+            
             if (inputSymbol == _targetSymbol)
             {
-                _targetDataPoints.Add(input.Close);
+                _targetROC.Update(input.EndTime, input.Close);
+                if (_targetROC.IsReady)
+                    _targetReturns.Add(_targetROC.Current.Value);
             }
             else if (inputSymbol == _referenceSymbol)
             {
-                _referenceDataPoints.Add(input.Close);
+                _referenceROC.Update(input.EndTime, input.Close);
+                if (_referenceROC.IsReady)
+                    _referenceReturns.Add(_referenceROC.Current.Value);
             }
             else
             {
                 throw new ArgumentException($"The input symbol {inputSymbol} is not the target or reference symbol.");
             }
 
-            if (_targetDataPoints.Samples == _referenceDataPoints.Samples && _targetDataPoints.IsReady && _referenceDataPoints.IsReady)
-            {
-                _targetAlphaReturns.Add(GetNewReturn(_targetDataPoints));
-                _referenceAlphaReturns.Add(GetNewReturn(_referenceDataPoints));
-
-                _targetBetaReturns.Add(GetNewReturn(_targetDataPoints));
-                _referenceBetaReturns.Add(GetNewReturn(_referenceDataPoints));
-
+            _beta.Update(input);
+            
+            if (_targetReturns.Samples == _referenceReturns.Samples && _targetReturns.Samples > 0)
                 ComputeAlpha();
-            }
+
             return _alpha;
-        }
-
-        /// <summary>
-        /// Computes the return of the last two data points of the window
-        /// </summary>
-        /// <param name="returns"></param>
-        /// <returns>Returns the return of the last two data points of the window</returns>
-        /// <exception cref="ArgumentException"></exception>
-        public static double GetNewReturn(RollingWindow<decimal> returns)
-        {
-            // Assert that the window has at least two data points
-            if (returns.Count < 2)
-            {
-                throw new ArgumentException("The window must have at least two data points.");
-            }
-
-            // Return of the last two data points of the window
-            // (last - previous) / previous
-            return (double)((returns[0] - returns[1]) / returns[1]);
         }
 
         /// <summary>
@@ -217,26 +194,16 @@ namespace QuantConnect.Indicators
         /// </summary>
         private void ComputeAlpha()
         {
-            // Beta = Covariance(TargetReturns, ReferenceReturns) / Variance(ReferenceReturns)
-
-            if (!_targetAlphaReturns.IsReady || !_referenceAlphaReturns.IsReady || !_referenceBetaReturns.IsReady || !_targetBetaReturns.IsReady)
+            if (!_beta.IsReady || !_targetReturns.IsReady || !_referenceReturns.IsReady)
             {
-                _alpha = 0;
+                _alpha = 0m;
                 return;
             }
-            var varianceComputed = _referenceBetaReturns.Variance();
-            var covarianceComputed = _targetBetaReturns.Covariance(_referenceBetaReturns);
 
-            // Avoid division with NaN or by zero
-            var variance = !varianceComputed.IsNaNOrZero() ? varianceComputed : 1;
-            var covariance = !covarianceComputed.IsNaNOrZero() ? covarianceComputed : 0;
-            var beta = covariance / variance;
+            var targetMean = _targetReturns.Average();
+            var referenceMean = _referenceReturns.Average();
 
-            var targetMean = _targetAlphaReturns.Average();
-            var referenceMean = _referenceAlphaReturns.Average();
-
-            // Alpha = TargetMean - Beta * ReferenceMean
-            _alpha = !beta.IsNaNOrZero() ? (decimal)(targetMean - beta * referenceMean) : 0;
+            _alpha = targetMean - _beta.Current.Value * referenceMean;
         }
 
         /// <summary>
@@ -244,12 +211,11 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _targetDataPoints.Reset();
-            _referenceDataPoints.Reset();
-            _targetAlphaReturns.Reset();
-            _referenceAlphaReturns.Reset();
-            _targetBetaReturns.Reset();
-            _referenceBetaReturns.Reset();
+            _targetReturns.Reset();
+            _referenceReturns.Reset();
+            _targetROC.Reset();
+            _referenceROC.Reset();
+            _beta.Reset();
             _alpha = 0m;
             base.Reset();
         }
