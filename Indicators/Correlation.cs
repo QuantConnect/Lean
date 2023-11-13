@@ -31,7 +31,6 @@ namespace QuantConnect.Indicators
     /// ensuring a consistent and reliable reference point. This helps traders and investors make informed decisions 
     /// regarding the risk and behavior of the target security in relation to market trends.
     /// </summary>
-
     public class Correlation : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
@@ -52,7 +51,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Period required for calcualte correlation
         /// </summary>
-        private decimal _period;
+        private readonly decimal _period;
  
         /// <summary>
         /// Correlation type
@@ -164,20 +163,20 @@ namespace QuantConnect.Indicators
                 _correlation = 0;
                 return;
             }
-            var _corr = 0.0;
+            var newCorrelation = 0d;
             if (_correlationType == CorrelationType.Pearson)
             {
-                _corr = MathNet.Numerics.Statistics.Correlation.Pearson(_targetDataPoints, _referenceDataPoints);
+                newCorrelation = MathNet.Numerics.Statistics.Correlation.Pearson(_targetDataPoints, _referenceDataPoints);
             }
             if (_correlationType == CorrelationType.Spearman)
             {
-                _corr = MathNet.Numerics.Statistics.Correlation.Spearman(_targetDataPoints, _referenceDataPoints);
+                newCorrelation = MathNet.Numerics.Statistics.Correlation.Spearman(_targetDataPoints, _referenceDataPoints);
             }
-            if (_corr.IsNaNOrZero())
+            if (newCorrelation.IsNaNOrZero())
             {
-                _corr = 0;
+                newCorrelation = 0;
             }
-            _correlation = Extensions.SafeDecimalCast(_corr);
+            _correlation = Extensions.SafeDecimalCast(newCorrelation);
         }
 
         /// <summary>
