@@ -306,6 +306,43 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a Alpha indicator for the given target symbol in relation with the reference used.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="target">The target symbol whose Alpha value we want</param>
+        /// <param name="reference">The reference symbol to compare with the target symbol</param>
+        /// <param name="alphaPeriod">The period of the Alpha indicator</param>
+        /// <param name="betaPeriod">The period of the Beta indicator</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Alpha indicator for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public Alpha A(Symbol target, Symbol reference, int alphaPeriod, int betaPeriod, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"A({alphaPeriod})", resolution);
+            var alpha = new Alpha(name, target, reference, alphaPeriod, betaPeriod);
+            InitializeIndicator(target, alpha, resolution, selector);
+            InitializeIndicator(reference, alpha, resolution, selector);
+
+            return alpha;
+        }
+
+        /// <summary>
+        /// Creates a Alpha indicator for the given target symbol in relation with the reference used.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="target">The target symbol whose Alpha value we want</param>
+        /// <param name="reference">The reference symbol to compare with the target symbol</param>
+        /// <param name="period">The period of the Alpha indicator (Beta is the same)</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Alpha indicator for the given parameters</returns>
+        public Alpha A(Symbol target, Symbol reference, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            return A(target, reference, period, period, resolution, selector);
+        }
+
+        /// <summary>
         /// Creates a Beta indicator for the given target symbol in relation with the reference used.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
