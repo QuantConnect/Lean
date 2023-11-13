@@ -63,6 +63,9 @@ namespace QuantConnect.Tests.Common
                 dataMonitor.OnOrderEvent(null, orderEvent);
             }
 
+            // Make sure it stores the data even if the subscription has been removed
+            algorithm.RemoveSecurity(spy);
+
             dataMonitor.StoreTradedSubscriptions();
 
             var filePath = dataMonitor.GetFilePath($"traded-securities-subscriptions.json");
@@ -89,7 +92,7 @@ namespace QuantConnect.Tests.Common
         {
             public TestableDataMonitor()
             {
-                _timeProvider = new ManualTimeProvider(new DateTime(2023, 11, 3, 10, 0, 0));
+                TimeProvider = new ManualTimeProvider(new DateTime(2023, 11, 3, 10, 0, 0));
             }
 
             public new void StoreTradedSubscriptions()
