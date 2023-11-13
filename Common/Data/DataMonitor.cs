@@ -154,37 +154,41 @@ namespace QuantConnect.Data
         /// </summary>
         public void Exit()
         {
-            if (_exited || _requestRateCalculationThread == null)
+            if (_exited)
             {
                 return;
             }
             _exited = true;
 
-            _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
-
-            var succeededDataRequestWriterWasCreated = _succeededDataRequestsWriter?.IsValueCreated ?? false;
-            if (succeededDataRequestWriterWasCreated)
+            if (_requestRateCalculationThread != null)
             {
-                _succeededDataRequestsWriter.Value.Close();
-            }
-            var failedDataRequestsWriterWasCreated = _failedDataRequestsWriter?.IsValueCreated ?? false;
-            if (failedDataRequestsWriterWasCreated)
-            {
-                _failedDataRequestsWriter.Value.Close();
+                _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
+
+                var succeededDataRequestWriterWasCreated = _succeededDataRequestsWriter?.IsValueCreated ?? false;
+                if (succeededDataRequestWriterWasCreated)
+                {
+                    _succeededDataRequestsWriter.Value.Close();
+                }
+                var failedDataRequestsWriterWasCreated = _failedDataRequestsWriter?.IsValueCreated ?? false;
+                if (failedDataRequestsWriterWasCreated)
+                {
+                    _failedDataRequestsWriter.Value.Close();
+                }
+
+                StoreDataMonitorReport(GenerateReport());
+
+                if (failedDataRequestsWriterWasCreated)
+                {
+                    _succeededDataRequestsWriter.Value.DisposeSafely();
+                }
+                if (failedDataRequestsWriterWasCreated)
+                {
+                    _failedDataRequestsWriter.Value.DisposeSafely();
+                }
+                _cancellationTokenSource.DisposeSafely();
             }
 
-            StoreDataMonitorReport(GenerateReport());
             StoreTradedSubscriptions();
-
-            if (failedDataRequestsWriterWasCreated)
-            {
-                _succeededDataRequestsWriter.Value.DisposeSafely();
-            }
-            if (failedDataRequestsWriterWasCreated)
-            {
-                _failedDataRequestsWriter.Value.DisposeSafely();
-            }
-            _cancellationTokenSource.DisposeSafely();
         }
 
         public void Dispose()
