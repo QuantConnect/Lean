@@ -38,6 +38,7 @@ namespace QuantConnect.Securities
 
         //Internal dictionary implementation:
         private readonly Dictionary<Symbol, Security> _securityManager;
+        private readonly Dictionary<Symbol, Security> _completeSecuritiesCollection;
         // let's keep ah thread safe enumerator created which we reset and recreate if required
         private List<Symbol> _enumeratorKeys;
         private List<Security> _enumeratorValues;
@@ -60,6 +61,7 @@ namespace QuantConnect.Securities
         {
             _timeKeeper = timeKeeper;
             _securityManager = new();
+            _completeSecuritiesCollection = new();
         }
 
         /// <summary>
@@ -75,6 +77,10 @@ namespace QuantConnect.Securities
             lock (_securityManager)
             {
                 changed = _securityManager.TryAdd(symbol, security);
+                if (changed)
+                {
+                    _completeSecuritiesCollection[symbol] = security;
+                }
             }
 
             if (changed)
@@ -115,6 +121,7 @@ namespace QuantConnect.Securities
                 _enumeratorKeys = null;
                 _enumeratorValues = null;
                 _securityManager.Clear();
+                _completeSecuritiesCollection.Clear();
             }
         }
 
@@ -128,7 +135,7 @@ namespace QuantConnect.Securities
         {
             lock (_securityManager)
             {
-                return _securityManager.Contains(pair);
+                return _completeSecuritiesCollection.Contains(pair);
             }
         }
 
@@ -142,7 +149,7 @@ namespace QuantConnect.Securities
         {
             lock (_securityManager)
             {
-                return _securityManager.ContainsKey(symbol);
+                return _completeSecuritiesCollection.ContainsKey(symbol);
             }
         }
 
@@ -219,7 +226,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// List of the symbol-keys in the collection of securities.
         /// </summary>
-        /// <remarks>IDictionary implementation</remarks>
+        /// <remarks>Excludes non active or delisted securities</remarks>
         public ICollection<Symbol> Keys
         {
             get
@@ -247,13 +254,14 @@ namespace QuantConnect.Securities
         {
             lock (_securityManager)
             {
-                return _securityManager.TryGetValue(symbol, out security);
+                return _completeSecuritiesCollection.TryGetValue(symbol, out security);
             }
         }
 
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </summary>
+        /// <remarks>Excludes non active or delisted securities</remarks>
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
@@ -262,6 +270,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </summary>
+        /// <remarks>Excludes non active or delisted securities</remarks>
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
@@ -270,7 +279,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Get a list of the security objects for this collection.
         /// </summary>
-        /// <remarks>IDictionary implementation</remarks>
+        /// <remarks>Excludes non active or delisted securities</remarks>
         public ICollection<Security> Values
         {
             get
@@ -282,6 +291,22 @@ namespace QuantConnect.Securities
                     {
                         _enumeratorValues = result = _securityManager.Values.ToList();
                     }
+                }
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Get a list of the complete security objects for this collection, including non active or delisted securities
+        /// </summary>
+        public ICollection<Security> Total
+        {
+            get
+            {
+                ICollection<Security> result;
+                lock (_securityManager)
+                {
+                    result = _completeSecuritiesCollection.Values.ToList();
                 }
                 return result;
             }
@@ -333,7 +358,7 @@ namespace QuantConnect.Securities
                 Security security;
                 lock (_securityManager)
                 {
-                    if (!_securityManager.TryGetValue(symbol, out security))
+                    if (!_completeSecuritiesCollection.TryGetValue(symbol, out security))
                     {
                         throw new KeyNotFoundException(Messages.SecurityManager.SymbolNotFoundInSecurities(symbol));
                     }

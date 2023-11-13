@@ -149,10 +149,10 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Unexpected symbol changed events: {_mappings.Count}, was expecting {expectedMappingCounts}");
             }
 
-            var securities = Securities.Values.Where(sec => !sec.IsTradable && !sec.Symbol.IsCanonical() && sec.Symbol.SecurityType == SecurityType.Future).ToList();
+            var securities = Securities.Total.Where(sec => !sec.IsTradable && !sec.Symbol.IsCanonical() && sec.Symbol.SecurityType == SecurityType.Future).ToList();
             if (securities.Count != 1)
             {
-                throw new Exception("We should have a non tradable future contract security!");
+                throw new Exception($"We should have a single non tradable future contract security! found: {securities.Count}");
             }
         }
 

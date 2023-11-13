@@ -248,16 +248,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // let's wait till it's remapped
                 if (securityChanges == 3)
                 {
-                    Assert.IsNotNull(_algorithm.Securities.Values.SingleOrDefault(sec => sec.IsTradable));
-                    Assert.AreEqual(3, _algorithm.Securities.Values.Count);
+                    Assert.IsNotNull(_algorithm.Securities.Total.SingleOrDefault(sec => sec.IsTradable));
+                    Assert.AreEqual(3, _algorithm.Securities.Total.Count);
 
-                    var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService);
+                    var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Total, _algorithm.SubscriptionManager.SubscriptionDataConfigService);
                     // old future mapped contract is removed
                     Assert.AreEqual(2, result.Count);
                     Assert.IsTrue(result.TryGetValue(es.Symbol.ID.ToString(), out var holding));
                     Assert.IsTrue(result.TryGetValue(es.Mapped.ID.ToString(), out holding));
 
-                    Assert.AreEqual(0, LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService, onlyInvested: true).Count);
+                    Assert.AreEqual(0, LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Total, _algorithm.SubscriptionManager.SubscriptionDataConfigService, onlyInvested: true).Count);
 
                     _algorithm.RemoveSecurity(es.Symbol);
                     // allow time for the exchange to pick up the selection point
@@ -265,10 +265,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else if (securityChanges == 4)
                 {
-                    Assert.IsTrue(_algorithm.Securities.Values.All(sec => !sec.IsTradable));
-                    Assert.AreEqual(3, _algorithm.Securities.Values.Count);
+                    Assert.IsTrue(_algorithm.Securities.Total.All(sec => !sec.IsTradable));
+                    Assert.AreEqual(3, _algorithm.Securities.Total.Count);
 
-                    var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService);
+                    var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Total, _algorithm.SubscriptionManager.SubscriptionDataConfigService);
                     Assert.AreEqual(0, result.Count);
 
                     // we got what we wanted shortcut unit test

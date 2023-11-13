@@ -591,13 +591,7 @@ namespace QuantConnect.Securities
         public virtual void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
         {
             _localTimeKeeper = localTimeKeeper;
-            Exchange.SetLocalDateTimeFrontier(localTimeKeeper.LocalTime);
-
-            _localTimeKeeper.TimeUpdated += (sender, args) =>
-            {
-                //Update the Exchange/Timer:
-                Exchange.SetLocalDateTimeFrontier(args.Time);
-            };
+            Exchange.SetLocalDateTimeFrontierProvider(localTimeKeeper);
         }
 
         /// <summary>

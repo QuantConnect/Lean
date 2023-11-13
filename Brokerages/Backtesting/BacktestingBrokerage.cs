@@ -26,7 +26,6 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
-using QuantConnect.Securities.Positions;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Backtesting
@@ -546,10 +545,6 @@ namespace QuantConnect.Brokerages.Backtesting
                     // Any other type of delisting
                     OnDelistingNotification(new DelistingNotificationEventArgs(delisting.Symbol));
                 }
-
-                // don't allow users to open a new position once we sent the liquidation order
-                security.IsTradable = false;
-                security.IsDelisted = true;
 
                 // the subscription are getting removed from the data feed because they end
                 // remove security from all universes
