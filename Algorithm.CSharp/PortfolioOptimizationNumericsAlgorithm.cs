@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
             var S = Matrix<double>.Build.DenseOfDiagonalArray(SymbolDataList.Select(x => (double)x.Risk).ToArray());
 
             // Computes Correlation Matrix (using Math.NET Numerics Statistics)
-            var R = Correlation.PearsonMatrix(allHistoryBars);
+            var R = MathNet.Numerics.Statistics.Correlation.PearsonMatrix(allHistoryBars);
 
             // Computes Covariance Matrix (using Math.NET Numerics Linear Algebra)
             Sigma = S * R * S;
