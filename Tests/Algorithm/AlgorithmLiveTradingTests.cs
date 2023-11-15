@@ -42,6 +42,7 @@ namespace QuantConnect.Tests.Algorithm
             algorithm.SetLiveMode(false);
             var security = algorithm.AddEquity("SPY");
             security.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            security.Exchange.SetLocalDateTimeFrontierProvider(algorithm.TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new Tick { Value = 270m });
             algorithm.SetFinishedWarmingUp();
 

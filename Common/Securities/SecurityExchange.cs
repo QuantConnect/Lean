@@ -14,10 +14,10 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
+using System.Linq;
 using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
@@ -26,6 +26,8 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityExchange
     {
+        private LocalTimeKeeper _timeProvider;
+
         /// <summary>
         /// Gets the <see cref="SecurityExchangeHours"/> for this exchange
         /// </summary>
@@ -45,7 +47,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Time from the most recent data
         /// </summary>
-        public DateTime LocalTime { get; private set; }
+        public DateTime LocalTime => _timeProvider.LocalTime;
 
         /// <summary>
         /// Boolean property for quickly testing if the exchange is open.
@@ -70,10 +72,10 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Set the current datetime in terms of the exchange's local time zone
         /// </summary>
-        /// <param name="newLocalTime">Most recent data tick</param>
-        public void SetLocalDateTimeFrontier(DateTime newLocalTime)
+        /// <param name="timeProvider">Most recent data tick</param>
+        public void SetLocalDateTimeFrontierProvider(LocalTimeKeeper timeProvider)
         {
-            LocalTime = newLocalTime;
+            _timeProvider = timeProvider;
         }
 
         /// <summary>

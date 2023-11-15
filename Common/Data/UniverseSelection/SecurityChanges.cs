@@ -184,13 +184,14 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Helper method to filter added and removed securities based on current settings
         /// </summary>
-        private IReadOnlyList<Security> GetFilteredList(IEnumerable<Security> source, IEnumerable<Security> secondSource = null)
+        private IReadOnlyList<Security> GetFilteredList(IReadOnlySet<Security> source, IReadOnlySet<Security> secondSource = null)
         {
-            if (secondSource != null)
+            IEnumerable<Security> enumerable = source;
+            if (secondSource != null && secondSource.Count > 0)
             {
-                source = source.Union(secondSource);
+                enumerable = enumerable.Union(secondSource);
             }
-            return source.Where(kvp => !FilterCustomSecurities || kvp.Type != SecurityType.Base)
+            return enumerable.Where(kvp => !FilterCustomSecurities || kvp.Type != SecurityType.Base)
                 .Select(kvp => kvp)
                 .OrderBy(security => security.Symbol.Value)
                 .ToList();

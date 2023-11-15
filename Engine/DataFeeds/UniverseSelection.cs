@@ -206,7 +206,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // don't remove if the universe wants to keep him in
                 if (!universe.CanRemoveMember(dateTimeUtc, security)) continue;
 
-                _securityChangesConstructor.Remove(member.Security, member.IsInternal);
+                if (!member.Security.IsDelisted)
+                {
+                    // TODO: here we are not checking if other universes have this security still selected
+                    _securityChangesConstructor.Remove(member.Security, member.IsInternal);
+                }
 
                 RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(security, universe),
                     dateTimeUtc,
@@ -407,6 +411,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges, _algorithm.BrokerageModel);
         }
 
+        public SecurityChanges HandleDelisting(BaseData data, bool isInternalFeed)
+        {
+            if (_algorithm.Securities.TryGetValue(data.Symbol, out var security))
+            {
+                // don't allow users to open a new position once delisted
+                security.IsDelisted = true;
+                security.IsTradable = false;
+
+                if (_algorithm.Securities.Remove(data.Symbol))
+                {
+                    _securityChangesConstructor.Remove(security, isInternalFeed);
+
+                    return _securityChangesConstructor.Flush();
+                }
+            }
+
+            return SecurityChanges.None;
+        }
+
         private void RemoveSecurityFromUniverse(
             List<PendingRemovalsManager.RemovedMember> removedMembers,
             DateTime dateTimeUtc,
@@ -424,6 +447,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // safe to remove the member from the universe
                 universe.RemoveMember(dateTimeUtc, member);
 
+                var isActive = _algorithm.UniverseManager.ActiveSecurities.ContainsKey(member.Symbol);
                 foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc,
                                                                               _algorithm.SubscriptionManager.SubscriptionDataConfigService))
                 {
@@ -432,7 +456,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _internalSubscriptionManager.RemovedSubscriptionRequest(subscription);
 
                         // if not used by any universe
-                        if (!_algorithm.UniverseManager.ActiveSecurities.ContainsKey(subscription.Configuration.Symbol))
+                        if (!isActive)
                         {
                             member.IsTradable = false;
                             // We need to mark this security as untradeable while it has no data subscription
@@ -440,6 +464,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // so we can make direct edits to the security here.
                             // We only clear the cache once the subscription is removed from the data stack
                             member.Cache.Reset();
+
+                            _algorithm.Securities.Remove(member.Symbol);
                         }
                     }
                 }

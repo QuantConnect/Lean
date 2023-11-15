@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,6 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private bool _receivedDelistedWarningEvent;
         private bool _receivedDelistedEvent;
+        private int _receivedSecurityChangesEvent;
         private int _dataCount;
 
         /// <summary>
@@ -109,6 +111,17 @@ namespace QuantConnect.Algorithm.CSharp
             Debug($"OnOrderEvent(OrderEvent): {Time}: {orderEvent}");
         }
 
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            foreach (var removedSecurity in changes.RemovedSecurities)
+            {
+                if (removedSecurity.Symbol.Value == "AAA.1")
+                {
+                    _receivedSecurityChangesEvent++;
+                }
+            }
+        }
+
         public override void OnEndOfAlgorithm()
         {
             if (!_receivedDelistedEvent)
@@ -122,6 +135,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (_dataCount != 13)
             {
                 throw new Exception($"Unexpected data count {_dataCount}. Expected 13");
+            }
+            if (_receivedSecurityChangesEvent != 1)
+            {
+                throw new Exception($"Did not receive expected security changes removal! Got {_receivedSecurityChangesEvent}");
             }
         }
 
