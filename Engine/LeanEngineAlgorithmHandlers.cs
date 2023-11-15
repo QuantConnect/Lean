@@ -179,11 +179,11 @@ namespace QuantConnect.Lean.Engine
             DataCacheProvider = new ZipDataCacheProvider(DataProvider, isDataEphemeral: liveMode);
 
             DataMonitor = new DataMonitor();
-            Transactions.NewOrderEvent += DataMonitor.OnOrderEvent;
 
             if (!liveMode && !researchMode)
             {
                 DataProvider.NewDataRequest += DataMonitor.OnNewDataRequest;
+                Transactions.NewOrderEvent += DataMonitor.OnOrderEvent;
             }
         }
 
