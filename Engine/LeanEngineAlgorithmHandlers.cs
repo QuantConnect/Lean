@@ -256,7 +256,7 @@ namespace QuantConnect.Lean.Engine
             if (_dataMonitorEventsSet)
             {
                 DataProvider.NewDataRequest -= DataMonitor.OnNewDataRequest;
-            Transactions.NewOrderEvent -= DataMonitor.OnOrderEvent;
+                Transactions.NewOrderEvent -= DataMonitor.OnOrderEvent;
             }
             DataMonitor.DisposeSafely();
 
