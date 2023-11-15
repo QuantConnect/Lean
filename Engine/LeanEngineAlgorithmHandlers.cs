@@ -36,6 +36,8 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public class LeanEngineAlgorithmHandlers : IDisposable
     {
+        private bool _dataMonitorEventsSet;
+
         /// <summary>
         /// Gets the result handler used to communicate results from the algorithm
         /// </summary>
@@ -184,6 +186,7 @@ namespace QuantConnect.Lean.Engine
             {
                 DataProvider.NewDataRequest += DataMonitor.OnNewDataRequest;
                 Transactions.NewOrderEvent += DataMonitor.OnOrderEvent;
+                _dataMonitorEventsSet = true;
             }
         }
 
@@ -250,7 +253,11 @@ namespace QuantConnect.Lean.Engine
             Setup.DisposeSafely();
             ObjectStore.DisposeSafely();
 
+            if (_dataMonitorEventsSet)
+            {
+                DataProvider.NewDataRequest -= DataMonitor.OnNewDataRequest;
             Transactions.NewOrderEvent -= DataMonitor.OnOrderEvent;
+            }
             DataMonitor.DisposeSafely();
 
             Log.Trace("LeanEngineAlgorithmHandlers.Dispose(): Disposed of algorithm handlers.");
