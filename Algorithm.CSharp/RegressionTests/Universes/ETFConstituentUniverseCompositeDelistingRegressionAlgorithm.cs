@@ -103,8 +103,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             _universeAdded |= changes.AddedSecurities.Count >= _universeSymbolCount;
-            // Subtract 1 from universe Symbol count for AAPL, since it was manually added to the algorithm
-            _universeRemoved |= changes.RemovedSecurities.Count == _universeSymbolCount - 1 && UtcTime.Date >= _delistingDate && UtcTime.Date < EndDate;
+            // TODO: shouldn't be sending AAPL as a removed security since it was added by another unvierse
+            // if we added the etf subscription it will get delisted and send us a removal event
+            var adjusment = AddETFSubscription ? 0 : -1;
+            _universeRemoved |= changes.RemovedSecurities.Count == _universeSymbolCount + adjusment && UtcTime.Date >= _delistingDate && UtcTime.Date < EndDate;
         }
 
         public override void OnEndOfAlgorithm()

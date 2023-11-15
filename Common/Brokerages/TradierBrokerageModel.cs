@@ -37,9 +37,6 @@ namespace QuantConnect.Brokerages
             OrderType.StopLimit
         };
 
-        private static readonly EquityExchange EquityExchange =
-            new EquityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity));
-
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
@@ -159,8 +156,6 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
         public override bool CanExecuteOrder(Security security, Order order)
         {
-            EquityExchange.SetLocalDateTimeFrontier(security.Exchange.LocalTime);
-
             var cache = security.GetLastData();
             if (cache == null)
             {
@@ -168,7 +163,7 @@ namespace QuantConnect.Brokerages
             }
 
             // tradier doesn't support after hours trading
-            if (!EquityExchange.IsOpenDuringBar(cache.Time, cache.EndTime, false))
+            if (!security.Exchange.IsOpenDuringBar(cache.Time, cache.EndTime, false))
             {
                 return false;
             }

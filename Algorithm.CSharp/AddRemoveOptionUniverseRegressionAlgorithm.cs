@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // things like manually added, auto added, internal, and any other boolean state we need to track against a single security)
                 throw new Exception("The underlying equity data should NEVER be removed in this algorithm because it was manually added");
             }
-            if (_expectedSecurities.AreDifferent(Securities.Keys.ToHashSet()))
+            if (_expectedSecurities.AreDifferent(Securities.Total.Select(x => x.Symbol).ToHashSet()))
             {
                 var expected = string.Join(Environment.NewLine, _expectedSecurities.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, Securities.Keys.OrderBy(s => s.ToString()));

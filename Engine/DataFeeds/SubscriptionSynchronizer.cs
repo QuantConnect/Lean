@@ -142,9 +142,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // universes (e.g. for ETF constituent universes, since the ETF itself is used to create
                             // the universe Symbol (and set as its underlying), once the ETF is delisted, the
                             // universe should cease to exist, since there are no more constituents of that ETF).
-                            if (subscription.IsUniverseSelectionSubscription && subscription.Current.Data is Delisting)
+                            if (subscription.Current.Data.DataType == MarketDataType.Auxiliary && subscription.Current.Data is Delisting delisting)
                             {
-                                subscription.Universes.Single().Dispose();
+                                if(subscription.IsUniverseSelectionSubscription)
+                                {
+                                    subscription.Universes.Single().Dispose();
+                                }
+                                else if(delisting.Type == DelistingType.Delisted)
+                                {
+                                    changes += _universeSelection.HandleDelisting(subscription.Current.Data, subscription.Configuration.IsInternalFeed);
+                                }
                             }
 
                             packet.Add(subscription.Current.Data);

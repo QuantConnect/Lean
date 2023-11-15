@@ -197,12 +197,13 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(openLeverage, model.GetLeverage(security));
             Assert.IsFalse(security.Exchange.ClosingSoon);
 
-            security.Exchange.SetLocalDateTimeFrontier(new DateTime(2016, 2, 16, 15, 50, 0));
+            var localTimeKeeper = TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
+            localTimeKeeper.UpdateTime(new DateTime(2016, 2, 16, 15, 50, 0).ConvertToUtc(TimeZones.NewYork));
             Assert.AreEqual(closedLeverage, model.GetLeverage(security));
             Assert.IsTrue(security.Exchange.ClosingSoon);
             Assert.IsTrue(security.Exchange.ExchangeOpen);
 
-            security.Exchange.SetLocalDateTimeFrontier(new DateTime(2016, 2, 16, 16, 0, 0));
+            localTimeKeeper.UpdateTime(new DateTime(2016, 2, 16, 16, 0, 0).ConvertToUtc(TimeZones.NewYork));
             Assert.IsFalse(security.Exchange.ExchangeOpen);
         }
 
@@ -360,7 +361,6 @@ namespace QuantConnect.Tests.Common.Securities
             );
             TimeKeeper.SetUtcDateTime(newLocalTime.ConvertToUtc(security.Exchange.TimeZone));
             security.BuyingPowerModel = buyingPowerModel;
-            security.Exchange.SetLocalDateTimeFrontier(newLocalTime);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, newLocalTime, 100m));
             security.FeeModel = new ConstantFeeModel(0);

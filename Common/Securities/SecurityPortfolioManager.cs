@@ -511,7 +511,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return Securities.Values.Sum(security => security.Holdings.TotalFees);
+                return Securities.Total.Sum(security => security.Holdings.TotalFees);
             }
         }
 
@@ -522,7 +522,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return Securities.Values.Sum(security => security.Holdings.Profit);
+                return Securities.Total.Sum(security => security.Holdings.Profit);
             }
         }
 
@@ -533,7 +533,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return Securities.Values.Sum(security => security.Holdings.NetProfit);
+                return Securities.Total.Sum(security => security.Holdings.NetProfit);
             }
         }
 
@@ -544,7 +544,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return Securities.Values.Sum(security => security.Holdings.TotalSaleVolume);
+                return Securities.Total.Sum(security => security.Holdings.TotalSaleVolume);
             }
         }
 
