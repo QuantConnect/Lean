@@ -454,6 +454,15 @@ namespace QuantConnect.Interfaces
         bool Shortable(Symbol symbol, decimal quantity);
 
         /// <summary>
+        /// Gets the quantity shortable for the given asset
+        /// </summary>
+        /// <returns>
+        /// Quantity shortable for the given asset. Zero if not
+        /// shortable, or a number greater than zero if shortable.
+        /// </returns>
+        long ShortableQuantity(Symbol symbol);
+
+        /// <summary>
         /// Sets the brokerage model used to resolve transaction models, settlement models,
         /// and brokerage specified ordering behaviors.
         /// </summary>

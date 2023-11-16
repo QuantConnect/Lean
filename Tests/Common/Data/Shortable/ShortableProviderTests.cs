@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Data.Shortable
         [Test]
         public void LocalDiskShortableProviderGetsDataBySymbol()
         {
-            var shortableProvider = new LocalDiskShortableProvider(SecurityType.Equity, "testbrokerage", QuantConnect.Market.USA);
+            var shortableProvider = new LocalDiskShortableProvider("testbrokerage");
             var symbols = new[]
             {
                 new Symbol(SecurityIdentifier.GenerateEquity("AAPL", QuantConnect.Market.USA, mappingResolveDate: new DateTime(2021, 1, 4)), "AAPL"),
@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Common.Data.Shortable
         [TestCase("SPY", "testbrokerage")]
         public void LocalDiskShortableProviderDefaultsToZeroForMissingData(string ticker, string brokerage)
         {
-            var provider = new LocalDiskShortableProvider(SecurityType.Equity, brokerage, QuantConnect.Market.USA);
+            var provider = new LocalDiskShortableProvider(brokerage);
             var date = new DateTime(2020, 12, 21);
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker, QuantConnect.Market.USA, mappingResolveDate: date), ticker);
 

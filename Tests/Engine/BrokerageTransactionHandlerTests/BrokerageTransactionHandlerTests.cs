@@ -2141,9 +2141,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
         private class TestShortableBrokerageModel : DefaultBrokerageModel
         {
-            public TestShortableBrokerageModel()
+            public override IShortableProvider GetShortableProvider(Security security)
             {
-                ShortableProvider = new TestNonShortableProvider();
+                return new TestNonShortableProvider();
             }
         }
     }

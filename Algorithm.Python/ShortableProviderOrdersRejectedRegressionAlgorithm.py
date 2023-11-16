@@ -15,7 +15,7 @@ from AlgorithmImports import *
 
 class RegressionTestShortableProvider(LocalDiskShortableProvider):
     def __init__(self):
-        super().__init__(SecurityType.Equity, "testbrokerage", Market.USA)
+        super().__init__("testbrokerage")
 
 ### <summary>
 ### Tests that orders are denied if they exceed the max shortable quantity.

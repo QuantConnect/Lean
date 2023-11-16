@@ -1103,6 +1103,18 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Gets the quantity shortable for the given asset
+        /// </summary>
+        /// <returns>
+        /// Quantity shortable for the given asset. Zero if not
+        /// shortable, or a number greater than zero if shortable.
+        /// </returns>
+        public long ShortableQuantity(Symbol symbol)
+        {
+            return _baseAlgorithm.ShortableQuantity(symbol);
+        }
+
+        /// <summary>
         /// Converts the string 'ticker' symbol into a full <see cref="Symbol"/> object
         /// This requires that the string 'ticker' has been added to the algorithm
         /// </summary>

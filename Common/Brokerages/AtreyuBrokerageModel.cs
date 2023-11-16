@@ -31,7 +31,6 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class AtreyuBrokerageModel : DefaultBrokerageModel
     {
-        private readonly IShortableProvider _shortableProvider;
         private readonly System.Type[] _supportedTimeInForces =
         {
             typeof(DayTimeInForce)
@@ -57,7 +56,6 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public AtreyuBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
         {
-            _shortableProvider = new LocalDiskShortableProvider(SecurityType.Equity, "quantconnect", Market.USA);
         }
 
         /// <summary>
@@ -79,9 +77,13 @@ namespace QuantConnect.Brokerages
         /// Gets the shortable provider
         /// </summary>
         /// <returns>Shortable provider</returns>
-        public override IShortableProvider GetShortableProvider()
+        public override IShortableProvider GetShortableProvider(Security security)
         {
-            return _shortableProvider;
+            if(security.Type == SecurityType.Equity)
+            {
+                return new LocalDiskShortableProvider("axos");
+            }
+            return base.GetShortableProvider(security);
         }
 
         /// <summary>

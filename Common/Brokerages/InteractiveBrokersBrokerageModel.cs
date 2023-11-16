@@ -16,14 +16,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Util;
 using QuantConnect.Benchmarks;
+using QuantConnect.Data.Shortable;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Option;
-using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -95,6 +97,19 @@ namespace QuantConnect.Brokerages
         {
             // Equivalent to no benchmark
             return new FuncBenchmark(x => 0);
+        }
+
+        /// <summary>
+        /// Gets the shortable provider
+        /// </summary>
+        /// <returns>Shortable provider</returns>
+        public override IShortableProvider GetShortableProvider(Security security)
+        {
+            if (security.Type == SecurityType.Equity)
+            {
+                return new InteractiveBrokersShortableProvider();
+            }
+            return base.GetShortableProvider(security);
         }
 
         /// <summary>

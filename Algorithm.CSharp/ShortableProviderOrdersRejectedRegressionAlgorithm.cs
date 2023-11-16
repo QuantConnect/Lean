@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Data.Shortable;
@@ -152,7 +151,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private class RegressionTestShortableProvider : LocalDiskShortableProvider
         {
-            public RegressionTestShortableProvider() : base(SecurityType.Equity, "testbrokerage", Market.USA)
+            public RegressionTestShortableProvider() : base("testbrokerage")
             {
             }
         }
@@ -205,7 +204,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$99000000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.23%"},
-            {"OrderListHash", "3ac2d7a61f71c1345eb569e30cc2834c"}
+            {"OrderListHash", "176a37505317656a3d76fed5a72b4ffa"}
         };
     }
 }

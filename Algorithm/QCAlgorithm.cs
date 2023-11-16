@@ -2973,14 +2973,15 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public bool Shortable(Symbol symbol, decimal shortQuantity)
         {
-            var shortableQuantity = Securities[symbol].ShortableProvider.ShortableQuantity(symbol, Time);
+            var security = Securities[symbol];
+            var shortableQuantity = security.ShortableProvider.ShortableQuantity(symbol, security.LocalTime);
             if (shortableQuantity == null)
             {
                 return true;
             }
 
             var openOrderQuantity = Transactions.GetOpenOrdersRemainingQuantity(symbol);
-            var portfolioQuantity = Portfolio.ContainsKey(symbol) ? Portfolio[symbol].Quantity : 0;
+            var portfolioQuantity = security.Holdings.Quantity;
             // We check portfolio and open orders beforehand to ensure that orderQuantity == 0 case does not return
             // a true result whenever we have no more shares left to short.
             if (portfolioQuantity + openOrderQuantity <= -shortableQuantity)
@@ -3002,7 +3003,8 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public long ShortableQuantity(Symbol symbol)
         {
-            return Securities[symbol].ShortableProvider.ShortableQuantity(symbol, Time) ?? 0;
+            var security = Securities[symbol];
+            return security.ShortableProvider.ShortableQuantity(symbol, security.LocalTime) ?? 0;
         }
 
         /// <summary>

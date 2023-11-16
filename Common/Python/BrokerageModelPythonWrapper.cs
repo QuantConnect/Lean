@@ -329,11 +329,11 @@ namespace QuantConnect.Python
         /// Gets the shortable provider
         /// </summary>
         /// <returns>Shortable provider</returns>
-        public IShortableProvider GetShortableProvider()
+        public IShortableProvider GetShortableProvider(Security security)
         {
             using (Py.GIL())
             {
-                return (_model.GetShortableProvider() as PyObject).GetAndDispose<IShortableProvider>();
+                return (_model.GetShortableProvider(security) as PyObject).GetAndDispose<IShortableProvider>();
             }
         }
 
