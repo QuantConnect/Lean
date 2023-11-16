@@ -16,6 +16,7 @@
 using System;
 using System.IO;
 using QuantConnect.Util;
+using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
 using System.Collections.Generic;
@@ -34,6 +35,7 @@ namespace QuantConnect.Data.Shortable
                 "DefaultDataProvider"), forceTypeNameOnExisting: false);
 
         private string _ticker;
+        private bool _scheduledCleanup;
         private Dictionary<DateTime, long> _shortableQuantityPerDate;
 
         /// <summary>
@@ -58,13 +60,8 @@ namespace QuantConnect.Data.Shortable
         /// <returns>Quantity shortable. Null if the data for the brokerage/date does not exist.</returns>
         public long? ShortableQuantity(Symbol symbol, DateTime localTime)
         {
-            if(_ticker != symbol.Value)
-            {
-                // symbol could of been remapped
-                CacheData(symbol);
-            }
-
-            if (!_shortableQuantityPerDate.TryGetValue(localTime.Date, out var result))
+            var shortableQuantityPerDate = GetCacheData(symbol);
+            if (!shortableQuantityPerDate.TryGetValue(localTime.Date, out var result))
             {
                 // Any missing entry will be considered to be Shortable.
                 return null;
@@ -76,11 +73,24 @@ namespace QuantConnect.Data.Shortable
         /// We cache data per ticker
         /// </summary>
         /// <param name="symbol">The requested symbol</param>
-        private void CacheData(Symbol symbol)
+        private Dictionary<DateTime, long> GetCacheData(Symbol symbol)
         {
+            var result = _shortableQuantityPerDate;
+            if (_ticker == symbol.Value)
+            {
+                return result;
+            }
+
+            if (!_scheduledCleanup)
+            {
+                // we schedule it once
+                _scheduledCleanup = true;
+                ClearCache();
+            }
+
+            // create a new collection
             _ticker = symbol.Value;
-            _shortableQuantityPerDate ??= new();
-            _shortableQuantityPerDate.Clear();
+            result = _shortableQuantityPerDate = new();
 
             // Implicitly trusts that Symbol.Value has been mapped and updated to the latest ticker
             var shortableSymbolFile = Path.Combine(Globals.DataFolder, symbol.SecurityType.SecurityTypeToLower(), symbol.ID.Market,
@@ -88,11 +98,37 @@ namespace QuantConnect.Data.Shortable
 
             foreach (var line in DataProvider.ReadLines(shortableSymbolFile))
             {
+                if (string.IsNullOrEmpty(line) || line.StartsWith("#"))
+                {
+                    // ignore empty or comment lines
+                    continue;
+                }
                 var csv = line.Split(',');
                 var date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
                 var quantity = Parse.Long(csv[1]);
-                _shortableQuantityPerDate[date] = quantity;
+                result[date] = quantity;
             }
+
+            return result;
+        }
+
+        /// <summary>
+        /// For live deployments we don't want to have stale short quantity so we refresh them every day
+        /// </summary>
+        private void ClearCache()
+        {
+            var now = DateTime.UtcNow;
+            var tomorrowMidnight = now.Date.AddDays(1);
+            var delayToClean = tomorrowMidnight - now;
+
+            Task.Delay(delayToClean).ContinueWith((_) =>
+            {
+                // create new instances so we don't need to worry about locks
+                _ticker = null;
+                _shortableQuantityPerDate = new();
+
+                ClearCache();
+            });
         }
     }
 }
