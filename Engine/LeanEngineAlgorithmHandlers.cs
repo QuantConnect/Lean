@@ -177,9 +177,7 @@ namespace QuantConnect.Lean.Engine
             ObjectStore = objectStore;
             DataPermissionsManager = dataPermissionsManager;
             DataCacheProvider = new ZipDataCacheProvider(DataProvider, isDataEphemeral: liveMode);
-
             DataMonitor = new DataMonitor();
-            Transactions.NewOrderEvent += DataMonitor.OnOrderEvent;
 
             if (!liveMode && !researchMode)
             {
@@ -249,8 +247,6 @@ namespace QuantConnect.Lean.Engine
             DataCacheProvider.DisposeSafely();
             Setup.DisposeSafely();
             ObjectStore.DisposeSafely();
-
-            Transactions.NewOrderEvent -= DataMonitor.OnOrderEvent;
             DataMonitor.DisposeSafely();
 
             Log.Trace("LeanEngineAlgorithmHandlers.Dispose(): Disposed of algorithm handlers.");
