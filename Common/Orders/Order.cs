@@ -202,6 +202,11 @@ namespace QuantConnect.Orders
         public GroupOrderManager GroupOrderManager { get; set; }
 
         /// <summary>
+        /// The adjustment mode used on the order fill price
+        /// </summary>
+        public DataNormalizationMode PriceAdjustmentMode { get; internal set; }
+
+        /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
         protected Order()

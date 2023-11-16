@@ -89,6 +89,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private readonly ConcurrentDictionary<int, OrderTicket> _completeOrderTickets = new ConcurrentDictionary<int, OrderTicket>();
 
         /// <summary>
+        /// Cache collection of price adjustment modes for each symbol
+        /// </summary>
+        private readonly Dictionary<Symbol, DataNormalizationMode> _priceAdjustmentModes = new Dictionary<Symbol, DataNormalizationMode>();
+
+        /// <summary>
         /// The _cancelPendingOrders instance will help to keep track of CancelPending orders and their Status
         /// </summary>
         protected readonly CancelPendingOrders _cancelPendingOrders = new CancelPendingOrders();
@@ -788,6 +793,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // save current security prices
             order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
 
+            // Set order price adjustment mode
+            order.PriceAdjustmentMode = GetPriceAdjustmentMode(order.Symbol);
+
             // update the ticket's internal storage with this new order reference
             ticket.SetOrder(order);
 
@@ -1278,6 +1286,27 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     ((StopLimitOrder)order).StopTriggered = e.StopTriggered;
                     break;
             }
+        }
+
+        /// <summary>
+        /// Gets the price adjustment mode for the specified symbol from its subscription configurations
+        /// </summary>
+        private DataNormalizationMode GetPriceAdjustmentMode(Symbol symbol)
+        {
+            if (!_priceAdjustmentModes.TryGetValue(symbol, out var mode))
+            {
+                var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: false);
+                if (configs.Count == 0)
+                {
+                    throw new Exception($"Unable to locate subscription data config for {symbol}");
+                }
+
+                mode = configs.First().DataNormalizationMode;
+                _priceAdjustmentModes[symbol] = mode;
+            }
+
+            return mode;
         }
 
         /// <summary>
