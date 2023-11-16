@@ -357,7 +357,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var shortable = true;
                 if (order?.Direction == OrderDirection.Sell || orderQuantity < 0)
                 {
-                    shortable = _algorithm.Shortable(ticket.Symbol, orderQuantity);
+                    shortable = _algorithm.Shortable(ticket.Symbol, orderQuantity, order.Id);
 
                     if(_algorithm.LiveMode && !shortable)
                     {

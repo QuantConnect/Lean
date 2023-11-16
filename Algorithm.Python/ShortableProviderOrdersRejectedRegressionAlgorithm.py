@@ -41,8 +41,14 @@ class ShortableProviderOrdersRejectedRegressionAlgorithm(QCAlgorithm):
     def OnData(self, data):
         if not self.initialize:
             self.HandleOrder(self.LimitOrder(self.spy.Symbol, -1001, 10000)) # Should be canceled, exceeds the max shortable quantity
-            self.HandleOrder(self.LimitOrder(self.spy.Symbol, -1000, 10000)) # Allowed, orders at or below 1000 should be accepted
+            orderTicket = self.LimitOrder(self.spy.Symbol, -1000, 10000)
+            self.HandleOrder(orderTicket) # Allowed, orders at or below 1000 should be accepted
             self.HandleOrder(self.LimitOrder(self.spy.Symbol, -10, 0.01)) # Should be canceled, the total quantity we would be short would exceed the max shortable quantity.
+
+            response = orderTicket.UpdateQuantity(-999) # should be allowed, we are reducing the quantity we want to short
+            if not response.IsSuccess:
+                raise ValueError("Order update should of succeeded!");
+
             self.initialize = True
             return
 
