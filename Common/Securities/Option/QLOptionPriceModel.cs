@@ -156,9 +156,6 @@ namespace QuantConnect.Securities.Option
 
                 var calendar = new UnitedStates();
                 var settlementDate = AddDays(contract.Time.Date, Option.DefaultSettlementDays, securityExchangeHours);
-                var evaluationDate = contract.Time.Date;
-                // TODO: static variable
-                Settings.setEvaluationDate(evaluationDate);
                 var underlyingQuoteValue = new SimpleQuote(spot);
 
                 var dividendYieldValue = new SimpleQuote(_dividendYieldEstimator.Estimate(security, slice, contract));
@@ -198,6 +195,10 @@ namespace QuantConnect.Securities.Option
                 // preparing pricing engine QL object
                 option.setPricingEngine(_pricingEngineFunc(contract.Symbol, stochasticProcess));
 
+                // Setting the evaluation date before running the calculations
+                var evaluationDate = contract.Time.Date;
+                SetEvaluationDate(evaluationDate);
+                
                 // running calculations
                 var npv = EvaluateOption(option);
 
@@ -207,6 +208,7 @@ namespace QuantConnect.Securities.Option
                 var impliedVol = 0d;
                 try
                 {
+                    SetEvaluationDate(evaluationDate);
                     impliedVol = option.impliedVolatility(premium, stochasticProcess);
                 }
                 catch (Exception e)
@@ -215,7 +217,8 @@ namespace QuantConnect.Securities.Option
                     impliedVol = ImpliedVolatilityEstimation(premium, initialGuess, maturity, riskFreeDiscount, forwardPrice, payoff, out blackCalculator);
                     if (Log.DebuggingEnabled)
                     {
-                        Log.Debug($"QLOptionPriceModel.Evaluate(). Cannot calculate Implied Volatility for {contract.Symbol}. Implied volatility from Newton-Raphson optimization: {impliedVol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. {e.Message} {e.StackTrace}");
+                        var referenceDate = underlyingVol.link.referenceDate();
+                        Log.Debug($"QLOptionPriceModel.Evaluate(). Cannot calculate Implied Volatility for {contract.Symbol}. Implied volatility from Newton-Raphson optimization: {impliedVol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Data time: {evaluationDate}. Reference date: {referenceDate}. {e.Message} {e.StackTrace}");
                     }
                 }
 
@@ -235,6 +238,7 @@ namespace QuantConnect.Securities.Option
 
                     try
                     {
+                        SetEvaluationDate(evaluationDate);
                         result = greek();
                     }
                     catch (Exception err)
@@ -263,7 +267,8 @@ namespace QuantConnect.Securities.Option
                     {
                         if (Log.DebuggingEnabled)
                         {
-                            Log.Debug($"QLOptionPriceModel.Evaluate(). NaN or Infinity greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}. {exception?.Message} {exception?.StackTrace}");
+                            var referenceDate = underlyingVol.link.referenceDate();
+                            Log.Debug($"QLOptionPriceModel.Evaluate(). NaN or Infinity greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}. Data time: {evaluationDate}. Reference date: {referenceDate}. {exception?.Message} {exception?.StackTrace}");
                         }
 
                         return 0m;
@@ -273,7 +278,8 @@ namespace QuantConnect.Securities.Option
 
                     if (value == decimal.Zero && Log.DebuggingEnabled)
                     {
-                        Log.Debug($"QLOptionPriceModel.Evaluate(). Zero-value greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}. {exception?.Message} {exception?.StackTrace}");
+                        var referenceDate = underlyingVol.link.referenceDate();
+                        Log.Debug($"QLOptionPriceModel.Evaluate(). Zero-value greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}. Data time: {evaluationDate}. Reference date: {referenceDate}. {exception?.Message} {exception?.StackTrace}");
                         return value;
                     }
 
@@ -292,7 +298,7 @@ namespace QuantConnect.Securities.Option
             }
             catch (Exception err)
             {
-                Log.Debug($"QLOptionPriceModel.Evaluate() error: {err.Message} {(Log.DebuggingEnabled ? err.StackTrace : string.Empty)}");
+                Log.Debug($"QLOptionPriceModel.Evaluate() error: {err.Message} {(Log.DebuggingEnabled ? err.StackTrace : string.Empty)} for {contract.Symbol}");
                 return OptionPriceModelResult.None;
             }
         }
@@ -404,6 +410,18 @@ namespace QuantConnect.Securities.Option
             }
 
             return forwardDate;
+        }
+
+        /// <summary>
+        /// Set the evaluation date
+        /// </summary>
+        /// <param name="evaluationDate">The current evaluation date</param>
+        private void SetEvaluationDate(DateTime evaluationDate)
+        {
+            if (Settings.evaluationDate().ToDateTime() != evaluationDate)
+            {
+                Settings.setEvaluationDate(evaluationDate);
+            }
         }
     }
 }
