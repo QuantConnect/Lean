@@ -124,6 +124,21 @@ namespace QuantConnect.Securities.Option
                     return OptionPriceModelResult.None;
                 }
 
+                var dayCounter = new Actual365Fixed();
+                var securityExchangeHours = security.Exchange.Hours;
+                var maturityDate = AddDays(contract.Expiry.Date, Option.DefaultSettlementDays, securityExchangeHours);
+
+                // Get time until maturity (in year)
+                var maturity = dayCounter.yearFraction(contract.Time.Date, maturityDate);
+                if (maturity < 0)
+                {
+                    if (Log.DebuggingEnabled)
+                    {
+                        Log.Debug($"QLOptionPriceModel.Evaluate(). negative time ({maturity}) given for {contract.Symbol}. Time: {contract.Time.Date}. Maturity {maturityDate}");
+                    }
+                    return OptionPriceModelResult.None;
+                }
+
                 // setting up option pricing parameters
                 var optionSecurity = (Option)security;
                 var premium = (double)optionSecurity.Price;
@@ -140,13 +155,7 @@ namespace QuantConnect.Securities.Option
                 }
 
                 var calendar = new UnitedStates();
-                var dayCounter = new Actual365Fixed();
-                var securityExchangeHours = security.Exchange.Hours;
                 var settlementDate = AddDays(contract.Time.Date, Option.DefaultSettlementDays, securityExchangeHours);
-                var evaluationDate = contract.Time.Date;
-                // TODO: static variable
-                Settings.setEvaluationDate(evaluationDate);
-                var maturityDate = AddDays(contract.Expiry.Date, Option.DefaultSettlementDays, securityExchangeHours);
                 var underlyingQuoteValue = new SimpleQuote(spot);
 
                 var dividendYieldValue = new SimpleQuote(_dividendYieldEstimator.Estimate(security, slice, contract));
@@ -155,11 +164,9 @@ namespace QuantConnect.Securities.Option
                 var riskFreeRateValue = new SimpleQuote((double)_riskFreeRateEstimator.Estimate(security, slice, contract));
                 var riskFreeRate = new Handle<YieldTermStructure>(new FlatForward(0, calendar, riskFreeRateValue, dayCounter));
 
-                // Get time until maturity (in year) and discount factor by dividend and risk free rate
-                var maturity = riskFreeRate.link.dayCounter()
-                    .yearFraction(riskFreeRate.link.referenceDate(), maturityDate);
-                var dividendDiscount = dividendYield.link.discount(maturityDate);
-                var riskFreeDiscount = riskFreeRate.link.discount(maturityDate);
+                // Get discount factor by dividend and risk free rate using the maturity
+                var dividendDiscount = dividendYield.link.discount(maturity);
+                var riskFreeDiscount = riskFreeRate.link.discount(maturity);
                 var forwardPrice = spot * dividendDiscount / riskFreeDiscount;
 
                 // Initial guess for volatility by Brenner and Subrahmanyam (1988)
@@ -188,9 +195,12 @@ namespace QuantConnect.Securities.Option
                 // preparing pricing engine QL object
                 option.setPricingEngine(_pricingEngineFunc(contract.Symbol, stochasticProcess));
 
+                // Setting the evaluation date before running the calculations
+                var evaluationDate = contract.Time.Date;
+                SetEvaluationDate(evaluationDate);
+                
                 // running calculations
-                // can return negative value in neighborhood of 0
-                var npv = Math.Max(0, EvaluateOption(option));
+                var npv = EvaluateOption(option);
 
                 BlackCalculator blackCalculator = null;
 
@@ -198,15 +208,17 @@ namespace QuantConnect.Securities.Option
                 var impliedVol = 0d;
                 try
                 {
+                    SetEvaluationDate(evaluationDate);
                     impliedVol = option.impliedVolatility(premium, stochasticProcess);
                 }
-                catch
+                catch (Exception e)
                 {
                     // A Newton-Raphson optimization estimate of the implied volatility
                     impliedVol = ImpliedVolatilityEstimation(premium, initialGuess, maturity, riskFreeDiscount, forwardPrice, payoff, out blackCalculator);
                     if (Log.DebuggingEnabled)
                     {
-                        Log.Debug($"QLOptionPriceModel.Evaluate(). Cannot calculate Implied Volatility for {contract.Symbol}. Implied volatility from Newton-Raphson optimization: {impliedVol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}.");
+                        var referenceDate = underlyingVol.link.referenceDate();
+                        Log.Debug($"QLOptionPriceModel.Evaluate(). Cannot calculate Implied Volatility for {contract.Symbol}. Implied volatility from Newton-Raphson optimization: {impliedVol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Data time: {evaluationDate}. Reference date: {referenceDate}. {e.Message} {e.StackTrace}");
                     }
                 }
 
@@ -222,12 +234,17 @@ namespace QuantConnect.Securities.Option
                 {
                     double result;
                     var isApproximation = false;
+                    Exception exception = null;
+
                     try
                     {
+                        SetEvaluationDate(evaluationDate);
                         result = greek();
                     }
-                    catch (Exception)
+                    catch (Exception err)
                     {
+                        exception = err;
+
                         if (!EnableGreekApproximation)
                         {
                             return 0.0m;
@@ -250,7 +267,8 @@ namespace QuantConnect.Securities.Option
                     {
                         if (Log.DebuggingEnabled)
                         {
-                            Log.Debug($"QLOptionPriceModel.Evaluate(). NaN or Infinity greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}");
+                            var referenceDate = underlyingVol.link.referenceDate();
+                            Log.Debug($"QLOptionPriceModel.Evaluate(). NaN or Infinity greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}. Data time: {evaluationDate}. Reference date: {referenceDate}. {exception?.Message} {exception?.StackTrace}");
                         }
 
                         return 0m;
@@ -260,7 +278,8 @@ namespace QuantConnect.Securities.Option
 
                     if (value == decimal.Zero && Log.DebuggingEnabled)
                     {
-                        Log.Debug($"QLOptionPriceModel.Evaluate(). Zero-value greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}");
+                        var referenceDate = underlyingVol.link.referenceDate();
+                        Log.Debug($"QLOptionPriceModel.Evaluate(). Zero-value greek for {contract.Symbol}. Premium: {premium}. Underlying price: {spot}. Initial guess volatility: {initialGuess}. Maturity: {maturity}. Risk Free: {riskFreeDiscount}. Forward price: {forwardPrice}. Implied Volatility: {impliedVol}. Is Approximation? {isApproximation}. Data time: {evaluationDate}. Reference date: {referenceDate}. {exception?.Message} {exception?.StackTrace}");
                         return value;
                     }
 
@@ -268,7 +287,7 @@ namespace QuantConnect.Securities.Option
                 }
 
                 // producing output with lazy calculations of greeks
-                return new OptionPriceModelResult(npv.SafeDecimalCast(),  // EvaluateOption ensure it is not NaN or Infinity
+                return new OptionPriceModelResult(npv,  // EvaluateOption ensure it is not NaN or Infinity
                             () => impliedVol.IsNaNOrInfinity() ? 0m : impliedVol.SafeDecimalCast(),
                             () => new Greeks(() => tryGetGreekOrReevaluate(() => option.delta(), (black) => black.delta(spot)),
                                             () => tryGetGreekOrReevaluate(() => option.gamma(), (black) => black.gamma(spot)),
@@ -279,7 +298,7 @@ namespace QuantConnect.Securities.Option
             }
             catch (Exception err)
             {
-                Log.Debug($"QLOptionPriceModel.Evaluate() error: {err.Message}");
+                Log.Debug($"QLOptionPriceModel.Evaluate() error: {err.Message} {(Log.DebuggingEnabled ? err.StackTrace : string.Empty)} for {contract.Symbol}");
                 return OptionPriceModelResult.None;
             }
         }
@@ -289,7 +308,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="option"></param>
         /// <returns></returns>
-        private static double EvaluateOption(VanillaOption option)
+        private static decimal EvaluateOption(VanillaOption option)
         {
             try
             {
@@ -297,14 +316,15 @@ namespace QuantConnect.Securities.Option
 
                 if (double.IsNaN(npv) ||
                     double.IsInfinity(npv))
-                    npv = 0.0;
+                    return 0;
 
-                return npv;
+                // can return negative value in neighborhood of 0
+                return Math.Max(0, npv).SafeDecimalCast();
             }
             catch (Exception err)
             {
                 Log.Debug($"QLOptionPriceModel.EvaluateOption() error: {err.Message}");
-                return 0.0;
+                return 0;
             }
         }
 
@@ -390,6 +410,18 @@ namespace QuantConnect.Securities.Option
             }
 
             return forwardDate;
+        }
+
+        /// <summary>
+        /// Set the evaluation date
+        /// </summary>
+        /// <param name="evaluationDate">The current evaluation date</param>
+        private void SetEvaluationDate(DateTime evaluationDate)
+        {
+            if (Settings.evaluationDate().ToDateTime() != evaluationDate)
+            {
+                Settings.setEvaluationDate(evaluationDate);
+            }
         }
     }
 }
