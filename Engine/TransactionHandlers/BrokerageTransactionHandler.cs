@@ -265,8 +265,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             if (!shortable)
             {
-                response = OrderResponse.Error(request, OrderResponseErrorCode.ExceedsShortableQuantity,
-                    $"Order exceeds maximum shortable quantity for Symbol {request.Symbol} (requested short: {Math.Abs(request.Quantity)})");
+                var message = GetShortableErrorMessage(request.Symbol, request.Quantity);
+                if (_algorithm.LiveMode)
+                {
+                    // in live mode we send a warning but we wont block the order being sent to the brokerage
+                    _algorithm.Debug($"Warning: {message}");
+                }
+                else
+                {
+                    response = OrderResponse.Error(request, OrderResponseErrorCode.ExceedsShortableQuantity, message);
+                }
             }
 
             request.SetResponse(response);
@@ -349,7 +357,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var shortable = true;
                 if (order?.Direction == OrderDirection.Sell || orderQuantity < 0)
                 {
-                    shortable = _algorithm.Shortable(ticket.Symbol, orderQuantity);
+                    shortable = _algorithm.Shortable(ticket.Symbol, orderQuantity, order.Id);
+
+                    if(_algorithm.LiveMode && !shortable)
+                    {
+                        // let's override and just send warning
+                        shortable = true;
+
+                        _algorithm.Debug($"Warning: {GetShortableErrorMessage(ticket.Symbol, ticket.Quantity)}");
+                    }
                 }
 
                 if (order == null)
@@ -381,7 +397,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else if (!shortable)
                 {
                     var shortableResponse = OrderResponse.Error(request, OrderResponseErrorCode.ExceedsShortableQuantity,
-                        $"Order exceeds maximum shortable quantity for Symbol {ticket.Symbol} (requested short: {Math.Abs(orderQuantity)})");
+                        GetShortableErrorMessage(ticket.Symbol, ticket.Quantity));
 
                     request.SetResponse(shortableResponse);
                 }
@@ -1631,6 +1647,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     $"Warning: To meet brokerage precision requirements, order {priceType.ToStringInvariant()} was rounded to {priceRound.ToStringInvariant()} from {priceOriginal.ToStringInvariant()}"
                 );
             }
+        }
+
+        private string GetShortableErrorMessage(Symbol symbol, decimal quantity)
+        {
+            var shortableQuantity = _algorithm.ShortableQuantity(symbol);
+            return $"Order exceeds shortable quantity {shortableQuantity} for Symbol {symbol} requested {quantity})";
         }
     }
 }

@@ -357,7 +357,7 @@ def getBrokerageName(algorithm):
                 throw new System.NotImplementedException();
             }
 
-            public IShortableProvider GetShortableProvider()
+            public IShortableProvider GetShortableProvider(Security security)
             {
                 throw new System.NotImplementedException();
             }

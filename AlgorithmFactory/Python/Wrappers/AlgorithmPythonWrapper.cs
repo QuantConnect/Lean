@@ -1092,14 +1092,29 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetObjectStore(IObjectStore objectStore) => _baseAlgorithm.SetObjectStore(objectStore);
 
         /// <summary>
-        /// Checks if the asset is shortable at the brokerage
+        /// Determines if the Symbol is shortable at the brokerage
         /// </summary>
-        /// <param name="symbol">Symbol to check if it is shortable</param>
-        /// <param name="quantity">Quantity to short</param>
-        /// <returns>True if shortable at the brokerage</returns>
-        public bool Shortable(Symbol symbol, decimal quantity)
+        /// <param name="symbol">Symbol to check if shortable</param>
+        /// <param name="shortQuantity">Order's quantity to check if it is currently shortable, taking into account current holdings and open orders</param>
+        /// <param name="updateOrderId">Optionally the id of the order being updated. When updating an order
+        /// we want to ignore it's submitted short quantity and use the new provided quantity to determine if we
+        /// can perform the update</param>
+        /// <returns>True if the symbol can be shorted by the requested quantity</returns>
+        public bool Shortable(Symbol symbol, decimal shortQuantity, int? updateOrderId = null)
         {
-            return _baseAlgorithm.Shortable(symbol, quantity);
+            return _baseAlgorithm.Shortable(symbol, shortQuantity, updateOrderId);
+        }
+
+        /// <summary>
+        /// Gets the quantity shortable for the given asset
+        /// </summary>
+        /// <returns>
+        /// Quantity shortable for the given asset. Zero if not
+        /// shortable, or a number greater than zero if shortable.
+        /// </returns>
+        public long ShortableQuantity(Symbol symbol)
+        {
+            return _baseAlgorithm.ShortableQuantity(symbol);
         }
 
         /// <summary>

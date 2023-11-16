@@ -61,7 +61,7 @@ namespace QuantConnect.Securities.CryptoFuture
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 IsCryptoCoinFuture(quoteCurrency.Symbol) ? new BinanceCoinFuturesFeeModel() : new BinanceFuturesFeeModel(),
-                new ConstantSlippageModel(0),
+                NullSlippageModel.Instance,
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new CryptoFutureMarginModel(),

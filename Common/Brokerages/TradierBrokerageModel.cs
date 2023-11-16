@@ -199,16 +199,5 @@ namespace QuantConnect.Brokerages
             // Trading stocks at Tradier Brokerage is free
             return new ConstantFeeModel(0m);
         }
-
-        /// <summary>
-        /// Gets a new slippage model that represents this brokerage's fill slippage behavior
-        /// </summary>
-        /// <param name="security">The security to get a slippage model for</param>
-        /// <returns>The new slippage model for this brokerage</returns>
-        public override ISlippageModel GetSlippageModel(Security security)
-        {
-            return new ConstantSlippageModel(0);
-        }
-
     }
 }

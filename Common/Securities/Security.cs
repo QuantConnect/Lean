@@ -334,7 +334,7 @@ namespace QuantConnect.Securities
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
-                new ConstantSlippageModel(0),
+                NullSlippageModel.Instance,
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(),
@@ -366,7 +366,7 @@ namespace QuantConnect.Securities
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
-                new ConstantSlippageModel(0),
+                NullSlippageModel.Instance,
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(),
@@ -430,7 +430,7 @@ namespace QuantConnect.Securities
             MarginInterestRateModel = marginInterestRateModel;
             Holdings = new SecurityHolding(this, currencyConverter);
             Data = new DynamicSecurityData(registeredTypesProvider, Cache);
-            ShortableProvider = new NullShortableProvider();
+            ShortableProvider = NullShortableProvider.Instance;
 
             UpdateSubscriptionProperties();
         }

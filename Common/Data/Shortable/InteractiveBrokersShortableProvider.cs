@@ -13,31 +13,21 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Interfaces;
-
 namespace QuantConnect.Data.Shortable
 {
     /// <summary>
-    /// Defines the default shortable provider in the case that no local data exists.
-    /// This will allow for all assets to be infinitely shortable, with no restrictions.
+    /// Sources the InteractiveBrokers short availability data from the local disk for the given brokerage
     /// </summary>
-    public class NullShortableProvider : IShortableProvider
+    public class InteractiveBrokersShortableProvider : LocalDiskShortableProvider
     {
         /// <summary>
-        /// The null shortable provider instance
+        /// Creates a new instance
         /// </summary>
-        public static NullShortableProvider Instance { get; } = new ();
-
-        /// <summary>
-        /// Gets the quantity shortable for the Symbol at the given time.
-        /// </summary>
-        /// <param name="symbol">Symbol to check</param>
-        /// <param name="localTime">Local time of the algorithm</param>
-        /// <returns>null, indicating that it is infinitely shortable</returns>
-        public long? ShortableQuantity(Symbol symbol, DateTime localTime)
+        /// <param name="securityType">SecurityType to read the short availability data</param>
+        /// <param name="market">Market to read the short availability data</param>
+        public InteractiveBrokersShortableProvider()
+            : base("interactivebrokers")
         {
-            return null;
         }
     }
 }

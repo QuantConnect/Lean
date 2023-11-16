@@ -48,7 +48,8 @@ namespace QuantConnect.Securities.Equity
             get
             {
                 var shortableQuantity = ShortableProvider.ShortableQuantity(Symbol, LocalTime);
-                return shortableQuantity == null || shortableQuantity == 0m;
+                // null means we don't have the data
+                return shortableQuantity == null || shortableQuantity > 0m;
             }
         }
 
@@ -84,7 +85,7 @@ namespace QuantConnect.Securities.Equity
                 new SecurityPortfolioModel(),
                 new EquityFillModel(),
                 new InteractiveBrokersFeeModel(),
-                new ConstantSlippageModel(0m),
+                NullSlippageModel.Instance,
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(2m),
@@ -118,7 +119,7 @@ namespace QuantConnect.Securities.Equity
                 new SecurityPortfolioModel(),
                 new EquityFillModel(),
                 new InteractiveBrokersFeeModel(),
-                new ConstantSlippageModel(0m),
+                NullSlippageModel.Instance,
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(2m),
