@@ -52,7 +52,7 @@ namespace QuantConnect.Securities.FutureOption
                 new OptionPortfolioModel(),
                 new FutureOptionFillModel(),
                 new InteractiveBrokersFeeModel(),
-                new ConstantSlippageModel(0),
+                NullSlippageModel.Instance,
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 null,

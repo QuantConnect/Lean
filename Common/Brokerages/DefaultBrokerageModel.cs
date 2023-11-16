@@ -294,26 +294,7 @@ namespace QuantConnect.Brokerages
         /// <returns>The new slippage model for this brokerage</returns>
         public virtual ISlippageModel GetSlippageModel(Security security)
         {
-            switch (security.Type)
-            {
-                case SecurityType.Base:
-                case SecurityType.Equity:
-                case SecurityType.Index:
-                    return new ConstantSlippageModel(0);
-
-                case SecurityType.Forex:
-                case SecurityType.Cfd:
-                case SecurityType.Crypto:
-                case SecurityType.CryptoFuture:
-                    return new ConstantSlippageModel(0);
-
-                case SecurityType.Commodity:
-                case SecurityType.Option:
-                case SecurityType.FutureOption:
-                case SecurityType.Future:
-                default:
-                    return new ConstantSlippageModel(0);
-            }
+            return NullSlippageModel.Instance;
         }
 
         /// <summary>
