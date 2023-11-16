@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Data;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using QuantConnect.Brokerages;
 using System.Collections.Generic;
@@ -22,12 +21,12 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm for the Atreyu brokerage
+    /// Basic template algorithm for the Axos brokerage
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
-    public class BasicTemplateAtreyuAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BasicTemplateAxosAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -38,14 +37,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
             SetCash(100000);
 
-            SetBrokerageModel(BrokerageName.Atreyu);
+            SetBrokerageModel(BrokerageName.Axos);
             AddEquity("SPY", Resolution.Minute);
-
-            DefaultOrderProperties = new AtreyuOrderProperties
-            {
-                // Currently only support order for the day
-                TimeInForce = TimeInForce.Day
-            };
         }
 
         /// <summary>
@@ -111,7 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$150000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "4.98%"},
-            {"OrderListHash", "d549c64ee7f5e3866712b3c7dbd64caa"}
+            {"OrderListHash", "86f2942f2fcfc7ee9e44521f86adc07d"}
         };
     }
 }

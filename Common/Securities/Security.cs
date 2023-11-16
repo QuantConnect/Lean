@@ -430,7 +430,7 @@ namespace QuantConnect.Securities
             MarginInterestRateModel = marginInterestRateModel;
             Holdings = new SecurityHolding(this, currencyConverter);
             Data = new DynamicSecurityData(registeredTypesProvider, Cache);
-            ShortableProvider = new NullShortableProvider();
+            ShortableProvider = NullShortableProvider.Instance;
 
             UpdateSubscriptionProperties();
         }

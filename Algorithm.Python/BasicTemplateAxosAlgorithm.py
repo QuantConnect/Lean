@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Basic template algorithm for the Atreyu brokerage
+### Basic template algorithm for the Axos brokerage
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
@@ -29,12 +29,8 @@ class BasicTemplateAtreyuAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
 
-        self.SetBrokerageModel(BrokerageName.Atreyu)
+        self.SetBrokerageModel(BrokerageName.Axos)
         self.AddEquity("SPY", Resolution.Minute)
-
-        self.DefaultOrderProperties = AtreyuOrderProperties()
-        # Currently only support order for the day
-        self.DefaultOrderProperties.TimeInForce = TimeInForce.Day
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.

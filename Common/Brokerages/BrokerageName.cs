@@ -156,5 +156,9 @@ namespace QuantConnect.Brokerages
         /// </summary>
         Eze,
 
+        /// <summary>
+        /// Transaction and submit/execution rules will use Axos models
+        /// </summary>
+        Axos,
     }
 }
