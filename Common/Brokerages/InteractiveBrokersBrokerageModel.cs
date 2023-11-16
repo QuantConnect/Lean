@@ -100,19 +100,6 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Gets the shortable provider
-        /// </summary>
-        /// <returns>Shortable provider</returns>
-        public override IShortableProvider GetShortableProvider(Security security)
-        {
-            if (security.Type == SecurityType.Equity)
-            {
-                return new InteractiveBrokersShortableProvider();
-            }
-            return base.GetShortableProvider(security);
-        }
-
-        /// <summary>
         /// Gets a new fee model that represents this brokerage's fee structure
         /// </summary>
         /// <param name="security">The security to get a fee model for</param>

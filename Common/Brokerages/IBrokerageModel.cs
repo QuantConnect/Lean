@@ -233,8 +233,8 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Zerodha:
                     return new ZerodhaBrokerageModel(accountType);
 
-                case BrokerageName.Atreyu:
-                    return new AtreyuBrokerageModel(accountType);
+                case BrokerageName.Axos:
+                    return new AxosClearingBrokerageModel(accountType);
 
                 case BrokerageName.TradingTechnologies:
                     return new TradingTechnologiesBrokerageModel(accountType);
@@ -321,8 +321,8 @@ namespace QuantConnect.Brokerages
                 case ZerodhaBrokerageModel _:
                     return BrokerageName.Zerodha;
 
-                case AtreyuBrokerageModel _:
-                    return BrokerageName.Atreyu;
+                case AxosClearingBrokerageModel _:
+                    return BrokerageName.Axos;
 
                 case TradingTechnologiesBrokerageModel _:
                     return BrokerageName.TradingTechnologies;

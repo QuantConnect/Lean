@@ -245,7 +245,7 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
                 new TestCaseData(new GDAXBrokerageModel(), BrokerageName.GDAX),
                 new TestCaseData(new AlphaStreamsBrokerageModel(), BrokerageName.AlphaStreams),
                 new TestCaseData(new ZerodhaBrokerageModel(), BrokerageName.Zerodha),
-                new TestCaseData(new AtreyuBrokerageModel(), BrokerageName.Atreyu),
+                new TestCaseData(new AxosClearingBrokerageModel(), BrokerageName.Axos),
                 new TestCaseData(new TradingTechnologiesBrokerageModel(), BrokerageName.TradingTechnologies),
                 new TestCaseData(new SamcoBrokerageModel(), BrokerageName.Samco),
                 new TestCaseData(new KrakenBrokerageModel(), BrokerageName.Kraken),
@@ -267,7 +267,7 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
         private class CustomGDAXBrokerageModel : GDAXBrokerageModel {}
         private class CustomAlphaStreamsBrokerageModel : AlphaStreamsBrokerageModel {}
         private class CustomZerodhaBrokerageModel : ZerodhaBrokerageModel {}
-        private class CustomAtreyuBrokerageModel : AtreyuBrokerageModel {}
+        private class CustomAxosBrokerageModel : AxosClearingBrokerageModel {}
         private class CustomTradingTechnologiesBrokerageModel : TradingTechnologiesBrokerageModel {}
         private class CustomSamcoBrokerageModel : SamcoBrokerageModel {}
         private class CustomKrakenBrokerageModel : KrakenBrokerageModel {}
@@ -291,7 +291,7 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
                 new TestCaseData(new CustomGDAXBrokerageModel(), BrokerageName.GDAX),
                 new TestCaseData(new CustomAlphaStreamsBrokerageModel(), BrokerageName.AlphaStreams),
                 new TestCaseData(new CustomZerodhaBrokerageModel(), BrokerageName.Zerodha),
-                new TestCaseData(new CustomAtreyuBrokerageModel(), BrokerageName.Atreyu),
+                new TestCaseData(new CustomAxosBrokerageModel(), BrokerageName.Axos),
                 new TestCaseData(new CustomTradingTechnologiesBrokerageModel(), BrokerageName.TradingTechnologies),
                 new TestCaseData(new CustomSamcoBrokerageModel(), BrokerageName.Samco),
                 new TestCaseData(new CustomKrakenBrokerageModel(), BrokerageName.Kraken),

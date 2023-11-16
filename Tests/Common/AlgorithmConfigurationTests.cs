@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Common
                 new Dictionary<string, string> { { "a", "A" }, { "b", "B" } }),
             new TestCaseData("EUR", BrokerageName.Bitfinex, AccountType.Margin,
                 new Dictionary<string, string> { { "first", "1" }, { "second", "2" }, { "third", "3" } }),
-            new TestCaseData("AUD", BrokerageName.Atreyu, AccountType.Margin,
+            new TestCaseData("AUD", BrokerageName.Axos, AccountType.Margin,
                 new Dictionary<string, string> { { "ema-slow", "20" }, { "ema-fast", "10" } })
         };
     }
