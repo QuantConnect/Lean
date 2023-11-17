@@ -144,7 +144,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "BTC.Bitcoin 2S"},
             {"Portfolio Turnover", "0.06%"},
-            {"OrderListHash", "0d80bb47bd16b5bc6989a4c1c7aa8349"}
+            {"OrderListHash", "afc1a24e5f563b115605767ce78b6970"}
         };
 
         /// <summary>

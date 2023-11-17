@@ -1298,7 +1298,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!_priceAdjustmentModes.TryGetValue(order.Symbol, out var mode))
             {
                 var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(order.Symbol, includeInternalConfigs: false);
+                    .GetSubscriptionDataConfigs(order.Symbol, includeInternalConfigs: true);
                 if (configs.Count == 0)
                 {
                     throw new InvalidOperationException($"Unable to locate subscription data config for {order.Symbol}");
