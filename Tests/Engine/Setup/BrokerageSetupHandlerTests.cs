@@ -803,7 +803,10 @@ namespace QuantConnect.Tests.Engine.Setup
         public override void Dispose() { }
     }
 
-    internal class TestBrokerage : Brokerage
+    /// <summary>
+    /// Public so that mock can access it
+    /// </summary>
+    public class TestBrokerage : Brokerage
     {
         public override bool IsConnected { get; } = true;
         public int GetCashBalanceCallCount;
