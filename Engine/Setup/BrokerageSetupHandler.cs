@@ -512,11 +512,6 @@ namespace QuantConnect.Lean.Engine.Setup
             // add options first to ensure raw data normalization mode is set on the equity underlyings
             foreach (var order in openOrders.OrderByDescending(x => x.SecurityType))
             {
-                transactionHandler.AddOpenOrder(order, algorithm);
-
-                Log.Trace($"BrokerageSetupHandler.Setup(): Has open order: {order}");
-                resultHandler.DebugMessage($"BrokerageSetupHandler.Setup(): Open order detected.  Creating order tickets for open order {order.Symbol.Value} with quantity {order.Quantity}. Beware that this order ticket may not accurately reflect the quantity of the order if the open order is partially filled.");
-
                 // verify existing holding security type
                 if (!supportedSecurityTypes.Contains(order.SecurityType))
                 {
@@ -527,8 +522,14 @@ namespace QuantConnect.Lean.Engine.Setup
                     // keep aggregating these errors
                     continue;
                 }
+
+                // Add the security before adding the order to ensure the subscription exists
                 var security = AddUnrequestedSecurity(algorithm, order.Symbol);
+                transactionHandler.AddOpenOrder(order, algorithm);
                 order.PriceCurrency = security?.SymbolProperties.QuoteCurrency;
+
+                Log.Trace($"BrokerageSetupHandler.Setup(): Has open order: {order}");
+                resultHandler.DebugMessage($"BrokerageSetupHandler.Setup(): Open order detected.  Creating order tickets for open order {order.Symbol.Value} with quantity {order.Quantity}. Beware that this order ticket may not accurately reflect the quantity of the order if the open order is partially filled.");
             }
         }
 

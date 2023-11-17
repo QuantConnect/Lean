@@ -110,7 +110,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 8;
+        public long DataPoints => 8943;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -122,30 +122,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "0"},
+            {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
+            {"Compounding Annual Return", "155.365%"},
+            {"Drawdown", "84.800%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Net Profit", "5123.170%"},
+            {"Sharpe Ratio", "2.094"},
+            {"Probabilistic Sharpe Ratio", "69.967%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
+            {"Alpha", "1.753"},
+            {"Beta", "0.055"},
+            {"Annual Standard Deviation", "0.84"},
+            {"Annual Variance", "0.706"},
+            {"Information Ratio", "1.942"},
+            {"Tracking Error", "0.848"},
+            {"Treynor Ratio", "32.18"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"Lowest Capacity Asset", "BTC.Bitcoin 2S"},
+            {"Portfolio Turnover", "0.06%"},
+            {"OrderListHash", "3123a80f06dab48d8f0945d293350aa1"}
         };
 
         /// <summary>
