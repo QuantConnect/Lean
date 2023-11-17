@@ -89,6 +89,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private readonly ConcurrentDictionary<int, OrderTicket> _completeOrderTickets = new ConcurrentDictionary<int, OrderTicket>();
 
         /// <summary>
+        /// Cache collection of price adjustment modes for each symbol
+        /// </summary>
+        private readonly Dictionary<Symbol, DataNormalizationMode> _priceAdjustmentModes = new Dictionary<Symbol, DataNormalizationMode>();
+
+        /// <summary>
         /// The _cancelPendingOrders instance will help to keep track of CancelPending orders and their Status
         /// </summary>
         protected readonly CancelPendingOrders _cancelPendingOrders = new CancelPendingOrders();
@@ -700,6 +705,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             var orderTicket = order.ToOrderTicket(algorithm.Transactions);
 
+            SetPriceAdjustmentMode(order);
+
             _openOrders.AddOrUpdate(order.Id, order, (i, o) => order);
             _completeOrders.AddOrUpdate(order.Id, order, (i, o) => order);
             _openOrderTickets.AddOrUpdate(order.Id, orderTicket);
@@ -787,6 +794,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // save current security prices
             order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
+
+            // Set order price adjustment mode
+            SetPriceAdjustmentMode(order);
 
             // update the ticket's internal storage with this new order reference
             ticket.SetOrder(order);
@@ -1278,6 +1288,34 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     ((StopLimitOrder)order).StopTriggered = e.StopTriggered;
                     break;
             }
+        }
+
+        /// <summary>
+        /// Gets the price adjustment mode for the specified symbol from its subscription configurations
+        /// </summary>
+        private void SetPriceAdjustmentMode(Order order)
+        {
+            if (_algorithm.LiveMode)
+            {
+                // live trading always uses raw prices
+                order.PriceAdjustmentMode = DataNormalizationMode.Raw;
+                return;
+            }
+
+            if (!_priceAdjustmentModes.TryGetValue(order.Symbol, out var mode))
+            {
+                var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(order.Symbol, includeInternalConfigs: true);
+                if (configs.Count == 0)
+                {
+                    throw new InvalidOperationException($"Unable to locate subscription data config for {order.Symbol}");
+                }
+
+                mode = configs[0].DataNormalizationMode;
+                _priceAdjustmentModes[order.Symbol] = mode;
+            }
+
+            order.PriceAdjustmentMode = mode;
         }
 
         /// <summary>

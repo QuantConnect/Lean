@@ -27,7 +27,11 @@ namespace QuantConnect.Lean.Engine.Server
     /// </summary>
     public class LocalLeanManager : ILeanManager
     {
-        private IAlgorithm _algorithm;
+        /// <summary>
+        /// The current algorithm
+        /// </summary>
+        protected IAlgorithm Algorithm { get; set; }
+
         private AlgorithmNodePacket _job;
         private ICommandHandler _commandHandler;
         private LeanEngineSystemHandlers _systemHandlers;
@@ -40,7 +44,7 @@ namespace QuantConnect.Lean.Engine.Server
         /// <param name="algorithmHandlers">Exposes the lean algorithm handlers running lean</param>
         /// <param name="job">The job packet representing either a live or backtest Lean instance</param>
         /// <param name="algorithmManager">The Algorithm manager</param>
-        public void Initialize(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, AlgorithmNodePacket job, AlgorithmManager algorithmManager)
+        public virtual void Initialize(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, AlgorithmNodePacket job, AlgorithmManager algorithmManager)
         {
             _algorithmHandlers = algorithmHandlers;
             _systemHandlers = systemHandlers;
@@ -51,9 +55,9 @@ namespace QuantConnect.Lean.Engine.Server
         /// Sets the IAlgorithm instance in the ILeanManager
         /// </summary>
         /// <param name="algorithm">The IAlgorithm instance being run</param>
-        public void SetAlgorithm(IAlgorithm algorithm)
+        public virtual void SetAlgorithm(IAlgorithm algorithm)
         {
-            _algorithm = algorithm;
+            Algorithm = algorithm;
             algorithm.SetApi(_systemHandlers.Api);
             RemoteFileSubscriptionStreamReader.SetDownloadProvider((Api.Api)_systemHandlers.Api);
         }
@@ -61,7 +65,7 @@ namespace QuantConnect.Lean.Engine.Server
         /// <summary>
         /// Execute the commands using the IAlgorithm instance
         /// </summary>
-        public void Update()
+        public virtual void Update()
         {
             if(_commandHandler != null)
             {
@@ -75,19 +79,19 @@ namespace QuantConnect.Lean.Engine.Server
         /// <summary>
         /// This method is called after algorithm initialization
         /// </summary>
-        public void OnAlgorithmStart()
+        public virtual void OnAlgorithmStart()
         {
-            if (_algorithm.LiveMode)
+            if (Algorithm.LiveMode)
             {
                 _commandHandler = new FileCommandHandler();
-                _commandHandler.Initialize(_job, _algorithm);
+                _commandHandler.Initialize(_job, Algorithm);
             }
         }
 
         /// <summary>
         /// This method is called before algorithm termination
         /// </summary>
-        public void OnAlgorithmEnd()
+        public virtual void OnAlgorithmEnd()
         {
             // NOP
         }
@@ -95,7 +99,7 @@ namespace QuantConnect.Lean.Engine.Server
         /// <summary>
         /// Callback fired each time that we add/remove securities from the data feed
         /// </summary>
-        public void OnSecuritiesChanged(SecurityChanges changes)
+        public virtual void OnSecuritiesChanged(SecurityChanges changes)
         {
             // NOP
         }
@@ -103,7 +107,7 @@ namespace QuantConnect.Lean.Engine.Server
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             _commandHandler.DisposeSafely();
         }

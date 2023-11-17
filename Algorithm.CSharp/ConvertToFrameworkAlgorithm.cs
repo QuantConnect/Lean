@@ -159,7 +159,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$1200000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "4.23%"},
-            {"OrderListHash", "f42ded0d7bc246cd22daa075d3e27bcf"}
+            {"OrderListHash", "736047518354ab16c79a6e5eb8ccf8bc"}
         };
     }
 }

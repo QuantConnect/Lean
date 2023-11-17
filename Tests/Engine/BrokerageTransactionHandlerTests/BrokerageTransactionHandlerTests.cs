@@ -1400,6 +1400,42 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
+        public void EmptyCashBalanceIsValid()
+        {
+            var mock = new Mock<TestBrokerage>
+            {
+                CallBase = true
+            };
+            var cashBalance = mock.Setup(m => m.GetCashBalance()).Returns(new List<CashAmount>());
+            mock.Setup(m => m.IsConnected).Returns(true);
+            mock.Setup(m => m.ShouldPerformCashSync(It.IsAny<DateTime>())).Returns(true);
+
+            var brokerage = mock.Object;
+            Assert.IsTrue(brokerage.IsConnected);
+
+            var algorithm = new QCAlgorithm();
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var securityService = new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algorithm.Portfolio));
+            algorithm.Securities.SetSecurityService(securityService);
+            algorithm.SetLiveMode(true);
+            algorithm.SetFinishedWarmingUp();
+
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            var resultHandler = new TestResultHandler();
+            transactionHandler.Initialize(algorithm, brokerage, resultHandler);
+
+            // Advance current time UTC so cash sync is performed
+            transactionHandler.TestCurrentTimeUtc = transactionHandler.TestCurrentTimeUtc.AddDays(2);
+
+            transactionHandler.ProcessSynchronousEvents();
+
+            resultHandler.Exit();
+
+            mock.VerifyAll();
+        }
+
+        [Test]
         public void DoesNotLoopEndlesslyIfGetCashBalanceAlwaysThrows()
         {
             // simulate connect failure
@@ -1980,6 +2016,81 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             // we expect difference because market order is old!
             Assert.AreEqual(2, algorithm.Transactions.GetOrderTickets().Count());
+        }
+
+        private static TestCaseData[] PriceAdjustmentModeTestCases => Enum.GetValues(typeof(DataNormalizationMode))
+            .Cast<DataNormalizationMode>()
+            .SelectMany(x => new[] { new TestCaseData(x, false), new TestCaseData(x, true) })
+            .ToArray();
+
+        [TestCaseSource(nameof(PriceAdjustmentModeTestCases))]
+        public void OrderPriceAdjustmentModeIsSetAfterPlacingOrder(DataNormalizationMode dataNormalizationMode, bool liveMode)
+        {
+            _algorithm.SetLiveMode(liveMode);
+
+            //Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
+
+            // Add the security
+            var security = _algorithm.AddSecurity(SecurityType.Forex, "CADUSD", dataNormalizationMode: dataNormalizationMode);
+            var securityNormalizationMode = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(security.Symbol)[0]
+                .DataNormalizationMode;
+
+            Assert.AreEqual(dataNormalizationMode, securityNormalizationMode);
+
+            // Creates the order
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1600, 0, 0, DateTime.Now, "");
+
+            // Mock the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act
+            var orderTicket = transactionHandler.Process(orderRequest);
+            Assert.AreEqual(OrderStatus.New, orderTicket.Status);
+            transactionHandler.HandleOrderRequest(orderRequest);
+
+            // Assert
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
+
+            var expectedNormalizationMode = liveMode ? DataNormalizationMode.Raw : dataNormalizationMode;
+            Assert.AreEqual(expectedNormalizationMode, transactionHandler.GetOrderById(orderTicket.OrderId).PriceAdjustmentMode);
+        }
+
+        [TestCaseSource(nameof(PriceAdjustmentModeTestCases))]
+        public void OrderPriceAdjustmentModeIsSetWhenAddingOpenOrder(DataNormalizationMode dataNormalizationMode, bool liveMode)
+        {
+            _algorithm.SetLiveMode(liveMode);
+
+            //Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
+
+            // Add the security
+            var security = _algorithm.AddSecurity(SecurityType.Forex, "CADUSD", dataNormalizationMode: dataNormalizationMode);
+            var securityNormalizationMode = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(security.Symbol)[0]
+                .DataNormalizationMode;
+
+            Assert.AreEqual(dataNormalizationMode, securityNormalizationMode);
+
+            // Creates the order
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1600, 0, 0, DateTime.Now, "");
+            var order = Order.CreateOrder(orderRequest);
+
+            // Act
+            transactionHandler.AddOpenOrder(order, _algorithm);
+
+            // Assert
+            Assert.Greater(order.Id, 0);
+
+            var expectedNormalizationMode = liveMode ? DataNormalizationMode.Raw : dataNormalizationMode;
+            Assert.AreEqual(expectedNormalizationMode, transactionHandler.GetOrderById(order.Id).PriceAdjustmentMode);
         }
 
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm

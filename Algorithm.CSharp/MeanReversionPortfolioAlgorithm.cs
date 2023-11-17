@@ -93,7 +93,7 @@ namespace QuantConnect.DataLibrary.Tests
             {"Estimated Strategy Capacity", "$370000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
             {"Portfolio Turnover", "17.55%"},
-            {"OrderListHash", "75caa630a3d9dad38bf6c536ee82552d"}
+            {"OrderListHash", "3becde2bc13398d50d231a2d2e6de495"}
         };
     }
 }
