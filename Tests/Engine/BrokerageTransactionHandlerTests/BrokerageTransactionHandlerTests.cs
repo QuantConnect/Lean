@@ -1400,6 +1400,42 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
+        public void EmptyCashBalanceIsValid()
+        {
+            var mock = new Mock<TestBrokerage>
+            {
+                CallBase = true
+            };
+            var cashBalance = mock.Setup(m => m.GetCashBalance()).Returns(new List<CashAmount>());
+            mock.Setup(m => m.IsConnected).Returns(true);
+            mock.Setup(m => m.ShouldPerformCashSync(It.IsAny<DateTime>())).Returns(true);
+
+            var brokerage = mock.Object;
+            Assert.IsTrue(brokerage.IsConnected);
+
+            var algorithm = new QCAlgorithm();
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var securityService = new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algorithm.Portfolio));
+            algorithm.Securities.SetSecurityService(securityService);
+            algorithm.SetLiveMode(true);
+            algorithm.SetFinishedWarmingUp();
+
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            var resultHandler = new TestResultHandler();
+            transactionHandler.Initialize(algorithm, brokerage, resultHandler);
+
+            // Advance current time UTC so cash sync is performed
+            transactionHandler.TestCurrentTimeUtc = transactionHandler.TestCurrentTimeUtc.AddDays(2);
+
+            transactionHandler.ProcessSynchronousEvents();
+
+            resultHandler.Exit();
+
+            mock.VerifyAll();
+        }
+
+        [Test]
         public void DoesNotLoopEndlesslyIfGetCashBalanceAlwaysThrows()
         {
             // simulate connect failure
