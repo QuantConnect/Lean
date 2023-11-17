@@ -606,6 +606,72 @@ namespace QuantConnect.Research
         }
 
         /// <summary>
+        /// Will return the universe selection data and will optionally perform selection
+        /// </summary>
+        /// <typeparam name="T1">The universe selection universe data type, for example Fundamentals</typeparam>
+        /// <typeparam name="T2">The selection data type, for example Fundamental</typeparam>
+        /// <param name="start">The start date</param>
+        /// <param name="end">Optionally the end date, will default to today</param>
+        /// <param name="func">Optionally the universe selection function</param>
+        /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
+        public IEnumerable<IEnumerable<T2>> Select<T1, T2>(DateTime start, DateTime? end = null, Func<IEnumerable<T2>, IEnumerable<Symbol>> func = null)
+            where T1 : BaseDataCollection
+            where T2 : IBaseData
+        {
+            end ??= DateTime.UtcNow.Date;
+            var history = History<T1>(Enumerable.Empty<Symbol>(), start, end.Value);
+
+            HashSet<Symbol> filteredSymbols = null;
+            foreach (var dataPoints in history)
+            {
+                var data = dataPoints.Values.Single();
+                var castedType = data.Data.OfType<T2>();
+
+                if (func != null)
+                {
+                    var selection = func(castedType);
+                    if(!ReferenceEquals(selection, Universe.Unchanged))
+                    {
+                        filteredSymbols = selection.ToHashSet();
+                    }
+                    yield return castedType.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol));
+                }
+                else
+                {
+                    yield return castedType;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Will return the universe selection data and will optionally perform selection
+        /// </summary>
+        /// <param name="type">The universe selection universe data type, for example Fundamentals</param>
+        /// <param name="start">The start date</param>
+        /// <param name="end">Optionally the end date, will default to today</param>
+        /// <param name="func">Optionally the universe selection function</param>
+        /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
+        public PyObject Select(PyObject type, DateTime start, DateTime? end = null, PyObject func = null)
+        {
+            end ??= DateTime.UtcNow.Date;
+            if (func == null)
+            {
+                return History(type, start, end.Value);
+            }
+
+            if (type.TryConvert<Type>(out var convertedType))
+            {
+                var requests = CreateDateRangeHistoryRequests(Enumerable.Empty<Symbol>(), convertedType, start, end.Value);
+                var history = History(requests).ToList();
+
+                return GetDataFrame(GetFilteredSlice(history, func), convertedType);
+            }
+
+            throw new ArgumentException($"Failed to convert given universe selection data type {type}. " +
+                $"Please provider a valid {nameof(BaseDataCollection)} inherited data type");
+        }
+
+        /// <summary>
         /// Gets Portfolio Statistics from a pandas.DataFrame with equity and benchmark values
         /// </summary>
         /// <param name="dataFrame">pandas.DataFrame with the information required to compute the Portfolio statistics</param>
@@ -667,6 +733,34 @@ namespace QuantConnect.Research
                 result.SetItem("Treynor Ratio", Convert.ToDouble(stats.TreynorRatio).ToPython());
 
                 return result;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to perform selection on the given data and filter it
+        /// </summary>
+        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func)
+        {
+            HashSet<Symbol> filteredSymbols = null;
+            foreach (var slice in history)
+            {
+                var filteredData = slice.AllData.OfType<BaseDataCollection>();
+                using (Py.GIL())
+                {
+                    using PyObject selection = func(filteredData.SelectMany(baseData => baseData.Data));
+                    if (!selection.TryConvert<object>(out var result) || !ReferenceEquals(result, Universe.Unchanged))
+                    {
+                        filteredSymbols = ((Symbol[])selection.AsManagedObject(typeof(Symbol[]))).ToHashSet();
+                    }
+                }
+                yield return new Slice(slice.Time, filteredData.Where(x => {
+                    if (filteredSymbols == null)
+                    {
+                        return true;
+                    }
+                    x.Data = new List<BaseData>(x.Data.Where(dataPoint => filteredSymbols.Contains(dataPoint.Symbol)));
+                    return true;
+                }), slice.UtcTime);
             }
         }
 

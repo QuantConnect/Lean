@@ -62,7 +62,6 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets or sets the time associated with this collection of data
         /// </summary>
-        [Obsolete("The DataDictionary<T> Time property is now obsolete. All algorithms should use algorithm.Time instead.")]
         public DateTime Time { get; set; }
 
         /// <summary>
