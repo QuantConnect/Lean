@@ -157,7 +157,6 @@ namespace QuantConnect.Tests.Indicators
             secondVolumeRenkoConsolidator.Dispose();
         }
 
-
         [Test]
         public void AcceptsQuoteBarsAsInput()
         {

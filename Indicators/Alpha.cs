@@ -90,8 +90,8 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="targetSymbol">The target symbol of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
-        /// <param name="alphaPeriod">The Alpha period of this indicator</param>
-        /// <param name="betaPeriod">The Beta period of this indicator</param>
+        /// <param name="alphaPeriod">Period of the indicator - alpha</param>
+        /// <param name="betaPeriod">Period of the indicator - beta</param>
         /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
         public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal riskFreeRate = 0.0m)
             : base(name)
@@ -132,11 +132,25 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Creates a new Alpha indicator with the specified name, target, reference, and period values
+        /// </summary>
+        /// <param name="targetSymbol"></param>
+        /// <param name="referenceSymbol"></param>
+        /// <param name="alphaPeriod">Period of the indicator - alpha</param>
+        /// <param name="betaPeriod">Period of the indicator - beta</param>
+        /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
+        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal riskFreeRate = 0.0m)
+            : this($"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod},{riskFreeRate})", targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, riskFreeRate)
+        {
+        }
+
+        /// <summary>
         /// Creates a new Alpha indicator with the specified target, reference, and period values
         /// </summary>
         /// <param name="targetSymbol">The target symbol of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
+        /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
         public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int period, decimal riskFreeRate = 0.0m)
             : this($"ALPHA({targetSymbol},{referenceSymbol},{period},{riskFreeRate})", targetSymbol, referenceSymbol, period, period, riskFreeRate)
         {
@@ -149,8 +163,9 @@ namespace QuantConnect.Indicators
         /// <param name="targetSymbol"></param>
         /// <param name="referenceSymbol"></param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
+        /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
         public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, decimal riskFreeRate = 0.0m)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{period},{riskFreeRate})", targetSymbol, referenceSymbol, period, period, riskFreeRate)
+            : this(name, targetSymbol, referenceSymbol, period, period, riskFreeRate)
         {
         }
         
@@ -167,18 +182,22 @@ namespace QuantConnect.Indicators
                 throw new ArgumentNullException(nameof(input));
             }
             Symbol inputSymbol = input.Symbol;
-            
+
             if (inputSymbol == _targetSymbol)
             {
                 _targetROC.Update(input.EndTime, input.Close);
                 if (_targetROC.IsReady)
+                {
                     _targetReturns.Add(_targetROC.Current.Value);
+                }
             }
             else if (inputSymbol == _referenceSymbol)
             {
                 _referenceROC.Update(input.EndTime, input.Close);
                 if (_referenceROC.IsReady)
+                {
                     _referenceReturns.Add(_referenceROC.Current.Value);
+                }
             }
             else
             {
@@ -188,7 +207,9 @@ namespace QuantConnect.Indicators
             _beta.Update(input);
             
             if (_targetReturns.Samples == _referenceReturns.Samples && _targetReturns.Samples > 0)
+            {
                 ComputeAlpha();
+            }
 
             return _alpha;
         }
