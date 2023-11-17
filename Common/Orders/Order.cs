@@ -202,6 +202,11 @@ namespace QuantConnect.Orders
         public GroupOrderManager GroupOrderManager { get; set; }
 
         /// <summary>
+        /// The adjustment mode used on the order fill price
+        /// </summary>
+        public DataNormalizationMode PriceAdjustmentMode { get; internal set; }
+
+        /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
         protected Order()
@@ -356,6 +361,7 @@ namespace QuantConnect.Orders
             order.Properties = Properties.Clone();
             order.OrderSubmissionData = OrderSubmissionData?.Clone();
             order.GroupOrderManager = GroupOrderManager;
+            order.PriceAdjustmentMode = PriceAdjustmentMode;
         }
 
         /// <summary>
@@ -401,6 +407,7 @@ namespace QuantConnect.Orders
             order.Price = serializedOrder.Price;
             order.PriceCurrency = serializedOrder.PriceCurrency;
             order.Status = serializedOrder.Status;
+            order.PriceAdjustmentMode = serializedOrder.PriceAdjustmentMode;
 
             if (serializedOrder.LastFillTime.HasValue)
             {

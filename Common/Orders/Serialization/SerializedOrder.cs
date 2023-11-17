@@ -207,6 +207,12 @@ namespace QuantConnect.Orders.Serialization
         public GroupOrderManager GroupOrderManager { get; set; }
 
         /// <summary>
+        /// The adjustment mode used on the order fill price
+        /// </summary>
+        [JsonProperty("price-adjustment-mode")]
+        public DataNormalizationMode PriceAdjustmentMode { get; set; }
+
+        /// <summary>
         /// Empty constructor required for JSON converter.
         /// </summary>
         protected SerializedOrder()
@@ -231,6 +237,7 @@ namespace QuantConnect.Orders.Serialization
             Status = order.Status;
             Tag = order.Tag;
             Direction = order.Direction;
+            PriceAdjustmentMode = order.PriceAdjustmentMode;
 
             CreatedTime = Time.DateTimeToUnixTimeStamp(order.CreatedTime);
             if (order.LastFillTime.HasValue)
