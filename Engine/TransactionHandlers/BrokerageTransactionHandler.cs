@@ -705,6 +705,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             var orderTicket = order.ToOrderTicket(algorithm.Transactions);
 
+            SetPriceAdjustmentMode(order);
+
             _openOrders.AddOrUpdate(order.Id, order, (i, o) => order);
             _completeOrders.AddOrUpdate(order.Id, order, (i, o) => order);
             _openOrderTickets.AddOrUpdate(order.Id, orderTicket);
@@ -794,7 +796,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
 
             // Set order price adjustment mode
-            order.PriceAdjustmentMode = GetPriceAdjustmentMode(order.Symbol);
+            SetPriceAdjustmentMode(order);
 
             // update the ticket's internal storage with this new order reference
             ticket.SetOrder(order);
@@ -1291,22 +1293,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Gets the price adjustment mode for the specified symbol from its subscription configurations
         /// </summary>
-        private DataNormalizationMode GetPriceAdjustmentMode(Symbol symbol)
+        private void SetPriceAdjustmentMode(Order order)
         {
-            if (!_priceAdjustmentModes.TryGetValue(symbol, out var mode))
+            if (!_priceAdjustmentModes.TryGetValue(order.Symbol, out var mode))
             {
                 var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: false);
+                    .GetSubscriptionDataConfigs(order.Symbol, includeInternalConfigs: false);
                 if (configs.Count == 0)
                 {
-                    throw new Exception($"Unable to locate subscription data config for {symbol}");
+                    throw new InvalidOperationException($"Unable to locate subscription data config for {order.Symbol}");
                 }
 
-                mode = configs.First().DataNormalizationMode;
-                _priceAdjustmentModes[symbol] = mode;
+                mode = configs[0].DataNormalizationMode;
+                _priceAdjustmentModes[order.Symbol] = mode;
             }
 
-            return mode;
+            order.PriceAdjustmentMode = mode;
         }
 
         /// <summary>

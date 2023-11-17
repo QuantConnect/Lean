@@ -1982,6 +1982,73 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(2, algorithm.Transactions.GetOrderTickets().Count());
         }
 
+        private static TestCaseData[] DataNormalizationModes => Enum.GetValues(typeof(DataNormalizationMode))
+            .Cast<DataNormalizationMode>()
+            .Select(x => new TestCaseData(x))
+            .ToArray();
+
+        [TestCaseSource(nameof(DataNormalizationModes))]
+        public void OrderPriceAdjustmentModeIsSetAfterPlacingOrder(DataNormalizationMode dataNormalizationMode)
+        {
+            //Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
+
+            // Add the security
+            var security = _algorithm.AddSecurity(SecurityType.Forex, "CADUSD", dataNormalizationMode: dataNormalizationMode);
+            var securityNormalizationMode = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(security.Symbol)[0]
+                .DataNormalizationMode;
+
+            Assert.AreEqual(dataNormalizationMode, securityNormalizationMode);
+
+            // Creates the order
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1600, 0, 0, DateTime.Now, "");
+
+            // Mock the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act
+            var orderTicket = transactionHandler.Process(orderRequest);
+            Assert.AreEqual(OrderStatus.New, orderTicket.Status);
+            transactionHandler.HandleOrderRequest(orderRequest);
+
+            // Assert
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
+            Assert.AreEqual(dataNormalizationMode, transactionHandler.GetOrderById(orderTicket.OrderId).PriceAdjustmentMode);
+        }
+
+        [TestCaseSource(nameof(DataNormalizationModes))]
+        public void OrderPriceAdjustmentModeIsSetWhenAddingOpenOrder(DataNormalizationMode dataNormalizationMode)
+        {
+            //Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
+
+            // Add the security
+            var security = _algorithm.AddSecurity(SecurityType.Forex, "CADUSD", dataNormalizationMode: dataNormalizationMode);
+            var securityNormalizationMode = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(security.Symbol)[0]
+                .DataNormalizationMode;
+
+            Assert.AreEqual(dataNormalizationMode, securityNormalizationMode);
+
+            // Creates the order
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1600, 0, 0, DateTime.Now, "");
+            var order = Order.CreateOrder(orderRequest);
+
+            // Act
+            transactionHandler.AddOpenOrder(order, _algorithm);
+
+            // Assert
+            Assert.Greater(order.Id, 0);
+            Assert.AreEqual(dataNormalizationMode, transactionHandler.GetOrderById(order.Id).PriceAdjustmentMode);
+        }
+
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
         {
             public static readonly Dictionary<int, int> OrderEventIds = new Dictionary<int, int>();

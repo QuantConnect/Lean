@@ -361,6 +361,7 @@ namespace QuantConnect.Orders
             order.Properties = Properties.Clone();
             order.OrderSubmissionData = OrderSubmissionData?.Clone();
             order.GroupOrderManager = GroupOrderManager;
+            order.PriceAdjustmentMode = PriceAdjustmentMode;
         }
 
         /// <summary>
@@ -406,6 +407,7 @@ namespace QuantConnect.Orders
             order.Price = serializedOrder.Price;
             order.PriceCurrency = serializedOrder.PriceCurrency;
             order.Status = serializedOrder.Status;
+            order.PriceAdjustmentMode = serializedOrder.PriceAdjustmentMode;
 
             if (serializedOrder.LastFillTime.HasValue)
             {
