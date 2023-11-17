@@ -1982,14 +1982,16 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(2, algorithm.Transactions.GetOrderTickets().Count());
         }
 
-        private static TestCaseData[] DataNormalizationModes => Enum.GetValues(typeof(DataNormalizationMode))
+        private static TestCaseData[] PriceAdjustmentModeTestCases => Enum.GetValues(typeof(DataNormalizationMode))
             .Cast<DataNormalizationMode>()
-            .Select(x => new TestCaseData(x))
+            .SelectMany(x => new[] { new TestCaseData(x, false), new TestCaseData(x, true) })
             .ToArray();
 
-        [TestCaseSource(nameof(DataNormalizationModes))]
-        public void OrderPriceAdjustmentModeIsSetAfterPlacingOrder(DataNormalizationMode dataNormalizationMode)
+        [TestCaseSource(nameof(PriceAdjustmentModeTestCases))]
+        public void OrderPriceAdjustmentModeIsSetAfterPlacingOrder(DataNormalizationMode dataNormalizationMode, bool liveMode)
         {
+            _algorithm.SetLiveMode(liveMode);
+
             //Initializes the transaction handler
             var transactionHandler = new TestBrokerageTransactionHandler();
             transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
@@ -2019,12 +2021,16 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(orderRequest.Response.IsProcessed);
             Assert.IsTrue(orderRequest.Response.IsSuccess);
             Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
-            Assert.AreEqual(dataNormalizationMode, transactionHandler.GetOrderById(orderTicket.OrderId).PriceAdjustmentMode);
+
+            var expectedNormalizationMode = liveMode ? DataNormalizationMode.Raw : dataNormalizationMode;
+            Assert.AreEqual(expectedNormalizationMode, transactionHandler.GetOrderById(orderTicket.OrderId).PriceAdjustmentMode);
         }
 
-        [TestCaseSource(nameof(DataNormalizationModes))]
-        public void OrderPriceAdjustmentModeIsSetWhenAddingOpenOrder(DataNormalizationMode dataNormalizationMode)
+        [TestCaseSource(nameof(PriceAdjustmentModeTestCases))]
+        public void OrderPriceAdjustmentModeIsSetWhenAddingOpenOrder(DataNormalizationMode dataNormalizationMode, bool liveMode)
         {
+            _algorithm.SetLiveMode(liveMode);
+
             //Initializes the transaction handler
             var transactionHandler = new TestBrokerageTransactionHandler();
             transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
@@ -2046,7 +2052,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             // Assert
             Assert.Greater(order.Id, 0);
-            Assert.AreEqual(dataNormalizationMode, transactionHandler.GetOrderById(order.Id).PriceAdjustmentMode);
+
+            var expectedNormalizationMode = liveMode ? DataNormalizationMode.Raw : dataNormalizationMode;
+            Assert.AreEqual(expectedNormalizationMode, transactionHandler.GetOrderById(order.Id).PriceAdjustmentMode);
         }
 
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm

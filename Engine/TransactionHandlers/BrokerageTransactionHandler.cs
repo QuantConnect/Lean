@@ -1295,6 +1295,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void SetPriceAdjustmentMode(Order order)
         {
+            if (_algorithm.LiveMode)
+            {
+                // live trading always uses raw prices
+                order.PriceAdjustmentMode = DataNormalizationMode.Raw;
+                return;
+            }
+
             if (!_priceAdjustmentModes.TryGetValue(order.Symbol, out var mode))
             {
                 var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService
