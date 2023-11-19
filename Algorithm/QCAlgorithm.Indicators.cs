@@ -318,7 +318,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The Alpha indicator for the given parameters</returns>
         [DocumentationAttribute(Indicators)]
-        public Alpha A(Symbol target, Symbol reference, int alphaPeriod, int betaPeriod, decimal riskFreeRate = 0.0m, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        public Alpha A(Symbol target, Symbol reference, int alphaPeriod = 1, int betaPeriod = 252, Resolution? resolution = null, decimal riskFreeRate = 0.0m, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(QuantConnect.Symbol.None, $"A({alphaPeriod},{betaPeriod})", resolution);
             var alpha = new Alpha(name, target, reference, alphaPeriod, betaPeriod, riskFreeRate);
@@ -326,22 +326,6 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(reference, alpha, resolution, selector);
 
             return alpha;
-        }
-
-        /// <summary>
-        /// Creates a Alpha indicator for the given target symbol in relation with the reference used.
-        /// The indicator will be automatically updated on the given resolution.
-        /// </summary>
-        /// <param name="target">The target symbol whose Alpha value we want</param>
-        /// <param name="reference">The reference symbol to compare with the target symbol</param>
-        /// <param name="period">The period of the Alpha indicator (Beta is the same)</param>
-        /// <param name="riskFreeRate">The risk free rate</param>
-        /// <param name="resolution">The resolution</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        /// <returns>The Alpha indicator for the given parameters</returns>
-        public Alpha A(Symbol target, Symbol reference, int period, decimal riskFreeRate = 0.0m, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
-        {
-            return A(target, reference, period, period, riskFreeRate, resolution, selector);
         }
 
         /// <summary>

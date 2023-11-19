@@ -191,7 +191,7 @@ namespace QuantConnect.Tests.Indicators
                 }
                 else
                 {
-                    Assert.AreEqual(0.0032062252, (double)indicator.Current.Value, 0.0000000001);
+                    Assert.AreEqual(0.0032053150, (double)indicator.Current.Value, 0.0000000001);
                 }
 
             }
@@ -218,7 +218,7 @@ namespace QuantConnect.Tests.Indicators
                 }
                 else
                 {
-                    Assert.AreEqual(0.003096821, (double)indicator.Current.Value, 0.0000000001);
+                    Assert.AreEqual(0.0030959108, (double)indicator.Current.Value, 0.0000000001);
                 }
 
             }

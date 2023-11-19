@@ -43,6 +43,16 @@ namespace QuantConnect.Indicators
         private readonly Symbol _targetSymbol;
 
         /// <summary>
+        /// Period of the indicator - alpha
+        /// </summary>
+        private readonly decimal _alphaPeriod;
+
+        /// <summary>
+        /// Period of the indicator - beta
+        /// </summary>
+        private readonly decimal _betaPeriod;
+
+        /// <summary>
         /// Rate of change of the target symbol
         /// </summary>
         private readonly RateOfChange _targetROC;
@@ -51,16 +61,6 @@ namespace QuantConnect.Indicators
         /// Rate of change of the reference symbol
         /// </summary>
         private readonly RateOfChange _referenceROC;
-
-        /// <summary>
-        /// RollingWindow of returns of the target symbol in the given period for the alpha
-        /// </summary>
-        private readonly RollingWindow<decimal> _targetReturns;
-
-        /// <summary>
-        /// RollingWindow of returns of the reference symbol in the given period for the alpha
-        /// </summary>
-        private readonly RollingWindow<decimal> _referenceReturns;
 
         /// <summary>
         /// Alpha of the target used in relation with the reference
@@ -72,6 +72,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         private readonly Beta _beta;
 
+        /// <summary>
+        /// Risk free rate of the target used in relation with the reference
+        /// </summary>
         private readonly decimal _riskFreeRate;
 
         /// <summary>
@@ -82,7 +85,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _targetReturns.IsReady && _beta.IsReady && _referenceReturns.IsReady;
+        public override bool IsReady => _targetROC.IsReady && _beta.IsReady && _referenceROC.IsReady;
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified name, target, reference, and period values
@@ -103,25 +106,24 @@ namespace QuantConnect.Indicators
             }
 
             // Assert that the period is greater than 2, otherwise the alpha can not be computed
-            if (alphaPeriod < 2)
+            if (alphaPeriod < 1)
             {
-                throw new ArgumentException("The period must be greater than 2.");
+                throw new ArgumentException("The period must be equal or greater than 1.");
             }
 
             // Assert that the beta period is greater than 2, otherwise the beta can not be computed
             if (betaPeriod < 2)
             {
-                throw new ArgumentException("The beta period must be greater than 2.");
+                throw new ArgumentException("The beta period must be equal or greater than 2.");
             }
             
             _targetSymbol = targetSymbol;
             _referenceSymbol = referenceSymbol;
+            _alphaPeriod = alphaPeriod;
+            _betaPeriod = betaPeriod;
 
-            _targetROC = new RateOfChange($"{name}_TargetROC", 1);
-            _referenceROC = new RateOfChange($"{name}_ReferenceROC", 1);
-
-            _targetReturns = new RollingWindow<decimal>(alphaPeriod);
-            _referenceReturns = new RollingWindow<decimal>(alphaPeriod);
+            _targetROC = new RateOfChange($"{name}_TargetROC", alphaPeriod);
+            _referenceROC = new RateOfChange($"{name}_ReferenceROC", alphaPeriod);
 
             _beta = new Beta($"{name}_Beta", _targetSymbol, _referenceSymbol, betaPeriod);
             
@@ -186,18 +188,10 @@ namespace QuantConnect.Indicators
             if (inputSymbol == _targetSymbol)
             {
                 _targetROC.Update(input.EndTime, input.Close);
-                if (_targetROC.IsReady)
-                {
-                    _targetReturns.Add(_targetROC.Current.Value);
-                }
             }
             else if (inputSymbol == _referenceSymbol)
             {
                 _referenceROC.Update(input.EndTime, input.Close);
-                if (_referenceROC.IsReady)
-                {
-                    _referenceReturns.Add(_referenceROC.Current.Value);
-                }
             }
             else
             {
@@ -206,7 +200,7 @@ namespace QuantConnect.Indicators
 
             _beta.Update(input);
             
-            if (_targetReturns.Samples == _referenceReturns.Samples && _targetReturns.Samples > 0)
+            if (_targetROC.Samples == _referenceROC.Samples && _referenceROC.Samples > 0)
             {
                 ComputeAlpha();
             }
@@ -219,14 +213,14 @@ namespace QuantConnect.Indicators
         /// </summary>
         private void ComputeAlpha()
         {
-            if (!_beta.IsReady || !_targetReturns.IsReady || !_referenceReturns.IsReady)
+            if (!_beta.IsReady || !_targetROC.IsReady || !_referenceROC.IsReady)
             {
                 _alpha = 0m;
                 return;
             }
 
-            var targetMean = _targetReturns.Average();
-            var referenceMean = _referenceReturns.Average();
+            var targetMean = _targetROC.Current.Value / _alphaPeriod;
+            var referenceMean = _referenceROC.Current.Value / _alphaPeriod;
 
             _alpha = targetMean - (_riskFreeRate + _beta.Current.Value * (referenceMean - _riskFreeRate));
         }
@@ -236,8 +230,6 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _targetReturns.Reset();
-            _referenceReturns.Reset();
             _targetROC.Reset();
             _referenceROC.Reset();
             _beta.Reset();
