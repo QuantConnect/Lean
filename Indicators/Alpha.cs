@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Data.Market;
 using System.Linq;
+using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
 {
@@ -78,6 +79,11 @@ namespace QuantConnect.Indicators
         private readonly decimal _riskFreeRate;
 
         /// <summary>
+        /// Interest rate provider is used to automaticalle get the risk free rate of the target used in relation with the reference
+        /// </summary>
+        private readonly InterestRateProvider _interestRateProvider;
+
+        /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public int WarmUpPeriod { get; private set; }
@@ -96,7 +102,8 @@ namespace QuantConnect.Indicators
         /// <param name="alphaPeriod">Period of the indicator - alpha</param>
         /// <param name="betaPeriod">Period of the indicator - beta</param>
         /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
-        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal riskFreeRate = 0.0m)
+        /// <param name="useInterestRateProvider">Use interest rate provider to automatically get the risk free rate of this indicator for given period</param>
+        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal riskFreeRate = 0.0m, bool useInterestRateProvider = false)
             : base(name)
         {
             // Assert that the target and reference symbols are not the same
@@ -122,6 +129,11 @@ namespace QuantConnect.Indicators
             _alphaPeriod = alphaPeriod;
             _betaPeriod = betaPeriod;
 
+            if (useInterestRateProvider)
+            {
+                _interestRateProvider = new InterestRateProvider();
+            }
+            _riskFreeRate = riskFreeRate;
             _targetROC = new RateOfChange($"{name}_TargetROC", alphaPeriod);
             _referenceROC = new RateOfChange($"{name}_ReferenceROC", alphaPeriod);
 
@@ -130,7 +142,6 @@ namespace QuantConnect.Indicators
             WarmUpPeriod = alphaPeriod >= betaPeriod ? alphaPeriod + 1 : betaPeriod + 1;
 
             _alpha = 0m;
-            _riskFreeRate = riskFreeRate;
         }
 
         /// <summary>
@@ -141,8 +152,9 @@ namespace QuantConnect.Indicators
         /// <param name="alphaPeriod">Period of the indicator - alpha</param>
         /// <param name="betaPeriod">Period of the indicator - beta</param>
         /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
-        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal riskFreeRate = 0.0m)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod},{riskFreeRate})", targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, riskFreeRate)
+        /// <param name="useInterestRateProvider">Use interest rate provider to automatically get the risk free rate of this indicator for given period</param>
+        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal riskFreeRate = 0.0m, bool useInterestRateProvider = false)
+            : this($"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod},{riskFreeRate})", targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, riskFreeRate, useInterestRateProvider)
         {
         }
 
@@ -153,8 +165,9 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
         /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
-        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int period, decimal riskFreeRate = 0.0m)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{period},{riskFreeRate})", targetSymbol, referenceSymbol, period, period, riskFreeRate)
+        /// <param name="useInterestRateProvider">Use interest rate provider to automatically get the risk free rate of this indicator for given period</param>
+        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int period, decimal riskFreeRate = 0.0m, bool useInterestRateProvider = false)
+            : this($"ALPHA({targetSymbol},{referenceSymbol},{period},{riskFreeRate})", targetSymbol, referenceSymbol, period, period, riskFreeRate, useInterestRateProvider)
         {
         }
 
@@ -166,8 +179,9 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol"></param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
         /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
-        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, decimal riskFreeRate = 0.0m)
-            : this(name, targetSymbol, referenceSymbol, period, period, riskFreeRate)
+        /// <param name="useInterestRateProvider">Use interest rate provider to automatically get the risk free rate of this indicator for given period</param>
+        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, decimal riskFreeRate = 0.0m, bool useInterestRateProvider = false)
+            : this(name, targetSymbol, referenceSymbol, period, period, riskFreeRate, useInterestRateProvider)
         {
         }
         
@@ -222,7 +236,13 @@ namespace QuantConnect.Indicators
             var targetMean = _targetROC.Current.Value / _alphaPeriod;
             var referenceMean = _referenceROC.Current.Value / _alphaPeriod;
 
-            _alpha = targetMean - (_riskFreeRate + _beta.Current.Value * (referenceMean - _riskFreeRate));
+            var risk_free_rate = _riskFreeRate;
+            if (_interestRateProvider != null)
+            {
+                risk_free_rate = _interestRateProvider.GetInterestRate(_targetROC.Current.Time);
+            }
+
+            _alpha = targetMean - (risk_free_rate + _beta.Current.Value * (referenceMean - risk_free_rate));
         }
 
         /// <summary>

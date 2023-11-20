@@ -223,5 +223,59 @@ namespace QuantConnect.Tests.Indicators
 
             }
         }
+
+        [Test]
+        public void UseInterestRateProviderTrue()
+        {
+            int alphaPeriod = 1;
+            int betaPeriod = 252;
+            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, alphaPeriod, betaPeriod, useInterestRateProvider: true);
+
+            for (int i = 0; i <= betaPeriod; i++)
+            {
+                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 100 + i, Time = _reference.AddDays(1 + i) });
+
+                Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
+
+                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 200 + i * 3, Time = _reference.AddDays(1 + i) });
+
+                if (i < betaPeriod)
+                {
+                    Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
+                }
+                else
+                {
+                    Assert.AreEqual(-0.0000620852, (double)indicator.Current.Value, 0.0000000001);
+                }
+
+            }
+        }
+
+        [Test]
+        public void UseInterestRateProviderFalse()
+        {
+            int alphaPeriod = 1;
+            int betaPeriod = 252;
+            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, alphaPeriod, betaPeriod, useInterestRateProvider: false);
+
+            for (int i = 0; i <= betaPeriod; i++)
+            {
+                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 100 + i, Time = _reference.AddDays(1 + i) });
+
+                Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
+
+                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 200 + i * 3, Time = _reference.AddDays(1 + i) });
+
+                if (i < betaPeriod)
+                {
+                    Assert.AreEqual(0.0, (double)indicator.Current.Value, 0.0000000001);
+                }
+                else
+                {
+                    Assert.AreEqual(0.0008518139, (double)indicator.Current.Value, 0.0000000001);
+                }
+
+            }
+        }
     }
 }
