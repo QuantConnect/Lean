@@ -37,13 +37,12 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         public void OptionsAreMappedCorrectly()
         {
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
 
             historyProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
                 null,
                 TestGlobals.DataProvider,
-                zipCache,
+                TestGlobals.DataCacheProvider,
                 TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
                 null,
@@ -86,20 +85,18 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             Assert.AreEqual(28, firstBar.Time.Date.Day);
             Assert.IsTrue(lastBar.Symbol.Value.Contains("FOXA"));
             Assert.AreEqual(2, lastBar.Time.Date.Day);
-            zipCache.DisposeSafely();
         }
 
         [Test]
         public void EquitiesAreMappedCorrectly()
         {
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
             historyProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
                 null,
                 TestGlobals.DataProvider,
-                zipCache,
-               TestGlobals.MapFileProvider,
+                TestGlobals.DataCacheProvider,
+                TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
                 null,
                 false,
@@ -128,7 +125,6 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             var firstBar = result.First().Values.Single();
             Assert.AreEqual("WMI", firstBar.Symbol.Value);
             Assert.IsNotEmpty(result);
-            zipCache.DisposeSafely();
         }
     }
 }

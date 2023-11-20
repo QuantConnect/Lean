@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -93,8 +93,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.IsTrue(slow.IsReady);
                 Assert.NotZero(slow.Samples);
             }
-
-            ZipCacheProvider.DisposeSafely();
         }
 
         [Test]
@@ -133,8 +131,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                     Assert.IsTrue(slow.IsReady.IsTrue());
                     Assert.NotZero(((PyObject)slow.Samples).GetAndDispose<int>());
                 }
-
-                ZipCacheProvider.DisposeSafely();
             }
         }
     }

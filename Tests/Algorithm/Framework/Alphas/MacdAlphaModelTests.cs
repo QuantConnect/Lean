@@ -87,8 +87,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.IsTrue(macd.IsReady);
                 Assert.NotZero(macd.Samples);
             }
-
-            ZipCacheProvider.DisposeSafely();
         }
 
         [Test]
@@ -123,8 +121,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                     Assert.IsTrue(macd.IsReady.IsTrue());
                     Assert.NotZero(((PyObject)macd.Samples).GetAndDispose<int>());
                 }
-
-                ZipCacheProvider.DisposeSafely();
             }
         }
     }
