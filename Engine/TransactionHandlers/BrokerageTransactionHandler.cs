@@ -705,7 +705,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             var orderTicket = order.ToOrderTicket(algorithm.Transactions);
 
-            SetPriceAdjustmentMode(order);
+            SetPriceAdjustmentMode(order, algorithm);
 
             _openOrders.AddOrUpdate(order.Id, order, (i, o) => order);
             _completeOrders.AddOrUpdate(order.Id, order, (i, o) => order);
@@ -796,7 +796,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
 
             // Set order price adjustment mode
-            SetPriceAdjustmentMode(order);
+            SetPriceAdjustmentMode(order, _algorithm);
 
             // update the ticket's internal storage with this new order reference
             ticket.SetOrder(order);
@@ -1293,9 +1293,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Gets the price adjustment mode for the specified symbol from its subscription configurations
         /// </summary>
-        private void SetPriceAdjustmentMode(Order order)
+        private void SetPriceAdjustmentMode(Order order, IAlgorithm algorithm)
         {
-            if (_algorithm.LiveMode)
+            if (algorithm.LiveMode)
             {
                 // live trading always uses raw prices
                 order.PriceAdjustmentMode = DataNormalizationMode.Raw;
@@ -1304,7 +1304,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             if (!_priceAdjustmentModes.TryGetValue(order.Symbol, out var mode))
             {
-                var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                var configs = algorithm.SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(order.Symbol, includeInternalConfigs: true);
                 if (configs.Count == 0)
                 {
