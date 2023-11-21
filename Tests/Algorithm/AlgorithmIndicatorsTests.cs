@@ -45,9 +45,8 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
 
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            using var cacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null,
-                TestGlobals.DataProvider, cacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
+                TestGlobals.DataProvider, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
                 null, true, new DataPermissionManager(), _algorithm.ObjectStore));
             _algorithm.SetHistoryProvider(historyProvider);
 
