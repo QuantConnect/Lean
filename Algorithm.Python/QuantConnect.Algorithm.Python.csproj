@@ -39,7 +39,7 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.24" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.25" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="FundamentalUniverseSelectionAlgorithm.py" />
@@ -56,7 +56,7 @@
     <Content Include="CustomPartialFillModelAlgorithm.py" />
     <Content Include="AddRiskManagementAlgorithm.py" />
     <Content Include="AddUniverseSelectionModelAlgorithm.py" />
-    <Compile Include="IndicatorWithRenkoBarsRegressionAlgorithm.py" />
+    <Content Include="IndicatorWithRenkoBarsRegressionAlgorithm.py" />
     <Content Include="Alphas\ContingentClaimsAnalysisDefaultPredictionAlpha.py" />
     <Content Include="Alphas\GasAndCrudeOilEnergyCorrelationAlpha.py" />
     <Content Include="Alphas\GlobalEquityMeanReversionIBSAlpha.py" />
