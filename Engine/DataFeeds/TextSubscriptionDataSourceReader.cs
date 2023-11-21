@@ -33,13 +33,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly bool _implementsStreamReader;
         private readonly DateTime _date;
-        private readonly SubscriptionDataConfig _config;
         private BaseData _factory;
         private bool _shouldCacheDataPoints;
 
         private static int CacheSize = 100;
         private static volatile Dictionary<string, List<BaseData>> BaseDataSourceCache = new Dictionary<string, List<BaseData>>(100);
         private static Queue<string> CacheKeys = new Queue<string>(100);
+
+        /// <summary>
+        /// The requested subscription configuration
+        /// </summary>
+        protected SubscriptionDataConfig Config { get; set; }
 
         /// <summary>
         /// Event fired when an exception is thrown during a call to
@@ -59,12 +63,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             : base(dataCacheProvider, isLiveMode, objectStore)
         {
             _date = date;
-            _config = config;
-            _shouldCacheDataPoints = !_config.IsCustomData && _config.Resolution >= Resolution.Hour
-                && _config.Type != typeof(FineFundamental) && _config.Type != typeof(CoarseFundamental) && _config.Type != typeof(Fundamental) && _config.Type != typeof(Fundamentals)
+            Config = config;
+            _shouldCacheDataPoints = !Config.IsCustomData && Config.Resolution >= Resolution.Hour
+                && Config.Type != typeof(FineFundamental) && Config.Type != typeof(CoarseFundamental) && Config.Type != typeof(Fundamental) && Config.Type != typeof(Fundamentals)
                 && !DataCacheProvider.IsDataEphemeral;
 
-            _implementsStreamReader = _config.Type.ImplementsStreamReader();
+            _implementsStreamReader = Config.Type.ImplementsStreamReader();
         }
 
         /// <summary>
@@ -82,7 +86,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             string cacheKey = null;
             if (_shouldCacheDataPoints)
             {
-                cacheKey = source.Source + _config.Type;
+                cacheKey = source.Source + Config.Type;
                 BaseDataSourceCache.TryGetValue(cacheKey, out cache);
             }
             if (cache == null)
@@ -99,7 +103,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (_factory == null)
                     {
                         // only create a factory if the stream isn't null
-                        _factory = _config.GetBaseDataInstance();
+                        _factory = Config.GetBaseDataInstance();
                     }
                     // while the reader has data
                     while (!reader.EndOfStream)
@@ -110,13 +114,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             if (reader.StreamReader != null && _implementsStreamReader)
                             {
-                                instance = _factory.Reader(_config, reader.StreamReader, _date, IsLiveMode);
+                                instance = _factory.Reader(Config, reader.StreamReader, _date, IsLiveMode);
                             }
                             else
                             {
                                 // read a line and pass it to the base data factory
                                 line = reader.ReadLine();
-                                instance = _factory.Reader(_config, line, _date, IsLiveMode);
+                                instance = _factory.Reader(Config, line, _date, IsLiveMode);
                             }
                         }
                         catch (Exception err)
@@ -184,7 +188,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             foreach (var data in cache.Skip(index))
             {
                 var clone = data.Clone();
-                clone.Symbol = _config.Symbol;
+                clone.Symbol = Config.Symbol;
                 yield return clone;
             }
         }

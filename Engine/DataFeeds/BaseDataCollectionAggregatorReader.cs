@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         _collection = (BaseDataCollection)Activator.CreateInstance(_collectionType);
                         _collection.Time = point.Time;
-                        _collection.Symbol = point.Symbol;
+                        _collection.Symbol = Config.Symbol;
                         _collection.EndTime = point.EndTime;
                     }
                     // aggregate the data points
