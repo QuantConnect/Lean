@@ -64,7 +64,7 @@ namespace QuantConnect.Securities
             security.MarginInterestRateModel = _brokerageModel.GetMarginInterestRateModel(security);
             // Sets the leverage after the buying power model. Otherwise we would set the leverage of the default model.
             security.SetLeverage(_brokerageModel.GetLeverage(security));
-            security.SetShortableProvider(_brokerageModel.GetShortableProvider());
+            security.SetShortableProvider(_brokerageModel.GetShortableProvider(security));
 
             _securitySeeder.SeedSecurity(security);
         }

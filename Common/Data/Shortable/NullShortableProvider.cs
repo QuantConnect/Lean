@@ -25,6 +25,11 @@ namespace QuantConnect.Data.Shortable
     public class NullShortableProvider : IShortableProvider
     {
         /// <summary>
+        /// The null shortable provider instance
+        /// </summary>
+        public static NullShortableProvider Instance { get; } = new ();
+
+        /// <summary>
         /// Gets the quantity shortable for the Symbol at the given time.
         /// </summary>
         /// <param name="symbol">Symbol to check</param>

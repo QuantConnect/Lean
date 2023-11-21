@@ -439,14 +439,12 @@ namespace QuantConnect.Tests.ToolBox
         /// </summary>
         internal class LocalHistoryBrokerage : NullBrokerage
         {
-            private readonly IDataCacheProvider _dataCacheProvider;
             private readonly IHistoryProvider _historyProvider;
 
             public LocalHistoryBrokerage()
             {
                 var mapFileProvider = TestGlobals.MapFileProvider;
                 var dataProvider = TestGlobals.DataProvider;
-                _dataCacheProvider = new ZipDataCacheProvider(dataProvider);
                 var factorFileProvider = TestGlobals.FactorFileProvider;
                 var dataPermissionManager = new DataPermissionManager();
 
@@ -459,7 +457,7 @@ namespace QuantConnect.Tests.ToolBox
                         null,
                         null,
                         dataProvider,
-                        _dataCacheProvider,
+                        TestGlobals.DataCacheProvider,
                         mapFileProvider,
                         factorFileProvider,
                         null,
@@ -485,11 +483,6 @@ namespace QuantConnect.Tests.ToolBox
                     default:
                         throw new NotImplementedException("Only support Trade & Quote bars");
                 }
-            }
-
-            public override void Dispose()
-            {
-                _dataCacheProvider.Dispose();
             }
         }
     }

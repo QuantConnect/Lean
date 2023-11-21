@@ -106,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$110000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "49.90%"},
-            {"OrderListHash", "f409be3a7c63d9c1394c2e6c005a15ee"}
+            {"OrderListHash", "0f357e8eeee4108d6b53f2b671e97f29"}
         };
 
         internal class TestBrokerageModel : DefaultBrokerageModel

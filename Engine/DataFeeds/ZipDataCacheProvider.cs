@@ -24,6 +24,7 @@ using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -47,10 +48,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Constructor that sets the <see cref="IDataProvider"/> used to retrieve data
         /// </summary>
-        public ZipDataCacheProvider(IDataProvider dataProvider, bool isDataEphemeral = true, double cacheTimer = 10)
+        public ZipDataCacheProvider(IDataProvider dataProvider, bool isDataEphemeral = true, double cacheTimer = double.NaN)
         {
             IsDataEphemeral = isDataEphemeral;
-            _cacheSeconds = cacheTimer;
+            _cacheSeconds = double.IsNaN(cacheTimer) ? Config.GetDouble("zip-data-cache-provider", 10) : cacheTimer;
             _dataProvider = dataProvider;
             _cacheCleaner = new Timer(state => CleanCache(), null, TimeSpan.FromSeconds(_cacheSeconds), Timeout.InfiniteTimeSpan);
         }

@@ -171,13 +171,16 @@ namespace QuantConnect.Algorithm.CSharp
         {
             public AllShortableSymbolsRegressionAlgorithmBrokerageModel() : base()
             {
-                ShortableProvider = new RegressionTestShortableProvider();
+            }
+            public override IShortableProvider GetShortableProvider(Security security)
+            {
+                return new RegressionTestShortableProvider();
             }
         }
 
         private class RegressionTestShortableProvider : LocalDiskShortableProvider
         {
-            public RegressionTestShortableProvider() : base(SecurityType.Equity, "testbrokerage", Market.USA)
+            public RegressionTestShortableProvider() : base("testbrokerage")
             {
             }
 
@@ -188,6 +191,7 @@ namespace QuantConnect.Algorithm.CSharp
             /// <returns>Symbol/quantity shortable as a Dictionary. Returns null if no entry data exists for this date or brokerage</returns>
             public Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime)
             {
+                var shortableDataDirectory = Path.Combine(Globals.DataFolder, SecurityType.Equity.SecurityTypeToLower(), Market.USA, "shortable", Brokerage);
                 var allSymbols = new Dictionary<Symbol, long>();
 
                 // Check backwards up to one week to see if we can source a previous file.
@@ -195,7 +199,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var i = 0;
                 while (i <= 7)
                 {
-                    var shortableListFile = Path.Combine(ShortableDataDirectory.FullName, "dates", $"{localTime.AddDays(-i):yyyyMMdd}.csv");
+                    var shortableListFile = Path.Combine(shortableDataDirectory, "dates", $"{localTime.AddDays(-i):yyyyMMdd}.csv");
 
                     foreach (var line in DataProvider.ReadLines(shortableListFile))
                     {
@@ -271,7 +275,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$2600000.00"},
             {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "10.61%"},
-            {"OrderListHash", "0069f402ffcd2d91b9018b81badfab81"}
+            {"OrderListHash", "9c129e856afe96579b52cbfe95237100"}
         };
     }
 }

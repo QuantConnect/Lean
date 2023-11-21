@@ -1565,44 +1565,41 @@ actualDictionary.update({'IBM': 5})
                 new DataPermissionManager()
             ));
 
-            using (var zipDataCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider))
+            algo.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
+            algo.HistoryProvider.Initialize(
+                new HistoryProviderInitializeParameters(
+                    null,
+                    null,
+                    null,
+                    TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    (_) => {},
+                    false,
+                    new DataPermissionManager(),
+                    algo.ObjectStore));
+
+            algo.SetStartDate(DateTime.UtcNow.AddDays(-1));
+
+            var history = algo.History(new[] { Symbols.IBM }, new DateTime(2013, 10, 7), new DateTime(2013, 10, 8), Resolution.Tick).ToList();
+            Assert.AreEqual(57460, history.Count);
+
+            foreach (var slice in history)
             {
-                algo.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
-                algo.HistoryProvider.Initialize(
-                    new HistoryProviderInitializeParameters(
-                        null,
-                        null,
-                        null,
-                        zipDataCacheProvider,
-                        TestGlobals.MapFileProvider,
-                        TestGlobals.FactorFileProvider,
-                        (_) => {},
-                        false,
-                        new DataPermissionManager(),
-                        algo.ObjectStore));
-
-                algo.SetStartDate(DateTime.UtcNow.AddDays(-1));
-
-                var history = algo.History(new[] { Symbols.IBM }, new DateTime(2013, 10, 7), new DateTime(2013, 10, 8), Resolution.Tick).ToList();
-                Assert.AreEqual(57460, history.Count);
-
-                foreach (var slice in history)
+                if (!slice.Ticks.ContainsKey(Symbols.IBM))
                 {
-                    if (!slice.Ticks.ContainsKey(Symbols.IBM))
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    foreach (var tick in slice.Ticks[Symbols.IBM])
+                foreach (var tick in slice.Ticks[Symbols.IBM])
+                {
+                    if (tick.BidPrice != 0)
                     {
-                        if (tick.BidPrice != 0)
-                        {
-                            Assert.LessOrEqual(Math.Abs(tick.Value - tick.BidPrice), 0.05);
-                        }
-                        if (tick.AskPrice != 0)
-                        {
-                            Assert.LessOrEqual(Math.Abs(tick.Value - tick.AskPrice), 0.05);
-                        }
+                        Assert.LessOrEqual(Math.Abs(tick.Value - tick.BidPrice), 0.05);
+                    }
+                    if (tick.AskPrice != 0)
+                    {
+                        Assert.LessOrEqual(Math.Abs(tick.Value - tick.AskPrice), 0.05);
                     }
                 }
             }

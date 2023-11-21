@@ -37,9 +37,6 @@ namespace QuantConnect.Brokerages
             OrderType.StopLimit
         };
 
-        private static readonly EquityExchange EquityExchange =
-            new EquityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity));
-
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
@@ -159,8 +156,6 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
         public override bool CanExecuteOrder(Security security, Order order)
         {
-            EquityExchange.SetLocalDateTimeFrontier(security.Exchange.LocalTime);
-
             var cache = security.GetLastData();
             if (cache == null)
             {
@@ -168,7 +163,7 @@ namespace QuantConnect.Brokerages
             }
 
             // tradier doesn't support after hours trading
-            if (!EquityExchange.IsOpenDuringBar(cache.Time, cache.EndTime, false))
+            if (!security.Exchange.IsOpenDuringBar(cache.Time, cache.EndTime, false))
             {
                 return false;
             }
@@ -204,16 +199,5 @@ namespace QuantConnect.Brokerages
             // Trading stocks at Tradier Brokerage is free
             return new ConstantFeeModel(0m);
         }
-
-        /// <summary>
-        /// Gets a new slippage model that represents this brokerage's fill slippage behavior
-        /// </summary>
-        /// <param name="security">The security to get a slippage model for</param>
-        /// <returns>The new slippage model for this brokerage</returns>
-        public override ISlippageModel GetSlippageModel(Security security)
-        {
-            return new ConstantSlippageModel(0);
-        }
-
     }
 }

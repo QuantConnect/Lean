@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Data.Shortable
         [Test]
         public void LocalDiskShortableProviderGetsDataBySymbol()
         {
-            var shortableProvider = new LocalDiskShortableProvider(SecurityType.Equity, "testbrokerage", QuantConnect.Market.USA);
+            var shortableProvider = new LocalDiskShortableProvider("testbrokerage");
             var symbols = new[]
             {
                 new Symbol(SecurityIdentifier.GenerateEquity("AAPL", QuantConnect.Market.USA, mappingResolveDate: new DateTime(2021, 1, 4)), "AAPL"),
@@ -54,13 +54,13 @@ namespace QuantConnect.Tests.Common.Data.Shortable
                 {
                     { symbols[0], 2000 },
                     { symbols[1], 5000 },
-                    { symbols[2], 0 }
+                    { symbols[2], null } // we have no data for this symbol
                 },
                 new Dictionary<Symbol, long?>
                 {
                     { symbols[0], 4000 },
                     { symbols[1], 10000 },
-                    { symbols[2], 0 }
+                    { symbols[2], null } // we have no data for this symbol
                 }
             };
 
@@ -84,13 +84,13 @@ namespace QuantConnect.Tests.Common.Data.Shortable
 
         [TestCase("AAPL", "nobrokerage")]
         [TestCase("SPY", "testbrokerage")]
-        public void LocalDiskShortableProviderDefaultsToZeroForMissingData(string ticker, string brokerage)
+        public void LocalDiskShortableProviderDefaultsToNullForMissingData(string ticker, string brokerage)
         {
-            var provider = new LocalDiskShortableProvider(SecurityType.Equity, brokerage, QuantConnect.Market.USA);
+            var provider = new LocalDiskShortableProvider(brokerage);
             var date = new DateTime(2020, 12, 21);
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker, QuantConnect.Market.USA, mappingResolveDate: date), ticker);
 
-            Assert.AreEqual(0, provider.ShortableQuantity(symbol, date).Value);
+            Assert.IsFalse(provider.ShortableQuantity(symbol, date).HasValue);
         }
     }
 }

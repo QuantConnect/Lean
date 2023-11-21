@@ -57,7 +57,7 @@ class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm(QCAlgorithm):
 
         self.universeAdded = self.universeAdded or len(changes.AddedSecurities) >= self.universeSymbolCount
         # Subtract 1 from universe Symbol count for AAPL, since it was manually added to the algorithm
-        self.universeRemoved = self.universeRemoved or (len(changes.RemovedSecurities) == self.universeSymbolCount - 1 and self.UtcTime.date() >= self.delistingDate and self.UtcTime.date() < self.EndDate.date())
+        self.universeRemoved = self.universeRemoved or (len(changes.RemovedSecurities) == self.universeSymbolCount and self.UtcTime.date() >= self.delistingDate and self.UtcTime.date() < self.EndDate.date())
 
     def OnEndOfAlgorithm(self):
         if not self.universeAdded:

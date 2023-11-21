@@ -15,12 +15,12 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Securities;
 using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -39,6 +39,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetStartDate(2014, 03, 25);
             SetEndDate(2014, 04, 07);
+
+            // before we add any symbol
+            AssertFundamentalUniverseData();
 
             AddEquity("SPY");
             AddEquity("AAPL");
@@ -81,23 +84,28 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"Unexpected {ticker} fundamental data");
                 }
             }
+            AssertFundamentalUniverseData();
 
+            AddUniverse(FundamentalSelectionFunction);
+        }
+
+        private void AssertFundamentalUniverseData()
+        {
             // Request historical fundamental data for all symbols
             var history2 = History<Fundamentals>(new TimeSpan(1, 0, 0, 0)).ToList();
             if (history2.Count != 1)
             {
-                throw new Exception($"Unexpected {nameof(Fundamentals)} history count {history.Count}! Expected 1");
+                throw new Exception($"Unexpected {nameof(Fundamentals)} history count {history2.Count}! Expected 1");
             }
-            if (history2[0].Single().Value.Data.Count < 7000)
+            var data = history2[0].Single().Value.Data;
+            if (data.Count < 7000)
             {
-                throw new Exception($"Unexpected {nameof(Fundamentals)} data count {history.Count}! Expected > 7000");
+                throw new Exception($"Unexpected {nameof(Fundamentals)} data count {data.Count}! Expected > 7000");
             }
-            if (history2[0].Single().Value.Data.Any(x => x.GetType() != typeof(Fundamental)))
+            if (data.Any(x => x.GetType() != typeof(Fundamental)))
             {
                 throw new Exception($"Unexpected {nameof(Fundamentals)} data type!");
             }
-
-            AddUniverse(FundamentalSelectionFunction);
         }
 
         // sort the data by daily dollar volume and take the top 'NumberOfSymbolsCoarse'
@@ -165,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 3;
+        public virtual int AlgorithmHistoryDataPoints => 4;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -195,7 +203,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$2200000000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.28%"},
-            {"OrderListHash", "34bb9933f9d242713c0ec14c4ee586b6"}
+            {"OrderListHash", "490a9beb7a7b09c88db446e4fbd392cc"}
         };
     }
 }

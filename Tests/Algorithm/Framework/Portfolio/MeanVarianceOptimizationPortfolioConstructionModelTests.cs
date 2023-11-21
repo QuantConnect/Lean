@@ -50,10 +50,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.SetHistoryProvider(historyProvider);
 
             historyProvider.Initialize(new HistoryProviderInitializeParameters(
-                new BacktestNodePacket(),
-                new Api.Api(),
+                null,
+                null,
                 TestGlobals.DataProvider,
-                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                TestGlobals.DataCacheProvider,
                 TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
                 i => { },

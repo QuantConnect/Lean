@@ -358,7 +358,7 @@ namespace QuantConnect.Data
         /// Gets the data of the specified type.
         /// </summary>
         /// <remarks>Supports both C# and Python use cases</remarks>
-        protected static dynamic GetImpl(Type type, Slice instance)
+        protected dynamic GetImpl(Type type, Slice instance)
         {
             if (instance._dataByType == null)
             {
@@ -374,6 +374,7 @@ namespace QuantConnect.Data
                 {
                     var dataDictionaryCache = GenericDataDictionary.Get(type, isPythonData: false);
                     dictionary = Activator.CreateInstance(dataDictionaryCache.GenericType);
+                    ((dynamic)dictionary).Time = Time;
 
                     foreach (var data in instance.Ticks)
                     {
@@ -430,6 +431,7 @@ namespace QuantConnect.Data
 
                     var dataDictionaryCache = GenericDataDictionary.Get(type, isPythonData);
                     dictionary = Activator.CreateInstance(dataDictionaryCache.GenericType);
+                    ((dynamic)dictionary).Time = Time;
 
                     foreach (var data in instance._data.Value.Values)
                     {

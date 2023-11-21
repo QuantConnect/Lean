@@ -103,8 +103,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             _universeAdded |= changes.AddedSecurities.Count >= _universeSymbolCount;
-            // Subtract 1 from universe Symbol count for AAPL, since it was manually added to the algorithm
-            _universeRemoved |= changes.RemovedSecurities.Count == _universeSymbolCount - 1 && UtcTime.Date >= _delistingDate && UtcTime.Date < EndDate;
+            // TODO: shouldn't be sending AAPL as a removed security since it was added by another unvierse
+            // if we added the etf subscription it will get delisted and send us a removal event
+            var adjusment = AddETFSubscription ? 0 : -1;
+            _universeRemoved |= changes.RemovedSecurities.Count == _universeSymbolCount + adjusment && UtcTime.Date >= _delistingDate && UtcTime.Date < EndDate;
         }
 
         public override void OnEndOfAlgorithm()
@@ -171,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$260000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.83%"},
-            {"OrderListHash", "49d511dbd5e31d6c25afda0f55aa28c2"}
+            {"OrderListHash", "d125adb907e6ca8b4c6ec06fbdcf986a"}
         };
     }
 }

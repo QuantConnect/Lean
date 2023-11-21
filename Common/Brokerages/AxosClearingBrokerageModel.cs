@@ -27,16 +27,10 @@ using QuantConnect.Util;
 namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// Provides Atreyu specific properties
+    /// Provides the Axos clearing brokerage model specific properties
     /// </summary>
-    public class AtreyuBrokerageModel : DefaultBrokerageModel
+    public class AxosClearingBrokerageModel : DefaultBrokerageModel
     {
-        private readonly IShortableProvider _shortableProvider;
-        private readonly System.Type[] _supportedTimeInForces =
-        {
-            typeof(DayTimeInForce)
-        };
-
         private readonly HashSet<OrderType> _supportedOrderTypes = new()
         {
             OrderType.Limit,
@@ -55,9 +49,8 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public AtreyuBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
+        public AxosClearingBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
         {
-            _shortableProvider = new LocalDiskShortableProvider(SecurityType.Equity, "quantconnect", Market.USA);
         }
 
         /// <summary>
@@ -66,22 +59,26 @@ namespace QuantConnect.Brokerages
         public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets => DefaultMarketMap;
 
         /// <summary>
-        /// Provides Atreyu fee model
+        /// Provides Axos fee model
         /// </summary>
         /// <param name="security">The security to get a fee model for</param>
         /// <returns>The new fee model for this brokerage</returns>
         public override IFeeModel GetFeeModel(Security security)
         {
-            return new AtreyuFeeModel();
+            return new AxosFeeModel();
         }
 
         /// <summary>
         /// Gets the shortable provider
         /// </summary>
         /// <returns>Shortable provider</returns>
-        public override IShortableProvider GetShortableProvider()
+        public override IShortableProvider GetShortableProvider(Security security)
         {
-            return _shortableProvider;
+            if(security.Type == SecurityType.Equity)
+            {
+                return new LocalDiskShortableProvider("axos");
+            }
+            return base.GetShortableProvider(security);
         }
 
         /// <summary>
@@ -124,20 +121,11 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            // validate time in force
-            if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));
-
-                return false;
-            }
-
             // validate orders quantity
             if (order.AbsoluteQuantity % 1 != 0)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.AtreyuBrokerageModel.NonIntegerOrderQuantity(order));
+                    Messages.AxosBrokerageModel.NonIntegerOrderQuantity(order));
 
                 return false;
             }

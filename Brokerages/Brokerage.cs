@@ -460,7 +460,7 @@ namespace QuantConnect.Brokerages
 
                 Log.Trace("Brokerage.PerformCashSync(): Sync cash balance");
 
-                var balances = new List<CashAmount>();
+                List<CashAmount> balances = null;
                 try
                 {
                     balances = GetCashBalance();
@@ -470,7 +470,8 @@ namespace QuantConnect.Brokerages
                     Log.Error(err, "Error in GetCashBalance:");
                 }
 
-                if (balances.Count == 0)
+                // empty cash balance is valid, if there was No error/exception
+                if (balances == null)
                 {
                     Log.Trace("Brokerage.PerformCashSync(): No cash balances available, cash sync not performed");
                     return false;

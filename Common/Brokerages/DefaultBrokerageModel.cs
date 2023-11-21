@@ -57,15 +57,6 @@ namespace QuantConnect.Brokerages
         }.ToReadOnlyDictionary();
 
         /// <summary>
-        /// Determines whether the asset you want to short is shortable.
-        /// The default is set to <see cref="NullShortableProvider"/>,
-        /// which allows for infinite shorting of any asset. You can limit the
-        /// quantity you can short for an asset class by setting this variable to
-        /// your own implementation of <see cref="IShortableProvider"/>.
-        /// </summary>
-        protected IShortableProvider ShortableProvider { get; set; }
-
-        /// <summary>
         /// Gets or sets the account type used by this model
         /// </summary>
         public virtual AccountType AccountType
@@ -96,11 +87,6 @@ namespace QuantConnect.Brokerages
         public DefaultBrokerageModel(AccountType accountType = AccountType.Margin)
         {
             AccountType = accountType;
-
-            // Shortable provider, responsible for loading the data that indicates how much
-            // quantity we can short for a given asset. The NullShortableProvider default will
-            // allow for infinite quantities of any asset to be shorted.
-            ShortableProvider = new NullShortableProvider();
         }
 
         /// <summary>
@@ -294,26 +280,7 @@ namespace QuantConnect.Brokerages
         /// <returns>The new slippage model for this brokerage</returns>
         public virtual ISlippageModel GetSlippageModel(Security security)
         {
-            switch (security.Type)
-            {
-                case SecurityType.Base:
-                case SecurityType.Equity:
-                case SecurityType.Index:
-                    return new ConstantSlippageModel(0);
-
-                case SecurityType.Forex:
-                case SecurityType.Cfd:
-                case SecurityType.Crypto:
-                case SecurityType.CryptoFuture:
-                    return new ConstantSlippageModel(0);
-
-                case SecurityType.Commodity:
-                case SecurityType.Option:
-                case SecurityType.FutureOption:
-                case SecurityType.Future:
-                default:
-                    return new ConstantSlippageModel(0);
-            }
+            return NullSlippageModel.Instance;
         }
 
         /// <summary>
@@ -385,9 +352,12 @@ namespace QuantConnect.Brokerages
         /// Gets the shortable provider
         /// </summary>
         /// <returns>Shortable provider</returns>
-        public virtual IShortableProvider GetShortableProvider()
+        public virtual IShortableProvider GetShortableProvider(Security security)
         {
-            return ShortableProvider;
+            // Shortable provider, responsible for loading the data that indicates how much
+            // quantity we can short for a given asset. The NullShortableProvider default will
+            // allow for infinite quantities of any asset to be shorted.
+            return NullShortableProvider.Instance;
         }
 
         /// <summary>

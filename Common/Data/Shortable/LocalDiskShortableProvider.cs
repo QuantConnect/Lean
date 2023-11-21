@@ -15,32 +15,41 @@
 
 using System;
 using System.IO;
-using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using System.Threading.Tasks;
+using QuantConnect.Interfaces;
+using QuantConnect.Configuration;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.Shortable
 {
     /// <summary>
-    /// Sources easy-to-borrow (ETB) data from the local disk for the given brokerage
+    /// Sources short availability data from the local disk for the given brokerage
     /// </summary>
     public class LocalDiskShortableProvider : IShortableProvider
     {
-        protected readonly DirectoryInfo ShortableDataDirectory;
-        protected IDataProvider DataProvider =
-            Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
-                "DefaultDataProvider"));
+        /// <summary>
+        /// The data provider instance to use
+        /// </summary>
+        protected static IDataProvider DataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
+                "DefaultDataProvider"), forceTypeNameOnExisting: false);
+
+        private string _ticker;
+        private bool _scheduledCleanup;
+        private Dictionary<DateTime, long> _shortableQuantityPerDate;
+
+        /// <summary>
+        /// The short availability provider
+        /// </summary>
+        protected string Brokerage { get; set; }
 
         /// <summary>
         /// Creates an instance of the class. Establishes the directory to read from.
         /// </summary>
-        /// <param name="securityType">SecurityType to read data</param>
-        /// <param name="brokerage">Brokerage to read ETB data</param>
-        /// <param name="market">Market to read ETB data</param>
-        public LocalDiskShortableProvider(SecurityType securityType, string brokerage, string market)
+        /// <param name="brokerage">Brokerage to read the short availability data</param>
+        public LocalDiskShortableProvider(string brokerage)
         {
-            var shortableDataDirectory = Path.Combine(Globals.DataFolder, securityType.SecurityTypeToLower(), market, "shortable", brokerage.ToLowerInvariant());
-            ShortableDataDirectory = Directory.CreateDirectory(shortableDataDirectory);
+            Brokerage = brokerage.ToLowerInvariant();
         }
 
         /// <summary>
@@ -51,29 +60,75 @@ namespace QuantConnect.Data.Shortable
         /// <returns>Quantity shortable. Null if the data for the brokerage/date does not exist.</returns>
         public long? ShortableQuantity(Symbol symbol, DateTime localTime)
         {
-            if (ShortableDataDirectory == null)
+            var shortableQuantityPerDate = GetCacheData(symbol);
+            if (!shortableQuantityPerDate.TryGetValue(localTime.Date, out var result))
             {
-                return 0;
+                // Any missing entry will be considered to be Shortable.
+                return null;
             }
+            return result;
+        }
+
+        /// <summary>
+        /// We cache data per ticker
+        /// </summary>
+        /// <param name="symbol">The requested symbol</param>
+        private Dictionary<DateTime, long> GetCacheData(Symbol symbol)
+        {
+            var result = _shortableQuantityPerDate;
+            if (_ticker == symbol.Value)
+            {
+                return result;
+            }
+
+            if (!_scheduledCleanup)
+            {
+                // we schedule it once
+                _scheduledCleanup = true;
+                ClearCache();
+            }
+
+            // create a new collection
+            _ticker = symbol.Value;
+            result = _shortableQuantityPerDate = new();
 
             // Implicitly trusts that Symbol.Value has been mapped and updated to the latest ticker
-            var shortableSymbolFile = Path.Combine(ShortableDataDirectory.FullName, "symbols", $"{symbol.Value.ToLowerInvariant()}.csv");
+            var shortableSymbolFile = Path.Combine(Globals.DataFolder, symbol.SecurityType.SecurityTypeToLower(), symbol.ID.Market,
+                "shortable", Brokerage, "symbols", $"{_ticker.ToLowerInvariant()}.csv");
 
-            var localDate = localTime.Date;
             foreach (var line in DataProvider.ReadLines(shortableSymbolFile))
             {
+                if (string.IsNullOrEmpty(line) || line.StartsWith("#"))
+                {
+                    // ignore empty or comment lines
+                    continue;
+                }
                 var csv = line.Split(',');
                 var date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
-
-                if (localDate == date)
-                {
-                    var quantity = Parse.Long(csv[1]);
-                    return quantity;
-                }
+                var quantity = Parse.Long(csv[1]);
+                result[date] = quantity;
             }
 
-            // Any missing entry will be considered to be unshortable.
-            return 0;
+            return result;
+        }
+
+        /// <summary>
+        /// For live deployments we don't want to have stale short quantity so we refresh them every day
+        /// </summary>
+        private void ClearCache()
+        {
+            var now = DateTime.UtcNow;
+            var tomorrowMidnight = now.Date.AddDays(1);
+            var delayToClean = tomorrowMidnight - now;
+
+            Task.Delay(delayToClean).ContinueWith((_) =>
+            {
+                // create new instances so we don't need to worry about locks
+                _ticker = null;
+                _shortableQuantityPerDate = new();
+
+                ClearCache();
+            });
         }
     }
 }

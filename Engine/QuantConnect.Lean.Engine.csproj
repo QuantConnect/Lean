@@ -42,7 +42,7 @@
     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.24" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.25" />
     <PackageReference Include="fasterflect" Version="3.0.0" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />

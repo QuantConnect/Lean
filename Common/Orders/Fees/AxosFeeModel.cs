@@ -18,9 +18,9 @@ using QuantConnect.Securities;
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Provides an implementation of <see cref="FeeModel"/> that models Atreyu order fees
+    /// Provides an implementation of <see cref="FeeModel"/> that models Axos order fees
     /// </summary>
-    public class AtreyuFeeModel: IFeeModel
+    public class AxosFeeModel: IFeeModel
     {
         private readonly decimal _feesPerShare;
 
@@ -29,7 +29,7 @@ namespace QuantConnect.Orders.Fees
         /// </summary>
         /// <param name="feesPerShare">The fees per share to apply</param>
         /// <remarks>Default value is $0.0015 per share</remarks>
-        public AtreyuFeeModel(decimal? feesPerShare = null)
+        public AxosFeeModel(decimal? feesPerShare = null)
         {
             _feesPerShare = feesPerShare ?? 0.0035m;
         }

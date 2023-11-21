@@ -823,24 +823,11 @@ namespace QuantConnect.Algorithm
             return history;
         }
 
-        private List<HistoryRequest> GetFilterestRequests(IEnumerable<HistoryRequest> requests)
+        private IEnumerable<HistoryRequest> GetFilterestRequests(IEnumerable<HistoryRequest> requests)
         {
-            List<HistoryRequest> result = new();
             var sentMessage = false;
-            // filter out any universe securities that may have made it this far
-            Dictionary<Type, HistoryRequest> baseDataCollectionTypes = null;
             foreach (var request in requests.Where(hr => HistoryRequestValid(hr.Symbol)))
             {
-                if (request.DataType.IsAssignableTo(typeof(BaseDataCollection)))
-                {
-                    baseDataCollectionTypes ??= new();
-                    if (!baseDataCollectionTypes.TryAdd(request.DataType, request))
-                    {
-                        // for base data collection types we allow a single history request at the time, these are universe types which return all available data
-                        continue;
-                    }
-                }
-
                 // prevent future requests
                 if (request.EndTimeUtc > UtcTime)
                 {
@@ -851,11 +838,11 @@ namespace QuantConnect.Algorithm
                         startTimeUtc = request.EndTimeUtc;
                     }
 
-                    result.Add(new HistoryRequest(startTimeUtc, endTimeUtc,
+                    yield return new HistoryRequest(startTimeUtc, endTimeUtc,
                         request.DataType, request.Symbol, request.Resolution, request.ExchangeHours,
                         request.DataTimeZone, request.FillForwardResolution, request.IncludeExtendedMarketHours,
                         request.IsCustomData, request.DataNormalizationMode, request.TickType, request.DataMappingMode,
-                        request.ContractDepthOffset));
+                        request.ContractDepthOffset);
 
                     if (!sentMessage)
                     {
@@ -865,17 +852,15 @@ namespace QuantConnect.Algorithm
                 }
                 else
                 {
-                    result.Add(request);
+                    yield return request;
                 }
             }
-
-            return result;
         }
 
         /// <summary>
         /// Helper method to create history requests from a date range
         /// </summary>
-        private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime startAlgoTz, DateTime endAlgoTz,
+        protected IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime startAlgoTz, DateTime endAlgoTz,
             Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
@@ -886,11 +871,11 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Helper method to create history requests from a date range with custom data type
         /// </summary>
-        private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, Type requestedType, DateTime startAlgoTz, DateTime endAlgoTz,
+        protected IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, Type requestedType, DateTime startAlgoTz, DateTime endAlgoTz,
             Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            return symbols.Where(HistoryRequestValid).SelectMany(x =>
+            return GetSymbolsForType(symbols, requestedType).Where(HistoryRequestValid).SelectMany(x =>
             {
                 var requests = new List<HistoryRequest>();
 
@@ -923,7 +908,7 @@ namespace QuantConnect.Algorithm
             Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
+            return GetSymbolsForType(symbols, requestedType).Where(HistoryRequestValid).SelectMany(symbol =>
             {
                 var res = GetResolution(symbol, resolution, requestedType);
                 var exchange = GetExchangeHours(symbol, requestedType);
@@ -939,6 +924,16 @@ namespace QuantConnect.Algorithm
                 return configs.Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, fillForward,
                     extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset));
             });
+        }
+
+        private IEnumerable<Symbol> GetSymbolsForType(IEnumerable<Symbol> symbols, Type requestedType)
+        {
+            if (requestedType.IsAssignableTo(typeof(BaseDataCollection)))
+            {
+                var instance = requestedType.GetBaseDataInstance();
+                return new [] { ((BaseDataCollection)instance).UniverseSymbol() };
+            }
+            return symbols;
         }
 
         private int GetTickTypeOrder(SecurityType securityType, TickType tickType)

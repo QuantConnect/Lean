@@ -82,16 +82,13 @@ namespace QuantConnect.Data.Fundamental
         }
 
         /// <summary>
-        /// Creates the symbol used for coarse fundamental data
+        /// Gets the default resolution for this data and security type
         /// </summary>
-        /// <param name="market">The market</param>
-        /// <returns>A coarse universe symbol for the specified market</returns>
-        public static Symbol CreateUniverseSymbol(string market)
+        /// <remarks>This is a method and not a property so that python
+        /// custom data types can override it</remarks>
+        public override Resolution DefaultResolution()
         {
-            market = market.ToLowerInvariant();
-            var ticker = $"qc-universe-fundamental-{market}-{Guid.NewGuid()}";
-            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
-            return new Symbol(sid, ticker);
+            return Resolution.Daily;
         }
     }
 }
