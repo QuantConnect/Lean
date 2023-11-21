@@ -212,6 +212,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>pandas DataFrame</returns>
+        [Obsolete("Please use the 'UniverseHistory()' API")]
         public PyObject GetFundamental(PyObject input, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             //Covert to symbols
@@ -244,6 +245,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one dictionary for each day there is data</returns>
+        [Obsolete("Please use the 'UniverseHistory()' API")]
         public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<Symbol> symbols, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             var data = GetAllFundamental(symbols, selector, start, end);
@@ -262,6 +264,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one Dictionary for each day there is data.</returns>
+        [Obsolete("Please use the 'UniverseHistory()' API")]
         public IEnumerable<DataDictionary<dynamic>> GetFundamental(Symbol symbol, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             var list = new List<Symbol>
@@ -280,6 +283,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one dictionary for each day there is data.</returns>
+        [Obsolete("Please use the 'UniverseHistory()' API")]
         public IEnumerable<DataDictionary<dynamic>> GetFundamental(IEnumerable<string> tickers, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             var list = new List<Symbol>();
@@ -299,6 +303,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns>Enumerable collection of DataDictionaries, one Dictionary for each day there is data.</returns>
+        [Obsolete("Please use the 'UniverseHistory()' API")]
         public dynamic GetFundamental(string ticker, string selector = null, DateTime? start = null, DateTime? end = null)
         {
             //Check if its Python; PythonNet likes to convert the strings, but for python we want the DataFrame as the return object
@@ -328,12 +333,30 @@ namespace QuantConnect.Research
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>A <see cref="OptionHistory"/> object that contains historical option data.</returns>
-        public OptionHistory GetOptionHistory(Symbol symbol, string targetOption, DateTime start, DateTime? end = null, Resolution? resolution = null,
+        public OptionHistory OptionHistory(Symbol symbol, string targetOption, DateTime start, DateTime? end = null, Resolution? resolution = null,
             bool fillForward = true, bool extendedMarketHours = false)
         {
             symbol = GetOptionSymbolForHistoryRequest(symbol, targetOption, resolution, fillForward);
 
-            return GetOptionHistory(symbol, start, end, resolution, fillForward, extendedMarketHours);
+            return OptionHistory(symbol, start, end, resolution, fillForward, extendedMarketHours);
+        }
+
+        /// <summary>
+        /// Gets <see cref="OptionHistory"/> object for a given symbol, date and resolution
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical option data for</param>
+        /// <param name="targetOption">The target option ticker. This is useful when the option ticker does not match the underlying, e.g. SPX index and the SPXW weekly option. If null is provided will use underlying</param>
+        /// <param name="start">The history request start time</param>
+        /// <param name="end">The history request end time. Defaults to 1 day if null</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <returns>A <see cref="OptionHistory"/> object that contains historical option data.</returns>
+        [Obsolete("Please use the 'OptionHistory()' API")]
+        public OptionHistory GetOptionHistory(Symbol symbol, string targetOption, DateTime start, DateTime? end = null, Resolution? resolution = null,
+            bool fillForward = true, bool extendedMarketHours = false)
+        {
+            return OptionHistory(symbol, targetOption, start, end, resolution, fillForward, extendedMarketHours);
         }
 
         /// <summary>
@@ -346,7 +369,7 @@ namespace QuantConnect.Research
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>A <see cref="OptionHistory"/> object that contains historical option data.</returns>
-        public OptionHistory GetOptionHistory(Symbol symbol, DateTime start, DateTime? end = null, Resolution? resolution = null,
+        public OptionHistory OptionHistory(Symbol symbol, DateTime start, DateTime? end = null, Resolution? resolution = null,
             bool fillForward = true, bool extendedMarketHours = false)
         {
             if (!end.HasValue || end.Value == start)
@@ -419,6 +442,23 @@ namespace QuantConnect.Research
         }
 
         /// <summary>
+        /// Gets <see cref="OptionHistory"/> object for a given symbol, date and resolution
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical option data for</param>
+        /// <param name="start">The history request start time</param>
+        /// <param name="end">The history request end time. Defaults to 1 day if null</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <returns>A <see cref="OptionHistory"/> object that contains historical option data.</returns>
+        [Obsolete("Please use the 'OptionHistory()' API")]
+        public OptionHistory GetOptionHistory(Symbol symbol, DateTime start, DateTime? end = null, Resolution? resolution = null,
+            bool fillForward = true, bool extendedMarketHours = false)
+        {
+            return OptionHistory(symbol, start, end, resolution, fillForward, extendedMarketHours);
+        }
+
+        /// <summary>
         /// Gets <see cref="FutureHistory"/> object for a given symbol, date and resolution
         /// </summary>
         /// <param name="symbol">The symbol to retrieve historical future data for</param>
@@ -428,7 +468,7 @@ namespace QuantConnect.Research
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>A <see cref="FutureHistory"/> object that contains historical future data.</returns>
-        public FutureHistory GetFutureHistory(Symbol symbol, DateTime start, DateTime? end = null, Resolution? resolution = null,
+        public FutureHistory FutureHistory(Symbol symbol, DateTime start, DateTime? end = null, Resolution? resolution = null,
             bool fillForward = true, bool extendedMarketHours = false)
         {
             if (!end.HasValue || end.Value == start)
@@ -459,6 +499,23 @@ namespace QuantConnect.Research
             }
 
             return new FutureHistory(History(allSymbols, start, end.Value, resolution, fillForward, extendedMarketHours));
+        }
+
+        /// <summary>
+        /// Gets <see cref="FutureHistory"/> object for a given symbol, date and resolution
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical future data for</param>
+        /// <param name="start">The history request start time</param>
+        /// <param name="end">The history request end time. Defaults to 1 day if null</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <returns>A <see cref="FutureHistory"/> object that contains historical future data.</returns>
+        [Obsolete("Please use the 'FutureHistory()' API")]
+        public FutureHistory GetFutureHistory(Symbol symbol, DateTime start, DateTime? end = null, Resolution? resolution = null,
+            bool fillForward = true, bool extendedMarketHours = false)
+        {
+            return FutureHistory(symbol, start, end, resolution, fillForward, extendedMarketHours);
         }
 
         /// <summary>
@@ -614,7 +671,7 @@ namespace QuantConnect.Research
         /// <param name="end">Optionally the end date, will default to today</param>
         /// <param name="func">Optionally the universe selection function</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public IEnumerable<IEnumerable<T2>> Select<T1, T2>(DateTime start, DateTime? end = null, Func<IEnumerable<T2>, IEnumerable<Symbol>> func = null)
+        public IEnumerable<IEnumerable<T2>> UniverseHistory<T1, T2>(DateTime start, DateTime? end = null, Func<IEnumerable<T2>, IEnumerable<Symbol>> func = null)
             where T1 : BaseDataCollection
             where T2 : IBaseData
         {
@@ -651,7 +708,7 @@ namespace QuantConnect.Research
         /// <param name="end">Optionally the end date, will default to today</param>
         /// <param name="func">Optionally the universe selection function</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public PyObject Select(PyObject type, DateTime start, DateTime? end = null, PyObject func = null)
+        public PyObject UniverseHistory(PyObject type, DateTime start, DateTime? end = null, PyObject func = null)
         {
             end ??= DateTime.UtcNow.Date;
             if (func == null)

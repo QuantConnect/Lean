@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Research
         {
             if (language == Language.CSharp)
             {
-                var history = _qb.Select<Fundamentals, Fundamental>(_start, _end).ToList();
+                var history = _qb.UniverseHistory<Fundamentals, Fundamental>(_start, _end).ToList();
 
                 // we asked for 2 weeks, 5 work days for each week expected
                 Assert.AreEqual(10, history.Count);
@@ -60,12 +60,12 @@ namespace QuantConnect.Tests.Research
                     @"
 from AlgorithmImports import *
 
-def getSelect(qb, start, end):
-    return qb.Select(Fundamentals, start, end)
+def getUniverseHistory(qb, start, end):
+    return qb.UniverseHistory(Fundamentals, start, end)
                     ");
 
-                    dynamic getSelect = testModule.GetAttr("getSelect");
-                    var pyHistory = getSelect(_qb, _start, _end);
+                    dynamic getUniverse = testModule.GetAttr("getUniverseHistory");
+                    var pyHistory = getUniverse(_qb, _start, _end);
 
                     Assert.AreEqual(10, pyHistory.__len__().AsManagedObject(typeof(int)));
 
@@ -85,12 +85,12 @@ def getSelect(qb, start, end):
         [TestCase(Language.Python, false)]
         [TestCase(Language.CSharp, true)]
         [TestCase(Language.Python, true)]
-        public void UniverseSelectionSelection(Language language, bool useUniverseUnchanged)
+        public void UniverseSelection(Language language, bool useUniverseUnchanged)
         {
             var selectionState = false;
             if (language == Language.CSharp)
             {
-                var history = _qb.Select<Fundamentals, Fundamental>(_start, _end, (fundamental) =>
+                var history = _qb.UniverseHistory<Fundamentals, Fundamental>(_start, _end, (fundamental) =>
                 {
                     if(!useUniverseUnchanged || !selectionState)
                     {
@@ -126,12 +126,12 @@ class Test():
             return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
         return Universe.Unchanged
 
-    def getSelect(self, qb, start, end):
-        return qb.Select(Fundamentals, start, end, self.selection)
+    def getUniverseHistory(self, qb, start, end):
+        return qb.UniverseHistory(Fundamentals, start, end, self.selection)
 ").GetAttr("Test");
 
                     var instance = testModule(useUniverseUnchanged);
-                    var pyHistory = instance.getSelect(_qb, _start, _end);
+                    var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
 
                     Assert.AreEqual(10, pyHistory.__len__().AsManagedObject(typeof(int)));
 
