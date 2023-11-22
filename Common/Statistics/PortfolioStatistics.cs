@@ -28,8 +28,6 @@ namespace QuantConnect.Statistics
     /// </summary>
     public class PortfolioStatistics
     {
-        private static Lazy<InterestRateProvider> _interestRateProvider = new Lazy<InterestRateProvider>();
-
         /// <summary>
         /// The average rate of return for winning trades
         /// </summary>
@@ -162,6 +160,7 @@ namespace QuantConnect.Statistics
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="listBenchmark">The list of benchmark values</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
+        /// <param name="riskFreeInterestRateModel">The risk free interest rate model to use</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         /// <param name="winCount">
         /// The number of wins, including ITM options with profitLoss less than 0.
@@ -175,6 +174,7 @@ namespace QuantConnect.Statistics
             List<double> listPerformance,
             List<double> listBenchmark,
             decimal startingCapital,
+            IRiskFreeInterestRateModel riskFreeInterestRateModel,
             int tradingDaysPerYear = 252,
             int? winCount = null,
             int? lossCount = null)
@@ -248,7 +248,7 @@ namespace QuantConnect.Statistics
             var benchmarkAnnualPerformance = GetAnnualPerformance(listBenchmark, tradingDaysPerYear);
             var annualPerformance = GetAnnualPerformance(listPerformance, tradingDaysPerYear);
 
-            var riskFreeRate = GetAverageRiskFreeRate(equity.Select(x => x.Key));
+            var riskFreeRate = riskFreeInterestRateModel.GetAverageRiskFreeRate(equity.Select(x => x.Key));
             SharpeRatio = AnnualStandardDeviation == 0 ? 0 : (annualPerformance - riskFreeRate) / AnnualStandardDeviation;
 
             var benchmarkVariance = listBenchmark.Variance();
@@ -272,27 +272,6 @@ namespace QuantConnect.Statistics
         /// </summary>
         public PortfolioStatistics()
         {
-        }
-
-        /// <summary>
-        /// Gets the average risk free annual return rate
-        /// </summary>
-        /// <param name="startDate">Start date to calculate the average</param>
-        /// <param name="endDate">End date to calculate the average</param>
-        public static decimal GetRiskFreeRate(DateTime startDate, DateTime endDate)
-        {
-            return GetAverageRiskFreeRate(Time.EachDay(startDate, endDate));
-        }
-
-        /// <summary>
-        /// Gets the average Risk Free Rate from the interest rate of the given dates
-        /// </summary>
-        /// <param name="dates">Collection of dates from which the interest rates will be computed
-        /// and then the average of them</param>
-        public static decimal GetAverageRiskFreeRate(IEnumerable<DateTime> dates)
-        {
-            var interestRates = dates.Select(x => _interestRateProvider.Value.GetInterestRate(x)).DefaultIfEmpty(0);
-            return interestRates.Average();
         }
 
         /// <summary>

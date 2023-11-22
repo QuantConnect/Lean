@@ -28,38 +28,54 @@ namespace QuantConnect.Data
     /// <summary>
     /// Fed US Primary Credit Rate at given date
     /// </summary>
-    public class InterestRateProvider
+    public class InterestRateProvider : IRiskFreeInterestRateModel
     {
-        private static readonly DateTime FirstInterestRateDate = new DateTime(1998, 1, 1);
+        private static readonly DateTime _firstInterestRateDate = new DateTime(1998, 1, 1);
+        private static DateTime _lastInterestRateDate;
+        private static Dictionary<DateTime, decimal> _riskFreeRateProvider;
+        private static readonly object _lock = new();
 
         /// <summary>
         /// Default Risk Free Rate of 1%
         /// </summary>
-        public static decimal DefaultRiskFreeRate { get; } = 0.01m;
-
-        private DateTime _lastInterestRateDate;
-        private Dictionary<DateTime, decimal> _riskFreeRateProvider;
+        public static readonly decimal DefaultRiskFreeRate = 0.01m;
 
         /// <summary>
-        /// Create class instance of interest rate provider
+        /// Lazily loads the interest rate provider from disk and returns it
         /// </summary>
-        public InterestRateProvider()
+        private IReadOnlyDictionary<DateTime, decimal> RiskFreeRateProvider
         {
-            LoadInterestRateProvider();
+            get
+            {
+                // let's not lock if the provider is already loaded
+                if (_riskFreeRateProvider != null)
+                {
+                    return _riskFreeRateProvider;
+                }
+
+                lock (_lock)
+                {
+                    if (_riskFreeRateProvider == null)
+                    {
+                        LoadInterestRateProvider();
+                    }
+                    return _riskFreeRateProvider;
+                }
+            }
         }
 
         /// <summary>
-        /// Get interest rate by a given datetime
+        /// Get interest rate by a given date
         /// </summary>
-        /// <param name="dateTime"></param>
-        /// <returns>interest rate of the given date</returns>
-        public decimal GetInterestRate(DateTime dateTime)
+        /// <param name="date">The date</param>
+        /// <returns>Interest rate on the given date</returns>
+        public decimal GetInterestRate(DateTime date)
         {
-            if (!_riskFreeRateProvider.TryGetValue(dateTime.Date, out var interestRate))
+            if (!RiskFreeRateProvider.TryGetValue(date.Date, out var interestRate))
             {
-                return dateTime < FirstInterestRateDate
-                    ? _riskFreeRateProvider[FirstInterestRateDate]
-                    : _riskFreeRateProvider[_lastInterestRateDate];
+                return date < _firstInterestRateDate
+                    ? RiskFreeRateProvider[_firstInterestRateDate]
+                    : RiskFreeRateProvider[_lastInterestRateDate];
             }
 
             return interestRate;
@@ -77,7 +93,7 @@ namespace QuantConnect.Data
             _lastInterestRateDate = DateTime.UtcNow.Date;
 
             // Sparse the discrete data points into continuous credit rate data for every day
-            for (var date = FirstInterestRateDate; date <= _lastInterestRateDate; date = date.AddDays(1))
+            for (var date = _firstInterestRateDate; date <= _lastInterestRateDate; date = date.AddDays(1))
             {
                 if (!_riskFreeRateProvider.TryGetValue(date, out var currentRate))
                 {
@@ -151,7 +167,7 @@ namespace QuantConnect.Data
                 return false;
             }
 
-            // Unit conversion from % 
+            // Unit conversion from %
             interestRate /= 100;
             return true;
         }

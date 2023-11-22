@@ -117,6 +117,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             }
         }
 
+        private static readonly IRiskFreeInterestRateModel _interestRateProvider = new InterestRateProvider();
+
         private static SecurityService GetSecurityService(RandomDataGeneratorSettings settings, SecurityManager securityManager)
         {
             var securityService = new SecurityService(
@@ -135,7 +137,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                     // from settings
                     if (security is Option option)
                     {
-                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName, Statistics.PortfolioStatistics.GetRiskFreeRate(settings.Start, settings.End));
+                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName,
+                            _interestRateProvider.GetRiskFreeRate(settings.Start, settings.End));
                     }
                 })),
                 RegisteredSecurityDataTypesProvider.Null,
