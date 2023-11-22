@@ -28,9 +28,6 @@ namespace QuantConnect.Statistics
     /// </summary>
     public class PortfolioStatistics
     {
-        private static readonly Lazy<IRiskFreeInterestRateModel> _defaultRiskFreeInterestRateModel =
-            new Lazy<IRiskFreeInterestRateModel>(() => new InterestRateProvider());
-
         /// <summary>
         /// The average rate of return for winning trades
         /// </summary>
@@ -163,13 +160,13 @@ namespace QuantConnect.Statistics
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="listBenchmark">The list of benchmark values</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
+        /// <param name="riskFreeInterestRateModel">The risk free interest rate model to use</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         /// <param name="winCount">
         /// The number of wins, including ITM options with profitLoss less than 0.
         /// If this and <paramref name="lossCount"/> are null, they will be calculated from <paramref name="profitLoss"/>
         /// </param>
         /// <param name="lossCount">The number of losses</param>
-        /// <param name="riskFreeInterestRateModel">The risk free interest rate model to use</param>
         public PortfolioStatistics(
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
@@ -177,10 +174,10 @@ namespace QuantConnect.Statistics
             List<double> listPerformance,
             List<double> listBenchmark,
             decimal startingCapital,
+            IRiskFreeInterestRateModel riskFreeInterestRateModel,
             int tradingDaysPerYear = 252,
             int? winCount = null,
-            int? lossCount = null,
-            IRiskFreeInterestRateModel riskFreeInterestRateModel = null)
+            int? lossCount = null)
         {
             if (portfolioTurnover.Count > 0)
             {
@@ -251,8 +248,7 @@ namespace QuantConnect.Statistics
             var benchmarkAnnualPerformance = GetAnnualPerformance(listBenchmark, tradingDaysPerYear);
             var annualPerformance = GetAnnualPerformance(listPerformance, tradingDaysPerYear);
 
-            var interestRateModel = riskFreeInterestRateModel ?? _defaultRiskFreeInterestRateModel.Value;
-            var riskFreeRate = interestRateModel.GetAverageRiskFreeRate(equity.Select(x => x.Key));
+            var riskFreeRate = riskFreeInterestRateModel.GetAverageRiskFreeRate(equity.Select(x => x.Key));
             SharpeRatio = AnnualStandardDeviation == 0 ? 0 : (annualPerformance - riskFreeRate) / AnnualStandardDeviation;
 
             var benchmarkVariance = listBenchmark.Variance();

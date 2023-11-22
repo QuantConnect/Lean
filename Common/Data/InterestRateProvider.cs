@@ -47,6 +47,12 @@ namespace QuantConnect.Data
         {
             get
             {
+                // let's not lock if the provider is already loaded
+                if (_riskFreeRateProvider != null)
+                {
+                    return _riskFreeRateProvider;
+                }
+
                 lock (_lock)
                 {
                     if (_riskFreeRateProvider == null)

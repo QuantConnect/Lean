@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Data;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 
@@ -68,7 +67,7 @@ namespace QuantConnect.Statistics
 
             TradeStatistics = new TradeStatistics(trades);
             PortfolioStatistics = new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital,
-                winCount: winningTransactions, lossCount: losingTransactions, riskFreeInterestRateModel: riskFreeInterestRateModel);
+                riskFreeInterestRateModel, winCount: winningTransactions, lossCount: losingTransactions);
             ClosedTrades = trades;
         }
 
