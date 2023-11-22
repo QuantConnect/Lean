@@ -50,9 +50,14 @@ namespace QuantConnect.Securities.Future
         /// <param name="useEquityHolidays">Use US Equity Holidays to exclude</param>
         /// <param name="holidayList">Enumerable of holidays to exclude. These should be sourced from the <see cref="MarketHoursDatabase"/></param>
         /// <returns>The date-time after adding n business days</returns>
-        public static DateTime AddBusinessDays(DateTime time, int n, bool useEquityHolidays = true, IEnumerable<DateTime> holidayList = null)
+        public static DateTime AddBusinessDays(DateTime time, int n, string market = null, string symbol = null, bool useEquityHolidays = true, IEnumerable<DateTime> holidayList = null)
         {
-            var holidays = GetDatesFromDateTimeList(holidayList);
+            var holidays = holidayList?.Select(x => x.Date).ToList() ?? MarketHoursDatabase.FromDataFolder()
+            .GetEntry(Market.SGX, Futures.Indices.MSCITaiwanIndex, SecurityType.Future)
+            .ExchangeHours
+            .Holidays.ToList();
+
+            //var holidays = GetDatesFromDateTimeList(holidayList);
             if (useEquityHolidays)
             {
                 holidays.AddRange(_mhdbUSHolidays.Value);
@@ -91,6 +96,39 @@ namespace QuantConnect.Securities.Future
                 } while (businessDays > 0);
 
                 return time.AddDays(totalDays);
+            }
+        }
+
+        /// <summary>
+        /// Method to retrieve n^th succeeding/preceding business day for a given day if there was a holiday on that day
+        /// </summary>
+        /// <param name="time">The current Time</param>
+        /// <param name="n">Number of business days succeeding current time. Use negative value for preceding business days</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="symbol">The particular symbol being traded</param>
+        /// <param name="useEquityHolidays">Use US Equity Holidays to exclude</param> TODO: Remove this parameter
+        /// <returns>The date-time after adding n business days</returns>
+        public static DateTime AddBusinessDaysIfHoliday(DateTime time, int n, string market, string symbol, bool useEquityHolidays = false, IEnumerable<DateTime> holidayList = null)
+        {
+            var holidays = holidayList?.ToList() ?? MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(market, symbol, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays.ToList();
+
+            //var holidays = GetDatesFromDateTimeList(holidayList);
+
+            if (useEquityHolidays)
+            {
+                holidays.AddRange(_mhdbUSHolidays.Value);
+            }
+
+            if (holidays.Contains(time))
+            {
+                return AddBusinessDays(time, n, holidayList: holidays);
+            }
+            else
+            {
+                return time;
             }
         }
 
