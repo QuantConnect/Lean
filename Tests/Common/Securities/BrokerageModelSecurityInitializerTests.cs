@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Common.Securities
                     null,
                     null,
                     TestGlobals.DataProvider,
-                    new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                    TestGlobals.DataCacheProvider,
                     TestGlobals.MapFileProvider,
                     TestGlobals.FactorFileProvider,
                     null,

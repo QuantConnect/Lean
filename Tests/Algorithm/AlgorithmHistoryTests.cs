@@ -62,14 +62,8 @@ namespace QuantConnect.Tests.Algorithm
             _dataProvider = TestGlobals.DataProvider;
             _mapFileProvider = TestGlobals.MapFileProvider;
             _factorFileProvider = TestGlobals.FactorFileProvider;
-            _cacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
+            _cacheProvider = TestGlobals.DataCacheProvider;
             FundamentalService.Initialize(_dataProvider, new NullFundamentalDataProvider(), false);
-        }
-
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            _cacheProvider.DisposeSafely();
         }
 
         [TestCase(Language.Python)]

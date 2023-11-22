@@ -36,7 +36,6 @@ namespace QuantConnect.Tests.Engine.Setup
 
             // Setup history provider and algorithm
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            var zipCache = new ZipDataCacheProvider(new DefaultDataProvider());
 
             var algorithm = new BrokerageSetupHandlerTests.TestAlgorithm { UniverseSettings = { Resolution = Resolution.Minute } };
 
@@ -44,7 +43,7 @@ namespace QuantConnect.Tests.Engine.Setup
                 null,
                 null,
                 TestGlobals.DataProvider,
-                zipCache,
+                TestGlobals.DataCacheProvider,
                 TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
                 null,
@@ -64,8 +63,6 @@ namespace QuantConnect.Tests.Engine.Setup
             // Assert that our portfolio has some value and that value is bitcoin
             Assert.IsTrue(algorithm.Portfolio.Cash > 0);
             Assert.IsTrue(algorithm.Portfolio.CashBook["BTC"].ValueInAccountCurrency > 0);
-
-            zipCache.DisposeSafely();
         }
     }
 }

@@ -308,7 +308,7 @@ namespace QuantConnect
         IndexOption,
 
         /// <summary>
-        /// Crypto futures
+        /// Crypto Future Type (11)
         /// </summary>
         CryptoFuture,
     }

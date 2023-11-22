@@ -2067,9 +2067,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         {
             _algorithm.SetLiveMode(liveMode);
 
-            //Initializes the transaction handler
+            // The engine might fetch brokerage open orders before even initializing the transaction handler,
+            // so let's not initialize it here to simulate that scenario
             var transactionHandler = new TestBrokerageTransactionHandler();
-            transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
 
             // Add the security
             var security = _algorithm.AddSecurity(SecurityType.Forex, "CADUSD", dataNormalizationMode: dataNormalizationMode);
