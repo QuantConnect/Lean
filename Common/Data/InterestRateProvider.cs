@@ -30,8 +30,8 @@ namespace QuantConnect.Data
     /// </summary>
     public class InterestRateProvider : IRiskFreeInterestRateModel
     {
-        private static readonly DateTime FirstInterestRateDate = new DateTime(1998, 1, 1);
-
+        private static readonly DateTime _firstInterestRateDate = new DateTime(1998, 1, 1);
+        private static DateTime _lastInterestRateDate;
         private static Dictionary<DateTime, decimal> _riskFreeRateProvider;
         private static readonly object _lock = new();
 
@@ -39,8 +39,6 @@ namespace QuantConnect.Data
         /// Default Risk Free Rate of 1%
         /// </summary>
         public static readonly decimal DefaultRiskFreeRate = 0.01m;
-
-        private DateTime _lastInterestRateDate;
 
         /// <summary>
         /// Lazily loads the interest rate provider from disk and returns it
@@ -69,8 +67,8 @@ namespace QuantConnect.Data
         {
             if (!RiskFreeRateProvider.TryGetValue(date.Date, out var interestRate))
             {
-                return date < FirstInterestRateDate
-                    ? RiskFreeRateProvider[FirstInterestRateDate]
+                return date < _firstInterestRateDate
+                    ? RiskFreeRateProvider[_firstInterestRateDate]
                     : RiskFreeRateProvider[_lastInterestRateDate];
             }
 
@@ -89,7 +87,7 @@ namespace QuantConnect.Data
             _lastInterestRateDate = DateTime.UtcNow.Date;
 
             // Sparse the discrete data points into continuous credit rate data for every day
-            for (var date = FirstInterestRateDate; date <= _lastInterestRateDate; date = date.AddDays(1))
+            for (var date = _firstInterestRateDate; date <= _lastInterestRateDate; date = date.AddDays(1))
             {
                 if (!_riskFreeRateProvider.TryGetValue(date, out var currentRate))
                 {

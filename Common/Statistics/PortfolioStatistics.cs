@@ -28,7 +28,8 @@ namespace QuantConnect.Statistics
     /// </summary>
     public class PortfolioStatistics
     {
-        private static readonly Lazy<IRiskFreeInterestRateModel> _defaultRiskFreeInterestRateModel = new Lazy<IRiskFreeInterestRateModel>();
+        private static readonly Lazy<IRiskFreeInterestRateModel> _defaultRiskFreeInterestRateModel =
+            new Lazy<IRiskFreeInterestRateModel>(() => new InterestRateProvider());
 
         /// <summary>
         /// The average rate of return for winning trades
