@@ -33,11 +33,11 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Get interest rate by a given date-time
+        /// Get interest rate by a given date
         /// </summary>
-        /// <param name="dateTime">The date-time</param>
+        /// <param name="date">The date</param>
         /// <returns>Interest rate on the given date</returns>
-        public decimal GetInterestRate(DateTime dateTime)
+        public decimal GetInterestRate(DateTime date)
         {
             return _riskFreeRate;
         }

@@ -14,22 +14,25 @@
 */
 
 using System;
+using Python.Runtime;
+using QuantConnect.Data;
 
-namespace QuantConnect.Data
+namespace QuantConnect.Python
 {
     /// <summary>
-    /// Constant risk free rate interest rate model
+    /// Wraps a <see cref="PyObject"/> object that represents a risk-free interest rate model
     /// </summary>
-    public class FuncRiskFreeRateInterestRateModel : IRiskFreeInterestRateModel
+    public class RiskFreeInterestRateModelPythonWrapper : IRiskFreeInterestRateModel
     {
-        private readonly Func<DateTime, decimal> _getInterestRateFunc;
+        private readonly dynamic _model;
 
         /// <summary>
-        /// Create class instance of interest rate provider
+        /// Constructor for initializing the <see cref="RiskFreeInterestRateModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
-        public FuncRiskFreeRateInterestRateModel(Func<DateTime, decimal> getInterestRateFunc)
+        /// <param name="model">Represents a security's model of buying power</param>
+        public RiskFreeInterestRateModelPythonWrapper(PyObject model)
         {
-            _getInterestRateFunc = getInterestRateFunc;
+            _model = model.ValidateImplementationOf<IRiskFreeInterestRateModel>();
         }
 
         /// <summary>
@@ -39,7 +42,8 @@ namespace QuantConnect.Data
         /// <returns>Interest rate on the given date</returns>
         public decimal GetInterestRate(DateTime date)
         {
-            return _getInterestRateFunc(date);
+            using var _ = Py.GIL();
+            return (_model.GetInterestRate(date) as PyObject).GetAndDispose<decimal>();
         }
     }
 }

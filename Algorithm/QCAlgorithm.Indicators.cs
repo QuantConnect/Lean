@@ -1515,10 +1515,10 @@ namespace QuantConnect.Algorithm
         {
             var baseBame = riskFreeRate.HasValue ? $"SR({sharpePeriod},{riskFreeRate})" : $"SR({sharpePeriod})";
             var name = CreateIndicatorName(symbol, baseBame, resolution);
-            var riskFreeRateModel = (IRiskFreeInterestRateModel)(riskFreeRate.HasValue
+            IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue
                 ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
                 // Make it a function so it's lazily evaluated: SetRiskFreeInterestRateModel can be called after this method
-                : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime)));
+                : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
             var sharpeRatio = new SharpeRatio(name, sharpePeriod, riskFreeRateModel);
             InitializeIndicator(symbol, sharpeRatio, resolution, selector);
 

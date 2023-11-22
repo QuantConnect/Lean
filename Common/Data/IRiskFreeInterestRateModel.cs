@@ -25,11 +25,11 @@ namespace QuantConnect.Data
     public interface IRiskFreeInterestRateModel
     {
         /// <summary>
-        /// Get interest rate by a given date-time
+        /// Get interest rate by a given date
         /// </summary>
-        /// <param name="dateTime">The date-time</param>
+        /// <param name="date">The date</param>
         /// <returns>Interest rate on the given date</returns>
-        decimal GetInterestRate(DateTime dateTime);
+        decimal GetInterestRate(DateTime date);
     }
 
     /// <summary>
@@ -56,16 +56,6 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Gets the average risk free annual return rate
-        /// </summary>
-        /// <param name="startDate">Start date to calculate the average</param>
-        /// <param name="endDate">End date to calculate the average</param>
-        public static decimal GetRiskFreeRate(DateTime startDate, DateTime endDate)
-        {
-            return DefaultInterestRateProvider.GetRiskFreeRate(startDate, endDate);
-        }
-
-        /// <summary>
         /// Gets the average Risk Free Rate from the interest rate of the given dates
         /// </summary>
         /// <param name="model">The interest rate model</param>
@@ -76,17 +66,6 @@ namespace QuantConnect.Data
         {
             var interestRates = dates.Select(x => model.GetInterestRate(x)).DefaultIfEmpty(0);
             return interestRates.Average();
-        }
-
-        /// <summary>
-        /// Gets the average Risk Free Rate from the interest rate of the given dates
-        /// </summary>
-        /// <param name="dates">
-        /// Collection of dates from which the interest rates will be computed and then the average of them
-        /// </param>
-        public static decimal GetAverageRiskFreeRate(IEnumerable<DateTime> dates)
-        {
-            return DefaultInterestRateProvider.GetAverageRiskFreeRate(dates);
         }
     }
 }

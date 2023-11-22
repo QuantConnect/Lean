@@ -28,6 +28,8 @@ namespace QuantConnect.Statistics
     /// </summary>
     public class PortfolioStatistics
     {
+        private static readonly Lazy<IRiskFreeInterestRateModel> _defaultRiskFreeInterestRateModel = new Lazy<IRiskFreeInterestRateModel>();
+
         /// <summary>
         /// The average rate of return for winning trades
         /// </summary>
@@ -248,7 +250,7 @@ namespace QuantConnect.Statistics
             var benchmarkAnnualPerformance = GetAnnualPerformance(listBenchmark, tradingDaysPerYear);
             var annualPerformance = GetAnnualPerformance(listPerformance, tradingDaysPerYear);
 
-            var interestRateModel = riskFreeInterestRateModel ?? RiskFreeInterestRateModelExtensions.DefaultInterestRateProvider;
+            var interestRateModel = riskFreeInterestRateModel ?? _defaultRiskFreeInterestRateModel.Value;
             var riskFreeRate = interestRateModel.GetAverageRiskFreeRate(equity.Select(x => x.Key));
             SharpeRatio = AnnualStandardDeviation == 0 ? 0 : (annualPerformance - riskFreeRate) / AnnualStandardDeviation;
 

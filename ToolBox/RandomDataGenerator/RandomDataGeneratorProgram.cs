@@ -33,6 +33,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// </summary>
     public static class RandomDataGeneratorProgram
     {
+        private static readonly IRiskFreeInterestRateModel _interestRateProvider = new InterestRateProvider();
+
         public static void RandomDataGenerator(
             string startDateString,
             string endDateString,
@@ -101,7 +103,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     if (security is Option option)
                     {
                         option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName,
-                            RiskFreeInterestRateModelExtensions.GetRiskFreeRate(settings.Start, settings.End));
+                            _interestRateProvider.GetRiskFreeRate(settings.Start, settings.End));
                     }
                 })),
                 RegisteredSecurityDataTypesProvider.Null,
