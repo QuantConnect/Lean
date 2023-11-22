@@ -25,10 +25,10 @@ namespace QuantConnect.Data
     public interface IRiskFreeInterestRateModel
     {
         /// <summary>
-        /// Get interest rate for a given datetime
+        /// Get interest rate by a given date-time
         /// </summary>
-        /// <param name="dateTime">The datetime</param>
-        /// <returns>Interest rate of the given date</returns>
+        /// <param name="dateTime">The date-time</param>
+        /// <returns>Interest rate on the given date</returns>
         decimal GetInterestRate(DateTime dateTime);
     }
 
