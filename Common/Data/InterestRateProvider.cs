@@ -28,7 +28,7 @@ namespace QuantConnect.Data
     /// <summary>
     /// Fed US Primary Credit Rate at given date
     /// </summary>
-    public class InterestRateProvider
+    public class InterestRateProvider : IRiskFreeInterestRateModel
     {
         private static readonly DateTime FirstInterestRateDate = new DateTime(1998, 1, 1);
 
@@ -151,7 +151,7 @@ namespace QuantConnect.Data
                 return false;
             }
 
-            // Unit conversion from % 
+            // Unit conversion from %
             interestRate /= 100;
             return true;
         }

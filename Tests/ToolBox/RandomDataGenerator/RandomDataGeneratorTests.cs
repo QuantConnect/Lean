@@ -135,7 +135,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                     // from settings
                     if (security is Option option)
                     {
-                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName, Statistics.PortfolioStatistics.GetRiskFreeRate(settings.Start, settings.End));
+                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName,
+                            RiskFreeInterestRateModelExtensions.GetRiskFreeRate(settings.Start, settings.End));
                     }
                 })),
                 RegisteredSecurityDataTypesProvider.Null,

@@ -19,6 +19,7 @@ using System;
 using QuantConnect.Statistics;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 
 namespace QuantConnect.Report
 {
@@ -76,7 +77,7 @@ namespace QuantConnect.Report
         /// <returns>Rolling sharpe ratio</returns>
         public static Series<DateTime, double> Sharpe(Series<DateTime, double> equityCurve, int months)
         {
-            var riskFreeRate = (double)PortfolioStatistics.GetAverageRiskFreeRate(equityCurve.Keys);
+            var riskFreeRate = (double)RiskFreeInterestRateModelExtensions.GetAverageRiskFreeRate(equityCurve.Keys);
             if (equityCurve.IsEmpty)
             {
                 return equityCurve;

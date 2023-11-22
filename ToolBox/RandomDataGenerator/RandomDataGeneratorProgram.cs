@@ -24,6 +24,7 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using QuantConnect.Logging;
+using QuantConnect.Data;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -81,7 +82,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 Log.Error($"RandomDataGeneratorProgram(): Required parameter --start must be at least 19980101");
                 Environment.Exit(1);
             }
-            
+
             var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
             var securityService = new SecurityService(
                 new CashBook(),
@@ -99,7 +100,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     // from settings
                     if (security is Option option)
                     {
-                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName, Statistics.PortfolioStatistics.GetRiskFreeRate(settings.Start, settings.End));
+                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName,
+                            RiskFreeInterestRateModelExtensions.GetRiskFreeRate(settings.Start, settings.End));
                     }
                 })),
                 RegisteredSecurityDataTypesProvider.Null,
