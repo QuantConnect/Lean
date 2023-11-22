@@ -33,6 +33,7 @@ namespace QuantConnect.Data
         private static readonly DateTime FirstInterestRateDate = new DateTime(1998, 1, 1);
 
         private static Dictionary<DateTime, decimal> _riskFreeRateProvider;
+        private static readonly object _lock = new();
 
         /// <summary>
         /// Default Risk Free Rate of 1%
@@ -48,7 +49,7 @@ namespace QuantConnect.Data
         {
             get
             {
-                lock (_riskFreeRateProvider)
+                lock (_lock)
                 {
                     if (_riskFreeRateProvider == null)
                     {
