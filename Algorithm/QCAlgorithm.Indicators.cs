@@ -315,14 +315,13 @@ namespace QuantConnect.Algorithm
         /// <param name="betaPeriod">The period of the Beta indicator</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="riskFreeRate">The risk free rate</param>
-        /// <param name="useInterestRateProvider">True to use the interest rate provider, false otherwise</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The Alpha indicator for the given parameters</returns>
         [DocumentationAttribute(Indicators)]
-        public Alpha A(Symbol target, Symbol reference, int alphaPeriod = 1, int betaPeriod = 252, Resolution? resolution = null, decimal riskFreeRate = 0.0m, bool useInterestRateProvider = false, Func<IBaseData, IBaseDataBar> selector = null)
+        public Alpha A(Symbol target, Symbol reference, int alphaPeriod = 1, int betaPeriod = 252, Resolution? resolution = null, decimal riskFreeRate = 0.0m, Func<IBaseData, IBaseDataBar> selector = null)
         {
-            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"A({alphaPeriod},{betaPeriod},{riskFreeRate},{useInterestRateProvider})", resolution);
-            var alpha = new Alpha(name, target, reference, alphaPeriod, betaPeriod, riskFreeRate, useInterestRateProvider);
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"A({alphaPeriod},{betaPeriod},{riskFreeRate})", resolution);
+            var alpha = new Alpha(name, target, reference, alphaPeriod, betaPeriod, riskFreeRate);
             InitializeIndicator(target, alpha, resolution, selector);
             InitializeIndicator(reference, alpha, resolution, selector);
 

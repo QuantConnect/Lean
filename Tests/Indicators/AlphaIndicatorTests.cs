@@ -225,11 +225,12 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void UseInterestRateProviderTrue()
+        public void RiskFreeRate252()
         {
             int alphaPeriod = 1;
             int betaPeriod = 252;
-            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, alphaPeriod, betaPeriod, useInterestRateProvider: true);
+            decimal riskFreeRate = 0.0025m;
+            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, alphaPeriod, betaPeriod, riskFreeRate);
 
             for (int i = 0; i <= betaPeriod; i++)
             {
@@ -252,11 +253,11 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void UseInterestRateProviderFalse()
+        public void NoRiskFreeRate252()
         {
             int alphaPeriod = 1;
             int betaPeriod = 252;
-            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, alphaPeriod, betaPeriod, useInterestRateProvider: false);
+            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, alphaPeriod, betaPeriod);
 
             for (int i = 0; i <= betaPeriod; i++)
             {
