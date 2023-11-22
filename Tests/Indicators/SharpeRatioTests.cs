@@ -15,6 +15,7 @@
 
 using Moq;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using System;
@@ -110,6 +111,36 @@ namespace QuantConnect.Tests.Indicators
             for (int i = 0; i < count; i++)
             {
                 interestRateProviderMock.Verify(x => x.GetInterestRate(dates[i]), Times.Once);
+            }
+        }
+
+        [Test]
+        public void UsesPythonDefinedRiskFreeInterestRateModel()
+        {
+            using var _ = Py.GIL();
+
+            var module = PyModule.FromString(Guid.NewGuid().ToString(), @"
+from AlgorithmImports import *
+
+class TestRiskFreeInterestRateModel:
+    CallCount = 0
+
+    def GetInterestRate(self, date: datetime) -> float:
+        TestRiskFreeInterestRateModel.CallCount += 1
+        return 0.5
+
+def getSharpeRatioIndicator() -> SharpeRatio:
+    return SharpeRatio(""SR"", 10, TestRiskFreeInterestRateModel())
+            ");
+
+            var sr = module.GetAttr("getSharpeRatioIndicator").Invoke().GetAndDispose<SharpeRatio>();
+            var modelClass = module.GetAttr("TestRiskFreeInterestRateModel");
+
+            var reference = new DateTime(2023, 11, 21, 10, 0, 0);
+            for (int i = 0; i < 20; i++)
+            {
+                sr.Update(new IndicatorDataPoint(reference + TimeSpan.FromMinutes(i), 100000m + i));
+                Assert.AreEqual(i + 1, modelClass.GetAttr("CallCount").GetAndDispose<int>());
             }
         }
 

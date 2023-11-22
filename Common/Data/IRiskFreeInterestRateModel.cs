@@ -37,13 +37,6 @@ namespace QuantConnect.Data
     /// </summary>
     public static class RiskFreeInterestRateModelExtensions
     {
-        private static Lazy<IRiskFreeInterestRateModel> _defaultInterestRateProvider = new(() => new InterestRateProvider());
-
-        /// <summary>
-        /// Gets a default interest rate provider
-        /// </summary>
-        public static IRiskFreeInterestRateModel DefaultInterestRateProvider => _defaultInterestRateProvider.Value;
-
         /// <summary>
         /// Gets the average risk free annual return rate
         /// </summary>

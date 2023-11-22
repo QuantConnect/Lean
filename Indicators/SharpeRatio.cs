@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Python;
 
 namespace QuantConnect.Indicators
 {
@@ -100,6 +102,26 @@ namespace QuantConnect.Indicators
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         public SharpeRatio(int period, IRiskFreeInterestRateModel riskFreeRateModel)
             : this($"SR({period})", period, riskFreeRateModel)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new Sharpe Ratio indicator using the specified period using a Python risk free rate model
+        /// </summary>
+        /// <param name="period">Period of historical observation for sharpe ratio calculation</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        public SharpeRatio(string name, int period, PyObject riskFreeRateModel)
+            : this(name, period, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel))
+        {
+        }
+
+        /// <summary>
+        /// Creates a new Sharpe Ratio indicator using the specified period using a Python risk free rate model
+        /// </summary>
+        /// <param name="period">Period of historical observation for sharpe ratio calculation</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        public SharpeRatio(int period, PyObject riskFreeRateModel)
+            : this(period, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel))
         {
         }
 

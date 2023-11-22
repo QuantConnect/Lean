@@ -45,5 +45,20 @@ namespace QuantConnect.Python
             using var _ = Py.GIL();
             return (_model.GetInterestRate(date) as PyObject).GetAndDispose<decimal>();
         }
+
+        /// <summary>
+        /// Converts a <see cref="PyObject"/> object into a <see cref="IRiskFreeInterestRateModel"/> object, wrapping it if necessary
+        /// </summary>
+        /// <param name="model">The Python model</param>
+        /// <returns>The converted <see cref="IRiskFreeInterestRateModel"/> instance</returns>
+        public static IRiskFreeInterestRateModel FromPyObject(PyObject model)
+        {
+            if (!model.TryConvert(out IRiskFreeInterestRateModel riskFreeInterestRateModel))
+            {
+                riskFreeInterestRateModel = new RiskFreeInterestRateModelPythonWrapper(model);
+            }
+
+            return riskFreeInterestRateModel;
+        }
     }
 }
