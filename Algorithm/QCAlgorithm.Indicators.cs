@@ -91,6 +91,36 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a Alpha indicator for the given target symbol in relation with the reference used.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="target">The target symbol whose Alpha value we want</param>
+        /// <param name="reference">The reference symbol to compare with the target symbol</param>
+        /// <param name="alphaPeriod">The period of the Alpha indicator</param>
+        /// <param name="betaPeriod">The period of the Beta indicator</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Alpha indicator for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public Alpha A(Symbol target, Symbol reference, int alphaPeriod = 1, int betaPeriod = 252, Resolution? resolution = null, decimal? riskFreeRate = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var baseBame = riskFreeRate.HasValue ? $"A({alphaPeriod},{betaPeriod},{riskFreeRate})" : $"A({alphaPeriod},{betaPeriod})";
+            var name = CreateIndicatorName(target, baseBame, resolution);
+
+            // If risk free rate is not specified, use the default risk free rate model
+            IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue 
+                ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
+                : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
+
+            var alpha = new Alpha(name, target, reference, alphaPeriod, betaPeriod, riskFreeRateModel);
+            InitializeIndicator(target, alpha, resolution, selector);
+            InitializeIndicator(reference, alpha, resolution, selector);
+
+            return alpha;
+        }
+
+        /// <summary>
         /// Creates a new ARIMA indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose ARIMA indicator we want</param>
@@ -303,29 +333,6 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(symbol, bollingerBands, resolution, selector);
 
             return bollingerBands;
-        }
-
-        /// <summary>
-        /// Creates a Alpha indicator for the given target symbol in relation with the reference used.
-        /// The indicator will be automatically updated on the given resolution.
-        /// </summary>
-        /// <param name="target">The target symbol whose Alpha value we want</param>
-        /// <param name="reference">The reference symbol to compare with the target symbol</param>
-        /// <param name="alphaPeriod">The period of the Alpha indicator</param>
-        /// <param name="betaPeriod">The period of the Beta indicator</param>
-        /// <param name="resolution">The resolution</param>
-        /// <param name="riskFreeRate">The risk free rate</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        /// <returns>The Alpha indicator for the given parameters</returns>
-        [DocumentationAttribute(Indicators)]
-        public Alpha A(Symbol target, Symbol reference, int alphaPeriod = 1, int betaPeriod = 252, Resolution? resolution = null, decimal riskFreeRate = 0.0m, Func<IBaseData, IBaseDataBar> selector = null)
-        {
-            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"A({alphaPeriod},{betaPeriod},{riskFreeRate})", resolution);
-            var alpha = new Alpha(name, target, reference, alphaPeriod, betaPeriod, riskFreeRate);
-            InitializeIndicator(target, alpha, resolution, selector);
-            InitializeIndicator(reference, alpha, resolution, selector);
-
-            return alpha;
         }
 
         /// <summary>

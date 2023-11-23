@@ -13,9 +13,11 @@
  * limitations under the License.
 */
 
-using System;
+using Python.Runtime;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using System.Linq;
+using QuantConnect.Python;
+using System;
 
 namespace QuantConnect.Indicators
 {
@@ -48,11 +50,6 @@ namespace QuantConnect.Indicators
         private readonly decimal _alphaPeriod;
 
         /// <summary>
-        /// Period of the indicator - beta
-        /// </summary>
-        private readonly decimal _betaPeriod;
-
-        /// <summary>
         /// Rate of change of the target symbol
         /// </summary>
         private readonly RateOfChange _targetROC;
@@ -73,9 +70,9 @@ namespace QuantConnect.Indicators
         private readonly Beta _beta;
 
         /// <summary>
-        /// Risk free rate of the target used in relation with the reference
+        /// Interest rate model used to compute the risk free rate
         /// </summary>
-        private readonly decimal _riskFreeRate;
+        private readonly IRiskFreeInterestRateModel _riskFreeInterestRateModel;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -95,8 +92,8 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="alphaPeriod">Period of the indicator - alpha</param>
         /// <param name="betaPeriod">Period of the indicator - beta</param>
-        /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
-        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal riskFreeRate = 0.0m)
+        /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
+        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, IRiskFreeInterestRateModel riskFreeRateModel)
             : base(name)
         {
             // Assert that the target and reference symbols are not the same
@@ -120,8 +117,7 @@ namespace QuantConnect.Indicators
             _targetSymbol = targetSymbol;
             _referenceSymbol = referenceSymbol;
             _alphaPeriod = alphaPeriod;
-            _betaPeriod = betaPeriod;
-            _riskFreeRate = riskFreeRate;
+            _riskFreeInterestRateModel = riskFreeRateModel;
 
             _targetROC = new RateOfChange($"{name}_TargetROC", alphaPeriod);
             _referenceROC = new RateOfChange($"{name}_ReferenceROC", alphaPeriod);
@@ -136,41 +132,145 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Creates a new Alpha indicator with the specified name, target, reference, and period values
         /// </summary>
-        /// <param name="targetSymbol"></param>
-        /// <param name="referenceSymbol"></param>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="targetSymbol">The target symbol of this indicator</param>
+        /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="alphaPeriod">Period of the indicator - alpha</param>
         /// <param name="betaPeriod">Period of the indicator - beta</param>
         /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
-        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal riskFreeRate = 0.0m)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod},{riskFreeRate})", targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, riskFreeRate)
+        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal? riskFreeRate = null)
+            : this(name, targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m))
         {
         }
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified target, reference, and period values
         /// </summary>
-        /// <param name="targetSymbol">The target symbol of this indicator</param>
-        /// <param name="referenceSymbol">The reference symbol of this indicator</param>
-        /// <param name="period">Period of the indicator - alpha and beta</param>
+        /// <param name="targetSymbol"></param>
+        /// <param name="referenceSymbol"></param>
+        /// <param name="alphaPeriod">Period of the indicator - alpha</param>
+        /// <param name="betaPeriod">Period of the indicator - beta</param>
         /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
-        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int period, decimal riskFreeRate = 0.0m)
-            : this($"ALPHA({targetSymbol},{referenceSymbol},{period},{riskFreeRate})", targetSymbol, referenceSymbol, period, period, riskFreeRate)
+        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, decimal? riskFreeRate = null)
+            : this($"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod},{riskFreeRate})", targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m))
         {
         }
 
         /// <summary>
-        /// Creates a new Alpha indicator with the specified name, target, reference, and period values
+        /// Creates a new Alpha indicator with the specified target, reference, and period value
+        /// </summary>
+        /// <param name="targetSymbol">The target symbol of this indicator</param>
+        /// <param name="referenceSymbol">The reference symbol of this indicator</param>
+        /// <param name="period">Period of the indicator - alpha and beta</param>
+        /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
+        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int period, decimal? riskFreeRate = null)
+            : this($"ALPHA({targetSymbol},{referenceSymbol},{period},{riskFreeRate})", targetSymbol, referenceSymbol, period, period, new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m))
+        {
+        }
+
+        /// <summary>
+        /// Creates a new Alpha indicator with the specified name, target, reference, and period value
         /// </summary>
         /// <param name="name"></param>
         /// <param name="targetSymbol"></param>
         /// <param name="referenceSymbol"></param>
         /// <param name="period">Period of the indicator - alpha and beta</param>
         /// <param name="riskFreeRate">The risk free rate of this indicator for given period</param>
-        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, decimal riskFreeRate = 0.0m)
-            : this(name, targetSymbol, referenceSymbol, period, period, riskFreeRate)
+        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, decimal? riskFreeRate = null)
+            : this(name, targetSymbol, referenceSymbol, period, period, new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m))
         {
         }
         
+        /// <summary>
+        /// Creates a new Alpha indicator with the specified target, reference, and period values
+        /// </summary>
+        /// <param name="targetSymbol"></param>
+        /// <param name="referenceSymbol"></param>
+        /// <param name="alphaPeriod">Period of the indicator - alpha</param>
+        /// <param name="betaPeriod">Period of the indicator - beta</param>
+        /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
+        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, IRiskFreeInterestRateModel riskFreeRateModel)
+            : this($"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod})", targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, riskFreeRateModel)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new Alpha indicator with the specified target, reference, and period value
+        /// </summary>
+        /// <param name="targetSymbol">The target symbol of this indicator</param>
+        /// <param name="referenceSymbol">The reference symbol of this indicator</param>
+        /// <param name="period">Period of the indicator - alpha and beta</param>
+        /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
+        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int period, IRiskFreeInterestRateModel riskFreeRateModel)
+            : this($"ALPHA({targetSymbol},{referenceSymbol},{period})", targetSymbol, referenceSymbol, period, period, riskFreeRateModel)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new Alpha indicator with the specified name, target, reference, and period value
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="targetSymbol"></param>
+        /// <param name="referenceSymbol"></param>
+        /// <param name="period">Period of the indicator - alpha and beta</param>
+        /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
+        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, IRiskFreeInterestRateModel riskFreeRateModel)
+            : this(name, targetSymbol, referenceSymbol, period, period, riskFreeRateModel)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new Alpha indicator with the specified name, target, reference, and period values
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="targetSymbol">The target symbol of this indicator</param>
+        /// <param name="referenceSymbol">The reference symbol of this indicator</param>
+        /// <param name="alphaPeriod">Period of the indicator - alpha</param>
+        /// <param name="betaPeriod">Period of the indicator - beta</param>
+        /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
+        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, PyObject riskFreeRateModel)
+            : this(name, targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel))
+        {
+        }
+
+        /// <summary>
+        /// Creates a new Alpha indicator with the specified target, reference, and period values
+        /// </summary>
+        /// <param name="targetSymbol"></param>
+        /// <param name="referenceSymbol"></param>
+        /// <param name="alphaPeriod">Period of the indicator - alpha</param>
+        /// <param name="betaPeriod">Period of the indicator - beta</param>
+        /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
+        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int alphaPeriod, int betaPeriod, PyObject riskFreeRateModel)
+            : this($"ALPHA({targetSymbol},{referenceSymbol},{alphaPeriod},{betaPeriod})", targetSymbol, referenceSymbol, alphaPeriod, betaPeriod, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel))
+        {
+        }
+
+        /// <summary>
+        /// Creates a new Alpha indicator with the specified target, reference, and period value
+        /// </summary>
+        /// <param name="targetSymbol">The target symbol of this indicator</param>
+        /// <param name="referenceSymbol">The reference symbol of this indicator</param>
+        /// <param name="period">Period of the indicator - alpha and beta</param>
+        /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
+        public Alpha(Symbol targetSymbol, Symbol referenceSymbol, int period, PyObject riskFreeRateModel)
+            : this($"ALPHA({targetSymbol},{referenceSymbol},{period})", targetSymbol, referenceSymbol, period, period, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel))
+        {
+        }
+
+        /// <summary>
+        /// Creates a new Alpha indicator with the specified name, target, reference, and period value
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="targetSymbol"></param>
+        /// <param name="referenceSymbol"></param>
+        /// <param name="period">Period of the indicator - alpha and beta</param>
+        /// <param name="riskFreeRateModel">The risk free rate model of this indicator</param>
+        public Alpha(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, PyObject riskFreeRateModel)
+            : this(name, targetSymbol, referenceSymbol, period, period, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel))
+        {
+        }
+
         /// <summary>
         /// Computes the next value for this indicator from the given state.
         /// </summary>
@@ -183,7 +283,7 @@ namespace QuantConnect.Indicators
             {
                 throw new ArgumentNullException(nameof(input));
             }
-            Symbol inputSymbol = input.Symbol;
+            var inputSymbol = input.Symbol;
 
             if (inputSymbol == _targetSymbol)
             {
@@ -222,7 +322,9 @@ namespace QuantConnect.Indicators
             var targetMean = _targetROC.Current.Value / _alphaPeriod;
             var referenceMean = _referenceROC.Current.Value / _alphaPeriod;
 
-            _alpha = targetMean - (_riskFreeRate + _beta.Current.Value * (referenceMean - _riskFreeRate));
+            var riskFreeRate = _riskFreeInterestRateModel.GetInterestRate(_targetROC.Current.Time);
+
+            _alpha = targetMean - (riskFreeRate + _beta.Current.Value * (referenceMean - riskFreeRate));
         }
 
         /// <summary>
