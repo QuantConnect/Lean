@@ -174,6 +174,7 @@ namespace QuantConnect.Algorithm
             SignalExport = new SignalExportManager(this);
 
             BrokerageModel = new DefaultBrokerageModel();
+            RiskFreeInterestRateModel = new InterestRateProvider();
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
             //Initialise to unlocked:
@@ -335,6 +336,16 @@ namespace QuantConnect.Algorithm
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Gets the risk free interest rate model used to get the interest rates
+        /// </summary>
+        [DocumentationAttribute(Modeling)]
+        public IRiskFreeInterestRateModel RiskFreeInterestRateModel
+        {
+            get;
+            private set;
         }
 
         /// <summary>
@@ -1276,6 +1287,16 @@ namespace QuantConnect.Algorithm
         public void SetBrokerageMessageHandler(IBrokerageMessageHandler handler)
         {
             BrokerageMessageHandler = handler ?? throw new ArgumentNullException(nameof(handler));
+        }
+
+        /// <summary>
+        /// Sets the risk free interest rate model to be used in the algorithm
+        /// </summary>
+        /// <param name="model">The risk free interest rate model to use</param>
+        [DocumentationAttribute(Modeling)]
+        public void SetRiskFreeInterestRateModel(IRiskFreeInterestRateModel model)
+        {
+            RiskFreeInterestRateModel = model ?? throw new ArgumentNullException(nameof(model));
         }
 
         /// <summary>
