@@ -49,7 +49,7 @@ namespace QuantConnect.Securities.FutureOption
                     .ExchangeHours
                     .Holidays;
 
-                return FuturesExpiryUtilityFunctions.AddBusinessDays(twentySixthDayOfPreviousMonthFromContractMonth, -7, holidayList: holidays);
+                return FuturesExpiryUtilityFunctions.AddBusinessDays(twentySixthDayOfPreviousMonthFromContractMonth, -7, futureHolidays: holidays);
             }},
             // Trading terminates on the 4th last business day of the month prior to the contract month (1 business day prior to the expiration of the underlying futures corresponding contract month).
             // https://www.cmegroup.com/trading/energy/natural-gas/natural-gas_contractSpecs_options.html
@@ -140,11 +140,11 @@ namespace QuantConnect.Securities.FutureOption
             var fridayBeforeSecondLastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(
                 expiryMonthPreceding,
                 2,
-                holidays).AddDays(-1);
+                holidayList: holidays).AddDays(-1);
 
             while (fridayBeforeSecondLastBusinessDay.DayOfWeek != DayOfWeek.Friday)
             {
-                fridayBeforeSecondLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fridayBeforeSecondLastBusinessDay, -1, useEquityHolidays: false, holidayList: holidays);
+                fridayBeforeSecondLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fridayBeforeSecondLastBusinessDay, -1, useEquityHolidays: false, futureHolidays: holidays);
             }
 
             return fridayBeforeSecondLastBusinessDay;
@@ -168,13 +168,13 @@ namespace QuantConnect.Securities.FutureOption
                 .Holidays;
 
             var expiryMonthPreceding = expiryMonth.AddMonths(-1);
-            var fourthLastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(expiryMonthPreceding, 4, holidays);
+            var fourthLastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(expiryMonthPreceding, 4, holidayList: holidays);
 
             if (noFridays)
             {
                 while (fourthLastBusinessDay.DayOfWeek == DayOfWeek.Friday || holidays.Contains(fourthLastBusinessDay.AddDays(1)))
                 {
-                    fourthLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fourthLastBusinessDay, -1, useEquityHolidays: false, holidayList: holidays);
+                    fourthLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fourthLastBusinessDay, -1, useEquityHolidays: false, futureHolidays: holidays);
                 }
             }
 
