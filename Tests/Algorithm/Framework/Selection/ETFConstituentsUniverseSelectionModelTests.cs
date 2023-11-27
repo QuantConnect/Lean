@@ -29,8 +29,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             using (Py.GIL())
             {
                 dynamic module = PyModule.FromString("testModule",
-                    @$"from AlgorithmImports import *
-{importStatement}
+                    @$"{importStatement}
 class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.UniverseSettings.Resolution = Resolution.Daily
@@ -45,6 +44,46 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
                 algorithm.Initialize();
                 string universeTypeStr = algorithm.universe_type.ToString();
                 Assert.IsTrue(universeTypeStr.Contains(expected, StringComparison.InvariantCulture));
+            }
+        }
+
+
+        [TestCase("'SPY'")]
+        [TestCase("'SPY', None")]
+        [TestCase("'SPY', None, None")]
+        [TestCase("'SPY', self.UniverseSettings")]
+        [TestCase("'SPY', self.UniverseSettings, None")]
+        [TestCase("'SPY', None, self.ETFConstituentsFilter")]
+        [TestCase("'SPY', self.UniverseSettings, self.ETFConstituentsFilter")]
+        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA)")]
+        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA), None, None")]
+        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA), self.UniverseSettings")]
+        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA), self.UniverseSettings, None")]
+        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA), None, self.ETFConstituentsFilter")]
+        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA), self.UniverseSettings, self.ETFConstituentsFilter")]
+        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA), universeFilterFunc=self.ETFConstituentsFilter")]
+        public void ETFConstituentsUniverseSelectionModelWithVariousConstructor(string constructorParameters)
+        {
+            using (Py.GIL())
+            {
+                var expectedTicker = "SPY";
+
+                dynamic module = PyModule.FromString("testModule",
+                    @$"from AlgorithmImports import *
+from Selection.ETFConstituentsUniverseSelectionModel import *
+class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
+    selection_model = None
+    def Initialize(self):
+        self.UniverseSettings.Resolution = Resolution.Daily
+        self.selection_model = ETFConstituentsUniverseSelectionModel({constructorParameters})
+
+    def ETFConstituentsFilter(self, constituents):
+        return [c.Symbol for c in constituents]");
+
+                dynamic algorithm = module.GetAttr("ETFConstituentsFrameworkAlgorithm").Invoke();
+                algorithm.Initialize();
+                Assert.IsNotNull(algorithm.selection_model);
+                Assert.IsTrue(algorithm.selection_model.etf_symbol.ToString().Contains(expectedTicker, StringComparison.InvariantCulture));
             }
         }
     }
