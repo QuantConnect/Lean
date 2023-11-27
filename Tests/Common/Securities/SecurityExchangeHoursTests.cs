@@ -652,7 +652,7 @@ namespace QuantConnect.Tests.Common.Securities
                 lateOpens = new Dictionary<DateTime, TimeSpan>();
             }
 
-            var holidays = USHoliday.Dates.Select(x => x.Date).Where(x => !earlyCloses.ContainsKey(x)).ToList();
+            var holidays = _mhdbUSHolidays.Value.Select(x => x.Date).Where(x => !earlyCloses.ContainsKey(x)).ToList();
             var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
