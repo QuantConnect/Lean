@@ -49,7 +49,7 @@ namespace QuantConnect.Securities.FutureOption
                     .ExchangeHours
                     .Holidays;
 
-                return FuturesExpiryUtilityFunctions.AddBusinessDays(twentySixthDayOfPreviousMonthFromContractMonth, -7, futureHolidays: holidays);
+                return FuturesExpiryUtilityFunctions.AddBusinessDays(twentySixthDayOfPreviousMonthFromContractMonth, -7, holidays);
             }},
             // Trading terminates on the 4th last business day of the month prior to the contract month (1 business day prior to the expiration of the underlying futures corresponding contract month).
             // https://www.cmegroup.com/trading/energy/natural-gas/natural-gas_contractSpecs_options.html
@@ -144,7 +144,7 @@ namespace QuantConnect.Securities.FutureOption
 
             while (fridayBeforeSecondLastBusinessDay.DayOfWeek != DayOfWeek.Friday)
             {
-                fridayBeforeSecondLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fridayBeforeSecondLastBusinessDay, -1, useEquityHolidays: false, futureHolidays: holidays);
+                fridayBeforeSecondLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fridayBeforeSecondLastBusinessDay, -1, holidays, useEquityHolidays: false);
             }
 
             return fridayBeforeSecondLastBusinessDay;
@@ -174,7 +174,7 @@ namespace QuantConnect.Securities.FutureOption
             {
                 while (fourthLastBusinessDay.DayOfWeek == DayOfWeek.Friday || holidays.Contains(fourthLastBusinessDay.AddDays(1)))
                 {
-                    fourthLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fourthLastBusinessDay, -1, useEquityHolidays: false, futureHolidays: holidays);
+                    fourthLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fourthLastBusinessDay, -1, holidays, useEquityHolidays: false);
                 }
             }
 

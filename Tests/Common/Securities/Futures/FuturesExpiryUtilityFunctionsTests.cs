@@ -75,8 +75,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(
                 inputTime,
                 n,
-                useEquityHolidays: false,
-                futureHolidays: holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss")));
+                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss")),
+                useEquityHolidays: false);
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
@@ -95,8 +95,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(
                 inputTime,
                 n,
-                useEquityHolidays: false,
-                futureHolidays: holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss")));
+                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss")),
+                useEquityHolidays: false);
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
@@ -273,7 +273,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         {
             var actual = FuturesExpiryUtilityFunctions.DairyLastTradeDate(
                 Parse.DateTimeExact(contractMonth, "MM/dd/yyyy"),
-                holidays: _holidays,
+                _holidays,
                 lastTradeTime: Parse.TimeSpan(lastTradeTime));
 
             var expected = Parse.DateTimeExact(reportDate, "MM/dd/yyyy")

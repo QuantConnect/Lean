@@ -335,7 +335,7 @@ namespace QuantConnect.Securities.Future
                                          where new DateTime(time.Year, time.Month, dateRange).DayOfWeek == DayOfWeek.Wednesday
                                          select new DateTime(time.Year, time.Month, dateRange)).Last();
 
-                    return FuturesExpiryUtilityFunctions.AddBusinessDays(lastWednesday, -1, futureHolidays: holidays);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(lastWednesday, -1, holidays);
                 })
             },
             // Indices
@@ -410,7 +410,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates at 5:00 p.m. Eastern Time (ET) on Business Day prior to 2nd Friday of the contract month.
                     var secondFriday = FuturesExpiryUtilityFunctions.SecondFriday(time);
                     var priorBusinessDay = secondFriday.AddDays(-1);
-                    while (!FuturesExpiryUtilityFunctions.NotHoliday(priorBusinessDay, futureHolidays: holidays))
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(priorBusinessDay, holidays))
                     {
                         priorBusinessDay = priorBusinessDay.AddDays(-1);
                     }
@@ -768,7 +768,7 @@ namespace QuantConnect.Securities.Future
 
                     // The business day prior to the 16th calendar day of the contract month at 12:05pm CT
                     var sixteenth = new DateTime(time.Year,time.Month,16);
-                    return FuturesExpiryUtilityFunctions.AddBusinessDays(sixteenth, -1, futureHolidays: holidays).Add(new TimeSpan(17, 5, 0));
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(sixteenth, -1, holidays).Add(new TimeSpan(17, 5, 0));
                 })
             },
             // Lumber and Softs
@@ -786,7 +786,7 @@ namespace QuantConnect.Securities.Future
 
                     // The business day prior to the 16th calendar day of the contract month at 12:05pm CT
                     var sixteenth = new DateTime(time.Year,time.Month, 16);
-                    return FuturesExpiryUtilityFunctions.AddBusinessDays(sixteenth, -1, futureHolidays: holidays).Add(new TimeSpan(17, 5, 0));
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(sixteenth, -1, holidays).Add(new TimeSpan(17, 5, 0));
                 })
             },
             // Grains And OilSeeds Group
@@ -804,7 +804,7 @@ namespace QuantConnect.Securities.Future
 
                     // The business day prior to the 15th calendar day of the contract month.
                     var fifteenth = new DateTime(time.Year,time.Month,15);
-                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1, futureHolidays: holidays);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1, holidays);
                 })
             },
             // HRW Wheat (KE): https://www.cmegroup.com/trading/agricultural/grain-and-oilseed/kc-wheat_contract_specifications.html
@@ -821,7 +821,7 @@ namespace QuantConnect.Securities.Future
 
                     // The business day prior to the 15th calendar day of the contract month.
                     var fifteenth = new DateTime(time.Year,time.Month,15);
-                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1, futureHolidays: holidays);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1, holidays);
                 })
             },
             // Corn (ZC): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/corn_contract_specifications.html
@@ -838,7 +838,7 @@ namespace QuantConnect.Securities.Future
 
                     // The business day prior to the 15th calendar day of the contract month.
                     var fifteenth = new DateTime(time.Year,time.Month,15);
-                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1, futureHolidays: holidays);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1, holidays);
                 })
             },
             // Soybeans (ZS): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/soybean_contract_specifications.html
@@ -855,7 +855,7 @@ namespace QuantConnect.Securities.Future
 
                     // The business day prior to the 15th calendar day of the contract month.
                     var fifteenth = new DateTime(time.Year,time.Month,15);
-                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1, futureHolidays: holidays);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1, holidays);
                 })
             },
             // SoybeanMeal (ZM): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/soybean-meal_contract_specifications.html
@@ -872,7 +872,7 @@ namespace QuantConnect.Securities.Future
 
                     // The business day prior to the 15th calendar day of the contract month.
                     var fifteenth = new DateTime(time.Year,time.Month,15);
-                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1, futureHolidays: holidays);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1, holidays);
                 })
             },
             // SoybeanOil (ZL): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/soybean-oil_contract_specifications.html
@@ -889,7 +889,7 @@ namespace QuantConnect.Securities.Future
 
                     // The business day prior to the 15th calendar day of the contract month.
                     var fifteenth = new DateTime(time.Year,time.Month,15);
-                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1, futureHolidays: holidays);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1, holidays);
                 })
             },
             // Oats (ZO): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/oats_contract_specifications.html
@@ -972,7 +972,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(
                         thirdWednesday,
-                        -2, futureHolidays: holidays);
+                        -2, holidays);
                     return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
@@ -986,7 +986,7 @@ namespace QuantConnect.Securities.Future
 
                     // 9:16 a.m. Central Time (CT) on the business day immediately preceding the third Wednesday of the contract month (usually Tuesday).
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
-                    var businessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -1, futureHolidays: holidays);
+                    var businessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -1, holidays);
                     return businessDayPrecedingThridWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
@@ -1002,7 +1002,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(
                         thirdWednesday,
-                        -2, futureHolidays: holidays);
+                        -2, holidays);
                     return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
@@ -1022,7 +1022,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(
                         thirdWednesday,
-                        -2, futureHolidays: holidays);
+                        -2, holidays);
                     return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
@@ -1054,7 +1054,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(
                         thirdWednesday,
-                        -2, futureHolidays: holidays);
+                        -2, holidays);
                     return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
@@ -1074,7 +1074,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(
                         thirdWednesday,
-                        -2, futureHolidays: holidays);
+                        -2, holidays);
                     return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
@@ -1103,7 +1103,7 @@ namespace QuantConnect.Securities.Future
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for 60 consecutive months
                     // On the last business day of the month, at 9:15 a.m. CT, immediately preceding the contract month, on which the Central Bank of Brazil is scheduled to publish its final end-of-month (EOM), "Commercial exchange rate for Brazilian reais per U.S. dollar for cash delivery" (PTAX rate).
-                    var lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(time, -1, futureHolidays: holidays);
+                    var lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(time, -1, holidays);
                     lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastPrecedingBusinessDay, -1, holidayList: holidays);
 
                     return lastPrecedingBusinessDay.Add(new TimeSpan(14,15,0));
