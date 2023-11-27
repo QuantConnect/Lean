@@ -183,9 +183,7 @@ RUN pip install --no-cache-dir      \
     jupyter-bokeh==3.0.7            \
     imbalanced-learn==0.11.0        \
     scikeras==0.12.0                \
-    openai==0.28.1                  \
-    openai[embeddings]==0.28.1      \
-    openai[wandb]==0.28.1           \
+    openai==1.3.5                   \
     lazypredict==0.2.12             \
     fracdiff==0.9.0                 \
     darts==0.24.0                   \
@@ -204,18 +202,20 @@ RUN pip install --no-cache-dir      \
     Shimmy==1.3.0                   \
     FixedEffectModel==0.0.5         \
     transformers==4.34.0            \
-    langchain==0.0.316              \
+    langchain==0.0.341              \
     tensorflow-ranking==0.5.3       \
     pomegranate==1.0.3              \
     tigramite==5.2.3.1              \
     MAPIE==0.7.0                    \
-    mlforecast==0.9.3
+    mlforecast==0.9.3               \
+    x-transformers==1.26.0          \
+    Werkzeug==2.3.8
 
 # Install dwave tool
 RUN dwave install --all -y
 
 # Install 'ipopt' solver for 'Pyomo'
-RUN conda install -c conda-forge ipopt==3.14.12 \
+RUN conda install -c conda-forge ipopt==3.14.13 \
     && conda clean -y --all
 
 # We install need to install separately else fails to find numpy
