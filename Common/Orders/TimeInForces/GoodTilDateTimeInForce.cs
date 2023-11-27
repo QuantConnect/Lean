@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -69,6 +69,7 @@ namespace QuantConnect.Orders.TimeInForces
                     break;
 
                 case SecurityType.Crypto:
+                case SecurityType.CryptoFuture:
                     // expires at midnight after expiry date
                     expired = time.Date > Expiry.Date;
                     break;

@@ -22,6 +22,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
+using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Tests.Common.Securities;
@@ -217,12 +218,9 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
         }
 
-        [Test]
-        public void DayTimeInForceCryptoOrderExpiresAtMidnightUtc()
+        private static Security[] CryptoSecurities => new Security[]
         {
-            var utcTime = new DateTime(2018, 4, 27, 10, 0, 0);
-
-            var security = new Crypto(
+            new Crypto(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 1m),
                 new Cash("BTC", 0, 0),
@@ -239,13 +237,30 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
-            );
+            ),
+            new CryptoFuture(
+                Symbol.Create("BTCUSDT", SecurityType.CryptoFuture, Market.Binance),
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                new Cash("USDT", 0, 1m),
+                new Cash("BTC", 0, 0),
+                SymbolProperties.GetDefault("USDT"),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            )
+        };
+
+        [TestCaseSource(nameof(CryptoSecurities))]
+        public void DayTimeInForceCryptoOrderExpiresAtMidnightUtc(Security security)
+        {
+            var utcTime = new DateTime(2018, 4, 27, 10, 0, 0);
+
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.Utc);
             security.SetLocalTimeKeeper(localTimeKeeper);
 
             var timeInForce = TimeInForce.Day;
             var orderProperties = new OrderProperties { TimeInForce = timeInForce };
-            var order = new LimitOrder(Symbols.BTCUSD, 10, 100, utcTime, "", orderProperties);
+            var order = new LimitOrder(security.Symbol, 10, 100, utcTime, "", orderProperties);
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
@@ -389,35 +404,17 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
         }
 
-        [Test]
-        public void GtdTimeInForceCryptoOrderExpiresAtMidnightUtcAfterExpiryDate()
+        [TestCaseSource(nameof(CryptoSecurities))]
+        public void GtdTimeInForceCryptoOrderExpiresAtMidnightUtcAfterExpiryDate(Security security)
         {
             var utcTime = new DateTime(2018, 4, 27, 10, 0, 0);
 
-            var security = new Crypto(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new Cash(Currencies.USD, 0, 1m),
-                new Cash("BTC", 0, 0),
-                new SubscriptionDataConfig(
-                    typeof(QuoteBar),
-                    Symbols.BTCUSD,
-                    Resolution.Minute,
-                    TimeZones.Utc,
-                    TimeZones.Utc,
-                    true,
-                    true,
-                    true
-                ),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.Utc);
             security.SetLocalTimeKeeper(localTimeKeeper);
 
             var timeInForce = TimeInForce.GoodTilDate(new DateTime(2018, 5, 1));
             var orderProperties = new OrderProperties { TimeInForce = timeInForce };
-            var order = new LimitOrder(Symbols.BTCUSD, 10, 100, utcTime, "", orderProperties);
+            var order = new LimitOrder(security.Symbol, 10, 100, utcTime, "", orderProperties);
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
@@ -604,35 +601,17 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
         }
 
-        [Test]
-        public void GtdSameDayTimeInForceCryptoOrderExpiresAtMidnightUtc()
+        [TestCaseSource(nameof(CryptoSecurities))]
+        public void GtdSameDayTimeInForceCryptoOrderExpiresAtMidnightUtc(Security security)
         {
             var utcTime = new DateTime(2018, 4, 27, 10, 0, 0);
 
-            var security = new Crypto(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new Cash(Currencies.USD, 0, 1m),
-                new Cash("BTC", 0, 0),
-                new SubscriptionDataConfig(
-                    typeof(QuoteBar),
-                    Symbols.BTCUSD,
-                    Resolution.Minute,
-                    TimeZones.Utc,
-                    TimeZones.Utc,
-                    true,
-                    true,
-                    true
-                ),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.Utc);
             security.SetLocalTimeKeeper(localTimeKeeper);
 
             var timeInForce = TimeInForce.GoodTilDate(new DateTime(2018, 4, 27));
             var orderProperties = new OrderProperties { TimeInForce = timeInForce };
-            var order = new LimitOrder(Symbols.BTCUSD, 10, 100, utcTime, "", orderProperties);
+            var order = new LimitOrder(security.Symbol, 10, 100, utcTime, "", orderProperties);
 
             Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
 
