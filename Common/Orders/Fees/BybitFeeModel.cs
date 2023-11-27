@@ -48,7 +48,7 @@ public class BybitFeeModel : FeeModel
         _makerFee = mFee;
         _takerFee = tFee;
     }
-        
+
     /// <summary>
     /// Gets the order fee associated with the specified order.
     /// </summary>
@@ -76,7 +76,7 @@ public class BybitFeeModel : FeeModel
         }
 
         // get order value in quote currency
-        var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+        var unitPrice = security.BidPrice;
         if (order.Type == OrderType.Limit)
         {
             // limit order posted to the order book
@@ -89,7 +89,7 @@ public class BybitFeeModel : FeeModel
             unitPrice * order.AbsoluteQuantity * fee,
             security.QuoteCurrency.Symbol));
     }
-    
+
     /// <summary>
     /// Gets the fee factor for the given order
     /// </summary>

@@ -579,6 +579,7 @@ namespace QuantConnect.Data.Market
                     }
 
                     case SecurityType.Crypto:
+                    case SecurityType.CryptoFuture:
                     {
                         TickType = config.TickType;
                         Exchange = config.Market;

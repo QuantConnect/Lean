@@ -85,6 +85,42 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(false, tick.Suspicious);
         }
 
+        [TestCase(SecurityType.Crypto, TickType.Trade, "1234567,18000,0.0001,0")]
+        [TestCase(SecurityType.Crypto, TickType.Quote, "1234567,18000,10,18100,15,0")]
+        [TestCase(SecurityType.CryptoFuture, TickType.Trade, "1234567,18000,0.0001,0")]
+        [TestCase(SecurityType.CryptoFuture, TickType.Quote, "1234567,18000,10,18100,15,0")]
+        public void ReadsCryptoAndCryptoFuturesTickFromLine(SecurityType securityType, TickType tickType, string line)
+        {
+            var baseDate = new DateTime(2013, 10, 08);
+            var symbol = Symbol.Create("BTCUSDT", securityType, QuantConnect.Market.Binance);
+            var config = new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, false, false, false,
+                tickType: tickType);
+            var tick = new Tick(config, line, baseDate);
+
+            var ms = (tick.Time - baseDate).TotalMilliseconds;
+            Assert.AreEqual(1234567d, ms);
+            Assert.AreEqual("", tick.Exchange);
+            Assert.AreEqual("", tick.SaleCondition);
+            Assert.AreEqual(false, tick.Suspicious);
+
+            if (tickType == TickType.Trade)
+            {
+                Assert.AreEqual(18000m, tick.Value);
+                Assert.AreEqual(0.0001m, tick.Quantity);
+                Assert.AreEqual("", tick.Exchange);
+                Assert.AreEqual("", tick.SaleCondition);
+                Assert.AreEqual(false, tick.Suspicious);
+            }
+            else
+            {
+                Assert.AreEqual((18000m + 18100m) / 2m, tick.Value);
+                Assert.AreEqual(18000m, tick.BidPrice);
+                Assert.AreEqual(10m, tick.BidSize);
+                Assert.AreEqual(18100m, tick.AskPrice);
+                Assert.AreEqual(15m, tick.AskSize);
+            }
+        }
+
         [TestCase("14400135,0,0,1680000,400,NASDAQ,00000001,0", 0, 0, 168, 400)]
         [TestCase("14400135,10000,10,0,0,NASDAQ,00000001,0", 1, 10, 0, 0)]
         [TestCase("14400135,10000,10,20000,20,NASDAQ,00000001,0", 1, 10, 2, 20)]
