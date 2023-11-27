@@ -1149,6 +1149,16 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets the risk free interest rate model to be used in the algorithm
+        /// </summary>
+        /// <param name="model">The risk free interest rate model to use</param>
+        [DocumentationAttribute(Modeling)]
+        public void SetRiskFreeInterestRateModel(PyObject model)
+        {
+            SetRiskFreeInterestRateModel(RiskFreeInterestRateModelPythonWrapper.FromPyObject(model));
+        }
+
+        /// <summary>
         /// Sets the security initializer function, used to initialize/configure securities after creation
         /// </summary>
         /// <param name="securityInitializer">The security initializer function or class</param>
@@ -1466,7 +1476,7 @@ namespace QuantConnect.Algorithm
             return pythonIndicator;
         }
 
-        private PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
+        protected PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
         {
             var memoizingEnumerable = data as MemoizingEnumerable<Slice>;
             if (memoizingEnumerable != null)
@@ -1475,7 +1485,20 @@ namespace QuantConnect.Algorithm
                 // the user will only have access to the final pandas data frame object
                 memoizingEnumerable.Enabled = false;
             }
-            return PandasConverter.GetDataFrame(data, dataType);
+            var history = PandasConverter.GetDataFrame(data, dataType);
+            if(dataType != null && dataType.IsAssignableTo(typeof(BaseDataCollection)))
+            {
+                // clear out the first symbol level since it doesn't make sense, it's the universe generic symbol
+                dynamic dynamic = history;
+                using (Py.GIL())
+                {
+                    if (!dynamic.empty)
+                    {
+                        dynamic.index = dynamic.index.droplevel("symbol");
+                    }
+                }
+            }
+            return history;
         }
     }
 }

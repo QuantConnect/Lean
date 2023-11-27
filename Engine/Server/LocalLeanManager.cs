@@ -34,8 +34,16 @@ namespace QuantConnect.Lean.Engine.Server
 
         private AlgorithmNodePacket _job;
         private ICommandHandler _commandHandler;
-        private LeanEngineSystemHandlers _systemHandlers;
-        private LeanEngineAlgorithmHandlers _algorithmHandlers;
+
+        /// <summary>
+        /// The system handlers
+        /// </summary>
+        protected LeanEngineSystemHandlers SystemHandlers { get; set; }
+
+        /// <summary>
+        /// The algorithm handlers
+        /// </summary>
+        protected LeanEngineAlgorithmHandlers AlgorithmHandlers { get; set; }
 
         /// <summary>
         /// Empty implementation of the ILeanManager interface
@@ -46,8 +54,8 @@ namespace QuantConnect.Lean.Engine.Server
         /// <param name="algorithmManager">The Algorithm manager</param>
         public virtual void Initialize(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, AlgorithmNodePacket job, AlgorithmManager algorithmManager)
         {
-            _algorithmHandlers = algorithmHandlers;
-            _systemHandlers = systemHandlers;
+            AlgorithmHandlers = algorithmHandlers;
+            SystemHandlers = systemHandlers;
             _job = job;
         }
 
@@ -58,8 +66,8 @@ namespace QuantConnect.Lean.Engine.Server
         public virtual void SetAlgorithm(IAlgorithm algorithm)
         {
             Algorithm = algorithm;
-            algorithm.SetApi(_systemHandlers.Api);
-            RemoteFileSubscriptionStreamReader.SetDownloadProvider((Api.Api)_systemHandlers.Api);
+            algorithm.SetApi(SystemHandlers.Api);
+            RemoteFileSubscriptionStreamReader.SetDownloadProvider((Api.Api)SystemHandlers.Api);
         }
 
         /// <summary>
@@ -71,7 +79,7 @@ namespace QuantConnect.Lean.Engine.Server
             {
                 foreach (var commandResultPacket in _commandHandler.ProcessCommands())
                 {
-                    _algorithmHandlers.Results.Messages.Enqueue(commandResultPacket);
+                    AlgorithmHandlers.Results.Messages.Enqueue(commandResultPacket);
                 }
             }
         }

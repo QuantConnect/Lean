@@ -91,6 +91,36 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a Alpha indicator for the given target symbol in relation with the reference used.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="target">The target symbol whose Alpha value we want</param>
+        /// <param name="reference">The reference symbol to compare with the target symbol</param>
+        /// <param name="alphaPeriod">The period of the Alpha indicator</param>
+        /// <param name="betaPeriod">The period of the Beta indicator</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Alpha indicator for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public Alpha A(Symbol target, Symbol reference, int alphaPeriod = 1, int betaPeriod = 252, Resolution? resolution = null, decimal? riskFreeRate = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var baseBame = riskFreeRate.HasValue ? $"A({alphaPeriod},{betaPeriod},{riskFreeRate})" : $"A({alphaPeriod},{betaPeriod})";
+            var name = CreateIndicatorName(target, baseBame, resolution);
+
+            // If risk free rate is not specified, use the default risk free rate model
+            IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue 
+                ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
+                : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
+
+            var alpha = new Alpha(name, target, reference, alphaPeriod, betaPeriod, riskFreeRateModel);
+            InitializeIndicator(target, alpha, resolution, selector);
+            InitializeIndicator(reference, alpha, resolution, selector);
+
+            return alpha;
+        }
+
+        /// <summary>
         /// Creates a new ARIMA indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose ARIMA indicator we want</param>
@@ -1500,19 +1530,26 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new RollingSharpeRatio indicator.
+        /// Creates a new SharpeRatio indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose RSR we want</param>
         /// <param name="sharpePeriod">Period of historical observation for sharpe ratio calculation</param>
-        /// <param name="riskFreeRate">Risk-free rate for sharpe ratio calculation</param>
+        /// <param name="riskFreeRate">
+        /// Risk-free rate for sharpe ratio calculation. If not specified, it will use the algorithms' <see cref="RiskFreeInterestRateModel"/>
+        /// </param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The RollingSharpeRatio indicator for the requested symbol over the specified period</returns>
+        /// <returns>The SharpeRatio indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
-        public SharpeRatio SR(Symbol symbol, int sharpePeriod, decimal riskFreeRate = 0.0m, Resolution ? resolution = null, Func<IBaseData, decimal> selector = null)
+        public SharpeRatio SR(Symbol symbol, int sharpePeriod, decimal? riskFreeRate = null, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"SR({sharpePeriod},{riskFreeRate})", resolution);
-            var sharpeRatio = new SharpeRatio(name, sharpePeriod, riskFreeRate);
+            var baseBame = riskFreeRate.HasValue ? $"SR({sharpePeriod},{riskFreeRate})" : $"SR({sharpePeriod})";
+            var name = CreateIndicatorName(symbol, baseBame, resolution);
+            IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue
+                ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
+                // Make it a function so it's lazily evaluated: SetRiskFreeInterestRateModel can be called after this method
+                : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
+            var sharpeRatio = new SharpeRatio(name, sharpePeriod, riskFreeRateModel);
             InitializeIndicator(symbol, sharpeRatio, resolution, selector);
 
             return sharpeRatio;

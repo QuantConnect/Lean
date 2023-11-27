@@ -204,7 +204,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The adjustment mode used on the order fill price
         /// </summary>
-        public DataNormalizationMode PriceAdjustmentMode { get; internal set; }
+        public DataNormalizationMode PriceAdjustmentMode { get; set; }
 
         /// <summary>
         /// Added a default constructor for JSON Deserialization:

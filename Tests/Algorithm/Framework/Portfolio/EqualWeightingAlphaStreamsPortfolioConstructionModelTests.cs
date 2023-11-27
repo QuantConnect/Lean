@@ -34,7 +34,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     [TestFixture]
     public class EqualWeightingAlphaStreamsPortfolioConstructionModelTests
     {
-        private ZipDataCacheProvider _cacheProvider;
         private QCAlgorithm _algorithm;
 
         [SetUp]
@@ -42,20 +41,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             _algorithm = new QCAlgorithm();
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            _cacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null,
-                TestGlobals.DataProvider, _cacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
+                TestGlobals.DataProvider, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
                 null, true, new DataPermissionManager(), _algorithm.ObjectStore));
             _algorithm.SetHistoryProvider(historyProvider);
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _algorithm.Settings.FreePortfolioValue = 0;
             _algorithm.SetFinishedWarmingUp();
-        }
-
-        [TearDown]
-        public virtual void TearDown()
-        {
-            _cacheProvider.DisposeSafely();
         }
 
         [TestCase(Language.CSharp)]

@@ -133,6 +133,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the risk free interest rate model used to get the interest rates
+        /// </summary>
+        IRiskFreeInterestRateModel RiskFreeInterestRateModel
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the brokerage message handler used to decide what to do
         /// with each message sent from the brokerage
         /// </summary>

@@ -188,6 +188,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public BrokerageName BrokerageName => _baseAlgorithm.BrokerageName;
 
         /// <summary>
+        /// Gets the risk free interest rate model used to get the interest rates
+        /// </summary>
+        public IRiskFreeInterestRateModel RiskFreeInterestRateModel => _baseAlgorithm.RiskFreeInterestRateModel;
+
+        /// <summary>
         /// Debug messages from the strategy:
         /// </summary>
         public ConcurrentQueue<string> DebugMessages => _baseAlgorithm.DebugMessages;

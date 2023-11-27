@@ -28,6 +28,9 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
 
         self.UniverseSettings.Resolution = Resolution.Daily
 
+        # before we add any symbol
+        self.AssertFundamentalUniverseData();
+
         self.AddEquity("SPY")
         self.AddEquity("AAPL")
 
@@ -53,6 +56,14 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
             if data["value"][0] == 0:
                 raise ValueError(f"Unexpected {data} fundamental data")
 
+        self.AssertFundamentalUniverseData();
+
+        self.AddUniverse(self.SelectionFunction)
+
+        self.changes = None
+        self.numberOfSymbolsFundamental = 2
+
+    def AssertFundamentalUniverseData(self):
         # Request historical fundamental data for all symbols
         history2 = self.History(Fundamentals, TimeSpan(1, 0, 0, 0))
         if len(history2) != 1:
@@ -63,11 +74,6 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
         for fundamental in data:
             if type(fundamental) is not Fundamental:
                 raise ValueError(f"Unexpected Fundamentals data type! {fundamental}")
-
-        self.AddUniverse(self.SelectionFunction)
-
-        self.changes = None
-        self.numberOfSymbolsFundamental = 2
 
     # return a list of three fixed symbol objects
     def SelectionFunction(self, fundamental):
