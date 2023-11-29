@@ -26,7 +26,14 @@ class ETFConstituentsUniverseSelectionModel(UniverseSelectionModel):
             etfSymbol: Symbol of the ETF to get constituents for
             universeSettings: Universe settings
             universeFilterFunc: Function to filter universe results'''
-        self.etf_symbol = etfSymbol
+        if type(etfSymbol) is str:
+            symbol = SymbolCache.TryGetSymbol(etfSymbol, None)
+            if symbol[0]:
+                self.etf_symbol = symbol[1]
+            else:
+                self.etf_symbol = Symbol.Create(etfSymbol, SecurityType.Equity, Market.USA)
+        else:
+            self.etf_symbol = etfSymbol
         self.universe_settings = universeSettings
         self.universe_filter_function = universeFilterFunc
 
