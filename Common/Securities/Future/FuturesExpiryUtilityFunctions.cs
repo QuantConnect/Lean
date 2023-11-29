@@ -27,10 +27,6 @@ namespace QuantConnect.Securities.Future
     {
         private static readonly Dictionary<DateTime, DateTime> _reverseDairyReportDates = FuturesExpiryFunctions.DairyReportDates
             .ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
-        private static readonly Lazy<HashSet<DateTime>> _mhdbUSHolidays = new(() => MarketHoursDatabase.FromDataFolder().
-            GetEntry(Market.CME, (string)null, SecurityType.Future)
-            .ExchangeHours.
-            Holidays);
 
         private static readonly HashSet<string> _dairyUnderlying = new HashSet<string>
         {
@@ -47,12 +43,12 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
         /// <param name="symbol">The particular symbol being traded</param>s
-        public static List<DateTime> GetHolidays(string market, string symbol)
+        public static HashSet<DateTime> GetHolidays(string market, string symbol)
         {
             return MarketHoursDatabase.FromDataFolder()
                         .GetEntry(market, symbol, SecurityType.Future)
                         .ExchangeHours
-                        .Holidays.ToList();
+                        .Holidays;
         }
 
         /// <summary>
@@ -60,18 +56,11 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         /// <param name="time">The current Time</param>
         /// <param name="n">Number of business days succeeding current time. Use negative value for preceding business days</param>
-        /// <param name="useEquityHolidays">Use CME Future Holidays to exclude</param>
         /// <param name="holidayList">Enumerable of holidays to exclude. These should be sourced from the <see cref="MarketHoursDatabase"/></param>
         /// <returns>The date-time after adding n business days</returns>
-
-        public static DateTime AddBusinessDays(DateTime time, int n, IEnumerable<DateTime> holidayList, bool useEquityHolidays = true)
+        public static DateTime AddBusinessDays(DateTime time, int n, IEnumerable<DateTime> holidayList)
         {
-            var holidays = holidayList.Select(x => x.Date).ToList();
-
-            if (useEquityHolidays)
-            {
-                holidays.AddRange(_mhdbUSHolidays.Value);
-            }
+            var holidays = holidayList.Select(x => x.Date);
 
             if (n < 0)
             {
@@ -115,9 +104,8 @@ namespace QuantConnect.Securities.Future
         /// <param name="time">The current Time</param>
         /// <param name="n">Number of business days succeeding current time. Use negative value for preceding business days</param>
         /// <param name="holidayList">Enumerable of holidays to exclude. These should be sourced from the <see cref="MarketHoursDatabase"/></param>
-        /// <param name="useEquityHolidays">Use CME Future Holidays to exclude</param> TODO: Remove this parameter
         /// <returns>The date-time after adding n business days</returns>
-        public static DateTime AddBusinessDaysIfHoliday(DateTime time, int n, List<DateTime> holidayList, bool useEquityHolidays = false)
+        public static DateTime AddBusinessDaysIfHoliday(DateTime time, int n, HashSet<DateTime> holidayList)
         {
             if (holidayList.Contains(time))
             {
@@ -140,7 +128,7 @@ namespace QuantConnect.Securities.Future
         {
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
             var lastDayOfMonth = new DateTime(time.Year, time.Month, daysInMonth);
-            var holidays = holidayList.Select(x => x.Date).ToList();
+            var holidays = holidayList.Select(x => x.Date);
 
             if(n > daysInMonth)
             {
@@ -174,7 +162,7 @@ namespace QuantConnect.Securities.Future
         public static DateTime NthBusinessDay(DateTime time, int nthBusinessDay, IEnumerable<DateTime> holidayList)
         {
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            var holidays = holidayList.Select(x => x.Date).ToList();
+            var holidays = holidayList.Select(x => x.Date);
             if (nthBusinessDay > daysInMonth)
             {
                 throw new ArgumentOutOfRangeException(Invariant(
@@ -195,12 +183,12 @@ namespace QuantConnect.Securities.Future
 
             // Check for holiday up here in case we want the first business day and it is a holiday so that we don't skip over it.
             // We also want to make sure that we don't stop on a weekend.
-            while (daysCounted < nthBusinessDay || holidays.Contains(calculatedTime) || _mhdbUSHolidays.Value.Contains(calculatedTime) || !calculatedTime.IsCommonBusinessDay())
+            while (daysCounted < nthBusinessDay || holidays.Contains(calculatedTime) || !calculatedTime.IsCommonBusinessDay())
             {
                 // The asset continues trading on days contained within `USHoliday.Dates`, but
                 // the last trade date is affected by those holidays. We check for
                 // both MHDB entries and holidays to get accurate business days
-                if (holidays.Contains(calculatedTime) || _mhdbUSHolidays.Value.Contains(calculatedTime))
+                if (holidays.Contains(calculatedTime))
                 {
                     // Catches edge case where first day is on a friday
                     if (i == 0 && calculatedTime.DayOfWeek == DayOfWeek.Friday)

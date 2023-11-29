@@ -246,7 +246,7 @@ namespace QuantConnect.Securities.Future
                     var market = Market.COMEX;
                     var symbol = Futures.Metals.Gold;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
-                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3, holidayList: holidays);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3, holidays);
                 })
             },
             // Silver (SI): http://www.cmegroup.com/trading/metals/precious/silver_contract_specifications.html
@@ -257,7 +257,7 @@ namespace QuantConnect.Securities.Future
                     var market = Market.COMEX;
                     var symbol = Futures.Metals.Silver;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
-                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3, holidayList: holidays);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3, holidays);
                 })
             },
             // Platinum (PL): http://www.cmegroup.com/trading/metals/precious/platinum_contract_specifications.html
@@ -268,7 +268,7 @@ namespace QuantConnect.Securities.Future
                     var market = Market.NYMEX;
                     var symbol = Futures.Metals.Platinum;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
-                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3, holidayList: holidays);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3, holidays);
                 })
             },
             // Palladium (PA): http://www.cmegroup.com/trading/metals/precious/palladium_contract_specifications.html
@@ -279,7 +279,7 @@ namespace QuantConnect.Securities.Future
                     var market = Market.NYMEX;
                     var symbol = Futures.Metals.Palladium;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
-                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3, holidayList: holidays);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3, holidays);
                 })
             },
             // Aluminum MW U.S. Transaction Premium Platts (25MT) (AUP): https://www.cmegroup.com/trading/metals/base/aluminum-mw-us-transaction-premium-platts-swap-futures_contract_specifications.html
@@ -290,9 +290,9 @@ namespace QuantConnect.Securities.Future
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts
                     // Trading terminates on the last business day of the contract month.
-                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidayList: holidays);
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidays);
 					
-                    lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastBusinessDay, -1, holidayList: holidays);
+                    lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastBusinessDay, -1, holidays);
 
                     return lastBusinessDay;
                 })
@@ -305,8 +305,8 @@ namespace QuantConnect.Securities.Future
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts
                     // Trading terminates on the last business day of the contract month
-                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidayList: holidays);
-                    lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastBusinessDay, -1, holidayList: holidays);
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidays);
+                    lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastBusinessDay, -1, holidays);
 
                     return lastBusinessDay;
                 })
@@ -320,7 +320,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates at 12:00 Noon CT on the third last business day of the contract month.
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 
-                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3, holidayList: holidays).Add(new TimeSpan(17, 0, 0));
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3, holidays).Add(new TimeSpan(17, 0, 0));
                 })
             },
             // U.S. Midwest Domestic Hot-Rolled Coil Steel (CRU) Index (HRC): https://www.cmegroup.com/trading/metals/ferrous/hrc-steel_contract_specifications.html
@@ -451,7 +451,7 @@ namespace QuantConnect.Securities.Future
 
                     // 3rd Wednesday of the contract month/ 1:30pm
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
-                    thirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(thirdWednesday, -1, holidayList: holidays);
+                    thirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(thirdWednesday, -1, holidays);
                     return thirdWednesday.Add(new TimeSpan(18, 30, 0));
                 })
             },
@@ -469,7 +469,7 @@ namespace QuantConnect.Securities.Future
 
                     // Trading can occur up to 9:30 a.m. ET on the 3rd Friday of the contract month
                     var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
-                    thirdFriday = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(thirdFriday, -1, holidayList: holidays);
+                    thirdFriday = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(thirdFriday, -1, holidays);
 
                     return thirdFriday.Add(new TimeSpan(13, 30, 0));
                 })
@@ -509,7 +509,7 @@ namespace QuantConnect.Securities.Future
                     // Monthly contracts
                     // Trading terminates on the11th business day of the contract month, 1:40pm.
 
-                    return FuturesExpiryUtilityFunctions.NthBusinessDay(time, 11, holidayList: holidays).Add(new TimeSpan(18, 40, 0));
+                    return FuturesExpiryUtilityFunctions.NthBusinessDay(time, 11, holidays).Add(new TimeSpan(18, 40, 0));
                 })
             },
             // USD-Denominated Ibovespa Index (IBV): https://www.cmegroup.com/trading/equity-index/international-index/usd-denominated-ibovespa_contract_specifications.html
@@ -651,12 +651,11 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the third Friday of the contract month @16:15.
                     var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
-                    holidays.AddRange(new HashSet<DateTime>{
-                        // Good Friday
+                    holidays.Add(
                         FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
-                    });
+                        );
 
-                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidayList: holidays);
+                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
 
                     return lastTradingDay.Add(new TimeSpan(16, 15, 0));
                 })
@@ -670,12 +669,12 @@ namespace QuantConnect.Securities.Future
                     var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
 
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
-					holidays.AddRange(new HashSet<DateTime> {
+                    holidays.Add(
                         // Good Friday
                         FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
-                    });
+                        );
 
-                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidayList: holidays);
+                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
 
                     return lastTradingDay.Add(new TimeSpan(16, 15, 0));
                 })
@@ -688,12 +687,12 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the third Friday of the contract month @16:15.
                     var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
-                    holidays.AddRange(new HashSet<DateTime> {
+                    holidays.Add(
                         // Good Friday
                         FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
-                    });
+                        );
 
-                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidayList: holidays);
+                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
 
                     return lastTradingDay.Add(new TimeSpan(16, 15, 0));
                 })
@@ -707,12 +706,12 @@ namespace QuantConnect.Securities.Future
                     var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
 
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
-					holidays.AddRange(new HashSet<DateTime> {
+                    holidays.Add(
                         // Good Friday
                         FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
-                    });
+                        );
 
-                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidayList: holidays);
+                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
 
                     return lastTradingDay.Add(new TimeSpan(16, 15, 0));
                 })
@@ -725,12 +724,12 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the third Friday of the contract month @16:15.
                     var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
-                    holidays.AddRange(new HashSet<DateTime> {
+                    holidays.Add(
                         // Good Friday
                         FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
-                    });
+                        );
 
-                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidayList: holidays);
+                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
 
                     return lastTradingDay.Add(new TimeSpan(16, 15, 0));
                 })
@@ -743,12 +742,12 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates on the third Friday of the contract month @16:15.
                     var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
-                    holidays.AddRange(new HashSet<DateTime> {
+                    holidays.Add(
                         // Good Friday
                         FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
-                    });
+                        );
 
-                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidayList: holidays);
+                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
 
                     return lastTradingDay.Add(new TimeSpan(16, 15, 0));
                 })
@@ -918,7 +917,7 @@ namespace QuantConnect.Securities.Future
 					
                     // Monthly contracts listed for 15 consecutive months.
                     // Trading terminates on the last business day of the contract month which is also a Platts publication date for the price assessment.
-                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidayList: holidays);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidays);
                 })
             },
             // Black Sea Wheat Financially Settled (Platts) (BWF): https://www.cmegroup.com/trading/agricultural/grain-and-oilseed/black-sea-wheat-financially-settled-platts_contract_specifications.html
@@ -929,8 +928,8 @@ namespace QuantConnect.Securities.Future
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for 15 consecutive months
                     // Trading terminates on the last business day of the contract month which is also a Platts publication date for the price assessment.
-                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidayList: holidays);
-                    lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastBusinessDay, -1, holidayList: holidays);
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidays);
+                    lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastBusinessDay, -1, holidays);
 
                     return lastBusinessDay;
                 })
@@ -1104,7 +1103,7 @@ namespace QuantConnect.Securities.Future
                     // Monthly contracts listed for 60 consecutive months
                     // On the last business day of the month, at 9:15 a.m. CT, immediately preceding the contract month, on which the Central Bank of Brazil is scheduled to publish its final end-of-month (EOM), "Commercial exchange rate for Brazilian reais per U.S. dollar for cash delivery" (PTAX rate).
                     var lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(time, -1, holidays);
-                    lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastPrecedingBusinessDay, -1, holidayList: holidays);
+                    lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastPrecedingBusinessDay, -1, holidays);
 
                     return lastPrecedingBusinessDay.Add(new TimeSpan(14,15,0));
                 })
@@ -1458,7 +1457,7 @@ namespace QuantConnect.Securities.Future
                     // Second London bank business day before 3rd Wednesday of the contract month. Trading
                     // in expiring contracts terminates at 11:00 a.m. London time on the last trading day.
 
-                    return FuturesExpiryUtilityFunctions.AddBusinessDays(FuturesExpiryUtilityFunctions.ThirdWednesday(time), -2, holidays, useEquityHolidays: false)
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(FuturesExpiryUtilityFunctions.ThirdWednesday(time), -2, holidays)
                         .Add(TimeSpan.FromHours(11));
                 })
             },
@@ -2866,10 +2865,10 @@ namespace QuantConnect.Securities.Future
                     var symbol = Futures.Metals.MiniNYGold;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Trading terminates on the third last business day of the contract month @13:30
-                    holidays.AddRange(new HashSet<DateTime> {
+                    holidays.Add(
                         // Good Friday
                         FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
-                    });
+                        );
 
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3, holidays);
 
@@ -2883,10 +2882,10 @@ namespace QuantConnect.Securities.Future
                     var symbol = Futures.Metals.MiniNYSilver;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Trading terminates on the third last business day of the contract month @13:25
-                    holidays.AddRange(new HashSet<DateTime> {
+                    holidays.Add(
                         // Good Friday
                         FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
-                    });
+                        );
 
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3, holidays);
 
@@ -2900,10 +2899,10 @@ namespace QuantConnect.Securities.Future
                     var symbol = Futures.Metals.Gold100Oz;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Trading terminates on the third last business day of the contract month @13:30
-                    holidays.AddRange(new HashSet<DateTime> {
+                    holidays.Add(
                         // Good Friday
                         FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
-                    });
+                        );
 
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3, holidays);
 
@@ -2917,10 +2916,10 @@ namespace QuantConnect.Securities.Future
                     var symbol = Futures.Metals.Silver5000Oz;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Trading terminates on the third last business day of the contract month @13:25
-                    holidays.AddRange(new HashSet<DateTime> {
+                    holidays.Add(
                         // Good Friday
                         FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
-                    });
+                        );
 
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3, holidays);
 

@@ -144,7 +144,7 @@ namespace QuantConnect.Securities.FutureOption
 
             while (fridayBeforeSecondLastBusinessDay.DayOfWeek != DayOfWeek.Friday)
             {
-                fridayBeforeSecondLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fridayBeforeSecondLastBusinessDay, -1, holidays, useEquityHolidays: false);
+                fridayBeforeSecondLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fridayBeforeSecondLastBusinessDay, -1, holidays);
             }
 
             return fridayBeforeSecondLastBusinessDay;
@@ -174,7 +174,7 @@ namespace QuantConnect.Securities.FutureOption
             {
                 while (fourthLastBusinessDay.DayOfWeek == DayOfWeek.Friday || holidays.Contains(fourthLastBusinessDay.AddDays(1)))
                 {
-                    fourthLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fourthLastBusinessDay, -1, holidays, useEquityHolidays: false);
+                    fourthLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fourthLastBusinessDay, -1, holidays);
                 }
             }
 

@@ -75,8 +75,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(
                 inputTime,
                 n,
-                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss")),
-                useEquityHolidays: false);
+                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss")));
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
@@ -95,8 +94,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(
                 inputTime,
                 n,
-                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss")),
-                useEquityHolidays: false);
+                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss")));
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
@@ -136,7 +134,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase("02/01/2019 00:00:01", 1, "02/01/2019 00:00:00")]
         [TestCase("01/01/2019 00:00:01", 1, "01/02/2019 00:00:00")]
         [TestCase("06/01/2019 00:00:01", 1, "06/03/2019 00:00:00")]
-        [TestCase("07/01/2019 00:00:01", 5, "07/08/2019 00:00:00")]
+        [TestCase("07/01/2019 00:00:01", 5, "07/05/2019 00:00:00")]
         public void NthBusinessDay_ShouldReturnAccurateBusinessDay(string testDate, int nthBusinessDay, string actualDate)
         {
             var inputDate = Parse.DateTimeExact(testDate, "MM/dd/yyyy HH:mm:ss");
@@ -147,9 +145,9 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             Assert.AreEqual(expectedResult, actual);
         }
 
-        [TestCase("01/01/2016 00:00:01", 1, "01/05/2016 00:00:00", "01/04/2016 00:00:01")]
-        [TestCase("02/01/2019 00:00:01", 12, "02/20/2019 00:00:00", "02/19/2019 00:00:01")]
-        [TestCase("01/01/2019 00:00:01", 1, "01/07/2019 00:00:00", "01/02/2019 00:00:01", "01/03/2019 00:00:01", "01/04/2019 00:00:01")]
+        [TestCase("01/01/2016 00:00:01", 1, "01/05/2016 00:00:00", "01/01/2016 00:00:01", "01/04/2016 00:00:01")]
+        [TestCase("02/01/2019 00:00:01", 12, "02/20/2019 00:00:00", "02/18/2019 00:00:01", "02/19/2019 00:00:01")]
+        [TestCase("01/01/2019 00:00:01", 1, "01/07/2019 00:00:00", "01/01/2019 00:00:01", "01/02/2019 00:00:01", "01/03/2019 00:00:01", "01/04/2019 00:00:01")]
         public void NthBusinessDay_ShouldReturnAccurateBusinessDay_WithHolidays(string testDate, int nthBusinessDay, string actualDate, params string[] holidayDates)
         {
             var inputDate = Parse.DateTimeExact(testDate, "MM/dd/yyyy HH:mm:ss");
