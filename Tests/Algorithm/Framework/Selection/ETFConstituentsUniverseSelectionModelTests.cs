@@ -14,8 +14,14 @@
 */
 
 using System;
-using NUnit.Framework;
+using System.Linq;
 using Python.Runtime;
+using NUnit.Framework;
+using QuantConnect.Algorithm;
+using QuantConnect.Securities;
+using System.Collections.Generic;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Algorithm.Framework.Selection;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Selection
 {
@@ -85,6 +91,51 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
                 Assert.IsNotNull(algorithm.selection_model);
                 Assert.IsTrue(algorithm.selection_model.etf_symbol.ToString().Contains(expectedTicker, StringComparison.InvariantCulture));
             }
+        }
+
+
+        [Test]
+        public void ETFConstituentsUniverseSelectionModelTestAllConstructor()
+        {
+            int numberOfOperation = 0;
+            var ticker = "SPY";
+            var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+            var universeSettings = new UniverseSettings(Resolution.Minute, Security.NullLeverage, true, false, TimeSpan.FromDays(1));
+
+            do
+            {
+                ETFConstituentsUniverseSelectionModel etfConstituents = numberOfOperation switch
+                {
+                    0 => new ETFConstituentsUniverseSelectionModel(ticker),
+                    1 => new ETFConstituentsUniverseSelectionModel(ticker, universeSettings),
+                    2 => new ETFConstituentsUniverseSelectionModel(ticker, ETFConstituentsFilter),
+                    3 => new ETFConstituentsUniverseSelectionModel(ticker, universeSettings, ETFConstituentsFilter),
+                    4 => new ETFConstituentsUniverseSelectionModel(ticker, universeSettings, (PyObject)null),
+                    5 => new ETFConstituentsUniverseSelectionModel(symbol),
+                    6 => new ETFConstituentsUniverseSelectionModel(symbol, universeSettings),
+                    7 => new ETFConstituentsUniverseSelectionModel(symbol, ETFConstituentsFilter),
+                    8 => new ETFConstituentsUniverseSelectionModel(symbol, universeSettings, ETFConstituentsFilter),
+                    9 => new ETFConstituentsUniverseSelectionModel(symbol, universeSettings, (PyObject)null),
+                    _ => throw new ArgumentException("Not recognize number of operation")
+                };
+
+                var universe = etfConstituents.CreateUniverses(new QCAlgorithm()).First();
+
+                Assert.IsNotNull(etfConstituents);
+                Assert.IsNotNull(universe);
+
+                Assert.IsTrue(universe.Configuration.Symbol.HasUnderlying);
+                Assert.AreEqual(symbol, universe.Configuration.Symbol.Underlying);
+
+                Assert.AreEqual(symbol.SecurityType, universe.Configuration.Symbol.SecurityType);
+                Assert.IsTrue(universe.Configuration.Symbol.ID.Symbol.StartsWithInvariant("qc-universe-"));
+
+            } while (++numberOfOperation <= 9) ;
+        }
+
+        private IEnumerable<Symbol> ETFConstituentsFilter(IEnumerable<ETFConstituentData> constituents)
+        {
+            return constituents.Select(c => c.Symbol);
         }
     }
 }
