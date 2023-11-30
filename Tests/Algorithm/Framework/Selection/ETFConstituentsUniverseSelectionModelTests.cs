@@ -143,12 +143,12 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
                     1 => new ETFConstituentsUniverseSelectionModel(ticker, universeSettings),
                     2 => new ETFConstituentsUniverseSelectionModel(ticker, ETFConstituentsFilter),
                     3 => new ETFConstituentsUniverseSelectionModel(ticker, universeSettings, ETFConstituentsFilter),
-                    4 => new ETFConstituentsUniverseSelectionModel(ticker, universeSettings, (PyObject)null),
+                    4 => new ETFConstituentsUniverseSelectionModel(ticker, universeSettings, default(PyObject)),
                     5 => new ETFConstituentsUniverseSelectionModel(symbol),
                     6 => new ETFConstituentsUniverseSelectionModel(symbol, universeSettings),
                     7 => new ETFConstituentsUniverseSelectionModel(symbol, ETFConstituentsFilter),
                     8 => new ETFConstituentsUniverseSelectionModel(symbol, universeSettings, ETFConstituentsFilter),
-                    9 => new ETFConstituentsUniverseSelectionModel(symbol, universeSettings, (PyObject)null),
+                    9 => new ETFConstituentsUniverseSelectionModel(symbol, universeSettings, default(PyObject)),
                     _ => throw new ArgumentException("Not recognize number of operation")
                 };
 
