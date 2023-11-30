@@ -21,14 +21,6 @@ from ETFConstituentsFrameworkAlgorithm import ETFConstituentsFrameworkAlgorithm
 class ETFConstituentsFrameworkWithDifferentSelectionModelAlgorithm(ETFConstituentsFrameworkAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2020, 12, 1)
-        self.SetEndDate(2020, 12, 7)
-        self.SetCash(100000)
-
-        self.UniverseSettings.Resolution = Resolution.Daily
-
+        super().Initialize()
+        
         self.AddUniverseSelection(ETFConstituentsUniverseSelectionModel("SPY", self.UniverseSettings, self.ETFConstituentsFilter))
-
-        self.AddAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(days=1)))
-
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())

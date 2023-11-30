@@ -27,22 +27,11 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class ETFConstituentsFrameworkWithDifferentSelectionModelAlgorithm : ETFConstituentsFrameworkAlgorithm
     {
-        /// <summary>
-        /// 
-        /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2020, 12, 1);
-            SetEndDate(2020, 12, 7);
-            SetCash(100000);
-
-            UniverseSettings.Resolution = Resolution.Daily;
+            base.Initialize();
 
             AddUniverseSelection(new ETFConstituentsUniverseSelectionModel("SPY", UniverseSettings, ETFConstituentsFilter));
-
-            AddAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1)));
-
-            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
         }
     }
 }
