@@ -92,38 +92,41 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
             }
         }
 
-        [TestCase("SPY", "CACHED", "TSLA")]
-        public void ETFConstituentsUniverseSelectionModelGetCachedSymbol(string ticker, string expectedAlias, string noCacheTicker)
+        [TestCase("TSLA")]
+        public void ETFConstituentsUniverseSelectionModelGetNoCachedSymbol(string ticker)
         {
             using (Py.GIL())
             {
-                dynamic module = PyModule.FromString("testModule",
-                    @$"from AlgorithmImports import *
-from Selection.ETFConstituentsUniverseSelectionModel import *
-class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
-    selection_model_cached = None
-    selection_model_no_cached = None
-    def Initialize(self):
-        SymbolCache.Set(""{ticker}"", Symbol.Create(""{ticker}"", SecurityType.Equity, Market.USA, ""CACHED""))
-        self.UniverseSettings.Resolution = Resolution.Daily
-        self.selection_model_cached = ETFConstituentsUniverseSelectionModel(""{ticker}"")
-        self.selection_model_no_cached = ETFConstituentsUniverseSelectionModel(""{noCacheTicker}"")"
-        );
-                
-                dynamic algorithm = module.GetAttr("ETFConstituentsFrameworkAlgorithm").Invoke();
-                algorithm.Initialize();
-                Assert.IsNotNull(algorithm.selection_model_cached);
-                Assert.IsNotNull(algorithm.selection_model_no_cached);
+                var etfAlgorithm = GetETFConstituentsFrameworkAlgorithm(ticker);
+                etfAlgorithm.Initialize();
 
-                Assert.IsTrue(algorithm.selection_model_cached.etf_symbol.GetPythonType().ToString().Contains($"{nameof(Symbol)}", StringComparison.InvariantCulture));
-                Assert.IsTrue(algorithm.selection_model_cached.etf_symbol.ToString().Contains(Symbols.SPY, StringComparison.InvariantCulture));
-                Assert.AreEqual(expectedAlias, algorithm.selection_model_cached.etf_symbol.Value.ToString());
+                Assert.IsNotNull(etfAlgorithm.selection_model);
+                Assert.IsTrue(etfAlgorithm.selection_model.etf_symbol.GetPythonType().ToString().Contains($"{nameof(Symbol)}", StringComparison.InvariantCulture));
 
-                Assert.IsTrue(algorithm.selection_model_no_cached.etf_symbol.GetPythonType().ToString().Contains($"{nameof(Symbol)}", StringComparison.InvariantCulture));
-                Assert.IsTrue(algorithm.selection_model_no_cached.etf_symbol.ToString().Contains(noCacheTicker, StringComparison.InvariantCulture));
-                Assert.AreEqual(noCacheTicker, algorithm.selection_model_no_cached.etf_symbol.Value.ToString());
+                var etfSymbol = (Symbol)etfAlgorithm.selection_model.etf_symbol;
+
+                Assert.IsTrue(etfSymbol.Value.Contains(ticker, StringComparison.InvariantCulture));
+                Assert.IsTrue(etfSymbol.SecurityType == SecurityType.Equity);
             }
+        }
 
+        [TestCase("SPY", "CACHED")]
+        public void ETFConstituentsUniverseSelectionModelGetCachedSymbol(string ticker, string expectedAlias)
+        {
+            using (Py.GIL())
+            {
+                var etfAlgorithm = GetETFConstituentsFrameworkAlgorithm(ticker);
+                etfAlgorithm.Initialize();
+
+                Assert.IsNotNull(etfAlgorithm.selection_model);
+                Assert.IsTrue(etfAlgorithm.selection_model.etf_symbol.GetPythonType().ToString().Contains($"{nameof(Symbol)}", StringComparison.InvariantCulture));
+
+                var etfSymbol = (Symbol)etfAlgorithm.selection_model.etf_symbol;
+
+                Assert.IsTrue(etfSymbol.Value.Contains(expectedAlias, StringComparison.InvariantCulture));
+                Assert.IsTrue(etfSymbol.ID == Symbols.SPY.ID);
+                Assert.IsTrue(etfSymbol.SecurityType == SecurityType.Equity);
+            }
         }
 
 
@@ -169,6 +172,24 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
         private IEnumerable<Symbol> ETFConstituentsFilter(IEnumerable<ETFConstituentData> constituents)
         {
             return constituents.Select(c => c.Symbol);
+        }
+
+        private static dynamic GetETFConstituentsFrameworkAlgorithm(string etfTicker, string cachedAlias = "CACHED")
+        {
+
+            dynamic module = PyModule.FromString("testModule",
+@$"from AlgorithmImports import *
+from Selection.ETFConstituentsUniverseSelectionModel import *
+class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
+    selection_model = None
+    def Initialize(self):
+        SymbolCache.Set('SPY', Symbol.Create('SPY', SecurityType.Equity, Market.USA, '{cachedAlias}'))
+        self.UniverseSettings.Resolution = Resolution.Daily
+        self.selection_model = ETFConstituentsUniverseSelectionModel(""{etfTicker}"")"
+);
+
+            dynamic algorithm = module.GetAttr("ETFConstituentsFrameworkAlgorithm").Invoke();
+            return algorithm;
         }
     }
 }

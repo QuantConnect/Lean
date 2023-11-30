@@ -81,9 +81,9 @@ namespace QuantConnect.Algorithm.Framework.Selection
             UniverseSettings universeSettings,
             Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
         {
-            _etfSymbol = SymbolCache.TryGetSymbol(etfTicker, out var existTicker)
-                && existTicker.SecurityType == SecurityType.Equity
-                ? existTicker : Symbol.Create(etfTicker, SecurityType.Equity, Market.USA);
+            _etfSymbol = SymbolCache.TryGetSymbol(etfTicker, out var symbol)
+                && symbol.SecurityType == SecurityType.Equity
+                ? symbol : Symbol.Create(etfTicker, SecurityType.Equity, Market.USA);
 
             _universeSettings = universeSettings;
             _universeFilterFunc = universeFilterFunc;
