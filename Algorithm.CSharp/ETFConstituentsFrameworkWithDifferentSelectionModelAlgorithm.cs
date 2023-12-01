@@ -13,12 +13,7 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Data.UniverseSelection;
-using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -31,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             base.Initialize();
 
-            AddUniverseSelection(new ETFConstituentsUniverseSelectionModel("SPY", UniverseSettings, ETFConstituentsFilter));
+            SetUniverseSelection(new ETFConstituentsUniverseSelectionModel("SPY", UniverseSettings, ETFConstituentsFilter));
         }
     }
 }

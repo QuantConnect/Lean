@@ -23,4 +23,4 @@ class ETFConstituentsFrameworkWithDifferentSelectionModelAlgorithm(ETFConstituen
     def Initialize(self):
         super().Initialize()
         
-        self.AddUniverseSelection(ETFConstituentsUniverseSelectionModel("SPY", self.UniverseSettings, self.ETFConstituentsFilter))
+        self.SetUniverseSelection(ETFConstituentsUniverseSelectionModel("SPY", self.UniverseSettings, self.ETFConstituentsFilter))
