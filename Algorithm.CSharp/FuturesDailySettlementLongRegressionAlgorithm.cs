@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (ExpectedCash.Remove(currentTime, out var expected))
             {
                 var value = Portfolio.CashBook.TotalValueInAccountCurrency;
-                if (expected != value)
+                if (expected != Math.Round(value, 5))
                 {
                     throw new Exception($"Unexpected cash balance {value} expected {expected}");
                 }
@@ -145,7 +145,7 @@ namespace QuantConnect.Algorithm.CSharp
                 $"{Environment.NewLine}CashBook:{Environment.NewLine}{Portfolio.CashBook}" +
                 $"{Environment.NewLine}UnsettledCashBook:{Environment.NewLine}{Portfolio.UnsettledCashBook}");
 
-            var expected = Math.Round(_initialPortfolioValue + holdings.NetProfit, 5);
+            var expected = _initialPortfolioValue + holdings.NetProfit;
             if (expected != Portfolio.TotalPortfolioValue || expected != Portfolio.CashBook[Currencies.USD].Amount)
             {
                 throw new Exception($"Unexpected future profit {holdings.NetProfit}");

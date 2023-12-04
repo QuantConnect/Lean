@@ -40,33 +40,19 @@ namespace QuantConnect.Securities.Future
                 var futureHolding = (FutureHolding)security.Holdings;
 
                 var absoluteQuantityClosed = Math.Min(fill.AbsoluteFillQuantity, security.Holdings.AbsoluteQuantity);
-                var quantityClosed = Math.Sign(-fill.FillQuantity) * absoluteQuantityClosed;
 
                 var absoluteQuantityClosedSettled = Math.Min(absoluteQuantityClosed, Math.Abs(_settledFutureQuantity));
                 var quantityClosedSettled = Math.Sign(-fill.FillQuantity) * absoluteQuantityClosedSettled;
-
-                // here we use the last settlement price we've used to calculate the trade unsettled funds (daily P&L we should apply)
-                var settledContractsTodaysProfit = futureHolding.TotalCloseProfit(includeFees: false, exitPrice: fill.FillPrice, entryPrice: _settlementPrice, quantity: quantityClosedSettled);
-                var unsettledContractsTodaysProfit = 0m;
-                if (quantityClosedSettled != quantityClosed)
-                {
-                    // if we fall into any of these cases, it means the position closed was increased today before closing which means the
-                    // profit of the increased quantity is not related to the settlement price because it happens after the last settlement
-                    unsettledContractsTodaysProfit = applyFundsParameters.CashAmount.Amount - futureHolding.SettledProfit - settledContractsTodaysProfit;
-                }
-
-                applyFundsParameters.CashAmount = new CashAmount(settledContractsTodaysProfit + unsettledContractsTodaysProfit, applyFundsParameters.CashAmount.Currency);
-
-                if (Log.DebuggingEnabled)
-                {
-                    Log.Debug($"FutureSettlementModel.ApplyFunds({security.Symbol}): {security.LocalTime} QuantityClosed: {quantityClosed} Settled: {_settledFutureQuantity} Applying: {applyFundsParameters.CashAmount.Amount}");
-                }
 
                 // reduce our settled future quantity proportionally too
                 var factor = quantityClosedSettled / _settledFutureQuantity;
                 _settledFutureQuantity -= quantityClosedSettled;
 
-                futureHolding.SettledProfit -= factor * futureHolding.SettledProfit;
+                // the passed in cash amount will hold the complete profit/loss of the trade, so we need to substract the settled profit we were given or taken from
+                var removedSettledProfit = factor * futureHolding.SettledProfit;
+                futureHolding.SettledProfit -= removedSettledProfit;
+
+                applyFundsParameters.CashAmount = new CashAmount(applyFundsParameters.CashAmount.Amount - removedSettledProfit, applyFundsParameters.CashAmount.Currency);
             }
 
             base.ApplyFunds(applyFundsParameters);
