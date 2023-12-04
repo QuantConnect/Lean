@@ -56,12 +56,10 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         /// <param name="time">The current Time</param>
         /// <param name="n">Number of business days succeeding current time. Use negative value for preceding business days</param>
-        /// <param name="holidayList">Enumerable of holidays to exclude. These should be sourced from the <see cref="MarketHoursDatabase"/></param>
+        /// <param name="holidays">Set of holidays to exclude. These should be sourced from the <see cref="MarketHoursDatabase"/></param>
         /// <returns>The date-time after adding n business days</returns>
-        public static DateTime AddBusinessDays(DateTime time, int n, IEnumerable<DateTime> holidayList)
+        public static DateTime AddBusinessDays(DateTime time, int n, HashSet<DateTime> holidays)
         {
-            var holidays = holidayList.Select(x => x.Date);
-
             if (n < 0)
             {
                 var businessDays = -n;
