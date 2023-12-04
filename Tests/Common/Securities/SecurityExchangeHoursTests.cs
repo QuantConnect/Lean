@@ -27,6 +27,7 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class SecurityExchangeHoursTests
     {
+        private static Lazy<HashSet<DateTime>> _mhdbUSHolidays = new Lazy<HashSet<DateTime>>(() => MarketHoursDatabase.FromDataFolder().GetEntry(Market.USA, (string)null, SecurityType.Equity).ExchangeHours.Holidays);
 
         public void IsAlwaysOpen()
         {
@@ -393,12 +394,56 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void MarketIsNotOpenBeforeLateOpen()
+        public void MarketIsNotOpenBeforeLateOpenIfNotEarlyClose()
         {
             var exchangeHours = CreateForexSecurityExchangeHours();
 
             var localDateTime = new DateTime(2019, 1, 1, 16, 59, 59);
             Assert.IsFalse(exchangeHours.IsOpen(localDateTime, false));
+        }
+
+        [Test]
+        public void MarketIsOpenBeforeLateOpenIfEarlyClose()
+        {
+            var exchangeHours = CreateUsFutureSecurityExchangeHours(true);
+
+            var localDateTime = new DateTime(2013, 11, 29, 10, 0, 0);
+            Assert.IsTrue(exchangeHours.IsOpen(localDateTime, false));
+        }
+
+        [Test]
+        public void MarketIsOpenAfterEarlyCloseIfLateOpen()
+        {
+            var exchangeHours = CreateUsFutureSecurityExchangeHours(true);
+
+            var localDateTime = new DateTime(2013, 11, 29, 16, 45, 0);
+            Assert.IsTrue(exchangeHours.IsOpen(localDateTime, false));
+        }
+
+        [Test]
+        public void MarketResumesAfterEarlyCloseIfLateOpen()
+        {
+            var exchangeHours = CreateUsFutureSecurityExchangeHours(true);
+            var localDateTime = new DateTime(2013, 11, 28, 0, 0, 0);
+            var nextDay = new DateTime(2013, 11, 29, 0, 0, 0);
+            var earlyClose = new TimeSpan(10, 30, 0);
+            var lateOpen = new TimeSpan(19, 0, 0);
+
+            var minutes = 0;
+            while (localDateTime < nextDay)
+            {
+                if (localDateTime.TimeOfDay < earlyClose || lateOpen < localDateTime.TimeOfDay)
+                {
+                    Assert.IsTrue(exchangeHours.IsOpen(localDateTime, false));
+                }
+                else
+                {
+                    Assert.IsFalse(exchangeHours.IsOpen(localDateTime, false));
+                }
+
+                minutes++;
+                localDateTime = localDateTime.AddMinutes(minutes);
+            }
         }
 
         [Test]
@@ -502,7 +547,8 @@ namespace QuantConnect.Tests.Common.Securities
             var friday = new LocalMarketHours(DayOfWeek.Friday, TimeSpan.Zero, new TimeSpan(17, 0, 0));
             var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
 
-            var holidays = USHoliday.Dates.Select(x => x.Date).ToList();
+            var holidays = _mhdbUSHolidays.Value;
+
             holidays.Remove(new DateTime(2019, 1, 1));  // not a forex holiday
 
             var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2018, 12, 31), new TimeSpan(17, 0, 0) } };
@@ -553,14 +599,14 @@ namespace QuantConnect.Tests.Common.Securities
 
             var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2016, 11, 25), new TimeSpan(13, 0, 0) } };
             var lateOpens = new Dictionary<DateTime, TimeSpan>() { { new DateTime(2016, 11, 25), new TimeSpan(10, 0, 0) } };
-            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
+            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, _mhdbUSHolidays.Value, new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
             }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
             return exchangeHours;
         }
 
-        public static SecurityExchangeHours CreateUsFutureSecurityExchangeHours()
+        public static SecurityExchangeHours CreateUsFutureSecurityExchangeHours(bool addLateOpens = false)
         {
             var sunday = LocalMarketHours.OpenAllDay(DayOfWeek.Sunday);
             var monday = new LocalMarketHours(
@@ -596,8 +642,18 @@ namespace QuantConnect.Tests.Common.Securities
 
             var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2013, 11, 28), new TimeSpan(10, 30, 0) },
                 { new DateTime(2013, 11, 29), new TimeSpan(12, 15, 0)} };
-            var lateOpens = new Dictionary<DateTime, TimeSpan>();
-            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
+            Dictionary<DateTime, TimeSpan> lateOpens = null;
+            if (addLateOpens)
+            {
+                lateOpens = new Dictionary<DateTime, TimeSpan> { { new DateTime(2013, 11, 28), new TimeSpan(19, 00, 0) }, { new DateTime(2013, 11, 29), new TimeSpan(16, 40, 0) } };
+            }
+            else
+            {
+                lateOpens = new Dictionary<DateTime, TimeSpan>();
+            }
+
+            var holidays = _mhdbUSHolidays.Value.Select(x => x.Date).Where(x => !earlyCloses.ContainsKey(x)).ToList();
+            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
             }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
@@ -644,7 +700,7 @@ namespace QuantConnect.Tests.Common.Securities
             var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2013, 11, 28), new TimeSpan(10, 30, 0) },
                 { new DateTime(2013, 11, 29), new TimeSpan(12, 15, 0)} };
             var lateOpens = new Dictionary<DateTime, TimeSpan>();
-            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
+            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, _mhdbUSHolidays.Value, new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
             }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);

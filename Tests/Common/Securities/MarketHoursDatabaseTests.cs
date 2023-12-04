@@ -141,10 +141,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(isHoliday, holidays.Contains(holidayDate));
         }
 
-        [TestCase("ES", Market.CME, "1/16/2012", true)]
         [TestCase("2YY", Market.CBOT, "4/7/2023", true)]
-        [TestCase("MYM", Market.CBOT, "4/7/2023", true)]
-        [TestCase("YM", Market.CBOT, "4/7/2023", true)]
         [TestCase("TN", Market.CBOT, "4/7/2023", true)]
         [TestCase("6A", Market.CME, "4/7/2023", true)]
         [TestCase("6Z", Market.CME, "4/7/2023", true)]
@@ -176,8 +173,6 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [TestCase("2YY", Market.CBOT, true)]
-        [TestCase("MYM", Market.CBOT, true)]
-        [TestCase("YM", Market.CBOT, true)]
         [TestCase("TN", Market.CBOT, true)]
         [TestCase("6A", Market.CME, true)]
         [TestCase("6Z", Market.CME, true)]
@@ -205,6 +200,27 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(isEarlyClose, earlyCloses.Keys.Contains(goodFriday));
             Assert.AreEqual(!isEarlyClose, holidays.Contains(goodFriday));
+        }
+
+        [TestCase("ES", Market.CME)]
+        [TestCase("30Y", Market.CBOT)]
+        [TestCase("M6B", Market.CME)]
+        [TestCase("BTC", Market.CME)]
+        [TestCase("ABT", Market.NYMEX)]
+        [TestCase("AUP", Market.COMEX)]
+        public void EarlyClosesResumesAgainIfLateOpen(string futureTicker, string market)
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
+            var future = Symbol.Create(ticker, SecurityType.Future, market);
+
+            var futureEntry = provider.GetEntry(market, ticker, future.SecurityType);
+            var earlyCloseDate = DateTime.Parse("9/4/2023", CultureInfo.InvariantCulture);
+            var earlyCloseHour = futureEntry.ExchangeHours.EarlyCloses[earlyCloseDate];
+            var lateOpenHour = futureEntry.ExchangeHours.LateOpens[earlyCloseDate];
+
+            Assert.AreEqual(earlyCloseHour, futureEntry.ExchangeHours.GetMarketHours(earlyCloseDate).GetMarketClose(new TimeSpan(0, 0, 0), true));
+            Assert.AreEqual(lateOpenHour, futureEntry.ExchangeHours.GetMarketHours(earlyCloseDate).GetMarketOpen(earlyCloseHour, true));
         }
 
         [Test]

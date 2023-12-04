@@ -2170,13 +2170,13 @@ tick = Tick
         }
 
         // C#
-        [TestCase(Language.CSharp, Resolution.Daily, 60)]
-        [TestCase(Language.CSharp, Resolution.Hour, 471)]
-        [TestCase(Language.CSharp, Resolution.Minute, 26325)]
+        [TestCase(Language.CSharp, Resolution.Daily, 61)]
+        [TestCase(Language.CSharp, Resolution.Hour, 477)]
+        [TestCase(Language.CSharp, Resolution.Minute, 26670)]
         // Python
-        [TestCase(Language.Python, Resolution.Daily, 60)]
-        [TestCase(Language.Python, Resolution.Hour, 471)]
-        [TestCase(Language.Python, Resolution.Minute, 26325)]
+        [TestCase(Language.Python, Resolution.Daily, 61)]
+        [TestCase(Language.Python, Resolution.Hour, 477)]
+        [TestCase(Language.Python, Resolution.Minute, 26670)]
         public void HistoryRequestWithDataMappingMode(Language language, Resolution resolution, int expectedHistoryCount)
         {
             var start = new DateTime(2013, 10, 6);
@@ -2671,13 +2671,13 @@ tradeBar = TradeBar
         }
 
         // C#
-        [TestCase(Language.CSharp, Resolution.Daily, 60)]
-        [TestCase(Language.CSharp, Resolution.Hour, 471)]
-        [TestCase(Language.CSharp, Resolution.Minute, 26325)]
+        [TestCase(Language.CSharp, Resolution.Daily, 61)]
+        [TestCase(Language.CSharp, Resolution.Hour, 477)]
+        [TestCase(Language.CSharp, Resolution.Minute, 26670)]
         // Python
-        [TestCase(Language.Python, Resolution.Daily, 60)]
-        [TestCase(Language.Python, Resolution.Hour, 471)]
-        [TestCase(Language.Python, Resolution.Minute, 26325)]
+        [TestCase(Language.Python, Resolution.Daily, 61)]
+        [TestCase(Language.Python, Resolution.Hour, 477)]
+        [TestCase(Language.Python, Resolution.Minute, 26670)]
         public void HistoryRequestWithContracDepthOffsets(Language language, Resolution resolution, int expectedHistoryCount)
         {
             var start = new DateTime(2013, 10, 07);
@@ -3068,8 +3068,8 @@ def getHistory(algorithm, symbol, period):
                     new TestCaseData(language, Symbols.AAPL, Resolution.Minute, equityStart, equityStart.AddDays(1), 390),
 
                     // Test cases for futures
-                    new TestCaseData(language, Symbols.ES_Future_Chain, Resolution.Daily, futureStart, futureStart.AddDays(100), 68),
-                    new TestCaseData(language, Symbols.ES_Future_Chain, Resolution.Hour, futureStart, futureStart.AddDays(20), 90),
+                    new TestCaseData(language, Symbols.ES_Future_Chain, Resolution.Daily, futureStart, futureStart.AddDays(100), 70),
+                    new TestCaseData(language, Symbols.ES_Future_Chain, Resolution.Hour, futureStart, futureStart.AddDays(20), 93),
                     new TestCaseData(language, Symbols.ES_Future_Chain, Resolution.Minute, futureStart, futureStart.AddDays(2), 900),
                 };
             }).ToArray();

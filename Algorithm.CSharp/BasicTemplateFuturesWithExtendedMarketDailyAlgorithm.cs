@@ -43,37 +43,37 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 16247;
+        public override long DataPoints => 16263;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "152"},
-            {"Average Win", "0.09%"},
+            {"Total Trades", "156"},
+            {"Average Win", "0.31%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-0.644%"},
-            {"Drawdown", "0.600%"},
-            {"Expectancy", "-0.872"},
-            {"Net Profit", "-0.649%"},
-            {"Sharpe Ratio", "-6.343"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "99%"},
-            {"Win Rate", "1%"},
-            {"Profit-Loss Ratio", "8.76"},
-            {"Alpha", "-0.012"},
+            {"Compounding Annual Return", "-0.024%"},
+            {"Drawdown", "0.400%"},
+            {"Expectancy", "-0.035"},
+            {"Net Profit", "-0.025%"},
+            {"Sharpe Ratio", "-1.602"},
+            {"Probabilistic Sharpe Ratio", "11.172%"},
+            {"Loss Rate", "97%"},
+            {"Win Rate", "3%"},
+            {"Profit-Loss Ratio", "36.65"},
+            {"Alpha", "-0.007"},
             {"Beta", "-0.001"},
-            {"Annual Standard Deviation", "0.002"},
+            {"Annual Standard Deviation", "0.005"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.409"},
+            {"Information Ratio", "-1.359"},
             {"Tracking Error", "0.089"},
-            {"Treynor Ratio", "10.18"},
-            {"Total Fees", "$338.96"},
+            {"Treynor Ratio", "8.008"},
+            {"Total Fees", "$347.56"},
             {"Estimated Strategy Capacity", "$1000.00"},
             {"Lowest Capacity Asset", "ES VRJST036ZY0X"},
-            {"Portfolio Turnover", "4.07%"},
-            {"OrderListHash", "dc803d068159572f745078503c2676c2"}
+            {"Portfolio Turnover", "4.16%"},
+            {"OrderListHash", "ce63f5e611a7ab2f49d49c9fdc777ef5"}
         };
     }
 }
