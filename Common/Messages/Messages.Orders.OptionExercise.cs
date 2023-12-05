@@ -39,7 +39,7 @@ namespace QuantConnect
                 var action = isAssignment ? "Assignment" : "Exercise";
                 var tag = inTheMoney ? $"Automatic {action}" : "OTM";
 
-                return $"{tag}. Underlying: {option.Underlying.Price}";
+                return $"{tag}. Underlying: {option.Underlying.Price.ToStringInvariant()}";
             }
         }
     }

@@ -161,7 +161,7 @@ namespace QuantConnect.Data
                 return false;
             }
 
-            if (!decimal.TryParse(line[1], out interestRate))
+            if (!decimal.TryParse(line[1], NumberStyles.Any, CultureInfo.InvariantCulture, out interestRate))
             {
                 Log.Error($"Couldn't parse primary credit rate while reading FED primary credit rate file. Line: {csvLine}");
                 return false;
