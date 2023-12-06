@@ -109,7 +109,7 @@ cbot,ZF,future,5-Year T-Note Futures,USD,1000.0,0.0078125,1.0
 cbot,ZL,future,Soybean Oil Futures,USD,60000.0,0.0001,1.0,,1,100
 cbot,ZM,future,Soybean Meal Futures,USD,100.0,0.1,1.0
 cbot,ZN,future,10-Year T-Note Futures,USD,1000.0,0.015625,1.0
-cbot,ZO,future,Oats Futures,USD,5000.0,0.25,1.0,,1,100
+cbot,ZO,future,Oats Futures,USD,5000.0,0.0025,1.0,,1,100
 cbot,ZS,future,Soybean Futures,USD,5000.0,0.0025,1.0,,1,100
 cbot,ZT,future,2-Year T-Note Futures,USD,2000,0.00390625,1.0
 cbot,ZW,future,Chicago SRW Wheat Futures,USD,5000.0,0.0025,1.0,,1,100
