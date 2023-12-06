@@ -3485,7 +3485,8 @@ namespace QuantConnect
         {
             foreach (var security in securityChanges.AddedSecurities)
             {
-                security.IsTradable = true;
+                // Don't update the IsTradable flag for Index
+                security.IsTradable = security.Type != SecurityType.Index || security.IsTradable;
 
                 // uses TryAdd, so don't need to worry about duplicates here
                 algorithm.Securities.Add(security);
