@@ -27,12 +27,6 @@ namespace QuantConnect.Securities.Index
     public class Index : Security
     {
         /// <summary>
-        /// Gets or sets whether or not this security should be considered tradable
-        /// </summary>
-        /// <remarks>Index are non tradable always</remarks>
-        public override bool IsTradable => false;
-
-        /// <summary>
         /// Constructor for the INDEX security
         /// </summary>
         /// <param name="exchangeHours">Defines the hours this exchange is open</param>
@@ -67,6 +61,7 @@ namespace QuantConnect.Securities.Index
                 Securities.MarginInterestRateModel.Null
                 )
         {
+            IsTradable = false;   //Index are non tradable by default
             Holdings = new IndexHolding(this, currencyConverter);
         }
 
@@ -107,6 +102,7 @@ namespace QuantConnect.Securities.Index
                 Securities.MarginInterestRateModel.Null
                 )
         {
+            IsTradable = false;   //Index are non tradable by default
             Holdings = new IndexHolding(this, currencyConverter);
         }
     }
