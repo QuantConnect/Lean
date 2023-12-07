@@ -16,14 +16,27 @@
 using Deedle;
 using QuantConnect.Packets;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace QuantConnect.Report.ReportElements
 {
-    internal sealed class SharpeRatioReportElement : ReportElement
+    public class SharpeRatioReportElement : ReportElement
     {
-        private LiveResult _live;
-        private BacktestResult _backtest;
+        /// <summary>
+        /// Live result object
+        /// </summary>
+        protected LiveResult LiveResult { get; }
+
+        /// <summary>
+        /// Backtest result object
+        /// </summary>
+        protected BacktestResult BacktestResult { get; }
+
+        /// <summary>
+        /// Sharpe Ratio from a backtest
+        /// </summary>
+        public virtual decimal? BacktestResultValue => BacktestResult?.TotalPerformance?.PortfolioStatistics?.SharpeRatio;
 
         /// <summary>
         /// Estimate the sharpe ratio of the strategy.
@@ -34,8 +47,8 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="live">Live result object</param>
         public SharpeRatioReportElement(string name, string key, BacktestResult backtest, LiveResult live)
         {
-            _live = live;
-            _backtest = backtest;
+            LiveResult = live;
+            BacktestResult = backtest;
             Name = name;
             Key = key;
         }
@@ -45,14 +58,13 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            if (_live == null)
+            if (LiveResult == null)
             {
-                var backtestSharpe = _backtest?.TotalPerformance?.PortfolioStatistics?.SharpeRatio;
-                Result = backtestSharpe;
-                return backtestSharpe?.ToString("F1") ?? "-";
+                Result = BacktestResultValue;
+                return BacktestResultValue?.ToString("F1") ?? "-";
             }
 
-            var equityPoints = ResultsUtil.EquityPoints(_live);
+            var equityPoints = ResultsUtil.EquityPoints(LiveResult);
             var performance = DeedleUtil.PercentChange(new Series<DateTime, double>(equityPoints).ResampleEquivalence(date => date.Date, s => s.LastValue()));
             if (performance.ValueCount == 0)
             {
@@ -64,14 +76,24 @@ namespace QuantConnect.Report.ReportElements
                 .Values
                 .ToList();
 
+            var liveResultValue = GetLiveResultValue(trailingPerformance);
+            Result = liveResultValue;
+            return liveResultValue?.ToString("F2") ?? "-";
+        }
+
+        /// <summary>
+        /// Get the live result value
+        /// </summary>
+        /// <param name="trailingPerformance">The performance for the last period</param>
+        /// <returns>The desired metric. Sharpe Ratio in this class.</returns>
+        public virtual double? GetLiveResultValue(List<double> trailingPerformance)
+        {
             if (trailingPerformance.Count < 7 || Statistics.Statistics.AnnualStandardDeviation(trailingPerformance) == 0)
             {
-                return "-";
+                return null;
             }
 
-            var sharpe = Statistics.Statistics.SharpeRatio(trailingPerformance, 0.0);
-            Result = sharpe;
-            return sharpe.ToString("F2");
+            return Statistics.Statistics.SharpeRatio(trailingPerformance, 0.0);
         }
     }
 }

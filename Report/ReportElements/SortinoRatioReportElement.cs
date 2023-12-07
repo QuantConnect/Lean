@@ -13,17 +13,18 @@
  * limitations under the License.
 */
 
-using Deedle;
 using QuantConnect.Packets;
-using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace QuantConnect.Report.ReportElements
 {
-    internal sealed class SortinoRatioReportElement : ReportElement
+    internal sealed class SortinoRatioReportElement : SharpeRatioReportElement
     {
-        private LiveResult _live;
-        private BacktestResult _backtest;
+        /// <summary>
+        /// Sortino ratio from a backtest
+        /// </summary>
+        public override decimal? BacktestResultValue => BacktestResult?.TotalPerformance?.PortfolioStatistics?.SortinoRatio;
 
         /// <summary>
         /// Estimate the Sortino ratio of the strategy.
@@ -33,45 +34,23 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
         public SortinoRatioReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+            : base(name, key, backtest, live)
         {
-            _live = live;
-            _backtest = backtest;
-            Name = name;
-            Key = key;
         }
 
         /// <summary>
-        /// The generated output string to be injected
+        /// Get the live result value
         /// </summary>
-        public override string Render()
+        /// <param name="trailingPerformance">The performance for the last period</param>
+        /// <returns>The desired metric. Sortini Ratio in this class.</returns>
+        public override double? GetLiveResultValue(List<double> trailingPerformance)
         {
-            if (_live == null)
-            {
-                var backtestSortino = _backtest?.TotalPerformance?.PortfolioStatistics?.SortinoRatio;
-                Result = backtestSortino;
-                return backtestSortino?.ToString("F1") ?? "-";
-            }
-
-            var equityPoints = ResultsUtil.EquityPoints(_live);
-            var performance = DeedleUtil.PercentChange(new Series<DateTime, double>(equityPoints).ResampleEquivalence(date => date.Date, s => s.LastValue()));
-            if (performance.ValueCount == 0)
-            {
-                return "-";
-            }
-
-            var sixMonthsAgo = performance.LastKey().AddDays(-180);
-            var trailingPerformance = performance.Where(series => series.Key >= sixMonthsAgo && series.Key.DayOfWeek != DayOfWeek.Saturday && series.Key.DayOfWeek != DayOfWeek.Sunday)
-                .Values
-                .ToList();
-
             if (trailingPerformance.Count < 7 || Statistics.Statistics.AnnualStandardDeviation(trailingPerformance.Where(ret => ret < 0).ToList()) == 0)
             {
-                return "-";
+                return null;
             }
 
-            var sortino = Statistics.Statistics.SortinoRatio(trailingPerformance, 0.0);
-            Result = sortino;
-            return sortino.ToString("F2");
+            return Statistics.Statistics.SortinoRatio(trailingPerformance, 0.0);
         }
     }
 }
