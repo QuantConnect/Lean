@@ -15,7 +15,6 @@
 
 using QuantConnect.Packets;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Report.ReportElements
 {
@@ -39,18 +38,13 @@ namespace QuantConnect.Report.ReportElements
         }
 
         /// <summary>
-        /// Get the live result value
+        /// Get annual standard deviation
         /// </summary>
         /// <param name="trailingPerformance">The performance for the last period</param>
-        /// <returns>The desired metric. Sortini Ratio in this class.</returns>
-        public override double? GetLiveResultValue(List<double> trailingPerformance)
+        /// <returns>Annual downside standard deviation.</returns>
+        public override double GetAnnualStandardDeviation(List<double> trailingPerformance)
         {
-            if (trailingPerformance.Count < 7 || Statistics.Statistics.AnnualStandardDeviation(trailingPerformance.Where(ret => ret < 0).ToList()) == 0)
-            {
-                return null;
-            }
-
-            return Statistics.Statistics.SortinoRatio(trailingPerformance, 0.0);
+            return Statistics.Statistics.AnnualDownsideStandardDeviation(trailingPerformance);
         }
     }
 }

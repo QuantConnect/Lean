@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -76,24 +76,26 @@ namespace QuantConnect.Report.ReportElements
                 .Values
                 .ToList();
 
-            var liveResultValue = GetLiveResultValue(trailingPerformance);
+            var annualStandardDeviation = trailingPerformance.Count < 7 ? 0 : GetAnnualStandardDeviation(trailingPerformance);
+            if (annualStandardDeviation <= 0)
+            {
+                return "-";
+            }
+
+            var annualPerformance = Statistics.Statistics.AnnualPerformance(trailingPerformance);
+            var liveResultValue = Statistics.Statistics.SharpeRatio(annualPerformance, annualStandardDeviation, 0.0);
             Result = liveResultValue;
-            return liveResultValue?.ToString("F2") ?? "-";
+            return liveResultValue.ToString("F2");
         }
 
         /// <summary>
-        /// Get the live result value
+        /// Get annual standard deviation
         /// </summary>
         /// <param name="trailingPerformance">The performance for the last period</param>
-        /// <returns>The desired metric. Sharpe Ratio in this class.</returns>
-        public virtual double? GetLiveResultValue(List<double> trailingPerformance)
+        /// <returns>Annual standard deviation.</returns>
+        public virtual double GetAnnualStandardDeviation(List<double> trailingPerformance)
         {
-            if (trailingPerformance.Count < 7 || Statistics.Statistics.AnnualStandardDeviation(trailingPerformance) == 0)
-            {
-                return null;
-            }
-
-            return Statistics.Statistics.SharpeRatio(trailingPerformance, 0.0);
+            return Statistics.Statistics.AnnualStandardDeviation(trailingPerformance);
         }
     }
 }
