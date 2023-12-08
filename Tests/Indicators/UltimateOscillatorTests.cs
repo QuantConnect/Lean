@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Indicators
             return new UltimateOscillator(7, 14, 28);
         }
 
-        [TestCase(4f, 56)]
+        [TestCase(0f, 56)]
         public void IndicatorWorksAsExpectedWhenPricesDontVary(float price, int n)
         {
             var prices = Enumerable.Repeat(price, n);
@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Indicators
                 days++;
             }
 
-            Assert.AreEqual((decimal)0, indicator.Current.Value);
+            Assert.AreEqual((decimal)50, indicator.Current.Value);
         }
 
         protected override string TestFileName => "spy_ultosc.txt";

@@ -106,9 +106,16 @@ namespace QuantConnect.Indicators
             if (!IsReady)
                 return 50m;
 
-            var average1 = _sumTrueRange1.Current.Value != 0 ? _sumBuyingPressure1.Current.Value / _sumTrueRange1.Current.Value : _sumBuyingPressure1.Current.Value;
-            var average2 = _sumTrueRange2.Current.Value != 0 ? _sumBuyingPressure2.Current.Value / _sumTrueRange2.Current.Value : _sumBuyingPressure2.Current.Value;
-            var average3 = _sumTrueRange3.Current.Value != 0 ? _sumBuyingPressure3.Current.Value / _sumTrueRange3.Current.Value : _sumBuyingPressure3.Current.Value;
+            if (_sumTrueRange1.Current.Value == 0
+                || _sumTrueRange2.Current.Value == 0
+                || _sumTrueRange3.Current.Value == 0)
+            {
+                return Current.Value;
+            }
+
+            var average1 = _sumBuyingPressure1.Current.Value / _sumTrueRange1.Current.Value;
+            var average2 = _sumBuyingPressure2.Current.Value / _sumTrueRange2.Current.Value;
+            var average3 = _sumBuyingPressure3.Current.Value / _sumTrueRange3.Current.Value;
 
             return 100m * (4 * average1 + 2 * average2 + average3) / 7;
         }
