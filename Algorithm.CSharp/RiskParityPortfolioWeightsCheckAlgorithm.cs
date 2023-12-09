@@ -114,6 +114,7 @@ namespace QuantConnect.DataLibrary.Tests
             {"Expectancy", "-0.273"},
             {"Net Profit", "0.510%"},
             {"Sharpe Ratio", "0.265"},
+            {"Sortino Ratio", "0.371"},
             {"Probabilistic Sharpe Ratio", "39.108%"},
             {"Loss Rate", "58%"},
             {"Win Rate", "42%"},
