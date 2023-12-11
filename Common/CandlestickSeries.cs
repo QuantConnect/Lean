@@ -141,10 +141,10 @@ namespace QuantConnect
             var closeSum = 0m;
             foreach (Candlestick point in Values)
             {
-                openSum += point.Open;
-                highSum += point.High;
-                lowSum += point.Low;
-                closeSum += point.Close;
+                openSum += point.Open.Value;
+                highSum += point.High.Value;
+                lowSum += point.Low.Value;
+                closeSum += point.Close.Value;
             }
 
             var lastCandlestick = Values[Values.Count - 1];

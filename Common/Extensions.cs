@@ -1143,6 +1143,19 @@ namespace QuantConnect
         /// Provides global smart rounding, numbers larger than 1000 will round to 4 decimal places,
         /// while numbers smaller will round to 7 significant digits
         /// </summary>
+        public static decimal? SmartRounding(this decimal? input)
+        {
+            if (!input.HasValue)
+            {
+                return null;
+            }
+            return input.Value.SmartRounding();
+        }
+
+        /// <summary>
+        /// Provides global smart rounding, numbers larger than 1000 will round to 4 decimal places,
+        /// while numbers smaller will round to 7 significant digits
+        /// </summary>
         public static decimal SmartRounding(this decimal input)
         {
             input = Normalize(input);

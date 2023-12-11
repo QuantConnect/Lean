@@ -15,7 +15,6 @@
 
 using System;
 using System.Linq;
-using System.Runtime.InteropServices;
 using NUnit.Framework;
 
 namespace QuantConnect.Tests.Common
@@ -23,16 +22,18 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class SeriesSamplerTests
     {
-        [Test]
-        public void ReturnsIdentityOnSinglePoint()
+        private readonly DateTime _reference = new(2023, 2, 2);
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ReturnsIdentityOnSinglePoint(bool isNullValue)
         {
             var series = new Series {Name = "name"};
-            var reference = DateTime.Now.ToUniversalTime();
-            series.AddPoint(reference, 1m);
+            series.AddPoint(new ChartPoint(_reference, isNullValue ? null: 1));
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1));
 
-            var sampled = sampler.Sample(series, reference.AddSeconds(-1), reference.AddSeconds(1));
+            var sampled = sampler.Sample(series, _reference.AddSeconds(-1), _reference.AddSeconds(1));
 
             var seriesValues = series.Values.Cast<ChartPoint>().ToList();
             var sampledValues = sampled.Values.Cast<ChartPoint>().ToList();
@@ -43,23 +44,53 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
-        public void DownSamples()
+        public void DownSamplesNullFirstValue()
         {
-            var series = new Series {Name = "name"};
-            var reference = DateTime.UtcNow.Date;
-            series.AddPoint(reference, 1m);
-            series.AddPoint(reference.AddDays(1), 2m);
-            series.AddPoint(reference.AddDays(2), 3m);
-            series.AddPoint(reference.AddDays(3), 4m);
+            var series = new Series { Name = "name" };
+            series.AddPoint(new ChartPoint(_reference, null));
+            series.AddPoint(_reference.AddDays(1), 2m);
+            series.AddPoint(_reference.AddDays(2), 3m);
+            series.AddPoint(_reference.AddDays(3), 4m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1.5));
 
-            var sampled = sampler.Sample(series, reference, reference.AddDays(3));
+            var sampled = sampler.Sample(series, _reference, _reference.AddDays(3));
 
             var seriesValues = series.Values.Cast<ChartPoint>().ToList();
             var sampledValues = sampled.Values.Cast<ChartPoint>().ToList();
 
             Assert.AreEqual(3, sampled.Values.Count);
+
+            Assert.AreEqual(seriesValues[0].x, sampledValues[0].x);
+            Assert.AreEqual(seriesValues[1].y, sampledValues[0].y);
+
+            Assert.AreEqual((seriesValues[1].x + seriesValues[2].x) / 2, sampledValues[1].x);
+            Assert.AreEqual((seriesValues[1].y + seriesValues[2].y) / 2, sampledValues[1].y);
+
+            Assert.AreEqual(seriesValues[3].x, sampledValues[2].x);
+            Assert.AreEqual(seriesValues[3].y, sampledValues[2].y);
+        }
+
+        [Test]
+        public void DownSamples()
+        {
+            var series = new Series {Name = "name"};
+            series.AddPoint(_reference, 1m);
+            series.AddPoint(_reference.AddDays(1), 2m);
+            series.AddPoint(_reference.AddDays(2), 3m);
+            series.AddPoint(_reference.AddDays(3), 4m);
+            series.AddPoint(new ChartPoint(_reference.AddDays(4), null));
+            series.AddPoint(_reference.AddDays(5), 5m);
+            series.AddPoint(_reference.AddDays(6), 6m);
+
+            var sampler = new SeriesSampler(TimeSpan.FromDays(1.5));
+
+            var sampled = sampler.Sample(series, _reference, _reference.AddDays(6));
+
+            var seriesValues = series.Values.Cast<ChartPoint>().ToList();
+            var sampledValues = sampled.Values.Cast<ChartPoint>().ToList();
+
+            Assert.AreEqual(5, sampled.Values.Count);
 
             Assert.AreEqual(seriesValues[0].x, sampledValues[0].x);
             Assert.AreEqual(seriesValues[0].y, sampledValues[0].y);
@@ -69,49 +100,158 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(seriesValues[3].x, sampledValues[2].x);
             Assert.AreEqual(seriesValues[3].y, sampledValues[2].y);
+
+            Assert.AreEqual((seriesValues[4].x + seriesValues[5].x) / 2, sampledValues[3].x);
+            Assert.AreEqual(seriesValues[5].y, sampledValues[3].y);
+
+            Assert.AreEqual(seriesValues[6].x, sampledValues[4].x);
+            Assert.AreEqual(seriesValues[6].y, sampledValues[4].y);
+        }
+
+        [Test]
+        public void DownSamplesWithTimeJump()
+        {
+            var series = new Series { Name = "name" };
+            series.AddPoint(_reference, 1m);
+            series.AddPoint(_reference.AddDays(1), 2m);
+            series.AddPoint(_reference.AddDays(2), 3m);
+            series.AddPoint(_reference.AddDays(3), 4m);
+            series.AddPoint(new ChartPoint(_reference.AddDays(4), null));
+            // time jump
+            series.AddPoint(_reference.AddDays(20), 5m);
+            series.AddPoint(_reference.AddDays(21), 6m);
+
+            var span = TimeSpan.FromDays(1.5);
+            var sampler = new SeriesSampler(span);
+
+            var sampled = sampler.Sample(series, _reference, _reference.AddDays(24));
+
+            var seriesValues = series.Values.Cast<ChartPoint>().ToList();
+            var sampledValues = sampled.Values.Cast<ChartPoint>().ToList();
+
+            Assert.AreEqual(15, sampled.Values.Count);
+
+            Assert.AreEqual(seriesValues[0].x, sampledValues[0].x);
+            Assert.AreEqual(seriesValues[0].y, sampledValues[0].y);
+
+            Assert.AreEqual((seriesValues[1].x + seriesValues[2].x) / 2, sampledValues[1].x);
+            Assert.AreEqual((seriesValues[1].y + seriesValues[2].y) / 2, sampledValues[1].y);
+
+            Assert.AreEqual(seriesValues[3].x, sampledValues[2].x);
+            Assert.AreEqual(seriesValues[3].y, sampledValues[2].y);
+
+            var expectedTime = seriesValues[3].x;
+            for (var i = 3; i < 13; i++)
+            {
+                expectedTime += (long)span.TotalSeconds;
+
+                Assert.AreEqual(expectedTime, sampledValues[i].x);
+                // all nulls
+                Assert.AreEqual(null, sampledValues[i].y);
+            }
+
+            Assert.AreEqual(expectedTime + (long)span.TotalSeconds, sampledValues[13].x);
+            Assert.AreEqual(seriesValues[5].y, sampledValues[13].y);
+
+            Assert.AreEqual(seriesValues[6].x, sampledValues[14].x);
+            Assert.AreEqual(seriesValues[6].y, sampledValues[14].y);
         }
 
         [Test]
         public void SubSamples()
         {
             var series = new Series {Name = "name"};
-            var reference = DateTime.UtcNow.Date;
-            series.AddPoint(reference, 1m);
-            series.AddPoint(reference.AddDays(1), 2m);
-            series.AddPoint(reference.AddDays(2), 3m);
-            series.AddPoint(reference.AddDays(3), 4m);
-            series.AddPoint(reference.AddDays(4), 5m);
+            series.AddPoint(_reference, 1m);
+            series.AddPoint(_reference.AddDays(1), 2m);
+            series.AddPoint(new ChartPoint(_reference.AddDays(2), null));
+            series.AddPoint(_reference.AddDays(3), 4m);
+            series.AddPoint(_reference.AddDays(4), 5m);
+            series.AddPoint(_reference.AddDays(5), 6m);
 
-            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
+            var sampler = new SeriesSampler(TimeSpan.FromDays(0.5));
 
-            var sampled = sampler.Sample(series, reference.AddDays(1), reference.AddDays(2));
+            var sampled = sampler.Sample(series, _reference.AddDays(1), _reference.AddDays(3));
 
             var seriesValues = series.Values.Cast<ChartPoint>().ToList();
             var sampledValues = sampled.Values.Cast<ChartPoint>().ToList();
 
-            Assert.AreEqual(2, sampled.Values.Count);
+            Assert.AreEqual(5, sampled.Values.Count);
 
             Assert.AreEqual(seriesValues[1].x, sampledValues[0].x);
             Assert.AreEqual(seriesValues[1].y, sampledValues[0].y);
 
-            Assert.AreEqual(seriesValues[2].x, sampledValues[1].x);
-            Assert.AreEqual(seriesValues[2].y, sampledValues[1].y);
+            Assert.AreEqual((seriesValues[1].x + seriesValues[2].x) / 2, sampledValues[1].x);
+            Assert.AreEqual(seriesValues[1].y, sampledValues[1].y);
+            Assert.AreEqual(seriesValues[2].x, sampledValues[2].x);
+            Assert.AreEqual(null, sampledValues[2].y);
+
+            Assert.AreEqual((seriesValues[3].x + seriesValues[2].x) / 2, sampledValues[3].x);
+            Assert.AreEqual(seriesValues[3].y, sampledValues[3].y);
+            Assert.AreEqual(seriesValues[3].x, sampledValues[4].x);
+            Assert.AreEqual(seriesValues[3].y, sampledValues[4].y);
+        }
+
+        [Test]
+        public void SubSamplesWithTimeJump()
+        {
+            var series = new Series { Name = "name" };
+            series.AddPoint(_reference, 1m);
+            series.AddPoint(_reference.AddDays(1), 2m);
+            series.AddPoint(new ChartPoint(_reference.AddDays(2), null));
+            series.AddPoint(_reference.AddDays(10), 4m);
+            series.AddPoint(_reference.AddDays(11), 5m);
+            series.AddPoint(_reference.AddDays(12), 6m);
+
+            var span = TimeSpan.FromDays(0.5);
+            var sampler = new SeriesSampler(span);
+
+            var sampled = sampler.Sample(series, _reference.AddDays(1), _reference.AddDays(12));
+
+            var seriesValues = series.Values.Cast<ChartPoint>().ToList();
+            var sampledValues = sampled.Values.Cast<ChartPoint>().ToList();
+
+            Assert.AreEqual(23, sampled.Values.Count);
+
+            Assert.AreEqual(seriesValues[1].x, sampledValues[0].x);
+            Assert.AreEqual(seriesValues[1].y, sampledValues[0].y);
+
+            var expectedTime = seriesValues[1].x;
+            expectedTime += (long)span.TotalSeconds;
+
+            Assert.AreEqual(expectedTime, sampledValues[1].x);
+            Assert.AreEqual(seriesValues[1].y, sampledValues[1].y);
+
+            for (var i = 2; i < 17; i++)
+            {
+                expectedTime += (long)span.TotalSeconds;
+
+                Assert.AreEqual(expectedTime, sampledValues[i].x);
+                Assert.AreEqual(null, sampledValues[i].y);
+            }
+
+            Assert.AreEqual(seriesValues[4].x, sampledValues[20].x);
+            Assert.AreEqual(seriesValues[4].y, sampledValues[20].y);
+
+            Assert.AreEqual(seriesValues[4].x + (long)span.TotalSeconds, sampledValues[21].x);
+            Assert.AreEqual((seriesValues[4].y + seriesValues[5].y) / 2, sampledValues[21].y);
+
+            Assert.AreEqual(seriesValues[5].x, sampledValues[22].x);
+            Assert.AreEqual(seriesValues[5].y, sampledValues[22].y);
         }
 
         [Test]
         public void DoesNotSampleBeforeStart()
         {
             var series = new Series { Name = "name" };
-            var reference = DateTime.UtcNow.Date;
-            series.AddPoint(reference, 1m);
-            series.AddPoint(reference.AddDays(1), 2m);
-            series.AddPoint(reference.AddDays(2), 3m);
-            series.AddPoint(reference.AddDays(3), 4m);
-            series.AddPoint(reference.AddDays(4), 5m);
+            series.AddPoint(_reference, 1m);
+            series.AddPoint(_reference.AddDays(1), 2m);
+            series.AddPoint(_reference.AddDays(2), 3m);
+            series.AddPoint(_reference.AddDays(3), 4m);
+            series.AddPoint(_reference.AddDays(4), 5m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1));
 
-            var sampled = sampler.Sample(series, reference.AddDays(-1), reference.AddDays(2));
+            var sampled = sampler.Sample(series, _reference.AddDays(-1), _reference.AddDays(2));
 
             var seriesValues = series.Values.Cast<ChartPoint>().ToList();
             var sampledValues = sampled.Values.Cast<ChartPoint>().ToList();
@@ -132,12 +272,12 @@ namespace QuantConnect.Tests.Common
         public void HandlesDuplicateTimes()
         {
             var series = new Series();
-            series.Values.Add(new ChartPoint(DateTime.Today, 1m));
-            series.Values.Add(new ChartPoint(DateTime.Today, 2m));
-            series.Values.Add(new ChartPoint(DateTime.Today.AddDays(1), 3m));
+            series.Values.Add(new ChartPoint(_reference, 1m));
+            series.Values.Add(new ChartPoint(_reference, 2m));
+            series.Values.Add(new ChartPoint(_reference.AddDays(1), 3m));
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1));
-            var sampled = sampler.Sample(series, DateTime.Today, DateTime.Today.AddDays(1));
+            var sampled = sampler.Sample(series, _reference, _reference.AddDays(1));
 
             // sampler will only produce one value at the time
             // it was also respect the latest value
@@ -154,13 +294,13 @@ namespace QuantConnect.Tests.Common
         public void DoesNotSampleScatterPlots()
         {
             var scatter = new Series("scatter", SeriesType.Scatter, 0, "$");
-            scatter.AddPoint(DateTime.Today, 1m);
-            scatter.AddPoint(DateTime.Today, 3m);
-            scatter.AddPoint(DateTime.Today.AddSeconds(1), 1.5m);
-            scatter.AddPoint(DateTime.Today.AddSeconds(0.5), 1.5m);
+            scatter.AddPoint(_reference, 1m);
+            scatter.AddPoint(_reference, 3m);
+            scatter.AddPoint(_reference.AddSeconds(1), 1.5m);
+            scatter.AddPoint(_reference.AddSeconds(0.5), 1.5m);
 
             var sampler = new SeriesSampler(TimeSpan.FromMilliseconds(1));
-            var sampled = sampler.Sample(scatter, DateTime.Today, DateTime.Today.AddDays(1));
+            var sampled = sampler.Sample(scatter, _reference, _reference.AddDays(1));
             foreach (var pair in scatter.Values.Cast<ChartPoint>().Zip(sampled.Values.Cast<ChartPoint>(), Tuple.Create))
             {
                 Assert.AreEqual(pair.Item1.x, pair.Item2.x);
@@ -169,15 +309,59 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void SubSampleTreemapPlots()
+        {
+            var treeMap = new Series("Treemap", SeriesType.Treemap, 0, "$");
+            treeMap.AddPoint(_reference, 1m);
+            treeMap.AddPoint(_reference.AddSeconds(0.5), 1.5m);
+            treeMap.AddPoint(_reference.AddMinutes(1), 2m);
+
+            var sampler = new SeriesSampler(TimeSpan.FromMilliseconds(1));
+            var sampled = sampler.Sample(treeMap, _reference, _reference.AddDays(1));
+
+            Assert.AreEqual(1000 * 60 + 1, sampled.Values.Count);
+            foreach (var newValues in sampled.Values.Cast<ChartPoint>())
+            {
+                var expected = (ChartPoint)treeMap.Values[0];
+                if (newValues.Time >= treeMap.Values[1].Time)
+                {
+                    expected = (ChartPoint)treeMap.Values[1];
+                }
+                if (newValues.Time >= treeMap.Values[2].Time)
+                {
+                    expected = (ChartPoint)treeMap.Values[2];
+                }
+                Assert.AreEqual(expected.y, newValues.y);
+            }
+        }
+
+        [Test]
+        public void DownSampleTreemapPlots()
+        {
+            var treeMap = new Series("Treemap", SeriesType.Treemap, 0, "$");
+            treeMap.AddPoint(_reference, 1m);
+            treeMap.AddPoint(_reference, 3m);
+            treeMap.AddPoint(_reference.AddSeconds(0.5), 1.5m);
+            treeMap.AddPoint(_reference.AddSeconds(1), 1.5m);
+
+            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
+            var sampled = sampler.Sample(treeMap, _reference, _reference.AddDays(1));
+
+            // the last value
+            Assert.AreEqual(1, sampled.Values.Count);
+            Assert.AreEqual(_reference, sampled.Values[0].Time);
+            Assert.AreEqual(((ChartPoint)treeMap.Values.Last()).Y, ((ChartPoint)sampled.Values[0]).Y);
+        }
+
+        [Test]
         public void EmitsEmptySeriesWithSinglePointOutsideOfStartStop()
         {
             var series = new Series { Name = "name" };
-            var reference = DateTime.Now;
-            series.AddPoint(reference.AddSeconds(-1), 1m);
+            series.AddPoint(_reference.AddSeconds(-1), 1m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1));
 
-            var sampled = sampler.Sample(series, reference, reference);
+            var sampled = sampler.Sample(series, _reference, _reference);
             Assert.AreEqual(0, sampled.Values.Count);
         }
 
@@ -185,12 +369,11 @@ namespace QuantConnect.Tests.Common
         public void ReturnsIdentityOnSinglePointCandlestickSeries()
         {
             var series = new CandlestickSeries { Name = "name" };
-            var reference = new DateTime(2023, 03, 03);
-            series.AddPoint(reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(_reference, 1m, 2m, 1m, 2m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1));
 
-            var sampled = sampler.Sample(series, reference.AddSeconds(-1), reference.AddSeconds(1));
+            var sampled = sampler.Sample(series, _reference.AddSeconds(-1), _reference.AddSeconds(1));
 
             var seriesValues = series.Values.Cast<Candlestick>().ToList();
             var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
@@ -207,16 +390,15 @@ namespace QuantConnect.Tests.Common
         public void DoesNotSampleCandlestickSeriesBeforeStart()
         {
             var series = new CandlestickSeries { Name = "name" };
-            var reference = new DateTime(2023, 03, 03);
-            series.AddPoint(reference, 1m, 2m, 1m, 2m);
-            series.AddPoint(reference.AddDays(1), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(2), 4m, 4m, 3m, 3m);
-            series.AddPoint(reference.AddDays(3), 2m, 2m, 1m, 1m);
-            series.AddPoint(reference.AddDays(4), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(_reference.AddDays(1), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(2), 4m, 4m, 3m, 3m);
+            series.AddPoint(_reference.AddDays(3), 2m, 2m, 1m, 1m);
+            series.AddPoint(_reference.AddDays(4), 2m, 3m, 2m, 3m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1));
 
-            var sampled = sampler.Sample(series, reference.AddDays(-1), reference.AddDays(2));
+            var sampled = sampler.Sample(series, _reference.AddDays(-1), _reference.AddDays(2));
 
             var seriesValues = series.Values.Cast<Candlestick>().ToList();
             var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
@@ -239,15 +421,14 @@ namespace QuantConnect.Tests.Common
             //      Sampled series:  |--------------|--------------|
 
             var series = new CandlestickSeries { Name = "name" };
-            var reference = new DateTime(2023, 03, 03);
-            series.AddPoint(reference, 1m, 2m, 1m, 2m);
-            series.AddPoint(reference.AddDays(1), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(2), 4m, 4m, 3m, 3m);
-            series.AddPoint(reference.AddDays(3), 2m, 2m, 1m, 1m);
+            series.AddPoint(_reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(_reference.AddDays(1), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(2), 4m, 4m, 3m, 3m);
+            series.AddPoint(_reference.AddDays(3), 2m, 2m, 1m, 1m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1.5));
 
-            var sampled = sampler.Sample(series, reference, reference.AddDays(3));
+            var sampled = sampler.Sample(series, _reference, _reference.AddDays(3));
 
             var seriesValues = series.Values.Cast<Candlestick>().ToList();
             var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
@@ -259,8 +440,8 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(seriesValues[0].Time.AddDays(1.5), sampledValues[1].Time);
             Assert.AreEqual(seriesValues[1].Open, sampledValues[1].Open);
-            Assert.AreEqual(Math.Max(seriesValues[1].High, seriesValues[2].High), sampledValues[1].High);
-            Assert.AreEqual(Math.Min(seriesValues[1].Low, seriesValues[2].Low), sampledValues[1].Low);
+            Assert.AreEqual(Math.Max(seriesValues[1].High.Value, seriesValues[2].High.Value), sampledValues[1].High);
+            Assert.AreEqual(Math.Min(seriesValues[1].Low.Value, seriesValues[2].Low.Value), sampledValues[1].Low);
             Assert.AreEqual(InterpolateClose(seriesValues[1], seriesValues[2], TimeSpan.FromDays(1), sampledValues[1].LongTime), sampledValues[1].Close);
 
             Assert.AreEqual(seriesValues[0].Time.AddDays(2 * 1.5), sampledValues[2].Time);
@@ -279,16 +460,15 @@ namespace QuantConnect.Tests.Common
             //      Sampled series:  |--------------|--------------|--------------
 
             var series = new CandlestickSeries { Name = "name" };
-            var reference = new DateTime(2023, 03, 03);
-            series.AddPoint(reference, 1m, 2m, 1m, 2m);
-            series.AddPoint(reference.AddDays(1), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(2), 4m, 4m, 3m, 3m);
-            series.AddPoint(reference.AddDays(3), 2m, 2m, 1m, 1m);
-            series.AddPoint(reference.AddDays(4), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(_reference.AddDays(1), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(2), 4m, 4m, 3m, 3m);
+            series.AddPoint(_reference.AddDays(3), 2m, 2m, 1m, 1m);
+            series.AddPoint(_reference.AddDays(4), 2m, 3m, 2m, 3m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1.5));
 
-            var sampled = sampler.Sample(series, reference, reference.AddDays(4));
+            var sampled = sampler.Sample(series, _reference, _reference.AddDays(4));
 
             var seriesValues = series.Values.Cast<Candlestick>().ToList();
             var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
@@ -300,8 +480,8 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(seriesValues[0].Time.AddDays(1.5), sampledValues[1].Time);
             Assert.AreEqual(seriesValues[1].Open, sampledValues[1].Open);
-            Assert.AreEqual(Math.Max(seriesValues[1].High, seriesValues[2].High), sampledValues[1].High);
-            Assert.AreEqual(Math.Min(seriesValues[1].Low, seriesValues[2].Low), sampledValues[1].Low);
+            Assert.AreEqual(Math.Max(seriesValues[1].High.Value, seriesValues[2].High.Value), sampledValues[1].High);
+            Assert.AreEqual(Math.Min(seriesValues[1].Low.Value, seriesValues[2].Low.Value), sampledValues[1].Low);
             Assert.AreEqual(InterpolateClose(seriesValues[1], seriesValues[2], TimeSpan.FromDays(1), sampledValues[1].LongTime), sampledValues[1].Close);
 
             Assert.AreEqual(seriesValues[0].Time.AddDays(2 * 1.5), sampledValues[2].Time);
@@ -320,19 +500,18 @@ namespace QuantConnect.Tests.Common
             //      Sampled series:  |------------------------|------------------------|-----------------------
 
             var series = new CandlestickSeries { Name = "name" };
-            var reference = new DateTime(2023, 03, 03);
-            series.AddPoint(reference, 1m, 2m, 1m, 2m);
-            series.AddPoint(reference.AddDays(1), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(2), 4m, 4m, 3m, 3m);
-            series.AddPoint(reference.AddDays(3), 2m, 2m, 1m, 1m);
-            series.AddPoint(reference.AddDays(4), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(5), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(6), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(7), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(_reference.AddDays(1), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(2), 4m, 4m, 3m, 3m);
+            series.AddPoint(_reference.AddDays(3), 2m, 2m, 1m, 1m);
+            series.AddPoint(_reference.AddDays(4), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(5), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(6), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(7), 2m, 3m, 2m, 3m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(2.5));
 
-            var sampled = sampler.Sample(series, reference, reference.AddDays(5));
+            var sampled = sampler.Sample(series, _reference, _reference.AddDays(5));
 
             var seriesValues = series.Values.Cast<Candlestick>().ToList();
             var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
@@ -350,15 +529,15 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(seriesValues[0].Time.AddDays(2 * 2.5), sampledValues[2].Time);
             Assert.AreEqual(seriesValues[4].Open, sampledValues[2].Open);
-            Assert.AreEqual(Math.Max(seriesValues[4].High, seriesValues[5].High), sampledValues[2].High);
-            Assert.AreEqual(Math.Min(seriesValues[4].Low, seriesValues[5].Low), sampledValues[2].Low);
+            Assert.AreEqual(Math.Max(seriesValues[4].High.Value, seriesValues[5].High.Value), sampledValues[2].High);
+            Assert.AreEqual(Math.Min(seriesValues[4].Low.Value, seriesValues[5].Low.Value), sampledValues[2].Low);
             Assert.AreEqual(seriesValues[5].Close, sampledValues[2].Close);
         }
 
         private static decimal InterpolateClose(Candlestick prev, Candlestick next, TimeSpan candleSpan, long time)
         {
             var prevOpenUnitTime = Time.DateTimeToUnixTimeStamp(prev.Time - candleSpan).SafeDecimalCast();
-            return (next.Close - prev.Open) * (time - prevOpenUnitTime) / (next.LongTime - prevOpenUnitTime) + prev.Open;
+            return (next.Close.Value - prev.Open.Value) * (time - prevOpenUnitTime) / (next.LongTime - prevOpenUnitTime) + prev.Open.Value;
         }
 
         [Test]
@@ -370,16 +549,15 @@ namespace QuantConnect.Tests.Common
             //      Sampled series:  |--------------|--------------|--------------|
 
             var series = new CandlestickSeries { Name = "name" };
-            var reference = new DateTime(2023, 03, 03);
-            series.AddPoint(reference, 1m, 2m, 1m, 2m);
-            series.AddPoint(reference.AddDays(1), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(2), 4m, 4m, 3m, 3m);
-            series.AddPoint(reference.AddDays(3), 2m, 2m, 1m, 1m);
-            series.AddPoint(reference.AddDays(4), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(_reference.AddDays(1), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(2), 4m, 4m, 3m, 3m);
+            series.AddPoint(_reference.AddDays(3), 2m, 2m, 1m, 1m);
+            series.AddPoint(_reference.AddDays(4), 2m, 3m, 2m, 3m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1.25));
 
-            var sampled = sampler.Sample(series, reference, reference.AddDays(4));
+            var sampled = sampler.Sample(series, _reference, _reference.AddDays(4));
 
             var seriesValues = series.Values.Cast<Candlestick>().ToList();
             var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
@@ -391,8 +569,8 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(seriesValues[0].Time.AddDays(1.25), sampledValues[1].Time);
             Assert.AreEqual(seriesValues[1].Open, sampledValues[1].Open);
-            Assert.AreEqual(Math.Max(seriesValues[1].High, seriesValues[2].High), sampledValues[1].High);
-            Assert.AreEqual(Math.Min(seriesValues[1].Low, seriesValues[2].Low), sampledValues[1].Low);
+            Assert.AreEqual(Math.Max(seriesValues[1].High.Value, seriesValues[2].High.Value), sampledValues[1].High);
+            Assert.AreEqual(Math.Min(seriesValues[1].Low.Value, seriesValues[2].Low.Value), sampledValues[1].Low);
             Assert.AreEqual(InterpolateClose(seriesValues[1], seriesValues[2], TimeSpan.FromDays(1), sampledValues[1].LongTime), sampledValues[1].Close);
 
             Assert.AreEqual(seriesValues[0].Time.AddDays(2 * 1.25), sampledValues[2].Time);
@@ -412,16 +590,15 @@ namespace QuantConnect.Tests.Common
         public void SubSamplesCandlestickSeries()
         {
             var series = new CandlestickSeries { Name = "name" };
-            var reference = new DateTime(2023, 03, 03);
-            series.AddPoint(reference, 1m, 2m, 1m, 2m);
-            series.AddPoint(reference.AddDays(1), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(2), 4m, 4m, 3m, 3m);
-            series.AddPoint(reference.AddDays(3), 2m, 2m, 1m, 1m);
-            series.AddPoint(reference.AddDays(4), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(_reference.AddDays(1), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(2), 4m, 4m, 3m, 3m);
+            series.AddPoint(_reference.AddDays(3), 2m, 2m, 1m, 1m);
+            series.AddPoint(_reference.AddDays(4), 2m, 3m, 2m, 3m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1));
 
-            var sampled = sampler.Sample(series, reference.AddDays(1), reference.AddDays(2));
+            var sampled = sampler.Sample(series, _reference.AddDays(1), _reference.AddDays(2));
 
             var seriesValues = series.Values.Cast<Candlestick>().ToList();
             var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
@@ -444,14 +621,13 @@ namespace QuantConnect.Tests.Common
             //      Sampled series:  |----|----|----|----|----|----|----|----|
 
             var series = new CandlestickSeries { Name = "name" };
-            var reference = new DateTime(2023, 03, 03);
-            series.AddPoint(reference, 1m, 2m, 1m, 2m);
-            series.AddPoint(reference.AddDays(1), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(2), 4m, 4m, 3m, 3m);
+            series.AddPoint(_reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(_reference.AddDays(1), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(2), 4m, 4m, 3m, 3m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(0.25));
 
-            var sampled = sampler.Sample(series, reference, reference.AddDays(2));
+            var sampled = sampler.Sample(series, _reference, _reference.AddDays(2));
 
             var seriesValues = series.Values.Cast<Candlestick>().ToList();
             var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
@@ -515,6 +691,92 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void SamplesCandlestickSeriesWithLowerSamplingResolutionNullValues()
+        {
+            var series = new CandlestickSeries { Name = "name" };
+            series.AddPoint(_reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(_reference.AddDays(1), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(2), 4m, 4m, 3m, 3m);
+            series.AddPoint(new Candlestick(_reference.AddDays(3), null, null, null, null));
+            // Time jump
+            series.AddPoint(_reference.AddDays(11), 5m, 5m, 5m, 5m);
+
+            var barSpan = TimeSpan.FromDays(1.5);
+            var sampler = new SeriesSampler(barSpan);
+
+            var sampled = sampler.Sample(series, _reference, _reference.AddDays(12));
+
+            var seriesValues = series.Values.Cast<Candlestick>().ToList();
+            var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
+
+            Assert.AreEqual(8, sampled.Values.Count);
+
+            var expectedTime = series.Values[3].Time;
+            for (var i = 2; i < 7; i++)
+            {
+                Assert.AreEqual(expectedTime, sampledValues[i].Time);
+                Assert.AreEqual(null, sampledValues[i].Open);
+                Assert.AreEqual(null, sampledValues[i].High);
+                Assert.AreEqual(null, sampledValues[i].Low);
+                Assert.AreEqual(null, sampledValues[i].Close);
+                expectedTime += barSpan;
+            }
+
+            Assert.AreEqual(expectedTime, sampledValues[7].Time);
+            Assert.AreEqual(seriesValues[4].Open, sampledValues[7].Open);
+            Assert.AreEqual(seriesValues[4].High, sampledValues[7].High);
+            Assert.AreEqual(seriesValues[4].Low, sampledValues[7].Low);
+            Assert.AreEqual(seriesValues[4].Close, sampledValues[7].Close);
+        }
+
+        [Test]
+        public void SamplesCandlestickSeriesWithHigherSamplingResolutionNullValues()
+        {
+            var series = new CandlestickSeries { Name = "name" };
+            series.AddPoint(_reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(_reference.AddDays(1), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(2), 4m, 4m, 3m, 3m);
+            series.AddPoint(new Candlestick(_reference.AddDays(3), null, null, null, null));
+            // Time jump
+            series.AddPoint(_reference.AddDays(10), 5m, 5m, 5m, 5m);
+
+            var barSpan = TimeSpan.FromDays(0.5);
+            var sampler = new SeriesSampler(barSpan);
+
+            var sampled = sampler.Sample(series, _reference, _reference.AddDays(10));
+
+            var seriesValues = series.Values.Cast<Candlestick>().ToList();
+            var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
+
+            Assert.AreEqual(21, sampled.Values.Count);
+
+            var expectedTime = series.Values[2].Time;
+            for (var i = 5; i < 19; i++)
+            {
+                expectedTime += barSpan;
+                Assert.AreEqual(expectedTime, sampledValues[i].Time);
+                Assert.AreEqual(null, sampledValues[i].Open);
+                Assert.AreEqual(null, sampledValues[i].High);
+                Assert.AreEqual(null, sampledValues[i].Low);
+                Assert.AreEqual(null, sampledValues[i].Close);
+            }
+
+            expectedTime += barSpan;
+            Assert.AreEqual(expectedTime, sampledValues[19].Time);
+            Assert.AreEqual(seriesValues[4].Open, sampledValues[19].Open);
+            Assert.AreEqual(seriesValues[4].High, sampledValues[19].High);
+            Assert.AreEqual(seriesValues[4].Low, sampledValues[19].Low);
+            Assert.AreEqual(seriesValues[4].Close, sampledValues[19].Close);
+
+            expectedTime += barSpan;
+            Assert.AreEqual(expectedTime, sampledValues[20].Time);
+            Assert.AreEqual(seriesValues[4].Open, sampledValues[20].Open);
+            Assert.AreEqual(seriesValues[4].High, sampledValues[20].High);
+            Assert.AreEqual(seriesValues[4].Low, sampledValues[20].Low);
+            Assert.AreEqual(seriesValues[4].Close, sampledValues[20].Close);
+        }
+
+        [Test]
         public void SamplesCandlestickSeriesWithHigherUnevenSamplingResolutionAndStopAfterLastPoint()
         {
             // Original series is sampled at 1 day intervals
@@ -523,14 +785,13 @@ namespace QuantConnect.Tests.Common
             //      Sampled series:  |--------|--------|--------|--------|--------
 
             var series = new CandlestickSeries { Name = "name" };
-            var reference = new DateTime(2023, 03, 03);
-            series.AddPoint(reference, 1m, 2m, 1m, 2m);
-            series.AddPoint(reference.AddDays(1), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(2), 4m, 4m, 3m, 3m);
+            series.AddPoint(_reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(_reference.AddDays(1), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(2), 4m, 4m, 3m, 3m);
 
             var sampler = new SeriesSampler(TimeSpan.FromHours(10));
 
-            var sampled = sampler.Sample(series, reference, reference.AddDays(2));
+            var sampled = sampler.Sample(series, _reference, _reference.AddDays(2));
 
             var seriesValues = series.Values.Cast<Candlestick>().ToList();
             var sampledValues = sampled.Values.Cast<Candlestick>().ToList();
@@ -578,14 +839,13 @@ namespace QuantConnect.Tests.Common
             //      Sampled series:  |--------|--------|--------|--------|
 
             var series = new CandlestickSeries { Name = "name" };
-            var reference = new DateTime(2023, 03, 03);
-            series.AddPoint(reference, 1m, 2m, 1m, 2m);
-            series.AddPoint(reference.AddDays(1), 2m, 3m, 2m, 3m);
-            series.AddPoint(reference.AddDays(2), 4m, 4m, 3m, 3m);
+            series.AddPoint(_reference, 1m, 2m, 1m, 2m);
+            series.AddPoint(_reference.AddDays(1), 2m, 3m, 2m, 3m);
+            series.AddPoint(_reference.AddDays(2), 4m, 4m, 3m, 3m);
 
             var sampler = new SeriesSampler(TimeSpan.FromHours(10));
 
-            var sampled = sampler.Sample(series, reference, reference.AddHours(40));
+            var sampled = sampler.Sample(series, _reference, _reference.AddHours(40));
 
             var seriesValues = series.Values.Cast<Candlestick>().ToList();
             var sampledValues = sampled.Values.Cast<Candlestick>().ToList();

@@ -311,10 +311,10 @@ namespace QuantConnect.Statistics
         {
             if (point is ChartPoint)
             {
-                return ((ChartPoint)point).y;
+                return ((ChartPoint)point).y.Value;
             }
 
-            return ((Candlestick)point).Close;
+            return ((Candlestick)point).Close.Value;
         }
 
         /// <summary>
