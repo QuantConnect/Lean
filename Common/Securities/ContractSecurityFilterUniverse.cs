@@ -316,6 +316,8 @@ namespace QuantConnect.Securities
         /// Instructs the engine to only filter contracts on the first time step of each market day.
         /// </summary>
         /// <returns>Universe with filter applied</returns>
+        /// <remarks>Deprecated since filters are non-dynamic by default now. See <see cref="Dynamic"/></remarks>
+        [Obsolete("Deprecated as of 2023-12-11. Filters are non-dynamic by default, which means they will only bee applied daily")]
         public T OnlyApplyFilterAtMarketOpen()
         {
             _onlyApplyOnMarketOpen = true;
