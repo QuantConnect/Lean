@@ -158,7 +158,9 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Mark this filter as dynamic for regular reapplying
+        /// Mark this filter as dynamic for regular reapplying.
+        /// This will make the filter to be applied more regularly. By default, the filter is applied only on market open,
+        /// but with this method it will be applied on every time step.
         /// </summary>
         /// <returns>Universe with filter applied</returns>
         public T Dynamic()
@@ -317,7 +319,8 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <returns>Universe with filter applied</returns>
         /// <remarks>Deprecated since filters are non-dynamic by default now. See <see cref="Dynamic"/></remarks>
-        [Obsolete("Deprecated as of 2023-12-11. Filters are non-dynamic by default, which means they will only bee applied daily")]
+        [Obsolete("Deprecated as of 2023-12-11. Filters are non-dynamic by default, which means they will only bee applied daily. " +
+            "For regular filter reapplying, see the Dynamic method")]
         public T OnlyApplyFilterAtMarketOpen()
         {
             _onlyApplyOnMarketOpen = true;
