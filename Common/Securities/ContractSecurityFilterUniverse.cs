@@ -158,6 +158,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Mark this filter as dynamic for regular reapplying
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public T Dynamic()
+        {
+            IsDynamicInternal = true;
+            return (T)this;
+        }
+
+        /// <summary>
         /// Sets universe of standard contracts (if any) as selection
         /// Contracts by default are standards; only needed to switch back if changed
         /// </summary>

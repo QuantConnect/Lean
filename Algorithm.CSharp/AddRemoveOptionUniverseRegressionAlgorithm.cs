@@ -115,7 +115,8 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception($"Unexpected underlying data point {u.Underlying.EndTime} {u.Underlying}");
                     }
                     // find first put above market price
-                    return u.IncludeWeeklys()
+                    return u.Dynamic()
+                        .IncludeWeeklys()
                         .Strikes(+1, +1)
                         .Expiration(TimeSpan.Zero, TimeSpan.FromDays(1))
                         .Contracts(c => c.Where(s => s.ID.OptionRight == OptionRight.Put));

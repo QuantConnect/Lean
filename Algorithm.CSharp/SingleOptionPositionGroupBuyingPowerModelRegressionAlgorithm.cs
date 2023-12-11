@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equitySymbol);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
+            option.SetFilter(u => u.Dynamic().Strikes(-2, +2).Expiration(0, 180));
         }
 
         public override void OnData(Slice slice)

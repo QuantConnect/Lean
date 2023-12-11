@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(UnderlyingTicker);
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.IncludeWeeklys()
+            option.SetFilter(u => u.Dynamic().IncludeWeeklys()
                                     .Strikes(-2, +2)
                                     .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
 

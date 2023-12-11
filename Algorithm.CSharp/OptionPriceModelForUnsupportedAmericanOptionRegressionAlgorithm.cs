@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 6, 9);
 
             var option = AddOption("AAPL", Resolution.Minute);
+            option.SetFilter(-1, 1, 0, 35, true);
             // BlackSholes model does not support American style options
             option.PriceModel = OptionPriceModels.BlackScholes();
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Subscribe to GOOG Options
             var option = AddOption("GOOG");
-            option.SetFilter(x => x.CallsOnly().Strikes(0, 1).Expiration(0, 30));
+            option.SetFilter(x => x.Dynamic().CallsOnly().Strikes(0, 1).Expiration(0, 30));
         }
 
         public override void OnData(Slice data)

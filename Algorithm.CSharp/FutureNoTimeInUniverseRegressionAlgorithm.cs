@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             _sp500 = futureSP500.Symbol;
             futureSP500.SetFilter(u =>
             {
-                return u.Where(s =>
+                return u.Dynamic().Where(s =>
                 {
                     if (_seenSymbols.ContainsKey(Time) || _seenSymbols.ContainsValue(s))
                     {

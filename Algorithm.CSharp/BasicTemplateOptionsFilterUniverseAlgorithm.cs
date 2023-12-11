@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             OptionSymbol = option.Symbol;
 
             // Set our custom universe filter, Expires today, is a call, and is within 10 dollars of the current price
-            option.SetFilter(universe => from symbol in universe.WeeklysOnly().Expiration(0, 1)
+            option.SetFilter(universe => from symbol in universe.Dynamic().WeeklysOnly().Expiration(0, 1)
                                          where symbol.ID.OptionRight != OptionRight.Put &&
                                               -10 < universe.Underlying.Price - symbol.ID.StrikePrice &&
                                               universe.Underlying.Price - symbol.ID.StrikePrice < 10

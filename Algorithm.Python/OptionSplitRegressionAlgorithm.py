@@ -64,7 +64,7 @@ class OptionSplitRegressionAlgorithm(QCAlgorithm):
 
     # set our strike/expiry filter for this option chain
     def UniverseFunc(self, universe):
-        return universe.IncludeWeeklys().Strikes(-2, 2).Expiration(timedelta(0), timedelta(365*2))
+        return universe.Dynamic().IncludeWeeklys().Strikes(-2, 2).Expiration(timedelta(0), timedelta(365*2))
 
     def OnOrderEvent(self, orderEvent):
         self.Log(str(orderEvent))

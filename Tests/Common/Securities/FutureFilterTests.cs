@@ -292,5 +292,40 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, filtered.Count);
             Assert.AreEqual(symbols[0], filtered[0]);
         }
+
+        [Test]
+        public void SetsDynamicFilter([Values] bool isDynamic)
+        {
+            var time = new DateTime(2016, 02, 26);
+
+            Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc = universe => isDynamic ? universe.Dynamic() : universe;
+
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+                universe => universeFunc(universe as FutureFilterUniverse);
+
+            var filter = new FuncSecurityDerivativeFilter(func);
+            var symbols = new[]
+            {
+                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(0)),
+                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(1)),
+                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(2)),
+                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(3)),
+                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(4)),
+                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(5)),
+                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(6)),
+                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(7)),
+                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(8)),
+                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(9)),
+            };
+
+            var filterUniverse = new FutureFilterUniverse(symbols, time);
+            var filtered = filter.Filter(filterUniverse).ToList();
+            Assert.AreEqual(10, filtered.Count);
+            for (var i = 0; i < symbols.Length; i++)
+            {
+                Assert.AreEqual(symbols[i], filtered[i]);
+            }
+            Assert.AreEqual(isDynamic, filterUniverse.IsDynamic);
+        }
     }
 }

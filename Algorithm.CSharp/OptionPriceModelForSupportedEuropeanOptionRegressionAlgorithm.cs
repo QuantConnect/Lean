@@ -30,6 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2021, 1, 14);
 
             var option = AddIndexOption("SPX", Resolution.Hour);
+            option.SetFilter(-1, 1, 0, 35, true);
             // BlackScholes model supports European style options
             option.PriceModel = OptionPriceModels.BlackScholes();
 

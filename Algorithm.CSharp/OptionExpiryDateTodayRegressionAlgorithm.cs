@@ -38,10 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 06, 15);
 
             var option = AddOption("AAPL", Resolution.Minute);
-            option.SetFilter((universeFilter) =>
-            {
-                return universeFilter.IncludeWeeklys().Strikes(-1, 1).Expiration(0, 10);
-            });
+            option.SetFilter(universeFilter => universeFilter.Dynamic().IncludeWeeklys().Strikes(-1, 1).Expiration(0, 10));
             option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
             _optionSymbol = option.Symbol;
 

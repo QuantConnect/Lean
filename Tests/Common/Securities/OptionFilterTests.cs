@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 Assert.AreEqual(symbols[8], filtered[5]);
             }
-            Assert.AreEqual(true, filterUniverse.IsDynamic);
+            Assert.IsFalse(filterUniverse.IsDynamic);
         }
 
         [Test]
@@ -111,7 +111,7 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 Assert.AreEqual(symbols[5], filtered[4]);
             }
-            Assert.AreEqual(true, filterUniverse.IsDynamic);
+            Assert.IsFalse(filterUniverse.IsDynamic);
         }
 
         [Test]
@@ -150,7 +150,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(symbols[5], filtered[0]);
             Assert.AreEqual(symbols[6], filtered[1]);
             Assert.AreEqual(symbols[7], filtered[2]);
-            Assert.AreEqual(true, filterUniverse.IsDynamic);
+            Assert.IsFalse(filterUniverse.IsDynamic);
         }
 
         [Test]
@@ -178,7 +178,7 @@ namespace QuantConnect.Tests.Common.Securities
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
             var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(0, filtered.Count);
-            Assert.AreEqual(true, filterUniverse.IsDynamic);
+            Assert.IsFalse(filterUniverse.IsDynamic);
         }
 
         [Test]
@@ -217,7 +217,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(symbols[2], filtered[0]);
             Assert.AreEqual(symbols[3], filtered[1]);
             Assert.AreEqual(symbols[4], filtered[2]);
-            Assert.AreEqual(true, filterUniverse.IsDynamic);
+            Assert.IsFalse(filterUniverse.IsDynamic);
         }
 
         [Test]
@@ -245,7 +245,7 @@ namespace QuantConnect.Tests.Common.Securities
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
             var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(0, filtered.Count);
-            Assert.AreEqual(true, filterUniverse.IsDynamic);
+            Assert.IsFalse(filterUniverse.IsDynamic);
         }
 
         [Test]
@@ -266,7 +266,7 @@ namespace QuantConnect.Tests.Common.Securities
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
             var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(0, filtered.Count);
-            Assert.AreEqual(true, filterUniverse.IsDynamic);
+            Assert.IsFalse(filterUniverse.IsDynamic);
         }
 
         [Test]
@@ -304,7 +304,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(symbols[5], filtered[2]);
             Assert.AreEqual(symbols[6], filtered[3]);
             Assert.AreEqual(symbols[7], filtered[4]);
-            Assert.AreEqual(true, filterUniverse.IsDynamic);
+            Assert.IsFalse(filterUniverse.IsDynamic);
         }
 
         [Test]
@@ -563,7 +563,42 @@ namespace QuantConnect.Tests.Common.Securities
             var u = new OptionFilterUniverse(symbols, underlying);
             var filtered = filter.Filter(u).ToList();
             Assert.AreEqual(3, filtered.Count);
-            Assert.AreEqual(true, u.IsDynamic);
+            Assert.IsFalse(u.IsDynamic);
+        }
+
+        [Test]
+        public void SetsDynamicFilter([Values] bool isDynamic)
+        {
+            var time = new DateTime(2016, 02, 26);
+            var underlying = new Tick { Value = 10m, Time = time };
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => isDynamic ? universe.Dynamic() : universe;
+
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+                universe => universeFunc(universe as OptionFilterUniverse);
+
+            var filter = new FuncSecurityDerivativeFilter(func);
+            var symbols = new[]
+            {
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(0)),
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(1)),
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(2)),
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(3)),
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(4)),
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(5)),
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(6)),
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(7)),
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(8)),
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, time.AddDays(9)),
+            };
+            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
+            var filtered = filter.Filter(filterUniverse).ToList();
+            Assert.AreEqual(10, filtered.Count);
+            for (var i = 0; i < symbols.Length; i++)
+            {
+                Assert.AreEqual(symbols[i], filtered[i]);
+            }
+            Assert.AreEqual(isDynamic, filterUniverse.IsDynamic);
         }
     }
 }

@@ -521,9 +521,10 @@ namespace QuantConnect.Securities.Option
         /// <param name="maxStrike">The max strike rank relative to market place, for example, -1 would put
         /// an upper bound of on strike under market price, where a +1 would be an upper bound of one strike
         /// over market price</param>
-        public void SetFilter(int minStrike, int maxStrike)
+        /// <param name="dynamic">Whether to mark the filter as dynamic for regular reapplying</param>
+        public void SetFilter(int minStrike, int maxStrike, bool dynamic = false)
         {
-            SetFilterImp(universe => universe.Strikes(minStrike, maxStrike));
+            SetFilterImp(universe => universe.Strikes(minStrike, maxStrike), dynamic);
         }
 
         /// <summary>
@@ -534,9 +535,10 @@ namespace QuantConnect.Securities.Option
         /// would exclude contracts expiring in less than 10 days</param>
         /// <param name="maxExpiry">The maximum time until expiry to include, for example, TimeSpan.FromDays(10)
         /// would exclude contracts expiring in more than 10 days</param>
-        public void SetFilter(TimeSpan minExpiry, TimeSpan maxExpiry)
+        /// <param name="dynamic">Whether to mark the filter as dynamic for regular reapplying</param>
+        public void SetFilter(TimeSpan minExpiry, TimeSpan maxExpiry, bool dynamic = false)
         {
-            SetFilterImp(universe => universe.Expiration(minExpiry, maxExpiry));
+            SetFilterImp(universe => universe.Expiration(minExpiry, maxExpiry), dynamic);
         }
 
         /// <summary>
@@ -553,11 +555,12 @@ namespace QuantConnect.Securities.Option
         /// would exclude contracts expiring in less than 10 days</param>
         /// <param name="maxExpiry">The maximum time until expiry to include, for example, TimeSpan.FromDays(10)
         /// would exclude contracts expiring in more than 10 days</param>
-        public void SetFilter(int minStrike, int maxStrike, TimeSpan minExpiry, TimeSpan maxExpiry)
+        /// <param name="dynamic">Whether to mark the filter as dynamic for regular reapplying</param>
+        public void SetFilter(int minStrike, int maxStrike, TimeSpan minExpiry, TimeSpan maxExpiry, bool dynamic = false)
         {
             SetFilterImp(universe => universe
                 .Strikes(minStrike, maxStrike)
-                .Expiration(minExpiry, maxExpiry));
+                .Expiration(minExpiry, maxExpiry), dynamic);
         }
 
         /// <summary>
@@ -574,11 +577,12 @@ namespace QuantConnect.Securities.Option
         /// would exclude contracts expiring in less than 10 days</param>
         /// <param name="maxExpiryDays">The maximum time, expressed in days, until expiry to include, for example, 10
         /// would exclude contracts expiring in more than 10 days</param>
-        public void SetFilter(int minStrike, int maxStrike, int minExpiryDays, int maxExpiryDays)
+        /// <param name="dynamic">Whether to mark the filter as dynamic for regular reapplying</param>
+        public void SetFilter(int minStrike, int maxStrike, int minExpiryDays, int maxExpiryDays, bool dynamic = false)
         {
             SetFilterImp(universe => universe
                 .Strikes(minStrike, maxStrike)
-                .Expiration(minExpiryDays, maxExpiryDays));
+                .Expiration(minExpiryDays, maxExpiryDays), dynamic);
         }
 
         /// <summary>
@@ -648,12 +652,17 @@ namespace QuantConnect.Securities.Option
             base.SetDataNormalizationMode(mode);
         }
 
-        private void SetFilterImp(Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc)
+        private void SetFilterImp(Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc, bool dynamic = false)
         {
             ContractFilter = new FuncSecurityDerivativeFilter(universe =>
             {
                 var optionUniverse = universe as OptionFilterUniverse;
                 var result = universeFunc(optionUniverse);
+                if (dynamic)
+                {
+                    result.Dynamic();
+                }
+
                 return result.ApplyTypesFilter();
             });
         }

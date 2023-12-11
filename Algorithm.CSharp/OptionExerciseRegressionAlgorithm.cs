@@ -45,6 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             _option = option.Symbol;
 
             option.SetFilter(universe => from symbol in universe
+                                .Dynamic()
                                 .WeeklysOnly()
                                 .Strikes(-5, +5)
                                 .Expiration(TimeSpan.Zero, TimeSpan.FromDays(29))

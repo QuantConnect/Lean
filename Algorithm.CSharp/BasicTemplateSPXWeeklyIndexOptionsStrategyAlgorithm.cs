@@ -48,7 +48,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             // weekly option SPX contracts
             var spxw = AddIndexOption(spx, "SPXW");
-            spxw.SetFilter(u => u.Strikes(0, 1)
+            spxw.SetFilter(u => u.Dynamic()
+                 .Strikes(0, 1)
                  // single week ahead since there are many SPXW contracts and we want to preserve performance
                  .Expiration(0, 7)
                  .IncludeWeeklys());
@@ -66,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
             OptionChain chain;
             if (slice.OptionChains.TryGetValue(_spxOption, out chain))
             {
-                // we find the first expiration group of call options and order them in ascending strike 
+                // we find the first expiration group of call options and order them in ascending strike
                 var contracts = chain
                     .Where(x => x.Right == OptionRight.Call)
                     .OrderBy(x => x.Expiry)

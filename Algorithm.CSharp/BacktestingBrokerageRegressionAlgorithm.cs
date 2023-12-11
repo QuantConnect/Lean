@@ -64,9 +64,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Get our option
             _option = AddOption("GOOG");
-            _option.SetFilter(u => u.IncludeWeeklys()
-                                   .Strikes(-2, +2)
-                                   .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
+            _option.SetFilter(u => u.Dynamic()
+                                    .IncludeWeeklys()
+                                    .Strikes(-2, +2)
+                                    .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
             _optionSymbol = _option.Symbol;
         }
 

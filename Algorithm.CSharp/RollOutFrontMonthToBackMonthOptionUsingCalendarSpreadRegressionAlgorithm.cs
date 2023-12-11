@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(500000);
 
             var option = AddOption("GOOG", Resolution.Minute);
-            option.SetFilter(universe => universe.Strikes(-1, 1).Expiration(0, 62));
+            option.SetFilter(universe => universe.Dynamic().Strikes(-1, 1).Expiration(0, 62));
 
             _symbol = option.Symbol;
         }
