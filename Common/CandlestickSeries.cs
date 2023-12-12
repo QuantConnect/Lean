@@ -135,16 +135,32 @@ namespace QuantConnect
         {
             if (Values.Count <= 0) return null;
 
-            var openSum = 0m;
-            var highSum = 0m;
-            var lowSum = 0m;
-            var closeSum = 0m;
+            decimal? openSum = null;
+            decimal? highSum = null;
+            decimal? lowSum = null;
+            decimal? closeSum = null;
             foreach (Candlestick point in Values)
             {
-                openSum += point.Open;
-                highSum += point.High;
-                lowSum += point.Low;
-                closeSum += point.Close;
+                if (point.Open.HasValue)
+                {
+                    openSum ??= 0;
+                    openSum += point.Open.Value;
+                }
+                if (point.High.HasValue)
+                {
+                    highSum ??= 0;
+                    highSum += point.High.Value;
+                }
+                if (point.Low.HasValue)
+                {
+                    lowSum ??= 0;
+                    lowSum += point.Low.Value;
+                }
+                if (point.Close.HasValue)
+                {
+                    closeSum ??= 0;
+                    closeSum += point.Close.Value;
+                }
             }
 
             var lastCandlestick = Values[Values.Count - 1];

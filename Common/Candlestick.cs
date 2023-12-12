@@ -15,8 +15,8 @@
 
 using System;
 using Newtonsoft.Json;
-using QuantConnect.Data.Market;
 using QuantConnect.Util;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect
 {
@@ -24,12 +24,13 @@ namespace QuantConnect
     /// Single candlestick for a candlestick chart
     /// </summary>
     [JsonConverter(typeof(CandlestickJsonConverter))]
-    public class Candlestick : Bar, ISeriesPoint
+    public class Candlestick : ISeriesPoint
     {
-        private decimal _open;
-        private decimal _high;
-        private decimal _low;
-        private decimal _close;
+        private bool _openSet;
+        private decimal? _open;
+        private decimal? _high;
+        private decimal? _low;
+        private decimal? _close;
 
         /// <summary>
         /// The candlestick time
@@ -50,7 +51,7 @@ namespace QuantConnect
         /// <summary>
         /// The candlestick open price
         /// </summary>
-        public override decimal Open
+        public decimal? Open
         {
             get { return _open; }
             set { _open = value.SmartRounding(); }
@@ -59,7 +60,7 @@ namespace QuantConnect
         /// <summary>
         /// The candlestick high price
         /// </summary>
-        public override decimal High
+        public decimal? High
         {
             get { return _high; }
             set { _high = value.SmartRounding(); }
@@ -68,7 +69,7 @@ namespace QuantConnect
         /// <summary>
         /// The candlestick low price
         /// </summary>
-        public override decimal Low
+        public decimal? Low
         {
             get { return _low; }
             set { _low = value.SmartRounding(); }
@@ -77,7 +78,7 @@ namespace QuantConnect
         /// <summary>
         /// The candlestick close price
         /// </summary>
-        public override decimal Close
+        public decimal? Close
         {
             get { return _close; }
             set { _close = value.SmartRounding(); }
@@ -96,7 +97,7 @@ namespace QuantConnect
         /// <param name="high">Candlestick high price</param>
         /// <param name="low">Candlestick low price</param>
         /// <param name="close">Candlestick close price</param>
-        public Candlestick(long time, decimal open, decimal high, decimal low, decimal close)
+        public Candlestick(long time, decimal? open, decimal? high, decimal? low, decimal? close)
             : this(QuantConnect.Time.UnixTimeStampToDateTime(time), open, high, low, close)
         {
         }
@@ -109,7 +110,7 @@ namespace QuantConnect
         /// <param name="high">Candlestick high price</param>
         /// <param name="low">Candlestick low price</param>
         /// <param name="close">Candlestick close price</param>
-        public Candlestick(DateTime time, decimal open, decimal high, decimal low, decimal close)
+        public Candlestick(DateTime time, decimal? open, decimal? high, decimal? low, decimal? close)
         {
             Time = time;
             Open = open;
@@ -161,6 +162,34 @@ namespace QuantConnect
         public ISeriesPoint Clone()
         {
             return new Candlestick(this);
+        }
+
+        /// <summary>
+        /// Updates the candlestick with a new value. This will aggregate the OHLC bar
+        /// </summary>
+        /// <param name="value">The new value</param>
+        public void Update(decimal? value)
+        {
+            if (value.HasValue)
+            {
+                Update(value.Value);
+            }
+        }
+
+        /// <summary>
+        /// Updates the candlestick with a new value. This will aggregate the OHLC bar
+        /// </summary>
+        /// <param name="value">The new value</param>
+        public void Update(decimal value)
+        {
+            if (!_openSet)
+            {
+                Open = High = Low = Close = value;
+                _openSet = true;
+            }
+            else if (value > High) High = value;
+            else if (value < Low) Low = value;
+            Close = value;
         }
     }
 }

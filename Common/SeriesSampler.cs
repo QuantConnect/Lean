@@ -14,10 +14,10 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using QuantConnect.Util;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect
 {
@@ -26,7 +26,10 @@ namespace QuantConnect
     /// </summary>
     public class SeriesSampler
     {
-        private readonly TimeSpan _step;
+        /// <summary>
+        /// The desired sampling resolution
+        /// </summary>
+        protected TimeSpan Step { get; set; }
 
         /// <summary>
         /// Creates a new SeriesSampler to sample Series data on the specified resolution
@@ -34,7 +37,7 @@ namespace QuantConnect
         /// <param name="resolution">The desired sampling resolution</param>
         public SeriesSampler(TimeSpan resolution)
         {
-            _step = resolution;
+            Step = resolution;
         }
 
         /// <summary>
@@ -45,7 +48,7 @@ namespace QuantConnect
         /// <param name="stop">The date to stop sampling, if after stop of data, then stop of data will be used</param>
         /// <param name="truncateValues">True will truncate values to integers</param>
         /// <returns>The sampled series</returns>
-        public BaseSeries Sample(BaseSeries series, DateTime start, DateTime stop, bool truncateValues = false)
+        public virtual BaseSeries Sample(BaseSeries series, DateTime start, DateTime stop, bool truncateValues = false)
         {
             if (series is Series seriesToSample)
             {
@@ -72,15 +75,27 @@ namespace QuantConnect
             var sampledCharts = new Dictionary<string, Chart>();
             foreach (var chart in charts.Values)
             {
-                var sampledChart = new Chart(chart.Name);
-                sampledCharts.Add(sampledChart.Name, sampledChart);
-                foreach (var series in chart.Series.Values)
-                {
-                    var sampledSeries = Sample(series, start, stop);
-                    sampledChart.AddSeries(sampledSeries);
-                }
+                sampledCharts[chart.Name] = SampleChart(chart, start, stop);
             }
             return sampledCharts;
+        }
+
+        /// <summary>
+        /// Samples the given chart
+        /// </summary>
+        /// <param name="chart">The chart to be sampled</param>
+        /// <param name="start">The date to start sampling</param>
+        /// <param name="stop">The date to stop sampling</param>
+        /// <returns>The sampled chart</returns>
+        public Chart SampleChart(Chart chart, DateTime start, DateTime stop)
+        {
+            var sampledChart = new Chart(chart.Name);
+            foreach (var series in chart.Series.Values)
+            {
+                var sampledSeries = Sample(series, start, stop);
+                sampledChart.AddSeries(sampledSeries);
+            }
+            return sampledChart;
         }
 
         /// <summary>
@@ -144,9 +159,18 @@ namespace QuantConnect
                 // iterate until we pass where we want our next point
                 while (nextSampleTime <= current.Time && nextSampleTime <= stop)
                 {
-                    var sampledPoint = TruncateValue(Interpolate(previous, current, nextSampleTime), truncateValues, clone: false);
+                    ISeriesPoint sampledPoint;
+                    if (series.SeriesType == SeriesType.Treemap)
+                    {
+                        // just carry along the values
+                        sampledPoint = new ChartPoint(nextSampleTime, (nextSampleTime + Step) > current.Time ? current.Y : previous.Y);
+                    }
+                    else
+                    {
+                        sampledPoint = TruncateValue(Interpolate(previous, current, nextSampleTime, (decimal)Step.TotalSeconds), truncateValues, clone: false);
+                    }
                     sampled.Values.Add(sampledPoint);
-                    nextSampleTime += _step;
+                    nextSampleTime += Step;
                 }
 
                 // if we've passed our stop then we're finished sampling
@@ -196,7 +220,7 @@ namespace QuantConnect
             if (candlesticks[startIndex].Time == nextSampleTime)
             {
                 sampledSeries.Values.Add(candlesticks[startIndex].Clone());
-                nextSampleTime += _step;
+                nextSampleTime += Step;
                 startIndex++;
             }
 
@@ -204,6 +228,11 @@ namespace QuantConnect
             for (var i = startIndex; i < seriesSize && nextSampleTime <= stop; i++)
             {
                 var current = (Candlestick)candlesticks[i];
+                Candlestick next = null;
+                if (i + 1 < candlesticks.Count)
+                {
+                    next = (Candlestick)candlesticks[i + 1];
+                }
                 if (nextSampleTime > current.Time)
                 {
                     continue;
@@ -218,9 +247,10 @@ namespace QuantConnect
                     ? candlesticks[startIndex - 1].Time
                     : first.Time - (candlesticks[startIndex + 1].Time - candlesticks[startIndex].Time);
                 Candlestick previous = null;
-                while (nextSampleTime <= current.Time && nextSampleTime <= stop)
+                var isNull = false;
+                do
                 {
-                    var interpolated = Interpolate(sampledCandlestick, first, current, firstOpenTime, nextSampleTime);
+                    var interpolated = Interpolate(sampledCandlestick, first, current, firstOpenTime, nextSampleTime, (decimal)Step.TotalSeconds);
 
                     if (previous != null)
                     {
@@ -229,8 +259,18 @@ namespace QuantConnect
 
                     sampledSeries.Values.Add(interpolated);
                     previous = interpolated;
-                    nextSampleTime += _step;
+                    nextSampleTime += Step;
+
+                    if(next != null && (nextSampleTime + Step) < next.Time && interpolated.Open == null)
+                    {
+                        isNull = true;
+                    }
+                    else
+                    {
+                        isNull = false;
+                    }
                 }
+                while ((nextSampleTime <= current.Time || isNull) && nextSampleTime <= stop);
 
                 // Update the start index
                 startIndex = i + 1;
@@ -250,19 +290,14 @@ namespace QuantConnect
                 Time = time
             };
 
-            // Set the open
-            aggregatedCandlestick.Update(((Candlestick)candlesticks[start]).Open);
-
-            // Set high and low
             for (var j = start; j < end; j++)
             {
                 var current = (Candlestick)candlesticks[j];
+                aggregatedCandlestick.Update(current.Open);
                 aggregatedCandlestick.Update(current.High);
                 aggregatedCandlestick.Update(current.Low);
+                aggregatedCandlestick.Update(current.Close);
             }
-
-            // Set the close
-            aggregatedCandlestick.Update(((Candlestick)candlesticks[end - 1]).Close);
 
             return (Candlestick)TruncateValue(aggregatedCandlestick, truncateValues, clone: false);
         }
@@ -270,16 +305,36 @@ namespace QuantConnect
         /// <summary>
         /// Linear interpolation used for sampling
         /// </summary>
-        private static decimal Interpolate(decimal x0, decimal y0, decimal x1, decimal y1, decimal x)
+        protected static decimal? Interpolate(decimal x0, decimal? y0, decimal x1, decimal? y1, decimal xTarget, decimal step)
         {
+            if (!y1.HasValue)
+            {
+                // if the next point isn't there we wont interpolate the value, it means it's the end, unless the target time is the current time or close
+                if (xTarget - x0 <= step)
+                {
+                    return y0;
+                }
+                return null;
+            }
+
+            if (!y0.HasValue)
+            {
+                // if the previous value isn't there, return null unlesss we reach the target end time or close enough
+                if (x1 - xTarget <= step)
+                {
+                    return y1;
+                }
+                return null;
+            }
+
             //  y=mx+b
-            return (y1 - y0) * (x - x0) / (x1 - x0) + y0;
+            return (y1 - y0) * (xTarget - x0) / (x1 - x0) + y0;
         }
 
         /// <summary>
         /// Linear interpolation used for sampling
         /// </summary>
-        private static ChartPoint Interpolate(ChartPoint previous, ChartPoint current, DateTime targetTime)
+        private static ChartPoint Interpolate(ChartPoint previous, ChartPoint current, DateTime targetTime, decimal step)
         {
             if (current.X == previous.X)
             {
@@ -288,14 +343,14 @@ namespace QuantConnect
 
             var targetUnixTime = Time.DateTimeToUnixTimeStamp(targetTime).SafeDecimalCast();
 
-            return new ChartPoint(targetTime, Interpolate(previous.X, previous.Y, current.X, current.Y, targetUnixTime));
+            return new ChartPoint(targetTime, Interpolate(previous.X, previous.Y, current.X, current.Y, targetUnixTime, step));
         }
 
         /// <summary>
         /// Linear interpolation used for sampling
         /// </summary>
         private static Candlestick Interpolate(Candlestick template, Candlestick first, Candlestick current,
-            DateTime firstOpenTime, DateTime targetTime)
+            DateTime firstOpenTime, DateTime targetTime, decimal step)
         {
             Candlestick result;
             if (firstOpenTime == current.Time)
@@ -310,7 +365,7 @@ namespace QuantConnect
 
             var targetUnixTime = Time.DateTimeToUnixTimeStamp(targetTime).SafeDecimalCast();
             var firstOpenUnitTime = Time.DateTimeToUnixTimeStamp(firstOpenTime).SafeDecimalCast();
-            result.Close = Interpolate(firstOpenUnitTime, first.Open, current.LongTime, current.Close, targetUnixTime);
+            result.Close = Interpolate(firstOpenUnitTime, first.Open, current.LongTime, current.Close, targetUnixTime, step);
 
             return result;
         }
@@ -330,14 +385,14 @@ namespace QuantConnect
 
             if (truncatedPoint is ChartPoint chartPoint)
             {
-                chartPoint.y = Math.Truncate(chartPoint.y);
+                chartPoint.y = SafeTruncate(chartPoint.y);
             }
             else if (truncatedPoint is Candlestick candlestick)
             {
-                candlestick.Open = Math.Truncate(candlestick.Open);
-                candlestick.High = Math.Truncate(candlestick.High);
-                candlestick.Low = Math.Truncate(candlestick.Low);
-                candlestick.Close = Math.Truncate(candlestick.Close);
+                candlestick.Open = SafeTruncate(candlestick.Open.Value);
+                candlestick.High = SafeTruncate(candlestick.High.Value);
+                candlestick.Low = SafeTruncate(candlestick.Low.Value);
+                candlestick.Close = SafeTruncate(candlestick.Close.Value);
             }
 
             return truncatedPoint;
@@ -346,7 +401,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets the identity series, this is the series with no sampling applied.
         /// </summary>
-        private static T GetIdentitySeries<T>(T series, DateTime start, DateTime stop, bool truncateValues)
+        protected static T GetIdentitySeries<T>(T series, DateTime start, DateTime stop, bool truncateValues)
             where T : BaseSeries
         {
             var sampled = (T)series.Clone(empty: true);
@@ -359,6 +414,15 @@ namespace QuantConnect
                 }
             }
             return sampled;
+        }
+
+        private static decimal? SafeTruncate(decimal? value)
+        {
+            if (value.HasValue)
+            {
+                return Math.Truncate(value.Value);
+            }
+            return null;
         }
     }
 }

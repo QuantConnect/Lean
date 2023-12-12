@@ -168,7 +168,10 @@ namespace QuantConnect
             var sum = 0m;
             foreach (ChartPoint point in Values)
             {
-                sum += point.y;
+                if(point.y.HasValue)
+                {
+                    sum += point.y.Value;
+                }
             }
 
             var lastPoint = (ChartPoint)Values.Last();

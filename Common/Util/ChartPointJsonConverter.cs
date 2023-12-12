@@ -64,6 +64,12 @@ namespace QuantConnect.Util
                 {
                     return new ChartPoint(x.Value<long>(), y.Value<decimal>());
                 }
+
+                if (y.Type == JTokenType.Null)
+                {
+                    return new ChartPoint(x.Value<long>(), null);
+                }
+
                 return null;
             }
 

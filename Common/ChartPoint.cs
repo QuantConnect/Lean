@@ -27,7 +27,7 @@ namespace QuantConnect
     {
         private DateTime _time;
         private long _x;
-        private decimal _y;
+        private decimal? _y;
 
         /// <summary>
         /// Time of this chart series point
@@ -67,7 +67,7 @@ namespace QuantConnect
         /// Chart point value
         /// </summary>
         /// <remarks>Lower case for javascript encoding simplicity</remarks>
-        public decimal y
+        public decimal? y
         {
             get
             {
@@ -89,7 +89,7 @@ namespace QuantConnect
         /// Shortcut for <see cref="y"/> for C# naming conventions
         /// </summary>
         [JsonIgnore]
-        public decimal Y => y;
+        public decimal? Y => y;
 
         /// <summary>
         /// Default constructor. Using in SeriesSampler.
@@ -101,7 +101,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="xValue">X value often representing a time in seconds</param>
         /// <param name="yValue">Y value</param>
-        public ChartPoint(long xValue, decimal yValue)
+        public ChartPoint(long xValue, decimal? yValue)
             : this()
         {
             x = xValue;
@@ -109,7 +109,7 @@ namespace QuantConnect
         }
 
         ///Constructor for datetime-value arguments:
-        public ChartPoint(DateTime time, decimal value)
+        public ChartPoint(DateTime time, decimal? value)
             : this()
         {
             Time = time;
