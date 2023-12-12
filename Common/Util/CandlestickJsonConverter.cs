@@ -75,8 +75,8 @@ namespace QuantConnect.Util
                 }
                 return new Candlestick(chartPoint.X, chartPoint.Y, chartPoint.Y, chartPoint.Y, chartPoint.Y);
             }
-            return new Candlestick(jArray[0].Value<long>(), jArray[1].Value<decimal>(), jArray[2].Value<decimal>(),
-                jArray[3].Value<decimal>(), jArray[4].Value<decimal>());
+            return new Candlestick(jArray[0].Value<long>(), jArray[1].Value<decimal?>(), jArray[2].Value<decimal?>(),
+                jArray[3].Value<decimal?>(), jArray[4].Value<decimal?>());
         }
 
         /// <summary>
