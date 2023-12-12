@@ -389,13 +389,10 @@ namespace QuantConnect
             }
             else if (truncatedPoint is Candlestick candlestick)
             {
-                if (candlestick.Open.HasValue)
-                {
-                    candlestick.Open = Math.Truncate(candlestick.Open.Value);
-                    candlestick.High = Math.Truncate(candlestick.High.Value);
-                    candlestick.Low = Math.Truncate(candlestick.Low.Value);
-                    candlestick.Close = Math.Truncate(candlestick.Close.Value);
-                }
+                candlestick.Open = SafeTruncate(candlestick.Open.Value);
+                candlestick.High = SafeTruncate(candlestick.High.Value);
+                candlestick.Low = SafeTruncate(candlestick.Low.Value);
+                candlestick.Close = SafeTruncate(candlestick.Close.Value);
             }
 
             return truncatedPoint;
@@ -417,6 +414,15 @@ namespace QuantConnect
                 }
             }
             return sampled;
+        }
+
+        private static decimal? SafeTruncate(decimal? value)
+        {
+            if (value.HasValue)
+            {
+                return Math.Truncate(value.Value);
+            }
+            return null;
         }
     }
 }
