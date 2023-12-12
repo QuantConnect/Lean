@@ -50,7 +50,7 @@ namespace QuantConnect.Report
         /// <returns>Always true</returns>
         public override bool CanConvert(Type objectType)
         {
-            return true;
+            return objectType.IsAssignableTo(typeof(T));
         }
 
         /// <summary>
