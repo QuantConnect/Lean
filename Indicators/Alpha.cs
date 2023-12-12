@@ -25,9 +25,9 @@ namespace QuantConnect.Indicators
     /// In financial analysis, the Alpha indicator is used to measure the performance of an investment (such as a stock or ETF) 
     /// relative to a benchmark index, often representing the broader market. Alpha indicates the excess return of the investment 
     /// compared to the return of the benchmark index. A positive Alpha implies that the investment has performed better than 
-    /// its benchmark index, while a negative Alpha indicates underperformance.
+    /// its benchmark index, while a negative Alpha indicates under performance.
     /// 
-    /// The S&P 500 index is frequently used as a benchmark in Alpha calculations to represent the overall market performance. 
+    /// The S P 500 index is frequently used as a benchmark in Alpha calculations to represent the overall market performance. 
     /// Alpha is an essential tool for investors to assess the active return on an investment and understand how well their 
     /// investment is performing compared to the market average.
     /// </summary>
