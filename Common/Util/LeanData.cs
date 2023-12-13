@@ -929,7 +929,8 @@ namespace QuantConnect.Util
                 }
             }
 
-            return string.Join(",", args);
+            var argsFormatted = args.Select(x => Convert.ToString(x, CultureInfo.InvariantCulture));
+            return string.Join(",", argsFormatted);
         }
 
         /// <summary>

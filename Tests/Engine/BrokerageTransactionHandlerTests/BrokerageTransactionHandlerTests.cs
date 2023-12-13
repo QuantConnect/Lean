@@ -258,8 +258,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         [TestCase("VIXW", "4.16", "4.16")]
         public void DynamicIndexOptionPriceRoundeding(string indexOption, string orderPriceStr, string expectedPriceStr)
         {
-            var orderPrice = decimal.Parse(orderPriceStr, System.Globalization.NumberStyles.Any);
-            var expectedPrice = decimal.Parse(expectedPriceStr, System.Globalization.NumberStyles.Any);
+            var orderPrice = decimal.Parse(orderPriceStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
+            var expectedPrice = decimal.Parse(expectedPriceStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
 
             //Initializes the transaction handler
             _algorithm.SetBrokerageModel(new DefaultBrokerageModel());

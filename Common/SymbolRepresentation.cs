@@ -369,7 +369,7 @@ namespace QuantConnect
         {
             var letter = _optionSymbology.Where(x => x.Value.Item2 == symbol.ID.OptionRight && x.Value.Item1 == symbol.ID.Date.Month).Select(x => x.Key).Single();
             var twoYearDigit = symbol.ID.Date.ToString("yy");
-            return $"{SecurityIdentifier.Ticker(symbol.Underlying, symbol.ID.Date)}{twoYearDigit}{symbol.ID.Date.Day:00}{letter}{symbol.ID.StrikePrice}";
+            return $"{SecurityIdentifier.Ticker(symbol.Underlying, symbol.ID.Date)}{twoYearDigit}{symbol.ID.Date.Day:00}{letter}{symbol.ID.StrikePrice.ToStringInvariant()}";
         }
 
         /// <summary>
@@ -395,11 +395,7 @@ namespace QuantConnect
             var underlying = ticker.Substring(0, optionTypeDelimiter - 4);
 
             // if we cannot parse strike price, we ignore this contract, but log the information.
-            decimal strikePrice;
-            if (!Decimal.TryParse(strikePriceString, out strikePrice))
-            {
-                return null;
-            }
+            var strikePrice = Parse.Decimal(strikePriceString);
 
             int day;
 
