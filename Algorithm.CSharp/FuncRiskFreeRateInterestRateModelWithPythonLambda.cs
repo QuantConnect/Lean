@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Asserts we can use a C# function as a FuncRiskFreeRateInterestRateModel
+    /// </summary>
     public class FuncRiskFreeRateInterestRateModelWithPythonLambda: QCAlgorithm, IRegressionAlgorithmDefinition
     {
         FuncRiskFreeRateInterestRateModel _model;

@@ -33,6 +33,9 @@ namespace QuantConnect.Data
             _getInterestRateFunc = getInterestRateFunc;
         }
 
+        /// <summary>
+        /// Create class instance of interest rate provider with given PyObject
+        /// </summary>
         public FuncRiskFreeRateInterestRateModel(PyObject getInterestRateFunc)
         {
             using (Py.GIL())
