@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             _sp500 = futureSP500.Symbol;
             futureSP500.SetFilter(u =>
             {
-                return u.Dynamic().Where(s =>
+                return u.Where(s =>
                 {
                     if (_seenSymbols.ContainsKey(Time) || _seenSymbols.ContainsValue(s))
                     {
@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 14931;
+        public long DataPoints => 18491;
 
         /// <summary>
         /// Data Points count of the algorithm history

@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equity.Symbol);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Dynamic().Strikes(-1, +1).Expiration(0, 30));
+            option.SetFilter(u => u.Strikes(-1, +1).Expiration(0, 30));
         }
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -106,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 465320;
+        public long DataPoints => 463141;
 
         /// </summary>
         /// Data Points count of the algorithm history

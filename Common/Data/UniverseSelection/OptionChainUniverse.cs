@@ -98,12 +98,7 @@ namespace QuantConnect.Data.UniverseSelection
             _optionFilterUniverse.Refresh(availableContracts, data.Underlying, localEndTime);
 
             var results = Option.ContractFilter.Filter(_optionFilterUniverse);
-
-            // if results are not dynamic, we cache them and won't call filtering till the end of the day
-            if (!results.IsDynamic)
-            {
-                _cacheDate = exchangeDate;
-            }
+            _cacheDate = exchangeDate;
 
             // always prepend the underlying symbol
             return _underlyingSymbol.Concat(results);

@@ -24,7 +24,6 @@ class OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm(OptionPric
         self.SetEndDate(2014, 6, 9)
 
         option = self.AddOption("AAPL", Resolution.Minute)
-        option.SetFilter(-1, 1, 0, 35, True)
         # BlackSholes model does not support American style options
         option.PriceModel = OptionPriceModels.BlackScholes()
 

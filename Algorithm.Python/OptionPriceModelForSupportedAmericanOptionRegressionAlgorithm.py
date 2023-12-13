@@ -24,7 +24,6 @@ class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm(OptionPriceM
         self.SetEndDate(2014, 6, 9)
 
         option = self.AddOption("AAPL", Resolution.Minute)
-        option.SetFilter(-1, 1, 0, 35, True)
         # BaroneAdesiWhaley model supports American style options
         option.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
 

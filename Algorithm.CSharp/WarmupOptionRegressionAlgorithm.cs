@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(UnderlyingTicker);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Dynamic().Strikes(-5, +5).Expiration(0, 180).IncludeWeeklys());
+            option.SetFilter(u => u.Strikes(-5, +5).Expiration(0, 180).IncludeWeeklys());
             SetWarmUp(TimeSpan.FromDays(1));
         }
 
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 630923;
+        public virtual long DataPoints => 609294;
 
         /// <summary>
         /// Data Points count of the algorithm history

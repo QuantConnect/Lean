@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption("GOOG");
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(-2, +2, 0, 180, true);
+            option.SetFilter(-2, +2, 0, 180);
 
             SetBenchmark("GOOG");
         }
@@ -131,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 475777;
+        public long DataPoints => 471124;
 
         /// <summary>
         /// Data Points count of the algorithm history

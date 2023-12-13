@@ -33,12 +33,12 @@ class NullBuyingPowerOptionBullCallSpreadAlgorithm(QCAlgorithm):
         option = self.AddOption(equity.Symbol)
         self.optionSymbol = option.Symbol
 
-        option.SetFilter(-2, 2, 0, 180, True)
-
+        option.SetFilter(-2, 2, 0, 180)
+        
     def OnData(self, slice):
         if self.Portfolio.Invested or not self.IsMarketOpen(self.optionSymbol):
             return
-
+       
         chain = slice.OptionChains.get(self.optionSymbol)
         if chain:
             call_contracts = [x for x in chain if x.Right == OptionRight.Call]
@@ -57,7 +57,7 @@ class NullBuyingPowerOptionBullCallSpreadAlgorithm(QCAlgorithm):
                 self.MarketOrder(short_call.Symbol, -quantity),
                 self.MarketOrder(long_call.Symbol, quantity)
             ]
-
+                
             for ticket in tickets:
                 if ticket.Status != OrderStatus.Filled:
                     raise Exception(f"There should be no restriction on buying {ticket.Quantity} of {ticket.Symbol} with BuyingPowerModel.Null")

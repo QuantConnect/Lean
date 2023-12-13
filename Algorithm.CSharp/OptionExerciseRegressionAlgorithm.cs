@@ -45,7 +45,6 @@ namespace QuantConnect.Algorithm.CSharp
             _option = option.Symbol;
 
             option.SetFilter(universe => from symbol in universe
-                                .Dynamic()
                                 .WeeklysOnly()
                                 .Strikes(-5, +5)
                                 .Expiration(TimeSpan.Zero, TimeSpan.FromDays(29))
@@ -114,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1895857;
+        public long DataPoints => 1864376;
 
         /// <summary>
         /// Data Points count of the algorithm history

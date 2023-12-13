@@ -41,16 +41,16 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
 
     def FilterFunction(self, universe):
         #Expires today, is a call, and is within 10 dollars of the current price
-        universe = universe.Dynamic().WeeklysOnly().Expiration(0, 1)
-        return [symbol for symbol in universe
-                if symbol.ID.OptionRight != OptionRight.Put
+        universe = universe.WeeklysOnly().Expiration(0, 1)
+        return [symbol for symbol in universe 
+                if symbol.ID.OptionRight != OptionRight.Put 
                 and -10 < universe.Underlying.Price - symbol.ID.StrikePrice < 10]
 
     def OnData(self,slice):
         if self.Portfolio.Invested: return
 
         for kvp in slice.OptionChains:
-
+            
             if kvp.Key != self.OptionSymbol: continue
 
             # Get the first call strike under market price expiring today
@@ -58,6 +58,6 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
             contracts = [option for option in sorted(chain, key = lambda x:x.Strike, reverse = True)
                          if option.Expiry.date() == self.Time.date()
                          and option.Strike < chain.Underlying.Price]
-
+            
             if contracts:
                 self.MarketOrder(contracts[0].Symbol, 1)

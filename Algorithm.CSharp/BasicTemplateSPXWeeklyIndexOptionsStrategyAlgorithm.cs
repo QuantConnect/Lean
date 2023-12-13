@@ -48,8 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // weekly option SPX contracts
             var spxw = AddIndexOption(spx, "SPXW");
-            spxw.SetFilter(u => u.Dynamic()
-                 .Strikes(0, 1)
+            spxw.SetFilter(u => u.Strikes(-1, +1)
                  // single week ahead since there are many SPXW contracts and we want to preserve performance
                  .Expiration(0, 7)
                  .IncludeWeeklys());
@@ -110,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 35451;
+        public virtual long DataPoints => 40893;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -122,31 +121,31 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "4"},
-            {"Average Win", "0.12%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "8.975%"},
+            {"Total Trades", "10"},
+            {"Average Win", "0.47%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "99.729%"},
             {"Drawdown", "0.100%"},
-            {"Expectancy", "62.078"},
-            {"Net Profit", "0.110%"},
-            {"Sharpe Ratio", "-14.495"},
+            {"Expectancy", "24.484"},
+            {"Net Profit", "0.890%"},
+            {"Sharpe Ratio", "8.078"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "1.216%"},
+            {"Probabilistic Sharpe Ratio", "93.697%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "125.16"},
-            {"Alpha", "-0.014"},
-            {"Beta", "0.001"},
-            {"Annual Standard Deviation", "0"},
+            {"Profit-Loss Ratio", "49.97"},
+            {"Alpha", "-1.975"},
+            {"Beta", "0.301"},
+            {"Annual Standard Deviation", "0.021"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-103.223"},
-            {"Tracking Error", "0.069"},
-            {"Treynor Ratio", "-4.479"},
+            {"Information Ratio", "-143.477"},
+            {"Tracking Error", "0.049"},
+            {"Treynor Ratio", "0.566"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$1800000.00"},
+            {"Estimated Strategy Capacity", "$13000000.00"},
             {"Lowest Capacity Asset", "SPXW XKX6S2GM9PGU|SPX 31"},
-            {"Portfolio Turnover", "0.03%"},
-            {"OrderListHash", "3d5b18554d5e10a5edaed0c7cb298192"}
+            {"Portfolio Turnover", "0.28%"},
+            {"OrderListHash", "ddc78aa04824180bc36aac3472ae22b4"}
         };
     }
 }

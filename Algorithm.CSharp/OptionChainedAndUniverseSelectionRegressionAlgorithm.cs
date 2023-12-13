@@ -36,9 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2014, 06, 05);
             SetEndDate(2014, 06, 09);
 
-            var option = AddOption("AAPL");
-            option.SetFilter(-1, 1, 0, 35, true);
-            _aaplOption = option.Symbol;
+            _aaplOption = AddOption("AAPL").Symbol;
             AddUniverseSelection(new DailyUniverseSelectionModel("MyCustomSelectionModel", time => new[] { "AAPL" }, this));
         }
 
@@ -97,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 3547410;
+        public long DataPoints => 3541240;
 
         /// <summary>
         /// Data Points count of the algorithm history

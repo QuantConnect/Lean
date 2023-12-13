@@ -33,8 +33,7 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
         self.option_symbol = option.Symbol
 
         # set our strike/expiry filter for this option chain
-        option.SetFilter(lambda u: (u.Dynamic()
-                                     .Strikes(-2, +2)
+        option.SetFilter(lambda u: (u.Strikes(-2, +2)
                                      # Expiration method accepts TimeSpan objects or integer for days.
                                      # The following statements yield the same filtering criteria
                                      .Expiration(0, 180)))
@@ -52,14 +51,14 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
 
         firstExpiry = list(sorted(groupedByExpiry))[0]
         callContracts = sorted(groupedByExpiry[firstExpiry], key = lambda x: x.Strike)
-
+        
         expiry = callContracts[0].Expiry
         lowerStrike = callContracts[0].Strike
         middleStrike = callContracts[1].Strike
         higherStrike = callContracts[2].Strike
 
         optionStrategy = OptionStrategies.CallButterfly(self.option_symbol, higherStrike, middleStrike, lowerStrike, expiry)
-
+                    
         self.Order(optionStrategy, 10)
 
     def OnOrderEvent(self, orderEvent):

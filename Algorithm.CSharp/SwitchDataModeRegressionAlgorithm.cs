@@ -24,7 +24,7 @@ using System.Linq;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression test algorithm reproduces issue https://github.com/QuantConnect/Lean/issues/4031
+    /// This regression test algorithm reproduces issue https://github.com/QuantConnect/Lean/issues/4031 
     /// fixed in PR https://github.com/QuantConnect/Lean/pull/4650
     /// Adjusted data have already been all loaded by the workers so DataNormalizationMode change has no effect in the data itself
     /// </summary>
@@ -54,8 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Time.Hour == 9 && Time.Minute == 58)
             {
-                var option = AddOption(UnderlyingTicker);
-                option.SetFilter(-1, 1, 0, 35, true);
+                AddOption(UnderlyingTicker);
             }
 
             AssertValue(data);
@@ -96,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 856665;
+        public long DataPoints => 854441;
 
         /// <summary>
         /// Data Points count of the algorithm history

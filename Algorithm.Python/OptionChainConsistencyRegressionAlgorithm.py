@@ -44,7 +44,7 @@ class OptionChainConsistencyRegressionAlgorithm(QCAlgorithm):
             chain = kvp.Value
             for o in chain:
                 if not self.Securities.ContainsKey(o.Symbol):
-                    self.Log("Inconsistency found: option chains contains contract {0} that is not available in securities manager and not available for trading".format(o.Symbol.Value))
+                    self.Log("Inconsistency found: option chains contains contract {0} that is not available in securities manager and not available for trading".format(o.Symbol.Value))           
 
             contracts = filter(lambda x: x.Expiry.date() == self.Time.date() and
                                          x.Strike < chain.Underlying.Price and
@@ -58,7 +58,7 @@ class OptionChainConsistencyRegressionAlgorithm(QCAlgorithm):
 
     # set our strike/expiry filter for this option chain
     def UniverseFunc(self, universe):
-        return universe.Dynamic().IncludeWeeklys().Strikes(-2, 2).Expiration(timedelta(0), timedelta(10))
+        return universe.IncludeWeeklys().Strikes(-2, 2).Expiration(timedelta(0), timedelta(10))
 
     def OnOrderEvent(self, orderEvent):
         self.Log(str(orderEvent))

@@ -115,9 +115,8 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception($"Unexpected underlying data point {u.Underlying.EndTime} {u.Underlying}");
                     }
                     // find first put above market price
-                    return u.Dynamic()
-                        .IncludeWeeklys()
-                        .Strikes(+1, +1)
+                    return u.IncludeWeeklys()
+                        .Strikes(+1, +3)
                         .Expiration(TimeSpan.Zero, TimeSpan.FromDays(1))
                         .Contracts(c => c.Where(s => s.ID.OptionRight == OptionRight.Put));
                 });
@@ -142,16 +141,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            if (changes.AddedSecurities.Count > 1)
-            {
-                // added event fired for underlying since it was added to the option chain universe
-                if (changes.AddedSecurities.All(s => s.Symbol != Underlying))
-                {
-                    var securities = string.Join(Environment.NewLine, changes.AddedSecurities.Select(s => s.Symbol));
-                    throw new Exception($"This algorithm intends to add a single security at a time but added: {changes.AddedSecurities.Count}{Environment.NewLine}{securities}");
-                }
-            }
-
             if (changes.AddedSecurities.Any())
             {
                 foreach (var added in changes.AddedSecurities)
@@ -214,7 +203,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 200618;
+        public long DataPoints => 200807;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -247,10 +236,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$6.00"},
-            {"Estimated Strategy Capacity", "$2000.00"},
+            {"Estimated Strategy Capacity", "$3000.00"},
             {"Lowest Capacity Asset", "GOOCV 305RBR0BSWIX2|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "1.19%"},
-            {"OrderListHash", "f5fb175f744ac9021efd92be13fbe386"}
+            {"Portfolio Turnover", "1.49%"},
+            {"OrderListHash", "3adcc7ebf4153baabb073a8152e8cb2b"}
         };
     }
 }

@@ -42,7 +42,8 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equitySymbol);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Dynamic().Strikes(-2, +2).Expiration(0, 180));
+            option.SetFilter(u => u.Strikes(-2, +2)
+                .Expiration(0, 180));
 
             Portfolio.MarginCallModel = new CustomMarginCallModel(Portfolio, DefaultOrderProperties);
         }
@@ -78,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 2973376;
+        public override long DataPoints => 2940643;
 
         /// <summary>
         /// Data Points count of the algorithm history

@@ -29,13 +29,12 @@ class BasicTemplateSPXWeeklyIndexOptionsAlgorithm(QCAlgorithm):
 
         # regular option SPX contracts
         self.spxOptions = self.AddIndexOption(self.spx);
-        self.spxOptions.SetFilter(lambda u: (u.Dynamic().Strikes(0, 1).Expiration(0, 30)))
+        self.spxOptions.SetFilter(lambda u: (u.Strikes(0, 1).Expiration(0, 30)))
 
         # weekly option SPX contracts
         spxw = self.AddIndexOption(self.spx, "SPXW")
         # set our strike/expiry filter for this option chain
-        spxw.SetFilter(lambda u: (u.Dynamic()
-                                     .Strikes(0, 1)
+        spxw.SetFilter(lambda u: (u.Strikes(0, 1)
                                      # single week ahead since there are many SPXW contracts and we want to preserve performance
                                      .Expiration(0, 7)
                                      .IncludeWeeklys()))

@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equity.Symbol);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(-2, +2, 0, 180, true);
+            option.SetFilter(-2, +2, 0, 180);
         }
 
         public override void OnData(Slice slice)
@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 475788;
+        public long DataPoints => 471135;
 
         /// <summary>
         /// Data Points count of the algorithm history

@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(UnderlyingTicker);
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.Dynamic().IncludeWeeklys()
+            option.SetFilter(u => u.IncludeWeeklys()
                                     .Strikes(-2, +2)
                                     .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
 
@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 475251;
+        public long DataPoints => 470437;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -155,7 +155,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$5000.00"},
             {"Lowest Capacity Asset", "GOOCV W6NBKPFL0ACM|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "9.93%"},
-            {"OrderListHash", "fb7ca61b551ff1bb877a61297385d9b7"}
+            {"OrderListHash", "d2d092360796d1e24041fb12f8d481ba"}
         };
     }
 }

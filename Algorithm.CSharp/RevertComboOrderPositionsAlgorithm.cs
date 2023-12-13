@@ -49,7 +49,6 @@ namespace QuantConnect.Algorithm.CSharp
             var equitySymbol = AddEquity("GOOG", leverage: 4, fillForward: true).Symbol;
             _option = AddOption(equitySymbol, fillForward: true);
             _option.SetFilter(optionFilterUniverse => optionFilterUniverse
-                .Dynamic()
                 .Strikes(-2, 2)
                 .Expiration(0, 180));
         }
@@ -174,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 475788;
+        public long DataPoints => 471135;
 
         /// <summary>
         /// Data Points count of the algorithm history

@@ -64,10 +64,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Get our option
             _option = AddOption("GOOG");
-            _option.SetFilter(u => u.Dynamic()
-                                    .IncludeWeeklys()
-                                    .Strikes(-2, +2)
-                                    .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
+            _option.SetFilter(u => u.IncludeWeeklys()
+                                   .Strikes(-2, +2)
+                                   .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
             _optionSymbol = _option.Symbol;
         }
 
@@ -297,7 +296,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1272232;
+        public long DataPoints => 1267414;
 
         /// <summary>
         /// Data Points count of the algorithm history

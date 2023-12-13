@@ -90,12 +90,7 @@ namespace QuantConnect.Data.UniverseSelection
 
             var availableContracts = data.Data.Select(x => x.Symbol);
             var results = Future.ContractFilter.Filter(new FutureFilterUniverse(availableContracts, localEndTime));
-
-            // if results are not dynamic, we cache them and won't call filtering till the end of the day
-            if (!results.IsDynamic)
-            {
-                _cacheDate = exchangeDate;
-            }
+            _cacheDate = exchangeDate;
 
             return results;
         }

@@ -223,10 +223,9 @@ namespace QuantConnect.Securities.Future
         /// would exclude contracts expiring in less than 10 days</param>
         /// <param name="maxExpiry">The maximum time until expiry to include, for example, TimeSpan.FromDays(10)
         /// would exclude contracts expiring in more than 10 days</param>
-        /// <param name="dynamic">Whether to mark the filter as dynamic for regular reapplying</param>
-        public void SetFilter(TimeSpan minExpiry, TimeSpan maxExpiry, bool dynamic = false)
+        public void SetFilter(TimeSpan minExpiry, TimeSpan maxExpiry)
         {
-            SetFilterImp(universe => universe.Expiration(minExpiry, maxExpiry), dynamic);
+            SetFilterImp(universe => universe.Expiration(minExpiry, maxExpiry));
         }
 
         /// <summary>
@@ -237,10 +236,9 @@ namespace QuantConnect.Securities.Future
         /// would exclude contracts expiring in less than 10 days</param>
         /// <param name="maxExpiryDays">The maximum time, expressed in days, until expiry to include, for example, 10
         /// would exclude contracts expiring in more than 10 days</param>
-        /// <param name="dynamic">Whether to mark the filter as dynamic for regular reapplying</param>
-        public void SetFilter(int minExpiryDays, int maxExpiryDays, bool dynamic = false)
+        public void SetFilter(int minExpiryDays, int maxExpiryDays)
         {
-            SetFilterImp(universe => universe.Expiration(minExpiryDays, maxExpiryDays), dynamic);
+            SetFilterImp(universe => universe.Expiration(minExpiryDays, maxExpiryDays));
         }
 
         /// <summary>
@@ -263,16 +261,12 @@ namespace QuantConnect.Securities.Future
             SetFilter(pyUniverseFunc);
         }
 
-        private void SetFilterImp(Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc, bool dynamic = false)
+        private void SetFilterImp(Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc)
         {
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func = universe =>
             {
                 var futureUniverse = universe as FutureFilterUniverse;
                 var result = universeFunc(futureUniverse);
-                if (dynamic)
-                {
-                    result.Dynamic();
-                }
                 return result.ApplyTypesFilter();
             };
             ContractFilter = new FuncSecurityDerivativeFilter(func);

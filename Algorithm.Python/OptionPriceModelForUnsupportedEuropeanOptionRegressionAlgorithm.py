@@ -24,7 +24,6 @@ class OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm(OptionPric
         self.SetEndDate(2021, 1, 14)
 
         option = self.AddIndexOption("SPX", Resolution.Hour)
-        option.SetFilter(-1, 1, 0, 35, True)
         # BaroneAdesiWhaley model does not support European style options
         option.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
 

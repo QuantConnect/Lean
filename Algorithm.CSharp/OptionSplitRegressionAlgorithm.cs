@@ -44,8 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.Dynamic()
-                       .IncludeWeeklys()
+            option.SetFilter(u => u.IncludeWeeklys()
                        .Strikes(-2, +2)
                        .Expiration(TimeSpan.Zero, TimeSpan.FromDays(365 * 2)));
 
@@ -125,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1974570;
+        public long DataPoints => 1882853;
 
         /// <summary>
         /// Data Points count of the algorithm history

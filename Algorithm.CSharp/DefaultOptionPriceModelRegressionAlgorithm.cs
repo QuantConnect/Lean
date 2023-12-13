@@ -35,17 +35,16 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             AddIndex("SPX");
-            var option = AddIndexOption("SPX");
-            option.SetFilter(-1, 1, 0, 35, true);
+            AddIndexOption("SPX");
         }
 
         public override void OnData(Slice slice)
         {
             if (slice.OptionChains.Any(kvp => kvp.Value.Any(
                     contract => contract.Greeks.Delta == 0 &&
-                        contract.Greeks.Gamma == 0 &&
-                        contract.Greeks.Theta == 0 &&
-                        contract.Greeks.Vega == 0 &&
+                        contract.Greeks.Gamma == 0 && 
+                        contract.Greeks.Theta == 0 && 
+                        contract.Greeks.Vega == 0 && 
                         contract.Greeks.Rho == 0)))
             {
                 throw new Exception("All Greeks are zero - Pricing Model is not ready!");
@@ -65,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 7311;
+        public long DataPoints => 5265;
 
         /// <summary>
         /// Data Points count of the algorithm history

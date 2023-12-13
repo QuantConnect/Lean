@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(500000);
 
             var option = AddOption("GOOG");
-            option.SetFilter(universe => universe.Dynamic().Strikes(-3, 3).Expiration(0, 180));
+            option.SetFilter(universe => universe.Strikes(-3, 3).Expiration(0, 180));
 
             _symbol = option.Symbol;
         }
@@ -147,7 +147,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 526804;
+        public long DataPoints => 522277;
 
         /// <summary>
         /// Data Points count of the algorithm history

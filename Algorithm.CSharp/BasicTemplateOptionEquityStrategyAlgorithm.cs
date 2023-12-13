@@ -44,8 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.Dynamic()
-                .Strikes(-2, +2)
+            option.SetFilter(u => u.Strikes(-2, +2)
                 // Expiration method accepts TimeSpan objects or integer for days.
                 // The following statements yield the same filtering criteria
                 .Expiration(0, 180));
@@ -74,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var higherStrike = callContracts[2].Strike;
 
                     var optionStrategy = OptionStrategies.CallButterfly(_optionSymbol, higherStrike, middleStrike, lowerStrike, expiry);
-
+                    
                     Order(optionStrategy, 10);
                 }
             }
@@ -103,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 475788;
+        public long DataPoints => 471135;
 
         /// <summary>
         /// Data Points count of the algorithm history

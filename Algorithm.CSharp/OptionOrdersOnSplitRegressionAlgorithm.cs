@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             _aapl = AddEquity("AAPL", Resolution.Minute, extendedMarketHours: true, dataNormalizationMode: DataNormalizationMode.Raw).Symbol;
 
             var option = AddOption(_aapl, Resolution.Minute);
-            option.SetFilter(-1, +1, 0, 365, true);
+            option.SetFilter(-1, +1, 0, 365);
         }
 
         public override void OnData(Slice slice)
@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 7082158;
+        public long DataPoints => 6972054;
 
         /// <summary>
         /// Data Points count of the algorithm history

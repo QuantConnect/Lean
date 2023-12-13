@@ -34,8 +34,7 @@ class BasicTemplateOptionsAlgorithm(QCAlgorithm):
         self.option_symbol = option.Symbol
 
         # set our strike/expiry filter for this option chain
-        option.SetFilter(lambda u: (u.Dynamic()
-                                     .Strikes(-2, +2)
+        option.SetFilter(lambda u: (u.Strikes(-2, +2)
                                      # Expiration method accepts TimeSpan objects or integer for days.
                                      # The following statements yield the same filtering criteria
                                      .Expiration(0, 180)))

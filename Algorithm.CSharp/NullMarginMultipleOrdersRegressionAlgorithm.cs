@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equity.Symbol);
             OptionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Dynamic().Strikes(-2, +2).Expiration(0, 180));
+            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
         }
 
         protected virtual void OverrideMarginModels()
@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 475788;
+        public virtual long DataPoints => 471135;
 
         /// <summary>
         /// Data Points count of the algorithm history

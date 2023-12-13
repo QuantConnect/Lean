@@ -43,7 +43,6 @@ namespace QuantConnect.Securities
 
         private class NoneIDerivativeSecurityFilterUniverse : IDerivativeSecurityFilterUniverse
         {
-            public bool IsDynamic => false;
             public DateTime LocalTime => default;
 
             public IEnumerator<Symbol> GetEnumerator()

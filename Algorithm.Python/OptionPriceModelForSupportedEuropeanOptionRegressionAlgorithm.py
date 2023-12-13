@@ -24,7 +24,6 @@ class OptionPriceModelForSupportedEuropeanOptionRegressionAlgorithm(OptionPriceM
         self.SetEndDate(2021, 1, 14)
 
         option = self.AddIndexOption("SPX", Resolution.Hour)
-        option.SetFilter(-1, 1, 0, 35, True)
         # BlackScholes model supports European style options
         option.PriceModel = OptionPriceModels.BlackScholes()
 
