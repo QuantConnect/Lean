@@ -36,6 +36,7 @@ namespace QuantConnect.Statistics
         public const string ProbabilisticSharpeRatio = "Probabilistic Sharpe Ratio";
         public const string ProfitLossRatio = "Profit-Loss Ratio";
         public const string SharpeRatio = "Sharpe Ratio";
+        public const string SortinoRatio = "Sortino Ratio";
         public const string TotalFees = "Total Fees";
         public const string TotalTrades = "Total Trades";
         public const string TrackingError = "Tracking Error";

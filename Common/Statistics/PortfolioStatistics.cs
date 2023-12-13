@@ -102,6 +102,13 @@ namespace QuantConnect.Statistics
         public decimal ProbabilisticSharpeRatio { get; set; }
 
         /// <summary>
+        /// Sortino ratio with respect to risk free rate: measures excess of return per unit of downside risk.
+        /// </summary>
+        /// <remarks>With risk defined as the algorithm's volatility</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public decimal SortinoRatio { get; set; }
+
+        /// <summary>
         /// Algorithm "Alpha" statistic - abnormal returns over the risk free rate and the relationshio (beta) with the benchmark returns.
         /// </summary>
         [JsonConverter(typeof(JsonRoundingConverter))]
@@ -242,14 +249,17 @@ namespace QuantConnect.Statistics
 
             Drawdown = DrawdownPercent(equity, 3);
 
-            AnnualVariance = GetAnnualVariance(listPerformance, tradingDaysPerYear);
+            AnnualVariance = Statistics.AnnualVariance(listPerformance, tradingDaysPerYear).SafeDecimalCast();
             AnnualStandardDeviation = (decimal) Math.Sqrt((double) AnnualVariance);
 
             var benchmarkAnnualPerformance = GetAnnualPerformance(listBenchmark, tradingDaysPerYear);
             var annualPerformance = GetAnnualPerformance(listPerformance, tradingDaysPerYear);
 
             var riskFreeRate = riskFreeInterestRateModel.GetAverageRiskFreeRate(equity.Select(x => x.Key));
-            SharpeRatio = AnnualStandardDeviation == 0 ? 0 : (annualPerformance - riskFreeRate) / AnnualStandardDeviation;
+            SharpeRatio = AnnualStandardDeviation == 0 ? 0 : Statistics.SharpeRatio(annualPerformance, AnnualStandardDeviation, riskFreeRate);
+
+            var annualDownsideDeviation = Statistics.AnnualDownsideStandardDeviation(listPerformance, tradingDaysPerYear).SafeDecimalCast();
+            SortinoRatio = annualDownsideDeviation == 0 ? 0 : Statistics.SharpeRatio(annualPerformance, annualDownsideDeviation, riskFreeRate);
 
             var benchmarkVariance = listBenchmark.Variance();
             Beta = benchmarkVariance.IsNaNOrZero() ? 0 : (decimal) (listPerformance.Covariance(listBenchmark) / benchmarkVariance);
@@ -306,19 +316,6 @@ namespace QuantConnect.Statistics
         private static decimal GetAnnualPerformance(List<double> performance, int tradingDaysPerYear = 252)
         {
             return Statistics.AnnualPerformance(performance, tradingDaysPerYear).SafeDecimalCast();
-        }
-
-        /// <summary>
-        /// Annualized variance statistic calculation using the daily performance variance and trading days per year.
-        /// </summary>
-        /// <param name="performance"></param>
-        /// <param name="tradingDaysPerYear"></param>
-        /// <remarks>Invokes the variance extension in the MathNet Statistics class</remarks>
-        /// <returns>Annual variance value</returns>
-        private static decimal GetAnnualVariance(List<double> performance, int tradingDaysPerYear = 252)
-        {
-            var variance = performance.Variance();
-            return variance.IsNaNOrZero() ? 0 : (decimal)variance * tradingDaysPerYear;
         }
     }
 }

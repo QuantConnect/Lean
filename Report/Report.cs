@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -120,6 +120,7 @@ namespace QuantConnect.Report
                 new TurnoverReportElement("turnover kpi", ReportKey.Turnover, backtest, live),
                 new MaxDrawdownReportElement("max drawdown kpi", ReportKey.MaxDrawdown, backtest, live),
                 new SharpeRatioReportElement("sharpe kpi", ReportKey.SharpeRatio, backtest, live),
+                new SortinoRatioReportElement("sortino kpi", ReportKey.SortinoRatio, backtest, live),
                 new PSRReportElement("psr kpi", ReportKey.PSR, backtest, live),
                 new InformationRatioReportElement("ir kpi", ReportKey.InformationRatio, backtest, live),
                 new MarketsReportElement("markets kpi", ReportKey.Markets, backtest, live),
