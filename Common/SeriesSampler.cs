@@ -216,8 +216,12 @@ namespace QuantConnect
             // Find the first candlestick that is after the start time.
             // This variable will also be used to keep track of the first candlestick to be aggregated.
             var startIndex = candlesticks.FindIndex(x => x.Time > nextSampleTime) - 1;
-
-            if (candlesticks[startIndex].Time == nextSampleTime)
+            if (startIndex < 0)
+            {
+                // there's not value before the start, just return identity
+                return GetIdentitySeries(series, start, stop, truncateValues);
+            }
+            if (candlesticks[startIndex].Time == nextSampleTime && nextSampleTime <= stop)
             {
                 sampledSeries.Values.Add(candlesticks[startIndex].Clone());
                 nextSampleTime += Step;

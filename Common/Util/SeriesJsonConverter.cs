@@ -81,9 +81,9 @@ namespace QuantConnect.Util
                     serializer.Serialize(writer, series.ScatterMarkerSymbol);
                     break;
 
-                case CandlestickSeries candlestickSeries:
+                default:
                     writer.WritePropertyName("Values");
-                    serializer.Serialize(writer, candlestickSeries.Values.Cast<Candlestick>().ToList(), typeof(Candlestick));
+                    serializer.Serialize(writer, (value as BaseSeries).Values);
                     break;
             }
 
