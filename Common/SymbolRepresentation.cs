@@ -146,7 +146,6 @@ namespace QuantConnect
         /// <returns>The future symbol or null if failed</returns>
         public static Symbol ParseFutureSymbol(string ticker, int? futureYear = null)
         {
-            var disambiguatedFutureYear = futureYear ?? TodayUtc.Year;
             var parsed = ParseFutureTicker(ticker);
             if (parsed == null)
             {
@@ -156,7 +155,7 @@ namespace QuantConnect
             var underlying = parsed.Underlying;
             var expirationYearShort = parsed.ExpirationYearShort;
             var expirationMonth = parsed.ExpirationMonth;
-            var expirationYear = GetExpirationYear(expirationYearShort, disambiguatedFutureYear);
+            var expirationYear = futureYear ?? GetExpirationYear(expirationYearShort);
 
             if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(underlying, SecurityType.Future, out var market))
             {
@@ -464,15 +463,16 @@ namespace QuantConnect
 
         private static IReadOnlyDictionary<int, string> _futuresMonthLookup = _futuresMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
 
-        private static int GetExpirationYear(int year, int futureYear)
+        /// <summary>
+        /// Get the expiration year from short year (two-digit integer).
+        /// Examples: NQZ23 and NQZ3 for Dec 2023  
+        /// </summary>
+        /// <param name="shortYear">Year in 2 digits format (23 represents 2023)</param>
+        /// <returns>Tickers from live trading may not provide the four-digit year.</returns>
+        private static int GetExpirationYear(int shortYear)
         {
-            var baseNum = 2000;
-            while (baseNum + year < futureYear)
-            {
-                baseNum += 10;
-            }
-
-            return baseNum + year;
+            var baseYear = shortYear > 9 ? 2000 : 10 * (int)Math.Floor(DateTime.UtcNow.Year / 10d);
+            return baseYear + shortYear;
         }
     }
 }
