@@ -19,6 +19,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -153,6 +154,51 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(series.Name, result.Name);
             Assert.AreEqual(series.Unit, result.Unit);
             Assert.AreEqual(series.SeriesType, result.SeriesType);
+        }
+
+        [Test]
+        public void HandlesAnyBaseSeries()
+        {
+            var date = new DateTime(2050, 1, 1, 1, 1, 1);
+            var testSeries = new TestSeries();
+            testSeries.AddPoint(new TestPoint { Time = date, Property = "Pepe" });
+
+            var serializedSeries = JsonConvert.SerializeObject(testSeries);
+
+            Assert.AreEqual("{\"Name\":null,\"Unit\":\"$\",\"Index\":0,\"SeriesType\":0,\"Values\":[{\"Time\":\"2050-01-01T01:01:01\",\"Property\":\"Pepe\"}]}", serializedSeries);
+        }
+
+        private class TestSeries : BaseSeries
+        {
+            public override BaseSeries Clone(bool empty = false)
+            {
+                var series = new TestSeries();
+                if (!empty)
+                {
+                    series.Values = CloneValues();
+                }
+                return series;
+            }
+
+            public override ISeriesPoint ConsolidateChartPoints()
+            {
+                throw new NotImplementedException();
+            }
+            public override void AddPoint(DateTime time, List<decimal> values)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        private class TestPoint : ISeriesPoint
+        {
+            public DateTime Time { get; set; }
+            public string Property { get; set;}
+
+            public ISeriesPoint Clone()
+            {
+                return new TestPoint { Property = Property, Time = Time };
+            }
         }
     }
 }

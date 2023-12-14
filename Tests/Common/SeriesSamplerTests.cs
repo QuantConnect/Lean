@@ -24,6 +24,53 @@ namespace QuantConnect.Tests.Common
     {
         private readonly DateTime _reference = new(2023, 2, 2);
 
+
+        [TestCase(0, true)]
+        [TestCase(1, true)]
+        [TestCase(2, true)]
+        [TestCase(3, true)]
+        [TestCase(0, false)]
+        [TestCase(1, false)]
+        [TestCase(2, false)]
+        [TestCase(3, false)]
+        public void ReturnsIdentityFutureOrPastCandlestick(int dataPoints, bool futureOrPast)
+        {
+            var series = new CandlestickSeries { Name = "name" };
+            for (var i = 0; i < dataPoints; i++)
+            {
+                series.AddPoint(new Candlestick(_reference.AddDays(futureOrPast ? (i + 1000) : i), 1, 1, 1, 1));
+            }
+
+            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
+            var sampled = sampler.Sample(series, _reference.AddDays(10), _reference.AddDays(11));
+
+            // empty
+            Assert.AreEqual(0, sampled.Values.Count);
+        }
+
+        [TestCase(0, true)]
+        [TestCase(1, true)]
+        [TestCase(2, true)]
+        [TestCase(3, true)]
+        [TestCase(0, false)]
+        [TestCase(1, false)]
+        [TestCase(2, false)]
+        [TestCase(3, false)]
+        public void ReturnsIdentityFutureOrPastPoints(int dataPoints, bool futureOrPast)
+        {
+            var series = new Series { Name = "name" };
+            for (var i = 0; i < dataPoints; i++)
+            {
+                series.AddPoint(new ChartPoint(_reference.AddDays(futureOrPast ? (i + 1000) : i), 1));
+            }
+
+            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
+            var sampled = sampler.Sample(series, _reference.AddDays(10), _reference.AddDays(11));
+
+            // empty
+            Assert.AreEqual(0, sampled.Values.Count);
+        }
+
         [TestCase(false)]
         [TestCase(true)]
         public void ReturnsIdentityOnSinglePoint(bool isNullValue)
