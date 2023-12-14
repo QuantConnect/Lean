@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption("AAPL", Resolution.Minute);
             option.SetFilter((universeFilter) =>
             {
-                return universeFilter.IncludeWeeklys().Strikes(-1, 1).Expiration(0, 10);
+                return universeFilter.IncludeWeeklys().Strikes(-2, +2).Expiration(0, 10);
             });
             option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
             _optionSymbol = option.Symbol;
@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 8626717;
+        public long DataPoints => 8605047;
 
         /// <summary>
         /// Data Points count of the algorithm history

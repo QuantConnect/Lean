@@ -46,8 +46,6 @@ namespace QuantConnect.Securities
         {
             get
             {
-                // underlying value changes over time, so accessing it makes universe dynamic
-                IsDynamicInternal = true;
                 return UnderlyingInternal;
             }
         }
@@ -124,9 +122,6 @@ namespace QuantConnect.Securities
                     .ToList();
                 _refreshUniqueStrikes = false;
             }
-
-            // new universe is dynamic
-            IsDynamicInternal = true;
 
             // find the current price in the list of strikes
             var exactPriceFound = true;
@@ -236,7 +231,6 @@ namespace QuantConnect.Securities
         public static OptionFilterUniverse Where(this OptionFilterUniverse universe, Func<Symbol, bool> predicate)
         {
             universe.AllSymbols = universe.AllSymbols.Where(predicate).ToList();
-            universe.IsDynamicInternal = true;
             return universe;
         }
 
@@ -249,7 +243,6 @@ namespace QuantConnect.Securities
         public static OptionFilterUniverse Select(this OptionFilterUniverse universe, Func<Symbol, Symbol> mapFunc)
         {
             universe.AllSymbols = universe.AllSymbols.Select(mapFunc).ToList();
-            universe.IsDynamicInternal = true;
             return universe;
         }
 
@@ -262,7 +255,6 @@ namespace QuantConnect.Securities
         public static OptionFilterUniverse SelectMany(this OptionFilterUniverse universe, Func<Symbol, IEnumerable<Symbol>> mapFunc)
         {
             universe.AllSymbols = universe.AllSymbols.SelectMany(mapFunc).ToList();
-            universe.IsDynamicInternal = true;
             return universe;
         }
 
@@ -275,7 +267,6 @@ namespace QuantConnect.Securities
         public static OptionFilterUniverse WhereContains(this OptionFilterUniverse universe, List<Symbol> filterList)
         {
             universe.AllSymbols = universe.AllSymbols.Where(filterList.Contains).ToList();
-            universe.IsDynamicInternal = true;
             return universe;
         }
     }
