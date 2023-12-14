@@ -212,12 +212,12 @@ namespace QuantConnect.Tests.Common
         }
 
         [TestCase("VXZ2", 2012, 19)]
-        [TestCase("VXZ2", null, 18)]
+        [TestCase("VXZ2", null, 21)]
         public void GenerateFutureSymbolFromTickerMissingDecadeInfo(string ticker, int? futureYear, int day)
         {
             var result = SymbolRepresentation.ParseFutureSymbol(ticker, futureYear);
-            // When the future year is not provided, we have an ambiguous case (2002, 2012, 1902, etc) and default 2000
-            Assert.AreEqual(new DateTime(futureYear ?? 2002, 12, day), result.ID.Date.Date);
+            // When the future year is not provided, we have an ambiguous case (2002, 2012, 1902, etc) and default current decade 2020
+            Assert.AreEqual(new DateTime(futureYear ?? 2022, 12, day), result.ID.Date.Date);
         }
 
         [TestCase("NQZ23")]
