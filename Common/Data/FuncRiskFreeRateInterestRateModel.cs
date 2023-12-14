@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Python.Runtime;
 using System;
 
 namespace QuantConnect.Data
@@ -30,6 +31,17 @@ namespace QuantConnect.Data
         public FuncRiskFreeRateInterestRateModel(Func<DateTime, decimal> getInterestRateFunc)
         {
             _getInterestRateFunc = getInterestRateFunc;
+        }
+
+        /// <summary>
+        /// Create class instance of interest rate provider with given PyObject
+        /// </summary>
+        public FuncRiskFreeRateInterestRateModel(PyObject getInterestRateFunc)
+        {
+            using (Py.GIL())
+            {
+                _getInterestRateFunc = getInterestRateFunc.ConvertToDelegate<Func<DateTime, decimal>>();
+            }
         }
 
         /// <summary>
