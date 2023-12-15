@@ -396,7 +396,7 @@ namespace QuantConnect
 
             // if we cannot parse strike price, we ignore this contract, but log the information.
             Decimal strikePrice;
-            if (!Decimal.TryParse(strikePriceString, NumberStyles.Currency, CultureInfo.InvariantCulture, out strikePrice))
+            if (!Decimal.TryParse(strikePriceString, NumberStyles.Any, CultureInfo.InvariantCulture, out strikePrice))
             {
                 return null;
             }
