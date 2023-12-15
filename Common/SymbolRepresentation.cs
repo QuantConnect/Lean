@@ -395,7 +395,11 @@ namespace QuantConnect
             var underlying = ticker.Substring(0, optionTypeDelimiter - 4);
 
             // if we cannot parse strike price, we ignore this contract, but log the information.
-            var strikePrice = Parse.Decimal(strikePriceString);
+            Decimal strikePrice;
+            if (!Decimal.TryParse(strikePriceString, NumberStyles.Currency, CultureInfo.InvariantCulture, out strikePrice))
+            {
+                return null;
+            }
 
             int day;
 
