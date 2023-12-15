@@ -1067,35 +1067,35 @@ namespace QuantConnect
             // Subtract by multiples of 5 to round down to nearest round number
             if (number < 10000)
             {
-                return $"{number - 5m:#,.##}K";
+                return (number - 5m).ToString("#,.##", CultureInfo.InvariantCulture) + "K";
             }
 
             if (number < 100000)
             {
-                return $"{number - 50m:#,.#}K";
+                return (number - 50m).ToString("#,.#", CultureInfo.InvariantCulture) + "K";
             }
 
             if (number < 1000000)
             {
-                return $"{number - 500m:#,.}K";
+                return (number - 500m).ToString("#,.", CultureInfo.InvariantCulture) + "K";
             }
 
             if (number < 10000000)
             {
-                return $"{number - 5000m:#,,.##}M";
+                return (number - 5000m).ToString("#,,.##", CultureInfo.InvariantCulture) + "M";
             }
 
             if (number < 100000000)
             {
-                return $"{number - 50000m:#,,.#}M";
+                return (number - 50000m).ToString("#,,.#", CultureInfo.InvariantCulture) + "M";
             }
 
             if (number < 1000000000)
             {
-                return $"{number - 500000m:#,,.}M";
+                return (number - 500000m).ToString("#,,.", CultureInfo.InvariantCulture) + "M";
             }
 
-            return $"{number - 5000000m:#,,,.##}B";
+            return (number - 5000000m).ToString("#,,,.##", CultureInfo.InvariantCulture) + "B";
         }
 
         /// <summary>

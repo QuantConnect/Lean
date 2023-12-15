@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     return false;
                 }
 
-                positions += $"{parameters.Algorithm.Ticker(holding.Symbol)} {_numeraiMarketFormat[holding.Symbol.ID.Market]},{holding.Quantity}\n";
+                positions += $"{parameters.Algorithm.Ticker(holding.Symbol)} {_numeraiMarketFormat[holding.Symbol.ID.Market]},{holding.Quantity.ToStringInvariant()}\n";
             }
 
             return true;

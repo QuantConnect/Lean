@@ -152,7 +152,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     return false;
                 }
 
-                positions += $"{_algorithm.Ticker(holding.Symbol)},{_algorithm.Securities[holding.Symbol].LocalTime.ToString("yyyy-MM-dd")},{holding.Quantity}\n";
+                positions += $"{_algorithm.Ticker(holding.Symbol)},{_algorithm.Securities[holding.Symbol].LocalTime.ToString("yyyy-MM-dd")},{holding.Quantity.ToStringInvariant()}\n";
             }
             
             return true;
