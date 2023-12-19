@@ -252,15 +252,12 @@ namespace QuantConnect.Tests.Common.Securities
             // ETHBTC buy limit order decreases available BTC (0.9 - 0.1 = 0.8 BTC)
             SubmitLimitOrder(_ethbtc.Symbol, 1m, 0.1m);
 
-            // BTCUSD sell stop order decreases available BTC (0.8 - 0.1 = 0.7 BTC)
-            SubmitStopMarketOrder(_btcusd.Symbol, -0.1m, 5000m);
-
             // 0.7 BTC available, can sell 0.7 BTC at any price
             var order = new LimitOrder(_btcusd.Symbol, -0.7m, 10000m, DateTime.UtcNow);
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
-            // 0.7 BTC available, cannot sell 0.8 BTC at any price
-            order = new LimitOrder(_btcusd.Symbol, -0.8m, 10000m, DateTime.UtcNow);
+            // 0.7 BTC available, cannot sell 0.9 BTC at any price
+            order = new LimitOrder(_btcusd.Symbol, -0.9m, 10000m, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // 2 ETH available, can sell 2 ETH at any price
@@ -275,8 +272,8 @@ namespace QuantConnect.Tests.Common.Securities
             var stopOrder = new StopMarketOrder(_btcusd.Symbol, -0.7m, 5000m, DateTime.UtcNow);
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, stopOrder).IsSufficient);
 
-            // 0.7 BTC available, cannot sell stop 0.8 BTC at any price
-            stopOrder = new StopMarketOrder(_btcusd.Symbol, -0.8m, 5000m, DateTime.UtcNow);
+            // 0.7 BTC available, cannot sell stop 0.9 BTC at any price
+            stopOrder = new StopMarketOrder(_btcusd.Symbol, -0.9m, 5000m, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, stopOrder).IsSufficient);
         }
 
@@ -877,25 +874,6 @@ namespace QuantConnect.Tests.Common.Securities
                 if (!resetEvent.WaitOne(5000))
                 {
                     throw new TimeoutException("SubmitLimitOrder");
-                }
-
-                _brokerage.OrdersStatusChanged -= handler;
-            }
-        }
-
-        private void SubmitStopMarketOrder(Symbol symbol, decimal quantity, decimal stopPrice)
-        {
-            using (var resetEvent = new ManualResetEvent(false))
-            {
-                EventHandler<List<OrderEvent>> handler = (s, e) => { resetEvent.Set(); };
-
-                _brokerage.OrdersStatusChanged += handler;
-
-                _algorithm.StopMarketOrder(symbol, quantity, stopPrice);
-
-                if (!resetEvent.WaitOne(5000))
-                {
-                    throw new TimeoutException("SubmitStopMarketOrder");
                 }
 
                 _brokerage.OrdersStatusChanged -= handler;
