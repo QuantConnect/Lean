@@ -14,11 +14,13 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -42,6 +44,11 @@ namespace QuantConnect.Brokerages
             OrderType.Market,
             OrderType.StopLimit
         };
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets => GetDefaultMarkets(Market.Coinbase);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CoinbaseBrokerageModel"/> class
@@ -116,6 +123,12 @@ namespace QuantConnect.Brokerages
                 var parameter = order == null ? nameof(order) : nameof(security);
                 throw new ArgumentNullException(parameter, $"{parameter} parameter cannot be null. Please provide a valid {parameter} for submission.");
             }
+            
+            if (order.BrokerId != null && order.BrokerId.Any())
+            {
+                message = _message;
+                return false;
+            }
 
             if (!IsValidOrderSize(security, order.Quantity, out message))
             {
@@ -170,6 +183,20 @@ namespace QuantConnect.Brokerages
             return !security!.SymbolProperties.MinimumOrderSize.HasValue ||
                    orderQuantity > security.SymbolProperties.MinimumOrderSize;
 #pragma warning restore CA1062
+        }
+
+        /// <summary>
+        /// Gets the default markets for different security types, with an option to override the market name for Crypto securities.
+        /// </summary>
+        /// <param name="marketName">The default market name for Crypto securities.</param>
+        /// <returns>
+        /// A read-only dictionary where the keys are <see cref="SecurityType"/> and the values are market names.
+        /// </returns>
+        protected static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)
+        {
+            var map = DefaultMarketMap.ToDictionary();
+            map[SecurityType.Crypto] = marketName;
+            return map.ToReadOnlyDictionary();
         }
     }
 }

@@ -14,6 +14,8 @@
 */
 
 using System;
+using QuantConnect.Securities;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Brokerages
 {
@@ -31,5 +33,16 @@ namespace QuantConnect.Brokerages
         public GDAXBrokerageModel(AccountType accountType = AccountType.Cash)
             : base(accountType)
         { }
+        
+        
+        /// <summary>
+        /// Provides GDAX fee model
+        /// </summary>
+        /// <param name="security"></param>
+        /// <returns></returns>
+        public override IFeeModel GetFeeModel(Security security)
+        {
+            return new GDAXFeeModel();
+        }
     }
 }
