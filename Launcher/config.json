@@ -115,10 +115,16 @@
   "iqfeed-productName": "",
   "iqfeed-version": "1.0",
 
-  // gdax configuration
+  // gdax configuration (use coinbase configuration instead)
   "gdax-api-secret": "",
   "gdax-api-key": "",
   "gdax-passphrase": "",
+
+  // coinbase configuration
+  "coinbase-api-url": "https://api.coinbase.com",
+  "coinbase-websocket-url": "wss://advanced-trade-ws.coinbase.com",
+  "coinbase-api-key": "",
+  "coinbase-api-secret": "",
 
   // bitfinex configuration
   "bitfinex-api-secret": "",

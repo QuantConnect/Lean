@@ -227,6 +227,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.GDAX:
                     return new GDAXBrokerageModel(accountType);
 
+                case BrokerageName.Coinbase:
+                    return new CoinbaseBrokerageModel(accountType);
+
                 case BrokerageName.AlphaStreams:
                     return new AlphaStreamsBrokerageModel(accountType);
 
@@ -314,6 +317,9 @@ namespace QuantConnect.Brokerages
 
                 case GDAXBrokerageModel _:
                     return BrokerageName.GDAX;
+
+                case CoinbaseBrokerageModel _:
+                    return BrokerageName.Coinbase;
 
                 case AlphaStreamsBrokerageModel _:
                     return BrokerageName.AlphaStreams;

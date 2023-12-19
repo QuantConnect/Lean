@@ -239,17 +239,11 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Provides user-facing messages for the <see cref="Brokerages.GDAXBrokerageModel"/> class and its consumers or related classes
+        /// Provides user-facing messages for the <see cref="Brokerages.CoinbaseBrokerageModel"/> class and its consumers or related classes
         /// </summary>
-        public static class GDAXBrokerageModel
+        public static class CoinbaseBrokerageModel
         {
-            public static string UnsupportedAccountType = "The GDAX brokerage does not currently support Margin trading.";
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string StopMarketOrdersNoLongerSupported(DateTime stopMarketOrderSupportEndDate)
-            {
-                return Invariant($"Stop Market orders are no longer supported since {stopMarketOrderSupportEndDate}.");
-            }
+            public static string UnsupportedAccountType = "The Coinbase brokerage does not currently support Margin trading.";
         }
 
         /// <summary>
