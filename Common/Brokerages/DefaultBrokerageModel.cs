@@ -51,6 +51,7 @@ namespace QuantConnect.Brokerages
             {SecurityType.Forex, Market.Oanda},
             {SecurityType.Cfd, Market.Oanda},
             {SecurityType.Crypto, Market.GDAX},
+            {SecurityType.Crypto, Market.Coinbase},
             {SecurityType.CryptoFuture, Market.Binance},
             {SecurityType.Index, Market.USA},
             {SecurityType.IndexOption, Market.USA}

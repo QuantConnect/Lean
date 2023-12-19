@@ -71,7 +71,7 @@ namespace QuantConnect.ToolBox.Polygon
         // Crypto exchanges from: https://api.polygon.io/v1/meta/crypto-exchanges?apiKey=xxx
         private readonly Dictionary<int, string> _cryptoExchangeMap = new()
         {
-            { 1, Market.GDAX },
+            { 1, Market.Coinbase },
             { 2, Market.Bitfinex },
             { 6, Market.Bitstamp },
             { 10, Market.HitBTC },

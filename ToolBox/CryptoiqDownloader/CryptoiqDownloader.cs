@@ -34,7 +34,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
         /// </summary>
         /// <param name="exchange">The bitcoin exchange</param>
         /// <param name="scaleFactor">Scale factor used to scale the data, useful for changing the BTC units</param>
-        public CryptoiqDownloader(string exchange = Market.GDAX)
+        public CryptoiqDownloader(string exchange = Market.Coinbase)
         {
             _exchange = exchange;
         }
