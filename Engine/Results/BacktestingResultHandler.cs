@@ -73,7 +73,7 @@ namespace QuantConnect.Lean.Engine.Results
             _chartSeriesExceededDataPoints = new HashSet<string>();
 
             // Delay uploading first packet
-            _nextS3Update = StartTime.AddSeconds(30);
+            _nextS3Update = StartTime.AddSeconds(5);
 
             //Default charts:
             Charts.AddOrUpdate(StrategyEquityKey, new Chart(StrategyEquityKey));
