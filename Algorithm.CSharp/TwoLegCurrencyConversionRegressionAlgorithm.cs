@@ -140,9 +140,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0"},
             {"Total Fees", "Ξ0.00"},
             {"Estimated Strategy Capacity", "Ξ2000.00"},
-            {"Lowest Capacity Asset", "LTCUSD XJ"},
+            {"Lowest Capacity Asset", "LTCUSD 2XR"},
             {"Portfolio Turnover", "0.00%"},
-            {"OrderListHash", "83fcdd53388a1dac3fb2476e314a148d"}
+            {"OrderListHash", "c47a40fe5d3d26a8cafce46d97f2d899"}
         };
     }
 }

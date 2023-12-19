@@ -361,21 +361,21 @@ namespace QuantConnect.Tests.Common.Util
             Symbol symbol;
             Resolution resolution;
 
-            var cryptoPath = "Data\\crypto\\gdax\\daily\\btcusd_quote.zip";
+            var cryptoPath = "Data\\crypto\\coinbase\\daily\\btcusd_quote.zip";
             Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
             Assert.AreEqual(symbol.ID.Market, Market.GDAX);
             Assert.AreEqual(resolution, Resolution.Daily);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
 
-            cryptoPath = "Data\\crypto\\gdax\\hour\\btcusd_quote.zip";
+            cryptoPath = "Data\\crypto\\coinbase\\hour\\btcusd_quote.zip";
             Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
             Assert.AreEqual(symbol.ID.Market, Market.GDAX);
             Assert.AreEqual(resolution, Resolution.Hour);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
 
-            cryptoPath = "Data\\crypto\\gdax\\minute\\btcusd\\20161007_quote.zip";
+            cryptoPath = "Data\\crypto\\coinbase\\minute\\btcusd\\20161007_quote.zip";
             Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
             Assert.AreEqual(symbol.ID.Market, Market.GDAX);
@@ -684,18 +684,18 @@ namespace QuantConnect.Tests.Common.Util
                 new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Daily, TickType.Quote, "de10ybeur.zip", "de10ybeur.csv", "cfd/oanda/daily"),
 
                 // Crypto - trades
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Tick, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_tick_trade.csv", "crypto/gdax/tick/btcusd"),
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Second, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_second_trade.csv", "crypto/gdax/second/btcusd"),
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Minute, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_minute_trade.csv", "crypto/gdax/minute/btcusd"),
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Hour, TickType.Trade, "btcusd_trade.zip", "btcusd.csv", "crypto/gdax/hour"),
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Daily, TickType.Trade, "btcusd_trade.zip", "btcusd.csv", "crypto/gdax/daily"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Tick, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_tick_trade.csv", "crypto/coinbase/tick/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Second, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_second_trade.csv", "crypto/coinbase/second/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Minute, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_minute_trade.csv", "crypto/coinbase/minute/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Hour, TickType.Trade, "btcusd_trade.zip", "btcusd.csv", "crypto/coinbase/hour"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Daily, TickType.Trade, "btcusd_trade.zip", "btcusd.csv", "crypto/coinbase/daily"),
 
                 // Crypto - quotes
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_tick_quote.csv", "crypto/gdax/tick/btcusd"),
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Second, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_second_quote.csv", "crypto/gdax/second/btcusd"),
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Minute, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_minute_quote.csv", "crypto/gdax/minute/btcusd"),
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Hour, TickType.Quote, "btcusd_quote.zip", "btcusd.csv", "crypto/gdax/hour"),
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Daily, TickType.Quote, "btcusd_quote.zip", "btcusd.csv", "crypto/gdax/daily"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_tick_quote.csv", "crypto/coinbase/tick/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Second, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_second_quote.csv", "crypto/coinbase/second/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Minute, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_minute_quote.csv", "crypto/coinbase/minute/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Hour, TickType.Quote, "btcusd_quote.zip", "btcusd.csv", "crypto/coinbase/hour"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Daily, TickType.Quote, "btcusd_quote.zip", "btcusd.csv", "crypto/coinbase/daily"),
 
                 // Futures (expiration month == contract month) - trades
                 new LeanDataTestParameters(Symbols.Future_ESZ18_Dec2018, dateFutures, Resolution.Tick, TickType.Trade, "20181210_trade.zip", "20181210_es_tick_trade_201812_20181221.csv", "future/cme/tick/es"),
