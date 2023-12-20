@@ -27,7 +27,6 @@ using QuantConnect.ToolBox.IVolatilityEquityConverter;
 using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.KrakenDownloader;
 using QuantConnect.ToolBox.NseMarketDataConverter;
-using QuantConnect.ToolBox.Polygon;
 using QuantConnect.ToolBox.QuantQuoteConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using QuantConnect.ToolBox.YahooDownloader;
@@ -105,17 +104,6 @@ namespace QuantConnect.ToolBox
                     case "ydl":
                     case "yahoodownloader":
                         YahooDownloaderProgram.YahooDownloader(tickers, resolution, fromDate, toDate);
-                        break;
-                    case "pdl":
-                    case "polygondownloader":
-                        PolygonDownloaderProgram.PolygonDownloader(
-                            tickers,
-                            GetParameterOrExit(optionsObject, "security-type"),
-                            GetParameterOrExit(optionsObject, "market"),
-                            resolution,
-                            fromDate,
-                            toDate,
-                            apiKey);
                         break;
 
                     case "avdl":
