@@ -421,7 +421,7 @@ namespace QuantConnect.Tests.ToolBox
             {
                 case SecurityType.Equity: // SPY; Daily/Hourly/Minute/Second/Tick
                     return new DateTime(2013, 10, 7);
-                case SecurityType.Crypto: // GDAX BTCUSD Daily/Minute/Second
+                case SecurityType.Crypto: // Coinbase (deprecated: GDAX) BTCUSD Daily/Minute/Second
                     if (resolution == Resolution.Hour || resolution == Resolution.Tick)
                     {
                         throw new ArgumentException($"GDAX BTC Crypto does not have data for this resolution {resolution}");
