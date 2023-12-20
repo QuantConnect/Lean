@@ -68,10 +68,7 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The fee percentage effective at the requested date</returns>
         public static decimal GetFeePercentage(DateTime utcTime, bool isMaker, bool isStableCoin)
         {
-            // Tier 1 fees
-            // https://pro.coinbase.com/orders/fees
-            // https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
-            // https://blog.coinbase.com/updates-to-coinbase-pro-fee-structure-b3d9ee586108
+            // Advanced Trade fees: Stable pairs: 0.00% Maker | 0.001% Taker
             if (isStableCoin)
                 return isMaker ? 0m : 0.001m;
 
@@ -81,7 +78,10 @@ namespace QuantConnect.Orders.Fees
             else if (utcTime < new DateTime(2019, 10, 8, 0, 30, 0))
                 return isMaker ? 0.0015m : 0.0025m;
 
-            return isMaker ? 0.005m : 0.005m;
+            // https://www.coinbase.com/advanced-fees
+            // Level      | Trading amount  | Spot fees (Maker | Taker)
+            // Advanced 1 |     >= $0       |       0.60% | 0.80%
+            return isMaker ? 0.006m : 0.008m;
         }
     }
 }
