@@ -115,11 +115,6 @@
   "iqfeed-productName": "",
   "iqfeed-version": "1.0",
 
-  // gdax configuration (use coinbase configuration instead)
-  "gdax-api-secret": "",
-  "gdax-api-key": "",
-  "gdax-passphrase": "",
-
   // coinbase configuration
   "coinbase-api-url": "https://api.coinbase.com",
   "coinbase-websocket-url": "wss://advanced-trade-ws.coinbase.com",
@@ -422,12 +417,12 @@
       "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
     },
 
-    "live-gdax": {
+    "live-coinbase": {
       "live-mode": true,
 
       // real brokerage implementations require the BrokerageTransactionHandler
-      "live-mode-brokerage": "GDAXBrokerage",
-      "data-queue-handler": [ "GDAXDataQueueHandler" ],
+      "live-mode-brokerage": "CoinbaseBrokerage",
+      "data-queue-handler": [ "CoinbaseDataQueueHandler" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
