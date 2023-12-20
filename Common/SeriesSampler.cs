@@ -116,7 +116,7 @@ namespace QuantConnect
             // in this case just copy the raw data
             if (series.Values.Count < 2 || series.SeriesType == SeriesType.Scatter)
             {
-                return GetIdentitySeries(series, start, stop, truncateValues);
+                return GetIdentitySeries(sampled, series, start, stop, truncateValues);
             }
 
             var enumerator = series.Values.Cast<ChartPoint>().GetEnumerator();
@@ -203,7 +203,7 @@ namespace QuantConnect
             // we can't sample a single point, so just copy the raw data
             if (seriesSize < 2)
             {
-                return GetIdentitySeries(series, start, stop, truncateValues);
+                return GetIdentitySeries(sampledSeries, series, start, stop, truncateValues);
             }
 
             // Make sure we don't start sampling before the data begins.
@@ -219,7 +219,7 @@ namespace QuantConnect
             if (startIndex < 0)
             {
                 // there's not value before the start, just return identity
-                return GetIdentitySeries(series, start, stop, truncateValues);
+                return GetIdentitySeries(sampledSeries, series, start, stop, truncateValues);
             }
             if (candlesticks[startIndex].Time == nextSampleTime && nextSampleTime <= stop)
             {
@@ -239,11 +239,12 @@ namespace QuantConnect
                 }
                 if (nextSampleTime > current.Time)
                 {
+                    // these bars will be aggregated
                     continue;
                 }
 
                 // Form the bar(s) between candlesticks at startIndex and i
-
+                var aggregated = startIndex != i;
                 var sampledCandlestick = AggregateCandlesticks(candlesticks, startIndex, i + 1, nextSampleTime, truncateValues);
 
                 var first = (Candlestick)candlesticks[startIndex];
@@ -264,6 +265,24 @@ namespace QuantConnect
                     sampledSeries.Values.Add(interpolated);
                     previous = interpolated;
                     nextSampleTime += Step;
+
+                    if (!aggregated)
+                    {
+                        // when subsampling, we build the high and low based on the open and close of the interpolated bar, not the bar we are sampling
+                        interpolated.High = interpolated.Close;
+                        interpolated.Low = interpolated.Close;
+                        if (interpolated.Open.HasValue)
+                        {
+                            if (!interpolated.Close.HasValue || interpolated.Open > interpolated.Close.Value)
+                            {
+                                interpolated.High = interpolated.Open.Value;
+                            }
+                            if (!interpolated.Close.HasValue || interpolated.Open < interpolated.Close.Value)
+                            {
+                                interpolated.Low = interpolated.Open.Value;
+                            }
+                        }
+                    }
 
                     if(next != null && (nextSampleTime + Step) < next.Time && interpolated.Open == null)
                     {
@@ -393,10 +412,10 @@ namespace QuantConnect
             }
             else if (truncatedPoint is Candlestick candlestick)
             {
-                candlestick.Open = SafeTruncate(candlestick.Open.Value);
-                candlestick.High = SafeTruncate(candlestick.High.Value);
-                candlestick.Low = SafeTruncate(candlestick.Low.Value);
-                candlestick.Close = SafeTruncate(candlestick.Close.Value);
+                candlestick.Open = SafeTruncate(candlestick.Open);
+                candlestick.High = SafeTruncate(candlestick.High);
+                candlestick.Low = SafeTruncate(candlestick.Low);
+                candlestick.Close = SafeTruncate(candlestick.Close);
             }
 
             return truncatedPoint;
@@ -405,10 +424,9 @@ namespace QuantConnect
         /// <summary>
         /// Gets the identity series, this is the series with no sampling applied.
         /// </summary>
-        protected static T GetIdentitySeries<T>(T series, DateTime start, DateTime stop, bool truncateValues)
+        protected static T GetIdentitySeries<T>(T sampled, T series, DateTime start, DateTime stop, bool truncateValues)
             where T : BaseSeries
         {
-            var sampled = (T)series.Clone(empty: true);
             // we can minimally verify we're within the start/stop interval
             foreach (var point in series.Values)
             {
