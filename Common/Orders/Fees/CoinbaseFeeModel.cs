@@ -70,13 +70,17 @@ namespace QuantConnect.Orders.Fees
         {
             // Advanced Trade fees: Stable pairs: 0.00% Maker | 0.001% Taker
             if (isStableCoin)
+            {
                 return isMaker ? 0m : 0.001m;
-
+            }
             else if (utcTime < new DateTime(2019, 3, 23, 1, 30, 0))
+            {
                 return isMaker ? 0m : 0.003m;
-
+            }
             else if (utcTime < new DateTime(2019, 10, 8, 0, 30, 0))
+            {
                 return isMaker ? 0.0015m : 0.0025m;
+            }
 
             // https://www.coinbase.com/advanced-fees
             // Level      | Trading amount  | Spot fees (Maker | Taker)
