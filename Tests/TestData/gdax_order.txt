@@ -1,1 +1,0 @@
-{"type": "market","created_at": "2014-11-07T08:19:27.028459Z","product_id": "BTC-USD","status": "pending","id": "132fb6ae-456b-4654-b4e0-d681ac05cea1","price": "123.45","size": "1.00","side": "sell"}
