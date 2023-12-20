@@ -31,6 +31,14 @@ namespace QuantConnect.Brokerages
     public class CoinbaseBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
+        /// Marks the end of stop market order support on Coinbase Pro.
+        /// For backtesting purposes, this field '_stopMarketOrderSupportEndDate' specifies the date when the
+        /// market structure update was applied, affecting the handling of historical data or simulations
+        /// involving stop market orders. Details: https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
+        /// </summary>
+        private readonly DateTime _stopMarketOrderSupportEndDate = new DateTime(2019, 3, 23, 1, 0, 0);
+
+        /// <summary>
         /// Notifies users that order updates are not supported by the current brokerage model.
         /// </summary>
         private readonly BrokerageMessageEvent _message = new(BrokerageMessageType.Warning, 0, Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
@@ -42,7 +50,8 @@ namespace QuantConnect.Brokerages
         {
             OrderType.Limit,
             OrderType.Market,
-            OrderType.StopLimit
+            OrderType.StopLimit,
+            OrderType.StopMarket
         };
 
         /// <summary>
@@ -146,6 +155,14 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+                return false;
+            }
+            
+            if (order.Type == OrderType.StopMarket && order.Time >= _stopMarketOrderSupportEndDate)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.CoinbaseBrokerageModel.StopMarketOrdersNoLongerSupported(_stopMarketOrderSupportEndDate));
+
                 return false;
             }
 

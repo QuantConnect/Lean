@@ -244,6 +244,12 @@ namespace QuantConnect
         public static class CoinbaseBrokerageModel
         {
             public static string UnsupportedAccountType = "The Coinbase brokerage does not currently support Margin trading.";
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string StopMarketOrdersNoLongerSupported(DateTime stopMarketOrderSupportEndDate)
+            {
+                return Invariant($"Stop Market orders are no longer supported since {stopMarketOrderSupportEndDate}.");
+            }
         }
 
         /// <summary>
