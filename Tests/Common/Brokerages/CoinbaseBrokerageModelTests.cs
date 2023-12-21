@@ -27,33 +27,33 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Common.Brokerages
 {
     [TestFixture, Parallelizable(ParallelScope.All)]
-    public class GDAXBrokerageModelTests
+    public class CoinbaseBrokerageModelTests
     {
-        private readonly GDAXBrokerageModel _gdaxBrokerageModel = new GDAXBrokerageModel();
+        private readonly CoinbaseBrokerageModel _coinbaseBrokerageModel = new CoinbaseBrokerageModel();
 
         [Test]
         public void GetLeverageTest()
         {
-            Assert.AreEqual(1, _gdaxBrokerageModel.GetLeverage(TestsHelpers.GetSecurity()));
+            Assert.AreEqual(1, _coinbaseBrokerageModel.GetLeverage(TestsHelpers.GetSecurity()));
         }
 
         [Test]
         public void GetFeeModelTest()
         {
-            Assert.IsInstanceOf<GDAXFeeModel>(_gdaxBrokerageModel.GetFeeModel(TestsHelpers.GetSecurity()));
+            Assert.IsInstanceOf<CoinbaseFeeModel>(_coinbaseBrokerageModel.GetFeeModel(TestsHelpers.GetSecurity()));
         }
 
         [Test]
         public void GetBuyingPowerModelTest()
         {
-            Assert.IsInstanceOf<CashBuyingPowerModel>(_gdaxBrokerageModel.GetBuyingPowerModel(TestsHelpers.GetSecurity()));
+            Assert.IsInstanceOf<CashBuyingPowerModel>(_coinbaseBrokerageModel.GetBuyingPowerModel(TestsHelpers.GetSecurity()));
         }
 
         [Test]
         public void CanUpdateOrderTest()
         {
             BrokerageMessageEvent message;
-            Assert.AreEqual(false, _gdaxBrokerageModel.CanUpdateOrder(TestsHelpers.GetSecurity(), Mock.Of<Order>(),
+            Assert.AreEqual(false, _coinbaseBrokerageModel.CanUpdateOrder(TestsHelpers.GetSecurity(), Mock.Of<Order>(),
                 new UpdateOrderRequest(DateTime.UtcNow, 1, new UpdateOrderFields()), out message));
         }
 
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 order.Object.BrokerId = new List<string>() {"abc123"};
             }
 
-            Assert.AreEqual(!isUpdate, _gdaxBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out message));
+            Assert.AreEqual(!isUpdate, _coinbaseBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out message));
         }
 
         [TestCase(0.01, true)]
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             order.Object.Quantity = orderQuantity;
 
-            Assert.AreEqual(isValidOrderQuantity, _gdaxBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.GDAX), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _coinbaseBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.Coinbase), order.Object, out message));
         }
 
         [TestCase(SecurityType.Crypto, true)]
@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = new Mock<Order>();
             order.Object.Quantity = 10.0m;
 
-            Assert.AreEqual(isValidSecurityType, _gdaxBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(1.0m, securityType), order.Object, out message));
+            Assert.AreEqual(isValidSecurityType, _coinbaseBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(1.0m, securityType), order.Object, out message));
         }
 
         [TestCase(OrderType.Market, 2019, 2, 1, 0, 0, 0, true)]
@@ -116,14 +116,14 @@ namespace QuantConnect.Tests.Common.Brokerages
             var security = TestsHelpers.GetSecurity();
             var order = Order.CreateOrder(new SubmitOrderRequest(orderType, SecurityType.Crypto, security.Symbol, 10.0m, 1.0m, 10.0m, utcTime, "Test Order"));
 
-            Assert.AreEqual(isValidOrderType, _gdaxBrokerageModel.CanSubmitOrder(security, order, out message));
+            Assert.AreEqual(isValidOrderType, _coinbaseBrokerageModel.CanSubmitOrder(security, order, out message));
         }
 
         [Test]
         public void FeeModelReturnsCorrectOrderFeeForTakerMarketOrder()
         {
             var security = TestsHelpers.GetSecurity();
-            security.FeeModel = new GDAXFeeModel();
+            security.FeeModel = new CoinbaseFeeModel();
             security.SetMarketPrice(new TradeBar { Symbol = security.Symbol, Close = 5000m });
             var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
                 security,
@@ -137,7 +137,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         public void FeeModelReturnsCorrectOrderFeeForMakerLimitOrdersTickResolution()
         {
             var security = TestsHelpers.GetSecurity(resolution: Resolution.Tick);
-            security.FeeModel = new GDAXFeeModel();
+            security.FeeModel = new CoinbaseFeeModel();
             security.SetMarketPrice(new Tick { Symbol = security.Symbol, Value = 5000m });
 
             var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
@@ -173,7 +173,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         public void FeeModelReturnsCorrectOrderFeeForTakerLimitOrdersTickResolution()
         {
             var security = TestsHelpers.GetSecurity(resolution: Resolution.Tick);
-            security.FeeModel = new GDAXFeeModel();
+            security.FeeModel = new CoinbaseFeeModel();
             security.SetMarketPrice(new Tick { Symbol = security.Symbol, Value = 5000m });
             var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
                 security, new LimitOrder(security.Symbol, 1, 5000.01m, DateTime.MinValue)
@@ -213,7 +213,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             var time = new DateTime(2018, 4, 10);
             var security = TestsHelpers.GetSecurity();
 
-            security.FeeModel = new GDAXFeeModel();
+            security.FeeModel = new CoinbaseFeeModel();
             security.SetMarketPrice(new TradeBar { Symbol = security.Symbol, Close = 5000m, EndTime = time.AddSeconds(75) });
 
             var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
@@ -241,7 +241,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             var time = new DateTime(2018, 4, 10);
             var security = TestsHelpers.GetSecurity();
 
-            security.FeeModel = new GDAXFeeModel();
+            security.FeeModel = new CoinbaseFeeModel();
             security.SetMarketPrice(new TradeBar { Symbol = security.Symbol, Close = 5000m, EndTime = time.AddMinutes(1) });
 
             var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(
@@ -277,8 +277,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                new GDAXBrokerageModel(AccountType.Margin);
-            }, "The GDAX brokerage does not currently support Margin trading.");
+                new CoinbaseBrokerageModel(AccountType.Margin);
+            }, "The Coinbase brokerage does not currently support Margin trading.");
         }
     }
 }
