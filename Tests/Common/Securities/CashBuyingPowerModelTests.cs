@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.CashBook.Add("BTC", 0, 15000m);
             _portfolio.CashBook.Add("ETH", 0, 1000m);
 
-            _algorithm.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
+            _algorithm.SetBrokerageModel(BrokerageName.Coinbase, AccountType.Cash);
 
             _transactionHandler = new BacktestingTransactionHandler();
             _brokerage = new BacktestingBrokerage(_algorithm);

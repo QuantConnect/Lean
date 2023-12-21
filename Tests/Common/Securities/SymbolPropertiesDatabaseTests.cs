@@ -59,15 +59,15 @@ namespace QuantConnect.Tests.Common.Securities
             var binanceSymbol = Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Binance);
             var binanceSymbolProperties = db.GetSymbolProperties(binanceSymbol.ID.Market, binanceSymbol, binanceSymbol.SecurityType, "EUR");
 
-            var gdaxSymbol = Symbol.Create("BTCGBP", SecurityType.Crypto, Market.GDAX);
-            var gdaxSymbolProperties = db.GetSymbolProperties(gdaxSymbol.ID.Market, gdaxSymbol, gdaxSymbol.SecurityType, "GBP");
+            var coinbaseSymbol = Symbol.Create("BTCGBP", SecurityType.Crypto, Market.Coinbase);
+            var coinbaseSymbolProperties = db.GetSymbolProperties(coinbaseSymbol.ID.Market, coinbaseSymbol, coinbaseSymbol.SecurityType, "GBP");
 
             var krakenSymbol = Symbol.Create("BTCCAD", SecurityType.Crypto, Market.Kraken);
             var krakenSymbolProperties = db.GetSymbolProperties(krakenSymbol.ID.Market, krakenSymbol, krakenSymbol.SecurityType, "CAD");
 
             Assert.AreEqual(bitfinexSymbolProperties.MinimumOrderSize, 0.00006m);
             Assert.AreEqual(binanceSymbolProperties.MinimumOrderSize, 5m); // in quote currency, MIN_NOTIONAL
-            Assert.AreEqual(gdaxSymbolProperties.MinimumOrderSize, 0.000015m);
+            Assert.AreEqual(coinbaseSymbolProperties.MinimumOrderSize, 0.000015m);
             Assert.AreEqual(krakenSymbolProperties.MinimumOrderSize, 0.0001m);
         }
 
@@ -110,7 +110,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         [TestCase(Market.FXCM, SecurityType.Forex)]
         [TestCase(Market.Oanda, SecurityType.Forex)]
-        [TestCase(Market.GDAX, SecurityType.Crypto)]
+        [TestCase(Market.Coinbase, SecurityType.Crypto)]
         [TestCase(Market.Bitfinex, SecurityType.Crypto)]
         public void BaseCurrencyIsNotEqualToQuoteCurrency(string market, SecurityType securityType)
         {
@@ -173,10 +173,10 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(spList[0].Key.Symbol.Contains("*"));
         }
 
-        #region GDAX brokerage
+        #region Coinbase brokerage
 
         [Test, Explicit]
-        public void FetchSymbolPropertiesFromGdax()
+        public void FetchSymbolPropertiesFromCoinbase()
         {
             const string urlCurrencies = "https://api.pro.coinbase.com/currencies";
             const string urlProducts = "https://api.pro.coinbase.com/products";
@@ -186,12 +186,12 @@ namespace QuantConnect.Tests.Common.Securities
             using (var wc = new WebClient())
             {
                 var jsonCurrencies = wc.DownloadString(urlCurrencies);
-                var rowsCurrencies = JsonConvert.DeserializeObject<List<GdaxCurrency>>(jsonCurrencies);
+                var rowsCurrencies = JsonConvert.DeserializeObject<List<CoinbaseCurrency>>(jsonCurrencies);
                 var currencyDescriptions = rowsCurrencies.ToDictionary(x => x.Id, x => x.Name);
 
                 var jsonProducts = wc.DownloadString(urlProducts);
 
-                var rowsProducts = JsonConvert.DeserializeObject<List<GdaxProduct>>(jsonProducts);
+                var rowsProducts = JsonConvert.DeserializeObject<List<CoinbaseProduct>>(jsonProducts);
                 foreach (var row in rowsProducts.OrderBy(x => x.Id))
                 {
                     string baseDescription, quoteDescription;
@@ -204,7 +204,7 @@ namespace QuantConnect.Tests.Common.Securities
                         quoteDescription = row.QuoteCurrency;
                     }
 
-                    sb.AppendLine("gdax," +
+                    sb.AppendLine("coinbase," +
                                   $"{row.BaseCurrency}{row.QuoteCurrency}," +
                                   "crypto," +
                                   $"{baseDescription}-{quoteDescription}," +
@@ -219,7 +219,7 @@ namespace QuantConnect.Tests.Common.Securities
             Log.Trace(sb.ToString());
         }
 
-        private class GdaxCurrency
+        private class CoinbaseCurrency
         {
             [JsonProperty("id")]
             public string Id { get; set; }
@@ -231,7 +231,7 @@ namespace QuantConnect.Tests.Common.Securities
             public decimal MinSize { get; set; }
         }
 
-        private class GdaxProduct
+        private class CoinbaseProduct
         {
             [JsonProperty("id")]
             public string Id { get; set; }

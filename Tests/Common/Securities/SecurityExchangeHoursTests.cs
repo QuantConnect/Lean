@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         public void IsAlwaysOpen()
         {
-            var cryptoMarketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.GDAX, (string)null, SecurityType.Crypto);
+            var cryptoMarketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.Coinbase, (string)null, SecurityType.Crypto);
             var cryptoExchangeHours = cryptoMarketHourDbEntry.ExchangeHours;
 
             var futureExchangeHours = CreateUsFutureSecurityExchangeHours();

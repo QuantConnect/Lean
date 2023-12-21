@@ -361,17 +361,17 @@ namespace QuantConnect.Api
     }
 
     /// <summary>
-    /// Live algorithm settings for trading with Coinbase (deprecated: GDAX)
+    /// Live algorithm settings for trading with Coinbase
     /// </summary>
     public class CoinbaseLiveAlgorithmSettings : BaseLiveAlgorithmSettings
     {
         /// <summary>
-        /// Constructor for live trading with Coinbase (deprecated: GDAX)
+        /// Constructor for live trading with Coinbase
         /// </summary>
         public CoinbaseLiveAlgorithmSettings(string key, string secret, Uri apiUrl, Uri wsUrl)
         {
             Environment = BrokerageEnvironment.Live;
-            Id = "CoinbaseBrokerage"; //BrokerageName.GDAX.ToString(); returns "GDAX"
+            Id = "CoinbaseBrokerage"; //BrokerageName.Coinbase.ToString(); returns "Coinbase"
             Key = key;
             Secret = secret;
             ApiUrl = apiUrl;

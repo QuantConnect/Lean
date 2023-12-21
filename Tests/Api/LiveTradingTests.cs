@@ -156,7 +156,7 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Live trading via Coinbase (deprecated: GDAX)
+        /// Live trading via Coinbase
         /// </summary>
         [Test]
         public void LiveCoinbaseTest()

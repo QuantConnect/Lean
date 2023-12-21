@@ -310,7 +310,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void BatchAlphaResultPacket()
         {
-            var btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
+            var btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Coinbase);
             var insights = new List<Insight>
             {
                 new Insight(DateTime.UtcNow, btcusd, Time.OneMillisecond, InsightType.Price, InsightDirection.Up, 1, 2, "sourceModel1"),
@@ -344,7 +344,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void BatchAlphaResultPacketDuplicateOrder()
         {
-            var btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
+            var btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Coinbase);
             var orders = new List<Order>
             {
                 new MarketOrder(btcusd, 1000, DateTime.UtcNow, "ExpensiveOrder") { Id = 1 },
@@ -532,7 +532,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2014, 3, 9, 2, 0, 1);
             var expected = new DateTime(2014, 3, 9, 2, 0, 0);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.GDAX, null, SecurityType.Crypto);
+            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Coinbase, null, SecurityType.Crypto);
             var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneHour, hours, TimeZones.Utc, true);
             Assert.AreEqual(expected, exchangeRounded);
         }
@@ -542,7 +542,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2014, 11, 2, 2, 0, 1);
             var expected = new DateTime(2014, 11, 2, 2, 0, 0);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.GDAX, null, SecurityType.Crypto);
+            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Coinbase, null, SecurityType.Crypto);
             var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneHour, hours, TimeZones.Utc, true);
             Assert.AreEqual(expected, exchangeRounded);
         }
@@ -661,7 +661,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2014, 3, 9, 2, 0, 1);
             var expected = new DateTime(2014, 3, 9, 2, 0, 0);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.GDAX, null, SecurityType.Crypto);
+            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Coinbase, null, SecurityType.Crypto);
             var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneHour, hours, TimeZones.NewYork, true);
             Assert.AreEqual(expected, exchangeRounded);
         }
@@ -671,7 +671,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2014, 11, 2, 2, 0, 1);
             var expected = new DateTime(2014, 11, 2, 2, 0, 0);
-            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.GDAX, null, SecurityType.Crypto);
+            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Coinbase, null, SecurityType.Crypto);
             var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneHour, hours, TimeZones.NewYork, true);
             Assert.AreEqual(expected, exchangeRounded);
         }

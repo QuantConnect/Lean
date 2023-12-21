@@ -25,12 +25,12 @@ using QuantConnect.Securities.Crypto;
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
     [TestFixture]
-    class GDAXFeeModelTests
+    class CoinbaseFeeModelTests
     {
         private Crypto _btcusd;
         private Crypto _btceur;
         private Crypto _daiusdc;
-        private readonly IFeeModel _feeModel = new GDAXFeeModel();
+        private readonly IFeeModel _feeModel = new CoinbaseFeeModel();
 
         [SetUp]
         public void Initialize()
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USDC", 0, 10),
                 new Cash("DAI", 0, 0),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("DAIUSDC", SecurityType.Crypto, Market.GDAX), Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("DAIUSDC", SecurityType.Crypto, Market.Coinbase), Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("DAIUSDC", "USDC", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null

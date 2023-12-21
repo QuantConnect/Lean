@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common
         {
             var algorithm = new QCAlgorithm();
             algorithm.SetAccountCurrency(Currencies.GBP);
-            algorithm.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
+            algorithm.SetBrokerageModel(BrokerageName.Coinbase, AccountType.Cash);
             algorithm.SetParameters(new Dictionary<string, string> { { "a", "A" }, { "b", "B" } });
 
             var backtestNode = new BacktestNodePacket
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Common
         {
             new TestCaseData("BTC", BrokerageName.Binance, AccountType.Cash,
                 new Dictionary<string, string> { { "param1", "param1 value" }, { "param2", "param2 value" } }),
-            new TestCaseData("USDT", BrokerageName.GDAX, AccountType.Cash,
+            new TestCaseData("USDT", BrokerageName.Coinbase, AccountType.Cash,
                 new Dictionary<string, string> { { "a", "A" }, { "b", "B" } }),
             new TestCaseData("EUR", BrokerageName.Bitfinex, AccountType.Margin,
                 new Dictionary<string, string> { { "first", "1" }, { "second", "2" }, { "third", "3" } }),

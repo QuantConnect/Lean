@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Common
             }
         }
 
-        [TestCase(SecurityType.Crypto, Market.GDAX)]
+        [TestCase(SecurityType.Crypto, Market.Coinbase)]
         [TestCase(SecurityType.Crypto, Market.Bitfinex)]
         public void HasCurrencySymbolForEachCryptoPair(SecurityType securityType, string market)
         {
