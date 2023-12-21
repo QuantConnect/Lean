@@ -364,21 +364,21 @@ namespace QuantConnect.Tests.Common.Util
             var cryptoPath = "Data\\crypto\\coinbase\\daily\\btcusd_quote.zip";
             Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
-            Assert.AreEqual(symbol.ID.Market, Market.GDAX);
+            Assert.AreEqual(symbol.ID.Market, Market.Coinbase);
             Assert.AreEqual(resolution, Resolution.Daily);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
 
             cryptoPath = "Data\\crypto\\coinbase\\hour\\btcusd_quote.zip";
             Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
-            Assert.AreEqual(symbol.ID.Market, Market.GDAX);
+            Assert.AreEqual(symbol.ID.Market, Market.Coinbase);
             Assert.AreEqual(resolution, Resolution.Hour);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
 
             cryptoPath = "Data\\crypto\\coinbase\\minute\\btcusd\\20161007_quote.zip";
             Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
-            Assert.AreEqual(symbol.ID.Market, Market.GDAX);
+            Assert.AreEqual(symbol.ID.Market, Market.Coinbase);
             Assert.AreEqual(resolution, Resolution.Minute);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
             Assert.AreEqual(date.Date, Parse.DateTime("2016-10-07").Date);

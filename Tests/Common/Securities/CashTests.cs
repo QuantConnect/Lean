@@ -677,7 +677,7 @@ namespace QuantConnect.Tests.Common.Securities
             new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "XCHF", false, new[] { Symbol.Create("BTCXCHF", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Bitfinex) } }, // No XCHFEUR, but indirect conversion exists
             new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "XCHF", false, new[] { Symbol.Create("BTCXCHF", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("BTCGBP", SecurityType.Crypto, Market.Bitfinex) } }, // No XCHFGBP, but indirect conversion exists
 
-            // *** Coinbase (deprecated: GDAX) ***
+            // *** Coinbase ***
             // Trades USDC and USDT* (*Not yet trading live, but expected soon)
             // USDC Cases
             new object[] { new CoinbaseBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1

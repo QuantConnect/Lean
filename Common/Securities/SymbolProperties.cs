@@ -75,7 +75,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The minimum order size allowed
         /// For crypto/forex pairs it's expected to be expressed in base or quote currency
-        /// i.e For BTC/USD the minimum order size allowed with Coinbase(deprecated: GDAX) is 0.0001 BTC
+        /// i.e For BTC/USD the minimum order size allowed with Coinbase is 0.0001 BTC
         /// while on Binance the minimum order size allowed is 10 USD
         /// </summary>
         public decimal? MinimumOrderSize

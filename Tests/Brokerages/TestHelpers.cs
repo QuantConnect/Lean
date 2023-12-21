@@ -22,7 +22,7 @@ namespace QuantConnect.Tests.Brokerages
 {
     public class TestsHelpers
     {
-        public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute, string symbol = "BTCUSD", string market = Market.GDAX, string quoteCurrency = "USD")
+        public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute, string symbol = "BTCUSD", string market = Market.Coinbase, string quoteCurrency = "USD")
         {
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),

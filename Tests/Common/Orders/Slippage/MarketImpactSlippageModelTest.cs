@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             {
                 _algorithm.AddEquity("SPY", Resolution.Daily),                      // liquid stock
                 _algorithm.AddEquity("AIG", Resolution.Daily),                      // illquid stock
-                _algorithm.AddCrypto("BTCUSD", Resolution.Daily, Market.GDAX),      // crypto
+                _algorithm.AddCrypto("BTCUSD", Resolution.Daily, Market.Coinbase),      // crypto
                 _algorithm.AddOptionContract(optionContract, Resolution.Minute)     // equity options
             };
             foreach (var security in _securities)
