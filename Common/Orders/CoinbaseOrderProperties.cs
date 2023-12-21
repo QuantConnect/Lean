@@ -36,13 +36,5 @@ namespace QuantConnect.Orders
         /// reducing the risk of unintentional trades within the same account.
         /// </summary>
         public bool SelfTradePreventionId { get; set; }
-
-        /// <summary>
-        /// Returns a new instance clone of this object
-        /// </summary>
-        public override IOrderProperties Clone()
-        {
-            return (CoinbaseOrderProperties)MemberwiseClone();
-        }
     }
 }
