@@ -242,7 +242,7 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
                 new TestCaseData(new BitfinexBrokerageModel(), BrokerageName.Bitfinex),
                 new TestCaseData(new BinanceUSBrokerageModel(), BrokerageName.BinanceUS),
                 new TestCaseData(new BinanceBrokerageModel(), BrokerageName.Binance),
-                new TestCaseData(new CoinbaseBrokerageModel, BrokerageName.Coinbase),
+                new TestCaseData(new CoinbaseBrokerageModel(), BrokerageName.Coinbase),
                 new TestCaseData(new AlphaStreamsBrokerageModel(), BrokerageName.AlphaStreams),
                 new TestCaseData(new ZerodhaBrokerageModel(), BrokerageName.Zerodha),
                 new TestCaseData(new AxosClearingBrokerageModel(), BrokerageName.Axos),
