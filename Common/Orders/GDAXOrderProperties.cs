@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Orders
 {
@@ -23,13 +22,5 @@ namespace QuantConnect.Orders
     /// </summary>
     [Obsolete("GDAXOrderProperties is deprecated. Use CoinbaseOrderProperties instead.")]
     public class GDAXOrderProperties : CoinbaseOrderProperties
-    {
-        /// <summary>
-        /// Returns a new instance clone of this object
-        /// </summary>
-        public override IOrderProperties Clone()
-        {
-            return (GDAXOrderProperties)MemberwiseClone();
-        }
-    }
+    { }
 }
