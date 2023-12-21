@@ -38,9 +38,9 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
             {
                 // Load settings from config.json
                 var dataDirectory = Globals.DataFolder;
-                //todo: will download any exchange but always save as Coinbase (deprecated: gdax)
+                //todo: will download any exchange but always save as gdax
                 // Create an instance of the downloader
-                const string market = Market.Coinbase;
+                const string market = Market.GDAX;
                 var downloader = new CryptoiqDownloader(exchange);
 
                 foreach (var ticker in tickers)
