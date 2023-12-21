@@ -28,7 +28,7 @@ namespace QuantConnect.ToolBox.CoinApi
     /// <summary>
     /// Provides the mapping between Lean symbols and CoinAPI symbols.
     /// </summary>
-    /// <remarks>For now we only support mapping for CoinbasePro (deprecated: GDAX) and Bitfinex</remarks>
+    /// <remarks>For now we only support mapping for CoinbasePro (GDAX) and Bitfinex</remarks>
     public class CoinApiSymbolMapper : ISymbolMapper
     {
         private const string RestUrl = "https://rest.coinapi.io";
@@ -40,7 +40,7 @@ namespace QuantConnect.ToolBox.CoinApi
         // LEAN market <-> CoinAPI exchange id maps
         public static readonly Dictionary<string, string> MapMarketsToExchangeIds = new Dictionary<string, string>
         {
-            { Market.Coinbase, "COINBASE" },
+            { Market.GDAX, "COINBASE" },
             { Market.Bitfinex, "BITFINEX" },
             { Market.Binance, "BINANCE" },
             { Market.FTX, "FTX" },

@@ -37,7 +37,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// </summary>
         private static readonly HashSet<string> SupportedMarkets = new[]
         {
-            Market.Coinbase,
+            Market.GDAX,
             Market.Bitfinex,
             Market.Binance,
             Market.FTX,
