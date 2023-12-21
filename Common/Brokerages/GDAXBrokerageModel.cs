@@ -22,7 +22,7 @@ namespace QuantConnect.Brokerages
     /// <summary>
     /// Provides GDAX specific properties
     /// </summary>
-    [Obsolete("GDAXBrokerageModel is deprecated. Use CoinbaseProBrokerageModel instead.")]
+    [Obsolete("GDAXBrokerageModel is deprecated. Use CoinbaseBrokerageModel instead.")]
     public class GDAXBrokerageModel : CoinbaseBrokerageModel
     {
         /// <summary>
