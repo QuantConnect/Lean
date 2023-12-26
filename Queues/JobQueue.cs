@@ -49,7 +49,37 @@ namespace QuantConnect.Queues
         private static readonly int UserId = Config.GetInt("job-user-id", 0);
         private static readonly int ProjectId = Config.GetInt("job-project-id", 0);
         private readonly string AlgorithmTypeName = Config.Get("algorithm-type-name");
-        private readonly Language Language = (Language)Enum.Parse(typeof(Language), Config.Get("algorithm-language"), ignoreCase: true);
+        private Language? _language;
+
+        protected Language Language
+        {
+            get
+            {
+                if (_language == null)
+                {
+                    string algorithmLanguage = Config.Get("algorithm-language");
+                    if (string.IsNullOrEmpty(algorithmLanguage))
+                    {
+                        var extension = Path.GetExtension(AlgorithmLocation);
+                        switch (extension)
+                        {
+                            case ".dll":
+                                algorithmLanguage = "CSharp";
+                                break;
+                            case ".py":
+                                algorithmLanguage = "Python";
+                                break;
+                            default:
+                                throw new ArgumentException($"Unknown extension, algorithm extension was {extension}");
+                        }
+                    }
+
+                    _language = (Language)Enum.Parse(typeof(Language), algorithmLanguage, ignoreCase: true);
+                }
+
+                return (Language)_language;
+            }
+        }
 
         /// <summary>
         /// Physical location of Algorithm DLL.
