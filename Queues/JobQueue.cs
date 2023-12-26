@@ -51,6 +51,9 @@ namespace QuantConnect.Queues
         private readonly string AlgorithmTypeName = Config.Get("algorithm-type-name");
         private Language? _language;
 
+        /// <summary>
+        /// This property is protected for testing purposes
+        /// </summary>
         protected Language Language
         {
             get
@@ -60,21 +63,23 @@ namespace QuantConnect.Queues
                     string algorithmLanguage = Config.Get("algorithm-language");
                     if (string.IsNullOrEmpty(algorithmLanguage))
                     {
-                        var extension = Path.GetExtension(AlgorithmLocation);
+                        var extension = Path.GetExtension(AlgorithmLocation).ToLower();
                         switch (extension)
                         {
                             case ".dll":
-                                algorithmLanguage = "CSharp";
+                                _language = Language.CSharp;
                                 break;
                             case ".py":
-                                algorithmLanguage = "Python";
+                                _language = Language.Python;
                                 break;
                             default:
                                 throw new ArgumentException($"Unknown extension, algorithm extension was {extension}");
                         }
                     }
-
-                    _language = (Language)Enum.Parse(typeof(Language), algorithmLanguage, ignoreCase: true);
+                    else
+                    {
+                        _language = (Language)Enum.Parse(typeof(Language), algorithmLanguage, ignoreCase: true);
+                    }
                 }
 
                 return (Language)_language;
