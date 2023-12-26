@@ -32,6 +32,11 @@ namespace QuantConnect
         protected TimeSpan Step { get; set; }
 
         /// <summary>
+        /// True if sub sampling is enabled, if false only subsampling will happen
+        /// </summary>
+        public bool SubSample { get; set; } = true;
+
+        /// <summary>
         /// Creates a new SeriesSampler to sample Series data on the specified resolution
         /// </summary>
         /// <param name="resolution">The desired sampling resolution</param>
@@ -142,20 +147,6 @@ namespace QuantConnect
 
             do
             {
-                // advance our current/previous
-                if (nextSampleTime > current.Time)
-                {
-                    if (enumerator.MoveNext())
-                    {
-                        previous = current;
-                        current = enumerator.Current;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
                 // iterate until we pass where we want our next point
                 while (nextSampleTime <= current.Time && nextSampleTime <= stop)
                 {
@@ -169,17 +160,37 @@ namespace QuantConnect
                     {
                         sampledPoint = TruncateValue(Interpolate(previous, current, nextSampleTime, (decimal)Step.TotalSeconds), truncateValues, clone: false);
                     }
-                    sampled.Values.Add(sampledPoint);
+
                     nextSampleTime += Step;
+                    if (SubSample)
+                    {
+                        sampled.Values.Add(sampledPoint);
+                    }
+                    else
+                    {
+                        if (current.Time < nextSampleTime)
+                        {
+                            sampled.Values.Add(sampledPoint);
+                        }
+                    }
                 }
 
-                // if we've passed our stop then we're finished sampling
-                if (nextSampleTime > stop)
+                // advance our current/previous
+                if (nextSampleTime > current.Time)
                 {
-                    break;
+                    if (enumerator.MoveNext())
+                    {
+                        previous = current;
+                        current = enumerator.Current;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
-            while (true);
+            // if we've passed our stop then we're finished sampling
+            while (nextSampleTime <= stop);
 
             enumerator.DisposeSafely();
             return sampled;
@@ -256,15 +267,21 @@ namespace QuantConnect
                 do
                 {
                     var interpolated = Interpolate(sampledCandlestick, first, current, firstOpenTime, nextSampleTime, (decimal)Step.TotalSeconds);
-
-                    if (previous != null)
-                    {
-                        interpolated.Open = previous.Close;
-                    }
-
-                    sampledSeries.Values.Add(interpolated);
-                    previous = interpolated;
                     nextSampleTime += Step;
+
+                    if (SubSample)
+                    {
+                        if (previous != null)
+                        {
+                            interpolated.Open = previous.Close;
+                        }
+                        sampledSeries.Values.Add(interpolated);
+                    }
+                    else if (current.Time < nextSampleTime)
+                    {
+                        sampledSeries.Values.Add(interpolated);
+                    }
+                    previous = interpolated;
 
                     if (!aggregated)
                     {
@@ -284,7 +301,7 @@ namespace QuantConnect
                         }
                     }
 
-                    if(next != null && (nextSampleTime + Step) < next.Time && interpolated.Open == null)
+                    if (next != null && (nextSampleTime + Step) < next.Time && interpolated.Open == null)
                     {
                         isNull = true;
                     }
