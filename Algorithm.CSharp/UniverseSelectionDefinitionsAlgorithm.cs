@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class UniverseSelectionDefinitionsAlgorithm : QCAlgorithm
     {
         private SecurityChanges _changes = SecurityChanges.None;
+        private bool _onSecuritiesChangedWasCalled;
 
         public override void Initialize()
         {
@@ -37,8 +38,8 @@ namespace QuantConnect.Algorithm.CSharp
             // force securities to remain in the universe for a minimm of 30 minutes
             UniverseSettings.MinimumTimeInUniverse = TimeSpan.FromMinutes(30);
 
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
+            SetStartDate(2014, 03, 24);
+            SetEndDate(2014, 03, 28);
             SetCash(100*1000);
 
             // add universe for the top 50 stocks by dollar volume
@@ -70,8 +71,17 @@ namespace QuantConnect.Algorithm.CSharp
             _changes = SecurityChanges.None;
         }
 
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_onSecuritiesChangedWasCalled)
+            {
+                throw new Exception($"OnSecuritiesChanged() method was never called!");
+            }
+        }
+
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
+            _onSecuritiesChangedWasCalled = true;
             _changes = changes;
         }
     }
