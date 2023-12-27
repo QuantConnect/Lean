@@ -374,7 +374,6 @@ namespace QuantConnect.Tests.Common.Storage
         public void SaveAndDelete()
         {
             string path;
-            var paths = new HashSet<string>();
             using (var store = new TestLocalObjectStore())
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = 1});
@@ -860,6 +859,9 @@ namespace QuantConnect.Tests.Common.Storage
         {
             public override void WriteAllBytes(string path, byte[] data)
             {
+                // The thread sleeps for 1 second in order to align with the
+                // other thread that will try to delete this file (see SaveAndDelete()
+                // unit test)
                 Thread.Sleep(1000);
                 base.WriteAllBytes(path, data);
             }
