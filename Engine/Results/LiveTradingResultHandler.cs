@@ -387,7 +387,7 @@ namespace QuantConnect.Lean.Engine.Results
             var filename = $"{AlgorithmId}-{utcTime:yyyy-MM-dd}-order-events.json";
             var path = GetResultsPath(filename);
 
-            var data = JsonConvert.SerializeObject(orderEvents, Formatting.None);
+            var data = JsonConvert.SerializeObject(orderEvents, Formatting.None, OrderEventJsonConverter);
 
             File.WriteAllText(path, data);
         }
