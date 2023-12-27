@@ -373,8 +373,15 @@ namespace QuantConnect.Lean.Engine.Storage
             var filePath = PathForKey(path);
             if (FileHandler.Exists(filePath))
             {
-                FileHandler.Delete(filePath);
-                return true;
+                try
+                {
+                    FileHandler.Delete(filePath);
+                    return true;
+                }
+                catch
+                {
+                    // This try sentence is to prevent a race condition with the Delete within the PersisData() method
+                }
             }
 
             return wasInCache;
@@ -523,6 +530,19 @@ namespace QuantConnect.Lean.Engine.Storage
 
                         // clear the dirty flag
                         kvp.Value.SetClean();
+
+                        // This kvp could have been deleted by the Delete() method
+                        if (!_storage.Contains(kvp))
+                        {
+                            try
+                            {
+                                FileHandler.Delete(filePath);
+                            }
+                            catch
+                            {
+                                // This try sentence is to prevent a race condition with the Delete() method
+                            }
+                        }
                     }
                 }
 

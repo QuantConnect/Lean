@@ -25,6 +25,7 @@ using QuantConnect.Research;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Storage;
+using System.Threading;
 
 namespace QuantConnect.Tests.Common.Storage
 {
@@ -367,6 +368,25 @@ namespace QuantConnect.Tests.Common.Storage
 
                 Assert.IsFalse(File.Exists(path));
             }
+        }
+
+        [Test]
+        public void SaveAndDelete()
+        {
+            string path;
+            using (var store = new TestLocalObjectStore())
+            {
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = 1}, new TestFileHandler());
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
+                var key = "ILove";
+                path = store.GetFilePath(key);
+                store.SaveBytes(key, new byte[] { 1 });
+                Thread.Sleep(2000);
+                store.Delete(key);
+
+                Assert.IsTrue(store.PersistDataCalled, "PersistData() was never called!");
+            }
+            Assert.IsFalse(File.Exists(path));
         }
 
         [TestCase(FileAccess.Read, false)]
@@ -822,10 +842,33 @@ namespace QuantConnect.Tests.Common.Storage
         private class TestLocalObjectStore : LocalObjectStore
         {
             public bool PersistDataCalled { get; set; }
+
+            public override void Initialize(int userId, int projectId, string userToken, Controls controls)
+            {
+                base.Initialize(userId, projectId, userToken, controls);
+            }
+
+            public void Initialize(int userId, int projectId, string userToken, Controls controls, FileHandler fileHandler)
+            {
+                FileHandler = fileHandler;
+                base.Initialize(userId, projectId, userToken, controls);
+            }
             protected override bool PersistData()
             {
                 PersistDataCalled = true;
                 return base.PersistData();
+            }
+        }
+
+        public class TestFileHandler : FileHandler
+        {
+            public override void WriteAllBytes(string path, byte[] data)
+            {
+                // The thread sleeps for 1 second in order to align with the
+                // other thread that will try to delete this file (see SaveAndDelete()
+                // unit test)
+                Thread.Sleep(1000);
+                base.WriteAllBytes(path, data);
             }
         }
     }
