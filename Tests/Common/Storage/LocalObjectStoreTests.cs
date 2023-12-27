@@ -376,7 +376,7 @@ namespace QuantConnect.Tests.Common.Storage
             string path;
             using (var store = new TestLocalObjectStore())
             {
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = 1});
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = 1}, new TestFileHandler());
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
                 var key = "ILove";
                 path = store.GetFilePath(key);
@@ -845,7 +845,12 @@ namespace QuantConnect.Tests.Common.Storage
 
             public override void Initialize(int userId, int projectId, string userToken, Controls controls)
             {
-                FileHandler = new TestFileHandler();
+                base.Initialize(userId, projectId, userToken, controls);
+            }
+
+            public void Initialize(int userId, int projectId, string userToken, Controls controls, FileHandler fileHandler)
+            {
+                FileHandler = fileHandler;
                 base.Initialize(userId, projectId, userToken, controls);
             }
             protected override bool PersistData()
