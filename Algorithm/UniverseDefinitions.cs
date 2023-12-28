@@ -345,8 +345,7 @@ namespace QuantConnect.Algorithm
             universeSettings ??= _algorithm.UniverseSettings;
 
             var symbol = Symbol.Create("us-equity-dollar-volume-top-" + count, SecurityType.Equity, Market.USA);
-            var config = new SubscriptionDataConfig(typeof(Fundamentals), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
-            return new FuncUniverse(config, universeSettings, selectionData => (
+            return new FundamentalUniverse(universeSettings, selectionData => (
                 from c in selectionData.OfType<Fundamental>()
                 orderby c.DollarVolume descending
                 select c.Symbol).Take(count)
