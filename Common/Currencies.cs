@@ -150,12 +150,12 @@ namespace QuantConnect
         /// Stable pairs in GDAX. We defined them because they have different fees in GDAX market
         /// </summary>
         [Obsolete("StablePairsGDAX is deprecated. Use StablePairsCoinbase instead.")]
-        public static HashSet<string> StablePairsGDAX = StablePairsCoinbase;
+        public static readonly HashSet<string> StablePairsGDAX = StablePairsCoinbase;
         
         /// <summary>
         /// Stable pairs in Coinbase. We defined them because they have different fees in Coinbase market
         /// </summary>
-        public static HashSet<string> StablePairsCoinbase = new()
+        public static readonly HashSet<string> StablePairsCoinbase = new()
         {
             "DAIUSDC",
             "DAIUSD",
