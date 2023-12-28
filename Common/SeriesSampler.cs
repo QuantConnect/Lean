@@ -113,7 +113,7 @@ namespace QuantConnect
         /// <returns>The sampled series</returns>
         private Series SampleSeries(Series series, DateTime start, DateTime stop, bool truncateValues)
         {
-            var sampled = series.Clone(empty: true);
+            var sampled = (Series)series.Clone(empty: true);
 
             var nextSampleTime = start;
 
@@ -206,7 +206,7 @@ namespace QuantConnect
         /// <returns>The sampled series</returns>
         private CandlestickSeries SampleCandlestickSeries(CandlestickSeries series, DateTime start, DateTime stop, bool truncateValues)
         {
-            var sampledSeries = series.Clone(empty: true);
+            var sampledSeries = (CandlestickSeries)series.Clone(empty: true);
 
             var candlesticks = series.Values;
             var seriesSize = candlesticks.Count;
