@@ -297,6 +297,17 @@ namespace QuantConnect.Tests.Common.Util
             Assert.Greater(nextNextExpiration.ID.Date, nextExpiration.ID.Date);
         }
 
+        [TestCase("MDTUSD XJ")]
+        [TestCase("BTCEUR XJ")]
+        [TestCase("BTCUSDC XJ")]
+        [TestCase("BTCUSDT XJ")]
+        public void GDAXMarketNameCompatibilityWithCoinbase(string gdaxTicker)
+        {
+            var sid = SecurityIdentifier.Parse(gdaxTicker);
+
+            Assert.AreEqual(Market.Coinbase, sid.Market);
+        }
+
         [TestCase("A", "a")]
         [TestCase("", "")]
         [TestCase(null, null)]
