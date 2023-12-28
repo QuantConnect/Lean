@@ -1072,33 +1072,32 @@ namespace QuantConnect.Algorithm
 
         private Resolution GetResolution(Symbol symbol, Resolution? resolution, Type type)
         {
-            Security security;
-            if (Securities.TryGetValue(symbol, out security))
+            if (resolution != null)
             {
-                if (resolution != null)
-                {
-                    return resolution.Value;
-                }
+                return resolution.Value;
+            }
 
-                Resolution? result = null;
-                var hasNonInternal = false;
-                foreach (var config in SubscriptionManager.SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
-                    // we process non internal configs first
-                    .OrderBy(config => config.IsInternalFeed ? 1 : 0))
+            Resolution? result = null;
+            var hasNonInternal = false;
+            foreach (var config in SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
+                // we process non internal configs first
+                .OrderBy(config => config.IsInternalFeed ? 1 : 0))
+            {
+                if (!config.IsInternalFeed || !hasNonInternal)
                 {
-                    if (!config.IsInternalFeed || !hasNonInternal)
+                    // once we find a non internal config we ignore internals
+                    hasNonInternal |= !config.IsInternalFeed;
+                    if (!result.HasValue || config.Resolution < result)
                     {
-                        // once we find a non internal config we ignore internals
-                        hasNonInternal |= !config.IsInternalFeed;
-                        if (!result.HasValue || config.Resolution < result)
-                        {
-                            result = config.Resolution;
-                        }
+                        result = config.Resolution;
                     }
                 }
+            }
 
-                return result ?? UniverseSettings.Resolution;
+            if (result != null)
+            {
+                return (Resolution)result;
             }
             else
             {
