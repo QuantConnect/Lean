@@ -15,8 +15,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -26,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="universes" />
     /// <meta name="tag" content="coarse universes" />
-    public class UniverseSelectionDefinitionsAlgorithm : QCAlgorithm
+    public class UniverseSelectionDefinitionsAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private SecurityChanges _changes = SecurityChanges.None;
         private bool _onSecuritiesChangedWasCalled;
@@ -34,16 +36,14 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             // subscriptions added via universe selection will have this resolution
-            UniverseSettings.Resolution = Resolution.Hour;
-            // force securities to remain in the universe for a minimm of 30 minutes
-            UniverseSettings.MinimumTimeInUniverse = TimeSpan.FromMinutes(30);
+            UniverseSettings.Resolution = Resolution.Daily;
 
             SetStartDate(2014, 03, 24);
             SetEndDate(2014, 03, 28);
             SetCash(100*1000);
 
-            // add universe for the top 50 stocks by dollar volume
-            AddUniverse(Universe.Top(50));
+            // add universe for the top 3 stocks by dollar volume
+            AddUniverse(Universe.Top(3));
         }
 
         public void OnData(TradeBars data)
@@ -84,5 +84,57 @@ namespace QuantConnect.Algorithm.CSharp
             _onSecuritiesChangedWasCalled = true;
             _changes = changes;
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 35417;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "7"},
+            {"Average Win", "0.00%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "-3.587%"},
+            {"Drawdown", "0.100%"},
+            {"Expectancy", "-0.439"},
+            {"Net Profit", "-0.050%"},
+            {"Sharpe Ratio", "-17.344"},
+            {"Sortino Ratio", "-17.344"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "0.12"},
+            {"Alpha", "-0.039"},
+            {"Beta", "0.017"},
+            {"Annual Standard Deviation", "0.002"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-0.747"},
+            {"Tracking Error", "0.092"},
+            {"Treynor Ratio", "-2.271"},
+            {"Total Fees", "$7.00"},
+            {"Estimated Strategy Capacity", "$1200000000.00"},
+            {"Lowest Capacity Asset", "QQQ RIWIV7K5Z9LX"},
+            {"Portfolio Turnover", "1.06%"},
+            {"OrderListHash", "395c2dd8d0a89ef1472497a641287eb1"}
+        };
     }
 }
