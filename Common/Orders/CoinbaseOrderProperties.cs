@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
-
 namespace QuantConnect.Orders
 {
     /// <summary>
