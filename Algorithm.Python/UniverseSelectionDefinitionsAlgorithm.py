@@ -23,18 +23,17 @@ class UniverseSelectionDefinitionsAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         # subscriptions added via universe selection will have this resolution
-        self.UniverseSettings.Resolution = Resolution.Hour
-        # force securities to remain in the universe for a minimm of 30 minutes
-        self.UniverseSettings.MinimumTimeInUniverse = timedelta(minutes=30)
+        self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.SetStartDate(2013,10,7)    # Set Start Date
-        self.SetEndDate(2013,10,11)     # Set End Date
+        self.SetStartDate(2014,3,24)    # Set Start Date
+        self.SetEndDate(2014,3,28)     # Set End Date
         self.SetCash(100000)            # Set Strategy Cash
 
-        # add universe for the top 50 stocks by dollar volume
-        self.AddUniverse(self.Universe.Top(50))
+        # add universe for the top 3 stocks by dollar volume
+        self.AddUniverse(self.Universe.Top(3))
 
         self.changes = None
+        self.onSecuritiesChangedWasCalled = False
 
     def OnData(self, data):
         if self.changes is None: return
@@ -51,7 +50,11 @@ class UniverseSelectionDefinitionsAlgorithm(QCAlgorithm):
 
         self.changes = None
 
-
     # this event fires whenever we have changes to our universe
     def OnSecuritiesChanged(self, changes):
         self.changes = changes
+        self.onSecuritiesChangedWasCalled = True
+
+    def OnEndOfAlgorithm(self):
+        if not self.onSecuritiesChangedWasCalled:
+            raise Exception("OnSecuritiesChanged() method was never called!")
