@@ -417,12 +417,14 @@ namespace QuantConnect.Lean.Engine.Setup
                     Log.Trace("BrokerageSetupHandler.Setup(): Has existing holding: " + holding);
 
                     // verify existing holding security type
-                    if (!algorithm.Securities.ContainsKey(holding.Symbol))
+                    if (!algorithm.Securities.TryGetValue(holding.Symbol, out var security))
                     {
-                        AddUnrequestedSecurity(algorithm, holding.Symbol, holding.Type);
+                        if (AddUnrequestedSecurity(algorithm, holding.Symbol, holding.Type) == null)
+                        {
+                            continue;
+                        }
                     }
 
-                    var security = algorithm.Securities[holding.Symbol];
                     var exchangeTime = utcNow.ConvertFromUtc(security.Exchange.TimeZone);
 
                     security.Holdings.SetHoldings(holding.AveragePrice, holding.Quantity);
@@ -459,15 +461,16 @@ namespace QuantConnect.Lean.Engine.Setup
             return true;
         }
 
-        private Security AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, SecurityType? securityType = null)
+        private Security AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, SecurityType securityType)
         {
             if (!algorithm.Securities.TryGetValue(symbol, out Security security))
             {
-                if (securityType != null && !_supportedSecurityTypes.Contains((SecurityType)securityType))
+                if (!_supportedSecurityTypes.Contains((SecurityType)securityType))
                 {
                     Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + securityType + "-" + symbol.Value);
                     AddInitializationError("Found unsupported security type in existing brokerage holdings: " + securityType + ". " +
                         "QuantConnect currently supports the following security types: " + string.Join(",", _supportedSecurityTypes));
+                    return null;
                 }
 
                 var resolution = algorithm.UniverseSettings.Resolution;
@@ -533,7 +536,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
 
                 // Add the security before adding the order to ensure the subscription exists
-                var security = AddUnrequestedSecurity(algorithm, order.Symbol);
+                var security = AddUnrequestedSecurity(algorithm, order.Symbol, order.SecurityType);
                 transactionHandler.AddOpenOrder(order, algorithm);
                 order.PriceCurrency = security?.SymbolProperties.QuoteCurrency;
 
