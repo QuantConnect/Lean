@@ -1058,6 +1058,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Time Series Forecast indicator
+        /// </summary>
+        /// <param name="symbol">The symbol whose TSF we want</param>
+        /// <param name="period">The period of the TSF</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to Value property of BaseData (x => x.Value)</param>
+        /// <returns></returns>
+        [DocumentationAttribute(Indicators)]
+        public TimeSeriesForecast TSF(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"TSF({period})", resolution);
+            var timeSeriesForecast = new TimeSeriesForecast(name, period);
+            InitializeIndicator(symbol, timeSeriesForecast, resolution, selector);
+
+            return timeSeriesForecast;
+        }
+
+        /// <summary>
         /// Creates a new Maximum indicator to compute the maximum value
         /// </summary>
         /// <param name="symbol">The symbol whose max we want</param>
