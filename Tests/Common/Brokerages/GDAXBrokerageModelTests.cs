@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             BrokerageMessageEvent message;
             var order = new Mock<Order>();
-            order.Object.Quantity = 10.0m;
+            order.Setup(x => x.Quantity).Returns(10.0m);
 
             if (isUpdate)
             {
@@ -79,8 +79,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             BrokerageMessageEvent message;
             var order = new Mock<Order>();
-
-            order.Object.Quantity = orderQuantity;
+            order.Setup(x => x.Quantity).Returns(orderQuantity);
 
             Assert.AreEqual(isValidOrderQuantity, _gdaxBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.GDAX), order.Object, out message));
         }
@@ -95,7 +94,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             BrokerageMessageEvent message;
             var order = new Mock<Order>();
-            order.Object.Quantity = 10.0m;
+            order.Setup(x => x.Quantity).Returns(10.0m);
 
             Assert.AreEqual(isValidSecurityType, _gdaxBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(1.0m, securityType), order.Object, out message));
         }
