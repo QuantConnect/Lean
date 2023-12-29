@@ -209,7 +209,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 foreach (var ticket in combo1)
                 {
-                    var newLimit = ticket.Get(OrderField.LimitPrice) + (ticket.Quantity > 0 ? 1m : -1m) * 0.01m;
+                    var newLimit = Math.Round(ticket.Get(OrderField.LimitPrice) + (ticket.Quantity > 0 ? 1m : -1m) * 0.01m, 2);
                     Debug($"Updating limits - Combo #1: {newLimit.ToStringInvariant("0.00")}");
 
                     ticket.Update(new UpdateOrderFields
@@ -221,7 +221,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 foreach (var ticket in combo2)
                 {
-                    var newLimit = ticket.Get(OrderField.LimitPrice) + (ticket.Quantity > 0 ? 1m : -1m) * 0.01m;
+                    var newLimit = Math.Round(ticket.Get(OrderField.LimitPrice) + (ticket.Quantity > 0 ? 1m : -1m) * 0.01m, 2);
                     Debug($"Updating limits - Combo #2: {newLimit.ToStringInvariant("0.00")}");
 
                     ticket.Update(new UpdateOrderFields
@@ -367,7 +367,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$2000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "58.98%"},
-            {"OrderListHash", "89bcdf27896c92d8bfb916fcc0507377"}
+            {"OrderListHash", "c455fd803ce5f4b7902a97d84c14629a"}
         };
     }
 }
