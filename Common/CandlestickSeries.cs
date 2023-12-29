@@ -131,7 +131,7 @@ namespace QuantConnect
         /// Will sum up all candlesticks into a new single one, using the time of latest point
         /// </summary>
         /// <returns>The new candlestick</returns>
-        public override Candlestick ConsolidateChartPoints()
+        public override ISeriesPoint ConsolidateChartPoints()
         {
             if (Values.Count <= 0) return null;
 
@@ -171,7 +171,7 @@ namespace QuantConnect
         /// Return a new instance clone of this object
         /// </summary>
         /// <returns></returns>
-        public override CandlestickSeries Clone(bool empty = false)
+        public override BaseSeries Clone(bool empty = false)
         {
             var series = new CandlestickSeries(Name, Index, Unit);
 
