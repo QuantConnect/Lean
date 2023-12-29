@@ -23,7 +23,7 @@ namespace QuantConnect.Orders
     /// Combo limit order type
     /// </summary>
     /// <remarks>Single limit price for the whole combo order</remarks>
-    public class ComboLimitOrder : Order
+    public class ComboLimitOrder : ComboOrder
     {
         /// <summary>
         /// Combo Limit Order Type
@@ -60,19 +60,7 @@ namespace QuantConnect.Orders
         /// <param name="security">The security matching this order's symbol</param>
         protected override decimal GetValueImpl(Security security)
         {
-            // selling, so higher price will be used
-            if (Quantity < 0)
-            {
-                return Quantity * Math.Max(GroupOrderManager.LimitPrice, security.Price);
-            }
-
-            // buying, so lower price will be used
-            if (Quantity > 0)
-            {
-                return Quantity * Math.Min(GroupOrderManager.LimitPrice, security.Price);
-            }
-
-            return 0m;
+            return LimitOrder.CalculateOrderValue(Quantity, GroupOrderManager.LimitPrice, security.Price);
         }
 
         /// <summary>

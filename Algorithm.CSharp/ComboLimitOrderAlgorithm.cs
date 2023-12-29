@@ -28,6 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
         private decimal _limitPrice;
         private int _comboQuantity;
 
+        private decimal _temporaryLimitPrice;
+        private int _temporaryComboQuantity;
+
         private int _fillCount;
 
         private decimal _liquidatedQuantity;
@@ -47,10 +50,23 @@ namespace QuantConnect.Algorithm.CSharp
         {
             _limitPrice = limitPrice.Value;
             _comboQuantity = quantity;
+            _temporaryLimitPrice = limitPrice.Value - Math.Sign(quantity) * limitPrice.Value * 0.5m; // Won't fill
+            _temporaryComboQuantity = quantity * 10;
 
             legs.ForEach(x => { x.OrderPrice = null; });
 
-            return ComboLimitOrder(legs, quantity, _limitPrice);
+            // First, let's place a limit order that won't fill so we can update it later
+            return ComboLimitOrder(legs, _temporaryComboQuantity, _temporaryLimitPrice);
+        }
+
+        protected override void UpdateComboOrder(List<OrderTicket> tickets)
+        {
+            // Let's update the quantity and limit price to the real values
+            tickets[0].Update(new UpdateOrderFields
+            {
+                Quantity = _comboQuantity,
+                LimitPrice = _limitPrice
+            });
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
@@ -156,7 +172,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$5000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "60.91%"},
-            {"OrderListHash", "6ca75024c436ecca6efbe1ddaace4c71"}
+            {"OrderListHash", "0a8f9edaff4857d0e7731c7b936e4288"}
         };
     }
 }

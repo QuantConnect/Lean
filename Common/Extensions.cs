@@ -2409,7 +2409,6 @@ namespace QuantConnect
             switch (order.Type)
             {
                 case OrderType.Limit:
-                case OrderType.ComboLegLimit:
                     var limitOrder = order as LimitOrder;
                     limitPrice = limitOrder.LimitPrice;
                     break;
@@ -2443,6 +2442,10 @@ namespace QuantConnect
                     break;
                 case OrderType.ComboLimit:
                     limitPrice = order.GroupOrderManager.LimitPrice;
+                    break;
+                case OrderType.ComboLegLimit:
+                    var legLimitOrder = order as ComboLegLimitOrder;
+                    limitPrice = legLimitOrder.LimitPrice;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

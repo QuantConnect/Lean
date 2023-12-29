@@ -253,7 +253,11 @@ namespace QuantConnect.Orders
                     {
                         fieldValue = AccessOrder<ComboLimitOrder, decimal>(this, field, o => o.GroupOrderManager.LimitPrice, r => r.LimitPrice);
                     }
-                    else if (_submitRequest.OrderType == OrderType.Limit || _submitRequest.OrderType == OrderType.ComboLegLimit)
+                    else if (_submitRequest.OrderType == OrderType.ComboLegLimit)
+                    {
+                        fieldValue = AccessOrder<ComboLegLimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                    }
+                    else if (_submitRequest.OrderType == OrderType.Limit)
                     {
                         fieldValue = AccessOrder<LimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }

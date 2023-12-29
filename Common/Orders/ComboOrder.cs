@@ -15,24 +15,35 @@
 
 using System;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Combo market order type
+    /// Combo order type
     /// </summary>
-    public class ComboMarketOrder : ComboOrder
+    public abstract class ComboOrder : Order
     {
+        private decimal _ratio;
+
         /// <summary>
-        /// Combo Market Order Type
+        /// Number of shares to execute.
         /// </summary>
-        public override OrderType Type => OrderType.ComboMarket;
+        public override decimal Quantity
+        {
+            get
+            {
+                return _ratio.GetOrderLegGroupQuantity(GroupOrderManager).Normalize();
+            }
+            internal set
+            {
+                _ratio = value.GetOrderLegRatio(GroupOrderManager);
+            }
+        }
 
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
-        public ComboMarketOrder() : base()
+        public ComboOrder() : base()
         {
         }
 
@@ -45,30 +56,32 @@ namespace QuantConnect.Orders
         /// <param name="groupOrderManager">Manager for the orders in the group</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public ComboMarketOrder(Symbol symbol, decimal quantity, DateTime time, GroupOrderManager groupOrderManager, string tag = "",
+        public ComboOrder(Symbol symbol, decimal quantity, DateTime time, GroupOrderManager groupOrderManager, string tag = "",
             IOrderProperties properties = null)
-            : base(symbol, quantity, time, groupOrderManager, tag, properties)
+            : base(symbol, 0m, time, tag, properties)
         {
+            GroupOrderManager = groupOrderManager;
+            Quantity = quantity;
         }
 
         /// <summary>
-        /// Gets the order value in units of the security's quote currency
+        /// Modifies the state of this order to match the update request
         /// </summary>
-        /// <param name="security">The security matching this order's symbol</param>
-        protected override decimal GetValueImpl(Security security)
+        /// <param name="request">The request to update this order object</param>
+        public override void ApplyUpdateOrderRequest(UpdateOrderRequest request)
         {
-            return Quantity * security.Price;
-        }
-
-        /// <summary>
-        /// Creates a deep-copy clone of this order
-        /// </summary>
-        /// <returns>A copy of this order</returns>
-        public override Order Clone()
-        {
-            var order = new ComboMarketOrder();
-            CopyTo(order);
-            return order;
+            if (request.OrderId != Id)
+            {
+                throw new ArgumentException("Attempted to apply updates to the incorrect order!");
+            }
+            if (request.Tag != null)
+            {
+                Tag = request.Tag;
+            }
+            if (request.Quantity.HasValue)
+            {
+                this.UpdateQuantity(request.Quantity.Value);
+            }
         }
     }
 }

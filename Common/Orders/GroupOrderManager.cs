@@ -32,7 +32,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The group order quantity
         /// </summary>
-        public decimal Quantity { get; }
+        public decimal Quantity { get; internal set; }
 
         /// <summary>
         /// The total order count associated with this order group

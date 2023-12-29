@@ -23,12 +23,17 @@ namespace QuantConnect.Orders
     /// Combo leg limit order type
     /// </summary>
     /// <remarks>Limit price per leg in the combo order</remarks>
-    public class ComboLegLimitOrder : LimitOrder
+    public class ComboLegLimitOrder : ComboOrder
     {
         /// <summary>
         /// Combo Limit Leg Order Type
         /// </summary>
         public override OrderType Type => OrderType.ComboLegLimit;
+
+        /// <summary>
+        /// Limit price for this order.
+        /// </summary>
+        public decimal LimitPrice { get; internal set; }
 
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
@@ -49,9 +54,32 @@ namespace QuantConnect.Orders
         /// <param name="properties">The order properties for this order</param>
         public ComboLegLimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, DateTime time, GroupOrderManager groupOrderManager,
             string tag = "", IOrderProperties properties = null)
-            : base(symbol, quantity, limitPrice, time, tag, properties)
+            : base(symbol, quantity, time, groupOrderManager, tag, properties)
         {
             GroupOrderManager = groupOrderManager;
+            LimitPrice = limitPrice;
+        }
+
+        /// <summary>
+        /// Gets the order value in units of the security's quote currency
+        /// </summary>
+        /// <param name="security">The security matching this order's symbol</param>
+        protected override decimal GetValueImpl(Security security)
+        {
+            return LimitOrder.CalculateOrderValue(Quantity, LimitPrice, security.Price);
+        }
+
+        /// <summary>
+        /// Modifies the state of this order to match the update request
+        /// </summary>
+        /// <param name="request">The request to update this order object</param>
+        public override void ApplyUpdateOrderRequest(UpdateOrderRequest request)
+        {
+            base.ApplyUpdateOrderRequest(request);
+            if (request.LimitPrice.HasValue)
+            {
+                LimitPrice = request.LimitPrice.Value;
+            }
         }
 
         /// <summary>
