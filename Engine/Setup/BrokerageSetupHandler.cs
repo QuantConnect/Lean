@@ -79,6 +79,18 @@ namespace QuantConnect.Lean.Engine.Setup
         // saves ref to algo so we can call quit if runtime error encountered
         private IBrokerageFactory _factory;
         private IBrokerage _dataQueueHandlerBrokerage;
+        private HashSet<SecurityType> _supportedSecurityTypes = new()
+        {
+            SecurityType.Equity,
+            SecurityType.Forex,
+            SecurityType.Cfd,
+            SecurityType.Option,
+            SecurityType.Future,
+            SecurityType.FutureOption,
+            SecurityType.IndexOption,
+            SecurityType.Crypto,
+            SecurityType.CryptoFuture
+        };
 
         /// <summary>
         /// Initializes a new BrokerageSetupHandler
@@ -379,15 +391,10 @@ namespace QuantConnect.Lean.Engine.Setup
 
         private bool LoadExistingHoldingsAndOrders(IBrokerage brokerage, IAlgorithm algorithm, SetupHandlerParameters parameters)
         {
-            var supportedSecurityTypes = new HashSet<SecurityType>
-            {
-                SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.IndexOption, SecurityType.Crypto, SecurityType.CryptoFuture
-            };
-
             Log.Trace("BrokerageSetupHandler.Setup(): Fetching open orders from brokerage...");
             try
             {
-                GetOpenOrders(algorithm, parameters.ResultHandler, parameters.TransactionHandler, brokerage, supportedSecurityTypes);
+                GetOpenOrders(algorithm, parameters.ResultHandler, parameters.TransactionHandler, brokerage, _supportedSecurityTypes);
             }
             catch (Exception err)
             {
@@ -410,17 +417,10 @@ namespace QuantConnect.Lean.Engine.Setup
                     Log.Trace("BrokerageSetupHandler.Setup(): Has existing holding: " + holding);
 
                     // verify existing holding security type
-                    if (!supportedSecurityTypes.Contains(holding.Type))
+                    if (!algorithm.Securities.ContainsKey(holding.Symbol))
                     {
-                        Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + holding.Type + "-" + holding.Symbol.Value);
-                        AddInitializationError("Found unsupported security type in existing brokerage holdings: " + holding.Type + ". " +
-                            "QuantConnect currently supports the following security types: " + string.Join(",", supportedSecurityTypes));
-
-                        // keep aggregating these errors
-                        continue;
+                        AddUnrequestedSecurity(algorithm, holding.Symbol, holding.Type);
                     }
-
-                    AddUnrequestedSecurity(algorithm, holding.Symbol);
 
                     var security = algorithm.Securities[holding.Symbol];
                     var exchangeTime = utcNow.ConvertFromUtc(security.Exchange.TimeZone);
@@ -459,10 +459,17 @@ namespace QuantConnect.Lean.Engine.Setup
             return true;
         }
 
-        private Security AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol)
+        private Security AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, SecurityType? securityType = null)
         {
             if (!algorithm.Securities.TryGetValue(symbol, out Security security))
             {
+                if (securityType != null && !_supportedSecurityTypes.Contains((SecurityType)securityType))
+                {
+                    Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + securityType + "-" + symbol.Value);
+                    AddInitializationError("Found unsupported security type in existing brokerage holdings: " + securityType + ". " +
+                        "QuantConnect currently supports the following security types: " + string.Join(",", _supportedSecurityTypes));
+                }
+
                 var resolution = algorithm.UniverseSettings.Resolution;
                 var fillForward = algorithm.UniverseSettings.FillForward;
                 var leverage = algorithm.UniverseSettings.Leverage;
