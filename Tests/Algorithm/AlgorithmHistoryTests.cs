@@ -536,6 +536,37 @@ def getTickHistory(algorithm, symbol, start, end):
             Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(QuoteBar)));
         }
 
+        [TestCase(Resolution.Daily)]
+        [TestCase(Resolution.Minute)]
+        [TestCase(Resolution.Hour)]
+        public void GetLastKnownPricesUsesCorrectResolution(Resolution resolution)
+        {
+            var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
+
+            algorithm.SetSecurityInitializer(security =>
+            {
+                var lastKnownPrices = algorithm.GetLastKnownPrices(security).ToList();
+                var data = lastKnownPrices.Where(x => x.GetType() == typeof(TradeBar)).Single().ConvertInvariant<TradeBar>();
+                var expectedPeriod = new TimeSpan();
+                switch (resolution)
+                {
+                    case Resolution.Daily:
+                        expectedPeriod = TimeSpan.FromDays(1);
+                        break;
+                    case Resolution.Minute:
+                        expectedPeriod = TimeSpan.FromMinutes(1);
+                        break;
+                    case Resolution.Hour:
+                        expectedPeriod = TimeSpan.FromHours(1);
+                        break;
+                }
+
+                Assert.AreEqual(expectedPeriod, data.Period);
+            });
+
+            algorithm.AddEquity("SPY", resolution);
+        }
+
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
         public void GetLastKnownPricesCustomData(Language language)

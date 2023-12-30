@@ -59,7 +59,7 @@ namespace QuantConnect.Util
                     if (series.SeriesType == SeriesType.Pie)
                     {
                         values = new List<ChartPoint>();
-                        var dataPoint = series.ConsolidateChartPoints();
+                        var dataPoint = series.ConsolidateChartPoints() as ChartPoint;
                         if (dataPoint != null)
                         {
                             values.Add(dataPoint);
