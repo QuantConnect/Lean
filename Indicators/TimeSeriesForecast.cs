@@ -58,6 +58,7 @@ public class TimeSeriesForecast : WindowIndicator<IndicatorDataPoint>, IIndicato
             return 0;
         }
         
+        // calculations are derived from https://tulipindicators.org/tsf
         decimal x1 = 0;
         decimal x2 = 0;
         decimal xy = 0;
