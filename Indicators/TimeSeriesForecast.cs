@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-
 namespace QuantConnect.Indicators
 {
 /// <summary>
@@ -23,6 +21,16 @@ namespace QuantConnect.Indicators
 /// </summary>
 public class TimeSeriesForecast : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
 {
+    /// <summary>
+    /// Gets a flag indicating when this indicator is ready and fully initialized
+    /// </summary>
+    public override bool IsReady => Samples >= Period;
+
+    /// <summary>
+    /// Required period, in data points, for the indicator to be ready and fully initialized
+    /// </summary>
+    public int WarmUpPeriod => Period;
+    
     /// <summary>
     /// Creates a new TimeSeriesForecast indicator with the specified period
     /// </summary>
@@ -43,34 +51,38 @@ public class TimeSeriesForecast : WindowIndicator<IndicatorDataPoint>, IIndicato
     }
 
     /// <inheritdoc />
-    protected override decimal ComputeNextValue(
-        IReadOnlyWindow<IndicatorDataPoint> window,
-        IndicatorDataPoint input
-        )
+    protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
     {
-        if (window.Count < Period)
+        if (!IsReady)
         {
-            throw new ArgumentException("Length of data is smaller than period.");
+            return 0;
         }
         
-        decimal x1 = Period;
-        decimal x2 = Period * Period;
+        decimal x1 = 0;
+        decimal x2 = 0;
         decimal xy = 0;
         decimal y = 0;
 
-        for (var i = 0; i < Period; i++)
+        var i = Period - 1;
+        for (; i > 0; i--)
         {
-            x1 += i + 1;
-            x2 += (i + 1) * (i + 1);
-            xy += window[i].Value * (i + 1);
+            x1 += i;
+            x2 += i * i;
+            xy += window[i].Value * (Period - i);
             y += window[i].Value;
         }
 
+        x1 += Period;
+        x2 += Period * Period;
+
+        xy += window[0].Value * Period;
+        y += window[0].Value;
+
         var bd = 1 / (Period * x2 - x1 * x1);
         var b = (Period * xy - x1 * y) * bd;
-        var a = (y - b * x1) * Period;
-        
-        return a + b * Period + 1;
+        var a = (y - b * x1) * (1m / Period);
+
+        return a + b * (Period + 1);
     }
 }
 }

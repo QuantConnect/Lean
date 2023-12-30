@@ -25,7 +25,7 @@ public class TimeSeriesForecastTests
     [Test]
     public void ComputesCorrectly()
     {
-        var period = 5;
+        const int period = 5;
         var tsf = new TimeSeriesForecast(period);
         
         // Data source: https://tulipindicators.org/tsf
@@ -42,6 +42,23 @@ public class TimeSeriesForecastTests
                 Assert.AreEqual(output[i], decimal.Round(tsf.Current.Value, 2));
             }
         }
+    }
+
+    [Test]
+    public void ResetsProperly()
+    {
+        const int period = 3;
+        var tsf = new TimeSeriesForecast(period);
+        var reference = DateTime.MinValue;
+
+        tsf.Update(reference, 1m);
+        tsf.Update(reference.AddDays(1), 1m);
+        tsf.Update(reference.AddDays(2), 1m);
+        Assert.IsTrue(tsf.IsReady);
+        
+        tsf.Reset();
+        Assert.IsFalse(tsf.IsReady);
+        TestHelper.AssertIndicatorIsInDefaultState(tsf);
     }
 }
 }
