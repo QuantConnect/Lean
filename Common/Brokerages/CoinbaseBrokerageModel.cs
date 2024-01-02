@@ -112,10 +112,45 @@ namespace QuantConnect.Brokerages
         /// <param name="request">The requested update to be made to the order</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
         /// <returns><c>true</c> if the brokerage supports updating orders; otherwise, <c>false</c>.</returns>
+        /// <remarks>Coinbase: Only limit order types, with time in force type of good-till-cancelled can be edited.</remarks>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            message = _message;
+            if (order == null || security == null || request == null)
+            {
+                var parameter = order == null ? nameof(order) : nameof(security);
+                throw new ArgumentNullException(parameter, $"{parameter} parameter cannot be null. Please provide a valid {parameter} for submission.");
+            }
+
+            if (order.Type != OrderType.Limit)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", 
+                    $"Order with type {order.Type} can't be modified, only LIMIT.");
+                return false;
+            }
+
+            if (order.TimeInForce != TimeInForce.GoodTilCanceled)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", 
+                    $"Order's parameter 'TimeInForce' is not instance of Good Til Cancelled class.");
+                return false;
+            }
+
+            if (order.Status is not (OrderStatus.New or OrderStatus.PartiallyFilled or OrderStatus.Submitted or OrderStatus.UpdateSubmitted))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    $"Order with status {order.Status} can't be modified");
+                return false;
+            }
+
+            if (request.Quantity.HasValue && !IsOrderSizeLargeEnough(security, Math.Abs(request.Quantity.Value)))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, request.Quantity.Value));
             return false;
+        }
+
+            message = null;
+            return true;
         }
 
         /// <summary>
