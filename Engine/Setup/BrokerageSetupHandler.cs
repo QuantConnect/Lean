@@ -79,7 +79,7 @@ namespace QuantConnect.Lean.Engine.Setup
         // saves ref to algo so we can call quit if runtime error encountered
         private IBrokerageFactory _factory;
         private IBrokerage _dataQueueHandlerBrokerage;
-        private HashSet<SecurityType> _supportedSecurityTypes = new()
+        protected virtual HashSet<SecurityType> SupportedSecurityTypes => new()
         {
             SecurityType.Equity,
             SecurityType.Forex,
@@ -394,7 +394,7 @@ namespace QuantConnect.Lean.Engine.Setup
             Log.Trace("BrokerageSetupHandler.Setup(): Fetching open orders from brokerage...");
             try
             {
-                GetOpenOrders(algorithm, parameters.ResultHandler, parameters.TransactionHandler, brokerage, _supportedSecurityTypes);
+                GetOpenOrders(algorithm, parameters.ResultHandler, parameters.TransactionHandler, brokerage);
             }
             catch (Exception err)
             {
@@ -418,12 +418,9 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     // verify existing holding security type
                     Security security;
-                    if (!algorithm.Securities.TryGetValue(holding.Symbol, out security))
+                    if (!algorithm.Securities.TryGetValue(holding.Symbol, out security) && !AddUnrequestedSecurity(algorithm, holding.Symbol, holding.Type, out security))
                     {
-                        if (!AddUnrequestedSecurity(algorithm, holding.Symbol, holding.Type, out security))
-                        {
-                            continue;
-                        }
+                        continue;
                     }
 
                     var exchangeTime = utcNow.ConvertFromUtc(security.Exchange.TimeZone);
@@ -466,11 +463,11 @@ namespace QuantConnect.Lean.Engine.Setup
         {
             if (!algorithm.Securities.TryGetValue(symbol, out security))
             {
-                if (!_supportedSecurityTypes.Contains((SecurityType)securityType))
+                if (!SupportedSecurityTypes.Contains((SecurityType)securityType))
                 {
                     Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + securityType + "-" + symbol.Value);
                     AddInitializationError("Found unsupported security type in existing brokerage holdings: " + securityType + ". " +
-                        "QuantConnect currently supports the following security types: " + string.Join(",", _supportedSecurityTypes));
+                        "QuantConnect currently supports the following security types: " + string.Join(",", SupportedSecurityTypes));
                     security = null;
                     return false;
                 }
@@ -516,9 +513,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="resultHandler">The configured result handler</param>
         /// <param name="transactionHandler">The configurated transaction handler</param>
         /// <param name="brokerage">Brokerage output instance</param>
-        /// <param name="supportedSecurityTypes">The list of supported security types</param>
-        protected void GetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage,
-            HashSet<SecurityType> supportedSecurityTypes)
+        protected void GetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage)
         {
             // populate the algorithm with the account's outstanding orders
             var openOrders = brokerage.GetOpenOrders();
@@ -528,13 +523,9 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 // verify existing holding security type
                 Security security;
-                if (!algorithm.Securities.TryGetValue(order.Symbol, out security))
+                if (!algorithm.Securities.TryGetValue(order.Symbol, out security) && !AddUnrequestedSecurity(algorithm, order.Symbol, order.SecurityType, out security))
                 {
-                    if (!AddUnrequestedSecurity(algorithm, order.Symbol, order.SecurityType, out security))
-                    {
-                        // keep aggregating these errors
-                        continue;
-                    }
+                    continue;
                 }
 
                 transactionHandler.AddOpenOrder(order, algorithm);
