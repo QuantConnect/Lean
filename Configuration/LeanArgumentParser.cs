@@ -136,8 +136,8 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("iqfeed-version", CommandOptionType.SingleValue),
 
                 // coinbase configuration
-                new CommandLineOption("coinbase-api-url", CommandOptionType.SingleValue),
-                new CommandLineOption("coinbase-websocket-url", CommandOptionType.SingleValue),
+                new CommandLineOption("coinbase-rest-api", CommandOptionType.SingleValue),
+                new CommandLineOption("coinbase-url", CommandOptionType.SingleValue),
                 new CommandLineOption("coinbase-api-key", CommandOptionType.SingleValue),
                 new CommandLineOption("coinbase-api-secret", CommandOptionType.SingleValue),
 

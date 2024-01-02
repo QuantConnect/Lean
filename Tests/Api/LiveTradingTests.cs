@@ -163,8 +163,8 @@ namespace QuantConnect.Tests.API
         {
             var key = Config.Get("coinbase-api-key");
             var secretKey = Config.Get("coinbase-api-secret");
-            var apiUrl = Config.Get("coinbase-api-url");
-            var wsUrl = Config.Get("coinbase-websocket-url");
+            var apiUrl = Config.Get("coinbase-rest-api");
+            var wsUrl = Config.Get("coinbase-url");
 
             // Create default algorithm settings
             var settings = new CoinbaseLiveAlgorithmSettings(key, secretKey, new Uri(apiUrl), new Uri(wsUrl));
@@ -251,8 +251,8 @@ namespace QuantConnect.Tests.API
                     case BrokerageName.Coinbase:
                         key = Config.Get("coinbase-api-key");
                         secretKey = Config.Get("coinbase-api-secret");
-                        var apiUrl = Config.Get("coinbase-api-url");
-                        var wsUrl = Config.Get("coinbase-websocket-url");
+                        var apiUrl = Config.Get("coinbase-rest-api");
+                        var wsUrl = Config.Get("coinbase-url");
                         
                         settings = new CoinbaseLiveAlgorithmSettings(key, secretKey, new Uri(apiUrl), new Uri(wsUrl));
                         break;
