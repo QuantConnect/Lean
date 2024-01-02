@@ -1064,7 +1064,7 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The period of the TSF</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to Value property of BaseData (x => x.Value)</param>
-        /// <returns></returns>
+        /// <returns>The TimeSeriesForecast indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
         public TimeSeriesForecast TSF(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
