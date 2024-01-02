@@ -146,8 +146,8 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, request.Quantity.Value));
-            return false;
-        }
+                return false;
+            }
 
             message = null;
             return true;
