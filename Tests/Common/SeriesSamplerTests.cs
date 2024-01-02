@@ -253,7 +253,8 @@ namespace QuantConnect.Tests.Common
             series.AddPoint(_reference, 1m);
             series.AddPoint(_reference.AddDays(1), 2m);
             series.AddPoint(new ChartPoint(_reference.AddDays(2), null));
-            series.AddPoint(_reference.AddDays(3), 4m);
+            // even if the data doesn't fit exactly the expected bar span we expect it to pass through
+            series.AddPoint(_reference.AddDays(2.8), 4m);
             series.AddPoint(_reference.AddDays(4), 5m);
             series.AddPoint(_reference.AddDays(5), 6m);
 
@@ -791,7 +792,8 @@ namespace QuantConnect.Tests.Common
             var series = new CandlestickSeries { Name = "name" };
             series.AddPoint(_reference, 1m, 2m, 1m, 2m);
             series.AddPoint(_reference.AddDays(1), 2m, 3m, 2m, 3m);
-            series.AddPoint(_reference.AddDays(2), 4m, 4m, 3m, 3m);
+            // even if the data doesn't fit exactly the expected bar span we expect it to pass through
+            series.AddPoint(_reference.AddDays(1.6), 4m, 4m, 3m, 3m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(0.25)) { SubSample = false };
 
