@@ -27,7 +27,6 @@ using QuantConnect.ToolBox.IVolatilityEquityConverter;
 using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.KrakenDownloader;
 using QuantConnect.ToolBox.NseMarketDataConverter;
-using QuantConnect.ToolBox.QuantQuoteConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
@@ -156,12 +155,6 @@ namespace QuantConnect.ToolBox
                     case "nsemarketdataconverter":
                         NseMarketDataConverterProgram.NseMarketDataConverter(GetParameterOrExit(optionsObject, "source-dir"),
                                                                              GetParameterOrExit(optionsObject, "destination-dir"));
-                        break;
-                    case "qqc":
-                    case "quantquoteconverter":
-                        QuantQuoteConverterProgram.QuantQuoteConverter(GetParameterOrExit(optionsObject, "destination-dir"),
-                                                                       GetParameterOrExit(optionsObject, "source-dir"),
-                                                                       GetParameterOrExit(optionsObject, "resolution"));
                         break;
                     case "cug":
                     case "coarseuniversegenerator":
