@@ -630,9 +630,9 @@ namespace QuantConnect.Tests.Engine.Setup
                 get
                 {
                     yield return new TestCaseData(
-                            new Func<List<Holding>>(() => new List<Holding>()),
-                            new Func<List<Order>>(() => new List<Order>()), true);
-
+                        new Func<List<Holding>>(() => new List<Holding>()),
+                        new Func<List<Order>>(() => new List<Order>()), true);
+                    
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -642,7 +642,7 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow)
                         }), true);
-
+                    
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -652,7 +652,7 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder(Symbols.SPY_C_192_Feb19_2016, 1, 1, DateTime.UtcNow)
                         }), true);
-
+                    
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -664,7 +664,7 @@ namespace QuantConnect.Tests.Engine.Setup
                             new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow),
                             new LimitOrder(Symbols.SPY_C_192_Feb19_2016, 1, 1, DateTime.UtcNow)
                         }), true);
-
+                    
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -676,7 +676,7 @@ namespace QuantConnect.Tests.Engine.Setup
                             new LimitOrder(Symbols.SPY_C_192_Feb19_2016, 1, 1, DateTime.UtcNow),
                             new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow)
                         }), true);
-
+                    
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -686,7 +686,7 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow),
                         }), true);
-
+                    
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -696,7 +696,7 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder(Symbols.EURUSD, 1, 1, DateTime.UtcNow)
                         }), true);
-
+                    
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -706,7 +706,7 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder(Symbols.BTCUSD, 1, 1, DateTime.UtcNow)
                         }), true);
-
+                    
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -716,7 +716,7 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder(Symbols.Fut_SPY_Feb19_2016, 1, 1, DateTime.UtcNow)
                         }), true);
-
+                    
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -726,11 +726,11 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder("XYZ", 1, 1, DateTime.UtcNow)
                         }), false);
-
+                    
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => { throw new Exception(); }),
                         new Func<List<Order>>(() => new List<Order>()), false);
-
+                    
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>()),
                         new Func<List<Order>>(() => { throw new Exception(); }), false);
