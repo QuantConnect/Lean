@@ -418,7 +418,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     // verify existing holding security type
                     Security security;
-                    if (!algorithm.Securities.TryGetValue(holding.Symbol, out security) && !AddUnrequestedSecurity(algorithm, holding.Symbol, holding.Type, out security))
+                    if (!GetOrAddUnrequestedSecurity(algorithm, holding.Symbol, holding.Type, out security))
                     {
                         continue;
                     }
@@ -459,7 +459,7 @@ namespace QuantConnect.Lean.Engine.Setup
             return true;
         }
 
-        private bool AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, SecurityType securityType, out Security security)
+        private bool GetOrAddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, SecurityType securityType, out Security security)
         {
             if (!algorithm.Securities.TryGetValue(symbol, out security))
             {
@@ -523,7 +523,7 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 // verify existing holding security type
                 Security security;
-                if (!algorithm.Securities.TryGetValue(order.Symbol, out security) && !AddUnrequestedSecurity(algorithm, order.Symbol, order.SecurityType, out security))
+                if (!GetOrAddUnrequestedSecurity(algorithm, order.Symbol, order.SecurityType, out security))
                 {
                     continue;
                 }
