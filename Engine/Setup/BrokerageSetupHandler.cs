@@ -389,7 +389,7 @@ namespace QuantConnect.Lean.Engine.Setup
             return true;
         }
 
-        private bool LoadExistingHoldingsAndOrders(IBrokerage brokerage, IAlgorithm algorithm, SetupHandlerParameters parameters)
+        protected bool LoadExistingHoldingsAndOrders(IBrokerage brokerage, IAlgorithm algorithm, SetupHandlerParameters parameters)
         {
             Log.Trace("BrokerageSetupHandler.Setup(): Fetching open orders from brokerage...");
             try
@@ -417,9 +417,10 @@ namespace QuantConnect.Lean.Engine.Setup
                     Log.Trace("BrokerageSetupHandler.Setup(): Has existing holding: " + holding);
 
                     // verify existing holding security type
-                    if (!algorithm.Securities.TryGetValue(holding.Symbol, out var security))
+                    Security security;
+                    if (!algorithm.Securities.TryGetValue(holding.Symbol, out security))
                     {
-                        if (!AddUnrequestedSecurity(algorithm, holding.Symbol, holding.Type))
+                        if (!AddUnrequestedSecurity(algorithm, holding.Symbol, holding.Type, out security))
                         {
                             continue;
                         }
@@ -461,15 +462,16 @@ namespace QuantConnect.Lean.Engine.Setup
             return true;
         }
 
-        private bool AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, SecurityType securityType)
+        private bool AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, SecurityType securityType, out Security security)
         {
-            if (!algorithm.Securities.TryGetValue(symbol, out Security security))
+            if (!algorithm.Securities.TryGetValue(symbol, out security))
             {
                 if (!_supportedSecurityTypes.Contains((SecurityType)securityType))
                 {
                     Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + securityType + "-" + symbol.Value);
                     AddInitializationError("Found unsupported security type in existing brokerage holdings: " + securityType + ". " +
                         "QuantConnect currently supports the following security types: " + string.Join(",", _supportedSecurityTypes));
+                    security = null;
                     return false;
                 }
 
@@ -525,9 +527,10 @@ namespace QuantConnect.Lean.Engine.Setup
             foreach (var order in openOrders.OrderByDescending(x => x.SecurityType))
             {
                 // verify existing holding security type
-                if (!algorithm.Securities.TryGetValue(order.Symbol, out var security))
+                Security security;
+                if (!algorithm.Securities.TryGetValue(order.Symbol, out security))
                 {
-                    if (!AddUnrequestedSecurity(algorithm, order.Symbol, order.SecurityType))
+                    if (!AddUnrequestedSecurity(algorithm, order.Symbol, order.SecurityType, out security))
                     {
                         // keep aggregating these errors
                         continue;

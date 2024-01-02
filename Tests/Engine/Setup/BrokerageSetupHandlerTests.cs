@@ -631,9 +631,12 @@ namespace QuantConnect.Tests.Engine.Setup
             new object[] {
                     new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = new Symbol(
                         SecurityIdentifier.GenerateBase(typeof(CustomDataBitcoinAlgorithm.Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 }}),
-                    new Func<List<Order>>(() => new List<Order> { new LimitOrder(new Symbol(
-                        SecurityIdentifier.GenerateBase(typeof(CustomDataBitcoinAlgorithm.Bitcoin), "BTC", Market.USA, false), "BTC"), 1, 1, DateTime.UtcNow)}),
-                    true }
+                    new Func<List<Order>>(() => new List<Order>()),
+                    true },
+            new object[] {
+                new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = Symbols.SPY, Quantity = 1 }}),
+                new Func<List<Order>>(() => new List<Order>()),
+                true }
         };
 
         private static TestCaseData[] GetExistingHoldingsAndOrdersTestCaseData()
