@@ -116,8 +116,8 @@
   "iqfeed-version": "1.0",
 
   // coinbase configuration
-  "coinbase-api-url": "https://api.coinbase.com",
-  "coinbase-websocket-url": "wss://advanced-trade-ws.coinbase.com",
+  "coinbase-rest-api": "https://api.coinbase.com",
+  "coinbase-url": "wss://advanced-trade-ws.coinbase.com",
   "coinbase-api-key": "",
   "coinbase-api-secret": "",
 
