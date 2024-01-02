@@ -129,6 +129,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [TestCase(2019, 3, 23, 1, 29, 59, 0.3)]
         [TestCase(2019, 3, 23, 1, 30, 0, 0.25)]
         [TestCase(2019, 4, 1, 0, 0, 0, 0.25)]
+        [TestCase(2024, 1, 2, 0, 0, 0, 0.8)]
         public void FeeChangesOverTime(int year, int month, int day, int hour, int minute, int second, decimal expectedFee)
         {
             var time = new DateTime(year, month, day, hour, minute, second);
@@ -141,6 +142,27 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             // 100 (price) * fee (taker fee)
+            Assert.AreEqual(expectedFee, fee.Value.Amount);
+        }
+
+        [TestCase(0.0035, 0.0055, false, 0.55)]
+        [TestCase(0.0035, 0.0055, true, 0.35)]
+        [TestCase(0.0025, 0.004, true, 0.25)]
+        public void CustomCoinbaseFeeModelPlusCoinbaseOrderProperty(decimal customMakerFee, decimal customTakerFee, bool postOnly, decimal expectedFee)
+        {
+            decimal orderAmount = -1m;
+            IFeeModel customFeeModel = new CoinbaseFeeModel(customMakerFee, customTakerFee);
+
+            var dateTime = new DateTime(2024, 1, 2, 0, 0, 0);
+            var orderProperty = new CoinbaseOrderProperties() { PostOnly = postOnly };
+
+            var fee = customFeeModel.GetOrderFee(new OrderFeeParameters(_btcusd, new LimitOrder(_btcusd.Symbol, orderAmount, 99, dateTime, "fee", orderProperty)
+            {
+                OrderSubmissionData = new OrderSubmissionData(_btcusd.BidPrice, _btcusd.AskPrice, _btcusd.Price)
+            }));
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            // (order.Direction == Buy ? AskPrice : BidPrice) * orderAmount * (maker)fee || (taker)fee
             Assert.AreEqual(expectedFee, fee.Value.Amount);
         }
     }
