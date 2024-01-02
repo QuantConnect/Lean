@@ -23,16 +23,6 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class TimeSeriesForecast : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
-        // /// <summary>
-        // /// Gets a flag indicating when this indicator is ready and fully initialized
-        // /// </summary>
-        // public override bool IsReady => Samples >= Period;
-        //
-        // /// <summary>
-        // /// Required period, in data points, for the indicator to be ready and fully initialized
-        // /// </summary>
-        // public int WarmUpPeriod => Period;
-        
         /// <summary>
         /// Creates a new TimeSeriesForecast indicator with the specified period
         /// </summary>

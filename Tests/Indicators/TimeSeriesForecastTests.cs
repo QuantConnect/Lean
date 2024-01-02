@@ -22,6 +22,16 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class TimeSeriesForecastTests : CommonIndicatorTests<IndicatorDataPoint>
     {
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        {
+            var tsf = new TimeSeriesForecast(5);
+            
+            return tsf;
+        }
+
+        protected override string TestFileName => "spy_tsf.csv";
+        protected override string TestColumnName => "tsf";
+        
         [Test]
         public void ComputesCorrectly()
         {
@@ -45,7 +55,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ResetsProperly()
+        public override void ResetsProperly()
         {
             const int period = 3;
             var tsf = new TimeSeriesForecast(period);
@@ -67,15 +77,5 @@ namespace QuantConnect.Tests.Indicators
             Assert.Throws<ArgumentException>(() => new TimeSeriesForecast(1));
             Assert.DoesNotThrow(() => new TimeSeriesForecast(2));
         }
-
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-        {
-            var tsf = new TimeSeriesForecast(5);
-            
-            return tsf;
-        }
-
-        protected override string TestFileName => "spy_tsf.csv";
-        protected override string TestColumnName => "tsf";
     }
 }
