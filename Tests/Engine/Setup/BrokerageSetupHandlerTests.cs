@@ -36,6 +36,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
+using QuantConnect.Algorithm.CSharp;
 
 namespace QuantConnect.Tests.Engine.Setup
 {
@@ -270,6 +271,38 @@ namespace QuantConnect.Tests.Engine.Setup
                     Assert.AreEqual(DataNormalizationMode.Raw, underlyingSecurity.DataNormalizationMode);
                 }
             }
+        }
+
+        [TestCaseSource(nameof(GetExistingHoldingsAndOrdersWithCustomDataTestCase))]
+        public void LoadsExistingHoldingsAndOrdersWithCustomData(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
+        {
+            var algorithm = new TestAlgorithm();
+            algorithm.AddData<CustomDataBitcoinAlgorithm.Bitcoin>("BTC");
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = GetJob();
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var objectStore = new Mock<IObjectStore>();
+            var brokerage = new Mock<IBrokerage>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(getHoldings);
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(getOrders);
+
+            var setupHandler = new TestBrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            var parameters = new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider);
+            var result = setupHandler.TestLoadExistingHoldingsAndOrders(brokerage.Object, algorithm, parameters);
+
+            Assert.AreEqual(expected, result);
         }
 
         [TestCase(true)]
@@ -593,6 +626,16 @@ namespace QuantConnect.Tests.Engine.Setup
             }
         }
 
+        private static object[] GetExistingHoldingsAndOrdersWithCustomDataTestCase =
+        {
+            new object[] {
+                    new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = new Symbol(
+                        SecurityIdentifier.GenerateBase(typeof(CustomDataBitcoinAlgorithm.Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 }}),
+                    new Func<List<Order>>(() => new List<Order> { new LimitOrder(new Symbol(
+                        SecurityIdentifier.GenerateBase(typeof(CustomDataBitcoinAlgorithm.Bitcoin), "BTC", Market.USA, false), "BTC"), 1, 1, DateTime.UtcNow)}),
+                    true }
+        };
+
         private static TestCaseData[] GetExistingHoldingsAndOrdersTestCaseData()
         {
             return new[]
@@ -883,5 +926,13 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         #endregion
+    }
+
+    public class TestBrokerageSetupHandler: BrokerageSetupHandler
+    {
+        public bool TestLoadExistingHoldingsAndOrders(IBrokerage brokerage, IAlgorithm algorithm, SetupHandlerParameters parameters)
+        {
+            return LoadExistingHoldingsAndOrders(brokerage, algorithm, parameters);
+        }
     }
 }
