@@ -598,7 +598,7 @@ namespace QuantConnect.Tests.Engine.Setup
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(getHoldings);
             brokerage.Setup(x => x.GetOpenOrders()).Returns(getOrders);
 
-            var setupHandler = new TestBrokerageSetupHandler();
+            var setupHandler = new TestableBrokerageSetupHandler();
 
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
@@ -797,6 +797,11 @@ namespace QuantConnect.Tests.Engine.Setup
             {
                 GetOpenOrders(algorithm, resultHandler, transactionHandler, brokerage);
             }
+
+            public bool TestLoadExistingHoldingsAndOrders(IBrokerage brokerage, IAlgorithm algorithm, SetupHandlerParameters parameters)
+            {
+                return LoadExistingHoldingsAndOrders(brokerage, algorithm, parameters);
+            }
         }
     }
 
@@ -892,13 +897,5 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         #endregion
-    }
-
-    public class TestBrokerageSetupHandler: BrokerageSetupHandler
-    {
-        public bool TestLoadExistingHoldingsAndOrders(IBrokerage brokerage, IAlgorithm algorithm, SetupHandlerParameters parameters)
-        {
-            return LoadExistingHoldingsAndOrders(brokerage, algorithm, parameters);
-        }
     }
 }
