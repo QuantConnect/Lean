@@ -419,7 +419,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     // verify existing holding security type
                     if (!algorithm.Securities.TryGetValue(holding.Symbol, out var security))
                     {
-                        if (AddUnrequestedSecurity(algorithm, holding.Symbol, holding.Type) == null)
+                        if (!AddUnrequestedSecurity(algorithm, holding.Symbol, holding.Type))
                         {
                             continue;
                         }
@@ -461,7 +461,7 @@ namespace QuantConnect.Lean.Engine.Setup
             return true;
         }
 
-        private Security AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, SecurityType securityType)
+        private bool AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, SecurityType securityType)
         {
             if (!algorithm.Securities.TryGetValue(symbol, out Security security))
             {
@@ -470,7 +470,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + securityType + "-" + symbol.Value);
                     AddInitializationError("Found unsupported security type in existing brokerage holdings: " + securityType + ". " +
                         "QuantConnect currently supports the following security types: " + string.Join(",", _supportedSecurityTypes));
-                    return null;
+                    return false;
                 }
 
                 var resolution = algorithm.UniverseSettings.Resolution;
@@ -504,7 +504,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     security = algorithm.AddSecurity(symbol.SecurityType, symbol.Value, resolution, symbol.ID.Market, fillForward, leverage, extendedHours);
                 }
             }
-            return security;
+            return true;
         }
 
         /// <summary>
@@ -525,18 +525,15 @@ namespace QuantConnect.Lean.Engine.Setup
             foreach (var order in openOrders.OrderByDescending(x => x.SecurityType))
             {
                 // verify existing holding security type
-                if (!supportedSecurityTypes.Contains(order.SecurityType))
+                if (!algorithm.Securities.TryGetValue(order.Symbol, out var security))
                 {
-                    Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + order.SecurityType + "-" + order.Symbol.Value);
-                    AddInitializationError("Found unsupported security type in existing brokerage open orders: " + order.SecurityType + ". " +
-                                           "QuantConnect currently supports the following security types: " + string.Join(",", supportedSecurityTypes));
-
-                    // keep aggregating these errors
-                    continue;
+                    if (!AddUnrequestedSecurity(algorithm, order.Symbol, order.SecurityType))
+                    {
+                        // keep aggregating these errors
+                        continue;
+                    }
                 }
 
-                // Add the security before adding the order to ensure the subscription exists
-                var security = AddUnrequestedSecurity(algorithm, order.Symbol, order.SecurityType);
                 transactionHandler.AddOpenOrder(order, algorithm);
                 order.PriceCurrency = security?.SymbolProperties.QuoteCurrency;
 
