@@ -101,7 +101,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Number of shares to execute.
         /// </summary>
-        public decimal Quantity
+        public virtual decimal Quantity
         {
             get { return _quantity; }
             internal set { _quantity = value.Normalize(); }
@@ -346,6 +346,9 @@ namespace QuantConnect.Orders
         protected void CopyTo(Order order)
         {
             order.Id = Id;
+            // The group order manager has to be set before the quantity,
+            // since combo orders might need it to calculate the quantity in the Quantity setter.
+            order.GroupOrderManager = GroupOrderManager;
             order.Time = Time;
             order.LastFillTime = LastFillTime;
             order.LastUpdateTime = LastUpdateTime;
@@ -360,7 +363,6 @@ namespace QuantConnect.Orders
             order.Tag = Tag;
             order.Properties = Properties.Clone();
             order.OrderSubmissionData = OrderSubmissionData?.Clone();
-            order.GroupOrderManager = GroupOrderManager;
             order.PriceAdjustmentMode = PriceAdjustmentMode;
         }
 

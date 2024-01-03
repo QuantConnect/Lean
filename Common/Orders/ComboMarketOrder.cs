@@ -22,7 +22,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Combo market order type
     /// </summary>
-    public class ComboMarketOrder : MarketOrder
+    public class ComboMarketOrder : ComboOrder
     {
         /// <summary>
         /// Combo Market Order Type
@@ -47,9 +47,17 @@ namespace QuantConnect.Orders
         /// <param name="properties">The order properties for this order</param>
         public ComboMarketOrder(Symbol symbol, decimal quantity, DateTime time, GroupOrderManager groupOrderManager, string tag = "",
             IOrderProperties properties = null)
-            : base(symbol, quantity, time, tag, properties)
+            : base(symbol, quantity, time, groupOrderManager, tag, properties)
         {
-            GroupOrderManager = groupOrderManager;
+        }
+
+        /// <summary>
+        /// Gets the order value in units of the security's quote currency
+        /// </summary>
+        /// <param name="security">The security matching this order's symbol</param>
+        protected override decimal GetValueImpl(Security security)
+        {
+            return Quantity * security.Price;
         }
 
         /// <summary>

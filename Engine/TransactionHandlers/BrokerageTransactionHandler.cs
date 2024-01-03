@@ -1136,9 +1136,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     switch (order.Type)
                     {
                         case OrderType.Limit:
-                        case OrderType.ComboLegLimit:
                             var limit = order as LimitOrder;
                             orderEvent.LimitPrice = limit.LimitPrice;
+                            break;
+                        case OrderType.ComboLegLimit:
+                            var legLimitOrder = order as ComboLegLimitOrder;
+                            orderEvent.LimitPrice = legLimitOrder.LimitPrice;
                             break;
                         case OrderType.StopMarket:
                             var marketOrder = order as StopMarketOrder;

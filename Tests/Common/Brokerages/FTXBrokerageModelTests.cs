@@ -95,13 +95,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(0.00005, false)]
         public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
         {
-            var order = new Mock<Order>
-            {
-                Object =
-                {
-                    Quantity = orderQuantity
-                }
-            };
+            var order = new Mock<Order>();
+            order.Setup(x => x.Quantity).Returns(orderQuantity);
 
             Assert.AreEqual(isValidOrderQuantity, _brokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market), order.Object, out _));
         }
