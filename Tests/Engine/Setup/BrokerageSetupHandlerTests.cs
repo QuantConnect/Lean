@@ -253,12 +253,12 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         [TestCaseSource(nameof(GetExistingHoldingsAndOrdersWithCustomDataTestCase))]
-        public void LoadsExistingHoldingsAndOrdersWithCustomData(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
+        public void LoadsExistingHoldingsAndOrdersWithCustomData(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders)
         {
             var algorithm = new TestAlgorithm();
             algorithm.AddData<Bitcoin>("BTC");
             algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
-            TestLoadExistingHoldingsAndOrders(algorithm, getHoldings, getOrders, expected);
+            TestLoadExistingHoldingsAndOrders(algorithm, getHoldings, getOrders, true);
         }
 
         [TestCase(true)]
@@ -613,14 +613,34 @@ namespace QuantConnect.Tests.Engine.Setup
         private static object[] GetExistingHoldingsAndOrdersWithCustomDataTestCase =
         {
             new object[] {
-                    new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = new Symbol(
-                        SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 }}),
-                    new Func<List<Order>>(() => new List<Order>()),
-                    true },
+                new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = new Symbol(
+                    SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 }}),
+                new Func<List<Order>>(() => new List<Order>())},
             new object[] {
                 new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = Symbols.SPY, Quantity = 1 }}),
-                new Func<List<Order>>(() => new List<Order>()),
-                true }
+                new Func<List<Order>>(() => new List<Order>())},
+            new object[] {
+                new Func<List<Holding>>(() => new List<Holding>()),
+                new Func<List<Order>>(() => new List<Order>() { new LimitOrder(new Symbol(
+                    SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), 1, 1, DateTime.UtcNow)})},
+            new object[] {
+                new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = new Symbol(
+                    SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 }}),
+                new Func<List<Order>>(() => new List<Order>() { new LimitOrder(new Symbol(
+                    SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), 1, 1, DateTime.UtcNow)})},
+            new object[] {
+                new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = new Symbol(
+                    SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 },
+                    new Holding { Symbol = Symbols.SPY, Quantity = 1 }}),
+                new Func<List<Order>>(() => new List<Order>() { new LimitOrder(new Symbol(
+                    SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), 1, 1, DateTime.UtcNow)})},
+            new object[] {
+                new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = new Symbol(
+                    SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 },
+                    new Holding { Symbol = Symbols.SPY, Quantity = 1 }}),
+                new Func<List<Order>>(() => new List<Order>() { new LimitOrder(new Symbol(
+                    SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), 1, 1, DateTime.UtcNow),
+                    new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow)})}
         };
 
         private class ExistingHoldingAndOrdersDataClass
@@ -726,7 +746,17 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder("XYZ", 1, 1, DateTime.UtcNow)
                         }), false);
-                    
+
+                    yield return new TestCaseData(
+                        new Func<List<Holding>>(() => new List<Holding>
+                        {
+                            new Holding { Symbol = new Symbol(SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 }
+                        }),
+                        new Func<List<Order>>(() => new List<Order>
+                        {
+                            new LimitOrder(new Symbol(SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), 1, 1, DateTime.UtcNow)
+                        }), false);
+
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => { throw new Exception(); }),
                         new Func<List<Order>>(() => new List<Order>()), false);
