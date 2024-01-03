@@ -36,7 +36,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
-using QuantConnect.Algorithm.CSharp;
+using Bitcoin = QuantConnect.Algorithm.CSharp.LiveTradingFeaturesAlgorithm.Bitcoin;
 using System.Collections;
 
 namespace QuantConnect.Tests.Engine.Setup
@@ -256,7 +256,7 @@ namespace QuantConnect.Tests.Engine.Setup
         public void LoadsExistingHoldingsAndOrdersWithCustomData(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
         {
             var algorithm = new TestAlgorithm();
-            algorithm.AddData<CustomDataBitcoinAlgorithm.Bitcoin>("BTC");
+            algorithm.AddData<Bitcoin>("BTC");
             algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
             TestLoadExistingHoldingsAndOrders(algorithm, getHoldings, getOrders, expected);
         }
@@ -614,7 +614,7 @@ namespace QuantConnect.Tests.Engine.Setup
         {
             new object[] {
                     new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = new Symbol(
-                        SecurityIdentifier.GenerateBase(typeof(CustomDataBitcoinAlgorithm.Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 }}),
+                        SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 }}),
                     new Func<List<Order>>(() => new List<Order>()),
                     true },
             new object[] {
