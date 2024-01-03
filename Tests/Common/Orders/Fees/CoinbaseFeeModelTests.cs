@@ -102,10 +102,11 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(0.3m, fee.Value.Amount);
         }
 
-        [Test]
-        public void ReturnsExpectedFeeWithStableCoins()
+        [TestCase(2019, 2, 1, 0.1)]
+        [TestCase(2023, 1, 3, 0.001)]
+        public void ReturnsExpectedFeeWithStableCoins(int year, int month, int day, decimal expectedStableFee)
         {
-            var time = new DateTime(2019, 2, 1);
+            var time = new DateTime(year, month, day);
             var stablePairFee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     _daiusdc,
@@ -120,8 +121,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 )
             );
 
-            // 100 (price) * 0.001 (taker fee)
-            Assert.AreEqual(0.1m, stablePairFee.Value.Amount);
+            // 100 (price) * 0.001m or 0.00001m (taker stable fee)
+            Assert.AreEqual(expectedStableFee, stablePairFee.Value.Amount);
             Assert.AreNotEqual(normalPairFee.Value.Amount, stablePairFee.Value.Amount);
         }
 

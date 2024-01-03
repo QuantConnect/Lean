@@ -111,7 +111,11 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The fee percentage</returns>
         protected static decimal GetFeePercentage(DateTime utcTime, bool isMaker, bool isStableCoin, decimal makerFee, decimal takerFee)
         {
-            if (isStableCoin)
+            if (isStableCoin && utcTime < new DateTime(2022, 6, 1))
+            {                
+                return isMaker ? 0m : 0.001m;
+            }
+            else if(isStableCoin)
             {
                 return isMaker ? MakerStablePairs : TakerStableParis;
             }
