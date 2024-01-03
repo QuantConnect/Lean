@@ -29,7 +29,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class AlgorithmPlottingTests
     {
         private Symbol _spy;
@@ -105,7 +105,7 @@ namespace QuantConnect.Tests.Algorithm
             {
                 for (var i = 0; i < 1000; i++)
                 {
-                    _algorithm.GetChartUpdates(true);
+                    _algorithm.GetChartUpdates(true).ToList();
                     Thread.Sleep(1);
                 }
             });
@@ -168,7 +168,7 @@ class PythonCustomIndicator(PythonIndicator):
                 customIndicator.Update(input);
                 customIndicator.Current.Value = customIndicator.Value;
                 Assert.DoesNotThrow(() => _algorithm.Plot("PlotTest", customIndicator));
-                var charts = _algorithm.GetChartUpdates();
+                var charts = _algorithm.GetChartUpdates().ToList();
                 Assert.IsTrue(charts.Where(x => x.Name == "PlotTest").Any());
                 Assert.AreEqual(10, charts.First().Series["custom"].GetValues<ChartPoint>().First().y);
             }
@@ -194,7 +194,7 @@ class CustomIndicator:
 
                 var customIndicator = module.GetAttr("CustomIndicator").Invoke();
                 Assert.DoesNotThrow(() => _algorithm.Plot("PlotTest", customIndicator));
-                var charts = _algorithm.GetChartUpdates();
+                var charts = _algorithm.GetChartUpdates().ToList();
                 Assert.IsFalse(charts.Where(x => x.Name == "PlotTest").Any());
                 Assert.IsTrue(charts.Where(x => x.Name == "Strategy Equity").Any());
                 Assert.AreEqual(10, charts.First().Series["PlotTest"].GetValues<ChartPoint>().First().y);
@@ -213,7 +213,7 @@ class CustomIndicator:
             sma1.Update(new DateTime(2022, 11, 15), 1);
             sma2.Update(new DateTime(2022, 11, 15), 2);
 
-            var charts = _algorithm.GetChartUpdates();
+            var charts = _algorithm.GetChartUpdates().ToList();
             Assert.IsTrue(charts.Where(x => x.Name == "PlotTest").Any());
 
             var chart = charts.First();

@@ -104,6 +104,12 @@ namespace QuantConnect.Packets
         public int MaximumDataPointsPerChartSeries;
 
         /// <summary>
+        /// Limits the amount of chart series. Applies only for backtesting
+        /// </summary>
+        [JsonProperty(PropertyName = "iMaximumChartSeries")]
+        public int MaximumChartSeries;
+
+        /// <summary>
         /// The amount seconds used for timeout limits
         /// </summary>
         [JsonProperty(PropertyName = "iSecondTimeOut")]
@@ -162,6 +168,7 @@ namespace QuantConnect.Packets
             RemainingLogAllowance = 10000;
             MaximumRuntimeMinutes = 60 * 24 * 100; // 100 days default
             BacktestingMaxInsights = 10000;
+            MaximumChartSeries = 10;
             MaximumDataPointsPerChartSeries = 4000;
             SecondTimeOut = 300;
             StorageLimit = 10737418240;
