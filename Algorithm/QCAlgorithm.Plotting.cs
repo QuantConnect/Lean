@@ -340,32 +340,22 @@ namespace QuantConnect.Algorithm
             {
                 if (reservedSeriesNames.Count == 0)
                 {
-                    throw new Exception($"Algorithm.Plot(): '{chartName}' is a reserved chart name.");
+                    throw new ArgumentException($"'{chartName}' is a reserved chart name.");
                 }
                 if (reservedSeriesNames.Contains(seriesName))
                 {
-                    throw new Exception($"Algorithm.Plot(): '{seriesName}' is a reserved series name for chart '{chartName}'.");
+                    throw new ArgumentException($"'{seriesName}' is a reserved series name for chart '{chartName}'.");
                 }
             }
 
-            // If we don't have the chart, create it
-            _charts.TryAdd(chartName, new Chart(chartName));
+            if(!_charts.TryGetValue(chartName, out var chart))
+            {
+                // If we don't have the chart, create it
+                _charts[chartName] = chart = new Chart(chartName);
+            }
 
-            var chart = _charts[chartName];
             if (!chart.Series.TryGetValue(seriesName, out var chartSeries))
             {
-                //Number of series in total, excluding reserved charts
-                var seriesCount = _charts.Select(x => x.Value)
-                    .Aggregate(0, (i, c) => ReservedChartSeriesNames.TryGetValue(c.Name, out reservedSeriesNames)
-                    ? i + c.Series.Values.Count(s => reservedSeriesNames.Count > 0 && !reservedSeriesNames.Contains(s.Name))
-                    : i + c.Series.Count);
-
-                if (seriesCount > 10)
-                {
-                    Error("Exceeded maximum series count: Each backtest can have up to 10 series in total.");
-                    return false;
-                }
-
                 chartSeries = new T() { Name = seriesName };
                 chart.AddSeries(chartSeries);
             }
@@ -549,22 +539,23 @@ namespace QuantConnect.Algorithm
         /// <returns>List of chart updates since the last request</returns>
         /// <remarks>GetChartUpdates returns the latest updates since previous request.</remarks>
         [DocumentationAttribute(Charting)]
-        public List<Chart> GetChartUpdates(bool clearChartData = false)
+        public IEnumerable<Chart> GetChartUpdates(bool clearChartData = false)
         {
-            var updates = _charts.Select(x => x.Value).Select(chart => chart.GetUpdates()).ToList();
-
-            if (clearChartData)
+            foreach (var chart in _charts.Values)
             {
-                // we can clear this data out after getting updates to prevent unnecessary memory usage
-                foreach (var chart in _charts)
+                var updates = chart.GetUpdates();
+
+                if (clearChartData)
                 {
-                    foreach (var series in chart.Value.Series)
+                    // we can clear this data out after getting updates to prevent unnecessary memory usage
+                    foreach (var series in chart.Series)
                     {
                         series.Value.Purge();
                     }
                 }
+
+                yield return updates;
             }
-            return updates;
         }
     }
 }

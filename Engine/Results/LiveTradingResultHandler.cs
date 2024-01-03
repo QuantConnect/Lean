@@ -653,7 +653,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="updates">Chart updates since the last request.</param>
         /// <seealso cref="Sample(string,string,int,SeriesType,ISeriesPoint,string)"/>
-        protected void SampleRange(List<Chart> updates)
+        protected void SampleRange(IEnumerable<Chart> updates)
         {
             Log.Debug("LiveTradingResultHandler.SampleRange(): Begin sampling");
             lock (ChartLock)

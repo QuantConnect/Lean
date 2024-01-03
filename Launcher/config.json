@@ -55,7 +55,8 @@
   "maximum-warmup-history-days-look-back": 5,
 
   // limits the amount of data points per chart series. Applies only for backtesting
-  "maximum-data-points-per-chart-series": 4000,
+  "maximum-data-points-per-chart-series": 1000000,
+  "maximum-chart-series": 30,
 
   // if one uses true in following token, market hours will remain open all hours and all days.
   // if one uses false will make lean operate only during regular market hours.
