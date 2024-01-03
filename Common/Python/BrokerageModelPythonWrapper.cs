@@ -221,7 +221,19 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.GetFillModel(security) as PyObject).GetAndDispose<IFillModel>();
+                var fillModel = _model.GetFillModel(security) as PyObject;
+                if (fillModel.TryConvert<IFillModel>(out var csharpFillModel))
+                {
+                    return (_model.GetFillModel(security) as PyObject).GetAndDispose<FillModel>();
+                }
+                else if (Extensions.TryConvert<IFillModel>(fillModel, out _, allowPythonDerivative: true))
+                {
+                    return (new FillModelPythonWrapper(fillModel));
+                }
+                else
+                {
+                    throw new Exception($@"{_model.__class__.__name__} Fill Model type is not supported!");
+                }
             }
         }
 

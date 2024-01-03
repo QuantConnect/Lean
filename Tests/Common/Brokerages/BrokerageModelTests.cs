@@ -22,6 +22,9 @@ using QuantConnect.Brokerages;
 using QuantConnect.Python;
 using QuantConnect.Securities;
 using Moq;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -212,6 +215,66 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
             var buyingPowerModel = brokerage?.GetBuyingPowerModel(security);
 
             Assert.AreEqual(buyingPowerModel.GetType(), type);
+        }
+
+        [Test]
+        public void BrokerageModelPythonWrapperWorksWithCustomPythonFillModel()
+        {
+            using (Py.GIL())
+            {
+                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
+                    @$"
+from AlgorithmImports import *
+
+class CustomFillModel(ImmediateFillModel):
+    def __init__(self):
+        super().__init__()
+
+    def MarketFill(self, asset, order):
+        raise ValueError(""Pepe"")
+
+class CustomBrokerageModel(DefaultBrokerageModel):
+    def GetFillModel(self, security):
+        return CustomFillModel()
+                ").GetAttr("CustomBrokerageModel");
+
+                var security = GetSecurity(Symbols.SPY);
+                var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
+                var fillModel = model.GetFillModel(security);
+                Assert.AreEqual(typeof(FillModelPythonWrapper), fillModel.GetType());
+                Assert.Throws<PythonException>(() => ((dynamic)fillModel).MarketFill(security, new Mock<MarketOrder>().Object));
+            }
+        }
+
+        [Test]
+        public void BrokerageModelPythonWrapperWorksWithCSharpFillModel()
+        {
+            using (Py.GIL())
+            {
+                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
+                    @$"
+from AlgorithmImports import *
+
+class CustomBrokerageModel(DefaultBrokerageModel):
+    def GetFillModel(self, security):
+        return ImmediateFillModel()
+                ").GetAttr("CustomBrokerageModel");
+
+                var security = GetSecurity(Symbols.SPY);
+                security.SetLocalTimeKeeper(new LocalTimeKeeper(DateTime.Now, DateTimeZone.Utc));
+                var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
+                var fillModel = model.GetFillModel(security);
+                Assert.AreEqual(typeof(ImmediateFillModel), fillModel.GetType());
+                var order = new Mock<MarketOrder>();
+                var subscriptionDataConfigProvider = new Mock<ISubscriptionDataConfigProvider>();
+                var securitiesForOrders = new Dictionary<Order, Security>() { { order.Object, security} };
+                var fillModelParameters = new FillModelParameters(security, order.Object, subscriptionDataConfigProvider.Object, TimeSpan.Zero, securitiesForOrders);
+                var result = fillModel.Fill(fillModelParameters);
+                foreach( var entry in result)
+                {
+                    Assert.AreEqual(OrderStatus.Filled, entry.Status);
+                }
+            }
         }
 
         private static Security GetSecurity(Symbol symbol) =>
