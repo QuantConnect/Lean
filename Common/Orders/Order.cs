@@ -346,6 +346,8 @@ namespace QuantConnect.Orders
         protected void CopyTo(Order order)
         {
             order.Id = Id;
+            // The group order manager has to be set before the quantity,
+            // since combo orders might need it to calculate the quantity in the Quantity setter.
             order.GroupOrderManager = GroupOrderManager;
             order.Time = Time;
             order.LastFillTime = LastFillTime;

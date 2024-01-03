@@ -125,22 +125,5 @@ namespace QuantConnect.Orders
         {
             return groupOrderManager != null ? legGroupQuantity / groupOrderManager.Quantity : legGroupQuantity;
         }
-
-        /// <summary>
-        /// Updates the combo order quantity
-        /// </summary>
-        /// <param name="order">The combo order</param>
-        /// <param name="quantity">The new global quantity</param>
-        public static void UpdateQuantity(this Order order, decimal quantity)
-        {
-            if (order.GroupOrderManager == null)
-            {
-                return;
-            }
-
-            var ratio = order.Quantity.GetOrderLegRatio(order.GroupOrderManager);
-            order.GroupOrderManager.Quantity = quantity;
-            order.Quantity = ratio.GetOrderLegGroupQuantity(order.GroupOrderManager);
-        }
     }
 }

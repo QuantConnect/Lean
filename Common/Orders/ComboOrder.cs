@@ -27,6 +27,9 @@ namespace QuantConnect.Orders
 
         /// <summary>
         /// Number of shares to execute.
+        /// For combo orders, we store the ratio of each leg instead of the quantity,
+        /// and the actual quantity is calculated when requested using the group order manager quantity.
+        /// This allows for a single quantity update to be applied to all the legs of the combo.
         /// </summary>
         public override decimal Quantity
         {
@@ -80,7 +83,8 @@ namespace QuantConnect.Orders
             }
             if (request.Quantity.HasValue)
             {
-                this.UpdateQuantity(request.Quantity.Value);
+                // For combo orders, the updated quantity is the quantity of the group
+                GroupOrderManager.Quantity = request.Quantity.Value;
             }
         }
     }
