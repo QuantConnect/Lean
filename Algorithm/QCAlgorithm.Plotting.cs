@@ -543,8 +543,7 @@ namespace QuantConnect.Algorithm
         {
             foreach (var chart in _charts.Values)
             {
-                var updates = chart.GetUpdates();
-
+                yield return chart.GetUpdates();
                 if (clearChartData)
                 {
                     // we can clear this data out after getting updates to prevent unnecessary memory usage
@@ -553,8 +552,6 @@ namespace QuantConnect.Algorithm
                         series.Value.Purge();
                     }
                 }
-
-                yield return updates;
             }
         }
     }
