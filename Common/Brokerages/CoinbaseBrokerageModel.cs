@@ -233,7 +233,7 @@ namespace QuantConnect.Brokerages
         {
 #pragma warning disable CA1062
             return !security!.SymbolProperties.MinimumOrderSize.HasValue ||
-                   orderQuantity > security.SymbolProperties.MinimumOrderSize;
+                   orderQuantity >= security.SymbolProperties.MinimumOrderSize;
 #pragma warning restore CA1062
         }
 
