@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = new Mock<Order>();
             order.Setup(x => x.Quantity).Returns(orderQuantity);
 
-            Assert.AreEqual(isValidOrderQuantity, _coinbaseBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.GDAX), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _coinbaseBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.Coinbase), order.Object, out message));
         }
 
         [TestCase(SecurityType.Crypto, true)]
