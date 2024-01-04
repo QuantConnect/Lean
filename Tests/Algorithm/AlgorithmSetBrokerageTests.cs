@@ -322,11 +322,6 @@ def getBrokerageName(algorithm):
                 throw new System.NotImplementedException();
             }
 
-            public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
-            {
-                throw new System.NotImplementedException();
-            }
-
             public IFeeModel GetFeeModel(Security security)
             {
                 throw new System.NotImplementedException();
@@ -348,11 +343,6 @@ def getBrokerageName(algorithm):
             }
 
             public ISettlementModel GetSettlementModel(Security security)
-            {
-                throw new System.NotImplementedException();
-            }
-
-            public ISettlementModel GetSettlementModel(Security security, AccountType accountType)
             {
                 throw new System.NotImplementedException();
             }
