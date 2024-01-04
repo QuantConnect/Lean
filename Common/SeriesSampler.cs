@@ -55,6 +55,16 @@ namespace QuantConnect
         /// <returns>The sampled series</returns>
         public virtual BaseSeries Sample(BaseSeries series, DateTime start, DateTime stop, bool truncateValues = false)
         {
+            if (!SubSample && series.Values.Count > 1)
+            {
+                var dataDiff = series.Values[1].Time - series.Values[0].Time;
+                if (dataDiff >= Step)
+                {
+                    // we don't want to subsample this case, directly return what we are given as long as is within the range
+                    return GetIdentitySeries(series.Clone(empty: true), series, start, stop, truncateValues: false);
+                }
+            }
+
             if (series is Series seriesToSample)
             {
                 return SampleSeries(seriesToSample, start, stop, truncateValues);

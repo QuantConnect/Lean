@@ -71,19 +71,7 @@ namespace QuantConnect.Orders
         /// <param name="security">The security matching this order's symbol</param>
         protected override decimal GetValueImpl(Security security)
         {
-            // selling, so higher price will be used
-            if (Quantity < 0)
-            {
-                return Quantity*Math.Max(LimitPrice, security.Price);
-            }
-
-            // buying, so lower price will be used
-            if (Quantity > 0)
-            {
-                return Quantity*Math.Min(LimitPrice, security.Price);
-            }
-
-            return 0m;
+            return CalculateOrderValue(Quantity, LimitPrice, security.Price);
         }
 
         /// <summary>
@@ -120,6 +108,23 @@ namespace QuantConnect.Orders
             var order = new LimitOrder {LimitPrice = LimitPrice};
             CopyTo(order);
             return order;
+        }
+
+        internal static decimal CalculateOrderValue(decimal quantity, decimal limitPrice, decimal price)
+        {
+            // selling, so higher price will be used
+            if (quantity < 0)
+            {
+                return quantity * Math.Max(limitPrice, price);
+            }
+
+            // buying, so lower price will be used
+            if (quantity > 0)
+            {
+                return quantity * Math.Min(limitPrice, price);
+            }
+
+            return 0m;
         }
     }
 }

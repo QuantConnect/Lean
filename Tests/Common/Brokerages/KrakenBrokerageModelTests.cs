@@ -32,8 +32,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             BrokerageMessageEvent message;
             var order = new Mock<Order>();
-
-            order.Object.Quantity = orderQuantity;
+            order.Setup(x => x.Quantity).Returns(orderQuantity);
 
             Assert.AreEqual(isValidOrderQuantity, _krakenBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.Kraken), order.Object, out message));
         }

@@ -40,15 +40,15 @@ namespace QuantConnect.Configuration
                                                      + "/KrakenDownloader or KDL/OandaDownloader or ODL/QuandlBitfinexDownloader or QBDL"
                                                      + "/YahooDownloader or YDL/AlgoSeekFuturesConverter or ASFC"
                                                      + "/IVolatilityEquityConverter or IVEC/KaikoDataConverter or KDC/NseMarketDataConverter or NMDC"
-                                                     + "/QuantQuoteConverter or QQC/CoarseUniverseGenerator or CUG/\n"
+                                                     + "/CoarseUniverseGenerator or CUG/\n"
                                                      + "RandomDataGenerator or RDG\n"
                                                      + "Example 1: --app=DDL\n"
                                                      + "Example 2: --app=NseMarketDataConverter\n"
                                                      + "Example 3: --app=RDG"),
                 new CommandLineOption("tickers", CommandOptionType.MultipleValue, "[REQUIRED ALL downloaders (except QBDL)] "
                                                                                   + "--tickers=SPY,AAPL,etc"),
-                new CommandLineOption("resolution", CommandOptionType.SingleValue, "[REQUIRED ALL downloaders (except QBDL, CDL) and IVolatilityEquityConverter,"
-                                                                                   + " QuantQuoteConverter] *Not all downloaders support all resolutions. Send empty for more information.*"
+                new CommandLineOption("resolution", CommandOptionType.SingleValue, "[REQUIRED ALL downloaders (except QBDL, CDL) and IVolatilityEquityConverter]"
+                                                                                   + " *Not all downloaders support all resolutions. Send empty for more information.*"
                                                                                    + " CASE SENSITIVE: --resolution=Tick/Second/Minute/Hour/Daily/All" +Environment.NewLine+
                                                                                    "[OPTIONAL for RandomDataGenerator - same format as downloaders, Options only support Minute"),
                 new CommandLineOption("from-date", CommandOptionType.SingleValue, "[REQUIRED ALL downloaders] --from-date=yyyyMMdd-HH:mm:ss"),
@@ -59,9 +59,9 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("date", CommandOptionType.SingleValue, "[REQUIRED for AlgoSeekFuturesConverter, AlgoSeekOptionsConverter, KaikoDataConverter]"
                                                                              + "Date for the option bz files: --date=yyyyMMdd"),
                 new CommandLineOption("source-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter, KaikoDataConverter,"
-                                                                                   + " CoinApiDataConverter, NseMarketDataConverter, QuantQuoteConverter]"),
+                                                                                   + " CoinApiDataConverter, NseMarketDataConverter]"),
                 new CommandLineOption("destination-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter, "
-                                                                                        + "NseMarketDataConverter, QuantQuoteConverter]"),
+                                                                                        + "NseMarketDataConverter]"),
                 new CommandLineOption("source-meta-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter]"),
                 new CommandLineOption("start", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator. Format yyyyMMdd Example: --start=20010101]"),
                 new CommandLineOption("end", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator. Format yyyyMMdd Example: --end=20020101]"),

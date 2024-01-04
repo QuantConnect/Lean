@@ -642,7 +642,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="clearChartData"></param>
         /// <returns>List of Chart Updates</returns>
-        List<Chart> GetChartUpdates(bool clearChartData = false);
+        IEnumerable<Chart> GetChartUpdates(bool clearChartData = false);
 
         /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm

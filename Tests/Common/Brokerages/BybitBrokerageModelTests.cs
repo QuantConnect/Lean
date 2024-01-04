@@ -54,13 +54,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(0.000001, false)]
         public void CanSubmitMarketOrder_OrderSizeIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
         {
-            var order = new Mock<MarketOrder>
-            {
-                Object =
-                {
-                    Quantity = orderQuantity
-                }
-            };
+            var order = new Mock<MarketOrder>();
+            order.Setup(x => x.Quantity).Returns(orderQuantity);
 
             _crypto.Cache.AddData(new Tick
             {
@@ -89,10 +84,11 @@ namespace QuantConnect.Tests.Common.Brokerages
             {
                 Object =
                 {
-                    Quantity = orderQuantity,
                     LimitPrice = limitPrice
                 }
             };
+
+            order.Setup(x => x.Quantity).Returns(orderQuantity);
 
             Assert.AreEqual(isValidOrderQuantity, BybitBrokerageModel.CanSubmitOrder(_crypto, order.Object, out var message));
             Assert.AreEqual(isValidOrderQuantity, message == null);
@@ -113,11 +109,11 @@ namespace QuantConnect.Tests.Common.Brokerages
             {
                 Object =
                 {
-                    Quantity = orderQuantity,
                     StopPrice = stopPrice,
                     LimitPrice = limitPrice
                 }
             };
+            order.Setup(x => x.Quantity).Returns(orderQuantity);
 
             Assert.AreEqual(isValidOrderQuantity, BybitBrokerageModel.CanSubmitOrder(_crypto, order.Object, out var message));
             Assert.AreEqual(isValidOrderQuantity, message == null);
@@ -130,13 +126,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void CanSubmitMarketOrder_IfPriceNotInitialized()
         {
-            var order = new Mock<MarketOrder>
-            {
-                Object =
-                {
-                    Quantity = 1
-                }
-            };
+            var order = new Mock<MarketOrder>();
+            order.Setup(x => x.Quantity).Returns(1m);
 
             var security = TestsHelpers.GetSecurity(symbol: BTCUSDT.Value, market: BTCUSDT.ID.Market, quoteCurrency: "USDT");
 
@@ -157,10 +148,10 @@ namespace QuantConnect.Tests.Common.Brokerages
             {
                 Object =
                 {
-                    Quantity = orderQuantity,
                     StopPrice = stopPrice
                 }
             };
+            order.Setup(x => x.Quantity).Returns(orderQuantity);
 
             var security = TestsHelpers.GetSecurity(symbol: BTCUSDT.Value, market: BTCUSDT.ID.Market, quoteCurrency: "USDT");
 

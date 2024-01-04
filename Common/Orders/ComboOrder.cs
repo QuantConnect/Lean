@@ -15,58 +15,56 @@
 
 using System;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Combo leg limit order type
+    /// Combo order type
     /// </summary>
-    /// <remarks>Limit price per leg in the combo order</remarks>
-    public class ComboLegLimitOrder : ComboOrder
+    public abstract class ComboOrder : Order
     {
-        /// <summary>
-        /// Combo Limit Leg Order Type
-        /// </summary>
-        public override OrderType Type => OrderType.ComboLegLimit;
+        private decimal _ratio;
 
         /// <summary>
-        /// Limit price for this order.
+        /// Number of shares to execute.
+        /// For combo orders, we store the ratio of each leg instead of the quantity,
+        /// and the actual quantity is calculated when requested using the group order manager quantity.
+        /// This allows for a single quantity update to be applied to all the legs of the combo.
         /// </summary>
-        public decimal LimitPrice { get; internal set; }
+        public override decimal Quantity
+        {
+            get
+            {
+                return _ratio.GetOrderLegGroupQuantity(GroupOrderManager).Normalize();
+            }
+            internal set
+            {
+                _ratio = value.GetOrderLegRatio(GroupOrderManager);
+            }
+        }
 
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
-        public ComboLegLimitOrder() : base()
+        public ComboOrder() : base()
         {
         }
 
         /// <summary>
-        /// New limit order constructor
+        /// New market order constructor
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="groupOrderManager">Manager for the orders in the group</param>
-        /// <param name="limitPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public ComboLegLimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, DateTime time, GroupOrderManager groupOrderManager,
-            string tag = "", IOrderProperties properties = null)
-            : base(symbol, quantity, time, groupOrderManager, tag, properties)
+        public ComboOrder(Symbol symbol, decimal quantity, DateTime time, GroupOrderManager groupOrderManager, string tag = "",
+            IOrderProperties properties = null)
+            : base(symbol, 0m, time, tag, properties)
         {
             GroupOrderManager = groupOrderManager;
-            LimitPrice = limitPrice;
-        }
-
-        /// <summary>
-        /// Gets the order value in units of the security's quote currency
-        /// </summary>
-        /// <param name="security">The security matching this order's symbol</param>
-        protected override decimal GetValueImpl(Security security)
-        {
-            return LimitOrder.CalculateOrderValue(Quantity, LimitPrice, security.Price);
+            Quantity = quantity;
         }
 
         /// <summary>
@@ -75,22 +73,19 @@ namespace QuantConnect.Orders
         /// <param name="request">The request to update this order object</param>
         public override void ApplyUpdateOrderRequest(UpdateOrderRequest request)
         {
-            base.ApplyUpdateOrderRequest(request);
-            if (request.LimitPrice.HasValue)
+            if (request.OrderId != Id)
             {
-                LimitPrice = request.LimitPrice.Value;
+                throw new ArgumentException("Attempted to apply updates to the incorrect order!");
             }
-        }
-
-        /// <summary>
-        /// Creates a deep-copy clone of this order
-        /// </summary>
-        /// <returns>A copy of this order</returns>
-        public override Order Clone()
-        {
-            var order = new ComboLegLimitOrder { LimitPrice = LimitPrice };
-            CopyTo(order);
-            return order;
+            if (request.Tag != null)
+            {
+                Tag = request.Tag;
+            }
+            if (request.Quantity.HasValue)
+            {
+                // For combo orders, the updated quantity is the quantity of the group
+                GroupOrderManager.Quantity = request.Quantity.Value;
+            }
         }
     }
 }

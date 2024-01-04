@@ -152,7 +152,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
             # if neither order has filled, bring in the limits by a penny
 
             for ticket in combo1:
-                newLimit = ticket.Get(OrderField.LimitPrice) + (1 if ticket.Quantity > 0 else -1) * 0.01
+                newLimit = round(ticket.Get(OrderField.LimitPrice) + (1 if ticket.Quantity > 0 else -1) * 0.01, 2)
                 self.Debug(f"Updating limits - Combo #1: {newLimit:.2f}")
                 fields = UpdateOrderFields()
                 fields.LimitPrice = newLimit
@@ -160,7 +160,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
                 ticket.Update(fields)
 
             for ticket in combo2:
-                newLimit = ticket.Get(OrderField.LimitPrice) + (1 if ticket.Quantity > 0 else -1) * 0.01
+                newLimit = round(ticket.Get(OrderField.LimitPrice) + (1 if ticket.Quantity > 0 else -1) * 0.01, 2)
                 self.Debug(f"Updating limits - Combo #2: {newLimit:.2f}")
                 fields.LimitPrice = newLimit
                 fields.Tag = f"Update #{len(ticket.UpdateRequests) + 1}"

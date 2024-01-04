@@ -574,7 +574,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="clearChartData"></param>
         /// <returns>List of Chart Updates</returns>
-        public List<Chart> GetChartUpdates(bool clearChartData = false) => _baseAlgorithm.GetChartUpdates(clearChartData);
+        public IEnumerable<Chart> GetChartUpdates(bool clearChartData = false) => _baseAlgorithm.GetChartUpdates(clearChartData);
 
         /// <summary>
         /// Gets whether or not this algorithm has been locked and fully initialized
