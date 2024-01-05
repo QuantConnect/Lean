@@ -26,15 +26,19 @@ class CustomBenchmarkRegressionAlgorithm(QCAlgorithm):
         self.updateRequestSubmitted = False
 
     def OnData(self, slice):
-        if (not self.Portfolio.Invested) and self.Benchmark.Evaluate(self.Time) != 0:
-            self.SetHoldings("SPY", 1)
+        benchmark = self.Benchmark.Evaluate(self.Time)
+        if (self.Time.day % 2 == 0) and (benchmark != 1):
+            raise Exception(f"Benchmark should be 1, but was {benchmark}")
+
+        if (self.Time.day % 2 == 1) and (benchmark != 2):
+            raise Exception(f"Benchmark should be 2, but was {benchmark}")
 
 class CustomBenchmark:
     def Evaluate(self, time):
         if time.day % 2 == 0:
-            return 0
-        else:
             return 1
+        else:
+            return 2
 
 class CustomBrokerageModelWithCustomBenchmark(CustomBrokerageModel):
     def GetBenchmark(self, securities):

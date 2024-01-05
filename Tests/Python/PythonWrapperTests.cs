@@ -64,7 +64,34 @@ namespace QuantConnect.Tests.Python
             public void SettlementModelPythonWrapperWorks()
             {
                 var results = AlgorithmRunner.RunLocalBacktest("CustomSettlementModelRegressionAlgorithm",
-                new Dictionary<string, string>(),
+                new Dictionary<string, string>()
+                {
+                    {"Total Trades", "0"},
+                    {"Average Win", "0%"},
+                    {"Average Loss", "0%"},
+                    {"Compounding Annual Return", "108.257%"},
+                    {"Drawdown", "0%"},
+                    {"Expectancy", "0"},
+                    {"Net Profit", "1.010%"},
+                    {"Sharpe Ratio", "10.983"},
+                    {"Sortino Ratio", "0"},
+                    {"Probabilistic Sharpe Ratio", "95.977%"},
+                    {"Loss Rate", "0%"},
+                    {"Win Rate", "0%"},
+                    {"Profit-Loss Ratio", "0"},
+                    {"Alpha", "1.42"},
+                    {"Beta", "-0.273"},
+                    {"Annual Standard Deviation", "0.08"},
+                    {"Annual Variance", "0.006"},
+                    {"Information Ratio", "-3.801"},
+                    {"Tracking Error", "0.288"},
+                    {"Treynor Ratio", "-3.226"},
+                    {"Total Fees", "$0.00"},
+                    {"Estimated Strategy Capacity", "$0"},
+                    {"Lowest Capacity Asset", ""},
+                    {"Portfolio Turnover", "0%"},
+                    {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+                },
                 Language.Python,
                 AlgorithmStatus.Completed,
                 algorithmLocation: "../../../Algorithm.Python/CustomSettlementModelRegressionAlgorithm.py");
@@ -74,7 +101,34 @@ namespace QuantConnect.Tests.Python
             public void BenchmarkModelPythonWrapperWorks()
             {
                 var results = AlgorithmRunner.RunLocalBacktest("CustomBenchmarkRegressionAlgorithm",
-                new Dictionary<string, string> { { "Total Trades", "1" } },
+                new Dictionary<string, string>()
+                {
+                    {"Total Trades", "0"},
+                    {"Average Win", "0%"},
+                    {"Average Loss", "0%"},
+                    {"Compounding Annual Return", "0%"},
+                    {"Drawdown", "0%"},
+                    {"Expectancy", "0"},
+                    {"Net Profit", "0%"},
+                    {"Sharpe Ratio", "0"},
+                    {"Sortino Ratio", "0"},
+                    {"Probabilistic Sharpe Ratio", "0%"},
+                    {"Loss Rate", "0%"},
+                    {"Win Rate", "0%"},
+                    {"Profit-Loss Ratio", "0"},
+                    {"Alpha", "0"},
+                    {"Beta", "0"},
+                    {"Annual Standard Deviation", "0"},
+                    {"Annual Variance", "0"},
+                    {"Information Ratio", "-1.9190768915765233E+23"},
+                    {"Tracking Error", "13.748"},
+                    {"Treynor Ratio", "0"},
+                    {"Total Fees", "$0.00"},
+                    {"Estimated Strategy Capacity", "$0"},
+                    {"Lowest Capacity Asset", ""},
+                    {"Portfolio Turnover", "0%"},
+                    {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+                },
                 Language.Python,
                 AlgorithmStatus.Completed,
                 algorithmLocation: "../../../Algorithm.Python/CustomBenchmarkRegressionAlgorithm.py");
