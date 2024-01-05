@@ -47,10 +47,10 @@ namespace QuantConnect.Tests.Engine.DataProviders
         [TestCase("cfd/oanda/second/xauusd/20140501_quote.zip", 10, false)]         // Date based second data
         [TestCase("cfd/oanda/tick/xauusd/20140501_quote.zip", 10, false)]           // Date based tick data
         // Crypto Cases
-        [TestCase("crypto/gdax/daily/btcusd_quote.zip", 6, true)]                   // Daily stale data
-        [TestCase("crypto/gdax/daily/btcusd_quote.zip", 0, false)]                  // Daily fresh data
-        [TestCase("crypto/gdax/minute/btcusd/20161007_trade.zip", 6, false)]        // Date based minute data
-        [TestCase("crypto/gdax/second/btcusd/20161007_trade.zip", 6, false)]        // Date based second data
+        [TestCase("crypto/coinbase/daily/btcusd_quote.zip", 6, true)]                   // Daily stale data
+        [TestCase("crypto/coinbase/daily/btcusd_quote.zip", 0, false)]                  // Daily fresh data
+        [TestCase("crypto/coinbase/minute/btcusd/20161007_trade.zip", 6, false)]        // Date based minute data
+        [TestCase("crypto/coinbase/second/btcusd/20161007_trade.zip", 6, false)]        // Date based second data
         // Equity Cases
         [TestCase("equity/usa/daily/aaa.zip", 4, true)]                             // Daily stale data
         [TestCase("equity/usa/daily/aaa.zip", 0, false)]                            // Daily fresh data
@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Engine.DataProviders
         // CFD
         [TestCase("cfd/oanda/daily/ch20hkd.zip")]
         // Crypto
-        [TestCase("crypto/gdax/minute/btcusd/20150114_trade.zip")]
+        [TestCase("crypto/coinbase/minute/btcusd/20150114_trade.zip")]
         // Equities
         [TestCase("equity/usa/shortable/atreyu/dates/20180117.csv")]
         [TestCase("equity/usa/factor_files/tsla.csv")]

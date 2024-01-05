@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.API
         /// </summary>
         /// <param name="filePath"></param>
         [TestCase("forex/oanda/daily/eurusd.zip")]
-        [TestCase("crypto/gdax/daily/btcusd_quote.zip")]
+        [TestCase("crypto/coinbase/daily/btcusd_quote.zip")]
         [TestCase("\\index\\usa\\minute\\spx")]
         public void GetPrices(string filePath)
         {
@@ -130,7 +130,7 @@ namespace QuantConnect.Tests.API
         /// <param name="directory"></param>
         [TestCase("alternative/sec/aapl/")]
         [TestCase("cfd/oanda/daily/")]
-        [TestCase("crypto/gdax/minute/btcusd/")]
+        [TestCase("crypto/coinbase/minute/btcusd/")]
         [TestCase("equity/usa/shortable/")]
         [TestCase("forex/oanda/minute/eurusd/")]
         [TestCase("forex\\oanda\\minute\\eurusd\\")] //Windows path case

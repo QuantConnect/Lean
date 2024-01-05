@@ -242,7 +242,7 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
                 new TestCaseData(new BitfinexBrokerageModel(), BrokerageName.Bitfinex),
                 new TestCaseData(new BinanceUSBrokerageModel(), BrokerageName.BinanceUS),
                 new TestCaseData(new BinanceBrokerageModel(), BrokerageName.Binance),
-                new TestCaseData(new GDAXBrokerageModel(), BrokerageName.GDAX),
+                new TestCaseData(new CoinbaseBrokerageModel(), BrokerageName.Coinbase),
                 new TestCaseData(new AlphaStreamsBrokerageModel(), BrokerageName.AlphaStreams),
                 new TestCaseData(new ZerodhaBrokerageModel(), BrokerageName.Zerodha),
                 new TestCaseData(new AxosClearingBrokerageModel(), BrokerageName.Axos),
@@ -264,7 +264,7 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
         private class CustomBitfinexBrokerageModel : BitfinexBrokerageModel {}
         private class CustomBinanceUSBrokerageModel : BinanceUSBrokerageModel {}
         private class CustomBinanceBrokerageModel : BinanceBrokerageModel {}
-        private class CustomGDAXBrokerageModel : GDAXBrokerageModel {}
+        private class CustomCoinbaseBrokerageModel : CoinbaseBrokerageModel {}
         private class CustomAlphaStreamsBrokerageModel : AlphaStreamsBrokerageModel {}
         private class CustomZerodhaBrokerageModel : ZerodhaBrokerageModel {}
         private class CustomAxosBrokerageModel : AxosClearingBrokerageModel {}
@@ -288,7 +288,7 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
                 new TestCaseData(new CustomBitfinexBrokerageModel(), BrokerageName.Bitfinex),
                 new TestCaseData(new CustomBinanceUSBrokerageModel(), BrokerageName.BinanceUS),
                 new TestCaseData(new CustomBinanceBrokerageModel(), BrokerageName.Binance),
-                new TestCaseData(new CustomGDAXBrokerageModel(), BrokerageName.GDAX),
+                new TestCaseData(new CustomCoinbaseBrokerageModel(), BrokerageName.Coinbase),
                 new TestCaseData(new CustomAlphaStreamsBrokerageModel(), BrokerageName.AlphaStreams),
                 new TestCaseData(new CustomZerodhaBrokerageModel(), BrokerageName.Zerodha),
                 new TestCaseData(new CustomAxosBrokerageModel(), BrokerageName.Axos),

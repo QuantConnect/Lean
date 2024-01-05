@@ -145,11 +145,17 @@ namespace QuantConnect
             {"LSK", "Ⱡ"},
             {"NAV", "Ꞥ"}
         };
-
+        
         /// <summary>
         /// Stable pairs in GDAX. We defined them because they have different fees in GDAX market
         /// </summary>
-        public static HashSet<string> StablePairsGDAX = new HashSet<string>
+        [Obsolete("StablePairsGDAX is deprecated. Use StablePairsCoinbase instead.")]
+        public static readonly HashSet<string> StablePairsGDAX = StablePairsCoinbase;
+        
+        /// <summary>
+        /// Stable pairs in Coinbase. We defined them because they have different fees in Coinbase market
+        /// </summary>
+        public static readonly HashSet<string> StablePairsCoinbase = new()
         {
             "DAIUSDC",
             "DAIUSD",
@@ -168,14 +174,14 @@ namespace QuantConnect
             "USTUSDT",
             "WBTCBTC"
         };
-
+        
         /// <summary>
-        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in GDAX market
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Coinbase market
         /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
         ///
         /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
         /// security.
-        private static readonly HashSet<string> _stableCoinsWithoutPairsGDAX = new HashSet<string>
+        private static readonly HashSet<string> _stableCoinsWithoutPairsCoinbase = new HashSet<string>
         {
             "USDCUSD"
         };
@@ -239,7 +245,7 @@ namespace QuantConnect
         {
             { Market.Binance , _stableCoinsWithoutPairsBinance},
             { Market.Bitfinex , _stableCoinsWithoutPairsBitfinex},
-            { Market.GDAX , _stableCoinsWithoutPairsGDAX},
+            { Market.Coinbase, _stableCoinsWithoutPairsCoinbase},
             { Market.Bybit , _stableCoinsWithoutPairsBybit},
         };
 

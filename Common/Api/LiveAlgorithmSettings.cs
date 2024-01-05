@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using Newtonsoft.Json;
 using QuantConnect.Brokerages;
 
@@ -360,41 +361,45 @@ namespace QuantConnect.Api
     }
 
     /// <summary>
-    /// Live algorithm settings for trading with GDAX (Coinbase)
+    /// Live algorithm settings for trading with Coinbase
     /// </summary>
-    public class GDAXLiveAlgorithmSettings : BaseLiveAlgorithmSettings
+    public class CoinbaseLiveAlgorithmSettings : BaseLiveAlgorithmSettings
     {
         /// <summary>
-        /// Constructor for live trading with GDAX (Coinbase)
+        /// Constructor for live trading with Coinbase
         /// </summary>
-        /// <param name="key"> Api key to GDAX account</param>
-        /// <param name="secret">Secret Api key to GDAX account</param>
-        /// <param name="passphrase">Passphrase to this API key</param>
-        public GDAXLiveAlgorithmSettings(string key, string secret, string passphrase)
+        public CoinbaseLiveAlgorithmSettings(string key, string secret, Uri apiUrl, Uri wsUrl)
         {
             Environment = BrokerageEnvironment.Live;
-            Id = "GDAXBrokerage"; //BrokerageName.GDAX.ToString(); returns "GDAX"
+            Id = "CoinbaseBrokerage"; //BrokerageName.Coinbase.ToString(); returns "Coinbase"
             Key = key;
             Secret = secret;
-            Passphrase = passphrase;
+            ApiUrl = apiUrl;
+            WsUrl = wsUrl;
         }
 
         /// <summary>
-        /// Property specific to GDAX account. API Key 
+        /// Property specific to Coinbase account. API Key 
         /// </summary>
         [JsonProperty(PropertyName = "key")]
         public string Key { get; private set; }
 
         /// <summary>
-        /// Property specific to GDAX account. API Secret Key
+        /// Property specific to Coinbase account. API Secret Key
         /// </summary>
         [JsonProperty(PropertyName = "secret")]
         public string Secret { get; private set; }
 
         /// <summary>
-        /// Property specific to GDAX account. API Passphrase
+        /// Property specific to Coinbase account. API Url
         /// </summary>
-        [JsonProperty(PropertyName = "passphrase")]
-        public string Passphrase { get; private set; }
+        [JsonProperty(PropertyName = "apiUrl")]
+        public Uri ApiUrl { get; private set; }
+        
+        /// <summary>
+        /// Property specific to Coinbase account. Ws Url
+        /// </summary>
+        [JsonProperty(PropertyName = "wsUrl")]
+        public Uri WsUrl { get; private set; }
     }
 }

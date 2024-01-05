@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual((int) BrokerageName.OandaBrokerage, 3);
             Assert.AreEqual((int) BrokerageName.FxcmBrokerage, 4);
             Assert.AreEqual((int) BrokerageName.Bitfinex, 5);
-            Assert.AreEqual((int) BrokerageName.GDAX, 12);
+            Assert.AreEqual((int) BrokerageName.Coinbase, 32);
         }
     }
 }

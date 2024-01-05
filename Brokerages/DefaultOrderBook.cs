@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -31,7 +31,6 @@ namespace QuantConnect.Brokerages
         private decimal _bestAskPrice;
         private decimal _bestAskSize;
         private readonly object _locker = new object();
-        private readonly Symbol _symbol;
 
         /// <summary>
         /// Represents bid prices and sizes
@@ -42,6 +41,11 @@ namespace QuantConnect.Brokerages
         /// Represents ask prices and sizes
         /// </summary>
         protected readonly SortedDictionary<decimal, decimal> Asks = new SortedDictionary<decimal, decimal>();
+
+        /// <summary>
+        /// Represents a unique security identifier of current Order Book
+        /// </summary>
+        public Symbol Symbol { get; }
 
         /// <summary>
         /// Event fired each time <see cref="BestBidPrice"/> or <see cref="BestAskPrice"/> are changed
@@ -110,7 +114,7 @@ namespace QuantConnect.Brokerages
         /// <param name="symbol">The symbol for the order book</param>
         public DefaultOrderBook(Symbol symbol)
         {
-            _symbol = symbol;
+            Symbol = symbol;
         }
 
         /// <summary>
@@ -146,7 +150,7 @@ namespace QuantConnect.Brokerages
                     _bestBidPrice = price;
                     _bestBidSize = size;
 
-                    BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, _bestBidPrice, _bestBidSize, _bestAskPrice, _bestAskSize));
+                    BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(Symbol, _bestBidPrice, _bestBidSize, _bestAskPrice, _bestAskSize));
                 }
             }
         }
@@ -167,7 +171,7 @@ namespace QuantConnect.Brokerages
                     _bestAskPrice = price;
                     _bestAskSize = size;
 
-                    BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, _bestBidPrice, _bestBidSize, _bestAskPrice, _bestAskSize));
+                    BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(Symbol, _bestBidPrice, _bestBidSize, _bestAskPrice, _bestAskSize));
                 }
             }
         }
@@ -188,7 +192,7 @@ namespace QuantConnect.Brokerages
                     _bestBidPrice = priceLevel.Key;
                     _bestBidSize = priceLevel.Value;
 
-                    BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, _bestBidPrice, _bestBidSize, _bestAskPrice, _bestAskSize));
+                    BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(Symbol, _bestBidPrice, _bestBidSize, _bestAskPrice, _bestAskSize));
                 }
             }
         }
@@ -209,7 +213,7 @@ namespace QuantConnect.Brokerages
                     _bestAskPrice = priceLevel.Key;
                     _bestAskSize = priceLevel.Value;
 
-                    BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, _bestBidPrice, _bestBidSize, _bestAskPrice, _bestAskSize));
+                    BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(Symbol, _bestBidPrice, _bestBidSize, _bestAskPrice, _bestAskSize));
                 }
             }
         }

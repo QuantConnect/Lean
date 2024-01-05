@@ -480,9 +480,9 @@ namespace QuantConnect.Tests.ToolBox
             new object[] {"forex", "oanda", "second", "nzdusd", "20140514_quote.zip", 18061, 15638.724575},
             new object[] {"forex", "oanda", "tick", "eurusd", "20140507_quote.zip", 41367, 57598.54664},
             new object[] {"cfd", "oanda", "hour", "xauusd", "xauusd.zip", 76499, 90453133.772 },
-            new object[] {"crypto", "gdax", "second", "btcusd", "20161008_trade.zip", 3453, 2137057.57},
-            new object[] {"crypto", "gdax", "minute", "ethusd", "20170903_trade.zip", 1440, 510470.66},
-            new object[] {"crypto", "gdax", "daily", "btcusd", "btcusd_trade.zip", 1318, 3725052.03},
+            new object[] {"crypto", "coinbase", "second", "btcusd", "20161008_trade.zip", 3453, 2137057.57},
+            new object[] {"crypto", "coinbase", "minute", "ethusd", "20170903_trade.zip", 1440, 510470.66},
+            new object[] {"crypto", "coinbase", "daily", "btcusd", "btcusd_trade.zip", 1318, 3725052.03},
         };
 
         public static string GenerateFilepathForTesting(string dataDirectory, string securityType, string market, string resolution, string ticker,

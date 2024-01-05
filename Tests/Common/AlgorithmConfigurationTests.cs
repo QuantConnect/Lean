@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common
         {
             var algorithm = new QCAlgorithm();
             algorithm.SetAccountCurrency(Currencies.GBP);
-            algorithm.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
+            algorithm.SetBrokerageModel(BrokerageName.Coinbase, AccountType.Cash);
             algorithm.SetParameters(new Dictionary<string, string> { { "a", "A" }, { "b", "B" } });
 
             var backtestNode = new BacktestNodePacket
@@ -63,14 +63,14 @@ namespace QuantConnect.Tests.Common
 
             var serialized = JsonConvert.SerializeObject(algorithmConfiguration);
 
-            Assert.AreEqual($"{{\"AccountCurrency\":\"GBP\",\"Brokerage\":12,\"AccountType\":1,\"Parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"OutOfSampleMaxEndDate\":\"2023-01-01T00:00:00\",\"OutOfSampleDays\":30,\"StartDate\":\"1998-01-01 00:00:00\",\"EndDate\":\"{algorithm.EndDate.ToString(DateFormat.UI)}\"}}", serialized);
+            Assert.AreEqual($"{{\"AccountCurrency\":\"GBP\",\"Brokerage\":32,\"AccountType\":1,\"Parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"OutOfSampleMaxEndDate\":\"2023-01-01T00:00:00\",\"OutOfSampleDays\":30,\"StartDate\":\"1998-01-01 00:00:00\",\"EndDate\":\"{algorithm.EndDate.ToString(DateFormat.UI)}\"}}", serialized);
         }
 
         private static TestCaseData[] AlgorithmConfigurationTestCases => new[]
         {
             new TestCaseData("BTC", BrokerageName.Binance, AccountType.Cash,
                 new Dictionary<string, string> { { "param1", "param1 value" }, { "param2", "param2 value" } }),
-            new TestCaseData("USDT", BrokerageName.GDAX, AccountType.Cash,
+            new TestCaseData("USDT", BrokerageName.Coinbase, AccountType.Cash,
                 new Dictionary<string, string> { { "a", "A" }, { "b", "B" } }),
             new TestCaseData("EUR", BrokerageName.Bitfinex, AccountType.Margin,
                 new Dictionary<string, string> { { "first", "1" }, { "second", "2" }, { "third", "3" } }),

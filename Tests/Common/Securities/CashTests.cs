@@ -677,12 +677,12 @@ namespace QuantConnect.Tests.Common.Securities
             new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "XCHF", false, new[] { Symbol.Create("BTCXCHF", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Bitfinex) } }, // No XCHFEUR, but indirect conversion exists
             new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "XCHF", false, new[] { Symbol.Create("BTCXCHF", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("BTCGBP", SecurityType.Crypto, Market.Bitfinex) } }, // No XCHFGBP, but indirect conversion exists
 
-            // *** GDAX ***
+            // *** Coinbase ***
             // Trades USDC and USDT* (*Not yet trading live, but expected soon)
             // USDC Cases
-            new object[] { new GDAXBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1
-            new object[] { new GDAXBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("USDCEUR", SecurityType.Crypto, Market.GDAX) } },
-            new object[] { new GDAXBrokerageModel(), Currencies.GBP, "USDC", false, new[] { Symbol.Create("USDCGBP", SecurityType.Crypto, Market.GDAX) } },
+            new object[] { new CoinbaseBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1
+            new object[] { new CoinbaseBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("USDCEUR", SecurityType.Crypto, Market.Coinbase) } },
+            new object[] { new CoinbaseBrokerageModel(), Currencies.GBP, "USDC", false, new[] { Symbol.Create("USDCGBP", SecurityType.Crypto, Market.Coinbase) } },
 
             // *** Binance ***
             // USDC Cases

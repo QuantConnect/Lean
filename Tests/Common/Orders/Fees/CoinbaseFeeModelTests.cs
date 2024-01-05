@@ -25,12 +25,12 @@ using QuantConnect.Securities.Crypto;
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
     [TestFixture]
-    class GDAXFeeModelTests
+    class CoinbaseFeeModelTests
     {
         private Crypto _btcusd;
         private Crypto _btceur;
         private Crypto _daiusdc;
-        private readonly IFeeModel _feeModel = new GDAXFeeModel();
+        private readonly IFeeModel _feeModel = new CoinbaseFeeModel();
 
         [SetUp]
         public void Initialize()
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USDC", 0, 10),
                 new Cash("DAI", 0, 0),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("DAIUSDC", SecurityType.Crypto, Market.GDAX), Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("DAIUSDC", SecurityType.Crypto, Market.Coinbase), Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("DAIUSDC", "USDC", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
@@ -102,10 +102,11 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(0.3m, fee.Value.Amount);
         }
 
-        [Test]
-        public void ReturnsExpectedFeeWithStableCoins()
+        [TestCase(2019, 2, 1, 0.1)]
+        [TestCase(2023, 1, 3, 0.001)]
+        public void ReturnsExpectedFeeWithStableCoins(int year, int month, int day, decimal expectedStableFee)
         {
-            var time = new DateTime(2019, 2, 1);
+            var time = new DateTime(year, month, day);
             var stablePairFee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     _daiusdc,
@@ -120,8 +121,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 )
             );
 
-            // 100 (price) * 0.001 (taker fee)
-            Assert.AreEqual(0.1m, stablePairFee.Value.Amount);
+            // 100 (price) * 0.001m or 0.00001m (taker stable fee)
+            Assert.AreEqual(expectedStableFee, stablePairFee.Value.Amount);
             Assert.AreNotEqual(normalPairFee.Value.Amount, stablePairFee.Value.Amount);
         }
 
@@ -129,6 +130,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [TestCase(2019, 3, 23, 1, 29, 59, 0.3)]
         [TestCase(2019, 3, 23, 1, 30, 0, 0.25)]
         [TestCase(2019, 4, 1, 0, 0, 0, 0.25)]
+        [TestCase(2024, 1, 2, 0, 0, 0, 0.8)]
         public void FeeChangesOverTime(int year, int month, int day, int hour, int minute, int second, decimal expectedFee)
         {
             var time = new DateTime(year, month, day, hour, minute, second);
@@ -141,6 +143,27 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             // 100 (price) * fee (taker fee)
+            Assert.AreEqual(expectedFee, fee.Value.Amount);
+        }
+
+        [TestCase(0.0035, 0.0055, false, 0.55)]
+        [TestCase(0.0035, 0.0055, true, 0.35)]
+        [TestCase(0.0025, 0.004, true, 0.25)]
+        public void CustomCoinbaseFeeModelPlusCoinbaseOrderProperty(decimal customMakerFee, decimal customTakerFee, bool postOnly, decimal expectedFee)
+        {
+            decimal orderAmount = -1m;
+            IFeeModel customFeeModel = new CoinbaseFeeModel(customMakerFee, customTakerFee);
+
+            var dateTime = new DateTime(2024, 1, 2, 0, 0, 0);
+            var orderProperty = new CoinbaseOrderProperties() { PostOnly = postOnly };
+
+            var fee = customFeeModel.GetOrderFee(new OrderFeeParameters(_btcusd, new LimitOrder(_btcusd.Symbol, orderAmount, 99, dateTime, "fee", orderProperty)
+            {
+                OrderSubmissionData = new OrderSubmissionData(_btcusd.BidPrice, _btcusd.AskPrice, _btcusd.Price)
+            }));
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            // (order.Direction == Buy ? AskPrice : BidPrice) * orderAmount * (maker)fee || (taker)fee
             Assert.AreEqual(expectedFee, fee.Value.Amount);
         }
     }

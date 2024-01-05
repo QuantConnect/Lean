@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common.Securities.Cryptos
                 portfolio.CashBook.Add(quote, 0, 1000);
             }
             var cash = portfolio.CashBook[quote];
-            var symbol = Symbol.Create(ticker, SecurityType.Crypto, Market.GDAX);
+            var symbol = Symbol.Create(ticker, SecurityType.Crypto, Market.Coinbase);
 
             var crypto = new Crypto(
                 symbol,

@@ -106,9 +106,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.21"},
             {"Estimated Strategy Capacity", "$170000.00"},
-            {"Lowest Capacity Asset", "ETHUSD XJ"},
+            {"Lowest Capacity Asset", "ETHUSD 2XR"},
             {"Portfolio Turnover", "0.00%"},
-            {"OrderListHash", "0be1ba882218cf108297c086fd3d3411"}
+            {"OrderListHash", "76b610bd1d6b6f15b371796b8430bc51"}
         };
     }
 }

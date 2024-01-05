@@ -156,17 +156,18 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Live trading via GDAX (Coinbase)
+        /// Live trading via Coinbase
         /// </summary>
         [Test]
-        public void LiveGDAXTest()
+        public void LiveCoinbaseTest()
         {
-            var key = Config.Get("gdax-api-key");
-            var secretKey = Config.Get("gdax-api-secret");
-            var passphrase = Config.Get("gdax-passphrase");
+            var key = Config.Get("coinbase-api-key");
+            var secretKey = Config.Get("coinbase-api-secret");
+            var apiUrl = Config.Get("coinbase-rest-api");
+            var wsUrl = Config.Get("coinbase-url");
 
             // Create default algorithm settings
-            var settings = new GDAXLiveAlgorithmSettings(key, secretKey, passphrase);
+            var settings = new CoinbaseLiveAlgorithmSettings(key, secretKey, new Uri(apiUrl), new Uri(wsUrl));
 
             var file = new ProjectFile
             {
@@ -247,11 +248,13 @@ namespace QuantConnect.Tests.API
                         settings = new BitfinexLiveAlgorithmSettings(key, secretKey);
                         break;
                     case BrokerageName.GDAX:
-                        key = Config.Get("gdax-api-key");
-                        secretKey = Config.Get("gdax-api-secret");
-                        var passphrase = Config.Get("gdax-api-passphrase");
-
-                        settings = new GDAXLiveAlgorithmSettings(key, secretKey, passphrase);
+                    case BrokerageName.Coinbase:
+                        key = Config.Get("coinbase-api-key");
+                        secretKey = Config.Get("coinbase-api-secret");
+                        var apiUrl = Config.Get("coinbase-rest-api");
+                        var wsUrl = Config.Get("coinbase-url");
+                        
+                        settings = new CoinbaseLiveAlgorithmSettings(key, secretKey, new Uri(apiUrl), new Uri(wsUrl));
                         break;
                     case BrokerageName.AlphaStreams:
                         // No live algorithm settings

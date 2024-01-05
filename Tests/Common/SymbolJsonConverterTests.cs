@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Common
         [TestCase("{\"value\":\"fb\",\"type\":\"1\"}", SecurityType.Equity, "FB", Market.USA)]
         [TestCase("{\"value\":\"AAPL\",\"type\":\"1\"}", SecurityType.Equity, "AAPL", Market.USA)]
 
-        [TestCase("{\"value\":\"BTCUSD\",\"type\":\"7\",\"market\":\"gdax\"}", SecurityType.Crypto, "BTCUSD", Market.GDAX)]
+        [TestCase("{\"value\":\"BTCUSD\",\"type\":\"7\",\"market\":\"coinbase\"}", SecurityType.Crypto, "BTCUSD", Market.Coinbase)]
         [TestCase("{\"value\":\"BTCUSD\",\"type\":\"7\",\"market\":\"binance\"}", SecurityType.Crypto, "BTCUSD", Market.Binance)]
 
         [TestCase("{\"value\":\"xauusd\",\"type\":\"6\",\"market\":\"oanda\"}", SecurityType.Cfd, "XAUUSD", Market.Oanda)]

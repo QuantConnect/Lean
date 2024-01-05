@@ -1723,7 +1723,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesAllTickTypesAtTickResolution()
         {
-            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
+            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Coinbase);
             // setting func benchmark so we don't add SPY
             _algorithm.SetBenchmark(time => 1);
             var feed = RunDataFeed(

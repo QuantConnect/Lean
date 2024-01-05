@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             var time = new DateTime(2017, 1, 3, 0, 0, 0);
             var nextTime = time.AddSeconds(1);
-            _symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, "GDAX");
+            _symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Coinbase);
 
             _quote = new QuoteBar(time, _symbol, new Bar(1, 1, 1, 1), 1, new Bar(2, 2, 2, 2), 2);
             _trade = new TradeBar(nextTime, _symbol, 3, 3, 3, 3, 3);

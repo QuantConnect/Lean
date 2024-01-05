@@ -1,6 +1,6 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
- * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014-2023 QuantConnect Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,34 +14,15 @@
 */
 
 using System;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
-using QuantConnect.Orders.Fees;
-using System.Linq;
-using QuantConnect.Benchmarks;
-using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// Provides GDAX specific properties
     /// </summary>
-    public class GDAXBrokerageModel : DefaultBrokerageModel
+    [Obsolete("GDAXBrokerageModel is deprecated. Use CoinbaseBrokerageModel instead.")]
+    public class GDAXBrokerageModel : CoinbaseBrokerageModel
     {
-        private readonly BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0,
-            Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
-
-        // https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
-        private readonly DateTime _stopMarketOrderSupportEndDate = new DateTime(2019, 3, 23, 1, 0, 0);
-
-        private readonly HashSet<OrderType> _supportedOrderTypes = new()
-        {
-            OrderType.Limit,
-            OrderType.Market,
-            OrderType.StopMarket,
-            OrderType.StopLimit
-        };
-
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXBrokerageModel"/> class
         /// </summary>
@@ -49,124 +30,6 @@ namespace QuantConnect.Brokerages
         /// <see cref="AccountType.Cash"/></param>
         public GDAXBrokerageModel(AccountType accountType = AccountType.Cash)
             : base(accountType)
-        {
-            if (accountType == AccountType.Margin)
-            {
-                throw new ArgumentException(Messages.GDAXBrokerageModel.UnsupportedAccountType, nameof(accountType));
-            }
-        }
-
-        /// <summary>
-        /// GDAX global leverage rule
-        /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
-        public override decimal GetLeverage(Security security)
-        {
-            // margin trading is not currently supported by GDAX
-            return 1m;
-        }
-
-        /// <summary>
-        /// Get the benchmark for this model
-        /// </summary>
-        /// <param name="securities">SecurityService to create the security with if needed</param>
-        /// <returns>The benchmark for this brokerage</returns>
-        public override IBenchmark GetBenchmark(SecurityManager securities)
-        {
-            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
-            return SecurityBenchmark.CreateInstance(securities, symbol);
-        }
-
-        /// <summary>
-        /// Provides GDAX fee model
-        /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
-        public override IFeeModel GetFeeModel(Security security)
-        {
-            return new GDAXFeeModel();
-        }
-
-        /// <summary>
-        /// Gdax does not support update of orders
-        /// </summary>
-        /// <param name="security">The security of the order</param>
-        /// <param name="order">The order to be updated</param>
-        /// <param name="request">The requested update to be made to the order</param>
-        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
-        /// <returns>GDAX does not support update of orders, so it will always return false</returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
-        {
-            message = _message;
-            return false;
-        }
-
-        /// <summary>
-        /// Evaluates whether exchange will accept order. Will reject order update
-        /// </summary>
-        /// <param name="security">The security of the order</param>
-        /// <param name="order">The order to be processed</param>
-        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
-        /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
-        {
-            if (order.BrokerId != null && order.BrokerId.Any())
-            {
-                message = _message;
-                return false;
-            }
-
-            if(!IsValidOrderSize(security, order.Quantity, out message))
-            {
-                return false;
-            }
-
-            if (security.Type != SecurityType.Crypto)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
-
-                return false;
-            }
-
-            if (!_supportedOrderTypes.Contains(order.Type))
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
-
-                return false;
-            }
-
-            if (order.Type == OrderType.StopMarket && order.Time >= _stopMarketOrderSupportEndDate)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.GDAXBrokerageModel.StopMarketOrdersNoLongerSupported(_stopMarketOrderSupportEndDate));
-
-                return false;
-            }
-
-            if (order.TimeInForce != TimeInForce.GoodTilCanceled)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));
-
-                return false;
-            }
-
-            return base.CanSubmitOrder(security, order, out message);
-        }
-
-        /// <summary>
-        /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
-        /// For cash accounts, leverage = 1 is used.
-        /// </summary>
-        /// <param name="security">The security to get a buying power model for</param>
-        /// <returns>The buying power model for this brokerage/security</returns>
-        public override IBuyingPowerModel GetBuyingPowerModel(Security security)
-        {
-            // margin trading is not currently supported by GDAX
-            return new CashBuyingPowerModel();
-        }
+        { }
     }
 }

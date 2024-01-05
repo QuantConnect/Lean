@@ -426,7 +426,7 @@ namespace QuantConnect.Tests.Common
             {
                 Symbol.Create("SPY", SecurityType.Equity, Market.USA),
                 Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda),
-                Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX),
+                Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Coinbase),
                 Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex),
                 Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM),
                 Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),

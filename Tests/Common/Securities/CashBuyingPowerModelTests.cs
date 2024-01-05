@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.CashBook.Add("BTC", 0, 15000m);
             _portfolio.CashBook.Add("ETH", 0, 1000m);
 
-            _algorithm.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
+            _algorithm.SetBrokerageModel(BrokerageName.Coinbase, AccountType.Cash);
 
             _transactionHandler = new BacktestingTransactionHandler();
             _brokerage = new BacktestingBrokerage(_algorithm);
@@ -291,8 +291,8 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(_btcusd.Symbol, 2m, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
-            // Maximum we can market buy with 20000 USD is 1.99004975 BTC
-            Assert.AreEqual(1.99004975m, _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 1, 0).Quantity);
+            // Maximum we can market buy with 20000 USD is 1.98412698 BTC
+            Assert.AreEqual(1.98412698m, _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 1, 0).Quantity);
 
             _btcusd.SetMarketPrice(new Tick { Value = 9900m });
 
@@ -312,9 +312,9 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(_btceur.Symbol, 2m, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order).IsSufficient);
 
-            // Maximum we can market buy with 20000 EUR is 1.99004975 BTC
+            // Maximum we can market buy with 20000 EUR is 1.98412698 BTC
             var targetValue = 20000m * _portfolio.CashBook["EUR"].ConversionRate / _portfolio.TotalPortfolioValue;
-            Assert.AreEqual(1.99004975m, _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btceur, targetValue, 0).Quantity);
+            Assert.AreEqual(1.98412698m, _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btceur, targetValue, 0).Quantity);
 
             _btceur.SetMarketPrice(new Tick { Value = 9900m });
 
@@ -362,9 +362,9 @@ namespace QuantConnect.Tests.Common.Securities
             // ETHUSD buy order decreases available USD (3500 - 3000 = 500 USD)
             SubmitLimitOrder(_ethusd.Symbol, 3m, 1000m);
 
-            // Maximum we can market buy with 500 USD is 0.03316749 BTC
+            // Maximum we can market buy with 500 USD is 0.03306878 BTC
             var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 500 / _portfolio.TotalPortfolioValue, 0).Quantity;
-            Assert.AreEqual(0.03316749m, quantity);
+            Assert.AreEqual(0.03306878m, quantity);
 
             // 500 USD available, can buy `quantity` BTC at 15000
             var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
@@ -399,9 +399,9 @@ namespace QuantConnect.Tests.Common.Securities
             // ETHBTC buy order decreases available BTC (0.9 - 0.1 = 0.8 BTC)
             SubmitLimitOrder(_ethbtc.Symbol, 1m, 0.1m);
 
-            // Maximum we can market sell with 0.8 BTC is -0.7960199 BTC (for a target position of 0.2 BTC)
+            // Maximum we can market sell with 0.8 BTC is -0.79365079 BTC (for a target position of 0.2 BTC)
             // target value = (1 - 0.8) * price
-            Assert.AreEqual(-0.7960199m, _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 0.2m * 15000 / _portfolio.TotalPortfolioValue, 0).Quantity);
+            Assert.AreEqual(-0.79365079m, _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 0.2m * 15000 / _portfolio.TotalPortfolioValue, 0).Quantity);
 
             // 0.8 BTC available, can sell 0.80 BTC at market
             var order = new MarketOrder(_btcusd.Symbol, -0.80m, DateTime.UtcNow);
@@ -452,18 +452,18 @@ namespace QuantConnect.Tests.Common.Securities
             _btceur.SetMarketPrice(new Tick { Value = 12000m });
             _algorithm.SetFinishedWarmingUp();
 
-            // 0.66334991 * 15000 + fees + price buffer <= 10000 USD
+            // 0.66137566 * 15000 + fees + price buffer <= 10000 USD
             var targetValue = 10000 / _portfolio.TotalPortfolioValue;
 
             var getMaximumOrderQuantityForTargetValueResult = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, targetValue, 0).Quantity;
-            Assert.AreEqual(0.66334991m, getMaximumOrderQuantityForTargetValueResult);
+            Assert.AreEqual(0.66137566m, getMaximumOrderQuantityForTargetValueResult);
 
             var order = new MarketOrder(_btcusd.Symbol, getMaximumOrderQuantityForTargetValueResult, DateTime.UtcNow);
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
-            // 9.95024875 * 1000 + fees <= 10000 USD
+            // 9.92063492 * 1000 + fees <= 10000 USD
             getMaximumOrderQuantityForTargetValueResult = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _ethusd, targetValue, 0).Quantity;
-            Assert.AreEqual(9.95024875m, getMaximumOrderQuantityForTargetValueResult);
+            Assert.AreEqual(9.92063492m, getMaximumOrderQuantityForTargetValueResult);
 
             order = new MarketOrder(_ethusd.Symbol, getMaximumOrderQuantityForTargetValueResult, DateTime.UtcNow);
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _ethusd, order).IsSufficient);
@@ -475,10 +475,10 @@ namespace QuantConnect.Tests.Common.Securities
             order = new MarketOrder(_ethbtc.Symbol, quantity, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _ethbtc, order).IsSufficient);
 
-            // 0.82918739 * 12000 + fees <= 10000 EUR
+            // 0.82671957 * 12000 + fees <= 10000 EUR
             targetValue = 10000m * _portfolio.CashBook["EUR"].ConversionRate / _portfolio.TotalPortfolioValue;
-            getMaximumOrderQuantityForTargetValueResult  = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btceur, targetValue, 0).Quantity;
-            Assert.AreEqual(0.82918739m, getMaximumOrderQuantityForTargetValueResult);
+            getMaximumOrderQuantityForTargetValueResult = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btceur, targetValue, 0).Quantity;
+            Assert.AreEqual(0.82671957m, getMaximumOrderQuantityForTargetValueResult);
 
             order = new MarketOrder(_btceur.Symbol, getMaximumOrderQuantityForTargetValueResult, DateTime.UtcNow);
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order).IsSufficient);
@@ -497,7 +497,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var getMaximumOrderQuantityForTargetValueResult = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 0.1m, 0);
             // Quantity * 15000m + fees + price buffer <= 1000 USD Target
-            Assert.AreEqual(0.06633499m, getMaximumOrderQuantityForTargetValueResult.Quantity);
+            Assert.AreEqual(0.06613756m, getMaximumOrderQuantityForTargetValueResult.Quantity);
 
             var order = new MarketOrder(_btcusd.Symbol, getMaximumOrderQuantityForTargetValueResult.Quantity, DateTime.UtcNow);
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
@@ -516,7 +516,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var getMaximumOrderQuantityForTargetValueResult = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 10m, 0);
             // Quantity * 15000m + fees + price buffer <= 100000 USD Target
-            Assert.AreEqual(6.63349917m, getMaximumOrderQuantityForTargetValueResult.Quantity);
+            Assert.AreEqual(6.61375661m, getMaximumOrderQuantityForTargetValueResult.Quantity);
 
             var order = new MarketOrder(_btcusd.Symbol, getMaximumOrderQuantityForTargetValueResult.Quantity, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
@@ -535,7 +535,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var getMaximumOrderQuantityForTargetValueResult = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 10000 / _portfolio.TotalPortfolioValue, 0);
             // We don't have enough cash, but GetMaximumOrderQuantityForTargetValue does not care about this :)
-            Assert.AreEqual(0.66334991m, getMaximumOrderQuantityForTargetValueResult.Quantity);
+            Assert.AreEqual(0.66137566m, getMaximumOrderQuantityForTargetValueResult.Quantity);
 
             var order = new MarketOrder(_btcusd.Symbol, getMaximumOrderQuantityForTargetValueResult.Quantity, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
@@ -553,7 +553,7 @@ namespace QuantConnect.Tests.Common.Securities
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _algorithm.SetFinishedWarmingUp();
-            var getMaximumOrderQuantityForTargetValueResult  = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 0.1m, 0);
+            var getMaximumOrderQuantityForTargetValueResult = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 0.1m, 0);
             // Quantity * 15000m + fees (0) + price buffer <= 10000 USD Target
             Assert.AreEqual(0.66666666m, getMaximumOrderQuantityForTargetValueResult.Quantity);
 
@@ -574,9 +574,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(10000m, _portfolio.TotalPortfolioValue);
 
-            // Maximum we can market buy for (10000-2000) = 8000 USD is 0.7960199 BTC
+            // Maximum we can market buy for (10000-2000) = 8000 USD is 0.79365079 BTC
             var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 10000m / _portfolio.TotalPortfolioValue, 0).Quantity;
-            Assert.AreEqual(0.7960199m, quantity);
+            Assert.AreEqual(0.79365079m, quantity);
 
             // the maximum order quantity can be executed
             var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
@@ -590,13 +590,13 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.CashBook.Add("BTC", 1m, 12000m);
             _btceur.SetLocalTimeKeeper(_timeKeeper);
             _btceur.SetMarketPrice(new Tick { Value = 10000m });
-            // Maximum we can market buy with 20000 EUR is 1.99004975 BTC
+            // Maximum we can market buy with 20000 EUR is 1.98412698 BTC
             // target value = 30000 EUR = 20000 EUR in cash + 10000 EUR in BTC
             var targetValue = 30000m * _portfolio.CashBook["EUR"].ConversionRate / _portfolio.TotalPortfolioValue;
-            Assert.AreEqual(1.99004975m, _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btceur, targetValue, 0).Quantity);
+            Assert.AreEqual(1.98412698m, _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btceur, targetValue, 0).Quantity);
 
-            // Available cash = 20000 EUR, can buy 1.99 BTC at 10000 (plus fees)
-            var order = new MarketOrder(_btceur.Symbol, 1.99m, DateTime.UtcNow);
+            // Available cash = 20000 EUR, can buy 1.98 BTC at 10000 (plus fees)
+            var order = new MarketOrder(_btceur.Symbol, 1.98m, DateTime.UtcNow);
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btceur, order).IsSufficient);
 
             // Available cash = 20000 EUR, cannot buy 2 BTC at 10000 (plus fees)
@@ -616,9 +616,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(10000m, _portfolio.TotalPortfolioValue);
 
-            // Maximum we can market buy at ask price with 10000 USD is 0.9900745 BTC
+            // Maximum we can market buy at ask price with 10000 USD is 0.98712785 BTC
             var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 1m, 0).Quantity;
-            Assert.AreEqual(0.9900745m, quantity);
+            Assert.AreEqual(0.98712785m, quantity);
 
             // the maximum order quantity can be executed
             var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
@@ -720,9 +720,9 @@ namespace QuantConnect.Tests.Common.Securities
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
 
-            // Maximum we can market buy at ask price with 10000 USD is 0.9900745 BTC => Account currency should not matter
+            // Maximum we can market buy at ask price with 10000 USD is 0.98712785 BTC => Account currency should not matter
             var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 1m, 0).Quantity;
-            Assert.AreEqual(0.9900745m, quantity);
+            Assert.AreEqual(0.98712785m, quantity);
 
             var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
             var fee = _btcusd.FeeModel.GetOrderFee(new OrderFeeParameters(_btcusd, order));
@@ -829,9 +829,9 @@ namespace QuantConnect.Tests.Common.Securities
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
 
-            // Maximum we can market buy at ask price with 10000 USD + (10000 EUR / 0.88 rate) is 2.11515916 BTC
+            // Maximum we can market buy at ask price with 10000 USD + (10000 EUR / 0.88 rate) is 2.10886404 BTC
             var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 1m, 0).Quantity;
-            Assert.AreEqual(2.11515916m, quantity);
+            Assert.AreEqual(2.10886404m, quantity);
 
             // the maximum order quantity can be executed
             var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
@@ -855,9 +855,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             // only use the USD for determining the target
             var reachableTarget = 8800m / 18800m;
-            // Maximum we can market buy at ask price with 10000 USD is 0.9900745 BTC => Account currency should not matter
+            // Maximum we can market buy at ask price with 10000 USD is 0.98712785 BTC => Account currency should not matter
             var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, reachableTarget, 0).Quantity;
-            Assert.AreEqual(0.9900745m, quantity);
+            Assert.AreEqual(0.98712785m, quantity);
 
             // the maximum order quantity can be executed
             var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
