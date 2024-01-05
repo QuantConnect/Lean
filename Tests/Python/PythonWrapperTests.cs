@@ -17,6 +17,7 @@ using System;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Python;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Python
 {
@@ -57,6 +58,26 @@ namespace QuantConnect.Tests.Python
                     var model = module.GetAttr("DerivedFromCSharpModel");
                     Assert.That(() => model.ValidateImplementationOf<IModel>(), Throws.Nothing);
                 }
+            }
+
+            [Test]
+            public void SettlementModelPythonWrapperWorks()
+            {
+                var results = AlgorithmRunner.RunLocalBacktest("CustomSettlementModelRegressionAlgorithm",
+                new Dictionary<string, string>(),
+                Language.Python,
+                AlgorithmStatus.Completed,
+                algorithmLocation: "../../../Algorithm.Python/CustomSettlementModelRegressionAlgorithm.py");
+            }
+
+            [Test]
+            public void BenchmarkModelPythonWrapperWorks()
+            {
+                var results = AlgorithmRunner.RunLocalBacktest("CustomBenchmarkRegressionAlgorithm",
+                new Dictionary<string, string> { { "Total Trades", "1" } },
+                Language.Python,
+                AlgorithmStatus.Completed,
+                algorithmLocation: "../../../Algorithm.Python/CustomBenchmarkRegressionAlgorithm.py");
             }
 
             private const string FullyImplemented =
