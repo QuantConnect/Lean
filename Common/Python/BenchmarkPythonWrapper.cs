@@ -29,7 +29,7 @@ namespace QuantConnect.Python
         /// <summary>
         /// Constructor for initialising the <see cref="BenchmarkPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
-        /// <param name="model">Models brokerage transactions, fees, and order</param>
+        /// <param name="model">Python benchmark model</param>
         public BenchmarkPythonWrapper(PyObject model)
         {
             _model = model;

@@ -311,6 +311,18 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Gets a new settlement model for the security
+        /// </summary>
+        /// <param name="security">The security to get a settlement model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The settlement model for this brokerage</returns>
+        [Obsolete("Flagged deprecated and will remove December 1st 2018")]
+        public ISettlementModel GetSettlementModel(Security security, AccountType accountType)
+        {
+            return GetSettlementModel(security);
+        }
+
+        /// <summary>
         /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
         /// For cash accounts, leverage = 1 is used.
         /// </summary>
@@ -356,6 +368,18 @@ namespace QuantConnect.Brokerages
         public virtual IMarginInterestRateModel GetMarginInterestRateModel(Security security)
         {
             return MarginInterestRateModel.Null;
+        }
+
+        /// <summary>
+        /// Gets a new buying power model for the security
+        /// </summary>
+        /// <param name="security">The security to get a buying power model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The buying power model for this brokerage/security</returns>
+        [Obsolete("Flagged deprecated and will remove December 1st 2018")]
+        public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
+        {
+            return GetBuyingPowerModel(security);
         }
 
         /// <summary>

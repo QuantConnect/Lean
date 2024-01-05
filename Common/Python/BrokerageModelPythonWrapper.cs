@@ -273,6 +273,21 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Gets a new settlement model for the security
+        /// </summary>
+        /// <param name="security">The security to get a settlement model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The settlement model for this brokerage</returns>
+        [Obsolete("Flagged deprecated and will remove December 1st 2018")]
+        public ISettlementModel GetSettlementModel(Security security, AccountType accountType)
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetSettlementModel(security, accountType) as PyObject).GetAndDispose<ISettlementModel>();
+            }
+        }
+
+        /// <summary>
         /// Gets a new slippage model that represents this brokerage's fill slippage behavior
         /// </summary>
         /// <param name="security">The security to get a slippage model for</param>
@@ -321,6 +336,21 @@ namespace QuantConnect.Python
                     return csharpBuyingPowerModel;
                 }
                 return new BuyingPowerModelPythonWrapper(buyingPowerModel);
+            }
+        }
+
+        /// <summary>
+        /// Gets a new buying power model for the security
+        /// </summary>
+        /// <param name="security">The security to get a buying power model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The buying power model for this brokerage/security</returns>
+        [Obsolete("Flagged deprecated and will remove December 1st 2018")]
+        public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetBuyingPowerModel(security, accountType) as PyObject).GetAndDispose<IBuyingPowerModel>();
             }
         }
 
