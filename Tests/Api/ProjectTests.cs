@@ -29,6 +29,17 @@ namespace QuantConnect.Tests.API
     [TestFixture, Explicit("Requires configured api access and available backtest node to run on")]
     public class ProjectTests : ApiTestBase
     {
+        [Test]
+        public void ReadProject()
+        {
+            var readProject = ApiClient.ReadProject(16408347);
+            Assert.IsTrue(readProject.Success);
+            Assert.AreEqual(1, readProject.Projects.Count);
+
+            var project = readProject.Projects[0];
+            Assert.AreNotEqual(0, project.OwnerId);
+        }
+
         /// <summary>
         /// Test creating and deleting projects with the Api
         /// </summary>
