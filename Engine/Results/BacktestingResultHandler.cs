@@ -601,7 +601,7 @@ namespace QuantConnect.Lean.Engine.Results
                             if(!_chartSeriesCountExceededError)
                             {
                                 _chartSeriesCountExceededError = true;
-                                DebugMessage($"Exceeded maximum chart series count, new series will be ignored. Limit is currently set at {_job.Controls.MaximumChartSeries}");
+                                DebugMessage($"Exceeded maximum chart series count for organization tier, new series will be ignored. Limit is currently set at {_job.Controls.MaximumChartSeries}. https://qnt.co/docs-charting-quotas");
                             }
                             continue;
                         }
@@ -628,7 +628,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 else if (!_chartSeriesExceededDataPoints.Contains(chart.Name + series.Name))
                                 {
                                     _chartSeriesExceededDataPoints.Add(chart.Name + series.Name);
-                                    DebugMessage($"Exceeded maximum data points per series, chart update skipped. Chart Name {update.Name}. Series name {series.Name}. " +
+                                    DebugMessage($"Exceeded maximum data points per series for organization tier, chart update skipped. Chart Name {update.Name}. Series name {series.Name}. https://qnt.co/docs-charting-quotas" +
                                                  $"Limit is currently set at {_job.Controls.MaximumDataPointsPerChartSeries}");
                                 }
                             }
