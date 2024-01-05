@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,6 +24,7 @@ namespace QuantConnect.Indicators
     {
         private decimal _rollingSum;
         private decimal _rollingSumOfSquares;
+        private readonly int _period;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Variance"/> class using the specified period.
@@ -42,12 +43,23 @@ namespace QuantConnect.Indicators
         public Variance(string name, int period)
             : base(name, period)
         {
+            // Assert the period is greater than two, otherwise the Variance can not be computed
+            if (period < 2)
+            {
+                throw new ArgumentException($"Period parameter for Variance indicator must be greater than 2 but was {period}");
+            }
+            _period = period;
         }
+
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => Samples >= _period;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => Period;
+        public int WarmUpPeriod => _period;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -63,13 +75,13 @@ namespace QuantConnect.Indicators
             if (Samples < 2)
                 return 0m;
 
-            var n = Math.Min(Period, Samples);
+            var n = Math.Min(_period, Samples);
             var meanValue1 = _rollingSum / n;
             var meanValue2 = _rollingSumOfSquares / n;
 
-            if (n == Period)
+            if (n == _period)
             {
-                var removedValue = window[Period - 1];
+                var removedValue = window[_period - 1];
                 _rollingSum -= removedValue.Value;
                 _rollingSumOfSquares -= removedValue.Value * removedValue.Value;
             }
