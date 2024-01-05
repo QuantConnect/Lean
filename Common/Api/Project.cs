@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace QuantConnect.Api
 {
@@ -52,6 +52,12 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "language")]
         public Language Language { get; set; }
+
+        /// <summary>
+        /// The projects owner id
+        /// </summary>
+        [JsonProperty(PropertyName = "ownerId")]
+        public int OwnerId { get; set; }
     }
 
     /// <summary>
