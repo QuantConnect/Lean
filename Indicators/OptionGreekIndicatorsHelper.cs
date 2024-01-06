@@ -15,6 +15,7 @@
 
 using System;
 using MathNet.Numerics.Distributions;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Indicators
 {
@@ -59,69 +60,41 @@ namespace QuantConnect.Indicators
             return d1 - volatility * DecimalMath(Math.Sqrt, timeToExpiration);
         }
 
-        internal static decimal LeisenReimerTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, OptionRight optionType, int numSteps = 500)
+        // Reference: https://en.wikipedia.org/wiki/Binomial_options_pricing_model#Step_1:_Create_the_binomial_price_tree
+        internal static decimal CRRTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice,
+            decimal timeToExpiration, decimal riskFreeRate, OptionRight optionType, int steps = 200)
         {
-            var upFactor = CalculateUpFactor(volatility, timeToExpiration, numSteps);
-            var downFactor = 1.0m / upFactor;
-            var upProbability = CalculateUpProbability(riskFreeRate, volatility, timeToExpiration, numSteps);
-            var downProbability = 1.0m - upProbability;
+            var deltaTime = timeToExpiration / steps;
+            var upFactor = DecimalMath(Math.Exp, volatility * DecimalMath(Math.Sqrt, deltaTime));
+            var discount = DecimalMath(Math.Exp, -riskFreeRate * deltaTime);
+            var probUp = (upFactor - discount) / (upFactor * upFactor - 1);
+            var probDown = discount - probUp;
 
-            decimal[,] stockPrices = new decimal[numSteps + 1, numSteps + 1];
-            decimal[,] optionPrices = new decimal[numSteps + 1, numSteps + 1];
+            var values = new decimal[steps + 1];
+            var exerciseValues = new decimal[steps + 1];
 
-            // Calculate stock prices at each node
-            for (int i = 0; i <= numSteps; i++)
+            for (int i = 0; i <= steps; i++)
             {
-                for (int j = 0; j <= i; j++)
+                var nextPrice = spotPrice * Convert.ToDecimal(Math.Pow((double)upFactor, 2 * i - steps));
+                values[i] = PayOff(optionType, nextPrice, strikePrice);
+            }
+
+            for (int period = steps - 1; period >= 0; period--)
+            {
+                for (int i = 0; i <= period; i++)
                 {
-                    stockPrices[j, i] = spotPrice * Convert.ToDecimal(Math.Pow((double)upFactor, i - j) * Math.Pow((double)downFactor, j));
+                    var binomialValue = values[i] * probDown + values[i + 1] * probUp;
+                    var exerciseValue = PayOff(optionType, values[i], strikePrice);
+                    values[i] = Math.Max(binomialValue, exerciseValue);
                 }
             }
 
-            // Calculate option prices at expiration
-            for (int j = 0; j <= numSteps; j++)
-            {
-                optionPrices[j, numSteps] = CalculateOptionPayoff(stockPrices[j, numSteps], strikePrice, optionType);
-            }
-
-            // Calculate option prices at previous nodes using backward induction
-            for (int i = numSteps - 1; i >= 0; i--)
-            {
-                for (int j = 0; j <= i; j++)
-                {
-                    optionPrices[j, i] = (upProbability * optionPrices[j, i + 1] + downProbability * optionPrices[j + 1, i + 1]) * DecimalMath(Math.Exp, -riskFreeRate * timeToExpiration / numSteps);
-                }
-            }
-
-            return optionPrices[0, 0];
+            return values[0];
         }
 
-        private static decimal CalculateUpFactor(decimal volatility, decimal timeToExpiration, int numSteps)
+        private static decimal PayOff(OptionRight optionType, decimal price, decimal strike)
         {
-            return DecimalMath(Math.Exp, volatility * DecimalMath(Math.Sqrt, timeToExpiration / numSteps));
-        }
-
-        private static decimal CalculateUpProbability(decimal riskFreeRate, decimal volatility, decimal timeToExpiration, int numSteps)
-        {
-            var upFactor = CalculateUpFactor(volatility, timeToExpiration, numSteps);
-            var r = DecimalMath(Math.Exp, riskFreeRate * timeToExpiration / numSteps);
-            return (r - (1.0m / upFactor)) / (upFactor - (1.0m / upFactor));
-        }
-
-        private static decimal CalculateOptionPayoff(decimal stockPrice, decimal strikePrice, OptionRight optionType)
-        {
-            if (optionType == OptionRight.Call)
-            {
-                return Math.Max(stockPrice - strikePrice, 0.0m);
-            }
-            else if (optionType == OptionRight.Put)
-            {
-                return Math.Max(strikePrice - stockPrice, 0.0m);
-            }
-            else
-            {
-                throw new ArgumentException("Invalid option right.");
-            }
+            return Math.Max(optionType == OptionRight.Call ? price - strike : strike - price, 0);
         }
 
         private static decimal DecimalMath(Func<double, double> function, decimal input)
@@ -135,17 +108,20 @@ namespace QuantConnect.Indicators
                                                    decimal lowerBound, 
                                                    decimal upperBound,
                                                    decimal tolerance = 1e-5m,
-                                                   int maxIterations = 100)
+                                                   int maxIterations = 20)
         {
-            var a = function(lowerBound) - referenceLevel;
-            var b = function(upperBound) - referenceLevel;
+            var a = lowerBound;
+            var b = upperBound;
+            var fA = function(a) - referenceLevel;
+            var fB = function(b) - referenceLevel;
 
-            if (a * b >= 0m)
+            if (fA * fB >= 0m)
             {
-                throw new Exception("Root is not bracketed");
+                Log.Error("Root is not bracketed, returning suboptimal result");
+                return Math.Abs(fA) > Math.Abs(fB) ? b : a;
             }
 
-            if (Math.Abs(a) < Math.Abs(b))
+            if (Math.Abs(fA) < Math.Abs(fB))
             {
                 var temp = a;
                 a = b;
@@ -154,17 +130,17 @@ namespace QuantConnect.Indicators
 
             var c = a;
             var d = c;
+            var s = decimal.MinValue;
             var fS = decimal.MinValue;
             var mFlag = true;
             var iter = 0;
 
-            while (fS != 0 || Math.Abs(b - a) > tolerance || iter > maxIterations)
+            while (fS != 0 && Math.Abs(b - a) > tolerance && iter < maxIterations)
             {
-                var fA = function(a) - referenceLevel;
-                var fB = function(b) - referenceLevel;
+                fA = function(a) - referenceLevel;
+                fB = function(b) - referenceLevel;
                 var fC = function(c) - referenceLevel;
 
-                decimal s;
                 if (fA != fC && fB != fC)
                 {
                     // inverse quadratic interpolation
@@ -172,15 +148,20 @@ namespace QuantConnect.Indicators
                 }
                 else
                 {
+                    // secant method
                     s = b - fB * (b - a) / (fB - fA);
                 }
 
-                if (s < (3 * a + b) / 4 || s > b ||
+                var bound1 = (3 * a + b) / 4;
+                var minBound = Math.Min(bound1, b);
+                var maxBound = Math.Max(bound1, b);
+                if (s < minBound || s > maxBound ||
                     (mFlag && Math.Abs(s - b) >= Math.Abs(b - c) / 2) ||
                     (!mFlag && Math.Abs(s - b) >= Math.Abs(c - d) / 2) ||
                     (mFlag && Math.Abs(b - c) < tolerance) ||
                     (!mFlag && Math.Abs(c - d) < tolerance))
                 {
+                    // bisection method
                     s = (a + b) / 2;
                     mFlag = true;
                 }
@@ -212,7 +193,7 @@ namespace QuantConnect.Indicators
                 iter++;
             }
 
-            return b;
+            return s;
         }
     }
 }

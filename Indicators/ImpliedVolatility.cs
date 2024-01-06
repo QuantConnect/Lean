@@ -14,7 +14,7 @@
 */
 
 using System;
-using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -26,9 +26,10 @@ namespace QuantConnect.Indicators
     {
         private readonly Symbol _optionSymbol;
         private readonly Symbol _underlyingSymbol;
-        private readonly int _period;
+        private BaseDataConsolidator _consolidator;
         private RateOfChange _roc;
         private decimal _impliedVolatility;
+        private bool _binomial;
 
         /// <summary>
         /// Gets the expiration time of the option
@@ -73,14 +74,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the ImpliedVolatility class
         /// </summary>
-        /// <param name="strike">The strike price of the option</param>
-        /// <param name="expiry">The expiry time of the option</param>
-        /// <param name="right">The option right (call/put) of the option</param>
-        /// <param name="style">The option style (European/American) of the option</param>
+        /// <param name="option">The option to be tracked</param>am>
         /// <param name="riskFreeRate">The risk free rate</param>
         /// <param name="period">The lookback period of historical volatility</param>
-        public ImpliedVolatility(Symbol option, decimal riskFreeRate = 0.05m, int period = 252)
-            : this($"IV({option.Value},{riskFreeRate},{period})", option, riskFreeRate, period)
+        /// <param name="binomial">Should option priced under binomial model?</param>
+        public ImpliedVolatility(Symbol option, decimal riskFreeRate = 0.05m, int period = 252, bool binomial = false)
+            : this($"IV({option.Value},{riskFreeRate},{period},{binomial})", option, riskFreeRate, period, binomial)
         {
         }
 
@@ -91,7 +90,8 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRate">The risk free rate</param>
         /// <param name="period">The lookback period of historical volatility</param>
-        public ImpliedVolatility(string name, Symbol option, decimal riskFreeRate = 0.05m, int period = 252)
+        /// <param name="binomial">Should option priced under binomial model?</param>
+        public ImpliedVolatility(string name, Symbol option, decimal riskFreeRate = 0.05m, int period = 252, bool binomial = false)
             : base(name)
         {
             var sid = option.ID;
@@ -102,8 +102,8 @@ namespace QuantConnect.Indicators
 
             _optionSymbol = option;
             _underlyingSymbol = option.Underlying;
-            _period = period;
-            _roc = new RateOfChange(1);
+            _roc = new(1);
+            _binomial = binomial;
 
             Strike = sid.StrikePrice;
             Expiry = sid.Date;
@@ -121,13 +121,18 @@ namespace QuantConnect.Indicators
             Price = new Identity(name + "_Close");
             UnderlyingPrice = new Identity(name + "_UnderlyingClose");
 
+            _consolidator = new(TimeSpan.FromDays(1));
+            _consolidator.DataConsolidated += (_, bar) => {
+                _roc.Update(bar.EndTime, bar.Price);
+            };
+
             WarmUpPeriod = period;
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => HistoricalVolatility.IsReady && Price.IsReady && UnderlyingPrice.IsReady;
+        public override bool IsReady => HistoricalVolatility.Samples >= 2 && Price.Current.Time == UnderlyingPrice.Current.Time;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -145,12 +150,12 @@ namespace QuantConnect.Indicators
             var inputSymbol = input.Symbol;
             if (inputSymbol == _optionSymbol)
             {
-                Price.Update(input);
+                Price.Update(input.EndTime, input.Close);
             }
             else if (inputSymbol == _underlyingSymbol)
             {
-                _roc.Update(input);
-                UnderlyingPrice.Update(input);
+                _consolidator.Update(input);
+                UnderlyingPrice.Update(input.EndTime, input.Close);
             }
             else
             {
@@ -158,35 +163,34 @@ namespace QuantConnect.Indicators
             }
 
             var time = Price.Current.Time;
-            if (time == UnderlyingPrice.Current.Time)
+            if (time == UnderlyingPrice.Current.Time && Price.IsReady && UnderlyingPrice.IsReady)
             {
                 _impliedVolatility = CalculateIV(time);
             }
-            return input.Value;
+            return _impliedVolatility;
         }
 
-        // Calculate the theoretical price
-        private decimal TheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, OptionRight optionType)
+        // Calculate the theoretical option price
+        private decimal TheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, 
+            OptionRight optionType, bool binomial = false)
         {
-            switch (Style)
+            if (binomial)
             {
-                case OptionStyle.European:
-                    return OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, optionType);
-                case OptionStyle.American:
-                    return OptionGreekIndicatorsHelper.LeisenReimerTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, optionType);
-                default:
-                    throw new Exception("Unsupported Option Style");
+                return OptionGreekIndicatorsHelper.CRRTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, optionType);
             }
+            // IV is calculated under BSM framework in default
+            return OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, optionType);
         }
 
+        // Calculate the IV of the option
         private decimal CalculateIV(DateTime time)
         {
             var price = Price.Current.Value;
             var spotPrice = UnderlyingPrice.Current.Value;
             var timeToExpiration = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
 
-            Func<decimal, decimal> f = (vol) => TheoreticalPrice(vol, spotPrice, Strike, timeToExpiration, RiskFreeRate, Right);
-            return OptionGreekIndicatorsHelper.BrentApproximation(f, price, 0m, 10m);
+            Func<decimal, decimal> f = (vol) => TheoreticalPrice(vol, spotPrice, Strike, timeToExpiration, RiskFreeRate, Right, _binomial);
+            return OptionGreekIndicatorsHelper.BrentApproximation(f, price, 0.01m, 1.0m);
         }
 
         /// <summary>
