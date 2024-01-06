@@ -848,6 +848,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new ImpliedVolatility indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The option symbol whose values we want as an indicator</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <returns>A new ImpliedVolatility indicator for the specified symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public ImpliedVolatility IV(Symbol symbol, decimal riskFreeRate = 0.05m, int period = 252, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(symbol, $"KER({period})", resolution);
+            var iv = new ImpliedVolatility(name, symbol, riskFreeRate, period);
+            RegisterIndicator(symbol, iv, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol.Underlying, iv, ResolveConsolidator(symbol, resolution));
+            return iv;
+        }
+
+        /// <summary>
         /// Creates a new KaufmanAdaptiveMovingAverage indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose KAMA we want</param>
