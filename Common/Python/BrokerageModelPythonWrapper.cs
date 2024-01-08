@@ -19,6 +19,7 @@ using Python.Runtime;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -195,7 +196,12 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.GetBenchmark(securities) as PyObject).GetAndDispose<IBenchmark>();
+                var benchmark = _model.GetBenchmark(securities) as PyObject;
+                if (benchmark.TryConvert<IBenchmark>(out var csharpBenchmark))
+                {
+                    return csharpBenchmark;
+                }
+                return new BenchmarkPythonWrapper(benchmark);
             }
         }
 
@@ -208,7 +214,12 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.GetFeeModel(security) as PyObject).GetAndDispose<IFeeModel>();
+                var feeModel = _model.GetFeeModel(security) as PyObject;
+                if (feeModel.TryConvert<IFeeModel>(out var csharpFeeModel))
+                {
+                    return csharpFeeModel;
+                }
+                return new FeeModelPythonWrapper(feeModel);
             }
         }
 
@@ -221,7 +232,12 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.GetFillModel(security) as PyObject).GetAndDispose<IFillModel>();
+                var fillModel = _model.GetFillModel(security) as PyObject;
+                if (fillModel.TryConvert<IFillModel>(out var csharpFillModel))
+                {
+                    return csharpFillModel;
+                }
+                return new FillModelPythonWrapper(fillModel);
             }
         }
 
@@ -247,7 +263,12 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.GetSettlementModel(security) as PyObject).GetAndDispose<ISettlementModel>();
+                var settlementModel = _model.GetSettlementModel(security) as PyObject;
+                if (settlementModel.TryConvert<ISettlementModel>(out var csharpSettlementModel))
+                {
+                    return csharpSettlementModel;
+                }
+                return new SettlementModelPythonWrapper(settlementModel);
             }
         }
 
@@ -262,8 +283,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.GetSettlementModel(security, accountType)
-                    as PyObject).GetAndDispose<ISettlementModel>();
+                return (_model.GetSettlementModel(security, accountType) as PyObject).GetAndDispose<ISettlementModel>();
             }
         }
 
@@ -276,7 +296,12 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.GetSlippageModel(security) as PyObject).GetAndDispose<ISlippageModel>();
+                var slippageModel = _model.GetSlippageModel(security) as PyObject;
+                if (slippageModel.TryConvert<ISlippageModel>(out var csharpSlippageModel))
+                {
+                    return csharpSlippageModel;
+                }
+                return new SlippageModelPythonWrapper(slippageModel);
             }
         }
 
@@ -305,7 +330,12 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.GetBuyingPowerModel(security) as PyObject).GetAndDispose<IBuyingPowerModel>();
+                var buyingPowerModel = _model.GetBuyingPowerModel(security) as PyObject;
+                if (buyingPowerModel.TryConvert<IBuyingPowerModel>(out var csharpBuyingPowerModel))
+                {
+                    return csharpBuyingPowerModel;
+                }
+                return new BuyingPowerModelPythonWrapper(buyingPowerModel);
             }
         }
 
@@ -320,8 +350,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.GetBuyingPowerModel(security, accountType)
-                    as PyObject).GetAndDispose<IBuyingPowerModel>();
+                return (_model.GetBuyingPowerModel(security, accountType) as PyObject).GetAndDispose<IBuyingPowerModel>();
             }
         }
 
@@ -333,7 +362,12 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.GetShortableProvider(security) as PyObject).GetAndDispose<IShortableProvider>();
+                var shortableProvider = _model.GetShortableProvider(security) as PyObject;
+                if (shortableProvider.TryConvert<IShortableProvider>(out var csharpShortableProvider))
+                {
+                    return csharpShortableProvider;
+                }
+                return new ShortableProviderPythonWrapper(shortableProvider);
             }
         }
 
@@ -358,7 +392,12 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.GetMarginInterestRateModel(security) as PyObject).GetAndDispose<IMarginInterestRateModel>();
+                var marginInterestRateModel = _model.GetMarginInterestRateModel(security) as PyObject;
+                if (marginInterestRateModel.TryConvert<IMarginInterestRateModel>(out var csharpBuyingPowerModel))
+                {
+                    return csharpBuyingPowerModel;
+                }
+                return new MarginInterestRateModelPythonWrapper(marginInterestRateModel);
             }
         }
     }
