@@ -237,7 +237,7 @@ namespace QuantConnect.Python
                 {
                     return csharpFillModel;
                 }
-                return (new FillModelPythonWrapper(fillModel));
+                return new FillModelPythonWrapper(fillModel);
             }
         }
 

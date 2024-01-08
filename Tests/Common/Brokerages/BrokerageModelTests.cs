@@ -248,7 +248,9 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var fillModel = model.GetFillModel(security);
                 Assert.AreEqual(typeof(FillModelPythonWrapper), fillModel.GetType());
-                Assert.Throws<PythonException>(() => ((dynamic)fillModel).MarketFill(security, new Mock<MarketOrder>().Object));
+                var ex = Assert.Throws<PythonException>(() => ((dynamic)fillModel).MarketFill(security, new Mock<MarketOrder>().Object));
+                Assert.AreEqual("ValueError", ex.Type.Name);
+                Assert.AreEqual("Pepe", ex.Message);
             }
         }
 
@@ -305,7 +307,9 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var benchmarkModel = model.GetBenchmark(securityManager);
                 Assert.AreEqual(typeof(BenchmarkPythonWrapper), benchmarkModel.GetType());
-                Assert.Throws<PythonException>(() => ((dynamic)benchmarkModel).Evaluate(DateTime.Now));
+                var ex = Assert.Throws<PythonException>(() => ((dynamic)benchmarkModel).Evaluate(DateTime.Now));
+                Assert.AreEqual("ValueError", ex.Type.Name);
+                Assert.AreEqual("Pepe", ex.Message);
             }
         }
 
@@ -347,7 +351,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
 from AlgorithmImports import *
 
 class CustomFeeModel:
-    def GetOrderFee(self, parameters):
+    def GetOrderFee(self, security, order):
         raise ValueError(""Pepe"")
 
 class CustomBrokerageModel(DefaultBrokerageModel):
@@ -360,7 +364,9 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 Assert.AreEqual(typeof(FeeModelPythonWrapper), feeModel.GetType());
                 var order = new Mock<Order>();
                 var orderParameters = new Mock<OrderFeeParameters>(security, order.Object);
-                Assert.Throws<PythonException>(() => ((dynamic)feeModel).GetOrderFee(orderParameters.Object));
+                var ex = Assert.Throws<PythonException>(() => ((dynamic)feeModel).GetOrderFee(orderParameters.Object));
+                Assert.AreEqual("ValueError", ex.Type.Name);
+                Assert.AreEqual("Pepe", ex.Message);
             }
         }
 
@@ -416,9 +422,13 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 algorithm.SetDateTime(DateTime.Now);
                 var portfolio = algorithm.Portfolio;
                 var appyFundsParameters = new ApplyFundsSettlementModelParameters(portfolio, security, DateTime.Now, new CashAmount(1000, Currencies.USD), null);
-                Assert.Throws<PythonException>(() => ((dynamic)settlementModel).ApplyFunds(appyFundsParameters));
+                var ex = Assert.Throws<PythonException>(() => ((dynamic)settlementModel).ApplyFunds(appyFundsParameters));
+                Assert.AreEqual("ValueError", ex.Type.Name);
+                Assert.AreEqual("Pepe", ex.Message);
                 var scanParameters = new ScanSettlementModelParameters(portfolio, security, DateTime.UtcNow);
-                Assert.Throws<PythonException>(() => ((dynamic)settlementModel).Scan(scanParameters));
+                ex = Assert.Throws<PythonException>(() => ((dynamic)settlementModel).Scan(scanParameters));
+                Assert.AreEqual("ValueError", ex.Type.Name);
+                Assert.AreEqual("Pepe2", ex.Message);
             }
         }
 
@@ -470,7 +480,9 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var slippageModel = model.GetSlippageModel(security);
                 Assert.AreEqual(typeof(SlippageModelPythonWrapper), slippageModel.GetType());
                 var order = new Mock<Order>();
-                Assert.Throws<PythonException>(() => ((dynamic)slippageModel).GetSlippageApproximation(security, order.Object));
+                var ex = Assert.Throws<PythonException>(() => ((dynamic)slippageModel).GetSlippageApproximation(security, order.Object));
+                Assert.AreEqual("ValueError", ex.Type.Name);
+                Assert.AreEqual("Pepe", ex.Message);
             }
         }
 
@@ -517,7 +529,9 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var buyingPowerModel = model.GetBuyingPowerModel(security);
                 Assert.AreEqual(typeof(BuyingPowerModelPythonWrapper), buyingPowerModel.GetType());
-                Assert.Throws<PythonException>(() => ((dynamic)buyingPowerModel).GetLeverage(security));
+                var ex = Assert.Throws<PythonException>(() => ((dynamic)buyingPowerModel).GetLeverage(security));
+                Assert.AreEqual("ValueError", ex.Type.Name);
+                Assert.AreEqual("Pepe", ex.Message);
             }
         }
 
@@ -563,7 +577,9 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var shortableProvider = model.GetShortableProvider(security);
                 Assert.AreEqual(typeof(ShortableProviderPythonWrapper), shortableProvider.GetType());
-                Assert.Throws<PythonException>(() => ((dynamic)shortableProvider).ShortableQuantity(security.Symbol, DateTime.Now));
+                var ex = Assert.Throws<PythonException>(() => ((dynamic)shortableProvider).ShortableQuantity(security.Symbol, DateTime.Now));
+                Assert.AreEqual("ValueError", ex.Type.Name);
+                Assert.AreEqual("Pepe", ex.Message);
             }
         }
 
@@ -610,7 +626,9 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var marginInterestRateModel = model.GetMarginInterestRateModel(security);
                 Assert.AreEqual(typeof(MarginInterestRateModelPythonWrapper), marginInterestRateModel.GetType());
                 var parameters = new MarginInterestRateParameters(security, DateTime.Now);
-                Assert.Throws<PythonException>(() => ((dynamic)marginInterestRateModel).ApplyMarginInterestRate(parameters));
+                var ex = Assert.Throws<PythonException>(() => ((dynamic)marginInterestRateModel).ApplyMarginInterestRate(parameters));
+                Assert.AreEqual("ValueError", ex.Type.Name);
+                Assert.AreEqual("Pepe", ex.Message);
             }
         }
 
