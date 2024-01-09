@@ -47,7 +47,7 @@ namespace QuantConnect.Securities
         /// <param name="securitiesDefinitionKey">Location to read the securities definition data from</param>
         private SecurityDefinitionSymbolResolver(IDataProvider dataProvider = null, string securitiesDefinitionKey = null)
         {
-            _securitiesDefinitionKey = securitiesDefinitionKey ?? Path.Combine(Globals.DataFolder, "symbol-properties", "security-database.csv");
+            _securitiesDefinitionKey = securitiesDefinitionKey ?? Path.Combine(Globals.GetDataFolderPath("symbol-properties"), "security-database.csv");
 
             _dataProvider = dataProvider ??
                 Composer.Instance.GetExportedValueByTypeName<IDataProvider>(
