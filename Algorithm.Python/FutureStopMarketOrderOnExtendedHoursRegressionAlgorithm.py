@@ -30,30 +30,19 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 12)
 
         # Add mini SP500 future with extended Market hours flag
-        self.SP500EMini = self.AddFuture(
-            Futures.Indices.SP500EMini, Resolution.Minute, extendedMarketHours=True
-        )
+        self.SP500EMini = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, extendedMarketHours=True)
 
         # Init new schedule event with params: everyDay, 19:00:00 PM, what should to do
-        self.Schedule.On(
-            self.DateRules.EveryDay(),
-            self.TimeRules.At(19, 0),
-            self.MakeMarketAndStopMarketOrder,
-        )
+        self.Schedule.On(self.DateRules.EveryDay(),self.TimeRules.At(19, 0),self.MakeMarketAndStopMarketOrder)
 
     # This method is opened 2 new orders by scheduler
     def MakeMarketAndStopMarketOrder(self):
         self.MarketOrder(self.SP500EMini.Mapped, 1)
-        self.stopMarketTicket = self.StopMarketOrder(
-            self.SP500EMini.Mapped, -1, self.SP500EMini.Price * 0.999
-        )
+        self.stopMarketTicket = self.StopMarketOrder(self.SP500EMini.Mapped, -1, self.SP500EMini.Price * 0.999)
 
     # New Data Event handler receiving all subscription data in a single event
     def OnData(self, slice):
-        if (
-            self.stopMarketTicket == None
-            or self.stopMarketTicket.Status != OrderStatus.Submitted
-        ):
+        if (self.stopMarketTicket == None or self.stopMarketTicket.Status != OrderStatus.Submitted):
             return None
 
         self.stopPrice = self.stopMarketTicket.Get(OrderField.StopPrice)
@@ -64,19 +53,13 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
 
     # An order fill update the resulting information is passed to this method.
     def OnOrderEvent(self, orderEvent):
-        if orderEvent is not None and orderEvent.Status == OrderStatus.Filled:
+        if orderEvent is None or not isinstance(self.Transactions.GetOrderById(orderEvent.Id), StopMarketOrder):
+            return None
+
+        if orderEvent.Status == OrderStatus.Filled:
             # Get Exchange Hours for specific security
-            exchangeHours = self.MarketHoursDatabase.GetExchangeHours(
-                self.SP500EMini.SubscriptionDataConfig
-            )
+            exchangeHours = self.MarketHoursDatabase.GetExchangeHours(self.SP500EMini.SubscriptionDataConfig)
 
             # Validate, Exchange is opened explicitly
-            if (
-                exchangeHours.IsOpen(
-                    orderEvent.UtcTime, self.SP500EMini.IsExtendedMarketHours
-                )
-                == False
-            ):
-                raise Exception(
-                    "The Exchange hours was closed, checko 'extendedMarketHours' flag in Initialize() when added new security(ies)"
-                )
+            if (not exchangeHours.IsOpen(orderEvent.UtcTime, self.SP500EMini.IsExtendedMarketHours)):
+                raise Exception("The Exchange hours was closed, checko 'extendedMarketHours' flag in Initialize() when added new security(ies)")
