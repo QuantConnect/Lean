@@ -3,13 +3,13 @@
 
 ### Introduction ###
 
-From the beginning LEAN strived to use an open, human readable data format - independent of any specific database or file format. From this core philosophy we built LEAN to read its financial data from flat files on disk. Data compression is done in zip format; and all individual files are CSV or JSON.
+From the beginning, LEAN has strived to use an open, human-readable data format - independent of any specific database or file format. From this core philosophy, we built LEAN to read its financial data from flat files on disk. Data compression is done in zip format, and all individual files are CSV or JSON.
 
-When there is no activity for a security, the price is omitted to the file. Only new ticks, and price changes are recorded.
+When there is no activity for a security, the price is omitted from the file. Only new ticks and price changes are recorded.
 
 ### File Data Format
 
-Although we strive to make all data formats identical it is often not possible. Below are links to dedicated documentation on the file format of the data in each asset type:
+Although we strive to make all data formats identical, it is often impossible. Below are links to dedicated documentation on the file format of the data in each asset type:
 
 [Equity](https://www.quantconnect.com/data/tree/equity) | [Forex](https://www.quantconnect.com/data/tree/forex) | [Options](https://www.quantconnect.com/data/tree/option) | [Futures](https://www.quantconnect.com/data/tree/future) | [Crypto](https://www.quantconnect.com/data/tree/crypto)
 
@@ -26,7 +26,7 @@ The `marketName` value is used to separate different tradable assets with the sa
 
 ### Core Data Types
 
-LEAN has a few core data types which are represented in all the asset classes we support. Below are links to their implementation in LEAN.
+LEAN has a few core data types represented in all the asset classes we support. Below are links to their implementation in LEAN.
 
  - [TradeBar](https://github.com/QuantConnect/Lean/blob/master/Common/Data/Market/TradeBar.cs#L182) - TradeBar represents trade ticks of assets consolidated for a period. TradeBar file format is slightly different for high resolution (second, minute) and low resolution (daily, hour).
 
@@ -37,8 +37,8 @@ LEAN has a few core data types which are represented in all the asset classes we
 
 ### Data Readers
 
-All data is parsed from disk via `Reader()` methods. The Reader takes a single line of the file and converts it the appropriate type. i.e. `TradeBar.Reader()` method is a factory which returns TradeBar objects. When implementing custom data Readers are used 
+All data is parsed from disk via `Reader()` methods. The Reader takes a single line of the file and converts it the appropriate type. i.e. `TradeBar.Reader()` method is a factory which returns TradeBar objects. When implementing custom data, Readers are used 
 
 
 ### Other Data Formats ###
-Theoretically LEAN can accept data in any format (database, API or flatfile). However practically we currently have reader implementations written for a flat file system.
+Theoretically LEAN can accept data in any format (database, API or flatfile). However, in practice, we currently have reader implementations written for a flat file system.
