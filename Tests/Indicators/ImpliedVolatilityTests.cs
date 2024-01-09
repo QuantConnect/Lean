@@ -145,7 +145,7 @@ namespace QuantConnect.Tests.Indicators
         {
             // Under CRR framework
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new ImpliedVolatility(_symbol, 0.04m, binomial: true);
+            var indicator = new ImpliedVolatility(_symbol, 0.04m, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein);
 
             var optionTradeBar = new TradeBar(_reference, _symbol, price, price, price, price, 0m);
             var spotTradeBar = new TradeBar(_reference, _underlying, spotPrice, spotPrice, spotPrice, spotPrice, 0m);

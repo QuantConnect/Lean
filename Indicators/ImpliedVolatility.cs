@@ -29,7 +29,7 @@ namespace QuantConnect.Indicators
         private BaseDataConsolidator _consolidator;
         private RateOfChange _roc;
         private decimal _impliedVolatility;
-        private bool _binomial;
+        private OptionPricingModelType _optionModel;
 
         /// <summary>
         /// Gets the expiration time of the option
@@ -77,9 +77,10 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>am>
         /// <param name="riskFreeRate">The risk free rate</param>
         /// <param name="period">The lookback period of historical volatility</param>
-        /// <param name="binomial">Should option priced under binomial model?</param>
-        public ImpliedVolatility(Symbol option, decimal riskFreeRate = 0.05m, int period = 252, bool binomial = false)
-            : this($"IV({option.Value},{riskFreeRate},{period},{binomial})", option, riskFreeRate, period, binomial)
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        public ImpliedVolatility(Symbol option, decimal riskFreeRate = 0.05m, int period = 252,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
+            : this($"IV({option.Value},{riskFreeRate},{period},{optionModel})", option, riskFreeRate, period, optionModel)
         {
         }
 
@@ -90,8 +91,9 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRate">The risk free rate</param>
         /// <param name="period">The lookback period of historical volatility</param>
-        /// <param name="binomial">Should option priced under binomial model?</param>
-        public ImpliedVolatility(string name, Symbol option, decimal riskFreeRate = 0.05m, int period = 252, bool binomial = false)
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        public ImpliedVolatility(string name, Symbol option, decimal riskFreeRate = 0.05m, int period = 252, 
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
             : base(name)
         {
             var sid = option.ID;
@@ -103,7 +105,7 @@ namespace QuantConnect.Indicators
             _optionSymbol = option;
             _underlyingSymbol = option.Underlying;
             _roc = new(1);
-            _binomial = binomial;
+            _optionModel = optionModel;
 
             Strike = sid.StrikePrice;
             Expiry = sid.Date;
@@ -172,14 +174,16 @@ namespace QuantConnect.Indicators
 
         // Calculate the theoretical option price
         private decimal TheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, 
-            OptionRight optionType, bool binomial = false)
+            OptionRight optionType, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
         {
-            if (binomial)
+            switch (optionModel)
             {
-                return OptionGreekIndicatorsHelper.CRRTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, optionType);
+                case OptionPricingModelType.BinomialCoxRossRubinstein:
+                    return OptionGreekIndicatorsHelper.CRRTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, optionType);
+                case OptionPricingModelType.BlackScholes:
+                default:
+                    return OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, optionType);
             }
-            // IV is calculated under BSM framework in default
-            return OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, optionType);
         }
 
         // Calculate the IV of the option
@@ -189,7 +193,7 @@ namespace QuantConnect.Indicators
             var spotPrice = UnderlyingPrice.Current.Value;
             var timeToExpiration = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
 
-            Func<decimal, decimal> f = (vol) => TheoreticalPrice(vol, spotPrice, Strike, timeToExpiration, RiskFreeRate, Right, _binomial);
+            Func<decimal, decimal> f = (vol) => TheoreticalPrice(vol, spotPrice, Strike, timeToExpiration, RiskFreeRate, Right, _optionModel);
             return OptionGreekIndicatorsHelper.BrentApproximation(f, price, 0.01m, 1.0m);
         }
 
