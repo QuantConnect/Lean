@@ -27,7 +27,6 @@ class CustomSettlementModelRegressionAlgorithm(QCAlgorithm):
 
     def SetSettlementModel(self, security):
         self.SetBrokerageModel(CustomBrokerageModelWithCustomSettlementModel())
-        self.updateRequestSubmitted = False
 
     def OnData(self, slice):
         if self.Portfolio.CashBook[Currencies.USD].Amount == 10000:
