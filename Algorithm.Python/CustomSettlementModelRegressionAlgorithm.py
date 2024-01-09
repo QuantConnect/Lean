@@ -23,6 +23,9 @@ class CustomSettlementModelRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)
         self.SetCash(10000)
         self.spy = self.AddEquity("SPY", Resolution.Daily)
+        self.SetSettlementModel(self.spy)
+
+    def SetSettlementModel(self, security):
         self.SetBrokerageModel(CustomBrokerageModelWithCustomSettlementModel())
         self.updateRequestSubmitted = False
 
@@ -34,15 +37,20 @@ class CustomSettlementModelRegressionAlgorithm(QCAlgorithm):
     def OnEndOfAlgorithm(self):
         if self.Portfolio.CashBook[Currencies.USD].Amount != 10101:
             raise Exception(f"It was expected to have 10101 USD in Portfolio, but was {self.Portfolio.CashBook[Currencies.USD].Amount}")
+        parameters = ScanSettlementModelParameters(self.Portfolio, self.spy, datetime(2013, 10, 6))
+        self.spy.SettlementModel.Scan(parameters)
+        if self.Portfolio.CashBook[Currencies.USD].Amount != 10000:
+            raise Exception(f"It was expected to have 10000 USD in Portfolio, but was {self.Portfolio.CashBook[Currencies.USD].Amount}")
 
 class CustomSettlementModel:
     def ApplyFunds(self, parameters):
-        currency = parameters.CashAmount.Currency;
-        amount = parameters.CashAmount.Amount
-        parameters.Portfolio.CashBook[currency].AddAmount(amount)
+        self.currency = parameters.CashAmount.Currency;
+        self.amount = parameters.CashAmount.Amount
+        parameters.Portfolio.CashBook[self.currency].AddAmount(self.amount)
 
     def Scan(self, parameters):
-        pass
+        if parameters.UtcTime == datetime(2013, 10, 6):
+            parameters.Portfolio.CashBook[self.currency].AddAmount(-self.amount)
 
 class CustomBrokerageModelWithCustomSettlementModel(CustomBrokerageModel):
     def GetSettlementModel(self, security):
