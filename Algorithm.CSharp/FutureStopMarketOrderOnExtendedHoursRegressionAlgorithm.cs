@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -20,6 +21,8 @@ using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using QuantConnect.Securities.Future;
+using System.Security.AccessControl;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -31,17 +34,18 @@ namespace QuantConnect.Algorithm.CSharp
     public class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private OrderTicket _ticket;
+        private Future _SP500EMini;
         public override void Initialize()
         {
             SetStartDate(2013, 10, 6);
             SetEndDate(2013, 10, 12);
 
-            var future = AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, extendedMarketHours: true);
+            _SP500EMini = AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, extendedMarketHours: true);
 
             Schedule.On(DateRules.EveryDay(), TimeRules.At(19, 0), () =>
             {
-                MarketOrder(future.Mapped, 1);
-                _ticket = StopMarketOrder(future.Mapped, -1, future.Price * 0.999m);
+                MarketOrder(_SP500EMini.Mapped, 1);
+                _ticket = StopMarketOrder(_SP500EMini.Mapped, -1, _SP500EMini.Price * 0.999m);
             });
         }
 
@@ -71,7 +75,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="orderEvent">Order event details containing details of the events</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Log($"orderEvent: {orderEvent}");
+            if (orderEvent != null && orderEvent.Status == OrderStatus.Filled)
+            {
+                var time = MarketHoursDatabase.GetExchangeHours(_SP500EMini.SubscriptionDataConfig);
+
+                if (!time.IsOpen(orderEvent.UtcTime, _SP500EMini.IsExtendedMarketHours))
+                {
+                    throw new Exception($"The Exchange hours was closed, checko 'extendedMarketHours' flag in {nameof(Initialize)} when added new security(ies).");
+                }
+            }
         }
 
         /// <summary>
