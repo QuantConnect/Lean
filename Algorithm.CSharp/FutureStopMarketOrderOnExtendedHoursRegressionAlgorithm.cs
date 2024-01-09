@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -43,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             Schedule.On(DateRules.EveryDay(), TimeRules.At(19, 0), () =>
             {
                 MarketOrder(_SP500EMini.Mapped, 1);
-                _ticket = StopMarketOrder(_SP500EMini.Mapped, -1, _SP500EMini.Price * 0.999m);
+                _ticket = StopMarketOrder(_SP500EMini.Mapped, -1, _SP500EMini.Price * 1.1m);
             });
         }
 
@@ -73,7 +74,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="orderEvent">Order event details containing details of the events</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (orderEvent == null || !(Transactions.GetOrderById(orderEvent.Id) is StopMarketOrder))
+            if (orderEvent == null)
+            {
+                return;
+            }
+
+            if (Transactions.GetOrderById(orderEvent.OrderId).Type != OrderType.StopMarket)
             {
                 return;
             }
@@ -87,6 +93,14 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"The Exchange hours was closed, checko 'extendedMarketHours' flag in {nameof(Initialize)} when added new security(ies).");
                 }
             }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            var stopMarketOrders = Transactions.GetOrders(x => x is StopMarketOrder);
+
+            if (stopMarketOrders.Any(x => x.Status != OrderStatus.Filled))
+                throw new Exception("The Algorithms was not handled any StopMarketOrders");
         }
 
         /// <summary>
@@ -114,31 +128,31 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "5"},
+            {"Total Trades", "10"},
             {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "15368.360%"},
-            {"Drawdown", "3.900%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "8.204%"},
-            {"Sharpe Ratio", "120.528"},
-            {"Sortino Ratio", "838.746"},
-            {"Probabilistic Sharpe Ratio", "93.657%"},
-            {"Loss Rate", "0%"},
+            {"Average Loss", "-0.02%"},
+            {"Compounding Annual Return", "-6.736%"},
+            {"Drawdown", "0.100%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-0.109%"},
+            {"Sharpe Ratio", "-22.29"},
+            {"Sortino Ratio", "-26.651"},
+            {"Probabilistic Sharpe Ratio", "0.016%"},
+            {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "60.47"},
-            {"Beta", "2.335"},
-            {"Annual Standard Deviation", "0.512"},
-            {"Annual Variance", "0.262"},
-            {"Information Ratio", "199.075"},
-            {"Tracking Error", "0.307"},
-            {"Treynor Ratio", "26.434"},
-            {"Total Fees", "$10.75"},
-            {"Estimated Strategy Capacity", "$50000000.00"},
+            {"Alpha", "-0.05"},
+            {"Beta", "-0.006"},
+            {"Annual Standard Deviation", "0.002"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-2.76"},
+            {"Tracking Error", "0.215"},
+            {"Treynor Ratio", "8.829"},
+            {"Total Fees", "$21.50"},
+            {"Estimated Strategy Capacity", "$3400000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "69.32%"},
-            {"OrderListHash", "eb1e11d1c499d08a6f2f02b17d241e5d"}
+            {"Portfolio Turnover", "138.95%"},
+            {"OrderListHash", "c85997dd5b7d9acda46ac9d11dd1a039"}
         };
     }
 }

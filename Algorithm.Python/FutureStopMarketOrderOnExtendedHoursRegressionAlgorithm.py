@@ -18,7 +18,6 @@ from QuantConnect import Orders
 # This example demonstrates how to create future 'stopMarketOrder' in extended Market Hours time
 # </summary>
 
-
 class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
     # Keep new created instance of stopMarketOrder
     stopMarketTicket = None
@@ -38,7 +37,7 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
     # This method is opened 2 new orders by scheduler
     def MakeMarketAndStopMarketOrder(self):
         self.MarketOrder(self.SP500EMini.Mapped, 1)
-        self.stopMarketTicket = self.StopMarketOrder(self.SP500EMini.Mapped, -1, self.SP500EMini.Price * 0.999)
+        self.stopMarketTicket = self.StopMarketOrder(self.SP500EMini.Mapped, -1, self.SP500EMini.Price * 1.1)
 
     # New Data Event handler receiving all subscription data in a single event
     def OnData(self, slice):
@@ -53,7 +52,10 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
 
     # An order fill update the resulting information is passed to this method.
     def OnOrderEvent(self, orderEvent):
-        if orderEvent is None or not isinstance(self.Transactions.GetOrderById(orderEvent.Id), StopMarketOrder):
+        if orderEvent is None:
+            return None
+
+        if self.Transactions.GetOrderById(orderEvent.OrderId).Type is not OrderType.StopMarket:
             return None
 
         if orderEvent.Status == OrderStatus.Filled:
@@ -63,3 +65,10 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
             # Validate, Exchange is opened explicitly
             if (not exchangeHours.IsOpen(orderEvent.UtcTime, self.SP500EMini.IsExtendedMarketHours)):
                 raise Exception("The Exchange hours was closed, checko 'extendedMarketHours' flag in Initialize() when added new security(ies)")
+
+    def OnEndOfAlgorithm(self):
+        self.stopMarketOrders = self.Transactions.GetOrders(lambda o: o.Type is OrderType.StopMarket)
+
+        for o in self.stopMarketOrders:
+            if o.Status != OrderStatus.Filled:
+                raise Exception("The Algorithms was not handled any StopMarketOrders")
