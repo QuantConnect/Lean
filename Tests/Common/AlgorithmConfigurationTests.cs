@@ -50,6 +50,9 @@ namespace QuantConnect.Tests.Common
         public void JsonSerialization()
         {
             var algorithm = new QCAlgorithm();
+            algorithm.SetName("Backtest name");
+            algorithm.AddTag("tag1");
+            algorithm.AddTag("tag2");
             algorithm.SetAccountCurrency(Currencies.GBP);
             algorithm.SetBrokerageModel(BrokerageName.Coinbase, AccountType.Cash);
             algorithm.SetParameters(new Dictionary<string, string> { { "a", "A" }, { "b", "B" } });
@@ -63,7 +66,7 @@ namespace QuantConnect.Tests.Common
 
             var serialized = JsonConvert.SerializeObject(algorithmConfiguration);
 
-            Assert.AreEqual($"{{\"AccountCurrency\":\"GBP\",\"Brokerage\":32,\"AccountType\":1,\"Parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"OutOfSampleMaxEndDate\":\"2023-01-01T00:00:00\",\"OutOfSampleDays\":30,\"StartDate\":\"1998-01-01 00:00:00\",\"EndDate\":\"{algorithm.EndDate.ToString(DateFormat.UI)}\",\"TradingDaysPerYear\":252}}", serialized);
+            Assert.AreEqual($"{{\"Name\":\"Backtest name\",\"Tags\":[\"tag1\",\"tag2\"],\"AccountCurrency\":\"GBP\",\"Brokerage\":32,\"AccountType\":1,\"Parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"OutOfSampleMaxEndDate\":\"2023-01-01T00:00:00\",\"OutOfSampleDays\":30,\"StartDate\":\"1998-01-01 00:00:00\",\"EndDate\":\"{algorithm.EndDate.ToString(DateFormat.UI)}\",\"TradingDaysPerYear\":252}}", serialized);
         }
 
         private static TestCaseData[] AlgorithmConfigurationTestCases => new[]
