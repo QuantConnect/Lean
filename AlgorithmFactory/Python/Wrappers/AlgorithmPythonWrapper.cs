@@ -1160,5 +1160,14 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         {
             _baseAlgorithm.AddTag(tag);
         }
+
+        /// <summary>
+        /// Sets the tags for the algorithm
+        /// </summary>
+        /// <param name="tags">The tags</param>
+        public void SetTags(List<string> tags)
+        {
+            _baseAlgorithm.SetTags(tags);
+        }
     }
 }

@@ -876,5 +876,11 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="tag">The tag to add</param>
         void AddTag(string tag);
+
+        /// <summary>
+        /// Sets the tags for the algorithm
+        /// </summary>
+        /// <param name="tags">The tags</param>
+        void SetTags(List<string> tags);
     }
 }

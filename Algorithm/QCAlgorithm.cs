@@ -498,6 +498,7 @@ namespace QuantConnect.Algorithm
         public List<string> Tags
         {
             get;
+            private set;
         }
 
         /// <summary>
@@ -1454,6 +1455,15 @@ namespace QuantConnect.Algorithm
             {
                 Tags.Add(tag);
             }
+        }
+
+        /// <summary>
+        /// Sets the tags for the algorithm
+        /// </summary>
+        /// <param name="tags">The tags</param>
+        public void SetTags(List<string> tags)
+        {
+            Tags = tags.ToList();
         }
 
         /// <summary>
