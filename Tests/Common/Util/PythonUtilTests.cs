@@ -194,6 +194,22 @@ def Test2(securityType: SecurityType) -> None:
    at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper.OnData(Slice slice) in /home/jhonathan/QuantConnect/Lean/AlgorithmFactory/Python/Wrappers/AlgorithmPythonWrapper.cs:line 587
    at QuantConnect.Lean.Engine.AlgorithmManager.Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token) in /home/jhonathan/QuantConnect/Lean/Engine/AlgorithmManager.cs:line 523",
             0)]
+        [TestCase(@"
+  at OnData
+    raise ValueError(""""ASD"""")
+   at Python.Runtime.PythonException.ThrowLastAsClrException() at src\runtime\PythonException.cs:line 52
+   at Python.Runtime.PyObject.Invoke(PyTuple args in BasicTemplateAlgorithm.py: line 43
+",
+            @"  File ""D:\QuantConnect/MyLean/Lean/Algorithm.Python\BasicTemplateAlgorithm.py"", line 43, in OnData
+    raise ValueError(""""ASD"""")
+   at Python.Runtime.PythonException.ThrowLastAsClrException() in D:\QuantConnect\MyLean\pythonnet\src\runtime\PythonException.cs:line 52
+   at Python.Runtime.PyObject.Invoke(PyTuple args, PyDict kw) in D:\QuantConnect\MyLean\pythonnet\src\runtime\PythonTypes\PyObject.cs:line 837
+   at Python.Runtime.PyObject.TryInvoke(InvokeBinder binder, Object[] args, Object& result) in D:\QuantConnect\MyLean\pythonnet\src\runtime\PythonTypes\PyObject.cs:line 1320
+   at CallSite.Target(Closure , CallSite , Object , PythonSlice )
+   at System.Dynamic.UpdateDelegates.UpdateAndExecuteVoid2[T0,T1](CallSite site, T0 arg0, T1 arg1)
+   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper.OnData(Slice slice) in D:\QuantConnect\MyLean\Lean\AlgorithmFactory\Python\Wrappers\AlgorithmPythonWrapper.cs:line 693
+   at QuantConnect.Lean.Engine.AlgorithmManager.Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationToken token) in D:\QuantConnect\MyLean\Lean\Engine\AlgorithmManager.cs:line 526",
+            0)]
         public void ParsesPythonExceptionStackTrace(string expected, string original, int shift)
         {
             var originalShiftValue = PythonUtil.ExceptionLineShift;
