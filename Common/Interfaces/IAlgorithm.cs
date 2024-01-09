@@ -195,11 +195,18 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Public name for the algorithm.
         /// </summary>
-        /// <remarks>Not currently used but preserved for API integrity</remarks>
         string Name
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// A list of tags associated with the algorithm or the backtest, useful for categorization
+        /// </summary>
+        List<string> Tags
+        {
+            get;
         }
 
         /// <summary>
@@ -857,5 +864,17 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="statisticsService">The statistics service instance</param>
         void SetStatisticsService(IStatisticsService statisticsService);
+
+        /// <summary>
+        /// Sets name to the currently running backtest
+        /// </summary>
+        /// <param name="name">The name for the backtest</param>
+        void SetName(string name);
+
+        /// <summary>
+        /// Adds a tag to the algorithm
+        /// </summary>
+        /// <param name="tag">The tag to add</param>
+        void AddTag(string tag);
     }
 }

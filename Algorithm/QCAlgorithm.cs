@@ -84,6 +84,7 @@ namespace QuantConnect.Algorithm
         private readonly TimeKeeper _timeKeeper;
         private LocalTimeKeeper _localTimeKeeper;
 
+        private string _name;
         private DateTime _start;
         private DateTime _startDate;   //Default start and end dates.
         private DateTime _endDate;     //Default end to yesterday
@@ -136,6 +137,7 @@ namespace QuantConnect.Algorithm
         public QCAlgorithm()
         {
             Name = GetType().Name;
+            Tags = new List<string>();
             Status = AlgorithmStatus.Running;
 
             // AlgorithmManager will flip this when we're caught up with realtime
@@ -472,8 +474,30 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HandlingData)]
         public string Name
         {
+            get
+            {
+                return _name;
+            }
+            set
+            {
+                if (_locked)
+                {
+                    throw new InvalidOperationException("Cannot algorithm name after it is initialized.");
+                }
+
+                if (!string.IsNullOrEmpty(value))
+                {
+                    _name = value.Length <= 200 ? value : value.Substring(0, 200);
+                }
+            }
+        }
+
+        /// <summary>
+        /// A list of tags associated with the algorithm or the backtest, useful for categorization
+        /// </summary>
+        public List<string> Tags
+        {
             get;
-            set;
         }
 
         /// <summary>
@@ -1409,6 +1433,27 @@ namespace QuantConnect.Algorithm
         {
             get;
             private set;
+        }
+
+        /// <summary>
+        /// Sets name to the currently running backtest
+        /// </summary>
+        /// <param name="name">The name for the backtest</param>
+        public void SetName(string name)
+        {
+            Name = name;
+        }
+
+        /// <summary>
+        /// Adds a tag to the algorithm
+        /// </summary>
+        /// <param name="tag">The tag to add</param>
+        public void AddTag(string tag)
+        {
+            if (!string.IsNullOrEmpty(tag))
+            {
+                Tags.Add(tag);
+            }
         }
 
         /// <summary>
