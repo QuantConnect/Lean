@@ -721,6 +721,24 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Sets the settlement model
+        /// </summary>
+        /// <param name="settlementModel"> Model that represents a settlement model</param>
+        public void SetSettlementModel(ISettlementModel settlementModel)
+        {
+            SettlementModel = settlementModel;
+        }
+
+        /// <summary>
+        /// Sets the settlement model
+        /// </summary>
+        /// <param name="settlementModel">Model that represents a settlement model</param>
+        public void SetSettlementModel(PyObject settlementModel)
+        {
+            SettlementModel = new SettlementModelPythonWrapper(settlementModel);
+        }
+
+        /// <summary>
         /// Sets the slippage model
         /// </summary>
         /// <param name="slippageModel">Model that represents a slippage model</param>
