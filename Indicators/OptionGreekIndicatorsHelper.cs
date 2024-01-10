@@ -68,7 +68,7 @@ namespace QuantConnect.Indicators
             var deltaTime = timeToExpiration / steps;
             var upFactor = DecimalMath(Math.Exp, volatility * DecimalMath(Math.Sqrt, deltaTime));
             var discount = DecimalMath(Math.Exp, -riskFreeRate * deltaTime);
-            var probUp = (upFactor - discount) / (upFactor * upFactor - 1);
+            var probUp = upFactor * (upFactor - discount) / (upFactor * upFactor - 1);
             var probDown = discount - probUp;
 
             var values = new decimal[steps + 1];
