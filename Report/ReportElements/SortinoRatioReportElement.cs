@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+using System.Globalization;
 using QuantConnect.Packets;
 using System.Collections.Generic;
 
@@ -44,7 +46,8 @@ namespace QuantConnect.Report.ReportElements
         /// <returns>Annual downside standard deviation.</returns>
         public override double GetAnnualStandardDeviation(List<double> trailingPerformance)
         {
-            return Statistics.Statistics.AnnualDownsideStandardDeviation(trailingPerformance);
+            return Statistics.Statistics.AnnualDownsideStandardDeviation(trailingPerformance,
+                Convert.ToDouble(BacktestResult?.AlgorithmConfiguration?.TradingDaysPerYear, CultureInfo.InvariantCulture));
         }
     }
 }

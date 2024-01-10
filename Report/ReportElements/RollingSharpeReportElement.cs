@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -52,10 +52,10 @@ namespace QuantConnect.Report.ReportElements
             var backtestSeries = new Series<DateTime, double>(backtestPoints);
             var liveSeries = new Series<DateTime, double>(livePoints);
 
-            var backtestRollingSharpeSixMonths = Rolling.Sharpe(backtestSeries, 6).DropMissing();
-            var backtestRollingSharpeTwelveMonths = Rolling.Sharpe(backtestSeries, 12).DropMissing();
-            var liveRollingSharpeSixMonths = Rolling.Sharpe(liveSeries, 6).DropMissing();
-            var liveRollingSharpeTwelveMonths = Rolling.Sharpe(liveSeries, 12).DropMissing();
+            var backtestRollingSharpeSixMonths = Rolling.Sharpe(backtestSeries, 6, _backtest.AlgorithmConfiguration.TradingDaysPerYear).DropMissing();
+            var backtestRollingSharpeTwelveMonths = Rolling.Sharpe(backtestSeries, 12, _backtest.AlgorithmConfiguration.TradingDaysPerYear).DropMissing();
+            var liveRollingSharpeSixMonths = Rolling.Sharpe(liveSeries, 6, _live.AlgorithmConfiguration.TradingDaysPerYear).DropMissing();
+            var liveRollingSharpeTwelveMonths = Rolling.Sharpe(liveSeries, 12, _live.AlgorithmConfiguration.TradingDaysPerYear).DropMissing();
 
             var base64 = "";
             using (Py.GIL())

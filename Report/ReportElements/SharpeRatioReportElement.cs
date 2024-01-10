@@ -17,6 +17,7 @@ using Deedle;
 using QuantConnect.Packets;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace QuantConnect.Report.ReportElements
@@ -82,7 +83,8 @@ namespace QuantConnect.Report.ReportElements
                 return "-";
             }
 
-            var annualPerformance = Statistics.Statistics.AnnualPerformance(trailingPerformance);
+            var annualPerformance = Statistics.Statistics.AnnualPerformance(trailingPerformance, 
+                Convert.ToDouble(BacktestResult?.AlgorithmConfiguration?.TradingDaysPerYear, CultureInfo.InvariantCulture));
             var liveResultValue = Statistics.Statistics.SharpeRatio(annualPerformance, annualStandardDeviation, 0.0);
             Result = liveResultValue;
             return liveResultValue.ToString("F2");
@@ -95,7 +97,8 @@ namespace QuantConnect.Report.ReportElements
         /// <returns>Annual standard deviation.</returns>
         public virtual double GetAnnualStandardDeviation(List<double> trailingPerformance)
         {
-            return Statistics.Statistics.AnnualStandardDeviation(trailingPerformance);
+            return Statistics.Statistics.AnnualStandardDeviation(trailingPerformance, 
+                Convert.ToDouble(BacktestResult?.AlgorithmConfiguration?.TradingDaysPerYear, CultureInfo.InvariantCulture));
         }
     }
 }
