@@ -15,19 +15,20 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using QuantConnect.AlgorithmFactory;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using QuantConnect.Brokerages;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
+using QuantConnect.AlgorithmFactory;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Lean.Engine.Setup
@@ -230,6 +231,30 @@ namespace QuantConnect.Lean.Engine.Setup
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Gets the number of trading days per year based on the specified brokerage model.
+        /// </summary>
+        /// <param name="brokerageModel">The brokerage model for which to determine the trading days.</param>
+        /// <returns>
+        /// The number of trading days per year. For specific brokerages (Coinbase, Binance, Bitfinex, Bybit, FTX, Kraken),
+        /// the value is 365. For other brokerages, the default value is 252.
+        /// </returns>
+        public static int GetBrokerageTradingDayPerYear(IBrokerageModel brokerageModel)
+        {
+            switch (brokerageModel)
+            {
+                case CoinbaseBrokerageModel:
+                case BinanceBrokerageModel:
+                case BitfinexBrokerageModel:
+                case BybitBrokerageModel:
+                case FTXBrokerageModel:
+                case KrakenBrokerageModel:
+                    return 365;
+                default:
+                    return 252;
+            }
         }
     }
 }

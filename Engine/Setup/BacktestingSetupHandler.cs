@@ -208,6 +208,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     // after we call initialize
                     BaseSetupHandler.LoadBacktestJobCashAmount(algorithm, job);
 
+                    // after algorithm was initialized we have validated trading days per year for our great portfolio statistics
+                    algorithm.Settings.TradingDaysPerYear ??= BaseSetupHandler.GetBrokerageTradingDayPerYear(algorithm.BrokerageModel);                    
+
                     // finalize initialization
                     algorithm.PostInitialize();
                 }

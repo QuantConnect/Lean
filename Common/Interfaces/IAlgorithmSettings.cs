@@ -105,6 +105,6 @@ namespace QuantConnect.Interfaces
         /// <seealso cref="Statistics.PortfolioStatistics.TrackingError"/>,
         /// <seealso cref="Statistics.PortfolioStatistics.InformationRatio"/>.
         /// </remarks>
-        int TradingDaysPerYear { get; set; }
+        int? TradingDaysPerYear { get; set; }
     }
 }

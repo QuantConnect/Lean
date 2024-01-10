@@ -130,7 +130,7 @@ namespace QuantConnect
         /// <seealso cref="Statistics.PortfolioStatistics.TrackingError"/>,
         /// <seealso cref="Statistics.PortfolioStatistics.InformationRatio"/>.
         /// </remarks>
-        public int TradingDaysPerYear { get; set; }
+        public int? TradingDaysPerYear { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
