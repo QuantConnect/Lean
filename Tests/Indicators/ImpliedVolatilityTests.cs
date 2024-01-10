@@ -132,13 +132,13 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(27.50, 450.0, OptionRight.Call, 60, 0.098)]
         [TestCase(29.35, 450.0, OptionRight.Put, 60, 0.110)]
         [TestCase(37.86, 470.0, OptionRight.Call, 60, 0.044)]
-        [TestCase(5.74, 470.0, OptionRight.Put, 60, 0.01)]      // Volatility of deep OTM American put option will not converge in CRR model
+        [TestCase(5.74, 470.0, OptionRight.Put, 60, 0.0)]      // Volatility of deep OTM American put option will not converge in CRR model
         [TestCase(3.44, 430.0, OptionRight.Call, 60, 0.027)]
         [TestCase(40.13, 430.0, OptionRight.Put, 60, 0.241)]
         [TestCase(17.74, 450.0, OptionRight.Call, 180, 0.022)]
         [TestCase(19.72, 450.0, OptionRight.Put, 180, 0.046)]
         [TestCase(38.45, 470.0, OptionRight.Call, 180, 0.057)]
-        [TestCase(0.43, 470.0, OptionRight.Put, 180, 0.01)]     // Volatility of deep OTM American put option will not converge in CRR model
+        [TestCase(0.43, 470.0, OptionRight.Put, 180, 0.0)]     // Volatility of deep OTM American put option will not converge in CRR model
         [TestCase(1.73, 430.0, OptionRight.Call, 180, 0.016)]
         [TestCase(12.46, 430.0, OptionRight.Put, 180, 0.079)]
         public void ComparesIVOnCRRModel(decimal price, decimal spotPrice, OptionRight right, int expiry, double refIV)
@@ -356,4 +356,4 @@ namespace QuantConnect.Tests.Indicators
         // Not used
         protected override string TestFileName => string.Empty;
     }
-    }
+}

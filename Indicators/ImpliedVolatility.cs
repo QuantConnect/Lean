@@ -14,8 +14,10 @@
 */
 
 using System;
+using MathNet.Numerics.RootFinding;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Indicators
 {
@@ -193,8 +195,16 @@ namespace QuantConnect.Indicators
             var spotPrice = UnderlyingPrice.Current.Value;
             var timeToExpiration = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
 
-            Func<decimal, decimal> f = (vol) => TheoreticalPrice(vol, spotPrice, Strike, timeToExpiration, RiskFreeRate, Right, _optionModel);
-            return OptionGreekIndicatorsHelper.BrentApproximation(f, price, 0.01m, 1.0m);
+            Func<double, double> f = (vol) => (double)(TheoreticalPrice(Convert.ToDecimal(vol), spotPrice, Strike, timeToExpiration, RiskFreeRate, Right, _optionModel) - price);
+            try
+            {
+                return Convert.ToDecimal(Brent.FindRoot(f, 0.01d, 1.0d, 1e-5d, 20));
+            }
+            catch
+            {
+                Log.Error("Fail to converge, returning 0.");
+                return 0m;
+            }
         }
 
         /// <summary>
@@ -202,6 +212,12 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
+            _consolidator = new(TimeSpan.FromDays(1));
+            _consolidator.DataConsolidated += (_, bar) => {
+                _roc.Update(bar.EndTime, bar.Price);
+            };
+
+            _roc.Reset();
             HistoricalVolatility.Reset();
             Price.Reset();
             UnderlyingPrice.Reset();
