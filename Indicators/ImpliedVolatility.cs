@@ -59,7 +59,7 @@ namespace QuantConnect.Indicators
         public OptionStyle Style { get; }
 
         /// <summary>
-        /// Gets the historical volatility
+        /// Gets the historical volatility of the underlying
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> HistoricalVolatility { get; }
 
@@ -144,8 +144,7 @@ namespace QuantConnect.Indicators
         public int WarmUpPeriod { get; }
 
         /// <summary>
-        /// Computes the next value of the following sub-indicators from the given state:
-        /// StandardDeviation, MiddleBand, UpperBand, LowerBand, BandWidth, %B
+        /// Computes the next value
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>The input is returned unmodified.</returns>
@@ -208,7 +207,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Resets this indicator and all sub-indicators (StandardDeviation, LowerBand, MiddleBand, UpperBand, BandWidth, %B)
+        /// Resets this indicator and all sub-indicators
         /// </summary>
         public override void Reset()
         {
