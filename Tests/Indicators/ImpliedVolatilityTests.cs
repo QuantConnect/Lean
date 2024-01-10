@@ -129,26 +129,26 @@ namespace QuantConnect.Tests.Indicators
             // Not used
         }
 
-        [TestCase(27.50, 450.0, OptionRight.Call, 60, 0.084)]
-        [TestCase(29.35, 450.0, OptionRight.Put, 60, 0.093)]
-        [TestCase(37.86, 470.0, OptionRight.Call, 60, 0.021)]
-        [TestCase(5.74, 470.0, OptionRight.Put, 60, 0.0)]      // Volatility of deep OTM American put option will not converge in CRR model
-        [TestCase(3.44, 430.0, OptionRight.Call, 60, 0.026)]
-        [TestCase(40.13, 430.0, OptionRight.Put, 60, 0.189)]
-        [TestCase(17.74, 450.0, OptionRight.Call, 180, 0.014)]
-        [TestCase(19.72, 450.0, OptionRight.Put, 180, 0.040)]
-        [TestCase(38.45, 470.0, OptionRight.Call, 180, 0.038)]
-        [TestCase(0.43, 470.0, OptionRight.Put, 180, 0.0)]     // Volatility of deep OTM American put option will not converge in CRR model
-        [TestCase(1.73, 430.0, OptionRight.Call, 180, 0.016)]
-        [TestCase(12.46, 430.0, OptionRight.Put, 180, 0.072)]
+        [TestCase(27.50, 450.0, OptionRight.Call, 60, 0.304)]
+        [TestCase(29.35, 450.0, OptionRight.Put, 60, 0.511)]
+        [TestCase(37.86, 470.0, OptionRight.Call, 60, 0.273)]
+        [TestCase(5.74, 470.0, OptionRight.Put, 60, 0.204)]      // Volatility of deep OTM American put option will not converge in CRR model
+        [TestCase(3.44, 430.0, OptionRight.Call, 60, 0.131)]
+        [TestCase(40.13, 430.0, OptionRight.Put, 60, 0.541)]
+        [TestCase(17.74, 450.0, OptionRight.Call, 180, 0.093)]
+        [TestCase(19.72, 450.0, OptionRight.Put, 180, 0.208)]
+        [TestCase(38.45, 470.0, OptionRight.Call, 180, 0.134)]
+        [TestCase(0.43, 470.0, OptionRight.Put, 180, 0.056)]     // Volatility of deep OTM American put option will not converge in CRR model
+        [TestCase(1.73, 430.0, OptionRight.Call, 180, 0.045)]
+        [TestCase(12.46, 430.0, OptionRight.Put, 180, 0.0)]
         public void ComparesIVOnCRRModel(decimal price, decimal spotPrice, OptionRight right, int expiry, double refIV)
         {
             // Under CRR framework
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new ImpliedVolatility(_symbol, 0.04m, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein);
+            var indicator = new ImpliedVolatility(symbol, 0.04m, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein);
 
-            var optionTradeBar = new TradeBar(_reference, _symbol, price, price, price, price, 0m);
-            var spotTradeBar = new TradeBar(_reference, _underlying, spotPrice, spotPrice, spotPrice, spotPrice, 0m);
+            var optionTradeBar = new TradeBar(_reference, symbol, price, price, price, price, 0m);
+            var spotTradeBar = new TradeBar(_reference, symbol.Underlying, spotPrice, spotPrice, spotPrice, spotPrice, 0m);
             indicator.Update(optionTradeBar);
             indicator.Update(spotTradeBar);
 

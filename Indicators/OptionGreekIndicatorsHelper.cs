@@ -85,7 +85,8 @@ namespace QuantConnect.Indicators
                 for (int i = 0; i <= period; i++)
                 {
                     var binomialValue = values[i] * probDown + values[i + 1] * probUp;
-                    var exerciseValue = OptionPayoff.GetIntrinsicValue(values[i], strikePrice, optionType);
+                    var nextPrice = spotPrice * Convert.ToDecimal(Math.Pow((double)upFactor, 2 * i - period));
+                    var exerciseValue = OptionPayoff.GetIntrinsicValue(nextPrice, strikePrice, optionType);
                     values[i] = Math.Max(binomialValue, exerciseValue);
                 }
             }
