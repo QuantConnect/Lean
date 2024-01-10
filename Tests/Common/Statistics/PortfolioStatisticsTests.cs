@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var lossCount = trades.Count - winCount;
             var statistics = new PortfolioStatistics(profitLoss, new SortedDictionary<DateTime, decimal>(),
                 new SortedDictionary<DateTime, decimal>(), new List<double> { 0, 0 }, new List<double> { 0, 0 }, 100000,
-                new InterestRateProvider(), winCount: winCount, lossCount: lossCount);
+                new InterestRateProvider(), 252, winCount, lossCount);
 
             if (win)
             {

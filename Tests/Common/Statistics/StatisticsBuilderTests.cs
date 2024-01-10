@@ -77,7 +77,8 @@ namespace QuantConnect.Tests.Common.Statistics
                     new QuantConnect.Securities.SecurityTransactionManager(
                         null,
                         new QuantConnect.Securities.SecurityManager(new TimeKeeper(DateTime.UtcNow))),
-                    new InterestRateProvider());
+                    new InterestRateProvider(),
+                    252);
             }, "Misaligned values provided, but we still generate statistics");
         }
     }

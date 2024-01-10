@@ -46,6 +46,7 @@ namespace QuantConnect.Statistics
         /// The transaction manager to get number of winning and losing transactions
         /// </param>
         /// <param name="riskFreeInterestRateModel">The risk free interest rate model to use</param>
+        /// <param name="tradingDaysPerYear">The number of trading days per year</param>       
         /// <returns>Returns a <see cref="StatisticsResults"/> object</returns>
         public static StatisticsResults Generate(
             List<Trade> trades,
@@ -60,7 +61,8 @@ namespace QuantConnect.Statistics
             CapacityEstimate estimatedStrategyCapacity,
             string accountCurrencySymbol,
             SecurityTransactionManager transactions,
-            IRiskFreeInterestRateModel riskFreeInterestRateModel)
+            IRiskFreeInterestRateModel riskFreeInterestRateModel,
+            int tradingDaysPerYear)
         {
             var equity = ChartPointToDictionary(pointsEquity);
 
@@ -68,9 +70,9 @@ namespace QuantConnect.Statistics
             var lastDate = equity.Keys.LastOrDefault().Date;
 
             var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark,
-                pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel);
+                pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel, tradingDaysPerYear);
             var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark,
-                pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel);
+                pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel, tradingDaysPerYear);
             var summary = GetSummary(totalPerformance, estimatedStrategyCapacity, totalFees, totalTransactions, accountCurrencySymbol);
 
             return new StatisticsResults(totalPerformance, rollingPerformances, summary);
@@ -92,6 +94,7 @@ namespace QuantConnect.Statistics
         /// The transaction manager to get number of winning and losing transactions
         /// </param>
         /// <param name="riskFreeInterestRateModel">The risk free interest rate model to use</param>
+        /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         /// <returns>The algorithm performance</returns>
         private static AlgorithmPerformance GetAlgorithmPerformance(
             DateTime fromDate,
@@ -104,7 +107,8 @@ namespace QuantConnect.Statistics
             List<ISeriesPoint> pointsPortfolioTurnover,
             decimal startingCapital,
             SecurityTransactionManager transactions,
-            IRiskFreeInterestRateModel riskFreeInterestRateModel)
+            IRiskFreeInterestRateModel riskFreeInterestRateModel,
+            int tradingDaysPerYear)
         {
             var periodEquity = new SortedDictionary<DateTime, decimal>(equity.Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
 
@@ -141,7 +145,7 @@ namespace QuantConnect.Statistics
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
 
             return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, portfolioTurnover, listPerformance, listBenchmark,
-                runningCapital, periodWinCount, periodLossCount, riskFreeInterestRateModel);
+                runningCapital, periodWinCount, periodLossCount, riskFreeInterestRateModel, tradingDaysPerYear);
         }
 
         /// <summary>
@@ -160,6 +164,7 @@ namespace QuantConnect.Statistics
         /// The transaction manager to get number of winning and losing transactions
         /// </param>
         /// <param name="riskFreeInterestRateModel">The risk free interest rate model to use</param>
+        /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         /// <returns>A dictionary with the rolling performances</returns>
         private static Dictionary<string, AlgorithmPerformance> GetRollingPerformances(
             DateTime firstDate,
@@ -172,7 +177,8 @@ namespace QuantConnect.Statistics
             List<ISeriesPoint> pointsPortfolioTurnover,
             decimal startingCapital,
             SecurityTransactionManager transactions,
-            IRiskFreeInterestRateModel riskFreeInterestRateModel)
+            IRiskFreeInterestRateModel riskFreeInterestRateModel,
+            int tradingDaysPerYear)
         {
             var rollingPerformances = new Dictionary<string, AlgorithmPerformance>();
 
@@ -185,7 +191,7 @@ namespace QuantConnect.Statistics
                 {
                     var key = $"M{monthPeriod}_{period.EndDate.ToStringInvariant("yyyyMMdd")}";
                     var periodPerformance = GetAlgorithmPerformance(period.StartDate, period.EndDate, trades, profitLoss, equity, pointsPerformance,
-                        pointsBenchmark, pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel);
+                        pointsBenchmark, pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel, tradingDaysPerYear);
                     rollingPerformances[key] = periodPerformance;
                 }
             }

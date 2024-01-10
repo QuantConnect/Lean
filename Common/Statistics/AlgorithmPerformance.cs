@@ -52,6 +52,7 @@ namespace QuantConnect.Statistics
         /// <param name="winningTransactions">Number of winning transactions</param>
         /// <param name="losingTransactions">Number of losing transactions</param>
         /// <param name="riskFreeInterestRateModel">The risk free interest rate model to use</param>
+        /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         public AlgorithmPerformance(
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
@@ -62,12 +63,13 @@ namespace QuantConnect.Statistics
             decimal startingCapital,
             int winningTransactions,
             int losingTransactions,
-            IRiskFreeInterestRateModel riskFreeInterestRateModel)
+            IRiskFreeInterestRateModel riskFreeInterestRateModel,
+            int tradingDaysPerYear)
         {
 
             TradeStatistics = new TradeStatistics(trades);
             PortfolioStatistics = new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital,
-                riskFreeInterestRateModel, winCount: winningTransactions, lossCount: losingTransactions);
+                riskFreeInterestRateModel, tradingDaysPerYear, winningTransactions, losingTransactions);
             ClosedTrades = trades;
         }
 
