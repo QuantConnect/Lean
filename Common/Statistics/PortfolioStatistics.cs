@@ -182,7 +182,7 @@ namespace QuantConnect.Statistics
             List<double> listBenchmark,
             decimal startingCapital,
             IRiskFreeInterestRateModel riskFreeInterestRateModel,
-            int tradingDaysPerYear = 252,
+            int tradingDaysPerYear,
             int? winCount = null,
             int? lossCount = null)
         {
@@ -273,7 +273,7 @@ namespace QuantConnect.Statistics
             TreynorRatio = Beta == 0 ? 0 : (annualPerformance - riskFreeRate) / Beta;
 
             // deannualize a 1 sharpe ratio
-            var benchmarkSharpeRatio = 1.0d / Math.Sqrt(252);
+            var benchmarkSharpeRatio = 1.0d / Math.Sqrt(tradingDaysPerYear);
             ProbabilisticSharpeRatio = Statistics.ProbabilisticSharpeRatio(listPerformance, benchmarkSharpeRatio).SafeDecimalCast();
         }
 
@@ -313,7 +313,7 @@ namespace QuantConnect.Statistics
         /// <param name="tradingDaysPerYear">Trading days per year for the assets in portfolio</param>
         /// <remarks>May be inaccurate for forex algorithms with more trading days in a year</remarks>
         /// <returns>Double annual performance percentage</returns>
-        private static decimal GetAnnualPerformance(List<double> performance, int tradingDaysPerYear = 252)
+        private static decimal GetAnnualPerformance(List<double> performance, int tradingDaysPerYear)
         {
             return Statistics.AnnualPerformance(performance, tradingDaysPerYear).SafeDecimalCast();
         }
