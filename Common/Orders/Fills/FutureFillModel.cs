@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
@@ -106,7 +107,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Fill only if open or extended
-            if (!IsExchangeOpen(asset, asset.Subscriptions.IsExtendedMarketHours()))
+            if (!IsExchangeOpen(asset, Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, asset.IsInternalFeed()).IsExtendedMarketHours()))
             {
                 return fill;
             }

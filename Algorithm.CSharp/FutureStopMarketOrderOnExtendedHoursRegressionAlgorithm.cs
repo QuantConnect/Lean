@@ -100,7 +100,9 @@ namespace QuantConnect.Algorithm.CSharp
             var stopMarketOrders = Transactions.GetOrders(x => x is StopMarketOrder);
 
             if (stopMarketOrders.Any(x => x.Status != OrderStatus.Filled))
+            {
                 throw new Exception("The Algorithms was not handled any StopMarketOrders");
+            }
         }
 
         /// <summary>
