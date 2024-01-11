@@ -19,6 +19,8 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Statistics;
+using QuantConnect.Brokerages;
+using QuantConnect.Lean.Engine.Setup;
 
 namespace QuantConnect.Tests.Common.Statistics
 {
@@ -78,7 +80,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         null,
                         new QuantConnect.Securities.SecurityManager(new TimeKeeper(DateTime.UtcNow))),
                     new InterestRateProvider(),
-                    252);
+                    BaseSetupHandler.GetBrokerageTradingDayPerYear(new DefaultBrokerageModel()));
             }, "Misaligned values provided, but we still generate statistics");
         }
     }

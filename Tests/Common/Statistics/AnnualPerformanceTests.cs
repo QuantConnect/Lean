@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Common.Statistics
             {
                 performance.Add((double)((_spy[i].Close / _spy[i - 1].Close) - 1));
             }
-            
+
             var result = QuantConnect.Statistics.Statistics.AnnualPerformance(performance, _algorithm.Settings.TradingDaysPerYear.Value);
 
             Assert.AreEqual(0.082859685889996371, result);
