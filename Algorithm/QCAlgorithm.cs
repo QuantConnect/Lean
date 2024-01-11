@@ -498,7 +498,7 @@ namespace QuantConnect.Algorithm
         public List<string> Tags
         {
             get;
-            private set;
+            set;
         }
 
         /// <summary>

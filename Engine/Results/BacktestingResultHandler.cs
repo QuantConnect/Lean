@@ -396,6 +396,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Algorithm = algorithm;
             Algorithm.SetStatisticsService(this);
+            State["Name"] = Algorithm.Name;
             StartingPortfolioValue = startingPortfolioValue;
             DailyPortfolioValue = StartingPortfolioValue;
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
