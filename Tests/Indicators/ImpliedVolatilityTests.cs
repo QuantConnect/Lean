@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestColumnName => "ImpliedVolatility";
 
         private DateTime _reference = new DateTime(2022, 9, 1, 10, 0, 0);
-        private Symbol _symbol;
+        private Symbol _symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2023, 9, 1));
         private Symbol _underlying;
 
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
@@ -42,7 +42,6 @@ namespace QuantConnect.Tests.Indicators
         [SetUp]
         public void SetUp()
         {
-            _symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2023, 9, 1));
             _underlying = _symbol.Underlying;
         }
 
