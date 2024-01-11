@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.RealTime
     {
         private Thread _realTimeThread;
         private CancellationTokenSource _cancellationTokenSource = new();
-        private static MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        protected static MarketHoursDatabase MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
         /// <summary>
         /// Boolean flag indicating thread state.
@@ -124,6 +124,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             {
                 var security = kvp.Value;
 
+                MarketHoursDatabase.Reset();
                 var marketHours = MarketToday(date, security.Symbol);
                 security.Exchange.SetMarketHours(marketHours, date.DayOfWeek);
                 var localMarketHours = security.Exchange.Hours.MarketHours[date.DayOfWeek];
@@ -185,8 +186,16 @@ namespace QuantConnect.Lean.Engine.RealTime
                 yield break;
             }
 
-            var hours = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
-            foreach (var segment in hours.MarketHours[time.DayOfWeek].Segments)
+            var entry = MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            var securityExchangeHours = new SecurityExchangeHours(
+                entry.DataTimeZone,
+                entry.ExchangeHours.Holidays,
+                entry.ExchangeHours.MarketHours.ToDictionary(),
+                entry.ExchangeHours.EarlyCloses,
+                entry.ExchangeHours.LateOpens);
+            var hours = securityExchangeHours.GetMarketHours(time);
+
+            foreach (var segment in hours.Segments)
             {
                 yield return segment;
             }
