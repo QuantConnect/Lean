@@ -128,7 +128,8 @@ namespace QuantConnect
                 algorithm.EndDate,
                 backtestNodePacket?.OutOfSampleMaxEndDate,
                 backtestNodePacket?.OutOfSampleDays ?? 0,
-                algorithm.Settings.TradingDaysPerYear ?? 0);
+                // use value = 252 like default for backwards compatibility
+                algorithm?.Settings?.TradingDaysPerYear ?? 252);
         }
     }
 }

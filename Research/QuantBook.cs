@@ -768,8 +768,11 @@ namespace QuantConnect.Research
                 // Gets the startting capital
                 var startingCapital = Convert.ToDecimal(dictEquity.FirstOrDefault().Value);
 
+                // use value = 252 like default for backwards compatibility
+                var tradingDaysPerYear = Settings.TradingDaysPerYear.HasValue ? Settings.TradingDaysPerYear.Value : 252;
+
                 // Compute portfolio statistics
-                var stats = new PortfolioStatistics(profitLoss, equity, new(), listPerformance, listBenchmark, startingCapital, RiskFreeInterestRateModel, Settings.TradingDaysPerYear.Value);
+                var stats = new PortfolioStatistics(profitLoss, equity, new(), listPerformance, listBenchmark, startingCapital, RiskFreeInterestRateModel, tradingDaysPerYear);
 
                 result.SetItem("Average Win (%)", Convert.ToDouble(stats.AverageWinRate * 100).ToPython());
                 result.SetItem("Average Loss (%)", Convert.ToDouble(stats.AverageLossRate * 100).ToPython());
