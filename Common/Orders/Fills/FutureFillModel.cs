@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using QuantConnect.Util;
+using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
 
@@ -69,6 +72,85 @@ namespace QuantConnect.Orders.Fills
 
             // assume the order completely filled
             fill.FillQuantity = order.Quantity;
+
+            return fill;
+        }
+
+        /// <summary>
+        /// Stop fill model implementation for Future.
+        /// </summary>
+        /// <param name="asset">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <remarks>
+        /// A Stop order is an instruction to submit a buy or sell market order
+        /// if and when the user-specified stop trigger price is attained or penetrated.
+        ///
+        /// A Sell Stop order is always placed below the current market price.
+        /// We assume a fluid/continuous, high volume market. Therefore, it is filled at the stop trigger price
+        /// if the current low price of trades is less than or equal to this price.
+        ///
+        /// A Buy Stop order is always placed above the current market price.
+        /// We assume a fluid, high volume market. Therefore, it is filled at the stop trigger price
+        /// if the current high price of trades is greater or equal than this price.
+        ///
+        /// The continuous market assumption is not valid if the market opens with an unfavorable gap.
+        /// In this case, a new bar opens below/above the stop trigger price, and the order is filled with the opening price.
+        /// <seealso cref="MarketFill(Security, MarketOrder)"/>
+        public override OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
+        {
+            //Default order event to return.
+            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
+
+            //If its cancelled don't need anymore checks:
+            if (order.Status == OrderStatus.Canceled) return fill;
+
+            // Fill only if open or extended
+            // even though data from internal configurations are not sent to the algorithm.OnData they still drive security cache and data
+            // this is specially relevant for the continuous contract underlying mapped contracts which are internal configurations
+            if (!IsExchangeOpen(asset, Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true).IsExtendedMarketHours()))
+            {
+                return fill;
+            }
+
+            //Get the range of prices in the last bar:
+            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
+            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+
+            // do not fill on stale data
+            if (pricesEndTime <= order.Time) return fill;
+
+            //Calculate the model slippage: e.g. 0.01c
+            var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
+
+            //Check if the Stop Order was filled: opposite to a limit order
+            switch (order.Direction)
+            {
+                case OrderDirection.Sell:
+                    //-> 1.1 Sell Stop: If Price below setpoint, Sell:
+                    if (prices.Low < order.StopPrice)
+                    {
+                        fill.Status = OrderStatus.Filled;
+                        // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
+                        fill.FillPrice = Math.Min(order.StopPrice, prices.Current - slip);
+                        // assume the order completely filled
+                        fill.FillQuantity = order.Quantity;
+                    }
+                    break;
+
+                case OrderDirection.Buy:
+                    //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
+                    if (prices.High > order.StopPrice)
+                    {
+                        fill.Status = OrderStatus.Filled;
+                        // Assuming worse case scenario fill - fill at highest of the stop & asset price.
+                        fill.FillPrice = Math.Max(order.StopPrice, prices.Current + slip);
+                        // assume the order completely filled
+                        fill.FillQuantity = order.Quantity;
+                    }
+                    break;
+            }
 
             return fill;
         }

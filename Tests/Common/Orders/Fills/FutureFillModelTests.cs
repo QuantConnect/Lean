@@ -64,6 +64,51 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
+        [Test]
+        public void PerformsStopMarketFill(
+            [Values] bool extendedMarketHours,
+            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection)
+        {
+            var symbol = Symbols.ES_Future_Chain;
+            var model = new FutureFillModel();
+            var quantity = orderDirection == OrderDirection.Buy ? 100 : -100;
+            var marketPrice = orderDirection == OrderDirection.Buy ? 102m : 101m;
+
+            var time = Noon.AddHours(-12);
+
+            var order = new StopMarketOrder(symbol, quantity, 101.124m, time);
+            var config = CreateTradeBarConfig(symbol, extendedMarketHours: extendedMarketHours);
+            var security = GetSecurity(config);
+            TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork).UpdateTime(time.ConvertToUtc(TimeZones.NewYork));
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(symbol, time, marketPrice));
+
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour,
+                null)).Single();
+
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(config);
+            if (extendedMarketHours)
+            {
+                Assert.AreEqual(order.Quantity, fill.FillQuantity);
+                Assert.AreEqual(security.Price, fill.FillPrice);
+                Assert.AreEqual(OrderStatus.Filled, fill.Status);
+                Assert.IsTrue(exchangeHours.IsOpen(fill.UtcTime, extendedMarketHours));
+            }
+            else
+            {
+                Assert.AreEqual(0m, fill.FillQuantity);
+                Assert.AreEqual(0m, fill.FillPrice);
+                Assert.AreNotEqual(OrderStatus.Filled, fill.Status);
+                Assert.AreNotEqual(OrderStatus.PartiallyFilled, fill.Status);
+                Assert.IsFalse(exchangeHours.IsOpen(fill.UtcTime, extendedMarketHours));
+            }
+
+        }
+
         private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, bool isInternal = false, bool extendedMarketHours = true)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, extendedMarketHours, isInternal);
