@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!time.IsOpen(orderEvent.UtcTime, _SP500EMini.IsExtendedMarketHours))
                 {
-                    throw new Exception($"The Exchange hours was closed, checko 'extendedMarketHours' flag in {nameof(Initialize)} when added new security(ies).");
+                    throw new Exception($"The Exchange hours was closed, verify 'extendedMarketHours' flag in {nameof(Initialize)} when added new security(ies).");
                 }
             }
         }

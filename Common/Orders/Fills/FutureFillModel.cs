@@ -107,6 +107,8 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Fill only if open or extended
+            // even though data from internal configurations are not sent to the algorithm.OnData they still drive security cache and data
+            // this is specially relevant for the continuous contract underlying mapped contracts which are internal configurations
             if (!IsExchangeOpen(asset, Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true).IsExtendedMarketHours()))
             {
                 return fill;

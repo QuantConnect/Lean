@@ -47,9 +47,6 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
         self.stopPrice = self.stopMarketTicket.Get(OrderField.StopPrice)
         self.bar = self.Securities[self.stopMarketTicket.Symbol].Cache.GetData()
 
-        if self.stopPrice > self.bar.Low:
-            self.Log(f"{self.stopPrice} -> {self.bar.Low}")
-
     # An order fill update the resulting information is passed to this method.
     def OnOrderEvent(self, orderEvent):
         if orderEvent is None:
@@ -64,7 +61,7 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
 
             # Validate, Exchange is opened explicitly
             if (not exchangeHours.IsOpen(orderEvent.UtcTime, self.SP500EMini.IsExtendedMarketHours)):
-                raise Exception("The Exchange hours was closed, checko 'extendedMarketHours' flag in Initialize() when added new security(ies)")
+                raise Exception("The Exchange hours was closed, verify 'extendedMarketHours' flag in Initialize() when added new security(ies)")
 
     def OnEndOfAlgorithm(self):
         self.stopMarketOrders = self.Transactions.GetOrders(lambda o: o.Type is OrderType.StopMarket)
