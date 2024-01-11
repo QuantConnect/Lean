@@ -107,7 +107,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Fill only if open or extended
-            if (!IsExchangeOpen(asset, Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, asset.IsInternalFeed()).IsExtendedMarketHours()))
+            if (!IsExchangeOpen(asset, Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true).IsExtendedMarketHours()))
             {
                 return fill;
             }

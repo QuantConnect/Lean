@@ -61,11 +61,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             var stopPrice = _ticket.Get(OrderField.StopPrice);
             var bar = Securities[_ticket.Symbol].Cache.GetData<TradeBar>();
-
-            if (stopPrice > bar.Low)
-            {
-                Log($"{stopPrice} -> {bar.Low}");
-            }
         }
 
         /// <summary>
