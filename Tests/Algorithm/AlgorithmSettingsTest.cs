@@ -114,6 +114,36 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(expectedTradingDayPerYear, algorithm.Settings.TradingDaysPerYear.Value);
         }
 
+        [TestCase(BrokerageName.Bybit, 202)]
+        [TestCase(BrokerageName.InteractiveBrokersBrokerage, 404)]
+        public void ReturnCustomTradingDayPerYearIndependentlyFromBrokerageName(BrokerageName brokerageName, int customTradingDayPerYear)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SetBrokerageModel(brokerageName);
+            algorithm.Settings.TradingDaysPerYear = customTradingDayPerYear;
+
+            // duplicate: make sure that custom value is assigned
+            algorithm.Settings.TradingDaysPerYear ??= BaseSetupHandler.GetBrokerageTradingDayPerYear(algorithm.BrokerageModel);
+
+            Assert.AreNotEqual(BaseSetupHandler.GetBrokerageTradingDayPerYear(algorithm.BrokerageModel), algorithm.Settings.TradingDaysPerYear);
+        }
+
+        [TestCase(null, 252)]
+        [TestCase(404, 404)]
+        public void ReturnTradingDayPerYearWithoutSetBrokerage(int? customTradingDayPerYear = null, int expectedTradingDayPerYear = 0)
+        {
+            var algorithm = new QCAlgorithm();
+
+            if (customTradingDayPerYear.HasValue)
+            {
+                algorithm.Settings.TradingDaysPerYear = customTradingDayPerYear.Value;
+            }
+
+            algorithm.Settings.TradingDaysPerYear ??= BaseSetupHandler.GetBrokerageTradingDayPerYear(algorithm.BrokerageModel);
+
+            Assert.AreEqual(expectedTradingDayPerYear, algorithm.Settings.TradingDaysPerYear);
+        }
+
         private FakeOrderProcessor InitializeAndGetFakeOrderProcessor(QCAlgorithm algo)
         {
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
