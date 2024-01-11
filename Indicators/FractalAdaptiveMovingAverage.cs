@@ -99,21 +99,22 @@ namespace QuantConnect.Indicators
 
             if (n1 + n2 > 0 && n3 > 0)
             {
-                dimen = Math.Log((n1 + n2) / n3) / Math.Log(2);
+                var log = Math.Log((n1 + n2) / n3);
+                dimen = (double.IsNaN(log) ? 0 : log) / Math.Log(2);
             }
 
-            var alpha = (decimal)Math.Exp(_w * (dimen - 1));
+            var alpha = Math.Exp(_w * (dimen - 1));
 
-            if (alpha < .01m)
+            if (alpha < .01)
             {
-                alpha = .01m;
+                alpha = .01;
             }
             if (alpha > 1)
             {
                 alpha = 1;
             }
 
-            return alpha * price + (1 - alpha) * Current.Value;
+            return (decimal)alpha * price + (1 - (decimal)alpha) * Current.Value;
         }
 
         /// <summary>
