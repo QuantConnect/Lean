@@ -424,6 +424,26 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Handles updates to the algorithm's name
+        /// </summary>
+        /// <param name="name">The new name</param>
+        public virtual void AlgorithmNameUpdated(string name)
+        {
+            // don't enqueue, send immediately
+            MessagingHandler.Send(new AlgorithmNameUpdatePacket(AlgorithmId, name));
+        }
+
+        /// <summary>
+        /// Sends a packet communicating an update to the algorithm's tags
+        /// </summary>
+        /// <param name="tags">The new tags</param>
+        public virtual void AlgorithmTagsUpdated(HashSet<string> tags)
+        {
+            // don't enqueue, send immediately
+            MessagingHandler.Send(new AlgorithmTagsUpdatePacket(AlgorithmId, tags));
+        }
+
+        /// <summary>
         /// Send a debug message back to the browser console.
         /// </summary>
         /// <param name="message">Message we'd like shown in console.</param>

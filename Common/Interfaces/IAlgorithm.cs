@@ -204,10 +204,21 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// A list of tags associated with the algorithm or the backtest, useful for categorization
         /// </summary>
-        List<string> Tags
+        HashSet<string> Tags
         {
             get;
+            set;
         }
+
+        /// <summary>
+        /// Event fired algorithm's name is changed
+        /// </summary>
+        event AlgorithmEvent<string> NameUpdated;
+
+        /// <summary>
+        /// Event fired when the tag collection is updated
+        /// </summary>
+        event AlgorithmEvent<HashSet<string>> TagsUpdated;
 
         /// <summary>
         /// Current date/time in the algorithm's local time zone
@@ -881,6 +892,6 @@ namespace QuantConnect.Interfaces
         /// Sets the tags for the algorithm
         /// </summary>
         /// <param name="tags">The tags</param>
-        void SetTags(List<string> tags);
+        void SetTags(HashSet<string> tags);
     }
 }

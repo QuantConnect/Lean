@@ -267,7 +267,49 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <summary>
         /// A list of tags associated with the algorithm or the backtest, useful for categorization
         /// </summary>
-        public List<string> Tags => _baseAlgorithm.Tags;
+        public HashSet<string> Tags
+        {
+            get
+            {
+                return _baseAlgorithm.Tags;
+            }
+            set
+            {
+                _baseAlgorithm.Tags = value;
+            }
+        }
+
+        /// <summary>
+        /// Event fired algorithm's name is changed
+        /// </summary>
+        public event AlgorithmEvent<string> NameUpdated
+        {
+            add
+            {
+                _baseAlgorithm.NameUpdated += value;
+            }
+
+            remove
+            {
+                _baseAlgorithm.NameUpdated -= value;
+            }
+        }
+
+        /// <summary>
+        /// Event fired when the tag collection is updated
+        /// </summary>
+        public event AlgorithmEvent<HashSet<string>> TagsUpdated
+        {
+            add
+            {
+                _baseAlgorithm.TagsUpdated += value;
+            }
+
+            remove
+            {
+                _baseAlgorithm.TagsUpdated -= value;
+            }
+        }
 
         /// <summary>
         /// Notification manager for storing and processing live event messages
@@ -1165,7 +1207,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Sets the tags for the algorithm
         /// </summary>
         /// <param name="tags">The tags</param>
-        public void SetTags(List<string> tags)
+        public void SetTags(HashSet<string> tags)
         {
             _baseAlgorithm.SetTags(tags);
         }

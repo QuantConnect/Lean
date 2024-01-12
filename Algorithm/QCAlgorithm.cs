@@ -137,7 +137,7 @@ namespace QuantConnect.Algorithm
         public QCAlgorithm()
         {
             Name = GetType().Name;
-            Tags = new List<string>();
+            Tags = new();
             Status = AlgorithmStatus.Running;
 
             // AlgorithmManager will flip this when we're caught up with realtime
@@ -487,7 +487,13 @@ namespace QuantConnect.Algorithm
 
                 if (!string.IsNullOrEmpty(value))
                 {
-                    _name = value.Length <= 200 ? value : value.Substring(0, 200);
+                    var name = value.Length <= 200 ? value : value.Substring(0, 200);
+                    if (_name != name)
+                    {
+                        NameUpdated?.Invoke(this, name);
+                    }
+
+                    _name = name;
                 }
             }
         }
@@ -495,11 +501,20 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// A list of tags associated with the algorithm or the backtest, useful for categorization
         /// </summary>
-        public List<string> Tags
-        {
-            get;
-            set;
-        }
+        [DocumentationAttribute(HandlingData)]
+        public HashSet<string> Tags { get; set; }
+
+        /// <summary>
+        /// Event fired algorithm's name is changed
+        /// </summary>
+        [DocumentationAttribute(HandlingData)]
+        public event AlgorithmEvent<string> NameUpdated;
+
+        /// <summary>
+        /// Event fired when the tag collection is updated
+        /// </summary>
+        [DocumentationAttribute(HandlingData)]
+        public event AlgorithmEvent<HashSet<string>> TagsUpdated;
 
         /// <summary>
         /// Read-only value for current time frontier of the algorithm in terms of the <see cref="TimeZone"/>
@@ -757,7 +772,7 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            if(TryGetWarmupHistoryStartTime(out var result))
+            if (TryGetWarmupHistoryStartTime(out var result))
             {
                 SetDateTime(result.ConvertToUtc(TimeZone));
             }
@@ -974,7 +989,7 @@ namespace QuantConnect.Algorithm
                     .Where(x => x.Name == "OnData")
                     .Where(x => x.DeclaringType != typeof(QCAlgorithm))
                     .Where(x => x.GetParameters().Length == 1)
-                    .FirstOrDefault(x => x.GetParameters()[0].ParameterType == typeof (Slice));
+                    .FirstOrDefault(x => x.GetParameters()[0].ParameterType == typeof(Slice));
 
                 if (method == null)
                 {
@@ -982,7 +997,7 @@ namespace QuantConnect.Algorithm
                 }
 
                 var self = Expression.Constant(this);
-                var parameter = Expression.Parameter(typeof (Slice), "data");
+                var parameter = Expression.Parameter(typeof(Slice), "data");
                 var call = Expression.Call(self, method, parameter);
                 var lambda = Expression.Lambda<Action<Slice>>(call, parameter);
                 _onDataSlice = lambda.Compile();
@@ -1451,9 +1466,9 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">The tag to add</param>
         public void AddTag(string tag)
         {
-            if (!string.IsNullOrEmpty(tag))
+            if (!string.IsNullOrEmpty(tag) && Tags.Add(tag))
             {
-                Tags.Add(tag);
+                TagsUpdated?.Invoke(this, Tags);
             }
         }
 
@@ -1461,9 +1476,11 @@ namespace QuantConnect.Algorithm
         /// Sets the tags for the algorithm
         /// </summary>
         /// <param name="tags">The tags</param>
-        public void SetTags(List<string> tags)
+        public void SetTags(HashSet<string> tags)
         {
-            Tags = tags.ToList();
+            // get a copy
+            Tags = tags.ToHashSet();
+            TagsUpdated?.Invoke(this, Tags);
         }
 
         /// <summary>
@@ -2256,7 +2273,7 @@ namespace QuantConnect.Algorithm
         public Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true,
             decimal leverage = Security.NullLeverage, bool extendedMarketHours = false)
         {
-            if(symbol == null || !symbol.SecurityType.IsOption() || symbol.Underlying == null)
+            if (symbol == null || !symbol.SecurityType.IsOption() || symbol.Underlying == null)
             {
                 throw new ArgumentException($"Unexpected option symbol {symbol}. " +
                     $"Please provide a valid option contract with it's underlying symbol set.");
@@ -2306,7 +2323,8 @@ namespace QuantConnect.Algorithm
             Universe universe;
             if (!UniverseManager.TryGetValue(universeSymbol, out universe))
             {
-                var settings = new UniverseSettings(UniverseSettings) {
+                var settings = new UniverseSettings(UniverseSettings)
+                {
                     DataNormalizationMode = DataNormalizationMode.Raw,
                     Resolution = underlyingConfigs.GetHighestResolution(),
                     ExtendedMarketHours = extendedMarketHours
@@ -2874,7 +2892,7 @@ namespace QuantConnect.Algorithm
                 dataMappingMode: mappingMode ?? UniverseSettings.DataMappingMode);
             var security = Securities.CreateSecurity(symbol, configs, leverage);
 
-            return (T) AddToUserDefinedUniverse(security, configs);
+            return (T)AddToUserDefinedUniverse(security, configs);
         }
 
         /// <summary>

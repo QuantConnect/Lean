@@ -1283,5 +1283,23 @@ namespace QuantConnect.Lean.Engine.Results
         {
             SummaryStatistic(name, value);
         }
+
+        /// <summary>
+        /// Handles updates to the algorithm's name
+        /// </summary>
+        /// <param name="name">The new name</param>
+        public void AlgorithmNameUpdated(string name)
+        {
+            // Do nothing here, tags only matter for backtest
+        }
+
+        /// <summary>
+        /// Handles updates to the algorithm's tags
+        /// </summary>
+        /// <param name="tags">The new tags</param>
+        public void AlgorithmTagsUpdated(HashSet<string> tags)
+        {
+            // Do nothing here, tags only matter for backtest
+        }
     }
 }
