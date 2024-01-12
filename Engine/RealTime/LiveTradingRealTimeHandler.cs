@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.RealTime
     {
         private Thread _realTimeThread;
         private CancellationTokenSource _cancellationTokenSource = new();
-        protected static MarketHoursDatabase MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        protected MarketHoursDatabase MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
         /// <summary>
         /// Boolean flag indicating thread state.
@@ -113,19 +113,20 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Refresh the Today variable holding the market hours information
+        /// Refresh the market hours for each security in the given date
         /// </summary>
+        /// <remarks>Each time this method is called, the MarketHoursDatabase is reset</remarks>
         private void RefreshMarketHoursToday(DateTime date)
         {
             date = date.Date;
+            MarketHoursDatabase.Reset();
 
             // update market hours for each security
             foreach (var kvp in Algorithm.Securities)
             {
                 var security = kvp.Value;
 
-                MarketHoursDatabase.Reset();
-                var marketHours = MarketToday(date, security.Symbol);
+                var marketHours = GetMarketHours(date, security.Symbol);
                 security.Exchange.SetMarketHours(marketHours, date.DayOfWeek);
                 var localMarketHours = security.Exchange.Hours.MarketHours[date.DayOfWeek];
                 Log.Trace($"LiveTradingRealTimeHandler.RefreshMarketHoursToday({security.Type}): Market hours set: Symbol: {security.Symbol} {localMarketHours} ({security.Exchange.Hours.TimeZone})");
@@ -176,9 +177,9 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Get the calendar open hours for the date.
+        /// Get the market hours for the given symbol and date
         /// </summary>
-        private IEnumerable<MarketHoursSegment> MarketToday(DateTime time, Symbol symbol)
+        private IEnumerable<MarketHoursSegment> GetMarketHours(DateTime time, Symbol symbol)
         {
             if (Config.GetBool("force-exchange-always-open"))
             {

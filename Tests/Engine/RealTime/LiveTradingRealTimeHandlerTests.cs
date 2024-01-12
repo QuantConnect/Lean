@@ -71,8 +71,8 @@ namespace QuantConnect.Tests.Engine.RealTime
             realTimeHandler.Exit();
         }
 
-        [Test]
-        public void RefreshesMarketHoursCorrectly()
+        [TestCaseSource(typeof(ExchangeHoursDataClass), nameof(ExchangeHoursDataClass.TestCases))]
+        public void RefreshesMarketHoursCorrectly(SecurityExchangeHours securityExchangeHours, MarketHoursSegment expectedSegment)
         {
             Security security;
             var algorithm = new AlgorithmStub();
@@ -85,17 +85,30 @@ namespace QuantConnect.Tests.Engine.RealTime
                 null,
                 new TestTimeLimitManager());
 
-            // Because neither implement EOD() deprecated it should be zero
-            var segments = security.Exchange.Hours.MarketHours[DateTime.UtcNow.AddDays(1).DayOfWeek].Segments.Count;
-            Assert.AreEqual(3, segments);
-            var securityExchangeHours = CreateExchangeHours();
+            var time = DateTime.UtcNow.AddDays(1);
             var entry = new MarketHoursDatabase.Entry(TimeZones.NewYork, securityExchangeHours);
             var key = new SecurityDatabaseKey(Market.USA, null, SecurityType.Equity);
             var mhdb = new MarketHoursDatabase(new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>() { { key, entry} });
             realTimeHandler.SetMarketHoursDatabase(mhdb);
-            realTimeHandler.ScanPastEvents(DateTime.UtcNow.AddDays(1));
-            segments = security.Exchange.Hours.MarketHours[DateTime.UtcNow.AddDays(1).DayOfWeek].Segments.Count;
-            Assert.AreEqual(1, segments);
+            realTimeHandler.ScanPastEvents(time);
+            Thread.Sleep(1000);
+            var marketHours = security.Exchange.Hours.MarketHours[time.DayOfWeek];
+            var segment = marketHours.Segments.SingleOrDefault();
+            if (segment == null)
+            {
+                Assert.AreEqual(expectedSegment, segment);
+            }
+            else
+            {
+                Assert.AreEqual(expectedSegment.Start, segment.Start);
+                Assert.AreEqual(expectedSegment.End, segment.End);
+                for (var hour = segment.Start; hour < segment.End; hour = hour.Add(TimeSpan.FromHours(1)))
+                {
+                    Assert.IsTrue(marketHours.IsOpen(hour, false));
+                }
+                Assert.AreEqual(expectedSegment.End, security.Exchange.Hours.GetNextMarketClose(time.Date, false).TimeOfDay);
+                Assert.AreEqual(expectedSegment.Start, security.Exchange.Hours.GetNextMarketOpen(time.Date, false).TimeOfDay);
+            }
         }
 
         private class TestTimeLimitManager : IIsolatorLimitResultProvider
@@ -122,23 +135,72 @@ namespace QuantConnect.Tests.Engine.RealTime
             }
         }
 
-        public static SecurityExchangeHours CreateExchangeHours()
+        public class ExchangeHoursDataClass
         {
-            var sunday = LocalMarketHours.ClosedAllDay(DayOfWeek.Sunday);
-            var monday = new LocalMarketHours(DayOfWeek.Monday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var tuesday = new LocalMarketHours(DayOfWeek.Tuesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var wednesday = new LocalMarketHours(DayOfWeek.Wednesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var thursday = new LocalMarketHours(DayOfWeek.Thursday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var friday = new LocalMarketHours(DayOfWeek.Friday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
+            private static LocalMarketHours _sunday = new LocalMarketHours(DayOfWeek.Sunday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _monday = new LocalMarketHours(DayOfWeek.Monday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _tuesday = new LocalMarketHours(DayOfWeek.Tuesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _wednesday = new LocalMarketHours(DayOfWeek.Wednesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _thursday = new LocalMarketHours(DayOfWeek.Thursday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _friday = new LocalMarketHours(DayOfWeek.Friday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _saturday = new LocalMarketHours(DayOfWeek.Saturday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
 
-            var earlyCloses = new Dictionary<DateTime, TimeSpan> { { DateTime.UtcNow.AddDays(1), new TimeSpan(13, 0, 0) } };
-            var lateOpens = new Dictionary<DateTime, TimeSpan>() { { DateTime.UtcNow.AddDays(1), new TimeSpan(10, 0, 0) } };
-            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
+            public static IEnumerable<TestCaseData> TestCases
             {
-                sunday, monday, tuesday, wednesday, thursday, friday, saturday
+                get
+                {
+                    yield return new TestCaseData(CreateExchangeHoursWithEarlyCloseAndLateOpen(), new MarketHoursSegment(MarketHoursState.Market,new TimeSpan(10, 0, 0), new TimeSpan(13, 0, 0)));
+                    yield return new TestCaseData(CreateExchangeHoursWithEarlyClose(), new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(9, 30, 0), new TimeSpan(13, 0, 0)));
+                    yield return new TestCaseData(CreateExchangeHoursWithLateOpen(), new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(10, 0, 0), new TimeSpan(16, 0, 0)));
+                    yield return new TestCaseData(CreateExchangeHoursWithHolidays(), null);
+                }
+            }
+
+            private static SecurityExchangeHours CreateExchangeHoursWithEarlyCloseAndLateOpen()
+            {
+                var earlyCloses = new Dictionary<DateTime, TimeSpan> { { DateTime.UtcNow.AddDays(1).Date, new TimeSpan(13, 0, 0) } };
+                var lateOpens = new Dictionary<DateTime, TimeSpan>() { { DateTime.UtcNow.AddDays(1).Date, new TimeSpan(10, 0, 0) } };
+                var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
+                {
+                _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
             }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
-            return exchangeHours;
+                return exchangeHours;
+            }
+
+            private static SecurityExchangeHours CreateExchangeHoursWithEarlyClose()
+            {
+                var earlyCloses = new Dictionary<DateTime, TimeSpan> { { DateTime.UtcNow.AddDays(1).Date, new TimeSpan(13, 0, 0) } };
+                var lateOpens = new Dictionary<DateTime, TimeSpan>();
+                var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
+                {
+                _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+                return exchangeHours;
+            }
+
+            private static SecurityExchangeHours CreateExchangeHoursWithLateOpen()
+            {
+                var earlyCloses = new Dictionary<DateTime, TimeSpan>();
+                var lateOpens = new Dictionary<DateTime, TimeSpan>() { { DateTime.UtcNow.AddDays(1).Date, new TimeSpan(10, 0, 0) } };
+                var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
+                {
+                _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+                return exchangeHours;
+            }
+
+            private static SecurityExchangeHours CreateExchangeHoursWithHolidays()
+            {
+                var earlyCloses = new Dictionary<DateTime, TimeSpan>();
+                var lateOpens = new Dictionary<DateTime, TimeSpan>();
+                var holidays = new List<DateTime>() { DateTime.UtcNow.AddDays(1).Date };
+                var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
+                {
+                _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+                return exchangeHours;
+            }
+
         }
     }
 }

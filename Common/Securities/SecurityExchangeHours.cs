@@ -435,6 +435,11 @@ namespace QuantConnect.Securities
         /// <param name="localDateTime">The local date time to retrieve market hours for</param>
         public LocalMarketHours GetMarketHours(DateTime localDateTime)
         {
+            if (_holidays.Contains(localDateTime.Ticks))
+            {
+                return new LocalMarketHours(localDateTime.DayOfWeek);
+            }
+
             LocalMarketHours marketHours;
             switch (localDateTime.DayOfWeek)
             {
