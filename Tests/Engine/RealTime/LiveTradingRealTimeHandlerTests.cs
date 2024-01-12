@@ -66,6 +66,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             realTimeHandler.Exit();
         }
 
+        [NonParallelizable]
         [TestCaseSource(typeof(ExchangeHoursDataClass), nameof(ExchangeHoursDataClass.TestCases))]
         public void RefreshesMarketHoursCorrectly(SecurityExchangeHours securityExchangeHours, MarketHoursSegment expectedSegment)
         {
@@ -85,25 +86,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             var key = new SecurityDatabaseKey(Market.USA, null, SecurityType.Equity);
             var mhdb = new MarketHoursDatabase(new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>() { { key, entry} });
             realTimeHandler.SetMarketHoursDatabase(mhdb);
-            realTimeHandler.ScanPastEvents(time);
-            Thread.Sleep(1000);
-            var marketHours = security.Exchange.Hours.MarketHours[time.DayOfWeek];
-            var segment = marketHours.Segments.SingleOrDefault();
-            if (segment == null)
-            {
-                Assert.AreEqual(expectedSegment, segment);
-            }
-            else
-            {
-                Assert.AreEqual(expectedSegment.Start, segment.Start);
-                Assert.AreEqual(expectedSegment.End, segment.End);
-                for (var hour = segment.Start; hour < segment.End; hour = hour.Add(TimeSpan.FromHours(1)))
-                {
-                    Assert.IsTrue(marketHours.IsOpen(hour, false));
-                }
-                Assert.AreEqual(expectedSegment.End, security.Exchange.Hours.GetNextMarketClose(time.Date, false).TimeOfDay);
-                Assert.AreEqual(expectedSegment.Start, security.Exchange.Hours.GetNextMarketOpen(time.Date, false).TimeOfDay);
-            }
+            realTimeHandler.ScanAndAssertMarketHours(security, time, expectedSegment);
         }
 
         private class TestTimeLimitManager : IIsolatorLimitResultProvider
@@ -124,9 +107,47 @@ namespace QuantConnect.Tests.Engine.RealTime
 
         public class TestLiveTradingRealTimeHandler: LiveTradingRealTimeHandler
         {
+            private static AutoResetEvent OnSecurityUpdated = new AutoResetEvent(false);
             public void SetMarketHoursDatabase(MarketHoursDatabase marketHoursDatabase)
             {
                 MarketHoursDatabase = marketHoursDatabase;
+            }
+
+            public void ScanAndAssertMarketHours(Security security, DateTime time, MarketHoursSegment expectedSegment)
+            {
+                OnSecurityUpdated.Reset();
+                ScanPastEvents(time);
+                OnSecurityUpdated.WaitOne();
+                AssertMarketHours(security, time, expectedSegment);
+            }
+
+            protected override IEnumerable<MarketHoursSegment> GetMarketHours(DateTime time, Symbol symbol)
+            {
+                var results = base.GetMarketHours(time, symbol);
+                OnSecurityUpdated.Set();
+                return results;
+            }
+
+            public void AssertMarketHours(Security security, DateTime time, MarketHoursSegment expectedSegment)
+            {
+                var marketHours = security.Exchange.Hours.MarketHours[time.DayOfWeek];
+                var segment = marketHours.Segments.SingleOrDefault();
+
+                if (segment == null)
+                {
+                    Assert.AreEqual(expectedSegment, segment);
+                }
+                else
+                {
+                    Assert.AreEqual(expectedSegment.Start, segment.Start);
+                    Assert.AreEqual(expectedSegment.End, segment.End);
+                    for (var hour = segment.Start; hour < segment.End; hour = hour.Add(TimeSpan.FromHours(1)))
+                    {
+                        Assert.IsTrue(marketHours.IsOpen(hour, false));
+                    }
+                    Assert.AreEqual(expectedSegment.End, security.Exchange.Hours.GetNextMarketClose(time.Date, false).TimeOfDay);
+                    Assert.AreEqual(expectedSegment.Start, security.Exchange.Hours.GetNextMarketOpen(time.Date, false).TimeOfDay);
+                }
             }
         }
 

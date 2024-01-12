@@ -179,7 +179,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Get the market hours for the given symbol and date
         /// </summary>
-        private IEnumerable<MarketHoursSegment> GetMarketHours(DateTime time, Symbol symbol)
+        protected virtual IEnumerable<MarketHoursSegment> GetMarketHours(DateTime time, Symbol symbol)
         {
             if (Config.GetBool("force-exchange-always-open"))
             {
