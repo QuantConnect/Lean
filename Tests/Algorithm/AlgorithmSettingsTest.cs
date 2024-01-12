@@ -109,23 +109,23 @@ namespace QuantConnect.Tests.Algorithm
             var algorithm = new QCAlgorithm();
             algorithm.SetBrokerageModel(brokerageName, accountType);
 
-            algorithm.Settings.TradingDaysPerYear ??= BaseSetupHandler.GetBrokerageTradingDayPerYear(algorithm.BrokerageModel);
+            BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
 
             Assert.AreEqual(expectedTradingDayPerYear, algorithm.Settings.TradingDaysPerYear.Value);
         }
 
-        [TestCase(BrokerageName.Bybit, 202)]
-        [TestCase(BrokerageName.InteractiveBrokersBrokerage, 404)]
-        public void ReturnCustomTradingDayPerYearIndependentlyFromBrokerageName(BrokerageName brokerageName, int customTradingDayPerYear)
+        [TestCase(BrokerageName.Bybit, 202, 365)]
+        [TestCase(BrokerageName.InteractiveBrokersBrokerage, 404, 252)]
+        public void ReturnCustomTradingDayPerYearIndependentlyFromBrokerageName(BrokerageName brokerageName, int customTradingDayPerYear, int expectedDefaultTradingDayPerYearForBrokerage)
         {
             var algorithm = new QCAlgorithm();
             algorithm.SetBrokerageModel(brokerageName);
             algorithm.Settings.TradingDaysPerYear = customTradingDayPerYear;
 
             // duplicate: make sure that custom value is assigned
-            algorithm.Settings.TradingDaysPerYear ??= BaseSetupHandler.GetBrokerageTradingDayPerYear(algorithm.BrokerageModel);
+            BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
 
-            Assert.AreNotEqual(BaseSetupHandler.GetBrokerageTradingDayPerYear(algorithm.BrokerageModel), algorithm.Settings.TradingDaysPerYear);
+            Assert.AreNotEqual(expectedDefaultTradingDayPerYearForBrokerage, algorithm.Settings.TradingDaysPerYear);
         }
 
         [TestCase(null, 252)]
@@ -139,7 +139,7 @@ namespace QuantConnect.Tests.Algorithm
                 algorithm.Settings.TradingDaysPerYear = customTradingDayPerYear.Value;
             }
 
-            algorithm.Settings.TradingDaysPerYear ??= BaseSetupHandler.GetBrokerageTradingDayPerYear(algorithm.BrokerageModel);
+            BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
 
             Assert.AreEqual(expectedTradingDayPerYear, algorithm.Settings.TradingDaysPerYear);
         }

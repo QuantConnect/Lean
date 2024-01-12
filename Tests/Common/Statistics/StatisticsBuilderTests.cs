@@ -19,14 +19,18 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Statistics;
-using QuantConnect.Brokerages;
-using QuantConnect.Lean.Engine.Setup;
 
 namespace QuantConnect.Tests.Common.Statistics
 {
     [TestFixture]
     public class StatisticsBuilderTests
     {
+        /// <summary>
+        /// TradingDaysPerYear: Use like backward compatibility
+        /// </summary>
+        /// <remarks><see cref="Interfaces.IAlgorithmSettings.TradingDaysPerYear"></remarks>
+        protected const int _tradingDaysPerYear = 252;
+
         [Test]
         public void MisalignedValues_ShouldThrow_DuringGeneration()
         {
@@ -80,7 +84,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         null,
                         new QuantConnect.Securities.SecurityManager(new TimeKeeper(DateTime.UtcNow))),
                     new InterestRateProvider(),
-                    BaseSetupHandler.GetBrokerageTradingDayPerYear(new DefaultBrokerageModel()));
+                    _tradingDaysPerYear);
             }, "Misaligned values provided, but we still generate statistics");
         }
     }

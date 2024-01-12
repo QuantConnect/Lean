@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Statistics
         public void GetData()
         {
             _algorithm = new QCAlgorithm();
-            _algorithm.Settings.TradingDaysPerYear = BaseSetupHandler.GetBrokerageTradingDayPerYear(_algorithm.BrokerageModel);
+            BaseSetupHandler.SetBrokerageTradingDayPerYear(_algorithm);
 
             var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             var spyPath = LeanData.GenerateZipFilePath(Globals.DataFolder, spy, new DateTime(2020, 3, 1), Resolution.Daily, TickType.Trade);

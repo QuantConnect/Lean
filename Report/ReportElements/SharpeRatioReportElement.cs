@@ -25,6 +25,11 @@ namespace QuantConnect.Report.ReportElements
     public class SharpeRatioReportElement : ReportElement
     {
         /// <summary>
+        /// The number of trading days per year to get better result of statistics
+        /// </summary>
+        protected double _tradingDaysPerYear;
+
+        /// <summary>
         /// Live result object
         /// </summary>
         protected LiveResult LiveResult { get; }
@@ -46,12 +51,14 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public SharpeRatioReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        /// <param name="tradingDaysPerYear">The number of trading days per year to get better result of statistics</param>
+        public SharpeRatioReportElement(string name, string key, BacktestResult backtest, LiveResult live, int tradingDaysPerYear)
         {
             LiveResult = live;
             BacktestResult = backtest;
             Name = name;
             Key = key;
+            _tradingDaysPerYear = Convert.ToDouble(tradingDaysPerYear, CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -77,14 +84,13 @@ namespace QuantConnect.Report.ReportElements
                 .Values
                 .ToList();
 
-            var annualStandardDeviation = trailingPerformance.Count < 7 ? 0 : GetAnnualStandardDeviation(trailingPerformance);
+            var annualStandardDeviation = trailingPerformance.Count < 7 ? 0 : GetAnnualStandardDeviation(trailingPerformance, _tradingDaysPerYear);
             if (annualStandardDeviation <= 0)
             {
                 return "-";
             }
 
-            var annualPerformance = Statistics.Statistics.AnnualPerformance(trailingPerformance, 
-                Convert.ToDouble(BacktestResult?.AlgorithmConfiguration?.TradingDaysPerYear, CultureInfo.InvariantCulture));
+            var annualPerformance = Statistics.Statistics.AnnualPerformance(trailingPerformance, _tradingDaysPerYear);
             var liveResultValue = Statistics.Statistics.SharpeRatio(annualPerformance, annualStandardDeviation, 0.0);
             Result = liveResultValue;
             return liveResultValue.ToString("F2");
@@ -94,11 +100,11 @@ namespace QuantConnect.Report.ReportElements
         /// Get annual standard deviation
         /// </summary>
         /// <param name="trailingPerformance">The performance for the last period</param>
+        /// <param name="tradingDaysPerYear">The number of trading days per year to get better result of statistics</param>
         /// <returns>Annual standard deviation.</returns>
-        public virtual double GetAnnualStandardDeviation(List<double> trailingPerformance)
+        public virtual double GetAnnualStandardDeviation(List<double> trailingPerformance, double tradingDaysPerYear)
         {
-            return Statistics.Statistics.AnnualStandardDeviation(trailingPerformance, 
-                Convert.ToDouble(BacktestResult?.AlgorithmConfiguration?.TradingDaysPerYear, CultureInfo.InvariantCulture));
+            return Statistics.Statistics.AnnualStandardDeviation(trailingPerformance, tradingDaysPerYear);
         }
     }
 }

@@ -234,27 +234,30 @@ namespace QuantConnect.Lean.Engine.Setup
         }
 
         /// <summary>
-        /// Gets the number of trading days per year based on the specified brokerage model.
+        /// Set the number of trading days per year based on the specified brokerage model.
         /// </summary>
-        /// <param name="brokerageModel">The brokerage model for which to determine the trading days.</param>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <returns>
         /// The number of trading days per year. For specific brokerages (Coinbase, Binance, Bitfinex, Bybit, FTX, Kraken),
         /// the value is 365. For other brokerages, the default value is 252.
         /// </returns>
-        public static int GetBrokerageTradingDayPerYear(IBrokerageModel brokerageModel)
+        public static void SetBrokerageTradingDayPerYear(IAlgorithm algorithm)
         {
-            switch (brokerageModel)
+            if (algorithm == null)
             {
-                case CoinbaseBrokerageModel:
-                case BinanceBrokerageModel:
-                case BitfinexBrokerageModel:
-                case BybitBrokerageModel:
-                case FTXBrokerageModel:
-                case KrakenBrokerageModel:
-                    return 365;
-                default:
-                    return 252;
+                throw new ArgumentNullException(nameof(algorithm));
             }
+
+            algorithm.Settings.TradingDaysPerYear ??= algorithm.BrokerageModel switch
+            {
+                CoinbaseBrokerageModel
+                or BinanceBrokerageModel
+                or BitfinexBrokerageModel
+                or BybitBrokerageModel
+                or FTXBrokerageModel
+                or KrakenBrokerageModel => 365,
+                _ => 252
+            };
         }
     }
 }

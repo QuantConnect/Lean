@@ -19,8 +19,6 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Statistics;
-using QuantConnect.Brokerages;
-using QuantConnect.Lean.Engine.Setup;
 
 namespace QuantConnect.Tests.Common.Statistics
 {
@@ -30,6 +28,12 @@ namespace QuantConnect.Tests.Common.Statistics
         private const decimal TradeFee = 2;
         private readonly DateTime _startTime = new DateTime(2015, 08, 06, 15, 30, 0);
 
+        /// <summary>
+        /// TradingDaysPerYear: Use like backward compatibility
+        /// </summary>
+        /// <remarks><see cref="Interfaces.IAlgorithmSettings.TradingDaysPerYear"></remarks>
+        protected const int _tradingDaysPerYear = 252;
+
         [Test]
         public void ITMOptionAssignment([Values] bool win)
         {
@@ -37,10 +41,9 @@ namespace QuantConnect.Tests.Common.Statistics
             var profitLoss = new SortedDictionary<DateTime, decimal>(trades.ToDictionary(x => x.ExitTime, x => x.ProfitLoss));
             var winCount = trades.Count(x => x.IsWin);
             var lossCount = trades.Count - winCount;
-            var tradingDayPerYears = BaseSetupHandler.GetBrokerageTradingDayPerYear(new DefaultBrokerageModel());
             var statistics = new PortfolioStatistics(profitLoss, new SortedDictionary<DateTime, decimal>(),
                 new SortedDictionary<DateTime, decimal>(), new List<double> { 0, 0 }, new List<double> { 0, 0 }, 100000,
-                new InterestRateProvider(), tradingDayPerYears, winCount, lossCount);
+                new InterestRateProvider(), _tradingDaysPerYear, winCount, lossCount);
 
             if (win)
             {

@@ -67,6 +67,10 @@ namespace QuantConnect.Report
             var backtestConfiguration = backtest?.AlgorithmConfiguration;
             var liveConfiguration = live?.AlgorithmConfiguration;
 
+            // Earlier we use constant's value tradingDaysPerYear = 252
+            // backtestConfiguration?.TradingDaysPerYear equal liveConfiguration?.TradingDaysPerYear
+            var tradingDayPerYear = backtestConfiguration?.TradingDaysPerYear ?? 252;
+
             Log.Trace($"QuantConnect.Report.Report(): Processing backtesting orders");
             var backtestPortfolioInTime = PortfolioLooper.FromOrders(backtestCurve, backtestOrders, backtestConfiguration).ToList();
             Log.Trace($"QuantConnect.Report.Report(): Processing live orders");
@@ -119,8 +123,8 @@ namespace QuantConnect.Report
                 new CAGRReportElement("cagr kpi", ReportKey.CAGR, backtest, live),
                 new TurnoverReportElement("turnover kpi", ReportKey.Turnover, backtest, live),
                 new MaxDrawdownReportElement("max drawdown kpi", ReportKey.MaxDrawdown, backtest, live),
-                new SharpeRatioReportElement("sharpe kpi", ReportKey.SharpeRatio, backtest, live),
-                new SortinoRatioReportElement("sortino kpi", ReportKey.SortinoRatio, backtest, live),
+                new SharpeRatioReportElement("sharpe kpi", ReportKey.SharpeRatio, backtest, live, tradingDayPerYear),
+                new SortinoRatioReportElement("sortino kpi", ReportKey.SortinoRatio, backtest, live, tradingDayPerYear),
                 new PSRReportElement("psr kpi", ReportKey.PSR, backtest, live),
                 new InformationRatioReportElement("ir kpi", ReportKey.InformationRatio, backtest, live),
                 new MarketsReportElement("markets kpi", ReportKey.Markets, backtest, live),
@@ -136,7 +140,7 @@ namespace QuantConnect.Report
                 new DrawdownReportElement("drawdown plot", ReportKey.Drawdown, backtest, live),
                 new DailyReturnsReportElement("daily returns plot", ReportKey.DailyReturns, backtest, live),
                 new RollingPortfolioBetaReportElement("rolling beta to equities plot", ReportKey.RollingBeta, backtest, live),
-                new RollingSharpeReportElement("rolling sharpe ratio plot", ReportKey.RollingSharpe, backtest, live),
+                new RollingSharpeReportElement("rolling sharpe ratio plot", ReportKey.RollingSharpe, backtest, live, tradingDayPerYear),
                 new LeverageUtilizationReportElement("leverage plot", ReportKey.LeverageUtilization, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
                 new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live, backtestPortfolioInTime, livePortfolioInTime)
             };

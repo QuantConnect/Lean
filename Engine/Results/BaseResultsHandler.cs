@@ -26,6 +26,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -846,12 +847,13 @@ namespace QuantConnect.Lean.Engine.Results
                         portfolioTurnover = new Series();
                     }
 
-                    // use value = 252 like default for backwards compatibility
-                    var tradingDaysPerYear = Algorithm.Settings.TradingDaysPerYear.HasValue ? Algorithm.Settings.TradingDaysPerYear.Value : 252;
+                    // call method to set tradingDayPerYear for Algorithm (use: backwards compatibility)
+                    BaseSetupHandler.SetBrokerageTradingDayPerYear(Algorithm);
 
                     statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performance.Values, benchmark.Values,
                         portfolioTurnover.Values, StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions,
-                        estimatedStrategyCapacity, AlgorithmCurrencySymbol, Algorithm.Transactions, Algorithm.RiskFreeInterestRateModel, tradingDaysPerYear);
+                        estimatedStrategyCapacity, AlgorithmCurrencySymbol, Algorithm.Transactions, Algorithm.RiskFreeInterestRateModel, 
+                        Algorithm.Settings.TradingDaysPerYear.Value);
                 }
 
                 statisticsResults.AddCustomSummaryStatistics(_customSummaryStatistics);
