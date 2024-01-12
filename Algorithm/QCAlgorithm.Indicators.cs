@@ -858,10 +858,14 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The desired resolution of the data</param>
         /// <returns>A new ImpliedVolatility indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
-        public ImpliedVolatility IV(Symbol symbol, decimal riskFreeRate = 0.05m, int period = 252, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, Resolution? resolution = null)
+        public ImpliedVolatility IV(Symbol symbol, decimal? riskFreeRate = null, int period = 252, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, Resolution? resolution = null)
         {
             var name = CreateIndicatorName(symbol, $"IV({riskFreeRate},{period},{optionModel})", resolution);
-            var iv = new ImpliedVolatility(name, symbol, riskFreeRate, period, optionModel);
+            IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue
+                ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
+                // Make it a function so it's lazily evaluated: SetRiskFreeInterestRateModel can be called after this method
+                : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
+            var iv = new ImpliedVolatility(name, symbol, riskFreeRateModel, period, optionModel);
             RegisterIndicator(symbol, iv, ResolveConsolidator(symbol, resolution));
             RegisterIndicator(symbol.Underlying, iv, ResolveConsolidator(symbol, resolution));
             return iv;

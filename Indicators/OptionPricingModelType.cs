@@ -23,10 +23,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Vanilla Black Scholes Model
         /// </summary>
+        /// <remarks>Preferred on calculating greeks for European options, and IV for all options</remarks>
         BlackScholes,
         /// <summary>
         /// The Cox-Ross-Rubinstein binomial tree model (CRR model)
         /// </summary>
+        /// <remarks>Preferred on calculating greeks for American options</remarks>
         BinomialCoxRossRubinstein
     }
 }

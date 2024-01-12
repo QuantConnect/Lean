@@ -15,16 +15,18 @@
 
 using System;
 using MathNet.Numerics.RootFinding;
+using Python.Runtime;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Python;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
     /// Implied Volatility indicator that calculate the IV of an option using Black-Scholes Model
     /// </summary>
-    public class ImpliedVolatility : BarIndicator, IIndicatorWarmUpPeriodProvider
+    public class ImpliedVolatility : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         private readonly Symbol _optionSymbol;
         private readonly Symbol _underlyingSymbol;
@@ -34,29 +36,34 @@ namespace QuantConnect.Indicators
         private OptionPricingModelType _optionModel;
 
         /// <summary>
+        /// Risk-free rate model
+        /// </summary>
+        private readonly IRiskFreeInterestRateModel _riskFreeInterestRateModel;
+
+        /// <summary>
         /// Gets the expiration time of the option
         /// </summary>
-        public DateTime Expiry { get; }
+        public DateTime Expiry => _optionSymbol.ID.Date;
 
         /// <summary>
         /// Gets the option right (call/put) of the option
         /// </summary>
-        public OptionRight Right { get; }
-
-        /// <summary>
-        /// Risk Free Rate
-        /// </summary>
-        public decimal RiskFreeRate { get; set; }
+        public OptionRight Right => _optionSymbol.ID.OptionRight;
 
         /// <summary>
         /// Gets the strike price of the option
         /// </summary>
-        public decimal Strike { get; }
+        public decimal Strike => _optionSymbol.ID.StrikePrice;
 
         /// <summary>
         /// Gets the option style (European/American) of the option
         /// </summary>
-        public OptionStyle Style { get; }
+        public OptionStyle Style => _optionSymbol.ID.OptionStyle;
+
+        /// <summary>
+        /// Risk Free Rate
+        /// </summary>
+        public Identity RiskFreeRate { get; set; }
 
         /// <summary>
         /// Gets the historical volatility of the underlying
@@ -76,25 +83,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the ImpliedVolatility class
         /// </summary>
-        /// <param name="option">The option to be tracked</param>am>
-        /// <param name="riskFreeRate">The risk free rate</param>
-        /// <param name="period">The lookback period of historical volatility</param>
-        /// <param name="optionModel">The option pricing model used to estimate IV</param>
-        public ImpliedVolatility(Symbol option, decimal riskFreeRate = 0.05m, int period = 252,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
-            : this($"IV({option.Value},{riskFreeRate},{period},{optionModel})", option, riskFreeRate, period, optionModel)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the ImpliedVolatility class
-        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
-        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate IV</param>
-        public ImpliedVolatility(string name, Symbol option, decimal riskFreeRate = 0.05m, int period = 252, 
+        public ImpliedVolatility(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, int period = 252, 
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
             : base(name)
         {
@@ -107,14 +101,10 @@ namespace QuantConnect.Indicators
             _optionSymbol = option;
             _underlyingSymbol = option.Underlying;
             _roc = new(1);
+            _riskFreeInterestRateModel = riskFreeRateModel;
             _optionModel = optionModel;
-
-            Strike = sid.StrikePrice;
-            Expiry = sid.Date;
-            Right = sid.OptionRight;
-            Style = sid.OptionStyle;
-            RiskFreeRate = riskFreeRate;
  
+            RiskFreeRate = new Identity(name + "_RiskFreeRate");
             HistoricalVolatility = IndicatorExtensions.Times(
                 IndicatorExtensions.Of(
                     new StandardDeviation(period),
@@ -134,6 +124,75 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        public ImpliedVolatility(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, int period = 252,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
+            : this($"IV({option.Value},{period},{optionModel})", option, riskFreeRateModel, period, optionModel)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        public ImpliedVolatility(string name, Symbol option, PyObject riskFreeRateModel, int period = 252,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
+            : this(name, option, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), period, optionModel)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        public ImpliedVolatility(Symbol option, PyObject riskFreeRateModel, int period = 252,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
+            : this($"IV({option.Value},{period},{optionModel})", option, 
+                RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), period, optionModel)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        public ImpliedVolatility(string name, Symbol option, decimal riskFreeRate = 0.05m, int period = 252,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
+            : this(name, option, new ConstantRiskFreeRateInterestRateModel(riskFreeRate), period, optionModel)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        public ImpliedVolatility(Symbol option, decimal riskFreeRate = 0.05m, int period = 252,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
+            : this($"IV({option.Value},{period},{riskFreeRate},{optionModel})", option, 
+                new ConstantRiskFreeRateInterestRateModel(riskFreeRate), period, optionModel)
+        {
+        }
+
+        /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => HistoricalVolatility.Samples >= 2 && Price.Current.Time == UnderlyingPrice.Current.Time;
@@ -148,17 +207,19 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>The input is returned unmodified.</returns>
-        protected override decimal ComputeNextValue(IBaseDataBar input)
+        protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
+            RiskFreeRate.Update(input.EndTime, _riskFreeInterestRateModel.GetInterestRate(input.EndTime));
+
             var inputSymbol = input.Symbol;
             if (inputSymbol == _optionSymbol)
             {
-                Price.Update(input.EndTime, input.Close);
+                Price.Update(input.EndTime, input.Price);
             }
             else if (inputSymbol == _underlyingSymbol)
             {
                 _consolidator.Update(input);
-                UnderlyingPrice.Update(input.EndTime, input.Close);
+                UnderlyingPrice.Update(input.EndTime, input.Price);
             }
             else
             {
@@ -194,14 +255,15 @@ namespace QuantConnect.Indicators
             var spotPrice = UnderlyingPrice.Current.Value;
             var timeToExpiration = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
 
-            Func<double, double> f = (vol) => (double)(TheoreticalPrice(Convert.ToDecimal(vol), spotPrice, Strike, timeToExpiration, RiskFreeRate, Right, _optionModel) - price);
+            Func<double, double> f = (vol) => 
+                (double)(TheoreticalPrice(Convert.ToDecimal(vol), spotPrice, Strike, timeToExpiration, RiskFreeRate.Current.Value, Right, _optionModel) - price);
             try
             {
                 return Convert.ToDecimal(Brent.FindRoot(f, 0.01d, 1.0d, 1e-5d, 20));
             }
             catch
             {
-                Log.Error("Fail to converge, returning 0.");
+                Log.Error("ImpliedVolatility.CalculateIV(): Fail to converge, returning 0.");
                 return 0m;
             }
         }
@@ -211,12 +273,14 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
+            _consolidator.Dispose();
             _consolidator = new(TimeSpan.FromDays(1));
             _consolidator.DataConsolidated += (_, bar) => {
                 _roc.Update(bar.EndTime, bar.Price);
             };
 
             _roc.Reset();
+            RiskFreeRate.Reset();
             HistoricalVolatility.Reset();
             Price.Reset();
             UnderlyingPrice.Reset();

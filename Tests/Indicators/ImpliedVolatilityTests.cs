@@ -17,15 +17,16 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Moq;
 using NUnit.Framework;
-using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
+using Python.Runtime;
+using QuantConnect.Data;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class ImpliedVolatilityTests : CommonIndicatorTests<IBaseDataBar>
+    public class ImpliedVolatilityTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         protected override string TestColumnName => "ImpliedVolatility";
 
@@ -33,7 +34,7 @@ namespace QuantConnect.Tests.Indicators
         private Symbol _symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2023, 9, 1));
         private Symbol _underlying;
 
-        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
             var indicator = new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.04m);
             return indicator;
@@ -45,38 +46,38 @@ namespace QuantConnect.Tests.Indicators
             _underlying = _symbol.Underlying;
         }
 
-        [TestCase("SPX230811C04300000")]
-        [TestCase("SPX230811C04500000")]
-        [TestCase("SPX230811C04700000")]
-        [TestCase("SPX230811P04300000")]
-        [TestCase("SPX230811P04500000")]
-        [TestCase("SPX230811P04700000")]
-        [TestCase("SPX230901C04300000")]
-        [TestCase("SPX230901C04500000")]
-        [TestCase("SPX230901C04700000")]
-        [TestCase("SPX230901P04300000")]
-        [TestCase("SPX230901P04500000")]
-        [TestCase("SPX230901P04700000")]
-        [TestCase("SPY230811C00430000")]
-        [TestCase("SPY230811C00450000")]
-        [TestCase("SPY230811C00470000")]
-        [TestCase("SPY230811P00430000")]
-        [TestCase("SPY230811P00450000")]
-        [TestCase("SPY230811P00470000")]
-        [TestCase("SPY230901C00430000")]
-        [TestCase("SPY230901C00450000")]
-        [TestCase("SPY230901C00470000")]
-        [TestCase("SPY230901P00430000")]
-        [TestCase("SPY230901P00450000")]
-        [TestCase("SPY230901P00470000")]
-        public void ComparesAgainstExternalData(string fileName)
+        [TestCase("SPX230811C04300000", 0.2)]   // Fail convergence case
+        [TestCase("SPX230811C04500000", 0.02)]
+        [TestCase("SPX230811C04700000", 0.05)]
+        [TestCase("SPX230811P04300000", 0.05)]
+        [TestCase("SPX230811P04500000", 0.02)]
+        [TestCase("SPX230811P04700000", 0.1)]
+        [TestCase("SPX230901C04300000", 0.06)]
+        [TestCase("SPX230901C04500000", 0.01)]
+        [TestCase("SPX230901C04700000", 0.03)]
+        [TestCase("SPX230901P04300000", 0.03)]
+        [TestCase("SPX230901P04500000", 0.01)]
+        [TestCase("SPX230901P04700000", 0.06)]
+        [TestCase("SPY230811C00430000", 0.1)]
+        [TestCase("SPY230811C00450000", 0.02)]
+        [TestCase("SPY230811C00470000", 0.05)]
+        [TestCase("SPY230811P00430000", 0.05)]
+        [TestCase("SPY230811P00450000", 0.02)]
+        [TestCase("SPY230811P00470000", 0.1)]
+        [TestCase("SPY230901C00430000", 0.06)]
+        [TestCase("SPY230901C00450000", 0.01)]
+        [TestCase("SPY230901C00470000", 0.03)]
+        [TestCase("SPY230901P00430000", 0.03)]
+        [TestCase("SPY230901P00450000", 0.01)]
+        [TestCase("SPY230901P00470000", 0.06)]
+        public void ComparesAgainstExternalData(string fileName, double errorMargin)
         {
             var path = Path.Combine("TestData", "greeks", $"{fileName}.csv");
             var symbol = ParseOptionSymbol(fileName);
             var underlying = symbol.Underlying;
 
             var indicator = new ImpliedVolatility(symbol, 0.04m);
-            RunTestIndicator(path, indicator, symbol, underlying);
+            RunTestIndicator(path, indicator, symbol, underlying, errorMargin);
         }
 
         [Test]
@@ -85,41 +86,41 @@ namespace QuantConnect.Tests.Indicators
             // Not used
         }
 
-        [TestCase("SPX230811C04300000")]
-        [TestCase("SPX230811C04500000")]
-        [TestCase("SPX230811C04700000")]
-        [TestCase("SPX230811P04300000")]
-        [TestCase("SPX230811P04500000")]
-        [TestCase("SPX230811P04700000")]
-        [TestCase("SPX230901C04300000")]
-        [TestCase("SPX230901C04500000")]
-        [TestCase("SPX230901C04700000")]
-        [TestCase("SPX230901P04300000")]
-        [TestCase("SPX230901P04500000")]
-        [TestCase("SPX230901P04700000")]
-        [TestCase("SPY230811C00430000")]
-        [TestCase("SPY230811C00450000")]
-        [TestCase("SPY230811C00470000")]
-        [TestCase("SPY230811P00430000")]
-        [TestCase("SPY230811P00450000")]
-        [TestCase("SPY230811P00470000")]
-        [TestCase("SPY230901C00430000")]
-        [TestCase("SPY230901C00450000")]
-        [TestCase("SPY230901C00470000")]
-        [TestCase("SPY230901P00430000")]
-        [TestCase("SPY230901P00450000")]
-        [TestCase("SPY230901P00470000")]
-        public void ComparesAgainstExternalDataAfterReset(string fileName)
+        [TestCase("SPX230811C04300000", 0.2)]   // Fail convergence case
+        [TestCase("SPX230811C04500000", 0.02)]
+        [TestCase("SPX230811C04700000", 0.05)]
+        [TestCase("SPX230811P04300000", 0.05)]
+        [TestCase("SPX230811P04500000", 0.02)]
+        [TestCase("SPX230811P04700000", 0.1)]
+        [TestCase("SPX230901C04300000", 0.06)]
+        [TestCase("SPX230901C04500000", 0.01)]
+        [TestCase("SPX230901C04700000", 0.03)]
+        [TestCase("SPX230901P04300000", 0.03)]
+        [TestCase("SPX230901P04500000", 0.01)]
+        [TestCase("SPX230901P04700000", 0.06)]
+        [TestCase("SPY230811C00430000", 0.1)]
+        [TestCase("SPY230811C00450000", 0.02)]
+        [TestCase("SPY230811C00470000", 0.05)]
+        [TestCase("SPY230811P00430000", 0.05)]
+        [TestCase("SPY230811P00450000", 0.02)]
+        [TestCase("SPY230811P00470000", 0.1)]
+        [TestCase("SPY230901C00430000", 0.06)]
+        [TestCase("SPY230901C00450000", 0.01)]
+        [TestCase("SPY230901C00470000", 0.03)]
+        [TestCase("SPY230901P00430000", 0.03)]
+        [TestCase("SPY230901P00450000", 0.01)]
+        [TestCase("SPY230901P00470000", 0.06)]
+        public void ComparesAgainstExternalDataAfterReset(string fileName, double errorMargin)
         {
             var path = Path.Combine("TestData", "greeks", $"{fileName}.csv");
             var symbol = ParseOptionSymbol(fileName);
             var underlying = symbol.Underlying;
 
             var indicator = new ImpliedVolatility(symbol, 0.04m);
-            RunTestIndicator(path, indicator, symbol, underlying);
+            RunTestIndicator(path, indicator, symbol, underlying, errorMargin);
 
             indicator.Reset();
-            RunTestIndicator(path, indicator, symbol, underlying);
+            RunTestIndicator(path, indicator, symbol, underlying, errorMargin);
         }
 
         [Test]
@@ -131,13 +132,13 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(27.50, 450.0, OptionRight.Call, 60, 0.304)]
         [TestCase(29.35, 450.0, OptionRight.Put, 60, 0.511)]
         [TestCase(37.86, 470.0, OptionRight.Call, 60, 0.273)]
-        [TestCase(5.74, 470.0, OptionRight.Put, 60, 0.204)]      // Volatility of deep OTM American put option will not converge in CRR model
+        [TestCase(5.74, 470.0, OptionRight.Put, 60, 0.204)]
         [TestCase(3.44, 430.0, OptionRight.Call, 60, 0.131)]
         [TestCase(40.13, 430.0, OptionRight.Put, 60, 0.541)]
         [TestCase(17.74, 450.0, OptionRight.Call, 180, 0.093)]
         [TestCase(19.72, 450.0, OptionRight.Put, 180, 0.208)]
         [TestCase(38.45, 470.0, OptionRight.Call, 180, 0.134)]
-        [TestCase(0.43, 470.0, OptionRight.Put, 180, 0.056)]     // Volatility of deep OTM American put option will not converge in CRR model
+        [TestCase(0.43, 470.0, OptionRight.Put, 180, 0.056)]
         [TestCase(1.73, 430.0, OptionRight.Call, 180, 0.045)]
         [TestCase(12.46, 430.0, OptionRight.Put, 180, 0.0)]
         public void ComparesIVOnCRRModel(decimal price, decimal spotPrice, OptionRight right, int expiry, double refIV)
@@ -146,10 +147,10 @@ namespace QuantConnect.Tests.Indicators
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
             var indicator = new ImpliedVolatility(symbol, 0.04m, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein);
 
-            var optionTradeBar = new TradeBar(_reference, symbol, price, price, price, price, 0m);
-            var spotTradeBar = new TradeBar(_reference, symbol.Underlying, spotPrice, spotPrice, spotPrice, spotPrice, 0m);
-            indicator.Update(optionTradeBar);
-            indicator.Update(spotTradeBar);
+            var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
+            var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
+            indicator.Update(optionDataPoint);
+            indicator.Update(spotDataPoint);
 
             Assert.AreEqual(refIV, (double)indicator.Current.Value, 0.03d);
         }
@@ -165,7 +166,7 @@ namespace QuantConnect.Tests.Indicators
             return Symbol.CreateOption(ticker, Market.USA, style, right, strike, expiry);
         }
 
-        private void RunTestIndicator(string path, ImpliedVolatility indicator, Symbol symbol, Symbol underlying)
+        private void RunTestIndicator(string path, ImpliedVolatility indicator, Symbol symbol, Symbol underlying, double errorMargin)
         {
             foreach (var line in File.ReadAllLines(path).Skip(1))
             {
@@ -176,14 +177,10 @@ namespace QuantConnect.Tests.Indicators
                 var spotPrice = Parse.Decimal(items[^1]);
                 var refIV = Parse.Double(items[2]);
 
-                var optionTradeBar = new TradeBar(time.AddSeconds(-1), symbol, price, price, price, price, 0m, TimeSpan.FromSeconds(1));
-                var spotTradeBar = new TradeBar(time.AddSeconds(-1), underlying, spotPrice, spotPrice, spotPrice, spotPrice, 0m, TimeSpan.FromSeconds(1));
-                indicator.Update(optionTradeBar);
-                indicator.Update(spotTradeBar);
+                indicator.Update(new IndicatorDataPoint(symbol, time, price));
+                indicator.Update(new IndicatorDataPoint(underlying, time, spotPrice));
 
-                // We're not sure IB's parameters and models, we'll accept a larger error from far OTM/ITM & close-to-expiry option
-                var acceptRange = Math.Max(0.03m, Math.Abs(symbol.ID.StrikePrice - spotPrice) / spotPrice * 30 / (decimal)(symbol.ID.Date - time).TotalDays);
-                Assert.AreEqual(refIV, (double)indicator.Current.Value, (double)acceptRange);
+                Assert.AreEqual(refIV, (double)indicator.Current.Value, errorMargin);
             }
         }
 
@@ -196,9 +193,10 @@ namespace QuantConnect.Tests.Indicators
             {
                 var price = 500m;
                 var optionPrice = Math.Max(price - 450, 0) * 1.1m;
+                var time = _reference.AddDays(1 + i);
 
-                indicator.Update(new TradeBar() { Symbol = _symbol, Low = optionPrice, High = optionPrice, Volume = 100, Close = optionPrice, Time = _reference.AddDays(1 + i) });
-                indicator.Update(new TradeBar() { Symbol = _underlying, Low = price, High = price, Volume = 100, Close = price, Time = _reference.AddDays(1 + i) });
+                indicator.Update(new IndicatorDataPoint(_symbol, time, optionPrice));
+                indicator.Update(new IndicatorDataPoint(_underlying, time, price));
             }
 
             Assert.IsTrue(indicator.IsReady);
@@ -217,9 +215,10 @@ namespace QuantConnect.Tests.Indicators
             {
                 var price = 500m;
                 var optionPrice = Math.Max(price - 450, 0) * 1.1m;
+                var time = _reference.AddDays(1 + i);
 
-                indicator.Update(new TradeBar() { Symbol = _symbol, Low = optionPrice, High = optionPrice, Volume = 100, Close = optionPrice, Time = _reference.AddDays(1 + i) });
-                indicator.Update(new TradeBar() { Symbol = _underlying, Low = price, High = price, Volume = 100, Close = price, Time = _reference.AddDays(1 + i) });
+                indicator.Update(new IndicatorDataPoint(_symbol, time, optionPrice));
+                indicator.Update(new IndicatorDataPoint(_underlying, time, price));
             }
 
             Assert.AreEqual(2, indicator.Samples);
@@ -245,11 +244,11 @@ namespace QuantConnect.Tests.Indicators
                 var price = 500m;
                 var optionPrice = Math.Max(price - 450, 0) * 1.1m;
 
-                indicator.Update(new TradeBar() { Symbol = _symbol, Low = optionPrice, High = optionPrice, Volume = 100, Close = optionPrice, Time = time });
+                indicator.Update(new IndicatorDataPoint(_symbol, time, optionPrice));
 
                 Assert.IsFalse(indicator.IsReady);
 
-                indicator.Update(new TradeBar() { Symbol = _underlying, Low = price, High = price, Volume = 100, Close = price, Time = time });
+                indicator.Update(new IndicatorDataPoint(_underlying, time, price));
 
                 // At least 2 days data for historical daily volatility
                 if (time <= _reference.AddDays(3))
@@ -267,89 +266,67 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public override void AcceptsRenkoBarsAsInput()
+        public void UsesRiskFreeInterestRateModel()
         {
-            var indicator = CreateIndicator();
-            var firstRenkoConsolidator = new RenkoConsolidator(0.5m);
-            var secondRenkoConsolidator = new RenkoConsolidator(0.5m);
-            firstRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
-            {
-                Assert.DoesNotThrow(() => indicator.Update(renkoBar));
-            };
+            const int count = 20;
+            var dates = Enumerable.Range(0, count).Select(i => new DateTime(2022, 11, 21, 10, 0, 0) + TimeSpan.FromDays(i)).ToList();
+            var interestRateValues = Enumerable.Range(0, count).Select(i => 0m + (10 - 0m) * (i / (count - 1m))).ToList();
 
-            secondRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
-            {
-                Assert.DoesNotThrow(() => indicator.Update(renkoBar));
-            };
+            var interestRateProviderMock = new Mock<IRiskFreeInterestRateModel>();
 
-            for (int i = 1; i <= 300; i++)
+            // Set up
+            for (int i = 0; i < count; i++)
             {
-                var price = 550m - i;
-                var optionPrice = Math.Max(price - 450, 0) * 1.1m;
-
-                var tradeBar1 = new TradeBar(_reference.AddDays(i), _symbol, optionPrice, optionPrice, optionPrice, optionPrice, 150m);
-                firstRenkoConsolidator.Update(tradeBar1);
-                var tradeBar2 = new TradeBar(_reference.AddDays(i), _underlying, price, price, price, price, 1200m);
-                secondRenkoConsolidator.Update(tradeBar2);
+                interestRateProviderMock.Setup(x => x.GetInterestRate(dates[i])).Returns(interestRateValues[i]).Verifiable();
             }
 
-            Assert.AreNotEqual(0, indicator.Samples);
-            firstRenkoConsolidator.Dispose();
-            secondRenkoConsolidator.Dispose();
+            var iv = new ImpliedVolatility(_symbol, interestRateProviderMock.Object);
+
+            for (int i = 0; i < count; i++)
+            {
+                iv.Update(new IndicatorDataPoint(_symbol, dates[i], 80m + i));
+                iv.Update(new IndicatorDataPoint(_underlying, dates[i], 500m + i));
+                Assert.AreEqual(interestRateValues[i], iv.RiskFreeRate.Current.Value);
+            }
+
+            // Assert
+            Assert.IsTrue(iv.IsReady);
+            interestRateProviderMock.Verify(x => x.GetInterestRate(It.IsAny<DateTime>()), Times.Exactly(dates.Count * 2));
+            for (int i = 0; i < count; i++)
+            {
+                interestRateProviderMock.Verify(x => x.GetInterestRate(dates[i]), Times.Exactly(2));
+            }
         }
 
         [Test]
-        public override void AcceptsVolumeRenkoBarsAsInput()
+        public void UsesPythonDefinedRiskFreeInterestRateModel()
         {
-            var indicator = CreateIndicator();
-            var firstVolumeRenkoConsolidator = new VolumeRenkoConsolidator(100);
-            var secondVolumeRenkoConsolidator = new VolumeRenkoConsolidator(1000);
-            firstVolumeRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
-            {
-                Assert.DoesNotThrow(() => indicator.Update(renkoBar));
-            };
+            using var _ = Py.GIL();
 
-            secondVolumeRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
-            {
-                Assert.DoesNotThrow(() => indicator.Update(renkoBar));
-            };
+            var module = PyModule.FromString(Guid.NewGuid().ToString(), @"
+from AlgorithmImports import *
 
-            for (int i = 1; i <= 300; i++)
-            {
-                var price = 550m - i;
-                var optionPrice = Math.Max(price - 450, 0) * 1.1m;
+class TestRiskFreeInterestRateModel:
+    CallCount = 0
 
-                var tradeBar1 = new TradeBar(_reference.AddDays(i), _symbol, optionPrice, optionPrice, optionPrice, optionPrice, 150m);
-                firstVolumeRenkoConsolidator.Update(tradeBar1);
-                var tradeBar2 = new TradeBar(_reference.AddDays(i), _underlying, price, price, price, price, 1200m);
-                secondVolumeRenkoConsolidator.Update(tradeBar2);
+    def GetInterestRate(self, date: datetime) -> float:
+        TestRiskFreeInterestRateModel.CallCount += 1
+        return 0.5
+
+def getImpliedVolatilityIndicator(symbol: Symbol) -> ImpliedVolatility:
+    return ImpliedVolatility(symbol, TestRiskFreeInterestRateModel())
+            ");
+
+            var iv = module.GetAttr("getImpliedVolatilityIndicator").Invoke(_symbol.ToPython()).GetAndDispose<ImpliedVolatility>();
+            var modelClass = module.GetAttr("TestRiskFreeInterestRateModel");
+
+            var reference = new DateTime(2022, 11, 21, 10, 0, 0);
+            for (int i = 0; i < 20; i++)
+            {
+                iv.Update(new IndicatorDataPoint(_symbol, reference + TimeSpan.FromMinutes(i), 10m + i));
+                iv.Update(new IndicatorDataPoint(_underlying, reference + TimeSpan.FromMinutes(i), 1000m + i));
+                Assert.AreEqual((i + 1) * 2, modelClass.GetAttr("CallCount").GetAndDispose<int>());
             }
-
-            Assert.AreNotEqual(0, indicator.Samples);
-            firstVolumeRenkoConsolidator.Dispose();
-            secondVolumeRenkoConsolidator.Dispose();
-        }
-
-        [Test]
-        public void AcceptsQuoteBarsAsInput()
-        {
-            var indicator = CreateIndicator();
-
-            for (var i = 1; i <= 100; i++)
-            {
-                var price = 500m;
-                var optionPrice = Math.Max(price - 450, 0) * 1.1m;
-
-                indicator.Update(new QuoteBar { 
-                    Symbol = _symbol, 
-                    Ask = new Bar(optionPrice, optionPrice, optionPrice, optionPrice), 
-                    Bid = new Bar(optionPrice, optionPrice, optionPrice, optionPrice),
-                    Time = _reference.AddDays(1 + i) 
-                });
-                indicator.Update(new QuoteBar { Symbol = _underlying, Ask = new Bar(price, price, price, price), Time = _reference.AddDays(1 + i) });
-            }
-
-            Assert.AreEqual(200, indicator.Samples);
         }
 
         // Not used
