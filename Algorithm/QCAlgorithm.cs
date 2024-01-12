@@ -85,6 +85,9 @@ namespace QuantConnect.Algorithm
         private LocalTimeKeeper _localTimeKeeper;
 
         private string _name;
+        private HashSet<string> _tags;
+        private bool _tagsLimitReachedLogSent;
+        private bool _tagsCollectionTruncatedLogSent;
         private DateTime _start;
         private DateTime _startDate;   //Default start and end dates.
         private DateTime _endDate;     //Default end to yesterday
@@ -487,13 +490,7 @@ namespace QuantConnect.Algorithm
 
                 if (!string.IsNullOrEmpty(value))
                 {
-                    var name = value.Length <= 200 ? value : value.Substring(0, 200);
-                    if (_name != name)
-                    {
-                        NameUpdated?.Invoke(this, name);
-                    }
-
-                    _name = name;
+                    _name = value.Length <= 200 ? value : value.Substring(0, 200);
                 }
             }
         }
@@ -502,7 +499,32 @@ namespace QuantConnect.Algorithm
         /// A list of tags associated with the algorithm or the backtest, useful for categorization
         /// </summary>
         [DocumentationAttribute(HandlingData)]
-        public HashSet<string> Tags { get; set; }
+        public HashSet<string> Tags
+        {
+            get
+            {
+                return _tags;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    return;
+                }
+
+                if (value.Count > 20 && !_tagsCollectionTruncatedLogSent)
+                {
+                    Log("Warning: The tags collection cannot contain more than 20 items. It will be truncated.");
+                    _tagsCollectionTruncatedLogSent = true;
+                }
+
+                _tags = value.Take(20).ToHashSet();
+                if (_locked)
+                {
+                    TagsUpdated?.Invoke(this, Tags);
+                }
+            }
+        }
 
         /// <summary>
         /// Event fired algorithm's name is changed
@@ -1466,9 +1488,19 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">The tag to add</param>
         public void AddTag(string tag)
         {
-            if (!string.IsNullOrEmpty(tag) && Tags.Add(tag))
+            if (!string.IsNullOrEmpty(tag))
             {
-                TagsUpdated?.Invoke(this, Tags);
+                if (Tags.Count >= 20 && !_tagsLimitReachedLogSent)
+                {
+                    Log($"Warning: AddTag({tag}): Unable to add tag. Tags are limited to a maximum of 20.");
+                    _tagsLimitReachedLogSent = true;
+                    return;
+                }
+
+                if (Tags.Add(tag) && _locked)
+                {
+                    TagsUpdated?.Invoke(this, Tags);
+                }
             }
         }
 
@@ -1478,9 +1510,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tags">The tags</param>
         public void SetTags(HashSet<string> tags)
         {
-            // get a copy
-            Tags = tags.ToHashSet();
-            TagsUpdated?.Invoke(this, Tags);
+            Tags = tags;
         }
 
         /// <summary>
@@ -1717,6 +1747,10 @@ namespace QuantConnect.Algorithm
         public void SetLocked()
         {
             _locked = true;
+
+            // The algorithm is initialized, we can now send the initial name and tags updates
+            NameUpdated?.Invoke(this, Name);
+            TagsUpdated?.Invoke(this, Tags);
         }
 
         /// <summary>

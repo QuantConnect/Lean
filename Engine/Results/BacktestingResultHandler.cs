@@ -429,8 +429,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="name">The new name</param>
         public virtual void AlgorithmNameUpdated(string name)
         {
-            // don't enqueue, send immediately
-            MessagingHandler.Send(new AlgorithmNameUpdatePacket(AlgorithmId, name));
+            Messages.Enqueue(new AlgorithmNameUpdatePacket(AlgorithmId, name));
         }
 
         /// <summary>
@@ -439,8 +438,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="tags">The new tags</param>
         public virtual void AlgorithmTagsUpdated(HashSet<string> tags)
         {
-            // don't enqueue, send immediately
-            MessagingHandler.Send(new AlgorithmTagsUpdatePacket(AlgorithmId, tags));
+            Messages.Enqueue(new AlgorithmTagsUpdatePacket(AlgorithmId, tags));
         }
 
         /// <summary>
