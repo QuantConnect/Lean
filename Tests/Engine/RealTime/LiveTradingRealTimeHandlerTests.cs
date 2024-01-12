@@ -22,13 +22,8 @@ using QuantConnect.Scheduling;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Algorithm;
-using QuantConnect.AlgorithmFactory.Python.Wrappers;
-using QuantConnect.Interfaces;
-using QuantConnect.Tests.Common.Data.UniverseSelection;
 using System.Linq;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Securities;
 using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Engine.RealTime
