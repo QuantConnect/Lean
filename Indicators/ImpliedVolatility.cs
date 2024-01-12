@@ -93,7 +93,7 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             var sid = option.ID;
-            if (sid.SecurityType != SecurityType.Option)
+            if (!sid.SecurityType.IsOption())
             {
                 throw new ArgumentException("ImpliedVolatility only support SecurityType.Option.");
             }
