@@ -81,12 +81,12 @@ namespace QuantConnect.Tests.Engine.RealTime
                 null,
                 new TestTimeLimitManager());
 
-            var time = DateTime.UtcNow.AddDays(1);
+            var time = new DateTime(2023, 5, 28).Date;
             var entry = new MarketHoursDatabase.Entry(TimeZones.NewYork, securityExchangeHours);
             var key = new SecurityDatabaseKey(Market.USA, null, SecurityType.Equity);
             var mhdb = new MarketHoursDatabase(new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>() { { key, entry} });
             realTimeHandler.SetMarketHoursDatabase(mhdb);
-            realTimeHandler.ScanAndAssertMarketHours(security, time, expectedSegment);
+            realTimeHandler.TestRefreshMarketHoursToday(security, time, expectedSegment);
         }
 
         private class TestTimeLimitManager : IIsolatorLimitResultProvider
@@ -113,10 +113,10 @@ namespace QuantConnect.Tests.Engine.RealTime
                 MarketHoursDatabase = marketHoursDatabase;
             }
 
-            public void ScanAndAssertMarketHours(Security security, DateTime time, MarketHoursSegment expectedSegment)
+            public void TestRefreshMarketHoursToday(Security security, DateTime time, MarketHoursSegment expectedSegment)
             {
                 OnSecurityUpdated.Reset();
-                ScanPastEvents(time);
+                RefreshMarketHoursToday(time);
                 OnSecurityUpdated.WaitOne();
                 AssertMarketHours(security, time, expectedSegment);
             }
@@ -148,6 +148,8 @@ namespace QuantConnect.Tests.Engine.RealTime
                     Assert.AreEqual(expectedSegment.End, security.Exchange.Hours.GetNextMarketClose(time.Date, false).TimeOfDay);
                     Assert.AreEqual(expectedSegment.Start, security.Exchange.Hours.GetNextMarketOpen(time.Date, false).TimeOfDay);
                 }
+
+                Exit();
             }
         }
 
@@ -174,8 +176,8 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             private static SecurityExchangeHours CreateExchangeHoursWithEarlyCloseAndLateOpen()
             {
-                var earlyCloses = new Dictionary<DateTime, TimeSpan> { { DateTime.UtcNow.AddDays(1).Date, new TimeSpan(13, 0, 0) } };
-                var lateOpens = new Dictionary<DateTime, TimeSpan>() { { DateTime.UtcNow.AddDays(1).Date, new TimeSpan(10, 0, 0) } };
+                var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2023, 5, 28).Date, new TimeSpan(13, 0, 0) } };
+                var lateOpens = new Dictionary<DateTime, TimeSpan>() { { new DateTime(2023, 5, 28).Date, new TimeSpan(10, 0, 0) } };
                 var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
                 {
                 _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
@@ -185,7 +187,7 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             private static SecurityExchangeHours CreateExchangeHoursWithEarlyClose()
             {
-                var earlyCloses = new Dictionary<DateTime, TimeSpan> { { DateTime.UtcNow.AddDays(1).Date, new TimeSpan(13, 0, 0) } };
+                var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2023, 5, 28).Date, new TimeSpan(13, 0, 0) } };
                 var lateOpens = new Dictionary<DateTime, TimeSpan>();
                 var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
                 {
@@ -197,7 +199,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             private static SecurityExchangeHours CreateExchangeHoursWithLateOpen()
             {
                 var earlyCloses = new Dictionary<DateTime, TimeSpan>();
-                var lateOpens = new Dictionary<DateTime, TimeSpan>() { { DateTime.UtcNow.AddDays(1).Date, new TimeSpan(10, 0, 0) } };
+                var lateOpens = new Dictionary<DateTime, TimeSpan>() { { new DateTime(2023, 5, 28).Date, new TimeSpan(10, 0, 0) } };
                 var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
                 {
                 _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
@@ -209,7 +211,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             {
                 var earlyCloses = new Dictionary<DateTime, TimeSpan>();
                 var lateOpens = new Dictionary<DateTime, TimeSpan>();
-                var holidays = new List<DateTime>() { DateTime.UtcNow.AddDays(1).Date };
+                var holidays = new List<DateTime>() { new DateTime(2023, 5, 28).Date };
                 var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
                 {
                 _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday

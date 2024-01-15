@@ -116,7 +116,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// Refresh the market hours for each security in the given date
         /// </summary>
         /// <remarks>Each time this method is called, the MarketHoursDatabase is reset</remarks>
-        private void RefreshMarketHoursToday(DateTime date)
+        protected void RefreshMarketHoursToday(DateTime date)
         {
             date = date.Date;
             MarketHoursDatabase.Reset();
