@@ -59,7 +59,6 @@ namespace QuantConnect.Report.ReportElements
             var backtestSeries = new Series<DateTime, double>(backtestPoints);
             var liveSeries = new Series<DateTime, double>(livePoints);
 
-            // use value = 252 like default for backwards compatibility
             var backtestRollingSharpeSixMonths = Rolling.Sharpe(backtestSeries, 6, _tradingDaysPerYear).DropMissing();
             var backtestRollingSharpeTwelveMonths = Rolling.Sharpe(backtestSeries, 12, _tradingDaysPerYear).DropMissing();
             var liveRollingSharpeSixMonths = Rolling.Sharpe(liveSeries, 6, _tradingDaysPerYear).DropMissing();

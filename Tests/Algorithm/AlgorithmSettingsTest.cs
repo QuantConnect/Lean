@@ -128,9 +128,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreNotEqual(expectedDefaultTradingDayPerYearForBrokerage, algorithm.Settings.TradingDaysPerYear);
         }
 
-        [TestCase(null, 252)]
+        [TestCase(252, null)]
         [TestCase(404, 404)]
-        public void ReturnTradingDayPerYearWithoutSetBrokerage(int? customTradingDayPerYear = null, int expectedTradingDayPerYear = 0)
+        public void ReturnTradingDayPerYearWithoutSetBrokerage(int expectedTradingDayPerYear, int? customTradingDayPerYear = null)
         {
             var algorithm = new QCAlgorithm();
 
