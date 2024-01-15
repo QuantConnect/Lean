@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         private List<double[]> _expectedReturns;
         private List<double[,]> _covariances;
         private List<double[]> _expectedResults;
-        private Dictionary<int, double> _targetReturns = new();
+        private Dictionary<int, double> _targetReturns;
 
         [OneTimeSetUp]
         public void Setup()
@@ -97,14 +97,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new double[] { 0.052859, 0.144177, 0.802964 },
             };
 
-            var targetReturn1 = 0.15d;
-            var targetReturn2 = 0.25d;
-            var targetReturn3 = 0.5d;
-            var targetReturn4 = 0.125d;
-            _targetReturns.Add(4, targetReturn1);
-            _targetReturns.Add(5, targetReturn2);
-            _targetReturns.Add(6, targetReturn3);
-            _targetReturns.Add(7, targetReturn4);
+            _targetReturns = new Dictionary<int, double>
+            {
+                { 4, 0.15d },
+                { 5, 0.25d },
+                { 6, 0.5d },
+                { 7, 0.125d }
+            };
         }
 
         [TestCase(0)]
