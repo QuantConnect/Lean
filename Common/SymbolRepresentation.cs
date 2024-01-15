@@ -46,7 +46,12 @@ namespace QuantConnect
             /// <summary>
             /// Short expiration year
             /// </summary>
-            public int ExpirationYearShort { get; set;  }
+            public int ExpirationYearShort { get; set; }
+
+            /// <summary>
+            /// Short expiration year digits
+            /// </summary>
+            public int ExpirationYearShortLength { get; set; }
 
             /// <summary>
             /// Expiration month
@@ -133,6 +138,7 @@ namespace QuantConnect
             {
                 Underlying = underlyingString,
                 ExpirationYearShort = expirationYearShort,
+                ExpirationYearShortLength = expirationYearString.Length,
                 ExpirationMonth = expirationMonth,
                 ExpirationDay = expirationDay
             };
@@ -153,9 +159,8 @@ namespace QuantConnect
             }
 
             var underlying = parsed.Underlying;
-            var expirationYearShort = parsed.ExpirationYearShort;
             var expirationMonth = parsed.ExpirationMonth;
-            var expirationYear = futureYear ?? GetExpirationYear(expirationYearShort);
+            var expirationYear = GetExpirationYear(futureYear, parsed);
 
             if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(underlying, SecurityType.Future, out var market))
             {
@@ -467,12 +472,35 @@ namespace QuantConnect
         /// Get the expiration year from short year (two-digit integer).
         /// Examples: NQZ23 and NQZ3 for Dec 2023  
         /// </summary>
+        /// <param name="futureYear">Clarifies the year for the current future</param>
         /// <param name="shortYear">Year in 2 digits format (23 represents 2023)</param>
         /// <returns>Tickers from live trading may not provide the four-digit year.</returns>
-        private static int GetExpirationYear(int shortYear)
+        private static int GetExpirationYear(int? futureYear, FutureTickerProperties parsed)
         {
-            var baseYear = shortYear > 9 ? 2000 : 10 * (int)Math.Floor(DateTime.UtcNow.Year / 10d);
-            return baseYear + shortYear;
+            if(futureYear.HasValue)
+            {
+                var referenceYear = 1900 + parsed.ExpirationYearShort;
+                while(referenceYear < futureYear.Value)
+                {
+                    referenceYear += 10;
+                }
+
+                return referenceYear;
+            }
+
+            var currentYear = DateTime.UtcNow.Year;
+            if (parsed.ExpirationYearShortLength > 1)
+            {
+                // we are given a double digit year
+                return 2000 + parsed.ExpirationYearShort;
+            }
+
+            var baseYear = ((int)Math.Round(currentYear / 10.0)) * 10 + parsed.ExpirationYearShort;
+            while (baseYear < currentYear)
+            {
+                baseYear += 10;
+            }
+            return baseYear;
         }
     }
 }

@@ -211,13 +211,48 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(expectedValue, result);
         }
 
-        [TestCase("VXZ2", 2012, 19)]
-        [TestCase("VXZ2", null, 21)]
-        public void GenerateFutureSymbolFromTickerMissingDecadeInfo(string ticker, int? futureYear, int day)
+        [TestCase("CLU0", 2008, "2010-08-20")]
+        [TestCase("CLU1", 2008, "2011-08-22")]
+        [TestCase("CLU2", 2008, "2012-08-21")]
+        [TestCase("CLU8", 2008, "2008-08-20")]
+        [TestCase("CLU9", 2008, "2009-08-20")]
+        public void GenerateFutureSymbolFromTickerKnownYearSingleDigit(string ticker, int futureYear, DateTime expectedExpiration)
         {
             var result = SymbolRepresentation.ParseFutureSymbol(ticker, futureYear);
-            // When the future year is not provided, we have an ambiguous case (2002, 2012, 1902, etc) and default current decade 2020
-            Assert.AreEqual(new DateTime(futureYear ?? 2022, 12, day), result.ID.Date.Date);
+            Assert.AreEqual(expectedExpiration, result.ID.Date.Date);
+        }
+
+        [TestCase("CLU20", 2020, "2020-08-20")]
+        [TestCase("CLU21", 2020, "2021-08-20")]
+        [TestCase("CLU22", 2020, "2022-08-22")]
+        [TestCase("CLU28", 2020, "2028-08-22")]
+        [TestCase("CLU29", 2020, "2029-08-21")]
+        public void GenerateFutureSymbolFromTickerUnknownYearSingleDigit(string ticker, int futureYear, DateTime expectedExpiration)
+        {
+            var result = SymbolRepresentation.ParseFutureSymbol(ticker, futureYear);
+            Assert.AreEqual(expectedExpiration, result.ID.Date.Date);
+        }
+
+        [TestCase("CLU20", "2020-08-20")]
+        [TestCase("CLU21", "2021-08-20")]
+        [TestCase("CLU22", "2022-08-22")]
+        [TestCase("CLU28", "2028-08-22")]
+        [TestCase("CLU29", "2029-08-21")]
+        public void GenerateFutureSymbolFromTickerUnknownYearSingleDigit(string ticker, DateTime expectedExpiration)
+        {
+            var result = SymbolRepresentation.ParseFutureSymbol(ticker);
+            Assert.AreEqual(expectedExpiration, result.ID.Date.Date);
+        }
+
+        [TestCase("CLU0", "2030-08-20")]
+        [TestCase("CLU1", "2031-08-20")]
+        [TestCase("CLU2", "2032-08-20")]
+        [TestCase("CLU8", "2028-08-22")]
+        [TestCase("CLU9", "2029-08-21")]
+        public void GenerateFutureSymbolFromTickerUnknownYearDoubleDigit(string ticker, DateTime expectedExpiration)
+        {
+            var result = SymbolRepresentation.ParseFutureSymbol(ticker);
+            Assert.AreEqual(expectedExpiration, result.ID.Date.Date);
         }
 
         [TestCase("NQZ23")]
