@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Accord;
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using System;
@@ -24,90 +25,92 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     [TestFixture]
     public class MinimumVariancePortfolioOptimizerTests
     {
+        private List<double[,]> _historicalReturns;
+        private List<double[]> _expectedReturns;
+        private List<double[,]> _covariances;
+        private List<double[]> _expectedResults;
         private Dictionary<int, double> _targetReturns = new();
-        private Dictionary<int, double[,]> _historicalReturns = new();
-        private Dictionary<int, double[]> _expectedReturns = new();
-        private Dictionary<int, double[,]> _covariances = new();
-        private Dictionary<int, double[]> _expectedResults = new();
 
         [OneTimeSetUp]
         public void Setup()
         {
-            double targetReturn1 = 0.15;
-            double targetReturn2 = 0.25;
-            double targetReturn3 = 0.5;
-            double targetReturn4 = 0.125;
+            var historicalReturns1 = new double[,] { { 0.76, -0.06, 1.22, 0.17 }, { 0.02, 0.28, 1.25, -0.00 }, { -0.50, -0.13, -0.50, -0.03 }, { 0.81, 0.31, 2.39, 0.26 }, { -0.02, 0.02, 0.06, 0.01 } };
+            var historicalReturns2 = new double[,] { { -0.15, 0.67, 0.45 }, { -0.44, -0.10, 0.07 }, { 0.04, -0.41, 0.01 }, { 0.01, 0.03, 0.02 } };
+            var historicalReturns3 = new double[,] { { -0.02, 0.65, 1.25 }, { -0.29, -0.39, -0.50 }, { 0.29, 0.58, 2.39 }, { 0.00, -0.01, 0.06 } };
+            var historicalReturns4 = new double[,] { { 0.76, 0.25, 0.21 }, { 0.02, -0.15, 0.45 }, { -0.50, -0.44, 0.07 }, { 0.81, 0.04, 0.01 }, { -0.02, 0.01, 0.02 } };
 
-            double[,] historicalReturns1 = new double[,] { { 0.76, -0.06, 1.22, 0.17 }, { 0.02, 0.28, 1.25, -0.00 }, { -0.50, -0.13, -0.50, -0.03 }, { 0.81, 0.31, 2.39, 0.26 }, { -0.02, 0.02, 0.06, 0.01 } };
-            double[,] historicalReturns2 = new double[,] { { -0.15, 0.67, 0.45 }, { -0.44, -0.10, 0.07 }, { 0.04, -0.41, 0.01 }, { 0.01, 0.03, 0.02 } };
-            double[,] historicalReturns3 = new double[,] { { -0.02, 0.65, 1.25 }, { -0.29, -0.39, -0.50 }, { 0.29, 0.58, 2.39 }, { 0.00, -0.01, 0.06 } };
-            double[,] historicalReturns4 = new double[,] { { 0.76, 0.25, 0.21 }, { 0.02, -0.15, 0.45 }, { -0.50, -0.44, 0.07 }, { 0.81, 0.04, 0.01 }, { -0.02, 0.01, 0.02 } };
+            var expectedReturns1 = new double[] { 0.21, 0.08, 0.88, 0.08 };
+            var expectedReturns2 = new double[] { -0.13, 0.05, 0.14 };
+            var expectedReturns3 = (double[])null;
+            var expectedReturns4 = (double[])null;
 
-            double[] expectedReturns1 = new double[] { 0.21, 0.08, 0.88, 0.08 };
-            double[] expectedReturns2 = new double[] { -0.13, 0.05, 0.14 };
-            double[] expectedReturns3 = null;
-            double[] expectedReturns4 = null;
+            var covariance1 = new double[,] { { 0.31, 0.05, 0.55, 0.07 }, { 0.05, 0.04, 0.18, 0.01 }, { 0.55, 0.18, 1.28, 0.12 }, { 0.07, 0.01, 0.12, 0.02 } };
+            var covariance2 = new double[,] { { 0.05, -0.02, -0.01 }, { -0.02, 0.21, 0.09 }, { -0.01, 0.09, 0.04 } };
+            var covariance3 = new double[,] { { 0.06, 0.09, 0.28 }, { 0.09, 0.25, 0.58 }, { 0.28, 0.58, 1.66 } };
+            var covariance4 = (double[,])null;
 
-            double[,] covariance1 = new double[,] { { 0.31, 0.05, 0.55, 0.07 }, { 0.05, 0.04, 0.18, 0.01 }, { 0.55, 0.18, 1.28, 0.12 }, { 0.07, 0.01, 0.12, 0.02 } };
-            double[,] covariance2 = new double[,] { { 0.05, -0.02, -0.01 }, { -0.02, 0.21, 0.09 }, { -0.01, 0.09, 0.04 } };
-            double[,] covariance3 = new double[,] { { 0.06, 0.09, 0.28 }, { 0.09, 0.25, 0.58 }, { 0.28, 0.58, 1.66 } };
-            double[,] covariance4 = null;
+            _historicalReturns = new List<double[,]>
+            {
+                historicalReturns1, 
+                historicalReturns2,
+                historicalReturns3,
+                historicalReturns4,
+                historicalReturns1,
+                historicalReturns2,
+                historicalReturns3,
+                historicalReturns4
+            };
 
-            double[] expectedResult1 = new double[] { -0.089212, 0.23431, -0.040975, 0.635503 };
-            double[] expectedResult2 = new double[] { 0.366812, -0.139738, 0.49345 };
-            double[] expectedResult3 = new double[] { 0.562216, 0.36747, -0.070314 };
-            double[] expectedResult4 = new double[] { -0.119241, 0.443464, 0.437295 };
-            double[] expectedResult5 = new double[] { -0.215505, 0.130699, 0.084806, 0.56899 };
-            double[] expectedResult6 = new double[] { -0.275, 0.275, 0.45 };
-            double[] expectedResult7 = new double[] { -0.129512, 0.551139, 0.319349 };
-            double[] expectedResult8 = new double[] { 0.052859, 0.144177, 0.802964 };
+            _expectedReturns = new List<double[]>
+            {
+                expectedReturns1,
+                expectedReturns2,
+                expectedReturns3,
+                expectedReturns4,
+                expectedReturns1,
+                expectedReturns2,
+                expectedReturns3,
+                expectedReturns4
+            };
 
-            _targetReturns.Add(5, targetReturn1);
-            _targetReturns.Add(6, targetReturn2);
-            _targetReturns.Add(7, targetReturn3);
-            _targetReturns.Add(8, targetReturn4);
+            _covariances = new List<double[,]>
+            {
+                covariance1,
+                covariance2,
+                covariance3,
+                covariance4,
+                covariance1,
+                covariance2,
+                covariance3,
+                covariance4
+            };
 
-            _expectedReturns.Add(1, expectedReturns1);
-            _expectedReturns.Add(2, expectedReturns2);
-            _expectedReturns.Add(3, expectedReturns3);
-            _expectedReturns.Add(4, expectedReturns4);
-            _expectedReturns.Add(5, expectedReturns1);
-            _expectedReturns.Add(6, expectedReturns2);
-            _expectedReturns.Add(7, expectedReturns3);
-            _expectedReturns.Add(8, expectedReturns4);
+            _expectedResults = new List<double[]>
+            {
+                new double[] { -0.089212, 0.23431, -0.040975, 0.635503 },
+                new double[] { 0.366812, -0.139738, 0.49345 },
+                new double[] { 0.562216, 0.36747, -0.070314 },
+                new double[] { -0.119241, 0.443464, 0.437295 },
+                new double[] { -0.215505, 0.130699, 0.084806, 0.56899 },
+                new double[] { -0.275, 0.275, 0.45 },
+                new double[] { -0.129512, 0.551139, 0.319349 },
+                new double[] { 0.052859, 0.144177, 0.802964 },
+            };
 
-            _historicalReturns.Add(1, historicalReturns1);
-            _historicalReturns.Add(2, historicalReturns2);
-            _historicalReturns.Add(3, historicalReturns3);
-            _historicalReturns.Add(4, historicalReturns4);
-            _historicalReturns.Add(5, historicalReturns1);
-            _historicalReturns.Add(6, historicalReturns2);
-            _historicalReturns.Add(7, historicalReturns3);
-            _historicalReturns.Add(8, historicalReturns4);
-
-            _covariances.Add(1, covariance1);
-            _covariances.Add(2, covariance2);
-            _covariances.Add(3, covariance3);
-            _covariances.Add(4, covariance4);
-            _covariances.Add(5, covariance1);
-            _covariances.Add(6, covariance2);
-            _covariances.Add(7, covariance3);
-            _covariances.Add(8, covariance4);
-
-            _expectedResults.Add(1, expectedResult1);
-            _expectedResults.Add(2, expectedResult2);
-            _expectedResults.Add(3, expectedResult3);
-            _expectedResults.Add(4, expectedResult4);
-            _expectedResults.Add(5, expectedResult5);
-            _expectedResults.Add(6, expectedResult6);
-            _expectedResults.Add(7, expectedResult7);
-            _expectedResults.Add(8, expectedResult8);
+            var targetReturn1 = 0.15d;
+            var targetReturn2 = 0.25d;
+            var targetReturn3 = 0.5d;
+            var targetReturn4 = 0.125d;
+            _targetReturns.Add(4, targetReturn1);
+            _targetReturns.Add(5, targetReturn2);
+            _targetReturns.Add(6, targetReturn3);
+            _targetReturns.Add(7, targetReturn4);
         }
 
+        [TestCase(0)]
         [TestCase(1)]
         [TestCase(2)]
         [TestCase(3)]
-        [TestCase(4)]
         public void TestOptimizeWeightings(int testCaseNumber)
         {
             var testOptimizer = new MinimumVariancePortfolioOptimizer();
@@ -121,10 +124,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(1d, result.Select(x => Math.Round(Math.Abs(x), 6)).Sum());
         }
 
+        [TestCase(4)]
         [TestCase(5)]
         [TestCase(6)]
         [TestCase(7)]
-        [TestCase(8)]
         public void TestOptimizeWeightingsSpecifyingTargetReturns(int testCaseNumber)
         {
             var testOptimizer = new MinimumVariancePortfolioOptimizer(targetReturn: _targetReturns[testCaseNumber]);
@@ -138,7 +141,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(1d, result.Select(x => Math.Round(Math.Abs(x), 6)).Sum());
         }
 
-        [TestCase(1)]
+        [TestCase(0)]
         public void EqualWeightingsWhenNoSolutionFound(int testCaseNumber)
         {
             var testOptimizer = new MinimumVariancePortfolioOptimizer(upper: -1);
@@ -149,14 +152,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(expectedResult, result);
         }
 
+        [TestCase(0)]
         [TestCase(1)]
         [TestCase(2)]
         [TestCase(3)]
-        [TestCase(4)]
         public void BoundariesAreNotViolated(int testCaseNumber)
         {
-            double lower = 0;
-            double upper = 0.5;
+            var lower = 0d;
+            var upper = 0.5d;
             var testOptimizer = new MinimumVariancePortfolioOptimizer(lower, upper);
 
             var result = testOptimizer.Optimize(
@@ -164,7 +167,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 _expectedReturns[testCaseNumber],
                 _covariances[testCaseNumber]);
 
-            foreach (double x in result)
+            foreach (var x in result)
             {
                 var rounded = Math.Round(x, 6);
                 Assert.GreaterOrEqual(rounded, lower);
@@ -185,7 +188,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void SingleSecurityPortfolioReturnsOne()
         {
             var testOptimizer = new MinimumVariancePortfolioOptimizer();
-            double[,] historicalReturns = new double[,] { { 0.76 }, { 0.02 }, { -0.50 } };
+            var historicalReturns = new double[,] { { 0.76 }, { 0.02 }, { -0.50 } };
 
             var result = testOptimizer.Optimize(historicalReturns);
 
