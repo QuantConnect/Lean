@@ -119,7 +119,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         protected void RefreshMarketHoursToday(DateTime date)
         {
             date = date.Date;
-            MarketHoursDatabase.Reset();
+            ResetMarketHoursDatabase();
 
             // update market hours for each security
             foreach (var kvp in Algorithm.Securities)
@@ -200,6 +200,16 @@ namespace QuantConnect.Lean.Engine.RealTime
             {
                 yield return segment;
             }
+        }
+
+        /// <summary>
+        /// Resets the market hours database, forcing a reload when reused.
+        /// Called in tests where multiple algorithms are run sequentially,
+        /// and we need to guarantee that every test starts with the same environment.
+        /// </summary>
+        protected virtual void ResetMarketHoursDatabase()
+        {
+            MarketHoursDatabase.Reset();
         }
     }
 }
