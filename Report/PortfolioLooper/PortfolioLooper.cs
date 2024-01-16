@@ -124,7 +124,6 @@ namespace QuantConnect.Report
 
             // Initialize the algorithm before adding any securities
             Algorithm.Initialize();
-
             Algorithm.PostInitialize();
 
             // Initializes all the proper Securities from the orders provided by the user
