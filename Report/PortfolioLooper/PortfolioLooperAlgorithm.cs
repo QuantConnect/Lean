@@ -88,8 +88,6 @@ namespace QuantConnect.Report
             {
                 SetAccountCurrency(_algorithmConfiguration.AccountCurrency);
                 SetBrokerageModel(_algorithmConfiguration.BrokerageName, _algorithmConfiguration.AccountType);
-                // assign custom value
-                Settings.TradingDaysPerYear = _algorithmConfiguration.TradingDaysPerYear;
             }
 
             SetCash(_startingCash);

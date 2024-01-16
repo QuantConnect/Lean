@@ -22,7 +22,6 @@ using QuantConnect.Brokerages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Lean.Engine.Setup;
 
 namespace QuantConnect.Tests.Report
 {
@@ -122,39 +121,6 @@ namespace QuantConnect.Tests.Report
             Assert.AreEqual(currency, algorithm.AccountCurrency);
             Assert.AreEqual(brokerageName, BrokerageModel.GetBrokerageName(algorithm.BrokerageModel));
             Assert.AreEqual(accountType, algorithm.BrokerageModel.AccountType);
-        }
-
-        [TestCase(null, null, null, 252)]
-        [TestCase(BrokerageName.Default, AccountType.Cash, null, 252)]
-        [TestCase(BrokerageName.Coinbase, AccountType.Cash, null, 365)]
-        [TestCase(BrokerageName.Binance, AccountType.Cash, 200, 200)]
-        [TestCase(BrokerageName.TDAmeritrade, AccountType.Cash, 404, 404)]
-        public void ValidateTradingDaysPerYearPropertyInPortfolioLooperAlgorithm(
-            BrokerageName? brokerageName, AccountType accountType, int? customTradingDaysPerYear, int expectedTradingDaysPerYear)
-        {
-            AlgorithmConfiguration algorithmConfiguration = default;
-            if (brokerageName.HasValue)
-            {
-                algorithmConfiguration = new AlgorithmConfiguration()
-                {
-                    AccountCurrency = "USD",
-                    BrokerageName = brokerageName.Value,
-                    AccountType = accountType,
-                };
-
-                if (customTradingDaysPerYear.HasValue)
-                {
-                    algorithmConfiguration.TradingDaysPerYear = customTradingDaysPerYear.Value;
-                }
-            }
-
-            var algorithm = CreateAlgorithm(Enumerable.Empty<Order>(), algorithmConfiguration);
-
-            algorithm.Initialize();
-
-            BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
-
-            Assert.AreEqual(expectedTradingDaysPerYear, algorithm.Settings.TradingDaysPerYear);
         }
     }
 }

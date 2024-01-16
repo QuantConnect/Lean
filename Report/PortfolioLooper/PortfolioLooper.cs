@@ -125,9 +125,6 @@ namespace QuantConnect.Report
             // Initialize the algorithm before adding any securities
             Algorithm.Initialize();
 
-            // after algorithm was initialized, should set trading days per year for our great portfolio statistics
-            BaseSetupHandler.SetBrokerageTradingDayPerYear(Algorithm);
-
             Algorithm.PostInitialize();
 
             // Initializes all the proper Securities from the orders provided by the user
