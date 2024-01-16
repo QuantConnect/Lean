@@ -510,7 +510,8 @@ namespace QuantConnect.Tests.Common.Orders
                 CanceledTime = DateTime.UtcNow,
                 Status = OrderStatus.Filled,
                 OrderSubmissionData = new OrderSubmissionData(321.47m, 321.48m, 321.49m),
-                Properties = { TimeInForce = timeInForce }
+                Properties = { TimeInForce = timeInForce },
+                PriceAdjustmentMode = DataNormalizationMode.Adjusted
             };
 
             var converter = new OrderJsonConverter();
@@ -541,6 +542,7 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(expected.OrderSubmissionData.AskPrice, actual.OrderSubmissionData.AskPrice);
             Assert.AreEqual(expected.OrderSubmissionData.BidPrice, actual.OrderSubmissionData.BidPrice);
             Assert.AreEqual(expected.OrderSubmissionData.LastPrice, actual.OrderSubmissionData.LastPrice);
+            Assert.AreEqual(expected.PriceAdjustmentMode, actual.PriceAdjustmentMode);
         }
 
         [Test]

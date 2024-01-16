@@ -259,8 +259,6 @@ namespace QuantConnect
         /// Heatmap Plot (9) -- NOTE: 8 is reserved
         Heatmap = 9,
         /// Scatter 3D Plot (10)
-        Scatter3d,
-        /// A stock plot
-        StockPlot
+        Scatter3d
     }
 }
