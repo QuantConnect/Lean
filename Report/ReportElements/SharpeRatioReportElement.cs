@@ -27,7 +27,7 @@ namespace QuantConnect.Report.ReportElements
         /// <summary>
         /// The number of trading days per year to get better result of statistics
         /// </summary>
-        protected double _tradingDaysPerYear;
+        private double _tradingDaysPerYear;
 
         /// <summary>
         /// Live result object

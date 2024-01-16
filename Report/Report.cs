@@ -125,7 +125,7 @@ namespace QuantConnect.Report
                 new MaxDrawdownReportElement("max drawdown kpi", ReportKey.MaxDrawdown, backtest, live),
                 new SharpeRatioReportElement("sharpe kpi", ReportKey.SharpeRatio, backtest, live, tradingDayPerYear),
                 new SortinoRatioReportElement("sortino kpi", ReportKey.SortinoRatio, backtest, live, tradingDayPerYear),
-                new PSRReportElement("psr kpi", ReportKey.PSR, backtest, live),
+                new PSRReportElement("psr kpi", ReportKey.PSR, backtest, live, tradingDayPerYear),
                 new InformationRatioReportElement("ir kpi", ReportKey.InformationRatio, backtest, live),
                 new MarketsReportElement("markets kpi", ReportKey.Markets, backtest, live),
                 new TradesPerDayReportElement("trades per day kpi", ReportKey.TradesPerDay, backtest, live),
@@ -139,7 +139,7 @@ namespace QuantConnect.Report
                 new AssetAllocationReportElement("asset allocation over time pie chart", ReportKey.AssetAllocation, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
                 new DrawdownReportElement("drawdown plot", ReportKey.Drawdown, backtest, live),
                 new DailyReturnsReportElement("daily returns plot", ReportKey.DailyReturns, backtest, live),
-                new RollingPortfolioBetaReportElement("rolling beta to equities plot", ReportKey.RollingBeta, backtest, live),
+                new RollingPortfolioBetaReportElement("rolling beta to equities plot", ReportKey.RollingBeta, backtest, live, tradingDayPerYear),
                 new RollingSharpeReportElement("rolling sharpe ratio plot", ReportKey.RollingSharpe, backtest, live, tradingDayPerYear),
                 new LeverageUtilizationReportElement("leverage plot", ReportKey.LeverageUtilization, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
                 new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live, backtestPortfolioInTime, livePortfolioInTime)
