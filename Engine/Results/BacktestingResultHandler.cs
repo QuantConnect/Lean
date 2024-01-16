@@ -421,6 +421,10 @@ namespace QuantConnect.Lean.Engine.Results
             SecurityType(types);
 
             ConfigureConsoleTextWriter(algorithm);
+
+            // Wire algorithm name and tags updates
+            algorithm.NameUpdated += (sender, name) => AlgorithmNameUpdated(name);
+            algorithm.TagsUpdated += (sender, tags) => AlgorithmTagsUpdated(tags);
         }
 
         /// <summary>

@@ -81,6 +81,8 @@ namespace QuantConnect.Algorithm
         const string StatisticsTag = "Statistics";
         #endregion
 
+        const int MaxNameAndTagsLength = 200;
+
         private readonly TimeKeeper _timeKeeper;
         private LocalTimeKeeper _localTimeKeeper;
 
@@ -485,12 +487,12 @@ namespace QuantConnect.Algorithm
             {
                 if (_locked)
                 {
-                    throw new InvalidOperationException("Cannot algorithm name after it is initialized.");
+                    throw new InvalidOperationException("Cannot set algorithm name after it is initialized.");
                 }
 
                 if (!string.IsNullOrEmpty(value))
                 {
-                    _name = value.Length <= 200 ? value : value.Substring(0, 200);
+                    _name = value.Truncate(MaxNameAndTagsLength);
                 }
             }
         }
@@ -518,7 +520,7 @@ namespace QuantConnect.Algorithm
                     _tagsCollectionTruncatedLogSent = true;
                 }
 
-                _tags = value.Take(20).ToHashSet();
+                _tags = value.Take(20).ToHashSet(tag => tag.Truncate(MaxNameAndTagsLength));
                 if (_locked)
                 {
                     TagsUpdated?.Invoke(this, Tags);
@@ -1497,7 +1499,7 @@ namespace QuantConnect.Algorithm
                     return;
                 }
 
-                if (Tags.Add(tag) && _locked)
+                if (Tags.Add(tag.Truncate(MaxNameAndTagsLength)) && _locked)
                 {
                     TagsUpdated?.Invoke(this, Tags);
                 }

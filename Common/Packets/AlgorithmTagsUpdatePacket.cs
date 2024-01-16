@@ -34,7 +34,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The new tags
         /// </summary>
-        [JsonProperty(PropertyName = "oTags")]
+        [JsonProperty(PropertyName = "aTags")]
         public HashSet<string> Tags = new();
 
         /// <summary>

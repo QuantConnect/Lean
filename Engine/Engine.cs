@@ -117,10 +117,6 @@ namespace QuantConnect.Lean.Engine
 
                     algorithm.ProjectId = job.ProjectId;
 
-                    // Wire algorithm name and tags updates
-                    algorithm.NameUpdated += (sender, name) => AlgorithmHandlers.Results.AlgorithmNameUpdated(name);
-                    algorithm.TagsUpdated += (sender, tags) => AlgorithmHandlers.Results.AlgorithmTagsUpdated(tags);
-
                     // Set algorithm in ILeanManager
                     SystemHandlers.LeanManager.SetAlgorithm(algorithm);
 

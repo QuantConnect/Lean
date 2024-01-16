@@ -310,5 +310,23 @@ namespace QuantConnect
 
             return value.Substring(startIndex, Math.Min(length, value.Length - startIndex));
         }
+
+        /// <summary>
+        /// Truncates a string to the specified maximum length
+        /// </summary>
+        /// <param name="value">The string</param>
+        /// <param name="maxLength">The maximum allowed string</param>
+        /// <returns>
+        /// A new string with <paramref name="maxLength"/> characters if the original one's length was greater than the maximum allowed length.
+        /// Otherwise, the original string is returned.
+        /// </returns>
+        public static string Truncate(this string value, int maxLength)
+        {
+            if (value.Length > maxLength)
+            {
+                return value.Substring(0, maxLength);
+            }
+            return value;
+        }
     }
 }

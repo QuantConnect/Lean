@@ -724,6 +724,10 @@ namespace QuantConnect.Lean.Engine.Results
             Console.SetError(error);
 
             UpdateAlgorithmStatus();
+
+            // Wire algorithm name and tags updates
+            algorithm.NameUpdated += (sender, name) => AlgorithmNameUpdated(name);
+            algorithm.TagsUpdated += (sender, tags) => AlgorithmTagsUpdated(tags);
         }
 
 
@@ -1290,7 +1294,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="name">The new name</param>
         public void AlgorithmNameUpdated(string name)
         {
-            // Do nothing here, tags only matter for backtest
+            Messages.Enqueue(new AlgorithmNameUpdatePacket(AlgorithmId, name));
         }
 
         /// <summary>
@@ -1299,7 +1303,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="tags">The new tags</param>
         public void AlgorithmTagsUpdated(HashSet<string> tags)
         {
-            // Do nothing here, tags only matter for backtest
+            Messages.Enqueue(new AlgorithmTagsUpdatePacket(AlgorithmId, tags));
         }
     }
 }
