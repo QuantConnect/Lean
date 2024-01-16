@@ -847,13 +847,11 @@ namespace QuantConnect.Lean.Engine.Results
                         portfolioTurnover = new Series();
                     }
 
-                    // call method to set tradingDayPerYear for Algorithm (use: backwards compatibility)
-                    BaseSetupHandler.SetBrokerageTradingDayPerYear(Algorithm);
-
                     statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performance.Values, benchmark.Values,
                         portfolioTurnover.Values, StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions,
-                        estimatedStrategyCapacity, AlgorithmCurrencySymbol, Algorithm.Transactions, Algorithm.RiskFreeInterestRateModel, 
-                        Algorithm.Settings.TradingDaysPerYear.Value);
+                        estimatedStrategyCapacity, AlgorithmCurrencySymbol, Algorithm.Transactions, Algorithm.RiskFreeInterestRateModel,
+                        Algorithm.Settings.TradingDaysPerYear.Value // already set in Brokerage|Backtesting-SetupHandler classes
+                        );
                 }
 
                 statisticsResults.AddCustomSummaryStatistics(_customSummaryStatistics);
