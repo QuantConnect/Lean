@@ -18,6 +18,8 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Util;
 using QuantConnect.Data.Market;
+using QuantConnect.Algorithm;
+using QuantConnect.Lean.Engine.Setup;
 
 namespace QuantConnect.Tests.Common.Statistics
 {
@@ -29,9 +31,18 @@ namespace QuantConnect.Tests.Common.Statistics
         private List<double> _spyPerformance = new List<double>();
         private List<double> _aaplPerformance = new List<double>();
 
+        /// <summary>
+        /// Instance of QC Algorithm. 
+        /// Use to get <see cref="Interfaces.IAlgorithmSettings.TradingDaysPerYear"/> for clear calculation in <seealso cref="QuantConnect.Statistics.Statistics.AnnualPerformance"/>
+        /// </summary>
+        private QCAlgorithm _algorithm;
+
         [OneTimeSetUp]
         public void GetData()
         {
+            _algorithm = new QCAlgorithm();
+            BaseSetupHandler.SetBrokerageTradingDayPerYear(_algorithm);
+
             var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             var spyPath = LeanData.GenerateZipFilePath(Globals.DataFolder, spy, new DateTime(2020, 3, 1), Resolution.Daily, TickType.Trade);
             var spyConfig = new QuantConnect.Data.SubscriptionDataConfig(typeof(TradeBar), spy, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
@@ -82,7 +93,7 @@ namespace QuantConnect.Tests.Common.Statistics
         [Test]
         public void OneYearPerformance()
         {
-            var result = QuantConnect.Statistics.Statistics.TrackingError(_aaplPerformance.Take(252).ToList(), _spyPerformance.Take(252).ToList());
+            var result = QuantConnect.Statistics.Statistics.TrackingError(_aaplPerformance.Take(252).ToList(), _spyPerformance.Take(252).ToList(), _algorithm.Settings.TradingDaysPerYear.Value);
 
             Assert.AreEqual(0.52780899407691173, result);
         }
@@ -91,7 +102,7 @@ namespace QuantConnect.Tests.Common.Statistics
         public void TotalPerformance()
         {
             // This might seem arbitrary, but there's 1 missing date vs. AAPL for SPY data, and it happens to be at line 5555 for date 2020-01-31
-            var result = QuantConnect.Statistics.Statistics.TrackingError(_aaplPerformance.Take(5555).ToList(), _spyPerformance.Take(5555).ToList());
+            var result = QuantConnect.Statistics.Statistics.TrackingError(_aaplPerformance.Take(5555).ToList(), _spyPerformance.Take(5555).ToList(), _algorithm.Settings.TradingDaysPerYear.Value);
 
             Assert.AreEqual(0.43074391577621751d, result, 0.00001);
         }
@@ -104,7 +115,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var benchmarkPerformance = Enumerable.Repeat(random.NextDouble(), 252).ToList();
             var algoPerformance = benchmarkPerformance.Select(element => element).ToList();
 
-            var result = QuantConnect.Statistics.Statistics.TrackingError(algoPerformance, benchmarkPerformance);
+            var result = QuantConnect.Statistics.Statistics.TrackingError(algoPerformance, benchmarkPerformance, _algorithm.Settings.TradingDaysPerYear.Value);
 
             Assert.AreEqual(0.0, result);
         }
@@ -124,7 +135,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 algoPerformance.Add((baseReturn * 2) + 2);
             }
 
-            var result = QuantConnect.Statistics.Statistics.TrackingError(algoPerformance, benchmarkPerformance);
+            var result = QuantConnect.Statistics.Statistics.TrackingError(algoPerformance, benchmarkPerformance, _algorithm.Settings.TradingDaysPerYear.Value);
 
             Assert.AreEqual(0.0, result);
         }
@@ -135,7 +146,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var benchmarkPerformance = Enumerable.Repeat(0.0, 252).ToList();
             var algoPerformance = Enumerable.Repeat(0.0, 252).ToList();
 
-            var result = QuantConnect.Statistics.Statistics.TrackingError(algoPerformance, benchmarkPerformance);
+            var result = QuantConnect.Statistics.Statistics.TrackingError(algoPerformance, benchmarkPerformance, _algorithm.Settings.TradingDaysPerYear.Value);
 
             Assert.AreEqual(0.0, result);
         }

@@ -93,5 +93,25 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <remarks>This allows improving the warmup speed by setting it to a lower resolution than the one added in the algorithm</remarks>
         Resolution? WarmupResolution { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of trading days per year for this Algorithm's portfolio statistics.
+        /// </summary>
+        /// <remarks>
+        /// This property affects the calculation of various portfolio statistics, including:
+        /// - <see cref="Statistics.PortfolioStatistics.AnnualVariance"/>
+        /// - <seealso cref="Statistics.PortfolioStatistics.AnnualStandardDeviation"/>
+        /// - <seealso cref="Statistics.PortfolioStatistics.SharpeRatio"/>
+        /// - <seealso cref="Statistics.PortfolioStatistics.SortinoRatio"/>
+        /// - <seealso cref="Statistics.PortfolioStatistics.TrackingError"/>
+        /// - <seealso cref="Statistics.PortfolioStatistics.InformationRatio"/>.
+        /// 
+        /// The default values are:
+        /// - Cryptocurrency Exchanges: 365 days
+        /// - Traditional Stock Exchanges: 252 days
+        /// 
+        /// Users can also set a custom value for this property.
+        /// </remarks>
+        int? TradingDaysPerYear { get; set; }
     }
 }

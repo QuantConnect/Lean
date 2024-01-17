@@ -323,6 +323,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
+                // after algorithm was initialized, should set trading days per year for our great portfolio statistics
+                BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
+
                 //Finalize Initialization
                 algorithm.PostInitialize();
 

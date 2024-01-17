@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,18 +27,25 @@ namespace QuantConnect.Report.ReportElements
         private BacktestResult _backtest;
 
         /// <summary>
+        /// The number of trading days per year to get better result of statistics
+        /// </summary>
+        private int _tradingDaysPerYear;
+
+        /// <summary>
         /// Create a new plot of the rolling sharpe ratio
         /// </summary>
         /// <param name="name">Name of the widget</param>
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public RollingSharpeReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        /// <param name="tradingDaysPerYear">The number of trading days per year to get better result of statistics</param>
+        public RollingSharpeReportElement(string name, string key, BacktestResult backtest, LiveResult live, int tradingDaysPerYear)
         {
             _live = live;
             _backtest = backtest;
             Name = name;
             Key = key;
+            _tradingDaysPerYear = tradingDaysPerYear;
         }
 
         /// <summary>
@@ -52,10 +59,10 @@ namespace QuantConnect.Report.ReportElements
             var backtestSeries = new Series<DateTime, double>(backtestPoints);
             var liveSeries = new Series<DateTime, double>(livePoints);
 
-            var backtestRollingSharpeSixMonths = Rolling.Sharpe(backtestSeries, 6).DropMissing();
-            var backtestRollingSharpeTwelveMonths = Rolling.Sharpe(backtestSeries, 12).DropMissing();
-            var liveRollingSharpeSixMonths = Rolling.Sharpe(liveSeries, 6).DropMissing();
-            var liveRollingSharpeTwelveMonths = Rolling.Sharpe(liveSeries, 12).DropMissing();
+            var backtestRollingSharpeSixMonths = Rolling.Sharpe(backtestSeries, 6, _tradingDaysPerYear).DropMissing();
+            var backtestRollingSharpeTwelveMonths = Rolling.Sharpe(backtestSeries, 12, _tradingDaysPerYear).DropMissing();
+            var liveRollingSharpeSixMonths = Rolling.Sharpe(liveSeries, 6, _tradingDaysPerYear).DropMissing();
+            var liveRollingSharpeTwelveMonths = Rolling.Sharpe(liveSeries, 12, _tradingDaysPerYear).DropMissing();
 
             var base64 = "";
             using (Py.GIL())

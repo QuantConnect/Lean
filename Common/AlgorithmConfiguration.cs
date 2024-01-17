@@ -82,12 +82,19 @@ namespace QuantConnect
         public DateTime EndDate;
 
         /// <summary>
+        /// Number of trading days per year for Algorithm's portfolio statistics.
+        /// </summary>
+        [JsonProperty(PropertyName = "TradingDaysPerYear")]
+        public int TradingDaysPerYear;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmConfiguration"/> class
         /// </summary>
         public AlgorithmConfiguration(string accountCurrency, BrokerageName brokerageName, AccountType accountType, IReadOnlyDictionary<string, string> parameters,
-            DateTime startDate, DateTime endDate, DateTime? outOfSampleMaxEndDate, int outOfSampleDays = 0)
+            DateTime startDate, DateTime endDate, DateTime? outOfSampleMaxEndDate, int outOfSampleDays = 0, int tradingDaysPerYear = 0)
         {
             OutOfSampleMaxEndDate = outOfSampleMaxEndDate;
+            TradingDaysPerYear = tradingDaysPerYear;
             OutOfSampleDays = outOfSampleDays;
             AccountCurrency = accountCurrency;
             BrokerageName = brokerageName;
@@ -102,6 +109,8 @@ namespace QuantConnect
         /// </summary>
         public AlgorithmConfiguration()
         {
+            // use default value for backwards compatibility
+            TradingDaysPerYear = 252;
         }
 
         /// <summary>
@@ -120,7 +129,9 @@ namespace QuantConnect
                 algorithm.StartDate,
                 algorithm.EndDate,
                 backtestNodePacket?.OutOfSampleMaxEndDate,
-                backtestNodePacket?.OutOfSampleDays ?? 0);
+                backtestNodePacket?.OutOfSampleDays ?? 0,
+                // use value = 252 like default for backwards compatibility
+                algorithm?.Settings?.TradingDaysPerYear ?? 252);
         }
     }
 }

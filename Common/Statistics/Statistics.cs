@@ -84,7 +84,7 @@ namespace QuantConnect.Statistics
         /// <param name="tradingDaysPerYear">Trading days per year for the assets in portfolio</param>
         /// <remarks>May be unaccurate for forex algorithms with more trading days in a year</remarks>
         /// <returns>Double annual performance percentage</returns>
-        public static double AnnualPerformance(List<double> performance, double tradingDaysPerYear = 252)
+        public static double AnnualPerformance(List<double> performance, double tradingDaysPerYear)
         {
             return Math.Pow((performance.Average() + 1), tradingDaysPerYear) - 1;
         }
@@ -96,7 +96,7 @@ namespace QuantConnect.Statistics
         /// <param name="tradingDaysPerYear"></param>
         /// <remarks>Invokes the variance extension in the MathNet Statistics class</remarks>
         /// <returns>Annual variance value</returns>
-        public static double AnnualVariance(List<double> performance, double tradingDaysPerYear = 252)
+        public static double AnnualVariance(List<double> performance, double tradingDaysPerYear)
         {
             var variance = performance.Variance();
             return variance.IsNaNOrZero() ? 0 : variance * tradingDaysPerYear;
@@ -112,7 +112,7 @@ namespace QuantConnect.Statistics
         ///     Feasibly the trading days per year can be fetched from the dictionary of performance which includes the date-times to get the range; if is more than 1 year data.
         /// </remarks>
         /// <returns>Value for annual standard deviation</returns>
-        public static double AnnualStandardDeviation(List<double> performance, double tradingDaysPerYear = 252)
+        public static double AnnualStandardDeviation(List<double> performance, double tradingDaysPerYear)
         {
             return Math.Sqrt(AnnualVariance(performance, tradingDaysPerYear));
         }
@@ -125,7 +125,7 @@ namespace QuantConnect.Statistics
         /// <param name="minimumAcceptableReturn">Minimum acceptable return</param>
         /// <remarks>Invokes the variance extension in the MathNet Statistics class</remarks>
         /// <returns>Annual variance value</returns>
-        public static double AnnualDownsideVariance(List<double> performance, double tradingDaysPerYear = 252, double minimumAcceptableReturn = 0)
+        public static double AnnualDownsideVariance(List<double> performance, double tradingDaysPerYear, double minimumAcceptableReturn = 0)
         {
             return AnnualVariance(performance.Where(ret => ret < minimumAcceptableReturn).ToList(), tradingDaysPerYear);
         }
@@ -137,7 +137,7 @@ namespace QuantConnect.Statistics
         /// <param name="tradingDaysPerYear">Number of trading days for the assets in portfolio to get annualize standard deviation.</param>
         /// <param name="minimumAcceptableReturn">Minimum acceptable return</param>
         /// <returns>Value for annual downside standard deviation</returns>
-        public static double AnnualDownsideStandardDeviation(List<double> performance, double tradingDaysPerYear = 252, double minimumAcceptableReturn = 0)
+        public static double AnnualDownsideStandardDeviation(List<double> performance, double tradingDaysPerYear, double minimumAcceptableReturn = 0)
         {
             return Math.Sqrt(AnnualDownsideVariance(performance, tradingDaysPerYear, minimumAcceptableReturn));
         }
@@ -150,7 +150,7 @@ namespace QuantConnect.Statistics
         /// <param name="benchmarkPerformance">Double collection of benchmark daily performance values</param>
         /// <param name="tradingDaysPerYear">Number of trading days per year</param>
         /// <returns>Value for tracking error</returns>
-        public static double TrackingError(List<double> algoPerformance, List<double> benchmarkPerformance, double tradingDaysPerYear = 252)
+        public static double TrackingError(List<double> algoPerformance, List<double> benchmarkPerformance, double tradingDaysPerYear)
         {
             // Un-equal lengths will blow up other statistics, but this will handle the case here
             if (algoPerformance.Count() != benchmarkPerformance.Count())
@@ -201,7 +201,7 @@ namespace QuantConnect.Statistics
         /// <param name="riskFreeRate">The risk free rate</param>
         /// <param name="tradingDaysPerYear">Trading days per year for the assets in portfolio</param>
         /// <returns>Value for sharpe ratio</returns>
-        public static double SharpeRatio(List<double> algoPerformance, double riskFreeRate, double tradingDaysPerYear=252)
+        public static double SharpeRatio(List<double> algoPerformance, double riskFreeRate, double tradingDaysPerYear)
         {
             return SharpeRatio(AnnualPerformance(algoPerformance, tradingDaysPerYear), AnnualStandardDeviation(algoPerformance, tradingDaysPerYear), riskFreeRate);
         }
@@ -215,7 +215,7 @@ namespace QuantConnect.Statistics
         /// <param name="tradingDaysPerYear">Trading days per year for the assets in portfolio</param>
         /// <param name="minimumAcceptableReturn">Minimum acceptable return for Sortino ratio calculation</param>
         /// <returns>Value for Sortino ratio</returns>
-        public static double SortinoRatio(List<double> algoPerformance, double riskFreeRate, double tradingDaysPerYear = 252, double minimumAcceptableReturn = 0)
+        public static double SortinoRatio(List<double> algoPerformance, double riskFreeRate, double tradingDaysPerYear, double minimumAcceptableReturn = 0)
         {
             return SharpeRatio(AnnualPerformance(algoPerformance, tradingDaysPerYear), AnnualDownsideStandardDeviation(algoPerformance, tradingDaysPerYear, minimumAcceptableReturn), riskFreeRate);
         }

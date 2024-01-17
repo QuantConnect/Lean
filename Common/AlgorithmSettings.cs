@@ -120,6 +120,19 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Number of trading days per year for this Algorithm's portfolio statistics.
+        /// </summary>
+        /// <remarks>Effect on 
+        /// <see cref="Statistics.PortfolioStatistics.AnnualVariance"/>,
+        /// <seealso cref="Statistics.PortfolioStatistics.AnnualStandardDeviation"/>,
+        /// <seealso cref="Statistics.PortfolioStatistics.SharpeRatio"/>,
+        /// <seealso cref="Statistics.PortfolioStatistics.SortinoRatio"/>,
+        /// <seealso cref="Statistics.PortfolioStatistics.TrackingError"/>,
+        /// <seealso cref="Statistics.PortfolioStatistics.InformationRatio"/>.
+        /// </remarks>
+        public int? TradingDaysPerYear { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
         /// </summary>
         public AlgorithmSettings()

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,18 +26,25 @@ namespace QuantConnect.Report.ReportElements
         private BacktestResult _backtest;
 
         /// <summary>
+        /// The number of trading days per year to get better result of statistics
+        /// </summary>
+        private int _tradingDaysPerYear;
+
+        /// <summary>
         /// Estimate the PSR of the strategy.
         /// </summary>
         /// <param name="name">Name of the widget</param>
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public PSRReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        /// <param name="tradingDaysPerYear">The number of trading days per year to get better result of statistics</param>
+        public PSRReportElement(string name, string key, BacktestResult backtest, LiveResult live, int tradingDaysPerYear)
         {
             _live = live;
             _backtest = backtest;
             Name = name;
             Key = key;
+            _tradingDaysPerYear = tradingDaysPerYear;
         }
 
         /// <summary>
@@ -69,7 +76,7 @@ namespace QuantConnect.Report.ReportElements
 
             var sixMonthsBefore = equityCurvePerformance.LastKey() - TimeSpan.FromDays(180);
 
-            var benchmarkSharpeRatio = 1.0d / Math.Sqrt(252);
+            var benchmarkSharpeRatio = 1.0d / Math.Sqrt(_tradingDaysPerYear);
             psr = Statistics.Statistics.ProbabilisticSharpeRatio(
                 equityCurvePerformance
                     .Where(kvp => kvp.Key >= sixMonthsBefore)

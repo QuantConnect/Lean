@@ -15,19 +15,20 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using QuantConnect.AlgorithmFactory;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using QuantConnect.Brokerages;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
+using QuantConnect.AlgorithmFactory;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Lean.Engine.Setup
@@ -230,6 +231,33 @@ namespace QuantConnect.Lean.Engine.Setup
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Set the number of trading days per year based on the specified brokerage model.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <returns>
+        /// The number of trading days per year. For specific brokerages (Coinbase, Binance, Bitfinex, Bybit, FTX, Kraken),
+        /// the value is 365. For other brokerages, the default value is 252.
+        /// </returns>
+        public static void SetBrokerageTradingDayPerYear(IAlgorithm algorithm)
+        {
+            if (algorithm == null)
+            {
+                throw new ArgumentNullException(nameof(algorithm));
+            }
+
+            algorithm.Settings.TradingDaysPerYear ??= algorithm.BrokerageModel switch
+            {
+                CoinbaseBrokerageModel
+                or BinanceBrokerageModel
+                or BitfinexBrokerageModel
+                or BybitBrokerageModel
+                or FTXBrokerageModel
+                or KrakenBrokerageModel => 365,
+                _ => 252
+            };
         }
     }
 }

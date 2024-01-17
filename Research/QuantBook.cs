@@ -36,6 +36,7 @@ using System.Linq;
 using QuantConnect.Packets;
 using System.Threading.Tasks;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.Setup;
 
 namespace QuantConnect.Research
 {
@@ -768,8 +769,12 @@ namespace QuantConnect.Research
                 // Gets the startting capital
                 var startingCapital = Convert.ToDecimal(dictEquity.FirstOrDefault().Value);
 
+                // call method to set tradingDayPerYear for Algorithm (use: backwards compatibility)
+                BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm: this);
+
                 // Compute portfolio statistics
-                var stats = new PortfolioStatistics(profitLoss, equity, new(), listPerformance, listBenchmark, startingCapital, RiskFreeInterestRateModel);
+                var stats = new PortfolioStatistics(profitLoss, equity, new(), listPerformance, listBenchmark, startingCapital, RiskFreeInterestRateModel,
+                    Settings.TradingDaysPerYear.Value);
 
                 result.SetItem("Average Win (%)", Convert.ToDouble(stats.AverageWinRate * 100).ToPython());
                 result.SetItem("Average Loss (%)", Convert.ToDouble(stats.AverageLossRate * 100).ToPython());

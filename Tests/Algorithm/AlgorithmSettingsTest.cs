@@ -14,11 +14,13 @@
 */
 using System;
 using NUnit.Framework;
-using QuantConnect.Algorithm;
-using QuantConnect.Data.Market;
-using QuantConnect.Tests.Common.Securities;
-using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
+using QuantConnect.Algorithm;
+using QuantConnect.Brokerages;
+using QuantConnect.Data.Market;
+using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Lean.Engine.Setup;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -75,6 +77,71 @@ namespace QuantConnect.Tests.Algorithm
             var actual = algo.CalculateOrderQuantity(Symbols.SPY, 1m);
             // 100000 / 20 - 1 due to fee - effect of the target being reduced because of FreePortfolioValuePercentage
             Assert.AreEqual(4986m, actual);
+        }
+
+        [TestCase(BrokerageName.FTX, 365)]
+        [TestCase(BrokerageName.RBI, 252)]
+        [TestCase(BrokerageName.Eze, 252)]
+        [TestCase(BrokerageName.Axos, 252)]
+        [TestCase(BrokerageName.Samco, 252)]
+        [TestCase(BrokerageName.FTXUS, 365)]
+        [TestCase(BrokerageName.Bybit, 365)]
+        [TestCase(BrokerageName.Kraken, 365)]
+        [TestCase(BrokerageName.Exante, 252)]
+        [TestCase(BrokerageName.Binance, 365)]
+        [TestCase(BrokerageName.Default, 252)]
+        [TestCase(BrokerageName.Zerodha, 252)]
+        [TestCase(BrokerageName.Bitfinex, 365)]
+        [TestCase(BrokerageName.Wolverine, 252)]
+        [TestCase(BrokerageName.TDAmeritrade, 252)]
+        [TestCase(BrokerageName.FxcmBrokerage, 252)]
+        [TestCase(BrokerageName.OandaBrokerage, 252)]
+        [TestCase(BrokerageName.BinanceFutures, 365)]
+        [TestCase(BrokerageName.TradierBrokerage, 252)]
+        [TestCase(BrokerageName.BinanceCoinFutures, 365)]
+        [TestCase(BrokerageName.TradingTechnologies, 252)]
+        [TestCase(BrokerageName.QuantConnectBrokerage, 252)]
+        [TestCase(BrokerageName.Coinbase, 365, AccountType.Cash)]
+        [TestCase(BrokerageName.BinanceUS, 365, AccountType.Cash)]
+        [TestCase(BrokerageName.InteractiveBrokersBrokerage, 252)]
+        public void ReturnUniqueTradingDayPerYearDependOnBrokerageName(BrokerageName brokerageName, int expectedTradingDayPerYear, AccountType accountType = AccountType.Margin)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SetBrokerageModel(brokerageName, accountType);
+
+            BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
+
+            Assert.AreEqual(expectedTradingDayPerYear, algorithm.Settings.TradingDaysPerYear.Value);
+        }
+
+        [TestCase(BrokerageName.Bybit, 202, 365)]
+        [TestCase(BrokerageName.InteractiveBrokersBrokerage, 404, 252)]
+        public void ReturnCustomTradingDayPerYearIndependentlyFromBrokerageName(BrokerageName brokerageName, int customTradingDayPerYear, int expectedDefaultTradingDayPerYearForBrokerage)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SetBrokerageModel(brokerageName);
+            algorithm.Settings.TradingDaysPerYear = customTradingDayPerYear;
+
+            // duplicate: make sure that custom value is assigned
+            BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
+
+            Assert.AreNotEqual(expectedDefaultTradingDayPerYearForBrokerage, algorithm.Settings.TradingDaysPerYear);
+        }
+
+        [TestCase(252, null)]
+        [TestCase(404, 404)]
+        public void ReturnTradingDayPerYearWithoutSetBrokerage(int expectedTradingDayPerYear, int? customTradingDayPerYear = null)
+        {
+            var algorithm = new QCAlgorithm();
+
+            if (customTradingDayPerYear.HasValue)
+            {
+                algorithm.Settings.TradingDaysPerYear = customTradingDayPerYear.Value;
+            }
+
+            BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
+
+            Assert.AreEqual(expectedTradingDayPerYear, algorithm.Settings.TradingDaysPerYear);
         }
 
         private FakeOrderProcessor InitializeAndGetFakeOrderProcessor(QCAlgorithm algo)

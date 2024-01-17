@@ -76,8 +76,9 @@ namespace QuantConnect.Report
         /// </summary>
         /// <param name="equityCurve">Equity curve to calculate rolling sharpe for</param>
         /// <param name="months">Number of months to calculate the rolling period for</param>
+        /// <param name="tradingDayPerYear">The number of trading days per year to increase result of Annual statistics</param>
         /// <returns>Rolling sharpe ratio</returns>
-        public static Series<DateTime, double> Sharpe(Series<DateTime, double> equityCurve, int months)
+        public static Series<DateTime, double> Sharpe(Series<DateTime, double> equityCurve, int months, int tradingDayPerYear)
         {
             var riskFreeRate = (double)_interestRateProvider.GetAverageRiskFreeRate(equityCurve.Keys);
             if (equityCurve.IsEmpty)
@@ -103,7 +104,7 @@ namespace QuantConnect.Report
                 rollingSharpeData.Add(
                     new KeyValuePair<DateTime, double>(
                         date,
-                        Statistics.Statistics.SharpeRatio(algoPerformanceLookback.Values.ToList(), riskFreeRate)
+                        Statistics.Statistics.SharpeRatio(algoPerformanceLookback.Values.ToList(), riskFreeRate, tradingDayPerYear)
                     )
                 );
             }

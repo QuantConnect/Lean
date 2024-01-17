@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+using System.Globalization;
 using QuantConnect.Packets;
 using System.Collections.Generic;
 
@@ -32,8 +34,9 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public SortinoRatioReportElement(string name, string key, BacktestResult backtest, LiveResult live)
-            : base(name, key, backtest, live)
+        /// <param name="tradingDaysPerYear">The number of trading days per year to get better result of statistics</param>
+        public SortinoRatioReportElement(string name, string key, BacktestResult backtest, LiveResult live, int tradingDaysPerYear)
+            : base(name, key, backtest, live, tradingDaysPerYear)
         {
         }
 
@@ -41,10 +44,11 @@ namespace QuantConnect.Report.ReportElements
         /// Get annual standard deviation
         /// </summary>
         /// <param name="trailingPerformance">The performance for the last period</param>
+        /// <param name="tradingDaysPerYear">The number of trading days per year to get better result of statistics</param>
         /// <returns>Annual downside standard deviation.</returns>
-        public override double GetAnnualStandardDeviation(List<double> trailingPerformance)
+        public override double GetAnnualStandardDeviation(List<double> trailingPerformance, double tradingDaysPerYear)
         {
-            return Statistics.Statistics.AnnualDownsideStandardDeviation(trailingPerformance);
+            return Statistics.Statistics.AnnualDownsideStandardDeviation(trailingPerformance, tradingDaysPerYear);
         }
     }
 }
