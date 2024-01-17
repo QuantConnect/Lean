@@ -240,8 +240,8 @@ namespace QuantConnect.Indicators
         {
             switch (optionModel)
             {
+                // Binomial model also follows BSM process (log-normal)
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
-                    return OptionGreekIndicatorsHelper.CRRTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, optionType);
                 case OptionPricingModelType.BlackScholes:
                 default:
                     return OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, optionType);
@@ -259,7 +259,7 @@ namespace QuantConnect.Indicators
                 (double)(TheoreticalPrice(Convert.ToDecimal(vol), spotPrice, Strike, timeToExpiration, RiskFreeRate.Current.Value, Right, _optionModel) - price);
             try
             {
-                return Convert.ToDecimal(Brent.FindRoot(f, 0.01d, 1.0d, 1e-5d, 20));
+                return Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 4.0d, 1e-4d, 100));
             }
             catch
             {
