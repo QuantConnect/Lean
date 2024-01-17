@@ -1,0 +1,28 @@
+name: API Tests
+
+on:
+  push:
+    branches: ['*']
+    tags: ['*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Free space
+        run: df -h && rm -rf /opt/hostedtoolcache* && df -h
+
+      - uses: addnab/docker-run-action@v3
+        with:
+          image: quantconnect/lean:foundation
+          options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w -e GITHUB_REF=${{ github.ref }} -e QC_JOB_USER_ID=${{ secrets.QC_JOB_USER_ID }} -e QC_API_ACCESS_TOKEN=${{ secrets.QC_API_ACCESS_TOKEN }} -e QC_JOB_ORGANIZATION_ID=${{ secrets.QC_JOB_ORGANIZATION_ID }}
+          shell: bash
+          run: |
+            # Build
+            dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+            # Run Projects tests
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --blame-hang-timeout 300seconds --blame-crash --filter "FullyQualifiedName=QuantConnect.Tests.API.ProjectTests" -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\)
