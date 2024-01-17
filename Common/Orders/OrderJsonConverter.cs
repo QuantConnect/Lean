@@ -124,6 +124,13 @@ namespace QuantConnect.Orders
                 order.OrderSubmissionData = new OrderSubmissionData(bidPrice, askPrice, lastPrice);
             }
 
+            var priceAdjustmentMode = jObject["PriceAdjustmentMode"];
+            if (priceAdjustmentMode != null && priceAdjustmentMode.Type != JTokenType.Null)
+            {
+                var value = priceAdjustmentMode.Value<int>();
+                order.PriceAdjustmentMode = (DataNormalizationMode)value;
+            }
+
             var lastFillTime = jObject["LastFillTime"];
             var lastUpdateTime = jObject["LastUpdateTime"];
             var canceledTime = jObject["CanceledTime"];

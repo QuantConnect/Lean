@@ -47,6 +47,12 @@ namespace QuantConnect
         public int Index { get; set; }
 
         /// <summary>
+        /// Defines the visual Z index of the series on the chart.
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public int? ZIndex { get; set; }
+
+        /// <summary>
         /// Chart type for the series:
         /// </summary>
         public SeriesType SeriesType { get; set; }
@@ -259,8 +265,6 @@ namespace QuantConnect
         /// Heatmap Plot (9) -- NOTE: 8 is reserved
         Heatmap = 9,
         /// Scatter 3D Plot (10)
-        Scatter3d,
-        /// A stock plot
-        StockPlot
+        Scatter3d
     }
 }

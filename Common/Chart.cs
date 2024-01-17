@@ -39,6 +39,12 @@ namespace QuantConnect
         public Dictionary<string, BaseSeries> Series = new Dictionary<string, BaseSeries>();
 
         /// <summary>
+        /// Associated symbol if any, making this an asset plot
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public Symbol Symbol { get; set; }
+
+        /// <summary>
         /// Default constructor for chart:
         /// </summary>
         public Chart() { }
@@ -60,9 +66,19 @@ namespace QuantConnect
         /// Constructor for a chart
         /// </summary>
         /// <param name="name">String name of the chart</param>
-        public Chart(string name)
+        public Chart(string name) : this(name, null)
+        {
+        }
+
+        /// <summary>
+        /// Constructor for a chart
+        /// </summary>
+        /// <param name="name">String name of the chart</param>
+        /// <param name="symbol">Associated symbol if any</param>
+        public Chart(string name, Symbol symbol)
         {
             Name = name;
+            Symbol = symbol;
             Series = new Dictionary<string, BaseSeries>();
         }
 
