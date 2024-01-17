@@ -14,11 +14,11 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
+using System.Drawing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace QuantConnect.Util
 {
@@ -51,6 +51,12 @@ namespace QuantConnect.Util
             writer.WriteValue(baseSeries.Index);
             writer.WritePropertyName("SeriesType");
             writer.WriteValue(baseSeries.SeriesType);
+
+            if (baseSeries.ZIndex.HasValue)
+            {
+                writer.WritePropertyName("ZIndex");
+                writer.WriteValue(baseSeries.ZIndex.Value);
+            }
 
             switch (value)
             {
@@ -103,6 +109,13 @@ namespace QuantConnect.Util
             var seriesType = (SeriesType)jObject["SeriesType"].Value<int>();
             var values = (JArray)jObject["Values"];
 
+            int? zindex = null;
+            var jZIndex = jObject["ZIndex"];
+            if (jZIndex != null && jZIndex.Type != JTokenType.Null)
+            {
+                zindex = jZIndex.Value<int>();
+            }
+
             if (seriesType == SeriesType.Candle)
             {
                 return new CandlestickSeries()
@@ -110,6 +123,7 @@ namespace QuantConnect.Util
                     Name = name,
                     Unit = unit,
                     Index = index,
+                    ZIndex = zindex,
                     SeriesType = seriesType,
                     Values = values.ToObject<List<Candlestick>>(serializer).Where(x => x != null).Cast<ISeriesPoint>().ToList()
                 };
@@ -120,6 +134,7 @@ namespace QuantConnect.Util
                 Name = name,
                 Unit = unit,
                 Index = index,
+                ZIndex = zindex,
                 SeriesType = seriesType,
                 Color = jObject["Color"].ToObject<Color>(serializer),
                 ScatterMarkerSymbol = jObject["ScatterMarkerSymbol"].ToObject<ScatterMarkerSymbol>(serializer),
