@@ -395,6 +395,16 @@ namespace QuantConnect.Tests.API
             readTagsResult = ApiClient.GetBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId);
             Assert.IsTrue(readTagsResult.Success, $"Error reading backtest tags:\n    {string.Join("\n    ", readTagsResult.Errors)}");
             CollectionAssert.IsEmpty(readTagsResult.Tags);
+
+            // Override the whole set of tags
+            var newTags = new List<string> { "tag4", "tag5", "tag6" };
+            var updateTagsResult = ApiClient.UpdateBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId, newTags);
+            Assert.IsTrue(updateTagsResult.Success, $"Error updating backtest tags:\n    {string.Join("\n    ", updateTagsResult.Errors)}");
+
+            // Read the backtest tags and verify the tags were updated
+            readTagsResult = ApiClient.GetBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId);
+            Assert.IsTrue(readTagsResult.Success, $"Error reading backtest tags:\n    {string.Join("\n    ", readTagsResult.Errors)}");
+            CollectionAssert.AreEquivalent(newTags, readTagsResult.Tags);
         }
 
         private static string GetTimestamp()

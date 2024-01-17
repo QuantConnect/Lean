@@ -707,6 +707,31 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Updates the tags collection for a backtest
+        /// </summary>
+        /// <param name="projectId">Project for the backtest we want to update</param>
+        /// <param name="backtestId">Backtest id we want to update</param>
+        /// <param name="tags">The new backtest tags</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse UpdateBacktestTags(int projectId, string backtestId, IReadOnlyCollection<string> tags)
+        {
+            var request = new RestRequest("backtests/tags/update", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+                backtestId,
+                tags
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+
+        /// <summary>
         /// Create a live algorithm.
         /// </summary>
         /// <param name="projectId">Id of the project on QuantConnect</param>

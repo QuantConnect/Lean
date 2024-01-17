@@ -1292,7 +1292,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Handles updates to the algorithm's name
         /// </summary>
         /// <param name="name">The new name</param>
-        public void AlgorithmNameUpdated(string name)
+        public virtual void AlgorithmNameUpdated(string name)
         {
             Messages.Enqueue(new AlgorithmNameUpdatePacket(AlgorithmId, name));
         }
@@ -1301,7 +1301,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Handles updates to the algorithm's tags
         /// </summary>
         /// <param name="tags">The new tags</param>
-        public void AlgorithmTagsUpdated(HashSet<string> tags)
+        public virtual void AlgorithmTagsUpdated(HashSet<string> tags)
         {
             Messages.Enqueue(new AlgorithmTagsUpdatePacket(AlgorithmId, tags));
         }
