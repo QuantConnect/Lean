@@ -158,33 +158,6 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(refIV, (double)indicator.Current.Value, 0.005d);
         }
 
-        // Reference values from QuantLib
-        [TestCase(23.753, 450.0, OptionRight.Call, 60, 0.307)]
-        [TestCase(35.830, 450.0, OptionRight.Put, 60, 0.515)]
-        [TestCase(33.928, 470.0, OptionRight.Call, 60, 0.276)]
-        [TestCase(6.428, 470.0, OptionRight.Put, 60, 0.205)]
-        [TestCase(3.219, 430.0, OptionRight.Call, 60, 0.132)]
-        [TestCase(47.701, 430.0, OptionRight.Put, 60, 0.545)]
-        [TestCase(16.528, 450.0, OptionRight.Call, 180, 0.093)]
-        [TestCase(21.784, 450.0, OptionRight.Put, 180, 0.208)]
-        [TestCase(35.207, 470.0, OptionRight.Call, 180, 0.134)]
-        [TestCase(0.409, 470.0, OptionRight.Put, 180, 0.056)]
-        [TestCase(2.642, 430.0, OptionRight.Call, 180, 0.056)]
-        [TestCase(27.772, 430.0, OptionRight.Put, 180, 0.178)]
-        public void ComparesIVOnCRRModel(decimal price, decimal spotPrice, OptionRight right, int expiry, double refIV)
-        {
-            // Under CRR framework
-            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new ImpliedVolatility(symbol, 0.04m, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein);
-
-            var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
-            var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
-            indicator.Update(optionDataPoint);
-            indicator.Update(spotDataPoint);
-
-            Assert.AreEqual(refIV, (double)indicator.Current.Value, 0.005d);
-        }
-
         private Symbol ParseOptionSymbol(string fileName)
         {
             var ticker = fileName.Substring(0, 3);

@@ -242,6 +242,7 @@ namespace QuantConnect.Indicators
             {
                 // Binomial model also follows BSM process (log-normal)
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
+                    return OptionGreekIndicatorsHelper.CRRTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, optionType);
                 case OptionPricingModelType.BlackScholes:
                 default:
                     return OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, optionType);
