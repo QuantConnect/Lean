@@ -173,7 +173,7 @@ namespace QuantConnect
         /// <returns></returns>
         public override BaseSeries Clone(bool empty = false)
         {
-            var series = new CandlestickSeries(Name, Index, Unit);
+            var series = new CandlestickSeries(Name, Index, Unit) { ZIndex = ZIndex };
 
             if (!empty)
             {

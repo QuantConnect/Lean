@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Common.Util
         public void SerializeDeserializeReturnsSameSeriesValue(int? zIndex)
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
-            var series = new Series("Pepito Grillo", SeriesType.Bar, "%", Color.Blue, ScatterMarkerSymbol.Diamond) { ZIndex = zIndex };
+            var series = new Series("Pepito Grillo", SeriesType.Bar, "%", Color.Blue, ScatterMarkerSymbol.Diamond) { ZIndex = zIndex, Index = 6 };
             series.AddPoint(date, 1);
             series.AddPoint(date.AddSeconds(1), 2);
 
@@ -52,6 +52,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(series.Color.ToArgb(), result.Color.ToArgb());
             Assert.AreEqual(series.ScatterMarkerSymbol, result.ScatterMarkerSymbol);
             Assert.AreEqual(series.ZIndex, result.ZIndex);
+            Assert.AreEqual(series.Index, result.Index);
         }
 
         [Test]

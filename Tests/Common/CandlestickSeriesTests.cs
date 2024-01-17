@@ -13,37 +13,22 @@
  * limitations under the License.
 */
 
-using System;
-using System.Linq;
-using System.Drawing;
 using NUnit.Framework;
 
 namespace QuantConnect.Tests.Common
 {
     [TestFixture]
-    public class SeriesTests
+    public class CandlestickSeriesTest
     {
-        [Test]
-        public void RespectsMostRecentTimeOnDuplicatePoints()
-        {
-            var series = new Series();
-            series.AddPoint(new DateTime(2023, 2, 2), 1m);
-            series.AddPoint(new DateTime(2023, 2, 2), 2m);
-            Assert.AreEqual(1, series.Values.Count);
-            Assert.AreEqual(2m, series.GetValues<ChartPoint>().Single().y);
-        }
-
         [Test]
         public void Clone()
         {
-            var series = new Series("A", SeriesType.Line, "TT", Color.AliceBlue, ScatterMarkerSymbol.Circle) { ZIndex = 98, Index = 8 };
-            var result = (Series)series.Clone();
+            var series = new CandlestickSeries("A", 8, "TT") { ZIndex = 98 };
+            var result = (CandlestickSeries)series.Clone();
 
             Assert.AreEqual(series.Name, result.Name);
             Assert.AreEqual(series.Unit, result.Unit);
             Assert.AreEqual(series.SeriesType, result.SeriesType);
-            Assert.AreEqual(series.Color.ToArgb(), result.Color.ToArgb());
-            Assert.AreEqual(series.ScatterMarkerSymbol, result.ScatterMarkerSymbol);
             Assert.AreEqual(series.Index, result.Index);
             Assert.AreEqual(series.ZIndex, result.ZIndex);
         }

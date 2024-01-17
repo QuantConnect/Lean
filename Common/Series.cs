@@ -187,7 +187,8 @@ namespace QuantConnect
             var series = new Series(Name, SeriesType, Index, Unit)
             {
                 Color = Color,
-                ScatterMarkerSymbol = ScatterMarkerSymbol
+                ZIndex = ZIndex,
+                ScatterMarkerSymbol = ScatterMarkerSymbol,
             };
 
             if (!empty)
