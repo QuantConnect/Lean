@@ -321,6 +321,27 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
+        [TestCase("SPX")]
+        [TestCase("NDX")]
+        [TestCase("VIX")]
+        public void USIndexOptionsResolveToUnderlyingEarlyCloses(string optionTicker)
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var underlyingTicker = OptionSymbol.MapToUnderlying(optionTicker, SecurityType.Index);
+            var underlying = Symbol.Create(underlyingTIcker, SecurityType.Index, Market.USA);
+            var option = Symbol.CreateOption(
+                underlying,
+                Market.USA,
+                default,
+                default,
+                default,
+                SecurityIdentifier.DefaultDate);
+
+            var underlyingEntry = provider.GetEntry(Market.USA, underlying, underlying.SecurityType);
+            var optionEntry = provider.GetEntry(Market.USA, option, option.SecurityType);
+            Assert.AreEqual(underlyingEntry.ExchangeHours.EarlyCloses, optionEntry.ExchangeHours.EarlyCloses);
+        }
+
         [TestCase("GC", Market.COMEX, "OG")]
         [TestCase("SI", Market.COMEX, "SO")]
         [TestCase("HG", Market.COMEX, "HXE")]
