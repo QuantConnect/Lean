@@ -10,13 +10,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
+    # Only run on push events (not on pull_request) for security reasons in order to be able to use secrets
+    if: ${{ github.event_name == 'push' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Free space
         run: df -h && rm -rf /opt/hostedtoolcache* && df -h
-
-      - uses: addnab/docker-run-action@v3
+      - name: Run API Tests
+        uses: addnab/docker-run-action@v3
         with:
           image: quantconnect/lean:foundation
           options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w -e GITHUB_REF=${{ github.ref }} -e QC_JOB_USER_ID=${{ secrets.QC_JOB_USER_ID }} -e QC_API_ACCESS_TOKEN=${{ secrets.QC_API_ACCESS_TOKEN }} -e QC_JOB_ORGANIZATION_ID=${{ secrets.QC_JOB_ORGANIZATION_ID }}
