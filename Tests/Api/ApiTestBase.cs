@@ -136,14 +136,14 @@ namespace QuantConnect.Tests.API
         /// <returns></returns>
         protected Compile WaitForCompilerResponse(int projectId, string compileId)
         {
-            var compile = new Compile();
-            var finish = DateTime.Now.AddSeconds(60);
-            while (DateTime.Now < finish)
+            Compile compile;
+            var finish = DateTime.UtcNow.AddSeconds(60);
+            do
             {
-                compile = ApiClient.ReadCompile(projectId, compileId);
-                if (compile.State == CompileState.BuildSuccess) break;
                 Thread.Sleep(1000);
-            }
+                compile = ApiClient.ReadCompile(projectId, compileId);
+            } while (compile.State != CompileState.BuildSuccess && DateTime.UtcNow < finish);
+
             return compile;
         }
 
@@ -155,16 +155,15 @@ namespace QuantConnect.Tests.API
         /// <returns>Completed backtest object</returns>
         protected Backtest WaitForBacktestCompletion(int projectId, string backtestId)
         {
-            var result = new Backtest();
-            var finish = DateTime.Now.AddSeconds(60);
-            while (DateTime.Now < finish)
+            Backtest backtest;
+            var finish = DateTime.UtcNow.AddSeconds(60);
+            do
             {
-                result = ApiClient.ReadBacktest(projectId, backtestId);
-                if (result.Progress == 1) break;
-                if (!result.Success) break;
                 Thread.Sleep(1000);
-            }
-            return result;
+                backtest = ApiClient.ReadBacktest(projectId, backtestId);
+            } while (backtest.Success && backtest.Progress < 1 && DateTime.UtcNow < finish);
+
+            return backtest;
         }
 
         /// <summary>

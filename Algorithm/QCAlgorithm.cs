@@ -1492,13 +1492,17 @@ namespace QuantConnect.Algorithm
         {
             if (!string.IsNullOrEmpty(tag))
             {
-                if (Tags.Count >= 20 && !_tagsLimitReachedLogSent)
+                if (Tags.Count >= 20)
                 {
-                    Log($"Warning: AddTag({tag}): Unable to add tag. Tags are limited to a maximum of 20.");
-                    _tagsLimitReachedLogSent = true;
+                    if (!_tagsLimitReachedLogSent)
+                    {
+                        Log($"Warning: AddTag({tag}): Unable to add tag. Tags are limited to a maximum of 20.");
+                        _tagsLimitReachedLogSent = true;
+                    }
                     return;
                 }
 
+                // We'll only notify the tad update after the algorithm has been initialized
                 if (Tags.Add(tag.Truncate(MaxNameAndTagsLength)) && _locked)
                 {
                     TagsUpdated?.Invoke(this, Tags);
