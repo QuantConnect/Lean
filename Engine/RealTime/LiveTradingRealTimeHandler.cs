@@ -188,13 +188,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
 
             var entry = MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
-            var securityExchangeHours = new SecurityExchangeHours(
-                entry.DataTimeZone,
-                entry.ExchangeHours.Holidays,
-                entry.ExchangeHours.MarketHours.ToDictionary(),
-                entry.ExchangeHours.EarlyCloses,
-                entry.ExchangeHours.LateOpens);
-            var hours = securityExchangeHours.GetMarketHours(time);
+            var hours = entry.ExchangeHours.GetMarketHours(time);
 
             foreach (var segment in hours.Segments)
             {

@@ -78,9 +78,8 @@ namespace QuantConnect.Tests.Engine.RealTime
         [TestCaseSource(typeof(ExchangeHoursDataClass), nameof(ExchangeHoursDataClass.TestCases))]
         public void RefreshesMarketHoursCorrectly(SecurityExchangeHours securityExchangeHours, MarketHoursSegment expectedSegment)
         {
-            Security security;
             var algorithm = new AlgorithmStub();
-            security = algorithm.AddEquity("SPY");
+            var security = algorithm.AddEquity("SPY");
 
             var realTimeHandler = new TestLiveTradingRealTimeHandler();
             realTimeHandler.Setup(algorithm,
@@ -145,7 +144,9 @@ namespace QuantConnect.Tests.Engine.RealTime
             Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
             broker.Scan();
             Assert.IsTrue(orderTicket.Status != OrderStatus.Filled);
+
             realTimeHandler.Exit();
+            broker.Dispose();
         }
 
         private class TestTimeLimitManager : IIsolatorLimitResultProvider
@@ -192,7 +193,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 var marketHours = security.Exchange.Hours.MarketHours[time.DayOfWeek];
                 var segment = marketHours.Segments.SingleOrDefault();
 
-                if (segment == null)
+                if (expectedSegment == null)
                 {
                     Assert.AreEqual(expectedSegment, segment);
                 }
@@ -212,7 +213,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             }
         }
 
-        public class TestLiveTradingRealTimeHandlerReset : LiveTradingRealTimeHandler
+        private class TestLiveTradingRealTimeHandlerReset : LiveTradingRealTimeHandler
         {
             private static AutoResetEvent OnSecurityUpdated = new AutoResetEvent(false);
 
