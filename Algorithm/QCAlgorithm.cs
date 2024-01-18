@@ -81,7 +81,15 @@ namespace QuantConnect.Algorithm
         const string StatisticsTag = "Statistics";
         #endregion
 
-        const int MaxNameAndTagsLength = 200;
+        /// <summary>
+        /// Maximum length of the name or tags of a backtest
+        /// </summary>
+        protected const int MaxNameAndTagsLength = 200;
+
+        /// <summary>
+        /// Maximum number of tags allowed for a backtest
+        /// </summary>
+        protected const int MaxTagsCount = 100;
 
         private readonly TimeKeeper _timeKeeper;
         private LocalTimeKeeper _localTimeKeeper;
@@ -514,13 +522,15 @@ namespace QuantConnect.Algorithm
                     return;
                 }
 
-                if (value.Count > 20 && !_tagsCollectionTruncatedLogSent)
+                var tags = value.Where(x => !string.IsNullOrEmpty(x?.Trim())).ToList();
+
+                if (tags.Count > MaxTagsCount && !_tagsCollectionTruncatedLogSent)
                 {
-                    Log("Warning: The tags collection cannot contain more than 20 items. It will be truncated.");
+                    Log($"Warning: The tags collection cannot contain more than {MaxTagsCount} items. It will be truncated.");
                     _tagsCollectionTruncatedLogSent = true;
                 }
 
-                _tags = value.Take(20).ToHashSet(tag => tag.Truncate(MaxNameAndTagsLength));
+                _tags = tags.Take(MaxTagsCount).ToHashSet(tag => tag.Truncate(MaxNameAndTagsLength));
                 if (_locked)
                 {
                     TagsUpdated?.Invoke(this, Tags);
@@ -1490,13 +1500,13 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">The tag to add</param>
         public void AddTag(string tag)
         {
-            if (!string.IsNullOrEmpty(tag))
+            if (!string.IsNullOrEmpty(tag?.Trim()))
             {
-                if (Tags.Count >= 20)
+                if (Tags.Count >= MaxTagsCount)
                 {
                     if (!_tagsLimitReachedLogSent)
                     {
-                        Log($"Warning: AddTag({tag}): Unable to add tag. Tags are limited to a maximum of 20.");
+                        Log($"Warning: AddTag({tag}): Unable to add tag. Tags are limited to a maximum of {MaxTagsCount}.");
                         _tagsLimitReachedLogSent = true;
                     }
                     return;
