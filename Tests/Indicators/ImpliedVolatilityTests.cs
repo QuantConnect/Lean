@@ -146,9 +146,8 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(27.772, 430.0, OptionRight.Put, 180, 0.178)]
         public void ComparesIVOnBSMModel(decimal price, decimal spotPrice, OptionRight right, int expiry, double refIV)
         {
-            // Under CRR framework
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new ImpliedVolatility(symbol, 0.04m, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein);
+            var indicator = new ImpliedVolatility(symbol, 0.04m);
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
             var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
