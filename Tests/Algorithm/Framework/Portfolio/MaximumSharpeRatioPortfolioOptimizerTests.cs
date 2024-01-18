@@ -22,17 +22,12 @@ using System.Linq;
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
     [TestFixture]
-    public class MaximumSharpeRatioPortfolioOptimizerTests
+    public class MaximumSharpeRatioPortfolioOptimizerTests : PortfolioOptimizerTestsBase
     {
-        private List<double[,]> _historicalReturns;
-        private List<double[]> _expectedReturns;
-        private List<double[,]> _covariances;
-        private List<double[]> _expectedResults;
-
         [OneTimeSetUp]
         public void SetUp()
         {
-            _historicalReturns = new List<double[,]>
+            HistoricalReturns = new List<double[,]>
             {
                 new double[,] { { 0.02, -0.02, 0.28 }, { -0.50, -0.29, -0.13 }, { 0.81, 0.29, 0.31 }, { -0.03, -0.00, 0.01 } },
                 new double[,] { { 0.10, 0.20, 0.4 }, { 0.12, 0.25, 0.4 }, { 0.11, 0.22, 0.4 } },
@@ -44,7 +39,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new double[,] { { 0.31, 0.43, 1.22, 0.03 }, { 0.65, 0.52, 1.25, 0.67 }, { -0.39, -0.28, -0.50, -0.10 }, { 0.58, 0.58, 2.39, -0.41 }, { -0.01, -0.01, 0.04, 0.03 } }
             };
 
-            _expectedReturns = new List<double[]>
+            ExpectedReturns = new List<double[]>
             {
                 new double[] { 0.08, -0.01, 0.12 },
                 new double[] { 0.11, 0.23, 0.4 },
@@ -56,7 +51,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new double[] { 0.23, 0.25, 0.88, 0.04 }
             };
 
-            _covariances = new List<double[,]>
+            Covariances = new List<double[,]>
             {
                 new double[,] { { 0.29, 0.13, 0.10 }, { 0.13, 0.06, 0.04 }, { 0.10, 0.04, 0.05 } },
                 null,
@@ -68,7 +63,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new double[,] { { 0.19, 0.16, 0.44, 0.05 }, { 0.16, 0.14, 0.40, 0.02 }, { 0.44, 0.40, 1.29, -0.06 }, { 0.05, 0.02, -0.06, 0.15 } }
             };
 
-            _expectedResults = new List<double[]>
+            ExpectedResults = new List<double[]>
             {
                 new double[] { -0.562396, 0.608942, 0.953453 },
                 new double[] { 0.686025, -0.269589, 0.583023 },
@@ -81,6 +76,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             };
         }
 
+        protected override IPortfolioOptimizer CreateOptimizer()
+        {
+            return new MaximumSharpeRatioPortfolioOptimizer();
+        }
+
         [TestCase(0)]
         [TestCase(1)]
         [TestCase(2)]
@@ -89,25 +89,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(5)]
         [TestCase(6)]
         [TestCase(7)]
-        public void TestOptimizeWeightings(int testCaseNumber)
+        public override void OptimizeWeightings(int testCaseNumber)
         {
-            var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer();
-
-            var result = testOptimizer.Optimize(
-                _historicalReturns[testCaseNumber],
-                _expectedReturns[testCaseNumber],
-                _covariances[testCaseNumber]);
-
-            Assert.AreEqual(_expectedResults[testCaseNumber], result.Select(x => Math.Round(x, 6)));
+            base.OptimizeWeightings(testCaseNumber);
         }
 
         [TestCase(0)]
-        public void TestOptimizeWeightingsSpecifyingLowerBoundAndRiskFreeRate(int testCaseNumber)
+        public void OptimizeWeightingsSpecifyingLowerBoundAndRiskFreeRate(int testCaseNumber)
         {
             var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer(lower: 0, riskFreeRate: 0.04);
             var expectedResult = new double[] { 0, 0.44898, 0.55102 };
 
-            var result = testOptimizer.Optimize(_historicalReturns[testCaseNumber]);
+            var result = testOptimizer.Optimize(HistoricalReturns[testCaseNumber]);
 
             Assert.AreEqual(expectedResult, result.Select(x => Math.Round(x, 6)));
         }
@@ -122,19 +115,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var expectedResult = new double[] { double.NaN };
 
             var result = testOptimizer.Optimize(historicalReturns, expectedReturns);
-
-            Assert.AreEqual(result, expectedResult);
-        }
-
-        [Test]
-        public void EmptyPortfolioReturnsEmptyArrayOfDouble()
-        {
-            var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer();
-            var historicalReturns = new double[,] { { } };
-
-            var expectedResult = Array.Empty<double>();
-
-            var result = testOptimizer.Optimize(historicalReturns);
 
             Assert.AreEqual(result, expectedResult);
         }
@@ -162,7 +142,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var upper = 0.5d;
             var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer(lower, upper);
 
-            var result = testOptimizer.Optimize(_historicalReturns[testCaseNumber], null, _covariances[testCaseNumber]);
+            var result = testOptimizer.Optimize(HistoricalReturns[testCaseNumber], null, Covariances[testCaseNumber]);
 
             foreach (var x in result)
             {

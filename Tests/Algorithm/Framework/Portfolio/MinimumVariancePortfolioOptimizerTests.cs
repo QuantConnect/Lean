@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using Accord;
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using System;
@@ -23,12 +22,8 @@ using System.Linq;
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
     [TestFixture]
-    public class MinimumVariancePortfolioOptimizerTests
+    public class MinimumVariancePortfolioOptimizerTests : PortfolioOptimizerTestsBase
     {
-        private List<double[,]> _historicalReturns;
-        private List<double[]> _expectedReturns;
-        private List<double[,]> _covariances;
-        private List<double[]> _expectedResults;
         private Dictionary<int, double> _targetReturns;
 
         [OneTimeSetUp]
@@ -49,7 +44,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var covariance3 = new double[,] { { 0.06, 0.09, 0.28 }, { 0.09, 0.25, 0.58 }, { 0.28, 0.58, 1.66 } };
             var covariance4 = (double[,])null;
 
-            _historicalReturns = new List<double[,]>
+            HistoricalReturns = new List<double[,]>
             {
                 historicalReturns1, 
                 historicalReturns2,
@@ -61,7 +56,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 historicalReturns4
             };
 
-            _expectedReturns = new List<double[]>
+            ExpectedReturns = new List<double[]>
             {
                 expectedReturns1,
                 expectedReturns2,
@@ -73,7 +68,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 expectedReturns4
             };
 
-            _covariances = new List<double[,]>
+            Covariances = new List<double[,]>
             {
                 covariance1,
                 covariance2,
@@ -85,7 +80,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 covariance4
             };
 
-            _expectedResults = new List<double[]>
+            ExpectedResults = new List<double[]>
             {
                 new double[] { -0.089212, 0.23431, -0.040975, 0.635503 },
                 new double[] { 0.366812, -0.139738, 0.49345 },
@@ -106,37 +101,34 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             };
         }
 
+        protected override IPortfolioOptimizer CreateOptimizer()
+        {
+            return new MinimumVariancePortfolioOptimizer();
+        }
+
         [TestCase(0)]
         [TestCase(1)]
         [TestCase(2)]
         [TestCase(3)]
-        public void TestOptimizeWeightings(int testCaseNumber)
+        public override void OptimizeWeightings(int testCaseNumber)
         {
-            var testOptimizer = new MinimumVariancePortfolioOptimizer();
-
-            var result = testOptimizer.Optimize(
-                _historicalReturns[testCaseNumber],
-                _expectedReturns[testCaseNumber],
-                _covariances[testCaseNumber]);
-
-            Assert.AreEqual(_expectedResults[testCaseNumber], result.Select(x => Math.Round(x, 6)));
-            Assert.AreEqual(1d, result.Select(x => Math.Round(Math.Abs(x), 6)).Sum());
+            base.OptimizeWeightings(testCaseNumber);
         }
 
         [TestCase(4)]
         [TestCase(5)]
         [TestCase(6)]
         [TestCase(7)]
-        public void TestOptimizeWeightingsSpecifyingTargetReturns(int testCaseNumber)
+        public void OptimizeWeightingsSpecifyingTargetReturns(int testCaseNumber)
         {
             var testOptimizer = new MinimumVariancePortfolioOptimizer(targetReturn: _targetReturns[testCaseNumber]);
 
             var result = testOptimizer.Optimize(
-                _historicalReturns[testCaseNumber],
-                _expectedReturns[testCaseNumber],
-                _covariances[testCaseNumber]);
+                HistoricalReturns[testCaseNumber],
+                ExpectedReturns[testCaseNumber],
+                Covariances[testCaseNumber]);
 
-            Assert.AreEqual(_expectedResults[testCaseNumber], result.Select(x => Math.Round(x, 6)));
+            Assert.AreEqual(ExpectedResults[testCaseNumber], result.Select(x => Math.Round(x, 6)));
             Assert.AreEqual(1d, result.Select(x => Math.Round(Math.Abs(x), 6)).Sum());
         }
 
@@ -146,7 +138,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var testOptimizer = new MinimumVariancePortfolioOptimizer(upper: -1);
             var expectedResult = new double[] { 0.25, 0.25, 0.25, 0.25 };
 
-            var result = testOptimizer.Optimize(_historicalReturns[testCaseNumber]);
+            var result = testOptimizer.Optimize(HistoricalReturns[testCaseNumber]);
 
             Assert.AreEqual(expectedResult, result);
         }
@@ -162,9 +154,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var testOptimizer = new MinimumVariancePortfolioOptimizer(lower, upper);
 
             var result = testOptimizer.Optimize(
-                _historicalReturns[testCaseNumber],
-                _expectedReturns[testCaseNumber],
-                _covariances[testCaseNumber]);
+                HistoricalReturns[testCaseNumber],
+                ExpectedReturns[testCaseNumber],
+                Covariances[testCaseNumber]);
 
             foreach (var x in result)
             {
@@ -174,24 +166,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             };
         }
 
-        public void EmptyPortfolioReturnsEmptyArrayOfDouble()
-        {
-            var testOptimizer = new MinimumVariancePortfolioOptimizer();
-            var historicalReturns = new double[,] { { } };
-
-            var result = testOptimizer.Optimize(historicalReturns);
-
-            Assert.AreEqual(Array.Empty<double>(), result);
-        }
-
+        [Test]
         public void SingleSecurityPortfolioReturnsOne()
         {
             var testOptimizer = new MinimumVariancePortfolioOptimizer();
             var historicalReturns = new double[,] { { 0.76 }, { 0.02 }, { -0.50 } };
+            var expectedResult = new double[] { 1 };
 
             var result = testOptimizer.Optimize(historicalReturns);
 
-            Assert.AreEqual(1d, result);
+            Assert.AreEqual(expectedResult, result);
         }
     }
 }

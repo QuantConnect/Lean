@@ -15,24 +15,18 @@
 
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
     [TestFixture]
-    public class UnconstrainedMeanVariancePortfolioOptimizerTests
+    public class UnconstrainedMeanVariancePortfolioOptimizerTests : PortfolioOptimizerTestsBase
     {
-        private List<double[,]> _historicalReturns;
-        private List<double[]> _expectedReturns;
-        private List<double[,]> _covariances;
-        private List<double[]> _expectedResults;
 
         [OneTimeSetUp]
         public void Setup()
         {
-            _historicalReturns = new List<double[,]>
+            HistoricalReturns = new List<double[,]>
             {
                 new double[,] { { 0.76, -0.06, 1.22, 0.17 }, { 0.02, 0.28, 1.25, -0.00 }, { -0.50, -0.13, -0.50, -0.03 }, { 0.81, 0.31, 2.39, 0.26 }, { -0.02, 0.02, 0.06, 0.01 } },
                 new double[,] { { -0.15, 0.67, 0.45 }, { -0.44, -0.10, 0.07 }, { 0.04, -0.41, 0.01 }, { 0.01, 0.03, 0.02 } },
@@ -40,7 +34,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new double[,] { { 0.76, 0.25, 0.21 }, { 0.02, -0.15, 0.45 }, { -0.50, -0.44, 0.07 }, { 0.81, 0.04, 0.01 }, { -0.02, 0.01, 0.02 } }
             };
 
-            _expectedReturns = new List<double[]>
+           ExpectedReturns = new List<double[]>
             {
                 new double[] { 0.21, 0.08, 0.88, 0.08 }, 
                 new double[] { -0.13, 0.05, 0.14 },
@@ -48,7 +42,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 null
             };
 
-            _covariances = new List<double[,]>
+            Covariances = new List<double[,]>
             {
                 new double[,] { { 0.31, 0.05, 0.55, 0.07 }, { 0.05, 0.04, 0.18, 0.01 }, { 0.55, 0.18, 1.28, 0.12 }, { 0.07, 0.01, 0.12, 0.02 } },
                 new double[,] { { 0.05, -0.02, -0.01 }, { -0.02, 0.21, 0.09 }, { -0.01, 0.09, 0.04 } },
@@ -56,7 +50,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 null
             };
 
-            _expectedResults = new List<double[]>
+            ExpectedResults = new List<double[]>
             {
                 new double[] { -13.288136, -23.322034, 8.79661, 9.389831 },
                 new double[] { -0.142857, -35.285714, 82.857143 },
@@ -64,31 +58,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new double[] { 4.621852, -9.651736, 5.098332 },
             };
         }
+        
+        protected override IPortfolioOptimizer CreateOptimizer()
+        {
+            return new UnconstrainedMeanVariancePortfolioOptimizer();
+        }
 
         [TestCase(0)]
         [TestCase(1)]
         [TestCase(2)]
         [TestCase(3)]
-        public void TestOptimizeWeightings(int testCaseNumber)
+        public override void OptimizeWeightings(int testCaseNumber)
         {
-            var testOptimizer = new UnconstrainedMeanVariancePortfolioOptimizer();
-
-            var result = testOptimizer.Optimize(
-                _historicalReturns[testCaseNumber],
-                _expectedReturns[testCaseNumber],
-                _covariances[testCaseNumber]);
-
-            Assert.AreEqual(_expectedResults[testCaseNumber], result.Select(x => Math.Round(x, 6)));
-        }
-
-        public void EmptyPortfolioReturnsEmptyArrayOfDouble()
-        {
-            var testOptimizer = new UnconstrainedMeanVariancePortfolioOptimizer();
-            var historicalReturns = new double[,] { { } };
-
-            var result = testOptimizer.Optimize(historicalReturns);
-
-            Assert.AreEqual(Array.Empty<double>(), result);
+            base.OptimizeWeightings(testCaseNumber);
         }
     }
 }
