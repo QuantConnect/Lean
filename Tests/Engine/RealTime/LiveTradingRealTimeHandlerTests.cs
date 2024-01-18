@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             var handleOptionNotification = typeof(BrokerageTransactionHandler).GetMethod("HandleOptionNotification", BindingFlags.NonPublic | BindingFlags.Instance);
 
             var transactionHandler = new TestBrokerageTransactionHandler();
-            var broker = new BacktestingBrokerage(algorithm);
+            using var broker = new BacktestingBrokerage(algorithm);
             transactionHandler.Initialize(algorithm, broker, new BacktestingResultHandler());
 
             // Creates a market order
@@ -146,7 +146,6 @@ namespace QuantConnect.Tests.Engine.RealTime
             Assert.IsTrue(orderTicket.Status != OrderStatus.Filled);
 
             realTimeHandler.Exit();
-            broker.Dispose();
         }
 
         private class TestTimeLimitManager : IIsolatorLimitResultProvider
