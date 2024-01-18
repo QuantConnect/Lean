@@ -848,6 +848,30 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new ImpliedVolatility indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The option symbol whose values we want as an indicator</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <returns>A new ImpliedVolatility indicator for the specified symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public ImpliedVolatility IV(Symbol symbol, decimal? riskFreeRate = null, int period = 252, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(symbol, $"IV({riskFreeRate},{period},{optionModel})", resolution);
+            IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue
+                ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
+                // Make it a function so it's lazily evaluated: SetRiskFreeInterestRateModel can be called after this method
+                : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
+            var iv = new ImpliedVolatility(name, symbol, riskFreeRateModel, period, optionModel);
+            RegisterIndicator(symbol, iv, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol.Underlying, iv, ResolveConsolidator(symbol, resolution));
+            return iv;
+        }
+
+        /// <summary>
         /// Creates a new KaufmanAdaptiveMovingAverage indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose KAMA we want</param>

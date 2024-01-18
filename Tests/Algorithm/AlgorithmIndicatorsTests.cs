@@ -14,10 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Linq.Expressions;
 
 using Moq;
 using NUnit.Framework;
@@ -26,7 +22,6 @@ using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -37,6 +32,7 @@ namespace QuantConnect.Tests.Algorithm
     public class AlgorithmIndicatorsTests
     {
         private QCAlgorithm _algorithm;
+        private Symbol _option;
 
         [SetUp]
         public void Setup()
@@ -52,6 +48,7 @@ namespace QuantConnect.Tests.Algorithm
 
             _algorithm.SetDateTime(new DateTime(2013, 10, 11, 15, 0, 0));
             _algorithm.AddEquity("SPY");
+            _option = _algorithm.AddOption("SPY").Symbol;
             _algorithm.EnableAutomaticIndicatorWarmUp = true;
         }
 
@@ -92,6 +89,35 @@ namespace QuantConnect.Tests.Algorithm
 
             // Our interest rate provider should have been called once
             interestRateProviderMock.Verify(x => x.GetInterestRate(reference), Times.Once);
+        }
+
+        [Test]
+        public void IVIndicatorUsesAlgorithmsRiskFreeRateModelSetAfterIndicatorRegistration()
+        {
+            // Register indicator
+            var sharpeRatio = _algorithm.IV(_option);
+
+            // Setup risk free rate model
+            var interestRateProviderMock = new Mock<IRiskFreeInterestRateModel>();
+            var reference = new DateTime(2023, 11, 21, 10, 0, 0);
+            interestRateProviderMock.Setup(x => x.GetInterestRate(reference)).Verifiable();
+
+            // Update indicator
+            sharpeRatio.Update(new IndicatorDataPoint(_option, reference, 30m));
+            sharpeRatio.Update(new IndicatorDataPoint(Symbols.SPY, reference, 300m));
+
+            // Our interest rate provider shouldn't have been called yet since it's hasn't been set to the algorithm
+            interestRateProviderMock.Verify(x => x.GetInterestRate(reference), Times.Never);
+
+            // Set the interest rate provider to the algorithm
+            _algorithm.SetRiskFreeInterestRateModel(interestRateProviderMock.Object);
+
+            // Update indicator
+            sharpeRatio.Update(new IndicatorDataPoint(_option, reference, 30m));
+            sharpeRatio.Update(new IndicatorDataPoint(Symbols.SPY, reference, 300m));
+
+            // Our interest rate provider should have been called once by each update
+            interestRateProviderMock.Verify(x => x.GetInterestRate(reference), Times.Exactly(2));
         }
     }
 }

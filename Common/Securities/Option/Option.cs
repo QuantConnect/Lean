@@ -24,6 +24,7 @@ using QuantConnect.Orders.OptionExercise;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Python;
 using QuantConnect.Securities.Interfaces;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 
@@ -328,7 +329,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public decimal GetIntrinsicValue(decimal underlyingPrice)
         {
-            return Math.Max(0.0m, GetPayOff(underlyingPrice));
+            return OptionPayoff.GetIntrinsicValue(underlyingPrice, StrikePrice, Right);
         }
 
         /// <summary>
@@ -338,7 +339,7 @@ namespace QuantConnect.Securities.Option
         /// <returns></returns>
         public decimal GetPayOff(decimal underlyingPrice)
         {
-            return Right == OptionRight.Call ? underlyingPrice - StrikePrice : StrikePrice - underlyingPrice;
+            return OptionPayoff.GetPayOff(underlyingPrice, StrikePrice, Right);
         }
 
         /// <summary>
