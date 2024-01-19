@@ -49,36 +49,6 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
-        public void ParseOptionIQFeedTicker()
-        {
-            // ticker contains two digits year of expiration
-            var result = SymbolRepresentation.ParseOptionTickerIQFeed("MSFT1615D30");
-
-            Assert.AreEqual(result.Underlying, "MSFT");
-            Assert.AreEqual(result.OptionRight, OptionRight.Call);
-            Assert.AreEqual(result.OptionStrike, 30m);
-            Assert.AreEqual(result.ExpirationDate, new DateTime(2016, 4, 15));
-        }
-
-        [TestCase("MSFT1615D30.5", "MSFT", OptionRight.Call, "30.5", "20160415")]
-        [TestCase("GOOG1415D30.5", "GOOG", OptionRight.Call, "30.5", "20140415")]
-        [TestCase("GOOCV1415C30.5", "GOOCV", OptionRight.Call, "30.5", "20140315")]
-        public void IQFeedTickerRoundTrip(string encodedOption, string underlying, OptionRight optionRight, decimal strike, string expiration)
-        {
-            var parsedOption = SymbolRepresentation.ParseOptionTickerIQFeed(encodedOption);
-
-            Assert.AreEqual(underlying, parsedOption.Underlying);
-            Assert.AreEqual(optionRight, parsedOption.OptionRight);
-            Assert.AreEqual(strike, parsedOption.OptionStrike);
-            Assert.AreEqual(Time.ParseDate(expiration), parsedOption.ExpirationDate);
-
-            var option = Symbol.CreateOption(parsedOption.Underlying, Market.USA, OptionStyle.American, parsedOption.OptionRight, parsedOption.OptionStrike, parsedOption.ExpirationDate);
-            var result = SymbolRepresentation.GenerateOptionTicker(option);
-
-            Assert.AreEqual(encodedOption, result);
-        }
-
-        [Test]
         public void ParseFuturesTickers()
         {
             // ticker contains two digits year of expiration, no day expiration
