@@ -15,7 +15,6 @@
 
 using System;
 using MathNet.Numerics.Distributions;
-using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Indicators
@@ -25,6 +24,8 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class OptionGreekIndicatorsHelper
     {
+        internal const int Steps = 200;
+     
         internal static decimal BlackTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, OptionRight optionType)
         {
             var d1 = CalculateD1(spotPrice, strikePrice, timeToExpiration, riskFreeRate, volatility);
@@ -49,10 +50,15 @@ namespace QuantConnect.Indicators
             return optionPrice;
         }
 
-        private static decimal CalculateD1(decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, decimal volatility)
+        internal static decimal CalculateD1(decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, decimal volatility)
         {
             var numerator = DecimalMath(Math.Log, spotPrice / strikePrice) + (riskFreeRate + 0.5m * volatility * volatility) * timeToExpiration;
             var denominator = volatility * DecimalMath(Math.Sqrt, timeToExpiration);
+            if (denominator == 0m)
+            {
+                // return a value large enough for probability close to 1
+                return 10;
+            }
             return numerator / denominator;
         }
 
@@ -63,10 +69,14 @@ namespace QuantConnect.Indicators
 
         // Reference: https://en.wikipedia.org/wiki/Binomial_options_pricing_model#Step_1:_Create_the_binomial_price_tree
         internal static decimal CRRTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice,
-            decimal timeToExpiration, decimal riskFreeRate, OptionRight optionType, int steps = 200)
+            decimal timeToExpiration, decimal riskFreeRate, OptionRight optionType, int steps = Steps)
         {
             var deltaTime = timeToExpiration / steps;
             var upFactor = DecimalMath(Math.Exp, volatility * DecimalMath(Math.Sqrt, deltaTime));
+            if (upFactor == 1m)
+            {
+                upFactor = 1.0001m;
+            }
             var discount = DecimalMath(Math.Exp, -riskFreeRate * deltaTime);
             var probUp = upFactor * (upFactor - discount) / (upFactor * upFactor - 1);
             var probDown = discount - probUp;
@@ -94,7 +104,7 @@ namespace QuantConnect.Indicators
             return values[0];
         }
 
-        private static decimal DecimalMath(Func<double, double> function, decimal input)
+        internal static decimal DecimalMath(Func<double, double> function, decimal input)
         {
             return Convert.ToDecimal(function((double)input));
         }
