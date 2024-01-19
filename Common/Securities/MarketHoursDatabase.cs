@@ -37,6 +37,7 @@ namespace QuantConnect.Securities
         private static readonly object DataFolderMarketHoursDatabaseLock = new object();
 
         private Dictionary<SecurityDatabaseKey, Entry> _entries;
+        private Dictionary<SecurityDatabaseKey, Entry> _customEntries = new();
 
         /// <summary>
         /// Gets all the exchange hours held by this provider
@@ -116,12 +117,12 @@ namespace QuantConnect.Securities
             }
         }
 
-        public void CheckAndResetEntries()
+        public void ReloadEntries()
         {
-            if (_dataFolderMarketHoursDatabase == null)
-            {
-                _entries = FromDataFolder().ExchangeHoursListing.ToDictionary();
-            }
+            Reset();
+            var newEntries = FromDataFolder().ExchangeHoursListing.ToDictionary();
+            newEntries = newEntries.Concat(_customEntries).ToDictionary();
+            _entries = newEntries;
         }
 
         /// <summary>
@@ -171,11 +172,11 @@ namespace QuantConnect.Securities
         /// <returns>The entry matching the specified market/symbol/security-type</returns>
         public virtual Entry SetEntry(string market, string symbol, SecurityType securityType, SecurityExchangeHours exchangeHours, DateTimeZone dataTimeZone = null)
         {
-            CheckAndResetEntries();
             dataTimeZone = dataTimeZone ?? exchangeHours.TimeZone;
             var key = new SecurityDatabaseKey(market, symbol, securityType);
             var entry = new Entry(dataTimeZone, exchangeHours);
             _entries[key] = entry;
+            _customEntries[key] = entry;
             return entry;
         }
 
@@ -203,7 +204,6 @@ namespace QuantConnect.Securities
         /// <returns>The entry matching the specified market/symbol/security-type</returns>
         public virtual Entry GetEntry(string market, string symbol, SecurityType securityType)
         {
-            CheckAndResetEntries();
             Entry entry;
             // Fall back on the Futures MHDB entry if the FOP lookup failed.
             // Some FOPs have the same symbol properties as their futures counterparts.
@@ -242,7 +242,6 @@ namespace QuantConnect.Securities
         /// <returns>True if the entry was present, else false</returns>
         public bool TryGetEntry(string market, Symbol symbol, SecurityType securityType, out Entry entry)
         {
-            CheckAndResetEntries();
             return TryGetEntry(market, GetDatabaseSymbolKey(symbol), securityType, out entry);
         }
 
@@ -256,7 +255,6 @@ namespace QuantConnect.Securities
         /// <returns>True if the entry was present, else false</returns>
         public bool TryGetEntry(string market, string symbol, SecurityType securityType, out Entry entry)
         {
-            CheckAndResetEntries();
             var symbolKey = new SecurityDatabaseKey(market, symbol, securityType);
             return _entries.TryGetValue(symbolKey, out entry)
                 // now check with null symbol key
@@ -324,7 +322,6 @@ namespace QuantConnect.Securities
         /// <returns>True if an entry is found, otherwise false</returns>
         protected bool ContainsKey(SecurityDatabaseKey key)
         {
-            CheckAndResetEntries();
             return _entries.ContainsKey(key);
         }
 

@@ -363,6 +363,21 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreSame(entry, fetchedEntry);
         }
 
+        [Test]
+        public void CustomEntriesAreNotLostWhenReset()
+        {
+            var database = MarketHoursDatabase.FromDataFolder();
+            var ticker = "UWU";
+            var hours = SecurityExchangeHours.AlwaysOpen(TimeZones.Berlin);
+            var entry = database.SetEntry(Market.USA, ticker, SecurityType.Base, hours);
+
+            MarketHoursDatabase.Entry returnedEntry;
+            Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, SecurityType.Base, out returnedEntry));
+            Assert.AreEqual(returnedEntry, entry);
+            database.ReloadEntries();
+            Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, SecurityType.Base, out returnedEntry));
+        }
+
         private static MarketHoursDatabase GetMarketHoursDatabase(string file)
         {
             return MarketHoursDatabase.FromFile(file);
