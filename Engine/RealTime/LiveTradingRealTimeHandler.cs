@@ -203,7 +203,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         protected virtual void ResetMarketHoursDatabase()
         {
-            MarketHoursDatabase.Reset();
+            MarketHoursDatabase.ReloadEntries();
         }
     }
 }

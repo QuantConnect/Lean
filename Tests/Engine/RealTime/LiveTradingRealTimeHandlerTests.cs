@@ -167,9 +167,21 @@ namespace QuantConnect.Tests.Engine.RealTime
         public class TestLiveTradingRealTimeHandler: LiveTradingRealTimeHandler
         {
             private static AutoResetEvent OnSecurityUpdated = new AutoResetEvent(false);
+            private MarketHoursDatabase newMarketHoursDatabase;
             public void SetMarketHoursDatabase(MarketHoursDatabase marketHoursDatabase)
             {
-                MarketHoursDatabase = marketHoursDatabase;
+                newMarketHoursDatabase = marketHoursDatabase;
+            }
+            protected override void ResetMarketHoursDatabase()
+            {
+                if (newMarketHoursDatabase != null)
+                {
+                    MarketHoursDatabase = newMarketHoursDatabase;
+                }
+                else
+                {
+                    base.ResetMarketHoursDatabase();
+                }
             }
 
             public void TestRefreshMarketHoursToday(Security security, DateTime time, MarketHoursSegment expectedSegment)
