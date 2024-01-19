@@ -300,7 +300,7 @@ namespace QuantConnect.Lean.Engine
                     // wire up the brokerage message handler
                     brokerage.Message += (sender, message) =>
                     {
-                        algorithm.BrokerageMessageHandler.Handle(message);
+                        algorithm.BrokerageMessageHandler.HandleMessage(message);
 
                         // fire brokerage message events
                         algorithm.OnBrokerageMessage(message);

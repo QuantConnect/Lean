@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Engine
 
             Assert.IsNull(algorithm.RunTimeError);
 
-            handler.Handle(BrokerageMessageEvent.Disconnected("Disconnection!"));
+            handler.HandleMessage(BrokerageMessageEvent.Disconnected("Disconnection!"));
 
             Assert.IsNull(algorithm.RunTimeError);
 
@@ -71,11 +71,11 @@ namespace QuantConnect.Tests.Engine
 
             Assert.IsNull(algorithm.RunTimeError);
 
-            handler.Handle(BrokerageMessageEvent.Disconnected("Disconnection!"));
+            handler.HandleMessage(BrokerageMessageEvent.Disconnected("Disconnection!"));
 
             Thread.Sleep(100);
 
-            handler.Handle(BrokerageMessageEvent.Reconnected("Reconnected!"));
+            handler.HandleMessage(BrokerageMessageEvent.Reconnected("Reconnected!"));
 
             Thread.Sleep(500);
 

@@ -30,41 +30,41 @@ namespace QuantConnect.Tests.Brokerages
         public void PatchesNonErrorMessagesToWrappedImplementation(BrokerageMessageType type)
         {
             var wrapped = new Mock<IBrokerageMessageHandler>();
-            wrapped.Setup(bmh => bmh.Handle(It.IsAny<BrokerageMessageEvent>())).Verifiable();
+            wrapped.Setup(bmh => bmh.HandleMessage(It.IsAny<BrokerageMessageEvent>())).Verifiable();
 
             var downgrader = new DowngradeErrorCodeToWarningBrokerageMessageHandler(wrapped.Object, new[] { "code" });
             var message = new BrokerageMessageEvent(type, "code", "message");
-            downgrader.Handle(message);
+            downgrader.HandleMessage(message);
 
-            wrapped.Verify(bmh => bmh.Handle(message), Times.Once);
+            wrapped.Verify(bmh => bmh.HandleMessage(message), Times.Once);
         }
 
         [Test]
         public void PatchesErrorMessageNotMatchingCodeToWrappedImplementation()
         {
             var wrapped = new Mock<IBrokerageMessageHandler>();
-            wrapped.Setup(bmh => bmh.Handle(It.IsAny<BrokerageMessageEvent>())).Verifiable();
+            wrapped.Setup(bmh => bmh.HandleMessage(It.IsAny<BrokerageMessageEvent>())).Verifiable();
 
             var downgrader = new DowngradeErrorCodeToWarningBrokerageMessageHandler(wrapped.Object, new[] { "code" });
             var message = new BrokerageMessageEvent(BrokerageMessageType.Error, "not-code", "message");
-            downgrader.Handle(message);
+            downgrader.HandleMessage(message);
 
-            wrapped.Verify(bmh => bmh.Handle(message), Times.Once);
+            wrapped.Verify(bmh => bmh.HandleMessage(message), Times.Once);
         }
 
         [Test]
         public void RewritesErrorMessageMatchingCodeAsWarning()
         {
             var wrapped = new Mock<IBrokerageMessageHandler>();
-            wrapped.Setup(bmh => bmh.Handle(It.IsAny<BrokerageMessageEvent>())).Verifiable();
+            wrapped.Setup(bmh => bmh.HandleMessage(It.IsAny<BrokerageMessageEvent>())).Verifiable();
 
             var downgrader = new DowngradeErrorCodeToWarningBrokerageMessageHandler(wrapped.Object, new[] { "code" });
             var message = new BrokerageMessageEvent(BrokerageMessageType.Error, "code", "message");
-            downgrader.Handle(message);
+            downgrader.HandleMessage(message);
 
             // verify we converter the message to a warning message w/ the same message and code
             wrapped.Verify(
-                bmh => bmh.Handle(
+                bmh => bmh.HandleMessage(
                     It.Is<BrokerageMessageEvent>(
                         e => e.Type == BrokerageMessageType.Warning
                             && e.Message == message.Message

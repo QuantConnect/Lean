@@ -180,7 +180,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _brokerage.NewBrokerageOrderNotification += (sender, e) =>
             {
-                AddOpenOrder(e.Order, _algorithm);
+                if (_algorithm.BrokerageMessageHandler.HandleOrder(e))
+                {
+                    AddOpenOrder(e.Order, _algorithm);
+                }
             };
 
             _brokerage.DelistingNotification += (sender, e) =>
