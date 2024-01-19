@@ -328,7 +328,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var provider = MarketHoursDatabase.FromDataFolder();
             var underlyingTicker = OptionSymbol.MapToUnderlying(optionTicker, SecurityType.Index);
-            var underlying = Symbol.Create(underlyingTIcker, SecurityType.Index, Market.USA);
+            var underlying = Symbol.Create(underlyingTicker, SecurityType.Index, Market.USA);
             var option = Symbol.CreateOption(
                 underlying,
                 Market.USA,
