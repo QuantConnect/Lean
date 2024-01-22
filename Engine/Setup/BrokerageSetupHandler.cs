@@ -464,53 +464,16 @@ namespace QuantConnect.Lean.Engine.Setup
 
         private bool GetOrAddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, SecurityType securityType, out Security security)
         {
-            if (!algorithm.Securities.TryGetValue(symbol, out security))
+            if (!algorithm.GetOrAddUnrequestedSecurity(symbol, SupportedSecurityTypes, out security))
             {
-                if (!SupportedSecurityTypes.Contains((SecurityType)securityType))
+                if (!SupportedSecurityTypes.Contains(securityType))
                 {
                     Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + securityType + "-" + symbol.Value);
                     AddInitializationError("Found unsupported security type in existing brokerage holdings: " + securityType + ". " +
                         "QuantConnect currently supports the following security types: " + string.Join(",", SupportedSecurityTypes));
-                    security = null;
-                    return false;
                 }
 
-                var resolution = algorithm.UniverseSettings.Resolution;
-                var fillForward = algorithm.UniverseSettings.FillForward;
-                var leverage = algorithm.UniverseSettings.Leverage;
-                var extendedHours = algorithm.UniverseSettings.ExtendedMarketHours;
-
-                if (!_notifiedUniverseSettingsUsed)
-                {
-                    // let's just send the message once
-                    _notifiedUniverseSettingsUsed = true;
-
-                    var leverageMsg = $" Leverage = {leverage};";
-                    if (leverage == Security.NullLeverage)
-                    {
-                        leverageMsg = $" Leverage = default;";
-                    }
-                    algorithm.Debug($"Will use UniverseSettings for automatically added securities for open orders and holdings. UniverseSettings:" +
-                        $" Resolution = {resolution};{leverageMsg} FillForward = {fillForward}; ExtendedHours = {extendedHours}");
-                }
-
-                Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + symbol.Value);
-
-                if (symbol.SecurityType.IsOption())
-                {
-                    // add current option contract to the system
-                    security = algorithm.AddOptionContract(symbol, resolution, fillForward, leverage, extendedHours);
-                }
-                else if (symbol.SecurityType == SecurityType.Future)
-                {
-                    // add current future contract to the system
-                    security = algorithm.AddFutureContract(symbol, resolution, fillForward, leverage, extendedHours);
-                }
-                else
-                {
-                    // for items not directly requested set leverage to 1 and at the min resolution
-                    security = algorithm.AddSecurity(symbol.SecurityType, symbol.Value, resolution, symbol.ID.Market, fillForward, leverage, extendedHours);
-                }
+                return false;
             }
             return true;
         }

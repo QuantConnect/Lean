@@ -180,10 +180,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _brokerage.NewBrokerageOrderNotification += (sender, e) =>
             {
-                if (_algorithm.BrokerageMessageHandler.HandleOrder(e))
-                {
-                    AddOpenOrder(e.Order, _algorithm);
-                }
+                HandleNewBrokerageSideOrder(e);
             };
 
             _brokerage.DelistingNotification += (sender, e) =>
@@ -1521,6 +1518,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// New brokerage-side order event handler
+        /// </summary>
+        private void HandleNewBrokerageSideOrder(NewBrokerageOrderNotificationEventArgs e)
+        {
+            if (_algorithm.BrokerageMessageHandler.HandleOrder(e) &&
+                _algorithm.GetOrAddUnrequestedSecurity(e.Order.Symbol, Enumerable.Empty<SecurityType>().ToList(), out _))
+            {
+                AddOpenOrder(e.Order, _algorithm);
             }
         }
 

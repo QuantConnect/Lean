@@ -2161,6 +2161,30 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(accepted ? 1 : 0, transactionHandler.OrdersCount);
         }
 
+        [Test]
+        public void UnrequestedSecuritiesAreAddedForNewBrokerageSideOrders()
+        {
+            //Initialize the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new TestingBrokerage();
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            _algorithm.SetBrokerageModel(new DefaultBrokerageModel());
+            var brokerageMessageHandler = new TestBrokerageMessageHandler();
+            _algorithm.SetBrokerageMessageHandler(brokerageMessageHandler);
+
+            var symbol = Symbols.SPY;
+            Assert.IsFalse(_algorithm.Securities.ContainsKey(symbol));
+
+            var order = GetOrder(OrderType.Market, symbol);
+            brokerage.OnNewBrokerageOrder(new NewBrokerageOrderNotificationEventArgs(order));
+            Assert.IsTrue(brokerageMessageHandler.LastHandleOrderResult);
+            Assert.AreEqual(1, transactionHandler.OrdersCount);
+
+            Assert.IsTrue(_algorithm.Securities.TryGetValue(symbol, out var security));
+            Assert.AreEqual(symbol, security.Symbol);
+        }
+
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
         {
             public static readonly Dictionary<int, int> OrderEventIds = new Dictionary<int, int>();
