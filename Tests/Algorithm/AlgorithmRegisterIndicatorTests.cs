@@ -31,6 +31,7 @@ namespace QuantConnect.Tests.Algorithm
     public class AlgorithmRegisterIndicatorTests
     {
         private Symbol _spy;
+        private Symbol _option;
         private QCAlgorithm _algorithm;
         private IEnumerable<Type> _indicatorTestsTypes;
 
@@ -40,6 +41,7 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm = new QCAlgorithm();
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             _spy = _algorithm.AddEquity("SPY").Symbol;
+            _option = _algorithm.AddOption("SPY").Symbol;
 
             _indicatorTestsTypes =
                 from type in GetType().Assembly.GetTypes()
@@ -59,7 +61,13 @@ namespace QuantConnect.Tests.Algorithm
             foreach (var type in _indicatorTestsTypes)
             {
                 var indicatorTest = Activator.CreateInstance(type);
-                if (indicatorTest is CommonIndicatorTests<IndicatorDataPoint>)
+                if (indicatorTest is OptionBaseIndicatorTests<OptionIndicatorBase>)
+                {
+                    var indicator = (indicatorTest as OptionBaseIndicatorTests<OptionIndicatorBase>).Indicator;
+                    Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_option, indicator, Resolution.Minute));
+                    expected++;
+                }
+                else if (indicatorTest is CommonIndicatorTests<IndicatorDataPoint>)
                 {
                     var indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).Indicator;
                     Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute, Field.Close));
@@ -117,7 +125,11 @@ namespace QuantConnect.Tests.Algorithm
             foreach (var type in _indicatorTestsTypes)
             {
                 var indicatorTest = Activator.CreateInstance(type);
-                if (indicatorTest is CommonIndicatorTests<IndicatorDataPoint>)
+                if (indicatorTest is OptionBaseIndicatorTests<OptionIndicatorBase>)
+                {
+                    indicator = (indicatorTest as OptionBaseIndicatorTests<OptionIndicatorBase>).GetIndicatorAsPyObject();
+                }
+                else if (indicatorTest is CommonIndicatorTests<IndicatorDataPoint>)
                 {
                     indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).GetIndicatorAsPyObject();
                 }

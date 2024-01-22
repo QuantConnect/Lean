@@ -29,8 +29,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Indicators
 {
-    [TestFixture]
-    public class OptionBaseIndicatorTests<T> : CommonIndicatorTests<IndicatorDataPoint>
+    public abstract class OptionBaseIndicatorTests<T> : CommonIndicatorTests<IndicatorDataPoint>
         where T : OptionIndicatorBase
     {
         // count of risk free rate calls per each update on greek indicator
