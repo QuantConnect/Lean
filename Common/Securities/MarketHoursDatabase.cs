@@ -37,7 +37,7 @@ namespace QuantConnect.Securities
         private static readonly object DataFolderMarketHoursDatabaseLock = new object();
 
         private Dictionary<SecurityDatabaseKey, Entry> _entries;
-        private Dictionary<SecurityDatabaseKey, Entry> _customEntries = new();
+        private readonly Dictionary<SecurityDatabaseKey, Entry> _customEntries = new();
 
         /// <summary>
         /// Gets all the exchange hours held by this provider
@@ -123,7 +123,7 @@ namespace QuantConnect.Securities
         public void ReloadEntries()
         {
             Reset();
-            var fileEntries = FromDataFolder().ExchangeHoursListing.Where(x => !_customEntries.ContainsKey(x.Key));
+            var fileEntries = FromDataFolder()._entries.Where(x => !_customEntries.ContainsKey(x.Key));
             var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
             _entries = newEntries;
         }
