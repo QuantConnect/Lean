@@ -117,11 +117,14 @@ namespace QuantConnect.Securities
             }
         }
 
+        /// <summary>
+        /// Reload entries dictionary from MHDB file and merge them with previous custom ones
+        /// </summary>
         public void ReloadEntries()
         {
             Reset();
-            var newEntries = FromDataFolder().ExchangeHoursListing.ToDictionary();
-            newEntries = newEntries.Concat(_customEntries).ToDictionary();
+            var fileEntries = FromDataFolder().ExchangeHoursListing;
+            var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
             _entries = newEntries;
         }
 

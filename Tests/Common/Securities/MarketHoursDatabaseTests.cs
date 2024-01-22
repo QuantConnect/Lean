@@ -376,6 +376,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(returnedEntry, entry);
             database.ReloadEntries();
             Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, SecurityType.Base, out returnedEntry));
+            Assert.AreEqual(returnedEntry, entry);
         }
 
         private static MarketHoursDatabase GetMarketHoursDatabase(string file)

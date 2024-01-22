@@ -74,7 +74,6 @@ namespace QuantConnect.Tests.Engine.RealTime
             realTimeHandler.Exit();
         }
 
-        [NonParallelizable]
         [TestCaseSource(typeof(ExchangeHoursDataClass), nameof(ExchangeHoursDataClass.TestCases))]
         public void RefreshesMarketHoursCorrectly(SecurityExchangeHours securityExchangeHours, MarketHoursSegment expectedSegment)
         {
