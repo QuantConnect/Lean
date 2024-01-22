@@ -534,7 +534,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The option symbol whose values we want as an indicator</param>
         /// <param name="riskFreeRate">The risk free rate</param>
-        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         /// <param name="resolution">The desired resolution of the data</param>
         /// <returns>A new OptionDelta indicator for the specified symbol</returns>

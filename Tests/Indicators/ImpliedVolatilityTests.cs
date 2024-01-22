@@ -14,36 +14,31 @@
 */
 
 using System;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using Moq;
 using NUnit.Framework;
-using Python.Runtime;
+using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class ImpliedVolatilityTests : CommonIndicatorTests<IndicatorDataPoint>
+    public class ImpliedVolatilityTests : OptionBaseIndicatorTests<ImpliedVolatility>
     {
-        protected override string TestColumnName => "ImpliedVolatility";
-
-        private DateTime _reference = new DateTime(2022, 9, 1, 10, 0, 0);
-        private Symbol _symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2023, 9, 1));
-        private Symbol _underlying;
-
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
-        {
-            var indicator = new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.04m);
-            return indicator;
-        }
+           => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.04m);
+
+        protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
+            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel);
+
+        protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
+            => algorithm.IV(_symbol);
 
         [SetUp]
         public void SetUp()
         {
-            _underlying = _symbol.Underlying;
+            // 2 updates per iteration
+            RiskFreeRateUpdatesPerIteration = 2;
         }
 
         // For comparing IB's value
@@ -71,20 +66,14 @@ namespace QuantConnect.Tests.Indicators
         [TestCase("SPY230901P00430000", 0.001)]
         [TestCase("SPY230901P00450000", 0.001)]
         [TestCase("SPY230901P00470000", 0.04)]
-        public void ComparesAgainstExternalData(string fileName, double errorMargin)
+        public void ComparesAgainstExternalData(string fileName, double errorMargin, int column = 2)
         {
             var path = Path.Combine("TestData", "greeks", $"{fileName}.csv");
             var symbol = ParseOptionSymbol(fileName);
             var underlying = symbol.Underlying;
 
             var indicator = new ImpliedVolatility(symbol, 0.04m);
-            RunTestIndicator(path, indicator, symbol, underlying, errorMargin);
-        }
-
-        [Test]
-        public override void ComparesAgainstExternalData()
-        {
-            // Not used
+            RunTestIndicator(path, indicator, symbol, underlying, errorMargin, column);
         }
 
         // For comparing IB's value
@@ -112,23 +101,17 @@ namespace QuantConnect.Tests.Indicators
         [TestCase("SPY230901P00430000", 0.001)]
         [TestCase("SPY230901P00450000", 0.001)]
         [TestCase("SPY230901P00470000", 0.04)]
-        public void ComparesAgainstExternalDataAfterReset(string fileName, double errorMargin)
+        public void ComparesAgainstExternalDataAfterReset(string fileName, double errorMargin, int column = 2)
         {
             var path = Path.Combine("TestData", "greeks", $"{fileName}.csv");
             var symbol = ParseOptionSymbol(fileName);
             var underlying = symbol.Underlying;
 
             var indicator = new ImpliedVolatility(symbol, 0.04m);
-            RunTestIndicator(path, indicator, symbol, underlying, errorMargin);
+            RunTestIndicator(path, indicator, symbol, underlying, errorMargin, column);
 
             indicator.Reset();
-            RunTestIndicator(path, indicator, symbol, underlying, errorMargin);
-        }
-
-        [Test]
-        public override void ComparesAgainstExternalDataAfterReset()
-        {
-            // Not used
+            RunTestIndicator(path, indicator, symbol, underlying, errorMargin, column);
         }
 
         // Reference values from QuantLib
@@ -155,75 +138,6 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(spotDataPoint);
 
             Assert.AreEqual(refIV, (double)indicator.Current.Value, 0.005d);
-        }
-
-        private Symbol ParseOptionSymbol(string fileName)
-        {
-            var ticker = fileName.Substring(0, 3);
-            var expiry = DateTime.ParseExact(fileName.Substring(3, 6), "yyMMdd", CultureInfo.InvariantCulture);
-            var right = fileName[9] == 'C' ? OptionRight.Call : OptionRight.Put;
-            var strike = Parse.Decimal(fileName.Substring(10, 8)) / 1000m;
-            var style = ticker == "SPY" ? OptionStyle.American : OptionStyle.European;
-
-            return Symbol.CreateOption(ticker, Market.USA, style, right, strike, expiry);
-        }
-
-        private void RunTestIndicator(string path, ImpliedVolatility indicator, Symbol symbol, Symbol underlying, double errorMargin)
-        {
-            foreach (var line in File.ReadAllLines(path).Skip(1))
-            {
-                var items = line.Split(',');
-
-                var time = DateTime.ParseExact(items[0], "yyyyMMdd HH:mm:ss.ffffff", CultureInfo.InvariantCulture);
-                var price = Parse.Decimal(items[1]);
-                var spotPrice = Parse.Decimal(items[^1]);
-                var refIV = Parse.Double(items[2]);
-
-                indicator.Update(new IndicatorDataPoint(symbol, time, price));
-                indicator.Update(new IndicatorDataPoint(underlying, time, spotPrice));
-
-                Assert.AreEqual(refIV, (double)indicator.Current.Value, errorMargin);
-            }
-        }
-
-        [Test]
-        public override void ResetsProperly()
-        {
-            var indicator = new ImpliedVolatility(_symbol, 0.04m);
-
-            for (var i = 0; i < 5; i++)
-            {
-                var price = 500m;
-                var optionPrice = Math.Max(price - 450, 0) * 1.1m;
-                var time = _reference.AddDays(1 + i);
-
-                indicator.Update(new IndicatorDataPoint(_symbol, time, optionPrice));
-                indicator.Update(new IndicatorDataPoint(_underlying, time, price));
-            }
-
-            Assert.IsTrue(indicator.IsReady);
-
-            indicator.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(indicator);
-        }
-
-        [Test]
-        public override void TimeMovesForward()
-        {
-            var indicator = CreateIndicator();
-
-            for (var i = 10; i > 0; i--)
-            {
-                var price = 500m;
-                var optionPrice = Math.Max(price - 450, 0) * 1.1m;
-                var time = _reference.AddDays(1 + i);
-
-                indicator.Update(new IndicatorDataPoint(_symbol, time, optionPrice));
-                indicator.Update(new IndicatorDataPoint(_underlying, time, price));
-            }
-
-            Assert.AreEqual(2, indicator.Samples);
         }
 
         [Test]
@@ -266,72 +180,5 @@ namespace QuantConnect.Tests.Indicators
 
             Assert.AreEqual(2 * warmUpPeriod.Value, indicator.Samples);
         }
-
-        [Test]
-        public void UsesRiskFreeInterestRateModel()
-        {
-            const int count = 20;
-            var dates = Enumerable.Range(0, count).Select(i => new DateTime(2022, 11, 21, 10, 0, 0) + TimeSpan.FromDays(i)).ToList();
-            var interestRateValues = Enumerable.Range(0, count).Select(i => 0m + (10 - 0m) * (i / (count - 1m))).ToList();
-
-            var interestRateProviderMock = new Mock<IRiskFreeInterestRateModel>();
-
-            // Set up
-            for (int i = 0; i < count; i++)
-            {
-                interestRateProviderMock.Setup(x => x.GetInterestRate(dates[i])).Returns(interestRateValues[i]).Verifiable();
-            }
-
-            var iv = new ImpliedVolatility(_symbol, interestRateProviderMock.Object);
-
-            for (int i = 0; i < count; i++)
-            {
-                iv.Update(new IndicatorDataPoint(_symbol, dates[i], 80m + i));
-                iv.Update(new IndicatorDataPoint(_underlying, dates[i], 500m + i));
-                Assert.AreEqual(interestRateValues[i], iv.RiskFreeRate.Current.Value);
-            }
-
-            // Assert
-            Assert.IsTrue(iv.IsReady);
-            interestRateProviderMock.Verify(x => x.GetInterestRate(It.IsAny<DateTime>()), Times.Exactly(dates.Count * 2));
-            for (int i = 0; i < count; i++)
-            {
-                interestRateProviderMock.Verify(x => x.GetInterestRate(dates[i]), Times.Exactly(2));
-            }
-        }
-
-        [Test]
-        public void UsesPythonDefinedRiskFreeInterestRateModel()
-        {
-            using var _ = Py.GIL();
-
-            var module = PyModule.FromString(Guid.NewGuid().ToString(), @"
-from AlgorithmImports import *
-
-class TestRiskFreeInterestRateModel:
-    CallCount = 0
-
-    def GetInterestRate(self, date: datetime) -> float:
-        TestRiskFreeInterestRateModel.CallCount += 1
-        return 0.5
-
-def getImpliedVolatilityIndicator(symbol: Symbol) -> ImpliedVolatility:
-    return ImpliedVolatility(symbol, TestRiskFreeInterestRateModel())
-            ");
-
-            var iv = module.GetAttr("getImpliedVolatilityIndicator").Invoke(_symbol.ToPython()).GetAndDispose<ImpliedVolatility>();
-            var modelClass = module.GetAttr("TestRiskFreeInterestRateModel");
-
-            var reference = new DateTime(2022, 11, 21, 10, 0, 0);
-            for (int i = 0; i < 20; i++)
-            {
-                iv.Update(new IndicatorDataPoint(_symbol, reference + TimeSpan.FromMinutes(i), 10m + i));
-                iv.Update(new IndicatorDataPoint(_underlying, reference + TimeSpan.FromMinutes(i), 1000m + i));
-                Assert.AreEqual((i + 1) * 2, modelClass.GetAttr("CallCount").GetAndDispose<int>());
-            }
-        }
-
-        // Not used
-        protected override string TestFileName => string.Empty;
     }
 }

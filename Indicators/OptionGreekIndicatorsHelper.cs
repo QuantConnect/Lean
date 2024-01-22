@@ -24,7 +24,10 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class OptionGreekIndicatorsHelper
     {
-        internal const int Steps = 200;
+        /// <summary>
+        /// Number of steps in binomial tree simulation to obtain Greeks/IV
+        /// </summary>
+        public const int Steps = 200;
      
         internal static decimal BlackTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, OptionRight optionType)
         {
@@ -56,7 +59,7 @@ namespace QuantConnect.Indicators
             var denominator = volatility * DecimalMath(Math.Sqrt, timeToExpiration);
             if (denominator == 0m)
             {
-                // return a value large enough for probability close to 1
+                // return a random variable large enough to produce normal probability density close to 1
                 return 10;
             }
             return numerator / denominator;
@@ -75,6 +78,7 @@ namespace QuantConnect.Indicators
             var upFactor = DecimalMath(Math.Exp, volatility * DecimalMath(Math.Sqrt, deltaTime));
             if (upFactor == 1m)
             {
+                // Introduce a very small factor to avoid constant tree while staying low volatility
                 upFactor = 1.0001m;
             }
             var discount = DecimalMath(Math.Exp, -riskFreeRate * deltaTime);
