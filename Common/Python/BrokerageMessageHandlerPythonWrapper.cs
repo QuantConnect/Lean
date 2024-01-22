@@ -42,7 +42,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                _model.Handle(message);
+                _model.HandleMessage(message);
             }
         }
 
