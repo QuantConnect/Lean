@@ -15,9 +15,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Securities;
@@ -58,6 +60,165 @@ namespace QuantConnect.Tests.Common.Util
                 }
             }
         }
+
+        public static void TestOverriddenEarlyClosesAndLateOpens(IReadOnlyDictionary<DateTime, TimeSpan> commonDateTimes,
+            IReadOnlyDictionary<DateTime, TimeSpan> specificDateTimes,
+            JObject jsonDatabase,
+            string testKey,
+            string specificEntryKey)
+        {
+            var datesWereOverriden = false;
+
+            foreach (var date in commonDateTimes.Keys)
+            {
+                // All early open or late close dates in the common entry should have been added to the specific entry.
+                // e.g. Index-usa-[*] early closes and late opens should have been added to Index-usa-VIX
+                Assert.IsTrue(specificDateTimes.ContainsKey(date));
+
+                // If common entry and specific entry have different times for the same date, the specific entry should
+                // have the correct time.
+                if (commonDateTimes[date] != specificDateTimes[date])
+                {
+                    var dateStr = date.ToStringInvariant("MM/dd/yyyy");
+                    var timeStr = jsonDatabase["entries"][specificEntryKey][testKey][dateStr].Value<string>();
+                    var time = TimeSpan.Parse(timeStr, CultureInfo.InvariantCulture);
+                    Assert.AreEqual(time, specificDateTimes[date]);
+
+                    datesWereOverriden = true;
+                }
+            }
+
+            Assert.IsTrue(datesWereOverriden);
+        }
+
+        [Test]
+        public void HandlesOverridingLateOpens()
+        {
+            var jsonDatabase = JObject.Parse(SampleMHDBWithOverriddenEarlyOpens);
+            var database = jsonDatabase.ToObject<MarketHoursDatabase>();
+
+            var googEntry = database.GetEntry(Market.USA, "GOOG", SecurityType.Equity);
+            var equityCommonEntry = database.GetEntry(Market.USA, "", SecurityType.Equity);
+
+            TestOverriddenEarlyClosesAndLateOpens(equityCommonEntry.ExchangeHours.LateOpens,
+                googEntry.ExchangeHours.LateOpens,
+                jsonDatabase,
+                "lateOpens",
+                "Equity-usa-GOOG");
+        }
+
+        [Test]
+        public void HandlesOverridingEarlyCloses()
+        {
+            var jsonDatabase = JObject.Parse(SampleMHDBWithOverriddenEarlyOpens);
+            var database = jsonDatabase.ToObject<MarketHoursDatabase>();
+
+            var googEntry = database.GetEntry(Market.USA, "GOOG", SecurityType.Equity);
+            var equityCommonEntry = database.GetEntry(Market.USA, "", SecurityType.Equity);
+
+            TestOverriddenEarlyClosesAndLateOpens(equityCommonEntry.ExchangeHours.EarlyCloses,
+                googEntry.ExchangeHours.EarlyCloses,
+                jsonDatabase,
+                "earlyCloses",
+                "Equity-usa-GOOG");
+        }
+
+        /// <summary>
+        /// Equity-usa-GOOG is more specific than Equity-usa-[*].
+        /// The early closes for GOOG should override the early closes for the common entry ([*]).
+        /// </summary>
+        public static string SampleMHDBWithOverriddenEarlyOpens => @"
+{
+  ""entries"": {
+    ""Equity-usa-[*]"": {
+      ""dataTimeZone"": ""America/New_York"",
+      ""exchangeTimeZone"": ""America/New_York"",
+      ""sunday"": [],
+      ""monday"": [
+        { ""start"": ""04:00:00"", ""end"": ""09:30:00"", ""state"": ""premarket"" },
+        { ""start"": ""09:30:00"", ""end"": ""16:00:00"", ""state"": ""market"" },
+        { ""start"": ""16:00:00"", ""end"": ""20:00:00"", ""state"": ""postmarket"" }
+      ],
+      ""tuesday"": [
+        { ""start"": ""04:00:00"", ""end"": ""09:30:00"", ""state"": ""premarket"" },
+        { ""start"": ""09:30:00"", ""end"": ""16:00:00"", ""state"": ""market"" },
+        { ""start"": ""16:00:00"", ""end"": ""20:00:00"", ""state"": ""postmarket"" }
+      ],
+      ""wednesday"": [
+        { ""start"": ""04:00:00"", ""end"": ""09:30:00"", ""state"": ""premarket"" },
+        { ""start"": ""09:30:00"", ""end"": ""16:00:00"", ""state"": ""market"" },
+        { ""start"": ""16:00:00"", ""end"": ""20:00:00"", ""state"": ""postmarket"" }
+      ],
+      ""thursday"": [
+        { ""start"": ""04:00:00"", ""end"": ""09:30:00"", ""state"": ""premarket"" },
+        { ""start"": ""09:30:00"", ""end"": ""16:00:00"", ""state"": ""market"" },
+        { ""start"": ""16:00:00"", ""end"": ""20:00:00"", ""state"": ""postmarket"" }
+      ],
+      ""friday"": [
+        { ""start"": ""04:00:00"", ""end"": ""09:30:00"", ""state"": ""premarket"" },
+        { ""start"": ""09:30:00"", ""end"": ""16:00:00"", ""state"": ""market"" },
+        { ""start"": ""16:00:00"", ""end"": ""20:00:00"", ""state"": ""postmarket"" }
+      ],
+      ""saturday"": [],
+      ""holidays"": [],
+      ""earlyCloses"": {
+        ""11/25/2015"": ""13:00:00"",
+        ""11/25/2016"": ""13:00:00"",
+        ""11/25/2017"": ""13:00:00"",
+        ""11/25/2018"": ""13:00:00""
+      },
+      ""lateOpens"": {
+        ""11/25/2015"": ""11:00:00"",
+        ""11/25/2016"": ""11:00:00"",
+        ""11/25/2017"": ""11:00:00"",
+        ""11/25/2018"": ""11:00:00""
+      }
+    },
+    ""Equity-usa-GOOG"": {
+      ""dataTimeZone"": ""America/New_York"",
+      ""exchangeTimeZone"": ""America/New_York"",
+      ""sunday"": [],
+      ""monday"": [
+        { ""start"": ""04:00:00"", ""end"": ""09:30:00"", ""state"": ""premarket"" },
+        { ""start"": ""09:30:00"", ""end"": ""16:00:00"", ""state"": ""market"" },
+        { ""start"": ""16:00:00"", ""end"": ""20:00:00"", ""state"": ""postmarket"" }
+      ],
+      ""tuesday"": [
+        { ""start"": ""04:00:00"", ""end"": ""09:30:00"", ""state"": ""premarket"" },
+        { ""start"": ""09:30:00"", ""end"": ""16:00:00"", ""state"": ""market"" },
+        { ""start"": ""16:00:00"", ""end"": ""20:00:00"", ""state"": ""postmarket"" }
+      ],
+      ""wednesday"": [
+        { ""start"": ""04:00:00"", ""end"": ""09:30:00"", ""state"": ""premarket"" },
+        { ""start"": ""09:30:00"", ""end"": ""16:00:00"", ""state"": ""market"" },
+        { ""start"": ""16:00:00"", ""end"": ""20:00:00"", ""state"": ""postmarket"" }
+      ],
+      ""thursday"": [
+        { ""start"": ""04:00:00"", ""end"": ""09:30:00"", ""state"": ""premarket"" },
+        { ""start"": ""09:30:00"", ""end"": ""16:00:00"", ""state"": ""market"" },
+        { ""start"": ""16:00:00"", ""end"": ""20:00:00"", ""state"": ""postmarket"" }
+      ],
+      ""friday"": [
+        { ""start"": ""04:00:00"", ""end"": ""09:30:00"", ""state"": ""premarket"" },
+        { ""start"": ""09:30:00"", ""end"": ""16:00:00"", ""state"": ""market"" },
+        { ""start"": ""16:00:00"", ""end"": ""20:00:00"", ""state"": ""postmarket"" }
+      ],
+      ""saturday"": [],
+      ""holidays"": [],
+      ""earlyCloses"": {
+        ""11/25/2017"": ""13:30:00"",
+        ""11/25/2018"": ""13:30:00"",
+        ""11/25/2019"": ""13:30:00""
+      },
+      ""lateOpens"": {
+        ""11/25/2017"": ""11:30:00"",
+        ""11/25/2018"": ""11:30:00"",
+        ""11/25/2019"": ""11:30:00""
+      }
+    }
+  }
+}
+";
 
         [Test, Ignore("This is provided to make it easier to convert your own market-hours-database.csv to the new format")]
         public void ConvertMarketHoursDatabaseCsvToJson()

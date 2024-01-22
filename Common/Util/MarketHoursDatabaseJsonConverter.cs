@@ -305,12 +305,12 @@ namespace QuantConnect.Util
 
                     if (marketEntry.ExchangeHours.EarlyCloses.Count > 0 )
                     {
-                        earlyCloses = earlyCloses.Union(marketEntry.ExchangeHours.EarlyCloses).ToDictionary();
+                        earlyCloses = MergeLateOpensAndEarlyCloses(marketEntry.ExchangeHours.EarlyCloses, earlyCloses);
                     }
 
                     if (marketEntry.ExchangeHours.LateOpens.Count > 0)
                     {
-                        lateOpens = lateOpens.Union(marketEntry.ExchangeHours.LateOpens).ToDictionary();
+                        lateOpens = MergeLateOpensAndEarlyCloses(marketEntry.ExchangeHours.LateOpens, lateOpens);
                     }
                 }
 
@@ -329,6 +329,23 @@ namespace QuantConnect.Util
                 {
                     segments = new List<MarketHoursSegment>();
                 }
+            }
+
+            /// <summary>
+            /// Merges the late opens or early closes from the common entry (with wildcards) with the specific entry
+            /// (e.g. Indices-usa-[*] with Indices-usa-VIX).
+            /// The specific entry takes precedence.
+            /// </summary>
+            private static Dictionary<DateTime, TimeSpan> MergeLateOpensAndEarlyCloses(IReadOnlyDictionary<DateTime, TimeSpan> common,
+                IReadOnlyDictionary<DateTime, TimeSpan> specific)
+            {
+                var result = common.ToDictionary();
+                foreach (var (key, value) in specific)
+                {
+                    result[key] = value;
+                }
+
+                return result;
             }
         }
     }
