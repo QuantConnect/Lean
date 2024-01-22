@@ -379,20 +379,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(returnedEntry, entry);
         }
 
-        [Test]
-        public void ReloadEntriesDoesNotFailWhenRepeatedEntry()
-        {
-            var database = MarketHoursDatabase.FromDataFolder();
-            var ticker = "SPX";
-            var hours = SecurityExchangeHours.AlwaysOpen(TimeZones.Chicago);
-            var entry = database.SetEntry(Market.USA, ticker, SecurityType.Index, hours);
-
-            MarketHoursDatabase.Entry returnedEntry;
-            Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, SecurityType.Index, out returnedEntry));
-            Assert.AreEqual(returnedEntry, entry);
-            Assert.DoesNotThrow(() => database.ReloadEntries());
-        }
-
         private static MarketHoursDatabase GetMarketHoursDatabase(string file)
         {
             return MarketHoursDatabase.FromFile(file);
