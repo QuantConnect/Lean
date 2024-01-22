@@ -123,7 +123,7 @@ namespace QuantConnect.Securities
         public void ReloadEntries()
         {
             Reset();
-            var fileEntries = FromDataFolder().ExchangeHoursListing;
+            var fileEntries = FromDataFolder().ExchangeHoursListing.Where(x => !_customEntries.ContainsKey(x.Key));
             var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
             _entries = newEntries;
         }

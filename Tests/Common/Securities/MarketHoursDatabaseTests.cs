@@ -363,20 +363,34 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreSame(entry, fetchedEntry);
         }
 
-        [Test]
-        public void CustomEntriesAreNotLostWhenReset()
+        [TestCase("UWU", SecurityType.Base)]
+        [TestCase("SPX", SecurityType.Index)]
+        public void CustomEntriesAreNotLostWhenReset(string ticker, SecurityType securityType)
         {
             var database = MarketHoursDatabase.FromDataFolder();
-            var ticker = "UWU";
-            var hours = SecurityExchangeHours.AlwaysOpen(TimeZones.Berlin);
-            var entry = database.SetEntry(Market.USA, ticker, SecurityType.Base, hours);
+            var hours = SecurityExchangeHours.AlwaysOpen(TimeZones.Chicago);
+            var entry = database.SetEntry(Market.USA, ticker, securityType, hours);
 
             MarketHoursDatabase.Entry returnedEntry;
-            Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, SecurityType.Base, out returnedEntry));
+            Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, securityType, out returnedEntry));
             Assert.AreEqual(returnedEntry, entry);
-            database.ReloadEntries();
-            Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, SecurityType.Base, out returnedEntry));
+            Assert.DoesNotThrow(() => database.ReloadEntries());
+            Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, securityType, out returnedEntry));
             Assert.AreEqual(returnedEntry, entry);
+        }
+
+        [Test]
+        public void ReloadEntriesDoesNotFailWhenRepeatedEntry()
+        {
+            var database = MarketHoursDatabase.FromDataFolder();
+            var ticker = "SPX";
+            var hours = SecurityExchangeHours.AlwaysOpen(TimeZones.Chicago);
+            var entry = database.SetEntry(Market.USA, ticker, SecurityType.Index, hours);
+
+            MarketHoursDatabase.Entry returnedEntry;
+            Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, SecurityType.Index, out returnedEntry));
+            Assert.AreEqual(returnedEntry, entry);
+            Assert.DoesNotThrow(() => database.ReloadEntries());
         }
 
         private static MarketHoursDatabase GetMarketHoursDatabase(string file)
