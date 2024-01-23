@@ -30,6 +30,12 @@ namespace QuantConnect
         private decimal? _y;
 
         /// <summary>
+        /// A summary of this point for the tooltip
+        /// </summary>
+        [JsonProperty(PropertyName = "tooltip", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string Tooltip { get; set; }
+
+        /// <summary>
         /// Time of this chart series point
         /// </summary>
         [JsonIgnore]
@@ -108,12 +114,28 @@ namespace QuantConnect
             y = yValue;
         }
 
-        ///Constructor for datetime-value arguments:
+        /// <summary>
+        /// Constructor that takes both x, y value pairs
+        /// </summary>
+        /// <param name="time">This point time</param>
+        /// <param name="value">Y value</param>
         public ChartPoint(DateTime time, decimal? value)
+            : this(time, value, null)
+        {
+        }
+
+        /// <summary>
+        /// Constructor that takes both x, y value pairs
+        /// </summary>
+        /// <param name="time">This point time</param>
+        /// <param name="value">Y value</param>
+        /// <param name="tooltip">Optional summary of this point for the tooltip</param>
+        public ChartPoint(DateTime time, decimal? value, string tooltip)
             : this()
         {
             Time = time;
             y = value;
+            Tooltip = tooltip;
         }
 
         ///Cloner Constructor:
@@ -122,6 +144,7 @@ namespace QuantConnect
             _time = point._time;
             _x = point._x;
             _y = point._y;
+            Tooltip = point.Tooltip;
         }
 
         /// <summary>
@@ -136,7 +159,7 @@ namespace QuantConnect
         /// Clones this instance
         /// </summary>
         /// <returns>Clone of this instance</returns>
-        public ISeriesPoint Clone()
+        public virtual ISeriesPoint Clone()
         {
             return new ChartPoint(this);
         }

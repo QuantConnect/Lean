@@ -58,6 +58,12 @@ namespace QuantConnect.Util
                 writer.WriteValue(baseSeries.ZIndex.Value);
             }
 
+            if (baseSeries.IndexName != null)
+            {
+                writer.WritePropertyName("IndexName");
+                writer.WriteValue(baseSeries.IndexName);
+            }
+
             switch (value)
             {
                 case Series series:
@@ -116,6 +122,13 @@ namespace QuantConnect.Util
                 zindex = jZIndex.Value<int>();
             }
 
+            string indexName = null;
+            var jIndexName = jObject["IndexName"];
+            if (jIndexName != null && jIndexName.Type != JTokenType.Null)
+            {
+                indexName = jIndexName.Value<string>();
+            }
+
             if (seriesType == SeriesType.Candle)
             {
                 return new CandlestickSeries()
@@ -124,6 +137,7 @@ namespace QuantConnect.Util
                     Unit = unit,
                     Index = index,
                     ZIndex = zindex,
+                    IndexName = indexName,
                     SeriesType = seriesType,
                     Values = values.ToObject<List<Candlestick>>(serializer).Where(x => x != null).Cast<ISeriesPoint>().ToList()
                 };
@@ -135,6 +149,7 @@ namespace QuantConnect.Util
                 Unit = unit,
                 Index = index,
                 ZIndex = zindex,
+                IndexName = indexName,
                 SeriesType = seriesType,
                 Color = jObject["Color"].ToObject<Color>(serializer),
                 ScatterMarkerSymbol = jObject["ScatterMarkerSymbol"].ToObject<ScatterMarkerSymbol>(serializer),
@@ -151,10 +166,5 @@ namespace QuantConnect.Util
         {
             return typeof(BaseSeries).IsAssignableFrom(objectType);
         }
-
-        /// <summary>
-        /// This converter wont be used to read JSON. Will throw exception if manually called.
-        /// </summary>
-        public override bool CanRead => true;
     }
 }

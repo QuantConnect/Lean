@@ -124,7 +124,18 @@ namespace QuantConnect
         /// <param name="value">Value of the chart point</param>
         public void AddPoint(DateTime time, decimal value)
         {
-            var chartPoint = new ChartPoint(time, value);
+            AddPoint(time, value, null);
+        }
+
+        /// <summary>
+        /// Add a new point to this series
+        /// </summary>
+        /// <param name="time">Time of the chart point</param>
+        /// <param name="value">Value of the chart point</param>
+        /// <param name="tooltip">Optional summary of this point for the tooltip</param>
+        public void AddPoint(DateTime time, decimal value, string tooltip)
+        {
+            var chartPoint = new ChartPoint(time, value, tooltip);
             AddPoint(chartPoint);
         }
 
@@ -188,6 +199,7 @@ namespace QuantConnect
             {
                 Color = Color,
                 ZIndex = ZIndex,
+                IndexName = IndexName,
                 ScatterMarkerSymbol = ScatterMarkerSymbol,
             };
 

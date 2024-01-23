@@ -36,6 +36,7 @@ namespace QuantConnect.Algorithm
             { "Benchmark", new List<string>() { "Benchmark" } },
             { "Assets Sales Volume", new List<string>() },
             { "Exposure", new List<string>() },
+            { "Portfolio Margin", new List<string>() },
             { "Portfolio Turnover", new List<string> { "Portfolio Turnover" } }
         };
 

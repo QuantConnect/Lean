@@ -17,7 +17,7 @@ using System.Linq;
 using QuantConnect.Data;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Data.Custom.AlphaStreams;
+using QuantConnect.Data.Custom;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>The new insights generated</returns>
         public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
-            foreach (var portfolioState in data.Get<AlphaStreamsPortfolioState>().Values)
+            foreach (var portfolioState in data.Get<PortfolioState>().Values)
             {
                 ProcessPortfolioState(algorithm, portfolioState);
             }
@@ -63,14 +63,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             changes.FilterCustomSecurities = false;
             foreach (var addedSecurity in changes.AddedSecurities)
             {
-                if (addedSecurity.Symbol.IsCustomDataType<AlphaStreamsPortfolioState>())
+                if (addedSecurity.Symbol.IsCustomDataType<PortfolioState>())
                 {
                     if (!_symbolsPerAlpha.ContainsKey(addedSecurity.Symbol))
                     {
                         _symbolsPerAlpha[addedSecurity.Symbol] = new HashSet<Symbol>();
                     }
                     // warmup alpha state, adding target securities
-                    ProcessPortfolioState(algorithm, addedSecurity.Cache.GetData<AlphaStreamsPortfolioState>());
+                    ProcessPortfolioState(algorithm, addedSecurity.Cache.GetData<PortfolioState>());
                 }
             }
 
@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Will handle adding and removing securities from the algorithm based on the current portfolio of the different alphas
         /// </summary>
-        private void ProcessPortfolioState(QCAlgorithm algorithm, AlphaStreamsPortfolioState portfolioState)
+        private void ProcessPortfolioState(QCAlgorithm algorithm, PortfolioState portfolioState)
         {
             if (portfolioState == null)
             {

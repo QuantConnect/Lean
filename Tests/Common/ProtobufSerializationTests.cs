@@ -24,12 +24,12 @@ using NUnit.Framework;
 using ProtoBuf;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.IconicTypes;
-using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Data.Custom;
 
 namespace QuantConnect.Tests.Common
 {
@@ -339,40 +339,13 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
-        public void AlphaStreamsOrderEventRoundTrip()
-        {
-            var symbol = Symbol.CreateBase(typeof(AlphaStreamsOrderEvent),
-                Symbol.Create("9fc8ef73792331b11dbd5429a", SecurityType.Base, Market.USA),
-                Market.USA);
-
-            var orderEvent = new AlphaStreamsOrderEvent
-            {
-                Time = DateTime.UtcNow,
-                Symbol = symbol,
-                Source = "Live trading",
-                AlgorithmId = "BasicTemplateAlgorithm",
-                AlphaId = "9fc8ef73792331b11dbd5429a",
-                OrderEvent = new OrderEvent(1, Symbols.SPY, DateTime.UtcNow, OrderStatus.Filled,
-                    OrderDirection.Buy, 1, 10, OrderFee.Zero, message:"crazy message")
-            };
-
-            var serializedOrderEvent = orderEvent.ProtobufSerialize(new Guid());
-            using (var stream = new MemoryStream(serializedOrderEvent))
-            {
-                var result = (AlphaStreamsOrderEvent)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
-
-                AssertAreEqual(orderEvent, result);
-            }
-        }
-
-        [Test]
         public void AlphaStreamsPortfolioStateRoundTrip()
         {
-            var symbol = Symbol.CreateBase(typeof(AlphaStreamsPortfolioState),
+            var symbol = Symbol.CreateBase(typeof(PortfolioState),
                 Symbol.Create("9fc8ef73792331b11dbd5429a", SecurityType.Base, Market.USA),
                 Market.USA);
 
-            var state = new AlphaStreamsPortfolioState
+            var state = new PortfolioState
             {
                 Id = 1000,
                 Time = DateTime.UtcNow,
@@ -380,7 +353,6 @@ namespace QuantConnect.Tests.Common
                 Source = "Live trading",
                 AccountCurrency = Currencies.EUR,
                 AlgorithmId = "BasicTemplateAlgorithm",
-                AlphaId = "9fc8ef73792331b11dbd5429a",
                 CashBook = new Dictionary<string, Cash>
                 {
                     { Currencies.EUR, new Cash(Currencies.EUR, 1, 1)}
@@ -413,7 +385,7 @@ namespace QuantConnect.Tests.Common
             var serializedState = state.ProtobufSerialize(new Guid());
             using (var stream = new MemoryStream(serializedState))
             {
-                var result = (AlphaStreamsPortfolioState)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
+                var result = (PortfolioState)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
 
                 AssertAreEqual(state, result);
             }

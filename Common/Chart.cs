@@ -19,13 +19,14 @@ using System.Data;
 using System.Drawing;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
     /// <summary>
     /// Single Parent Chart Object for Custom Charting
     /// </summary>
-    [JsonObject]
+    [JsonConverter(typeof(ChartJsonConverter))]
     public class Chart
     {
         /// Name of the Chart:
@@ -43,6 +44,12 @@ namespace QuantConnect
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public Symbol Symbol { get; set; }
+
+        /// <summary>
+        /// True to hide this series legend from the chart
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool LegendDisabled { get; set; }
 
         /// <summary>
         /// Default constructor for chart:
@@ -150,7 +157,7 @@ namespace QuantConnect
         /// <returns></returns>
         public Chart GetUpdates()
         {
-            var copy = new Chart(Name);
+            var copy = CloneEmpty();
             try
             {
                 foreach (var series in Series.Values)
@@ -169,9 +176,9 @@ namespace QuantConnect
         /// Return a new instance clone of this object
         /// </summary>
         /// <returns></returns>
-        public Chart Clone()
+        public virtual Chart Clone()
         {
-            var chart = new Chart(Name);
+            var chart = CloneEmpty();
 
             foreach (var kvp in Series)
             {
@@ -179,6 +186,14 @@ namespace QuantConnect
             }
 
             return chart;
+        }
+
+        /// <summary>
+        /// Return a new empty instance clone of this object
+        /// </summary>
+        public virtual Chart CloneEmpty()
+        {
+            return new Chart(Name) { LegendDisabled = LegendDisabled, Symbol = Symbol };
         }
     }
 

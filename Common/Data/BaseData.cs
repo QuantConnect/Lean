@@ -22,7 +22,7 @@ using Newtonsoft.Json;
 using QuantConnect.Util;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Data.Custom.AlphaStreams;
+using QuantConnect.Data.Custom;
 
 namespace QuantConnect.Data
 {
@@ -36,8 +36,7 @@ namespace QuantConnect.Data
     [ProtoInclude(200, typeof(QuoteBar))]
     [ProtoInclude(300, typeof(Dividend))]
     [ProtoInclude(400, typeof(Split))]
-    [ProtoInclude(555, typeof(AlphaStreamsPortfolioState))]
-    [ProtoInclude(556, typeof(AlphaStreamsOrderEvent))]
+    [ProtoInclude(555, typeof(PortfolioState))]
     public abstract class BaseData : IBaseData
     {
         private decimal _value;

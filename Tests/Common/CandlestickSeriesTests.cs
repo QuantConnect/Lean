@@ -20,10 +20,11 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class CandlestickSeriesTest
     {
-        [Test]
-        public void Clone()
+        [TestCase(null)]
+        [TestCase("IndexName")]
+        public void Clone(string indexName)
         {
-            var series = new CandlestickSeries("A", 8, "TT") { ZIndex = 98 };
+            var series = new CandlestickSeries("A", 8, "TT") { ZIndex = 98, Index = 8, IndexName = indexName };
             var result = (CandlestickSeries)series.Clone();
 
             Assert.AreEqual(series.Name, result.Name);
