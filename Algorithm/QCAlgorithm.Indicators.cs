@@ -529,7 +529,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new OptionDelta indicator for the symbol The indicator will be automatically
+        /// Creates a new Delta indicator for the symbol The indicator will be automatically
         /// updated on the symbol's subscription resolution
         /// </summary>
         /// <param name="symbol">The option symbol whose values we want as an indicator</param>
@@ -537,9 +537,9 @@ namespace QuantConnect.Algorithm
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         /// <param name="resolution">The desired resolution of the data</param>
-        /// <returns>A new OptionDelta indicator for the specified symbol</returns>
+        /// <returns>A new Delta indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
-        public OptionDelta Delta(Symbol symbol, decimal? riskFreeRate = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, 
+        public Delta Delta(Symbol symbol, decimal? riskFreeRate = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, 
             OptionPricingModelType? ivModel = null, Resolution? resolution = null)
         {
             var name = CreateIndicatorName(symbol, $"Delta({riskFreeRate},{optionModel},{ivModel})", resolution);
@@ -547,7 +547,7 @@ namespace QuantConnect.Algorithm
                 ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
                 // Make it a function so it's lazily evaluated: SetRiskFreeInterestRateModel can be called after this method
                 : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
-            var delta = new OptionDelta(name, symbol, riskFreeRateModel, optionModel, ivModel);
+            var delta = new Delta(name, symbol, riskFreeRateModel, optionModel, ivModel);
             RegisterIndicator(symbol, delta, ResolveConsolidator(symbol, resolution));
             RegisterIndicator(symbol.Underlying, delta, ResolveConsolidator(symbol, resolution));
             return delta;

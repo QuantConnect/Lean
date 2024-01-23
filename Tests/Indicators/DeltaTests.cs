@@ -22,13 +22,13 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class OptionDeltaTests : OptionBaseIndicatorTests<OptionDelta>
+    public class DeltaTests : OptionBaseIndicatorTests<Delta>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator() 
-            => new OptionDelta("testOptionDeltaIndicator", _symbol, 0.04m);
+            => new Delta("testDeltaIndicator", _symbol, 0.04m);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
-            => new OptionDelta("testOptionDeltaIndicator", _symbol, riskFreeRateModel);
+            => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel);
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm) 
             => algorithm.Delta(_symbol);
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Indicators
             var symbol = ParseOptionSymbol(fileName);
             var underlying = symbol.Underlying;
 
-            var indicator = new OptionDelta(symbol, 0.04m);
+            var indicator = new Delta(symbol, 0.04m);
             RunTestIndicator(path, indicator, symbol, underlying, errorMargin, column);
         }
 
@@ -106,7 +106,7 @@ namespace QuantConnect.Tests.Indicators
             var symbol = ParseOptionSymbol(fileName);
             var underlying = symbol.Underlying;
 
-            var indicator = new OptionDelta(symbol, 0.04m);
+            var indicator = new Delta(symbol, 0.04m);
             RunTestIndicator(path, indicator, symbol, underlying, errorMargin, column);
 
             indicator.Reset();
@@ -130,7 +130,7 @@ namespace QuantConnect.Tests.Indicators
         {
             // Under CRR framework
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new OptionDelta(symbol, 0.04m, optionModel: OptionPricingModelType.BlackScholes);
+            var indicator = new Delta(symbol, 0.04m, optionModel: OptionPricingModelType.BlackScholes);
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
             var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
@@ -157,7 +157,7 @@ namespace QuantConnect.Tests.Indicators
         {
             // Under CRR framework
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new OptionDelta(symbol, 0.04m,
+            var indicator = new Delta(symbol, 0.04m,
                     optionModel: OptionPricingModelType.BinomialCoxRossRubinstein,
                     ivModel: OptionPricingModelType.BlackScholes);
 

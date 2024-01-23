@@ -24,83 +24,83 @@ namespace QuantConnect.Indicators
     /// Option Delta indicator that calculate the delta of an option
     /// </summary>
     /// <remarks>sensitivity of option price relative to $1 of underlying change</remarks>
-    public class OptionDelta : OptionGreeksIndicatorBase
+    public class Delta : OptionGreeksIndicatorBase
     {
         /// <summary>
-        /// Initializes a new instance of the OptionDelta class
+        /// Initializes a new instance of the Delta class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public OptionDelta(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, 
+        public Delta(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, 
                 OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, optionModel: optionModel, ivModel: ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the OptionDelta class
+        /// Initializes a new instance of the Delta class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public OptionDelta(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, 
+        public Delta(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, 
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : this($"Delta({optionModel})", option, riskFreeRateModel, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the OptionDelta class
+        /// Initializes a new instance of the Delta class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public OptionDelta(string name, Symbol option, PyObject riskFreeRateModel, 
+        public Delta(string name, Symbol option, PyObject riskFreeRateModel, 
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, optionModel: optionModel, ivModel: ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the OptionDelta class
+        /// Initializes a new instance of the Delta class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public OptionDelta(Symbol option, PyObject riskFreeRateModel, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+        public Delta(Symbol option, PyObject riskFreeRateModel, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
             OptionPricingModelType? ivModel = null)
             : this($"Delta({optionModel})", option, riskFreeRateModel, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the OptionDelta class
+        /// Initializes a new instance of the Delta class
         /// </summary>
         /// <param name="option">The option to be tracked</param>am>
         /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public OptionDelta(string name, Symbol option, decimal riskFreeRate = 0.05m, 
+        public Delta(string name, Symbol option, decimal riskFreeRate = 0.05m, 
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRate, optionModel: optionModel, ivModel: ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the OptionDelta class
+        /// Initializes a new instance of the Delta class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public OptionDelta(Symbol option, decimal riskFreeRate = 0.05m, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+        public Delta(Symbol option, decimal riskFreeRate = 0.05m, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
             OptionPricingModelType? ivModel = null)
             : this($"Delta({optionModel})", option, riskFreeRate, optionModel, ivModel)
         {
