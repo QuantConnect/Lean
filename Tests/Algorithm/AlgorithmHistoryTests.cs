@@ -29,12 +29,12 @@ using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Lean.Engine.HistoricalData;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Common.Data.Fundamental;
+using QuantConnect.Data.Custom;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -510,17 +510,6 @@ def getTickHistory(algorithm, symbol, start, end):
             var lastKnownPrice = _algorithm.GetLastKnownPrice(option);
             Assert.IsNotNull(lastKnownPrice);
             Assert.AreEqual(barTime.AddMinutes(1), lastKnownPrice.EndTime);
-        }
-
-        [Test]
-        public void GetLastKnownPriceOfCustomData()
-        {
-            var algorithm = GetAlgorithm(new DateTime(2018, 4, 4));
-
-            var alpha = algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a");
-
-            var lastKnownPrice = algorithm.GetLastKnownPrice(alpha);
-            Assert.IsNotNull(lastKnownPrice);
         }
 
         [Test]

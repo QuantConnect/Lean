@@ -17,27 +17,20 @@
 using System;
 using NodaTime;
 using ProtoBuf;
-using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Securities.Positions;
 
-namespace QuantConnect.Data.Custom.AlphaStreams
+namespace QuantConnect.Data.Custom
 {
     /// <summary>
     /// Snapshot of an algorithms portfolio state
     /// </summary>
     [ProtoContract(SkipConstructor = true)]
-    public class AlphaStreamsPortfolioState : BaseData
+    public class PortfolioState : BaseData
     {
-        /// <summary>
-        /// The deployed alpha id. This is the id generated upon submission to the alpha marketplace
-        /// </summary>
-        [JsonProperty("alphaId", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [ProtoMember(10)]
-        public string AlphaId { get; set; }
-
         /// <summary>
         /// The algorithm's unique deploy identifier
         /// </summary>
@@ -105,15 +98,7 @@ namespace QuantConnect.Data.Custom.AlphaStreams
         /// <returns>Subscription Data Source.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var source = Path.Combine(
-                Globals.DataFolder,
-                "alternative",
-                "alphastreams",
-                "portfoliostate",
-                config.Symbol.Value.ToLowerInvariant(),
-                $"{date:yyyyMMdd}.json"
-            );
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -126,7 +111,7 @@ namespace QuantConnect.Data.Custom.AlphaStreams
         /// <returns>New data point object</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var dataPoint = JsonConvert.DeserializeObject<AlphaStreamsPortfolioState>(line);
+            var dataPoint = JsonConvert.DeserializeObject<PortfolioState>(line);
             dataPoint.Symbol = config.Symbol;
             return dataPoint;
         }
@@ -147,13 +132,12 @@ namespace QuantConnect.Data.Custom.AlphaStreams
         /// </summary>
         public override BaseData Clone()
         {
-            return new AlphaStreamsPortfolioState
+            return new PortfolioState
             {
                 Id = Id,
                 Time = Time,
                 Source = Source,
                 Symbol = Symbol,
-                AlphaId = AlphaId,
                 DataType = DataType,
                 CashBook = CashBook,
                 AlgorithmId = AlgorithmId,
@@ -180,6 +164,21 @@ namespace QuantConnect.Data.Custom.AlphaStreams
     [ProtoContract(SkipConstructor = true)]
     public class PositionGroupState
     {
+        private string _name;
+
+        /// <summary>
+        /// Name of this position group
+        /// </summary>
+        [JsonIgnore]
+        public string Name
+        {
+            get
+            {
+                _name ??= string.Join(", ", Positions.Select(x => x.Symbol.Value));
+                return _name;
+            }
+        }
+
         /// <summary>
         /// Currently margin used
         /// </summary>

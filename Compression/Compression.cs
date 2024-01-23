@@ -65,12 +65,12 @@ namespace QuantConnect
                 using (var stream = new ZipOutputStream(File.Create(zipPath)))
                 {
                     stream.SetLevel(0);
-                    foreach (var filename in filenamesAndData.Keys)
+                    foreach (var kvp in filenamesAndData)
                     {
+                        var filename = kvp.Key;
                         //Create the space in the zip file:
                         var entry = new ZipEntry(filename);
-                        var data = filenamesAndData[filename];
-                        var bytes = Encoding.Default.GetBytes(data);
+                        var bytes = Encoding.Default.GetBytes(kvp.Value);
                         stream.PutNextEntry(entry);
                         stream.Write(bytes, 0, bytes.Length);
                         stream.CloseEntry();

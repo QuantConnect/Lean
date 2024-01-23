@@ -104,7 +104,7 @@ namespace QuantConnect
         /// <returns>The sampled chart</returns>
         public Chart SampleChart(Chart chart, DateTime start, DateTime stop)
         {
-            var sampledChart = new Chart(chart.Name);
+            var sampledChart = chart.CloneEmpty();
             foreach (var series in chart.Series.Values)
             {
                 var sampledSeries = Sample(series, start, stop);

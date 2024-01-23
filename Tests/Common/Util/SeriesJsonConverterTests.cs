@@ -26,14 +26,20 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class SeriesJsonConverterTests
     {
-        [TestCase(null)]
-        [TestCase(87)]
-        public void SerializeDeserializeReturnsSameSeriesValue(int? zIndex)
+        [TestCase(null, null, null)]
+        [TestCase(87, null, null)]
+        [TestCase(null, "tooltip", null)]
+        [TestCase(87, "tooltip", null)]
+        [TestCase(null, null, "Index Name")]
+        [TestCase(87, null, "Index Name")]
+        [TestCase(null, "tooltip", "Index Name")]
+        [TestCase(87, "tooltip", "Index Name")]
+        public void SerializeDeserializeReturnsSameSeriesValue(int? zIndex, string tooltip, string indexName)
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
-            var series = new Series("Pepito Grillo", SeriesType.Bar, "%", Color.Blue, ScatterMarkerSymbol.Diamond) { ZIndex = zIndex, Index = 6 };
-            series.AddPoint(date, 1);
-            series.AddPoint(date.AddSeconds(1), 2);
+            var series = new Series("Pepito Grillo", SeriesType.Bar, "%", Color.Blue, ScatterMarkerSymbol.Diamond) { ZIndex = zIndex, Index = 6, IndexName = indexName };
+            series.AddPoint(date, 1, tooltip);
+            series.AddPoint(date.AddSeconds(1), 2, tooltip);
 
             var serializedSeries = JsonConvert.SerializeObject(series);
             var result = (Series) JsonConvert.DeserializeObject(serializedSeries, typeof(Series));
@@ -45,6 +51,7 @@ namespace QuantConnect.Tests.Common.Util
             {
                 Assert.AreEqual(values[i].x, resultValues[i].x);
                 Assert.AreEqual(values[i].y, resultValues[i].y);
+                Assert.AreEqual(values[i].Tooltip, resultValues[i].Tooltip);
             }
             Assert.AreEqual(series.Name, result.Name);
             Assert.AreEqual(series.Unit, result.Unit);
@@ -53,6 +60,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(series.ScatterMarkerSymbol, result.ScatterMarkerSymbol);
             Assert.AreEqual(series.ZIndex, result.ZIndex);
             Assert.AreEqual(series.Index, result.Index);
+            Assert.AreEqual(series.IndexName, result.IndexName);
         }
 
         [Test]
@@ -78,11 +86,14 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(series.ScatterMarkerSymbol, result.ScatterMarkerSymbol);
         }
 
-        [Test]
-        public void SerializeDeserializeReturnsSameCandlestickSeriesValue()
+        [TestCase(null, null)]
+        [TestCase(87, null)]
+        [TestCase(null, "Index Name")]
+        [TestCase(87, "Index Name")]
+        public void SerializeDeserializeReturnsSameCandlestickSeriesValue(int? zIndex, string indexName)
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
-            var series = new CandlestickSeries("Pepito Grillo");
+            var series = new CandlestickSeries("Pepito Grillo") { ZIndex = zIndex, IndexName = indexName, Index = 7 };
             series.AddPoint(date, 100, 110, 80, 90);
             series.AddPoint(date.AddSeconds(1), 105, 115, 85, 95);
 
@@ -103,6 +114,9 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(series.Name, result.Name);
             Assert.AreEqual(series.Unit, result.Unit);
             Assert.AreEqual(series.SeriesType, result.SeriesType);
+            Assert.AreEqual(series.ZIndex, result.ZIndex);
+            Assert.AreEqual(series.Index, result.Index);
+            Assert.AreEqual(series.IndexName, result.IndexName);
         }
 
         [Test]

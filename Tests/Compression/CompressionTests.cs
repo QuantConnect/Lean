@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -186,6 +187,26 @@ namespace QuantConnect.Tests.Compression
                 File.Delete(zipFile);
                 files.ForEach(File.Delete);
             }
+        }
+
+        [Test]
+        public void ZipUnzipDataToFile()
+        {
+            var data = new Dictionary<string, string>
+            {
+                {"Ł", "The key is unicode"},
+                {"2", "something"}
+            };
+
+            var fileName = Guid.NewGuid().ToString();
+            var compressed = QuantConnect.Compression.ZipData(fileName, data);
+
+            Assert.IsTrue(compressed);
+
+            using var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var result = QuantConnect.Compression.UnzipDataAsync(fileStream).Result;
+
+            CollectionAssert.AreEqual(data.OrderBy(kv => kv.Key).ToList(), result.OrderBy(kv => kv.Key).ToList());
         }
 
         [Test]

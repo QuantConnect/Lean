@@ -27,7 +27,7 @@ using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Custom.AlphaStreams;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
@@ -334,9 +334,9 @@ namespace QuantConnect.Tests.Common.Util
             };
             var orders = new List<Order> { new MarketOrder(btcusd, 1000, DateTime.UtcNow, "ExpensiveOrder") { Id = 1 } };
 
-            var packet1 = new AlphaResultPacket("1", 1, insights: insights, portfolio: new AlphaStreamsPortfolioState { TotalPortfolioValue = 11 });
+            var packet1 = new AlphaResultPacket("1", 1, insights: insights, portfolio: new PortfolioState { TotalPortfolioValue = 11 });
             var packet2 = new AlphaResultPacket("1", 1, orders: orders);
-            var packet3 = new AlphaResultPacket("1", 1, orderEvents: orderEvents, portfolio: new AlphaStreamsPortfolioState { TotalPortfolioValue = 12 });
+            var packet3 = new AlphaResultPacket("1", 1, orderEvents: orderEvents, portfolio: new PortfolioState { TotalPortfolioValue = 12 });
 
             var result = new List<AlphaResultPacket> { packet1, packet2, packet3 }.Batch();
 

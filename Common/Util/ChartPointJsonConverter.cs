@@ -54,20 +54,27 @@ namespace QuantConnect.Util
                 var jObject = JObject.Load(reader);
                 var x = jObject["x"];
 
-                if(!jObject.ContainsKey("y"))
+                string tooltip = null;
+                var jTooltip = jObject["tooltip"];
+                if (jTooltip != null && jTooltip.Type != JTokenType.Null)
                 {
-                    return new ChartPoint(x.Value<long>(), 0);
+                    tooltip = jTooltip.Value<string>();
+                }
+
+                if (!jObject.ContainsKey("y"))
+                {
+                    return new ChartPoint(x.Value<long>(), 0) { Tooltip = tooltip };
                 }
 
                 var y = jObject["y"];
                 if (y != null && (y.Type == JTokenType.Float || y.Type == JTokenType.Integer))
                 {
-                    return new ChartPoint(x.Value<long>(), y.Value<decimal>());
+                    return new ChartPoint(x.Value<long>(), y.Value<decimal>()) { Tooltip = tooltip };
                 }
 
                 if (y.Type == JTokenType.Null)
                 {
-                    return new ChartPoint(x.Value<long>(), null);
+                    return new ChartPoint(x.Value<long>(), null) { Tooltip = tooltip };
                 }
 
                 return null;
