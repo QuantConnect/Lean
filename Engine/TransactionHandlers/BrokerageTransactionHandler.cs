@@ -180,7 +180,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _brokerage.NewBrokerageOrderNotification += (sender, e) =>
             {
-                AddOpenOrder(e.Order, _algorithm);
+                HandleNewBrokerageSideOrder(e);
             };
 
             _brokerage.DelistingNotification += (sender, e) =>
@@ -1518,6 +1518,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// New brokerage-side order event handler
+        /// </summary>
+        private void HandleNewBrokerageSideOrder(NewBrokerageOrderNotificationEventArgs e)
+        {
+            void onError(IReadOnlyCollection<SecurityType> supportedSecurityTypes) =>
+                _algorithm.Debug($"Warning: New brokerage-side order could not be processed due to " +
+                    $"it's security not being supported. Supported security types are {string.Join(", ", supportedSecurityTypes)}");
+
+            if (_algorithm.BrokerageMessageHandler.HandleOrder(e) &&
+                _algorithm.GetOrAddUnrequestedSecurity(e.Order.Symbol, out _, onError))
+            {
+                AddOpenOrder(e.Order, _algorithm);
             }
         }
 

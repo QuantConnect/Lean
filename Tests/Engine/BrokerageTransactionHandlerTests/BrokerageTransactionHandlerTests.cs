@@ -2093,6 +2093,98 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(expectedNormalizationMode, transactionHandler.GetOrderById(order.Id).PriceAdjustmentMode);
         }
 
+        private static TestCaseData[] BrokerageSideOrdersTestCases => new[]
+        {
+            new TestCaseData(OrderType.Limit, false),
+            new TestCaseData(OrderType.StopMarket, false),
+            new TestCaseData(OrderType.StopLimit, false),
+            new TestCaseData(OrderType.MarketOnOpen, false),
+            new TestCaseData(OrderType.MarketOnClose, false),
+            new TestCaseData(OrderType.LimitIfTouched, false),
+            new TestCaseData(OrderType.ComboMarket, false),
+            new TestCaseData(OrderType.ComboLimit, false),
+            new TestCaseData(OrderType.ComboLegLimit, false),
+            new TestCaseData(OrderType.TrailingStop, false),
+            // Only market orders are supported for this test
+            new TestCaseData(OrderType.Market, true),
+        };
+
+        private static Order GetOrder(OrderType type, Symbol symbol)
+        {
+            switch (type)
+            {
+                case OrderType.Market:
+                    return new MarketOrder(symbol, 100, new DateTime(2024, 01, 19, 12, 0, 0));
+                case OrderType.Limit:
+                    return new LimitOrder(symbol, 100, 100m, new DateTime(2024, 01, 19, 12, 0, 0));
+                case OrderType.StopMarket:
+                    return new StopMarketOrder(symbol, 100, 100m, new DateTime(2024, 01, 19, 12, 0, 0));
+                case OrderType.StopLimit:
+                    return new StopLimitOrder(symbol, 100, 100m, 100m, new DateTime(2024, 01, 19, 12, 0, 0));
+                case OrderType.MarketOnOpen:
+                    return new MarketOnOpenOrder(symbol, 100, new DateTime(2024, 01, 19, 12, 0, 0));
+                case OrderType.MarketOnClose:
+                    return new MarketOnCloseOrder(symbol, 100, new DateTime(2024, 01, 19, 12, 0, 0));
+                case OrderType.LimitIfTouched:
+                    return new LimitIfTouchedOrder(symbol, 100, 100m, 100m, new DateTime(2024, 01, 19, 12, 0, 0));
+                case OrderType.ComboMarket:
+                    return new ComboMarketOrder(symbol, 100, new DateTime(2024, 01, 19, 12, 0, 0), new GroupOrderManager(1, 1, 10));
+                case OrderType.ComboLimit:
+                    return new ComboLimitOrder(symbol, 100, 100m, new DateTime(2024, 01, 19, 12, 0, 0), new GroupOrderManager(1, 1, 10, 100));
+                case OrderType.ComboLegLimit:
+                    return new ComboLegLimitOrder(symbol, 100, 100m, new DateTime(2024, 01, 19, 12, 0, 0), new GroupOrderManager(1, 1, 10));
+                case OrderType.TrailingStop:
+                    return new TrailingStopOrder(symbol, 100, 100m, 100m, false, new DateTime(2024, 01, 19, 12, 0, 0));
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+        }
+
+        [TestCaseSource(nameof(BrokerageSideOrdersTestCases))]
+        public void NewBrokerageOrdersAreFiltered(OrderType orderType, bool accepted)
+        {
+            //Initialize the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new TestingBrokerage();
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            _algorithm.SetBrokerageModel(new DefaultBrokerageModel());
+            var brokerageMessageHandler = new TestBrokerageMessageHandler();
+            _algorithm.SetBrokerageMessageHandler(brokerageMessageHandler);
+
+            var symbol = _algorithm.AddEquity("SPY").Symbol;
+
+            var order = GetOrder(orderType, symbol);
+            Assert.AreEqual(orderType, order.Type);
+            brokerage.OnNewBrokerageOrder(new NewBrokerageOrderNotificationEventArgs(order));
+            Assert.AreEqual(accepted, brokerageMessageHandler.LastHandleOrderResult);
+            Assert.AreEqual(accepted ? 1 : 0, transactionHandler.OrdersCount);
+        }
+
+        [Test]
+        public void UnrequestedSecuritiesAreAddedForNewBrokerageSideOrders()
+        {
+            //Initialize the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new TestingBrokerage();
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            _algorithm.SetBrokerageModel(new DefaultBrokerageModel());
+            var brokerageMessageHandler = new TestBrokerageMessageHandler();
+            _algorithm.SetBrokerageMessageHandler(brokerageMessageHandler);
+
+            var symbol = Symbols.SPY;
+            Assert.IsFalse(_algorithm.Securities.ContainsKey(symbol));
+
+            var order = GetOrder(OrderType.Market, symbol);
+            brokerage.OnNewBrokerageOrder(new NewBrokerageOrderNotificationEventArgs(order));
+            Assert.IsTrue(brokerageMessageHandler.LastHandleOrderResult);
+            Assert.AreEqual(1, transactionHandler.OrdersCount);
+
+            Assert.IsTrue(_algorithm.Securities.TryGetValue(symbol, out var security));
+            Assert.AreEqual(symbol, security.Symbol);
+        }
+
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
         {
             public static readonly Dictionary<int, int> OrderEventIds = new Dictionary<int, int>();
@@ -2255,6 +2347,30 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public override IShortableProvider GetShortableProvider(Security security)
             {
                 return new TestNonShortableProvider();
+            }
+        }
+
+        private class TestBrokerageMessageHandler : IBrokerageMessageHandler
+        {
+            public bool LastHandleOrderResult { get; private set; }
+
+            public void HandleMessage(BrokerageMessageEvent messageEvent)
+            {
+            }
+
+            public bool HandleOrder(NewBrokerageOrderNotificationEventArgs eventArgs)
+            {
+                // For testing purposes, only market orders are handled
+                return LastHandleOrderResult = eventArgs.Order.Type == OrderType.Market;
+
+            }
+        }
+
+        private class TestingBrokerage : TestBrokerage
+        {
+            public void OnNewBrokerageOrder(NewBrokerageOrderNotificationEventArgs e)
+            {
+                OnNewBrokerageOrderNotification(e);
             }
         }
     }
