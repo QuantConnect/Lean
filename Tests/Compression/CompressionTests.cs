@@ -210,6 +210,30 @@ namespace QuantConnect.Tests.Compression
             Assert.AreEqual(expected.Value, actual.Value);
         }
 
+        [Test]
+        public void UnzipDataStream()
+        {
+            var data = new Dictionary<string, string>
+            {
+                {"Ł", "The key is unicode"}
+            };
+
+            var encoding = Encoding.UTF8;
+            var bytes = encoding.GetBytes(JsonConvert.SerializeObject(data));
+            var compressed = QuantConnect.Compression.ZipBytes(bytes, "entry.json");
+
+            using var stream = new MemoryStream(compressed);
+            var decompressed = QuantConnect.Compression.UnzipDataAsync(stream, encoding).Result;
+            var redata = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                decompressed.Single().Value
+            );
+
+            var expected = data.Single();
+            var actual = redata.Single();
+            Assert.AreEqual(expected.Key, actual.Key);
+            Assert.AreEqual(expected.Value, actual.Value);
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void ZipCreateAppendData(bool overrideEntry)
