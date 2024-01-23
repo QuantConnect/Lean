@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Engine
     public class CustomBrokerageMessageHandlerTests
     {
         [Test]
-        public void RunRegressionAlgorithm()
+        public void RunRegressionAlgorithm([Values(Language.CSharp, Language.Python)] Language language)
         {
             // We expect only half of the orders to be processed
             var expectedOrdersCount = CustomBacktestingBrokerage.MaxOrderCount / 2;
@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Engine
                     {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
                     {"Portfolio Turnover", "1.45%"}
                 },
-                Language.CSharp,
+                language,
                 AlgorithmStatus.Completed);
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,

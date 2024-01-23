@@ -60,8 +60,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public class CustomBrokerageMessageHandler : IBrokerageMessageHandler
         {
-            private readonly IAlgorithm _algo;
-            public CustomBrokerageMessageHandler(IAlgorithm algo) { _algo = algo; }
+            private readonly IAlgorithm _algorithm;
+            public CustomBrokerageMessageHandler(IAlgorithm algo) { _algorithm = algo; }
 
             /// <summary>
             /// Process the brokerage message event. Trigger any actions in the algorithm or notifications system required.
@@ -69,9 +69,9 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="message">Message object</param>
             public void HandleMessage(BrokerageMessageEvent message)
             {
-                var toLog = $"{_algo.Time.ToStringInvariant("o")} Event: {message.Message}";
-                _algo.Debug(toLog);
-                _algo.Log(toLog);
+                var toLog = $"{_algorithm.Time.ToStringInvariant("o")} Event: {message.Message}";
+                _algorithm.Debug(toLog);
+                _algorithm.Log(toLog);
             }
 
             /// <summary>
