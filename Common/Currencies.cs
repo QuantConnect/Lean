@@ -202,6 +202,7 @@ namespace QuantConnect
             "BUSDUSD",
             "USTUSD",
             "TUSDUSD",
+            "FDUSDUSD",
             "DAIUSD",
             "IDRTIDR"
         };

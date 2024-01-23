@@ -692,7 +692,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // USDT Cases
             new object[] { new BinanceBrokerageModel(), Currencies.USD, "USDT", false, null }, // No USDTUSD, but does not throw! Conversion 1-1
-            new object[] { new BinanceBrokerageModel(), "VAI", "USDT", false, new[] { Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance), Symbol.Create("BTCVAI", SecurityType.Crypto, Market.Binance) } }, // No USDTVAI, but indirect conversion exists
+            new object[] { new BinanceBrokerageModel(), "VIA", "USDT", false, new[] { Symbol.Create("BNBUSDT", SecurityType.Crypto, Market.Binance), Symbol.Create("VIABNB", SecurityType.Crypto, Market.Binance) } }, // No USDTVIA, but indirect conversion exists
 
             // USDP Cases
             new object[] { new BinanceBrokerageModel(), Currencies.USD, "USDP", false, null }, // No USDPUSD, but does not throw! Conversion 1-1
@@ -727,6 +727,10 @@ namespace QuantConnect.Tests.Common.Securities
             new object[] { new BinanceBrokerageModel(), Currencies.GBP, "IDRT", false, new[] { Symbol.Create("BNBIDRT", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBGBP", SecurityType.Crypto, Market.Binance) } }, // No IDRTGBP, but indirect conversion exists
 
             new object[] { new OandaBrokerageModel(), Currencies.EUR, "INR", false, new[] { Symbol.Create("USDINR", SecurityType.Forex, Market.Oanda), Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda) } }, // No INREUR, but indirect conversion exists
+
+            // FDUSD Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "FDUSD", false, null }, // No FDUSDUSD, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), "VAI", "FDUSD", false, new[] { Symbol.Create("BTCFDUSD", SecurityType.Crypto, Market.Binance), Symbol.Create("BTCVAI", SecurityType.Crypto, Market.Binance) } }, // No FDUSDVAI, but indirect conversion exists
         };
     }
 }
