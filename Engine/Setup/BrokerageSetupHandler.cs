@@ -39,8 +39,6 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public class BrokerageSetupHandler : ISetupHandler
     {
-        private bool _notifiedUniverseSettingsUsed;
-
         /// <summary>
         /// Max allocation limit configuration variable name
         /// </summary>
