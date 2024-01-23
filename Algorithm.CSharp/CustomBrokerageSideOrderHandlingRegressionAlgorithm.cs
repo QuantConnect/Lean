@@ -69,9 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="message">Message object</param>
             public void HandleMessage(BrokerageMessageEvent message)
             {
-                var toLog = $"{_algorithm.Time.ToStringInvariant("o")} Event: {message.Message}";
-                _algorithm.Debug(toLog);
-                _algorithm.Log(toLog);
+                _algorithm.Debug($"{_algorithm.Time.ToStringInvariant("o")} Event: {message.Message}");
             }
 
             /// <summary>

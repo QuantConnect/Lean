@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Engine
                 parameter.Statistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
-                setupHandler: "CustomBacktestingSetupHandler");
+                setupHandler: nameof(CustomBacktestingSetupHandler));
         }
 
         public class CustomBacktestingBrokerage : BacktestingBrokerage
@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Engine
                 brokerage.NewBrokerageOrderNotification += (sender, e) =>
                 {
                     if (uninitializedAlgorithm.BrokerageMessageHandler.HandleOrder(e) &&
-                        uninitializedAlgorithm.GetOrAddUnrequestedSecurity(e.Order.Symbol, Enumerable.Empty<SecurityType>().ToList(), out _))
+                        uninitializedAlgorithm.GetOrAddUnrequestedSecurity(e.Order.Symbol, out _))
                     {
                         brokerage.PlaceOrder(e.Order);
                     }

@@ -652,7 +652,7 @@ namespace QuantConnect.Tests.Engine.Setup
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>()),
                         new Func<List<Order>>(() => new List<Order>()), true);
-                    
+
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -662,7 +662,7 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow)
                         }), true);
-                    
+
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -672,7 +672,7 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder(Symbols.SPY_C_192_Feb19_2016, 1, 1, DateTime.UtcNow)
                         }), true);
-                    
+
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -684,7 +684,7 @@ namespace QuantConnect.Tests.Engine.Setup
                             new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow),
                             new LimitOrder(Symbols.SPY_C_192_Feb19_2016, 1, 1, DateTime.UtcNow)
                         }), true);
-                    
+
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -696,7 +696,7 @@ namespace QuantConnect.Tests.Engine.Setup
                             new LimitOrder(Symbols.SPY_C_192_Feb19_2016, 1, 1, DateTime.UtcNow),
                             new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow)
                         }), true);
-                    
+
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -706,7 +706,7 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder(Symbols.SPY, 1, 1, DateTime.UtcNow),
                         }), true);
-                    
+
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -716,7 +716,7 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder(Symbols.EURUSD, 1, 1, DateTime.UtcNow)
                         }), true);
-                    
+
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -726,7 +726,7 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder(Symbols.BTCUSD, 1, 1, DateTime.UtcNow)
                         }), true);
-                    
+
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -736,7 +736,7 @@ namespace QuantConnect.Tests.Engine.Setup
                         {
                             new LimitOrder(Symbols.Fut_SPY_Feb19_2016, 1, 1, DateTime.UtcNow)
                         }), true);
-                    
+
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>
                         {
@@ -760,7 +760,7 @@ namespace QuantConnect.Tests.Engine.Setup
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => { throw new Exception(); }),
                         new Func<List<Order>>(() => new List<Order>()), false);
-                    
+
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>()),
                         new Func<List<Order>>(() => { throw new Exception(); }), false);
@@ -818,11 +818,6 @@ namespace QuantConnect.Tests.Engine.Setup
 
         private class TestableBrokerageSetupHandler : BrokerageSetupHandler
         {
-            protected override HashSet<SecurityType> SupportedSecurityTypes => new HashSet<SecurityType>
-            {
-                SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.Crypto
-            };
-
             public void PublicGetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage)
             {
                 GetOpenOrders(algorithm, resultHandler, transactionHandler, brokerage);

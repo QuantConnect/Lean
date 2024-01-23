@@ -77,18 +77,6 @@ namespace QuantConnect.Lean.Engine.Setup
         // saves ref to algo so we can call quit if runtime error encountered
         private IBrokerageFactory _factory;
         private IBrokerage _dataQueueHandlerBrokerage;
-        protected virtual HashSet<SecurityType> SupportedSecurityTypes => new()
-        {
-            SecurityType.Equity,
-            SecurityType.Forex,
-            SecurityType.Cfd,
-            SecurityType.Option,
-            SecurityType.Future,
-            SecurityType.FutureOption,
-            SecurityType.IndexOption,
-            SecurityType.Crypto,
-            SecurityType.CryptoFuture
-        };
 
         /// <summary>
         /// Initializes a new BrokerageSetupHandler
@@ -462,18 +450,10 @@ namespace QuantConnect.Lean.Engine.Setup
 
         private bool GetOrAddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol, SecurityType securityType, out Security security)
         {
-            if (!algorithm.GetOrAddUnrequestedSecurity(symbol, SupportedSecurityTypes, out security))
-            {
-                if (!SupportedSecurityTypes.Contains(securityType))
-                {
-                    Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + securityType + "-" + symbol.Value);
-                    AddInitializationError("Found unsupported security type in existing brokerage holdings: " + securityType + ". " +
-                        "QuantConnect currently supports the following security types: " + string.Join(",", SupportedSecurityTypes));
-                }
-
-                return false;
-            }
-            return true;
+            return algorithm.GetOrAddUnrequestedSecurity(symbol, out security,
+                onError: (supportedSecurityTypes) => AddInitializationError(
+                    "Found unsupported security type in existing brokerage holdings: " + securityType + ". " +
+                    "QuantConnect currently supports the following security types: " + string.Join(",", supportedSecurityTypes)));
         }
 
         /// <summary>

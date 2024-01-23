@@ -3631,6 +3631,18 @@ namespace QuantConnect
         }
 
         private static bool _notifiedUniverseSettingsUsed;
+        private static readonly HashSet<SecurityType> _supportedSecurityTypes = new()
+        {
+            SecurityType.Equity,
+            SecurityType.Forex,
+            SecurityType.Cfd,
+            SecurityType.Option,
+            SecurityType.Future,
+            SecurityType.FutureOption,
+            SecurityType.IndexOption,
+            SecurityType.Crypto,
+            SecurityType.CryptoFuture
+        };
 
         /// <summary>
         /// Gets the security for the specified symbol from the algorithm's securities collection.
@@ -3639,18 +3651,18 @@ namespace QuantConnect
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="symbol">The symbol which security is being looked up</param>
-        /// <param name="supportedSecurityTypes">The security types supported for adding</param>
         /// <param name="security">The found or added security instance</param>
+        /// <param name="onError">Callback to invoke in case of unsupported security type</param>
         /// <returns>True if the security was found or added</returns>
-        public static bool GetOrAddUnrequestedSecurity(this IAlgorithm algorithm, Symbol symbol,
-            IReadOnlyCollection<SecurityType> supportedSecurityTypes, out Security security)
+        public static bool GetOrAddUnrequestedSecurity(this IAlgorithm algorithm, Symbol symbol, out Security security,
+            Action<IReadOnlyCollection<SecurityType>> onError = null)
         {
             if (!algorithm.Securities.TryGetValue(symbol, out security))
             {
-                if (supportedSecurityTypes.Count > 0 && !supportedSecurityTypes.Contains(symbol.SecurityType))
+                if (!_supportedSecurityTypes.Contains(symbol.SecurityType))
                 {
-                    Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + symbol.SecurityType + "-" + symbol.Value);
-                    security = null;
+                    Log.Error("GetOrAddUnrequestedSecurity(): Unsupported security type: " + symbol.SecurityType + "-" + symbol.Value);
+                    onError?.Invoke(_supportedSecurityTypes);
                     return false;
                 }
 
@@ -3673,7 +3685,7 @@ namespace QuantConnect
                         $" Resolution = {resolution};{leverageMsg} FillForward = {fillForward}; ExtendedHours = {extendedHours}");
                 }
 
-                Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + symbol.Value);
+                Log.Trace("GetOrAddUnrequestedSecurity(): Adding unrequested security: " + symbol.Value);
 
                 if (symbol.SecurityType.IsOption())
                 {

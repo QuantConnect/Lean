@@ -52,9 +52,7 @@ class CustomBrokerageMessageHandler(IBrokerageMessageHandler):
         self._algorithm = algorithm
 
     def HandleMessage(self, message):
-        toLog = f"{self._algorithm.Time} Event: {message.Message}"
-        self._algorithm.Debug(toLog)
-        self._algorithm.Log(toLog)
+        self._algorithm.Debug(f"{self._algorithm.Time} Event: {message.Message}")
 
     def HandleOrder(self, eventArgs):
         order = eventArgs.Order

@@ -1526,8 +1526,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void HandleNewBrokerageSideOrder(NewBrokerageOrderNotificationEventArgs e)
         {
+            void onError(IReadOnlyCollection<SecurityType> supportedSecurityTypes) =>
+                _algorithm.Debug($"Warning: New brokerage-side order could not be processed due to " +
+                    $"it's security not being supported. Supported security types are {string.Join(", ", supportedSecurityTypes)}");
+
             if (_algorithm.BrokerageMessageHandler.HandleOrder(e) &&
-                _algorithm.GetOrAddUnrequestedSecurity(e.Order.Symbol, Enumerable.Empty<SecurityType>().ToList(), out _))
+                _algorithm.GetOrAddUnrequestedSecurity(e.Order.Symbol, out _, onError))
             {
                 AddOpenOrder(e.Order, _algorithm);
             }
