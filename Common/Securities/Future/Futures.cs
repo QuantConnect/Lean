@@ -919,6 +919,54 @@ namespace QuantConnect.Securities
             public const string Nikkei225Dollar = "NKD";
 
             /// <summary>
+            /// Nikkei-225 Yen denominated Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Nikkei225YenCME = "NIY";
+
+            // <summary>
+            /// E-mini Nikkei 225 Yen denominated Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Nikkei225YenEMini = "ENY";
+
+            // <summary>
+            /// E-MINI FTSE China 50 Index Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string FTSEChina50EMini = "FT5";
+
+            // <summary>
+            /// E-mini FTSE 100 Index (GBP) Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string FTSE100EMini = "FT1";
+
+            // <summary>
+            /// E-MINI S&P EUROPE 350 ESG Index Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string SPEurop350ESGEMini = "E3G";
+
+            // <summary>
+            /// E-MINI USD Denominated FTSE 100 Index Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string FTSE100USDEMini = "FTU";
+
+            // <summary>
+            /// USD Denominated Topix Index Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string TOPIXUSD = "TPD";
+
+            // <summary>
+            /// YEN Denominated Topix Index Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string TOPIXYEN = "TPY";
+
+            /// <summary>
             /// Bloomberg Commodity Index Futures
             /// </summary>
             /// <returns>The symbol</returns>

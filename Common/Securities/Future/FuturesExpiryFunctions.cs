@@ -15,7 +15,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
+using QLNet;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Securities.Future
 {
@@ -415,6 +418,184 @@ namespace QuantConnect.Securities.Future
                         priorBusinessDay = priorBusinessDay.AddDays(-1);
                     }
                     return priorBusinessDay.Add(TimeSpan.FromHours(21));
+                })
+            },
+            // Nikkei225YenCME (NIY): https://www.cmegroup.com/markets/equities/international-indices/nikkei-225-yen.contractSpecs.html
+            {Symbol.Create(Futures.Indices.Nikkei225YenCME, SecurityType.Future, Market.CME), (time =>
+                {
+                    var market = Market.CME;
+                    var symbol = Futures.Indices.Nikkei225YenCME;
+                    var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 12 quarters, serial contract listed for 3 months, and 3 additional Dec contract months
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // Trading terminates at 5:00 p.m. Eastern Time (ET) on Business Day prior to 2nd Friday of the contract month.
+                    var secondFriday = FuturesExpiryUtilityFunctions.SecondFriday(time);
+                    var priorBusinessDay = secondFriday.AddDays(-1);
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(priorBusinessDay, holidays))
+                    {
+                        priorBusinessDay = priorBusinessDay.AddDays(-1);
+                    }
+                    return priorBusinessDay.Add(TimeSpan.FromHours(21));
+                })
+            },
+            // Nikkei225YenEMini (ENY): https://www.cmegroup.com/markets/equities/international-indices/emini-nikkei-225-yen.contractSpecs.html
+            {Symbol.Create(Futures.Indices.Nikkei225YenEMini, SecurityType.Future, Market.CME), (time =>
+                {
+                    var market = Market.CME;
+                    var symbol = Futures.Indices.Nikkei225YenEMini;
+                    var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
+                    // Four months in the March Quarterly Cycle (Mar, Jun, Sep, Dec)
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // Trading terminates at 5:00 p.m. Eastern Time (ET) on Business Day prior to 2nd Friday of the contract month.
+                    var secondFriday = FuturesExpiryUtilityFunctions.SecondFriday(time);
+                    var priorBusinessDay = secondFriday.AddDays(-1);
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(priorBusinessDay, holidays))
+                    {
+                        priorBusinessDay = priorBusinessDay.AddDays(-1);
+                    }
+                    return priorBusinessDay.Add(TimeSpan.FromHours(21));
+                })
+            },
+            // FTSEChina50EMini (FT5): https://www.cmegroup.com/markets/equities/international-indices/e-mini-ftse-china-50-index.contractSpecs.html
+            {Symbol.Create(Futures.Indices.FTSEChina50EMini, SecurityType.Future, Market.CME), (time =>
+                {
+                    var market = Market.CME;
+                    var symbol = Futures.Indices.FTSEChina50EMini;
+                    var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
+                    //Contracts listed for the  2 nearest serial and 4 quarterly months.
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    //Trading terminates on the second to last business day of the contract month at the end of trading on the Hong Kong Exchange Securities Market
+                    var secondLastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,2, holidays);
+         
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(secondLastBusinessDay, holidays))
+                    {
+                        secondLastBusinessDay = secondLastBusinessDay.AddDays(-1);
+                    }
+                    return secondLastBusinessDay.Add(TimeSpan.FromHours(6));
+                })
+            },
+            // FTSE100EMini (FT1): https://www.cmegroup.com/markets/equities/international-indices/e-mini-ftse-100-index.contractSpecs.html
+            {Symbol.Create(Futures.Indices.FTSE100EMini, SecurityType.Future, Market.CME), (time =>
+                {
+                    var market = Market.CME;
+                    var symbol = Futures.Indices.FTSE100EMini;
+                    var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
+                    //Contracts listed for five months in the March Quarterly Cycle (Mar, Jun, Sep, Dec)
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    //Trading terminates on the third Friday of the contract month
+                    var thirdFriday = FuturesExpiryUtilityFunctions.NthFriday(time,3);
+
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(thirdFriday, holidays))
+                    {
+                        thirdFriday = thirdFriday.AddDays(-1);
+                    }
+                    return thirdFriday;
+                })
+            },
+            // SPEurop350ESGEMini (E3G): https://www.cmegroup.com/markets/equities/international-indices/e-mini-sp-europe-350-esg-index.contractSpecs.html
+            {Symbol.Create(Futures.Indices.SPEurop350ESGEMini, SecurityType.Future, Market.CME), (time =>
+                {
+                    var market = Market.CME;
+                    var symbol = Futures.Indices.SPEurop350ESGEMini;
+                    var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
+                    //Contracts listed for 5 months in the March Quarterly Cycle (Mar, Jun, Sep, Dec)
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    //Trading terminates on the 3rd Friday of contract delivery month.
+                    var thirdFriday = FuturesExpiryUtilityFunctions.NthFriday(time,3);
+
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(thirdFriday, holidays))
+                    {
+                        thirdFriday = thirdFriday.AddDays(-1);
+                    }
+                    return thirdFriday;
+                })
+            },
+            // FTSE100USDEMini (FTU): https://www.cmegroup.com/markets/equities/international-indices/e-mini-sp-europe-350-esg-index.contractSpecs.html
+            {Symbol.Create(Futures.Indices.FTSE100USDEMini, SecurityType.Future, Market.CME), (time =>
+                {
+                    var market = Market.CME;
+                    var symbol = Futures.Indices.FTSE100USDEMini;
+                    var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
+                    //Contracts listed for five months in the March Quarterly Cycle (Mar, Jun, Sep, Dec)
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    //Trading terminates on the third Friday of the contract month.
+                    var thirdFriday = FuturesExpiryUtilityFunctions.NthFriday(time,3);
+
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(thirdFriday, holidays))
+                    {
+                        thirdFriday = thirdFriday.AddDays(-1);
+                    }
+                    return thirdFriday;
+                })
+            },
+            // TOPIXUSD (TPD): https://www.cmegroup.com/markets/equities/international-indices/usd-denominated-topix-index.contractSpecs.html
+            {Symbol.Create(Futures.Indices.TOPIXUSD, SecurityType.Future, Market.CME), (time =>
+                {
+                    var market = Market.CME;
+                    var symbol = Futures.Indices.TOPIXUSD;
+                    var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
+                    //Quarterly Contracts listed for (Mar, Jun, Sep, Dec) for 5 months
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    //Trading terminates at 5:00 p.m. ET on the Thursday prior to the second Friday of the contract month.
+                    var secondFriday = FuturesExpiryUtilityFunctions.NthFriday(time,2);
+                    var thursdaypriorsecondFriday = secondFriday.AddDays(-1);
+
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(thursdaypriorsecondFriday, holidays))
+                    {
+                        thursdaypriorsecondFriday = thursdaypriorsecondFriday.AddDays(-1);
+                    }
+                    return thursdaypriorsecondFriday.Add(TimeSpan.FromHours(21));
+                })
+            },
+            // TOPIXYEN (TPY): https://www.cmegroup.com/markets/equities/international-indices/usd-denominated-topix-index.contractSpecs.html
+            {Symbol.Create(Futures.Indices.TOPIXYEN, SecurityType.Future, Market.CME), (time =>
+                {
+                    var market = Market.CME;
+                    var symbol = Futures.Indices.TOPIXYEN;
+                    var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
+                    //Quarterly Contracts listed for (Mar, Jun, Sep, Dec) for 5 months
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    //Trading terminates at 5:00 p.m. ET on the Thursday prior to the second Friday of the contract month.
+                    var secondFriday = FuturesExpiryUtilityFunctions.NthFriday(time,2);
+                    var thursdaypriorsecondFriday = secondFriday.AddDays(-1);
+
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(thursdaypriorsecondFriday, holidays))
+                    {
+                        thursdaypriorsecondFriday = thursdaypriorsecondFriday.AddDays(-1);
+                    }
+                    return thursdaypriorsecondFriday.Add(TimeSpan.FromHours(21));
                 })
             },
             // CBOE Volatility Index Futures (VIX): https://www.cboe.com/tradable_products/vix/vix_futures/specifications/

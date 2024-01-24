@@ -135,14 +135,19 @@ cme,CNH,future,Standard-Size USD/Offshore RMB (CNH) Futures,CNY,100000.0,0.0001,
 cme,CSC,future,Cash-Settled Cheese Futures,USD,20000.0,0.001,1.0
 cme,DC,future,Class III Milk Futures,USD,2000.0,0.01,1.0
 cme,DY,future,Dry Whey Futures,USD,44000.0,0.00025,1.0,,1,100
+cme,E3G,future,E-mini FTSE 100 GBP Futures,GBP,500.0,500.0,1.0
 cme,E7,future,E-mini Euro FX Futures,USD,62500.0,0.0001,1.0
 cme,EAD,future,Euro/Australian Dollar Futures,AUD,125000.0,0.0001,1.0
 cme,ECD,future,Euro/Canadian Dollar Futures,CAD,125000.0,0.0001,1.0
 cme,EI,future,E-mini FTSE Emerging Index Futures,USD,100.0,0.1,1.0
 cme,EMD,future,E-mini S&P MidCap 400 Futures,USD,100.0,0.1,1.0
+cme,ENY,future,E-mini Nikkei YEN Futures,Yen,100.0,100.0,1.0
 cme,ES,future,E-mini S&P 500 Futures,USD,50.0,0.25,1.0
 cme,ESK,future,Euro/Swedish Krona Futures,SEK,125000.0,0.0005,1.0
 cme,ETH,future,Ether Futures,USD,50.0,0.50,1.0
+cme,FT1,future,E-mini FTSE 100 GBP Futures,GBP,10.0,10.0,1.0
+cme,FT5,future,E-mini FTSE China Futures,USD,2.0,2.0,1.0
+cme,FTU,future,E-mini FTSE 100 USD Futures,USD,50.0,50.0,1.0
 cme,GD,future,S&P-GSCI Commodity Index Futures,USD,250.0,0.05,1.0
 cme,GDK,future,Class IV Milk Futures,USD,2000.0,0.01,1.0
 cme,GE,future,Eurodollar Futures,USD,2500.0,0.0025,1.0
@@ -170,9 +175,12 @@ cme,MJY,future,Micro Japanese Yen/U.S. Dollar (JPY/USD) Futures,USD,1250000,1e-0
 cme,MNH,future,Micro USD/CNH Futures,USD,10000,0.0001,1
 cme,MNQ,future,Micro E-mini Nasdaq-100 Index Futures,USD,2,0.25,1,,1
 cme,MSF,future,Micro Swiss Franc/U.S. Dollar (CHF/USD) Futures,USD,12500,0.0001,1,,1
+cme,NIY,future,Nikkei/YEN Futures,JPY,500.0,500.0,1.0
 cme,NKD,future,Nikkei/USD Futures,USD,5.0,5.0,1.0
 cme,NQ,future,E-mini Nasdaq-100 Futures,USD,20.0,0.25,1.0
 cme,RTY,future,E-mini  Russell 2000 Index Futures,USD,50.0,0.1,1.0
+cme,TPD,future,TOPIX USD Futures,USD,50.0,50.0,1.0
+cme,TPY,future,TOPIX JPY Futures,JPY,5000.0,5000.0,1.0
 comex,AUP,future,Aluminum MW U.S. Transaction Premium Platts (25MT) Futures,USD,55116.0,1e-05,1.0
 comex,EDP,future,Aluminium European Premium Duty-Paid (Metal Bulletin) Futures,USD,25.0,0.01,1.0
 comex,GC,future,Gold Futures,USD,100.0,0.1,1.0
