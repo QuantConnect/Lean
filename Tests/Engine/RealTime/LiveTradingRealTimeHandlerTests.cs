@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,10 +22,21 @@ using QuantConnect.Scheduling;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Tests.Engine.DataFeeds;
+using System.Linq;
+using QuantConnect.Securities;
+using System.Collections.Generic;
+using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.TransactionHandlers;
+using Moq;
+using QuantConnect.Brokerages.Backtesting;
+using static QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests;
+using QuantConnect.Orders;
+using System.Reflection;
+using QuantConnect.Lean.Engine.HistoricalData;
 
 namespace QuantConnect.Tests.Engine.RealTime
 {
-    [TestFixture, Parallelizable(ParallelScope.All)]
+    [TestFixture]
     public class LiveTradingRealTimeHandlerTests
     {
         [Test]
@@ -63,6 +74,79 @@ namespace QuantConnect.Tests.Engine.RealTime
             realTimeHandler.Exit();
         }
 
+        [TestCaseSource(typeof(ExchangeHoursDataClass), nameof(ExchangeHoursDataClass.TestCases))]
+        public void RefreshesMarketHoursCorrectly(SecurityExchangeHours securityExchangeHours, MarketHoursSegment expectedSegment)
+        {
+            var algorithm = new AlgorithmStub();
+            var security = algorithm.AddEquity("SPY");
+
+            var realTimeHandler = new TestLiveTradingRealTimeHandler();
+            realTimeHandler.Setup(algorithm,
+                new AlgorithmNodePacket(PacketType.AlgorithmNode),
+                new BacktestingResultHandler(),
+                null,
+                new TestTimeLimitManager());
+
+            var time = new DateTime(2023, 5, 30).Date;
+            var entry = new MarketHoursDatabase.Entry(TimeZones.NewYork, securityExchangeHours);
+            var key = new SecurityDatabaseKey(Market.USA, null, SecurityType.Equity);
+            var mhdb = new MarketHoursDatabase(new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>() { { key, entry} });
+            realTimeHandler.SetMarketHoursDatabase(mhdb);
+            realTimeHandler.TestRefreshMarketHoursToday(security, time, expectedSegment);
+        }
+
+        [Test]
+        public void ResetMarketHoursCorrectly()
+        {
+            var algorithm = new TestAlgorithm { HistoryProvider = new FakeHistoryProvider() };
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetCash(100000);
+            algorithm.SetStartDate(2023, 5, 30);
+            algorithm.SetEndDate(2023, 5, 30);
+            var security = algorithm.AddEquity("SPY");
+            security.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            var symbol = security.Symbol;
+            algorithm.SetFinishedWarmingUp();
+
+            var handleOptionNotification = typeof(BrokerageTransactionHandler).GetMethod("HandleOptionNotification", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var broker = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, broker, new BacktestingResultHandler());
+
+            // Creates a market order
+            security.SetMarketPrice(new TradeBar(new DateTime(2023, 5, 30), symbol, 280m, 280m, 280m, 280m, 100));
+
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, new DateTime(2023, 5, 30), "TestTag1");
+
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(algorithm.Transactions, orderRequest));
+            algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+            var orderTicket = transactionHandler.Process(orderRequest);
+            transactionHandler.HandleOrderRequest(orderRequest);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
+            broker.Scan();
+            Assert.IsTrue(orderTicket.Status == OrderStatus.Filled);
+
+            var realTimeHandler = new TestLiveTradingRealTimeHandlerReset();
+            realTimeHandler.Setup(algorithm,
+                new AlgorithmNodePacket(PacketType.AlgorithmNode),
+                new BacktestingResultHandler(),
+                null,
+                new TestTimeLimitManager());
+            realTimeHandler.AddRefreshHoursScheduledEvent();
+
+            orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, new DateTime(2023, 5, 30), "TestTag2");
+            orderRequest.SetOrderId(2);
+            orderTicket = transactionHandler.Process(orderRequest);
+            transactionHandler.HandleOrderRequest(orderRequest);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
+            broker.Scan();
+            Assert.IsTrue(orderTicket.Status != OrderStatus.Filled);
+
+            realTimeHandler.Exit();
+        }
+
         private class TestTimeLimitManager : IIsolatorLimitResultProvider
         {
             public IsolatorLimitResult IsWithinLimit()
@@ -77,6 +161,167 @@ namespace QuantConnect.Tests.Engine.RealTime
             {
                 throw new NotImplementedException();
             }
+        }
+
+        public class TestLiveTradingRealTimeHandler: LiveTradingRealTimeHandler
+        {
+            private static AutoResetEvent OnSecurityUpdated = new AutoResetEvent(false);
+            private MarketHoursDatabase newMarketHoursDatabase;
+            public void SetMarketHoursDatabase(MarketHoursDatabase marketHoursDatabase)
+            {
+                newMarketHoursDatabase = marketHoursDatabase;
+            }
+            protected override void ResetMarketHoursDatabase()
+            {
+                if (newMarketHoursDatabase != null)
+                {
+                    MarketHoursDatabase = newMarketHoursDatabase;
+                }
+                else
+                {
+                    base.ResetMarketHoursDatabase();
+                }
+            }
+
+            public void TestRefreshMarketHoursToday(Security security, DateTime time, MarketHoursSegment expectedSegment)
+            {
+                OnSecurityUpdated.Reset();
+                RefreshMarketHoursToday(time);
+                OnSecurityUpdated.WaitOne();
+                AssertMarketHours(security, time, expectedSegment);
+            }
+
+            protected override IEnumerable<MarketHoursSegment> GetMarketHours(DateTime time, Symbol symbol)
+            {
+                var results = base.GetMarketHours(time, symbol);
+                OnSecurityUpdated.Set();
+                return results;
+            }
+
+            public void AssertMarketHours(Security security, DateTime time, MarketHoursSegment expectedSegment)
+            {
+                var marketHours = security.Exchange.Hours.MarketHours[time.DayOfWeek];
+                var segment = marketHours.Segments.SingleOrDefault();
+
+                if (expectedSegment == null)
+                {
+                    Assert.AreEqual(expectedSegment, segment);
+                }
+                else
+                {
+                    Assert.AreEqual(expectedSegment.Start, segment.Start);
+                    Assert.AreEqual(expectedSegment.End, segment.End);
+                    for (var hour = segment.Start; hour < segment.End; hour = hour.Add(TimeSpan.FromHours(1)))
+                    {
+                        Assert.IsTrue(marketHours.IsOpen(hour, false));
+                    }
+                    Assert.AreEqual(expectedSegment.End, security.Exchange.Hours.GetNextMarketClose(time.Date, false).TimeOfDay);
+                    Assert.AreEqual(expectedSegment.Start, security.Exchange.Hours.GetNextMarketOpen(time.Date, false).TimeOfDay);
+                }
+
+                Exit();
+            }
+        }
+
+        private class TestLiveTradingRealTimeHandlerReset : LiveTradingRealTimeHandler
+        {
+            private static AutoResetEvent OnSecurityUpdated = new AutoResetEvent(false);
+
+            public void AddRefreshHoursScheduledEvent()
+            {
+                Add(new ScheduledEvent("RefreshHours", new[] { new DateTime(2023, 6, 29) }, (name, triggerTime) =>
+                {
+                    // refresh market hours from api every day
+                    RefreshMarketHoursToday((new DateTime(2023, 5, 30)).Date);
+                }));
+                OnSecurityUpdated.Reset();
+                SetTime(DateTime.UtcNow);
+                OnSecurityUpdated.WaitOne();
+                Exit();
+            }
+
+            protected override IEnumerable<MarketHoursSegment> GetMarketHours(DateTime time, Symbol symbol)
+            {
+                var results = base.GetMarketHours(time, symbol);
+                OnSecurityUpdated.Set();
+                return results;
+            }
+
+            protected override void ResetMarketHoursDatabase()
+            {
+                var entry = new MarketHoursDatabase.Entry(TimeZones.NewYork, ExchangeHoursDataClass.CreateExchangeHoursWithHolidays());
+                var key = new SecurityDatabaseKey(Market.USA, null, SecurityType.Equity);
+                var mhdb = new MarketHoursDatabase(new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>() { { key, entry } });
+                MarketHoursDatabase = mhdb;
+            }
+        }
+
+        public class ExchangeHoursDataClass
+        {
+            private static LocalMarketHours _sunday = new LocalMarketHours(DayOfWeek.Sunday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _monday = new LocalMarketHours(DayOfWeek.Monday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _tuesday = new LocalMarketHours(DayOfWeek.Tuesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _wednesday = new LocalMarketHours(DayOfWeek.Wednesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _thursday = new LocalMarketHours(DayOfWeek.Thursday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _friday = new LocalMarketHours(DayOfWeek.Friday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            private static LocalMarketHours _saturday = new LocalMarketHours(DayOfWeek.Saturday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+
+            public static IEnumerable<TestCaseData> TestCases
+            {
+                get
+                {
+                    yield return new TestCaseData(CreateExchangeHoursWithEarlyCloseAndLateOpen(), new MarketHoursSegment(MarketHoursState.Market,new TimeSpan(10, 0, 0), new TimeSpan(13, 0, 0)));
+                    yield return new TestCaseData(CreateExchangeHoursWithEarlyClose(), new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(9, 30, 0), new TimeSpan(13, 0, 0)));
+                    yield return new TestCaseData(CreateExchangeHoursWithLateOpen(), new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(10, 0, 0), new TimeSpan(16, 0, 0)));
+                    yield return new TestCaseData(CreateExchangeHoursWithHolidays(), null);
+                }
+            }
+
+            private static SecurityExchangeHours CreateExchangeHoursWithEarlyCloseAndLateOpen()
+            {
+                var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2023, 5, 30).Date, new TimeSpan(13, 0, 0) } };
+                var lateOpens = new Dictionary<DateTime, TimeSpan>() { { new DateTime(2023, 5, 30).Date, new TimeSpan(10, 0, 0) } };
+                var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
+                {
+                _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+                return exchangeHours;
+            }
+
+            private static SecurityExchangeHours CreateExchangeHoursWithEarlyClose()
+            {
+                var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2023, 5, 30).Date, new TimeSpan(13, 0, 0) } };
+                var lateOpens = new Dictionary<DateTime, TimeSpan>();
+                var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
+                {
+                _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+                return exchangeHours;
+            }
+
+            private static SecurityExchangeHours CreateExchangeHoursWithLateOpen()
+            {
+                var earlyCloses = new Dictionary<DateTime, TimeSpan>();
+                var lateOpens = new Dictionary<DateTime, TimeSpan>() { { new DateTime(2023, 5, 30).Date, new TimeSpan(10, 0, 0) } };
+                var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, new List<DateTime>(), new[]
+                {
+                _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+                return exchangeHours;
+            }
+
+            public static SecurityExchangeHours CreateExchangeHoursWithHolidays()
+            {
+                var earlyCloses = new Dictionary<DateTime, TimeSpan>();
+                var lateOpens = new Dictionary<DateTime, TimeSpan>();
+                var holidays = new List<DateTime>() { new DateTime(2023, 5, 30).Date };
+                var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
+                {
+                _sunday, _monday, _tuesday, _wednesday, _thursday, _friday, _saturday
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+                return exchangeHours;
+            }
+
         }
     }
 }

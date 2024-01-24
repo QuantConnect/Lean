@@ -36,7 +36,8 @@ namespace QuantConnect.Securities
         private static MarketHoursDatabase _alwaysOpenMarketHoursDatabase;
         private static readonly object DataFolderMarketHoursDatabaseLock = new object();
 
-        private readonly Dictionary<SecurityDatabaseKey, Entry> _entries;
+        private Dictionary<SecurityDatabaseKey, Entry> _entries;
+        private readonly Dictionary<SecurityDatabaseKey, Entry> _customEntries = new();
 
         /// <summary>
         /// Gets all the exchange hours held by this provider
@@ -117,6 +118,17 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Reload entries dictionary from MHDB file and merge them with previous custom ones
+        /// </summary>
+        public void ReloadEntries()
+        {
+            Reset();
+            var fileEntries = FromDataFolder()._entries.Where(x => !_customEntries.ContainsKey(x.Key));
+            var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
+            _entries = newEntries;
+        }
+
+        /// <summary>
         /// Gets the instance of the <see cref="MarketHoursDatabase"/> class produced by reading in the market hours
         /// data found in /Data/market-hours/
         /// </summary>
@@ -167,6 +179,7 @@ namespace QuantConnect.Securities
             var key = new SecurityDatabaseKey(market, symbol, securityType);
             var entry = new Entry(dataTimeZone, exchangeHours);
             _entries[key] = entry;
+            _customEntries[key] = entry;
             return entry;
         }
 
