@@ -293,6 +293,15 @@ namespace QuantConnect.Orders
         protected abstract decimal GetValueImpl(Security security);
 
         /// <summary>
+        /// Gets the default tag for this order
+        /// </summary>
+        /// <returns>The default tag</returns>
+        public virtual string GetDefaultTag()
+        {
+            return string.Empty;
+        }
+
+        /// <summary>
         /// Gets a new unique incremental id for this order
         /// </summary>
         /// <returns>Returns a new id for this order</returns>
