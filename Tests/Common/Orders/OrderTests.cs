@@ -25,7 +25,6 @@ using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Option;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Tests.Common.Orders
 {
@@ -51,7 +50,7 @@ namespace QuantConnect.Tests.Common.Orders
         public void LimitOrder_SetsDefaultTag(string tag)
         {
             var order = new LimitOrder(Symbols.SPY, 1m, 123.4567m, DateTime.Today, tag);
-            Assert.AreEqual(Invariant($"Limit Price: {order.LimitPrice:C}"), order.Tag);
+            Assert.AreEqual(string.Empty, order.Tag);
         }
 
         [Test]
@@ -60,7 +59,7 @@ namespace QuantConnect.Tests.Common.Orders
         public void StopLimitOrder_SetsDefaultTag(string tag)
         {
             var order = new StopLimitOrder(Symbols.SPY, 1m, 123.4567m, 234.5678m, DateTime.Today, tag);
-            Assert.AreEqual(Invariant($"Stop Price: {order.StopPrice:C} Limit Price: {order.LimitPrice:C}"), order.Tag);
+            Assert.AreEqual(string.Empty, order.Tag);
         }
 
         [Test]
@@ -69,7 +68,7 @@ namespace QuantConnect.Tests.Common.Orders
         public void StopMarketOrder_SetsDefaultTag(string tag)
         {
             var order = new StopMarketOrder(Symbols.SPY, 1m, 123.4567m, DateTime.Today, tag);
-            Assert.AreEqual(Invariant($"Stop Price: {order.StopPrice:C}"), order.Tag);
+            Assert.AreEqual(string.Empty, order.Tag);
         }
 
         [Test]
@@ -87,7 +86,7 @@ namespace QuantConnect.Tests.Common.Orders
         public void LimitIfTouchedOrder_SetsDefaultTag(string tag)
         {
             var order = new LimitIfTouchedOrder(Symbols.SPY, 1m, 123.4567m,122.4567m, DateTime.Today, tag);
-            Assert.AreEqual(Invariant($"Trigger Price: {order.TriggerPrice:C} Limit Price: {order.LimitPrice:C}"), order.Tag);
+            Assert.AreEqual(string.Empty, order.Tag);
         }
 
         [TestCase(OrderDirection.Sell, 300, 0.1, true, 270)]

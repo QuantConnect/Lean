@@ -44,7 +44,8 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // Entry short $2 below
                 var stopPrice = orderEvent.FillPrice - 2;
-                Debug($"Enter short at {orderEvent.FillPrice} set STOPLOSS at {stopPrice:C}");
+                var currencySymbol = Currencies.GetCurrencySymbol(order.PriceCurrency);
+                Debug($"Enter short at {orderEvent.FillPrice} set STOPLOSS at {currencySymbol}{stopPrice}");
                 StopMarketOrder(order.Symbol, -order.Quantity, stopPrice, "StopLoss");
             }
         }

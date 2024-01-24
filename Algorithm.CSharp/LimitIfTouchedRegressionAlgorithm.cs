@@ -35,9 +35,9 @@ namespace QuantConnect.Algorithm.CSharp
         // We assert the following occur in FIFO order in OnOrderEvent
         private readonly Queue<string> _expectedEvents = new Queue<string>(new[]
         {
-            "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 399 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 144.6434 USD LimitPrice: 144.3551 TriggerPrice: 143.61 OrderFee: 1 USD",
-            "Time: 10/10/2013 15:57:00 OrderID: 73 EventID: 156 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 145.6636 USD LimitPrice: 145.6434 TriggerPrice: 144.89 OrderFee: 1 USD",
-            "Time: 10/11/2013 15:37:00 OrderID: 74 EventID: 380 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 146.7185 USD LimitPrice: 146.6723 TriggerPrice: 145.92 OrderFee: 1 USD"        });
+            "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 399 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: $144.6434 LimitPrice: $144.3551 TriggerPrice: $143.61 OrderFee: 1 USD",
+            "Time: 10/10/2013 15:57:00 OrderID: 73 EventID: 156 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: $145.6636 LimitPrice: $145.6434 TriggerPrice: $144.89 OrderFee: 1 USD",
+            "Time: 10/11/2013 15:37:00 OrderID: 74 EventID: 380 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: $146.7185 LimitPrice: $146.6723 TriggerPrice: $145.92 OrderFee: 1 USD"        });
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -74,10 +74,10 @@ namespace QuantConnect.Algorithm.CSharp
                     $"LIT - Quantity: {_negative * 10}");
                 _request = Transactions.AddOrder(orderRequest);
                 return;
-                
+
             }
 
-            // Order updating if request exists 
+            // Order updating if request exists
             if (_request != null)
             {
                 if (_request.Quantity == 1)
@@ -105,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (orderEvent.ToString() != expected)
                 {
-                    throw new Exception($"orderEvent {orderEvent.Id} differed from {expected}");
+                    throw new Exception($"orderEvent {orderEvent.Id} differed from {expected}. Actual {orderEvent}");
                 }
             }
         }

@@ -60,7 +60,6 @@ namespace QuantConnect.Orders
 
             if (string.IsNullOrEmpty(tag))
             {
-                //Default tag values to display limit price in GUI.
                 Tag = Messages.LimitOrder.Tag(this);
             }
         }
