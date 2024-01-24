@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             Symbol etfSymbol,
             UniverseSettings universeSettings = null,
             PyObject universeFilterFunc = null) :
-            this(etfSymbol, universeSettings, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>())
+            this(etfSymbol, universeSettings, universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentData>())
         { }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             string etfTicker,
             UniverseSettings universeSettings = null,
             PyObject universeFilterFunc = null) :
-            this(etfTicker, universeSettings, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>())
+            this(etfTicker, universeSettings, universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentData>())
         { }
 
         /// <summary>
