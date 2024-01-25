@@ -132,6 +132,13 @@ namespace QuantConnect.Brokerages
 
                 return false;
             }
+            else if (order.Type == OrderType.MarketOnClose && (security.Type == SecurityType.Option || security.Type == SecurityType.IndexOption))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning,
+                    "InteractiveBrokers does not support Market-on-Close orders for Options",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes.Where(x => x != OrderType.MarketOnClose)));
+                return false;
+            }
 
             // validate security type
             if (security.Type != SecurityType.Equity &&

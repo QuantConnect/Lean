@@ -27,6 +27,7 @@ using QuantConnect.Securities;
 using QuantConnect.Data;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.IndexOption;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -70,6 +71,52 @@ namespace QuantConnect.Tests.Common.Brokerages
                 StringAssert.Contains("minimum and maximum limits for the allowable order size are", message.Message);
             }
         }
+
+        [Test]
+        public void CannotSubmitMOCOrdersForOptions()
+        {
+            var option = Symbols.SPY_Option_Chain;
+            var securityOption = new QuantConnect.Securities.Option.Option(
+            option,
+            MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, option, option.SecurityType),
+            new Cash("USD", 100000m, 1m),
+                new OptionSymbolProperties(string.Empty, "USD", 1m, 0.01m, 1m),
+                new CashBook(),
+                new RegisteredSecurityDataTypesProvider(),
+                new SecurityCache(),
+                null);
+
+            var optionOrder = new MarketOnCloseOrder(option, 1, DateTime.UtcNow);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(securityOption, optionOrder, out var message);
+            Assert.IsFalse(result);
+            var expectedMessage = "The InteractiveBrokersBrokerageModel does not support MarketOnClose order type. Only supports [Market,MarketOnOpen,Limit,StopMarket,StopLimit,TrailingStop,LimitIfTouched,ComboMarket,ComboLimit,ComboLegLimit,OptionExercise]";
+            Assert.AreEqual(expectedMessage, message.Message);
+        }
+
+        [Test]
+        public void CannotSubmitMOCOrdersForIndexOptions()
+        {
+            var index = Symbol.Create(IndexOptionSymbol.MapToUnderlying("SPY"), SecurityType.Index, Market.USA);
+            var indexOption = Symbol.CreateOption(index, "SPY", Market.USA, OptionStyle.European,
+                OptionRight.Call, 3700, DateTime.UtcNow);
+            var securityIndexOption = new QuantConnect.Securities.IndexOption.IndexOption(
+            indexOption,
+            MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, indexOption, indexOption.SecurityType),
+            new Cash("USD", 100000m, 1m),
+                new IndexOptionSymbolProperties(string.Empty, "USD", 1m, 0.01m, 1m),
+                new CashBook(),
+                new RegisteredSecurityDataTypesProvider(),
+                new SecurityCache(),
+                null);
+
+            var indexOptionOrder = new MarketOnCloseOrder(indexOption, 1, DateTime.UtcNow);
+            var optionIndexOrder = new MarketOnCloseOrder(indexOption, 1, DateTime.UtcNow);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(securityIndexOption, indexOptionOrder, out var message);
+            Assert.IsFalse(result);
+            var expectedMessage = "The InteractiveBrokersBrokerageModel does not support MarketOnClose order type. Only supports [Market,MarketOnOpen,Limit,StopMarket,StopLimit,TrailingStop,LimitIfTouched,ComboMarket,ComboLimit,ComboLegLimit,OptionExercise]";
+            Assert.AreEqual(expectedMessage, message.Message);
+        }
+
 
         private static List<Security> GetUnsupportedOptions()
         {
