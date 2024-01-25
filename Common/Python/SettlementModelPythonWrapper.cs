@@ -31,7 +31,7 @@ namespace QuantConnect.Python
         /// <param name="model">Settlement Python Model</param>
         public SettlementModelPythonWrapper(PyObject model)
         {
-            _model = model;
+            _model = model.ValidateImplementationOf<ISettlementModel>();
         }
 
         /// <summary>
@@ -55,6 +55,18 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 _model.Scan(settlementParameters);
+            }
+        }
+
+        /// <summary>
+        /// Check if there are unsettled funds that still need to be settled
+        /// </summary>
+        /// <returns>Whether there are unsettled funds for the security</returns>
+        public bool HasUnsettledFunds()
+        {
+            using (Py.GIL())
+            {
+                return _model.HasUnsettledFunds();
             }
         }
     }
