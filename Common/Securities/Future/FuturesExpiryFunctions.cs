@@ -15,10 +15,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using QLNet;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Securities.Future
 {
