@@ -2697,7 +2697,7 @@ namespace QuantConnect
             Func<IEnumerable<T>, object> convertedFunc;
             Func<IEnumerable<T>, IEnumerable<Symbol>> filterFunc = null;
 
-            if (universeFilterFunc.TryConvertToDelegate(out convertedFunc))
+            if (universeFilterFunc != null && universeFilterFunc.TryConvertToDelegate(out convertedFunc))
             {
                 filterFunc = convertedFunc.ConvertToUniverseSelectionSymbolDelegate();
             }

@@ -22,6 +22,7 @@ using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Selection;
+using Moq;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Selection
 {
@@ -165,6 +166,8 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
 
                 Assert.AreEqual(symbol.SecurityType, universe.Configuration.Symbol.SecurityType);
                 Assert.IsTrue(universe.Configuration.Symbol.ID.Symbol.StartsWithInvariant("qc-universe-"));
+                var data = new Mock<BaseDataCollection>();
+                Assert.DoesNotThrow(() => universe.PerformSelection(DateTime.UtcNow, data.Object));
 
             } while (++numberOfOperation <= 9) ;
         }
