@@ -117,6 +117,37 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(expectedMessage, message.Message);
         }
 
+        [Test]
+        public void CannotSubmitMOCOrdersForFutureOptions()
+        {
+            var underlyingFuture = Symbol.CreateFuture(
+                QuantConnect.Securities.Futures.Indices.SP500EMini,
+                Market.CME,
+                new DateTime(2021, 3, 19));
+
+            var futureOption = Symbol.CreateOption(underlyingFuture,
+                Market.CME,
+                OptionStyle.American,
+                OptionRight.Call,
+                2550m,
+                new DateTime(2021, 3, 19));
+
+            var futureOptionSecurity = new QuantConnect.Securities.FutureOption.FutureOption(
+                futureOption,
+                MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.CME, futureOption, futureOption.SecurityType),
+                new Cash("USD", 100000m, 1m),
+                new OptionSymbolProperties(string.Empty, "USD", 1m, 0.01m, 1m),
+                new CashBook(),
+                new RegisteredSecurityDataTypesProvider(),
+                new SecurityCache(),
+                null);
+
+            var futureOptionOrder = new MarketOnCloseOrder(futureOption, 1, DateTime.UtcNow);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(futureOptionSecurity, futureOptionOrder, out var message);
+            Assert.IsFalse(result);
+            var expectedMessage = "The InteractiveBrokersBrokerageModel does not support MarketOnClose order type. Only supports [Market,MarketOnOpen,Limit,StopMarket,StopLimit,TrailingStop,LimitIfTouched,ComboMarket,ComboLimit,ComboLegLimit,OptionExercise]";
+            Assert.AreEqual(expectedMessage, message.Message);
+        }
 
         private static List<Security> GetUnsupportedOptions()
         {
