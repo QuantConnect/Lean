@@ -924,6 +924,7 @@ namespace QuantConnect.Securities
             /// <returns>The symbol</returns>
             public const string Nikkei225YenCME = "NIY";
 
+
             // <summary>
             /// E-mini Nikkei 225 Yen denominated Futures on CME
             /// </summary>
