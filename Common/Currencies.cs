@@ -145,13 +145,13 @@ namespace QuantConnect
             {"LSK", "Ⱡ"},
             {"NAV", "Ꞥ"}
         };
-        
+
         /// <summary>
         /// Stable pairs in GDAX. We defined them because they have different fees in GDAX market
         /// </summary>
         [Obsolete("StablePairsGDAX is deprecated. Use StablePairsCoinbase instead.")]
         public static readonly HashSet<string> StablePairsGDAX = StablePairsCoinbase;
-        
+
         /// <summary>
         /// Stable pairs in Coinbase. We defined them because they have different fees in Coinbase market
         /// </summary>
@@ -174,7 +174,7 @@ namespace QuantConnect
             "USTUSDT",
             "WBTCBTC"
         };
-        
+
         /// <summary>
         /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Coinbase market
         /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
@@ -272,8 +272,12 @@ namespace QuantConnect
         /// <returns>The currency symbol</returns>
         public static string GetCurrencySymbol(string currency)
         {
-            string currencySymbol;
-            return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : currency;
+            if (string.IsNullOrEmpty(currency))
+            {
+                return string.Empty;
+            }
+
+            return CurrencySymbols.TryGetValue(currency, out var currencySymbol) ? currencySymbol : currency;
         }
 
         /// <summary>
