@@ -967,6 +967,30 @@ namespace QuantConnect.Securities
             /// <returns>The symbol</returns>
             public const string TOPIXYEN = "TPY";
 
+            // <summary>
+            /// Dow Jones Real Estate futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string DowJonesRealEstate = "RX";
+
+            // <summary>
+            /// E-mini SP500 ESG futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string SP500EMiniESG = "ESG";
+
+            // <summary>
+            /// E-mini Russell 1000 futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Russell1000EMini = "RS1";
+
+            /// <summary>
+            /// S&P 500 Annual dividend index futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string SP500AnnualDividendIndex = "SDA";
+
             /// <summary>
             /// Bloomberg Commodity Index Futures
             /// </summary>
