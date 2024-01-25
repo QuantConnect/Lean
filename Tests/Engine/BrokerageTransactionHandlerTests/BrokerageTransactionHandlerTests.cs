@@ -63,6 +63,79 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsNotNull(_handleOptionNotification);
         }
 
+        private static SubmitOrderRequest MakeOrderRequest(Security security, OrderType orderType, DateTime date)
+        {
+            var groupOrderManager = new GroupOrderManager(1, 1, 100, orderType == OrderType.ComboLimit ? 100 : 0);
+
+            return orderType switch
+            {
+                OrderType.Market => new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, date, ""),
+                OrderType.Limit => new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1, 0, 290, date, ""),
+                OrderType.StopMarket => new SubmitOrderRequest(OrderType.StopMarket, security.Type, security.Symbol, 1, 305, 0, date, ""),
+                OrderType.StopLimit => new SubmitOrderRequest(OrderType.StopLimit, security.Type, security.Symbol, 1, 305, 295, date, ""),
+                OrderType.MarketOnOpen => new SubmitOrderRequest(OrderType.MarketOnOpen, security.Type, security.Symbol, 1, 0, 0, date, ""),
+                OrderType.MarketOnClose => new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol, 1, 0, 0, date, ""),
+                OrderType.LimitIfTouched => new SubmitOrderRequest(OrderType.LimitIfTouched, security.Type, security.Symbol, 1, 0, 300, 305, date, ""),
+                OrderType.OptionExercise => new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol, 1, 0, 0, date, ""),
+                OrderType.ComboMarket => new SubmitOrderRequest(OrderType.ComboMarket, security.Type, security.Symbol, 1, 0, 0, date, "", groupOrderManager: groupOrderManager),
+                OrderType.ComboLimit => new SubmitOrderRequest(OrderType.ComboLimit, security.Type, security.Symbol, 1, 295, 0, date, "", groupOrderManager: groupOrderManager),
+                OrderType.ComboLegLimit => new SubmitOrderRequest(OrderType.ComboLegLimit, security.Type, security.Symbol, 1, 295, 0, date, "", groupOrderManager: groupOrderManager),
+                OrderType.TrailingStop => new SubmitOrderRequest(OrderType.TrailingStop, security.Type, security.Symbol, 1, 305, 0, 305, date, ""),
+                _ => throw new ArgumentOutOfRangeException(nameof(orderType), orderType, null)
+            };
+        }
+
+        [Test]
+        public void OrderTagIsSetToTheDefaultOne([Values] OrderType orderType)
+        {
+            var reference = new DateTime(2024, 01, 25, 10, 0, 0);
+
+            // Initialize the algorithm
+            var algorithm = new TestAlgorithm { HistoryProvider = new EmptyHistoryProvider() };
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetCash(100000);
+            var security = (Security)algorithm.AddEquity("SPY");
+            algorithm.SetFinishedWarmingUp();
+
+            //Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+
+            // Set up security
+            security.SetMarketPrice(new Tick(reference, security.Symbol, 300, 300));
+            if (orderType == OrderType.OptionExercise)
+            {
+                algorithm.AddOption(security.Symbol);
+                security = algorithm.AddOptionContract(Symbol.CreateOption(security.Symbol, Market.USA, OptionStyle.American, OptionRight.Call,
+                    300, reference.AddDays(4).Date));
+                security.SetMarketPrice(new Tick(reference, security.Symbol, 10, 10));
+            }
+
+            // Creates the order
+            var orderRequest = MakeOrderRequest(security, orderType, reference);
+
+            // Mock the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(algorithm.Transactions, orderRequest));
+            algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act
+            var orderTicket = transactionHandler.Process(orderRequest);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.New);
+            transactionHandler.HandleOrderRequest(orderRequest);
+
+            // Assert
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            Assert.AreEqual(OrderStatus.Submitted, orderTicket.Status);
+
+            // Assert the order tag is set to the default one
+            var order = transactionHandler.GetOpenOrders().Single();
+            Assert.AreEqual(orderType, order.Type);
+            Assert.AreEqual(order.GetDefaultTag(), order.Tag);
+        }
+
         [Test]
         public void OrderQuantityIsFlooredToNearestMultipleOfLotSizeWhenLongOrderIsRounded()
         {

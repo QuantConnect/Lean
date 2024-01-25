@@ -774,6 +774,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // ensure the order is tagged with a currency
             var security = _algorithm.Securities[order.Symbol];
             order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
+            if (string.IsNullOrEmpty(order.Tag))
+            {
+                order.Tag = order.GetDefaultTag();
+            }
 
             // rounds off the order towards 0 to the nearest multiple of lot size
             order.Quantity = RoundOffOrder(order, security);

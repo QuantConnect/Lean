@@ -71,11 +71,6 @@ namespace QuantConnect.Orders
         {
             TriggerPrice = (decimal) triggerPrice;
             LimitPrice = limitPrice;
-            if (string.IsNullOrEmpty(tag))
-            {
-                //Default tag values to display trigger price in GUI.
-                Tag = Messages.LimitIfTouchedOrder.Tag(this);
-            }
         }
 
         /// <summary>
@@ -83,6 +78,15 @@ namespace QuantConnect.Orders
         /// </summary>
         public LimitIfTouchedOrder()
         {
+        }
+
+        /// <summary>
+        /// Gets the default tag for this order
+        /// </summary>
+        /// <returns>The default tag</returns>
+        public override string GetDefaultTag()
+        {
+            return Messages.LimitIfTouchedOrder.Tag(this);
         }
 
         /// <summary>

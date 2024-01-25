@@ -69,12 +69,15 @@ namespace QuantConnect.Orders
         {
             StopPrice = stopPrice;
             LimitPrice = limitPrice;
+        }
 
-            if (string.IsNullOrEmpty(tag))
-            {
-                //Default tag values to display stop price in GUI.
-                Tag = Messages.StopLimitOrder.Tag(this);
-            }
+        /// <summary>
+        /// Gets the default tag for this order
+        /// </summary>
+        /// <returns>The default tag</returns>
+        public override string GetDefaultTag()
+        {
+            return Messages.StopLimitOrder.Tag(this);
         }
 
         /// <summary>
@@ -86,13 +89,13 @@ namespace QuantConnect.Orders
             // selling, so higher price will be used
             if (Quantity < 0)
             {
-                return Quantity*Math.Max(LimitPrice, security.Price);
+                return Quantity * Math.Max(LimitPrice, security.Price);
             }
 
             // buying, so lower price will be used
             if (Quantity > 0)
             {
-                return Quantity*Math.Min(LimitPrice, security.Price);
+                return Quantity * Math.Min(LimitPrice, security.Price);
             }
 
             return 0m;

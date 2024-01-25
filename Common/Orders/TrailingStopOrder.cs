@@ -26,7 +26,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Trailing amount for this trailing stop order
         /// </summary>
-        public decimal TrailingAmount{ get; internal set; }
+        public decimal TrailingAmount { get; internal set; }
 
         /// <summary>
         /// Determines whether the <see cref="TrailingAmount"/> is a percentage or an absolute currency value
@@ -65,12 +65,6 @@ namespace QuantConnect.Orders
         {
             TrailingAmount = trailingAmount;
             TrailingAsPercentage = trailingAsPercentage;
-
-            if (string.IsNullOrEmpty(tag))
-            {
-                //Default tag values to display stop price in GUI.
-                Tag = Messages.TrailingStopOrder.Tag(this);
-            }
         }
 
         /// <summary>
@@ -89,6 +83,15 @@ namespace QuantConnect.Orders
             DateTime time, string tag = "", IOrderProperties properties = null)
             : this(symbol, quantity, 0, trailingAmount, trailingAsPercentage, time, tag, properties)
         {
+        }
+
+        /// <summary>
+        /// Gets the default tag for this order
+        /// </summary>
+        /// <returns>The default tag</returns>
+        public override string GetDefaultTag()
+        {
+            return Messages.TrailingStopOrder.Tag(this);
         }
 
         /// <summary>
