@@ -61,7 +61,7 @@ namespace QuantConnect
                 if (dataDiff >= Step)
                 {
                     // we don't want to subsample this case, directly return what we are given as long as is within the range
-                    return GetIdentitySeries(series.Clone(empty: true), series, start, stop, truncateValues: false);
+                    return GetIdentitySeries(series.Clone(empty: true), series, start, stop, truncateValues: false, roundTime: series.SeriesType == SeriesType.StackedArea);
                 }
             }
 
@@ -125,13 +125,13 @@ namespace QuantConnect
         {
             var sampled = (Series)series.Clone(empty: true);
 
-            var nextSampleTime = start;
+            var nextSampleTime = start.RoundUp(Step);
 
             // we can't sample a single point and it doesn't make sense to sample scatter plots
             // in this case just copy the raw data
             if (series.Values.Count < 2 || series.SeriesType == SeriesType.Scatter)
             {
-                return GetIdentitySeries(sampled, series, start, stop, truncateValues);
+                return GetIdentitySeries(sampled, series, start, stop, truncateValues, series.SeriesType == SeriesType.StackedArea);
             }
 
             var enumerator = series.Values.Cast<ChartPoint>().GetEnumerator();
@@ -143,9 +143,9 @@ namespace QuantConnect
             var current = enumerator.Current;
 
             // make sure we don't start sampling before the data begins
-            if (nextSampleTime < previous.Time)
+            while (nextSampleTime < previous.Time)
             {
-                nextSampleTime = previous.Time;
+                nextSampleTime += Step;
             }
 
             // make sure to advance into the requested time frame before sampling
@@ -168,7 +168,7 @@ namespace QuantConnect
                     }
                     else
                     {
-                        sampledPoint = TruncateValue(Interpolate(previous, current, nextSampleTime, (decimal)Step.TotalSeconds), truncateValues, clone: false);
+                        sampledPoint = TruncateValue(Interpolate(previous, current, nextSampleTime, (decimal)Step.TotalSeconds), truncateValues, clone: false, roundTime: false);
                     }
 
                     nextSampleTime += Step;
@@ -224,7 +224,7 @@ namespace QuantConnect
             // we can't sample a single point, so just copy the raw data
             if (seriesSize < 2)
             {
-                return GetIdentitySeries(sampledSeries, series, start, stop, truncateValues);
+                return GetIdentitySeries(sampledSeries, series, start, stop, truncateValues, roundTime: false);
             }
 
             // Make sure we don't start sampling before the data begins.
@@ -240,7 +240,7 @@ namespace QuantConnect
             if (startIndex < 0)
             {
                 // there's not value before the start, just return identity
-                return GetIdentitySeries(sampledSeries, series, start, stop, truncateValues);
+                return GetIdentitySeries(sampledSeries, series, start, stop, truncateValues, roundTime: false);
             }
             if (candlesticks[startIndex].Time == nextSampleTime && nextSampleTime <= stop)
             {
@@ -333,7 +333,7 @@ namespace QuantConnect
         /// Aggregates the candlesticks in the given range into a single candlestick,
         /// keeping the first open and last close and calculating highest high and lowest low
         /// </summary>
-        private static Candlestick AggregateCandlesticks(List<ISeriesPoint> candlesticks, int start, int end, DateTime time, bool truncateValues)
+        private Candlestick AggregateCandlesticks(List<ISeriesPoint> candlesticks, int start, int end, DateTime time, bool truncateValues)
         {
             var aggregatedCandlestick = new Candlestick
             {
@@ -349,7 +349,7 @@ namespace QuantConnect
                 aggregatedCandlestick.Update(current.Close);
             }
 
-            return (Candlestick)TruncateValue(aggregatedCandlestick, truncateValues, clone: false);
+            return (Candlestick)TruncateValue(aggregatedCandlestick, truncateValues, clone: false, roundTime: false);
         }
 
         /// <summary>
@@ -424,14 +424,17 @@ namespace QuantConnect
         /// Truncates the value/values of the point after cloning it to avoid mutating the original point
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ISeriesPoint TruncateValue(ISeriesPoint point, bool truncate, bool clone = false)
+        private ISeriesPoint TruncateValue(ISeriesPoint point, bool truncate, bool clone = false, bool roundTime = false)
         {
+            var truncatedPoint = clone ? point.Clone() : point;
+            if (roundTime)
+            {
+                truncatedPoint.Time = truncatedPoint.Time.RoundUp(Step);
+            }
             if (!truncate)
             {
-                return point;
+                return truncatedPoint;
             }
-
-            var truncatedPoint = clone ? point.Clone() : point;
 
             if (truncatedPoint is ChartPoint chartPoint)
             {
@@ -451,7 +454,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets the identity series, this is the series with no sampling applied.
         /// </summary>
-        protected static T GetIdentitySeries<T>(T sampled, T series, DateTime start, DateTime stop, bool truncateValues)
+        protected T GetIdentitySeries<T>(T sampled, T series, DateTime start, DateTime stop, bool truncateValues, bool roundTime)
             where T : BaseSeries
         {
             // we can minimally verify we're within the start/stop interval
@@ -459,7 +462,7 @@ namespace QuantConnect
             {
                 if (point.Time >= start && point.Time <= stop)
                 {
-                    sampled.Values.Add(TruncateValue(point, truncateValues, clone: true));
+                    sampled.Values.Add(TruncateValue(point, truncateValues, clone: true, roundTime));
                 }
             }
             return sampled;
