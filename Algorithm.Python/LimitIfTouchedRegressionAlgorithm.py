@@ -22,9 +22,9 @@ from collections import deque
 ### <meta name="tag" content="limit if touched order"/>
 class LimitIfTouchedRegressionAlgorithm(QCAlgorithm):
     _expectedEvents = deque([
-        "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 399 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 144.6434 USD LimitPrice: 144.3551 TriggerPrice: 143.61 OrderFee: 1 USD",
-        "Time: 10/10/2013 15:57:00 OrderID: 73 EventID: 156 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 145.6636 USD LimitPrice: 145.6434 TriggerPrice: 144.89 OrderFee: 1 USD",
-        "Time: 10/11/2013 15:37:00 OrderID: 74 EventID: 380 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 146.7185 USD LimitPrice: 146.6723 TriggerPrice: 145.92 OrderFee: 1 USD"    ])
+        "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 399 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: $144.6434 LimitPrice: $144.3551 TriggerPrice: $143.61 OrderFee: 1 USD",
+        "Time: 10/10/2013 15:57:00 OrderID: 73 EventID: 156 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: $145.6636 LimitPrice: $145.6434 TriggerPrice: $144.89 OrderFee: 1 USD",
+        "Time: 10/11/2013 15:37:00 OrderID: 74 EventID: 380 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: $146.7185 LimitPrice: $146.6723 TriggerPrice: $145.92 OrderFee: 1 USD"    ])
 
     def Initialize(self):
         self.SetStartDate(2013, 10, 7)
@@ -51,11 +51,11 @@ class LimitIfTouchedRegressionAlgorithm(QCAlgorithm):
                     return
 
                 new_quantity = int(self._request.Quantity - self._negative)
-                self._request.UpdateQuantity(new_quantity, f"LIT - Quantity: {new_quantity}")     
+                self._request.UpdateQuantity(new_quantity, f"LIT - Quantity: {new_quantity}")
                 self._request.UpdateTriggerPrice(Extensions.RoundToSignificantDigits(self._request.Get(OrderField.TriggerPrice), 5));
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
             expected = self._expectedEvents.popleft()
-            if orderEvent.ToString() != expected:
-                raise Exception(f"orderEvent {orderEvent.Id} differed from {expected}")
+            if str(orderEvent) != expected:
+                raise Exception(f"orderEvent {orderEvent.Id} differed from {expected}. Actual {orderEvent}")
