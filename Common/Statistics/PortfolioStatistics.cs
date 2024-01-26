@@ -16,8 +16,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics.Distributions;
 using MathNet.Numerics.Statistics;
 using Newtonsoft.Json;
+using QLNet;
 using QuantConnect.Data;
 using QuantConnect.Util;
 
@@ -159,6 +161,18 @@ namespace QuantConnect.Statistics
         public decimal PortfolioTurnover { get; set; }
 
         /// <summary>
+        /// The 1-day VaR for the portfolio, using the Variance-covariance approach. Assumes a 99% confidence level and that the returns are normally distributed.
+        /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public decimal ValueAtRisk99 { get; set; }
+
+        /// <summary>
+        /// The 1-day VaR for the portfolio, using the Variance-covariance approach. Assumes a 95% confidence level and that the returns are normally distributed.
+        /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public decimal ValueAtRisk95 { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="PortfolioStatistics"/> class
         /// </summary>
         /// <param name="profitLoss">Trade record of profits and losses</param>
@@ -275,6 +289,9 @@ namespace QuantConnect.Statistics
             // deannualize a 1 sharpe ratio
             var benchmarkSharpeRatio = 1.0d / Math.Sqrt(tradingDaysPerYear);
             ProbabilisticSharpeRatio = Statistics.ProbabilisticSharpeRatio(listPerformance, benchmarkSharpeRatio).SafeDecimalCast();
+            
+            ValueAtRisk99 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.99d);
+            ValueAtRisk95 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.95d);
         }
 
         /// <summary>
@@ -316,6 +333,19 @@ namespace QuantConnect.Statistics
         private static decimal GetAnnualPerformance(List<double> performance, int tradingDaysPerYear)
         {
             return Statistics.AnnualPerformance(performance, tradingDaysPerYear).SafeDecimalCast();
+        }
+
+        private static decimal GetValueAtRisk(
+            List<double> performance,
+            int lookbackPeriodDays,
+            double confidenceLevel,
+            int rounding = 3)
+        {
+            var periodPerformance = performance.TakeLast(lookbackPeriodDays);
+            var mean = periodPerformance.Mean();
+            var standardDeviation = periodPerformance.StandardDeviation();
+            var valueAtRisk = (decimal)Normal.InvCDF(mean, standardDeviation, 1 - confidenceLevel);
+            return Math.Round(valueAtRisk, rounding);
         }
     }
 }
