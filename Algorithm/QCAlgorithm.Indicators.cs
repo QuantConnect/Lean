@@ -539,7 +539,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The desired resolution of the data</param>
         /// <returns>A new Delta indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
-        public Delta Delta(Symbol symbol, decimal? riskFreeRate = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, 
+        public Delta D(Symbol symbol, decimal? riskFreeRate = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, 
             OptionPricingModelType? ivModel = null, Resolution? resolution = null)
         {
             var name = CreateIndicatorName(symbol, $"Delta({riskFreeRate},{optionModel},{ivModel})", resolution);
@@ -551,6 +551,23 @@ namespace QuantConnect.Algorithm
             RegisterIndicator(symbol, delta, ResolveConsolidator(symbol, resolution));
             RegisterIndicator(symbol.Underlying, delta, ResolveConsolidator(symbol, resolution));
             return delta;
+        }
+
+        /// <summary>
+        /// Creates a new Delta indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The option symbol whose values we want as an indicator</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="optionModel">The option pricing model used to estimate Delta</param>
+        /// <param name="ivModel">The option pricing model used to estimate IV</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <returns>A new Delta indicator for the specified symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public Delta Δ(Symbol symbol, decimal? riskFreeRate = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        {
+            return D(symbol, riskFreeRate, optionModel, ivModel, resolution);
         }
 
         /// <summary>

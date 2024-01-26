@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Indicators
             => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel);
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm) 
-            => algorithm.Delta(_symbol);
+            => algorithm.D(_symbol);
 
         [SetUp]
         public void SetUp()
