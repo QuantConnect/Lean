@@ -363,48 +363,30 @@ namespace QuantConnect.Tests.API
         }
 
         [Test]
-        public void AddAndDeleteBacktestTags()
+        public void UpdatesBacktestTags()
         {
             // We will be using the existing TestBacktest for this test
             var tags = new List<string> { "tag1", "tag2", "tag3" };
 
             // Add the tags to the backtest
-            var addTagsResult = ApiClient.AddBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId, tags);
+            var addTagsResult = ApiClient.UpdateBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId, tags);
             Assert.IsTrue(addTagsResult.Success, $"Error adding tags to backtest:\n    {string.Join("\n    ", addTagsResult.Errors)}");
 
-            // Read the backtest tags and verify they were added
-            var readTagsResult = ApiClient.GetBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId);
-            Assert.IsTrue(readTagsResult.Success, $"Error reading backtest tags:\n    {string.Join("\n    ", readTagsResult.Errors)}");
-            CollectionAssert.AreEquivalent(tags, readTagsResult.Tags);
+            // Read the backtest and verify the tags were added
+            var backtestsResult = ApiClient.ListBacktests(TestProject.ProjectId);
+            Assert.IsTrue(backtestsResult.Success, $"Error getting backtests:\n    {string.Join("\n    ", backtestsResult.Errors)}");
+            Assert.AreEqual(1, backtestsResult.Backtests.Count);
+            CollectionAssert.AreEquivalent(tags, backtestsResult.Backtests[0].Tags);
 
-            // Delete one tag from the backtest
-            var deleteTagResult = ApiClient.DeleteBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId, tags.Take(1).ToList());
-            Assert.IsTrue(deleteTagResult.Success, $"Error deleting tag from backtest:\n    {string.Join("\n    ", deleteTagResult.Errors)}");
+            // Remove all tags from the backtest
+            var deleteTagsResult = ApiClient.UpdateBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId, new List<string>());
+            Assert.IsTrue(deleteTagsResult.Success, $"Error deleting tags from backtest:\n    {string.Join("\n    ", deleteTagsResult.Errors)}");
 
-            // Read the backtest tags and verify the tag was deleted
-            readTagsResult = ApiClient.GetBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId);
-            Assert.IsTrue(readTagsResult.Success, $"Error reading backtest tags:\n    {string.Join("\n    ", readTagsResult.Errors)}");
-            var remainingTags = tags.Skip(1).ToList();
-            CollectionAssert.AreEquivalent(remainingTags, readTagsResult.Tags);
-
-            // Delete the remaining tags from the backtest
-            deleteTagResult = ApiClient.DeleteBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId, remainingTags);
-            Assert.IsTrue(deleteTagResult.Success, $"Error deleting tag from backtest:\n    {string.Join("\n    ", deleteTagResult.Errors)}");
-
-            // Read the backtest tags and verify the tags were deleted
-            readTagsResult = ApiClient.GetBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId);
-            Assert.IsTrue(readTagsResult.Success, $"Error reading backtest tags:\n    {string.Join("\n    ", readTagsResult.Errors)}");
-            CollectionAssert.IsEmpty(readTagsResult.Tags);
-
-            // Override the whole set of tags
-            var newTags = new List<string> { "tag4", "tag5", "tag6" };
-            var updateTagsResult = ApiClient.UpdateBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId, newTags);
-            Assert.IsTrue(updateTagsResult.Success, $"Error updating backtest tags:\n    {string.Join("\n    ", updateTagsResult.Errors)}");
-
-            // Read the backtest tags and verify the tags were updated
-            readTagsResult = ApiClient.GetBacktestTags(TestProject.ProjectId, TestBacktest.BacktestId);
-            Assert.IsTrue(readTagsResult.Success, $"Error reading backtest tags:\n    {string.Join("\n    ", readTagsResult.Errors)}");
-            CollectionAssert.AreEquivalent(newTags, readTagsResult.Tags);
+            // Read the backtest and verify the tags were deleted
+            backtestsResult = ApiClient.ListBacktests(TestProject.ProjectId);
+            Assert.IsTrue(backtestsResult.Success, $"Error getting backtests:\n    {string.Join("\n    ", backtestsResult.Errors)}");
+            Assert.AreEqual(1, backtestsResult.Backtests.Count);
+            Assert.AreEqual(0, backtestsResult.Backtests[0].Tags.Count);
         }
 
         private static string GetTimestamp()

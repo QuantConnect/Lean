@@ -110,6 +110,12 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "parameterSet")]
         public ParameterSet ParameterSet { get; set; }
+
+        /// <summary>
+        /// Collection of tags for the backtest
+        /// </summary>
+        [JsonProperty(PropertyName = "tags")]
+        public List<string> Tags { get; set; }
     }
 
     /// <summary>
