@@ -225,6 +225,9 @@
   // To get your access token go to https://www.eia.gov/opendata
   "us-energy-information-auth-token": "",
 
+  // Required for IEX history requests
+  "iex-cloud-api-key": "",
+
   // Required for market data from Coin API
   "coinapi-api-key": "",
   "coinapi-product": "free", // free, startup, streamer, professional, enterprise
