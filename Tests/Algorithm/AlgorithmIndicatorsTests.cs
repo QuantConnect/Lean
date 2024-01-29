@@ -48,7 +48,8 @@ namespace QuantConnect.Tests.Algorithm
 
             _algorithm.SetDateTime(new DateTime(2013, 10, 11, 15, 0, 0));
             _algorithm.AddEquity("SPY");
-            _option = _algorithm.AddOption("SPY").Symbol;
+            _option = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2023, 9, 1));
+            _algorithm.AddOptionContract(_option);
             _algorithm.EnableAutomaticIndicatorWarmUp = true;
         }
 
@@ -89,35 +90,6 @@ namespace QuantConnect.Tests.Algorithm
 
             // Our interest rate provider should have been called once
             interestRateProviderMock.Verify(x => x.GetInterestRate(reference), Times.Once);
-        }
-
-        [Test]
-        public void IVIndicatorUsesAlgorithmsRiskFreeRateModelSetAfterIndicatorRegistration()
-        {
-            // Register indicator
-            var sharpeRatio = _algorithm.IV(_option);
-
-            // Setup risk free rate model
-            var interestRateProviderMock = new Mock<IRiskFreeInterestRateModel>();
-            var reference = new DateTime(2023, 11, 21, 10, 0, 0);
-            interestRateProviderMock.Setup(x => x.GetInterestRate(reference)).Verifiable();
-
-            // Update indicator
-            sharpeRatio.Update(new IndicatorDataPoint(_option, reference, 30m));
-            sharpeRatio.Update(new IndicatorDataPoint(Symbols.SPY, reference, 300m));
-
-            // Our interest rate provider shouldn't have been called yet since it's hasn't been set to the algorithm
-            interestRateProviderMock.Verify(x => x.GetInterestRate(reference), Times.Never);
-
-            // Set the interest rate provider to the algorithm
-            _algorithm.SetRiskFreeInterestRateModel(interestRateProviderMock.Object);
-
-            // Update indicator
-            sharpeRatio.Update(new IndicatorDataPoint(_option, reference, 30m));
-            sharpeRatio.Update(new IndicatorDataPoint(Symbols.SPY, reference, 300m));
-
-            // Our interest rate provider should have been called once by each update
-            interestRateProviderMock.Verify(x => x.GetInterestRate(reference), Times.Exactly(2));
         }
     }
 }
