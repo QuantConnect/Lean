@@ -18,6 +18,7 @@ using System;
 using QuantConnect.Orders;
 using QuantConnect.Statistics;
 using System.Collections.Generic;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Packets
 {
@@ -35,7 +36,6 @@ namespace QuantConnect.Packets
         /// Rolling window detailed statistics.
         /// </summary>
         public AlgorithmPerformance TotalPerformance { get; set; }
-
         /// <summary>
         /// Creates a new instance
         /// </summary>
@@ -48,18 +48,12 @@ namespace QuantConnect.Packets
             List<OrderEvent> orderEvents,
             AlgorithmPerformance totalPerformance = null,
             AlgorithmConfiguration algorithmConfiguration = null,
-            IDictionary<string, string> state = null)
+            IDictionary<string, string> state = null,
+            List<PortfolioState> portfolioStates = null)
+            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, algorithmConfiguration, state, portfolioStates)
         {
-            Charts = charts;
-            Orders = orders;
-            ProfitLoss = profitLoss;
-            Statistics = statistics;
-            RuntimeStatistics = runtimeStatistics;
             RollingWindow = rollingWindow;
-            OrderEvents = orderEvents;
             TotalPerformance = totalPerformance;
-            AlgorithmConfiguration = algorithmConfiguration;
-            State = state;
         }
     }
 }

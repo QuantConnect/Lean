@@ -61,7 +61,9 @@ namespace QuantConnect
             writer.WritePropertyName("Series");
             writer.WriteStartObject();
             // we sort the series in ascending count so that they are chart nicely, has value for stacked area series so they're continuous 
-            foreach (var kvp in chart.Series.OrderBy(x => x.Value.Values.Count).ThenBy(x => x.Value.Values.Select(x => (x as ChartPoint)?.Y ?? 0).Sum()))
+            foreach (var kvp in chart.Series.OrderBy(x => x.Value.Index)
+                .ThenBy(x => x.Value.Values.Count)
+                .ThenBy(x => x.Value.Values.Select(x => (x as ChartPoint)?.Y ?? 0).Sum()))
             {
                 writer.WritePropertyName(kvp.Key);
                 serializer.Serialize(writer, kvp.Value);

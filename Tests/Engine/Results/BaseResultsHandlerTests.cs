@@ -143,7 +143,7 @@ namespace QuantConnect.Tests.Engine.Results
 
             // BaseResultHandler.Algorithm property accessed once by BaseResultHandler.SampleExposure()
             // and once by BaseResultHandler.GetPortfolioValue() + 2 for sampling current equity value
-            protectedMockResultHandler.VerifyGet<IAlgorithm>("Algorithm", Times.Exactly(4));
+            protectedMockResultHandler.VerifyGet<IAlgorithm>("Algorithm", Times.Exactly(5));
 
             // Sample should've been called twice, by BaseResultHandler.SampleExposure(), once for the long and once for the short positions
             protectedMockResultHandler.Verify("Sample", Times.Exactly(2), ItExpr.IsAny<string>(), ItExpr.IsAny<string>(),

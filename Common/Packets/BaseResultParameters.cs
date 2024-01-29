@@ -17,6 +17,7 @@
 using System;
 using QuantConnect.Orders;
 using System.Collections.Generic;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Packets
 {
@@ -64,5 +65,34 @@ namespace QuantConnect.Packets
         /// The algorithm's configuration required for report generation
         /// </summary>
         public AlgorithmConfiguration AlgorithmConfiguration { get; set; }
+
+        /// <summary>
+        /// The algorithm's portfolio state
+        /// </summary>
+        public List<PortfolioState> PortfolioStates { get; set; }
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        public BaseResultParameters(IDictionary<string, Chart> charts,
+            IDictionary<int, Order> orders,
+            IDictionary<DateTime, decimal> profitLoss,
+            IDictionary<string, string> statistics,
+            IDictionary<string, string> runtimeStatistics,
+            List<OrderEvent> orderEvents,
+            AlgorithmConfiguration algorithmConfiguration = null,
+            IDictionary<string, string> state = null,
+            List<PortfolioState> portfolioStates = null)
+        {
+            Charts = charts;
+            Orders = orders;
+            ProfitLoss = profitLoss;
+            Statistics = statistics;
+            RuntimeStatistics = runtimeStatistics;
+            OrderEvents = orderEvents;
+            AlgorithmConfiguration = algorithmConfiguration;
+            State = state;
+            PortfolioStates = portfolioStates;
+        }
     }
 }

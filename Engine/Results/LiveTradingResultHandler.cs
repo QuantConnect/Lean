@@ -33,6 +33,7 @@ using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Positions;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 
@@ -56,7 +57,11 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextInsightStoreUpdate;
         private DateTime _currentUtcDate;
 
-        private TimeSpan _storeInsightPeriod;
+        private readonly TimeSpan _storeInsightPeriod;
+
+        private DateTime _nextPortfolioStateUpdate;
+        private readonly TimeSpan _samplePortfolioPeriod;
+        private readonly List<PortfolioState> _intradayPortfolioStates = new();
 
         /// <summary>
         /// The earliest time of next dump to the status file
@@ -77,6 +82,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _lastChartSampleLogicCheck;
         private readonly Dictionary<string, SecurityExchangeHours> _exchangeHours;
 
+
         /// <summary>
         /// Creates a new instance
         /// </summary>
@@ -86,7 +92,7 @@ namespace QuantConnect.Lean.Engine.Results
             _cancellationTokenSource = new CancellationTokenSource();
             ResamplePeriod = TimeSpan.FromSeconds(2);
             NotificationPeriod = TimeSpan.FromSeconds(1);
-            _storeInsightPeriod = TimeSpan.FromMinutes(10);
+            _samplePortfolioPeriod = _storeInsightPeriod = TimeSpan.FromMinutes(10);
             _streamedChartLimit = Config.GetInt("streamed-chart-limit", 12);
             _streamedChartGroupSize = Config.GetInt("streamed-chart-group-size", 3);
 
@@ -106,7 +112,10 @@ namespace QuantConnect.Lean.Engine.Results
             _api = api;
             _job = (LiveNodePacket)job;
             if (_job == null) throw new Exception("LiveResultHandler.Constructor(): Submitted Job type invalid.");
-            _currentUtcDate = DateTime.UtcNow.Date;
+            var utcNow = DateTime.UtcNow;
+            _currentUtcDate = utcNow.Date;
+
+            _nextPortfolioStateUpdate = utcNow.RoundDown(_samplePortfolioPeriod).Add(_samplePortfolioPeriod);
             base.Initialize(job, messagingHandler, api, transactionHandler);
         }
 
@@ -435,7 +444,9 @@ namespace QuantConnect.Lean.Engine.Results
                     runtimeStatistics: runtimeStatistics,
                     orderEvents: null, // we stored order events separately
                     serverStatistics: serverStatistics,
-                    state: algorithmState));
+                    state: algorithmState,
+                    // daily portfolio sampling
+                    portfolioStates: GetPortfolioStates()));
 
                 SaveResults($"{AlgorithmId}.json", result);
                 Log.Debug("LiveTradingResultHandler.Update(): status update end.");
@@ -509,7 +520,7 @@ namespace QuantConnect.Lean.Engine.Results
             // only send order and order event packet if there is actually any update
             if (deltaOrders.Count > 0 || deltaOrderEvents.Count > 0)
             {
-                result= result.Concat(new []{ new LiveResultPacket(_job, new LiveResult { Orders = deltaOrders, OrderEvents = deltaOrderEvents }) });
+                result = result.Concat(new[] { new LiveResultPacket(_job, new LiveResult { Orders = deltaOrders, OrderEvents = deltaOrderEvents }) });
             }
 
             return result;
@@ -899,7 +910,12 @@ namespace QuantConnect.Lean.Engine.Results
                     var tenminuteCharts = tenminuteSampler.SampleCharts(live.Results.Charts, start, stop);
 
                     live.Results.Charts = tenminuteCharts;
+                    lock (_intradayPortfolioStates)
+                    {
+                        live.Results.PortfolioState = new List<PortfolioState>(_intradayPortfolioStates);
+                    }
                     SaveResults(CreateKey("10minute"), live.Results);
+                    live.Results.PortfolioState = null;
 
                     // high resolution data, we only want to save an hour
                     live.Results.Charts = highResolutionCharts;
@@ -1046,6 +1062,24 @@ namespace QuantConnect.Lean.Engine.Results
 
             // Update the equity bar
             UpdateAlgorithmEquity();
+
+            if (time > _nextPortfolioStateUpdate || forceProcess)
+            {
+                _nextPortfolioStateUpdate = time.RoundDown(_samplePortfolioPeriod).Add(_samplePortfolioPeriod);
+                var newState = PortfolioState.Create(Algorithm.Portfolio, time);
+                lock (_intradayPortfolioStates)
+                {
+                    if (_intradayPortfolioStates.Count > 0 && _intradayPortfolioStates[^1].Time.Date != time.Date)
+                    {
+                        // we crossed into a new day
+                        _intradayPortfolioStates.Clear();
+                    }
+                    if (newState != null)
+                    {
+                        _intradayPortfolioStates.Add(newState);
+                    }
+                }
+            }
 
             if (time > _nextSample || forceProcess)
             {

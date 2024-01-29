@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Securities.Positions;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 
@@ -218,7 +219,7 @@ namespace QuantConnect.Lean.Engine.Results
                         runtimeStatistics,
                         new Dictionary<string, AlgorithmPerformance>(),
                         // we store the last 100 order events, the final packet will contain the full list
-                        TransactionHandler.OrderEvents.Reverse().Take(100).ToList(), state: GetAlgorithmState()));
+                        TransactionHandler.OrderEvents.Reverse().Take(100).ToList(), state: GetAlgorithmState(), portfolioStates: GetPortfolioStates()));
 
                     StoreResult(new BacktestResultPacket(_job, completeResult, Algorithm.EndDate, Algorithm.StartDate, progress));
 
@@ -306,7 +307,8 @@ namespace QuantConnect.Lean.Engine.Results
                             null, // null order events, we store them separately
                             result.Results.TotalPerformance,
                             result.Results.AlgorithmConfiguration,
-                            result.Results.State));
+                            result.Results.State,
+                            result.Results.PortfolioState));
                     }
                     // Save results
                     SaveResults(key, results);
@@ -356,7 +358,7 @@ namespace QuantConnect.Lean.Engine.Results
                     result = new BacktestResultPacket(_job,
                         new BacktestResult(new BacktestResultParameters(charts, orders, profitLoss, statisticsResults.Summary, runtime,
                             statisticsResults.RollingPerformances, orderEvents, statisticsResults.TotalPerformance,
-                            AlgorithmConfiguration.Create(Algorithm, _job), GetAlgorithmState(endTime))),
+                            AlgorithmConfiguration.Create(Algorithm, _job), GetAlgorithmState(endTime), GetPortfolioStates())),
                         Algorithm.EndDate, Algorithm.StartDate);
                 }
                 else

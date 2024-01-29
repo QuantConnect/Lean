@@ -16,7 +16,6 @@
 
 using NUnit.Framework;
 using QuantConnect.Algorithm;
-using QuantConnect.Data.Custom;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
@@ -27,6 +26,7 @@ using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Positions;
 using QuantConnect.Tests.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
@@ -253,7 +253,6 @@ namespace QuantConnect.Tests.Algorithm
                     new TestCaseData(Symbols.SPY_Option_Chain, null),
                     new TestCaseData(Symbols.SPY_C_192_Feb19_2016, null),
                     new TestCaseData(Symbols.SPY_P_192_Feb19_2016, null),
-                    new TestCaseData(Symbol.CreateBase(typeof(PortfolioState), Symbols.SPY, Market.USA), typeof(PortfolioState)),
                     new TestCaseData(Symbol.Create("CustomData", SecurityType.Base, Market.Binance), null),
                     new TestCaseData(Symbol.Create("CustomData2", SecurityType.Base, Market.COMEX), null)
                 };

@@ -429,12 +429,6 @@ namespace QuantConnect
                         resultPacket.Orders = resultPacket.Orders.GroupBy(order => order.Id)
                             .Select(ordersGroup => ordersGroup.Last()).ToList();
                     }
-
-                    if (newerPacket.Portfolio != null)
-                    {
-                        // we just keep the newest state if not null
-                        resultPacket.Portfolio = newerPacket.Portfolio;
-                    }
                 }
             }
             return resultPacket;

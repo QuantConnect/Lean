@@ -18,6 +18,7 @@ using System;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Packets
 {
@@ -54,19 +55,13 @@ namespace QuantConnect.Packets
             List<OrderEvent> orderEvents,
             IDictionary<string, string> serverStatistics = null,
             AlgorithmConfiguration algorithmConfiguration = null,
-            IDictionary<string, string> state = null)
+            IDictionary<string, string> state = null,
+            List<PortfolioState> portfolioStates = null)
+            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, algorithmConfiguration, state, portfolioStates)
         {
-            Charts = charts;
-            Orders = orders;
-            ProfitLoss = profitLoss;
             Holdings = holdings;
             CashBook = cashBook;
-            Statistics = statistics;
-            RuntimeStatistics = runtimeStatistics;
-            OrderEvents = orderEvents;
             ServerStatistics = serverStatistics ?? OS.GetServerStatistics();
-            AlgorithmConfiguration = algorithmConfiguration;
-            State = state;
         }
     }
 }

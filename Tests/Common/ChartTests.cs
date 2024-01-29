@@ -23,14 +23,18 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class ChartTests
     {
-        [TestCase(false, false)]
-        [TestCase(false, true)]
-        [TestCase(true, false)]
-        [TestCase(true, true)]
-        public void SerializeDeserializeReturnsSameSeriesValue(bool setSymbol, bool legendDisabled)
+        [TestCase(false, false, 0)]
+        [TestCase(false, true, 0)]
+        [TestCase(true, false, 0)]
+        [TestCase(true, true, 0)]
+        [TestCase(false, false, 1)]
+        [TestCase(false, true, 1)]
+        [TestCase(true, false, 1)]
+        [TestCase(true, true, 1)]
+        public void SerializeDeserializeReturnsSameSeriesValue(bool setSymbol, bool legendDisabled, int index)
         {
             var chart = new Chart("ChartName") { LegendDisabled = legendDisabled, Symbol = setSymbol ? Symbols.IBM : null };
-            var series1 = new Series("Test1");
+            var series1 = new Series("Test1") { Index = index };
             series1.AddPoint(new DateTime(2023, 03, 03), 100);
             series1.AddPoint(new DateTime(2023, 04, 03), 200);
             chart.AddSeries(series1);

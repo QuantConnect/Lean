@@ -26,12 +26,12 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
+using QuantConnect.Securities.Positions;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -121,6 +121,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// Storage for the price and equity charts of the live results.
         /// </summary>
         public ConcurrentDictionary<string, Chart> Charts { get; set; }
+
+        /// <summary>
+        /// The algorithms portfolio state
+        /// </summary>
+        public List<PortfolioState> PortfolioStates { get; set; } = new();
 
         /// <summary>
         /// True if the exit has been triggered
@@ -518,12 +523,34 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Get's the current daily portfolio state samples
+        /// </summary>
+        protected List<PortfolioState> GetPortfolioStates()
+        {
+            List<PortfolioState> portfolioStatesClone;
+            lock (PortfolioStates)
+            {
+                portfolioStatesClone = new(PortfolioStates);
+            }
+            return portfolioStatesClone;
+        }
+
+        /// <summary>
         /// Samples portfolio equity, benchmark, and daily performance
         /// Called by scheduled event every night at midnight algorithm time
         /// </summary>
         /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
         public virtual void Sample(DateTime time)
         {
+            lock (PortfolioStates)
+            {
+                // daily portfolio sampling
+                var state = PortfolioState.Create(Algorithm.Portfolio, time);
+                if (state != null)
+                {
+                    PortfolioStates.Add(state);
+                }
+            }
             var currentPortfolioValue = GetPortfolioValue();
             var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
 

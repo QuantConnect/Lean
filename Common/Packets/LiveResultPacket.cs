@@ -203,19 +203,10 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Constructor for the result class for dictionary objects
         /// </summary>
-        public LiveResult(LiveResultParameters parameters)
+        public LiveResult(LiveResultParameters parameters) : base(parameters)
         {
-            Charts = parameters.Charts;
-            Orders = parameters.Orders;
-            ProfitLoss = parameters.ProfitLoss;
-            Statistics = parameters.Statistics;
             Holdings = parameters.Holdings;
             CashBook = parameters.CashBook;
-            RuntimeStatistics = parameters.RuntimeStatistics;
-            OrderEvents = parameters.OrderEvents;
-            ServerStatistics = parameters.ServerStatistics;
-            AlgorithmConfiguration = parameters.AlgorithmConfiguration;
-            State = parameters.State;
         }
     }
 } // End of Namespace:
