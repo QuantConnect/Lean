@@ -107,6 +107,32 @@ namespace QuantConnect.Orders
     }
 
     /// <summary>
+    /// Position of the order
+    /// </summary>
+    public enum OrderPosition
+    {
+        /// <summary>
+        /// Indicates the buy order will result in a long position, starting either from zero or an existing long position (0)
+        /// </summary>
+        BuyToOpen,
+
+        /// <summary>
+        /// Indicates the buy order is starting from an existing short position, resulting in a closed or long position (1)
+        /// </summary>
+        BuyToClose,
+
+        /// <summary>
+        /// Indicates the sell order will result in a short position, starting either from zero or an existing short position (2)
+        /// </summary>
+        SellToOpen,
+
+        /// <summary>
+        /// Indicates the sell order is starting from an existing long position, resulting in a closed or short position (3)
+        /// </summary>
+        SellToClose,
+    }
+
+    /// <summary>
     /// Fill status of the order class.
     /// </summary>
     public enum OrderStatus
