@@ -919,6 +919,79 @@ namespace QuantConnect.Securities
             public const string Nikkei225Dollar = "NKD";
 
             /// <summary>
+            /// Nikkei-225 Yen denominated Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Nikkei225YenCME = "NIY";
+
+
+            // <summary>
+            /// E-mini Nikkei 225 Yen denominated Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Nikkei225YenEMini = "ENY";
+
+            // <summary>
+            /// E-MINI FTSE China 50 Index Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string FTSEChina50EMini = "FT5";
+
+            // <summary>
+            /// E-mini FTSE 100 Index (GBP) Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string FTSE100EMini = "FT1";
+
+            // <summary>
+            /// E-MINI S&P EUROPE 350 ESG Index Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string SPEurop350ESGEMini = "E3G";
+
+            // <summary>
+            /// E-MINI USD Denominated FTSE 100 Index Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string FTSE100USDEMini = "FTU";
+
+            // <summary>
+            /// USD Denominated Topix Index Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string TOPIXUSD = "TPD";
+
+            // <summary>
+            /// YEN Denominated Topix Index Futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string TOPIXYEN = "TPY";
+
+            // <summary>
+            /// Dow Jones Real Estate futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string DowJonesRealEstate = "RX";
+
+            // <summary>
+            /// E-mini SP500 ESG futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string SP500EMiniESG = "ESG";
+
+            // <summary>
+            /// E-mini Russell 1000 futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Russell1000EMini = "RS1";
+
+            /// <summary>
+            /// S&P 500 Annual dividend index futures on CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string SP500AnnualDividendIndex = "SDA";
+
+            /// <summary>
             /// Bloomberg Commodity Index Futures
             /// </summary>
             /// <returns>The symbol</returns>
