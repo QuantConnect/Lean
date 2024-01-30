@@ -22,6 +22,11 @@ namespace QuantConnect.Securities
     public class ImmediateSettlementModel : ISettlementModel
     {
         /// <summary>
+        /// Unsettled cash amount for the security
+        /// </summary>
+        public virtual decimal UnsettledCash { get; }
+
+        /// <summary>
         /// Applies cash settlement rules
         /// </summary>
         /// <param name="applyFundsParameters">The funds application parameters</param>
@@ -38,15 +43,6 @@ namespace QuantConnect.Securities
         /// <param name="settlementParameters">The settlement parameters</param>
         public virtual void Scan(ScanSettlementModelParameters settlementParameters)
         {
-        }
-
-        /// <summary>
-        /// Check if there are unsettled funds that still need to be settled
-        /// </summary>
-        /// <returns>Whether there are unsettled funds for the security</returns>
-        public virtual bool HasUnsettledFunds()
-        {
-            return false;
         }
     }
 }

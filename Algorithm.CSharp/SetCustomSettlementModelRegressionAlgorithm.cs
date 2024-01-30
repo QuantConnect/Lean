@@ -133,9 +133,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public bool HasUnsettledFunds()
-        {
-            return false;
-        }
+        /// <summary>
+        /// Unsettled cash amount for the security
+        /// </summary>
+        public decimal UnsettledCash { get; }
     }
 }

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities
 {
@@ -31,6 +32,11 @@ namespace QuantConnect.Securities
         /// The list of pending funds waiting for settlement time
         /// </summary>
         private readonly Queue<UnsettledCashAmount> _unsettledCashAmounts;
+
+        /// <summary>
+        /// Unsettled cash amount for the security
+        /// </summary>
+        public decimal UnsettledCash => _unsettledCashAmounts.Sum(x => x.Amount);
 
         /// <summary>
         /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
@@ -108,18 +114,6 @@ namespace QuantConnect.Securities
                     // update settled cashbook
                     settlementParameters.Portfolio.CashBook[item.Currency].AddAmount(item.Amount);
                 }
-            }
-        }
-
-        /// <summary>
-        /// Check if there are unsettled funds that still need to be settled
-        /// </summary>
-        /// <returns>Whether there are unsettled funds for the security</returns>
-        public bool HasUnsettledFunds()
-        {
-            lock (_unsettledCashAmounts)
-            {
-                return _unsettledCashAmounts.Count > 0;
             }
         }
     }

@@ -63,7 +63,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // don't remove if there are unsettled positions
-                if (member.SettlementModel.HasUnsettledFunds())
+                if (member.SettlementModel.UnsettledCash > 0)
                 {
                     return false;
                 }

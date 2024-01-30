@@ -33,9 +33,8 @@ namespace QuantConnect.Securities
         void Scan(ScanSettlementModelParameters settlementParameters);
 
         /// <summary>
-        /// Check if there are unsettled funds that still need to be settled
+        /// Unsettled cash amount for the security
         /// </summary>
-        /// <returns>Whether there are unsettled funds for the security</returns>
-        bool HasUnsettledFunds();
+        decimal UnsettledCash { get; }
     }
 }
