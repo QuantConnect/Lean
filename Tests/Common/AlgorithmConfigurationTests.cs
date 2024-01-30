@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
-        public void JsonSerialization()
+        public void JsonRoundtrip()
         {
             var algorithm = new QCAlgorithm();
             algorithm.SetName("Backtest name");
@@ -66,7 +66,23 @@ namespace QuantConnect.Tests.Common
 
             var serialized = JsonConvert.SerializeObject(algorithmConfiguration);
 
-            Assert.AreEqual($"{{\"Name\":\"Backtest name\",\"Tags\":[\"tag1\",\"tag2\"],\"AccountCurrency\":\"GBP\",\"Brokerage\":32,\"AccountType\":1,\"Parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"OutOfSampleMaxEndDate\":\"2023-01-01T00:00:00\",\"OutOfSampleDays\":30,\"StartDate\":\"1998-01-01 00:00:00\",\"EndDate\":\"{algorithm.EndDate.ToString(DateFormat.UI)}\",\"TradingDaysPerYear\":252}}", serialized);
+            Assert.AreEqual($"{{\"Name\":\"Backtest name\",\"Tags\":[\"tag1\",\"tag2\"],\"AccountCurrency\":\"GBP\",\"Brokerage\":32," +
+                $"\"AccountType\":1,\"Parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"OutOfSampleMaxEndDate\":\"2023-01-01T00:00:00\"," +
+                $"\"OutOfSampleDays\":30,\"StartDate\":\"1998-01-01 00:00:00\",\"EndDate\":\"{algorithm.EndDate.ToString(DateFormat.UI)}\",\"TradingDaysPerYear\":252}}", serialized);
+
+            var deserialize = JsonConvert.DeserializeObject<AlgorithmConfiguration>(serialized);
+
+            Assert.AreEqual(algorithmConfiguration.Name, deserialize.Name);
+            Assert.AreEqual(algorithmConfiguration.Parameters, deserialize.Parameters);
+            Assert.AreEqual(algorithmConfiguration.AccountCurrency, deserialize.AccountCurrency);
+            Assert.AreEqual(algorithmConfiguration.AccountType, deserialize.AccountType);
+            Assert.AreEqual(algorithmConfiguration.BrokerageName, deserialize.BrokerageName);
+            Assert.AreEqual(new DateTime(2024, 01, 29, 23, 59, 59), deserialize.EndDate);
+            Assert.AreEqual(algorithmConfiguration.OutOfSampleDays, deserialize.OutOfSampleDays);
+            Assert.AreEqual(algorithmConfiguration.TradingDaysPerYear, deserialize.TradingDaysPerYear);
+            Assert.AreEqual(algorithmConfiguration.OutOfSampleMaxEndDate, deserialize.OutOfSampleMaxEndDate);
+            Assert.AreEqual(algorithmConfiguration.StartDate, deserialize.StartDate);
+            Assert.AreEqual(algorithmConfiguration.Tags, deserialize.Tags);
         }
 
         private static TestCaseData[] AlgorithmConfigurationTestCases => new[]
