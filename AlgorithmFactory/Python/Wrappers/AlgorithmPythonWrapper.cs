@@ -265,6 +265,53 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// A list of tags associated with the algorithm or the backtest, useful for categorization
+        /// </summary>
+        public HashSet<string> Tags
+        {
+            get
+            {
+                return _baseAlgorithm.Tags;
+            }
+            set
+            {
+                _baseAlgorithm.Tags = value;
+            }
+        }
+
+        /// <summary>
+        /// Event fired algorithm's name is changed
+        /// </summary>
+        public event AlgorithmEvent<string> NameUpdated
+        {
+            add
+            {
+                _baseAlgorithm.NameUpdated += value;
+            }
+
+            remove
+            {
+                _baseAlgorithm.NameUpdated -= value;
+            }
+        }
+
+        /// <summary>
+        /// Event fired when the tag collection is updated
+        /// </summary>
+        public event AlgorithmEvent<HashSet<string>> TagsUpdated
+        {
+            add
+            {
+                _baseAlgorithm.TagsUpdated += value;
+            }
+
+            remove
+            {
+                _baseAlgorithm.TagsUpdated -= value;
+            }
+        }
+
+        /// <summary>
         /// Notification manager for storing and processing live event messages
         /// </summary>
         public NotificationManager Notify => _baseAlgorithm.Notify;
@@ -1137,5 +1184,32 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="symbol">The symbol to get the ticker for</param>
         /// <returns>The mapped ticker for a symbol</returns>
         public string Ticker(Symbol symbol) => _baseAlgorithm.Ticker(symbol);
+
+        /// <summary>
+        /// Sets name to the currently running backtest
+        /// </summary>
+        /// <param name="name">The name for the backtest</param>
+        public void SetName(string name)
+        {
+            _baseAlgorithm.SetName(name);
+        }
+
+        /// <summary>
+        /// Adds a tag to the algorithm
+        /// </summary>
+        /// <param name="tag">The tag to add</param>
+        public void AddTag(string tag)
+        {
+            _baseAlgorithm.AddTag(tag);
+        }
+
+        /// <summary>
+        /// Sets the tags for the algorithm
+        /// </summary>
+        /// <param name="tags">The tags</param>
+        public void SetTags(HashSet<string> tags)
+        {
+            _baseAlgorithm.SetTags(tags);
+        }
     }
 }

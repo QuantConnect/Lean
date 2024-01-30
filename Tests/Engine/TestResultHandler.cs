@@ -207,5 +207,13 @@ namespace QuantConnect.Tests.Engine
         public void SetSummaryStatistic(string name, string value)
         {
         }
+
+        public void AlgorithmTagsUpdated(HashSet<string> tags)
+        {
+        }
+
+        public void AlgorithmNameUpdated(string name)
+        {
+        }
     }
 }

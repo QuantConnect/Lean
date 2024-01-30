@@ -187,5 +187,11 @@ namespace QuantConnect.Packets
 
         /// Language model chat response
         LanguageModelChatResponse,
+
+        /// Algorithm name update
+        AlgorithmNameUpdate,
+
+        /// Algorithm tags update
+        AlgorithmTagsUpdate,
     }
 }

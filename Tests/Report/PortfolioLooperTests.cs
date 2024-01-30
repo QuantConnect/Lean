@@ -209,7 +209,8 @@ namespace QuantConnect.Tests.Report
             var orders = new[] { order };
 
             var looper = PortfolioLooper.FromOrders(series, orders,
-                new AlgorithmConfiguration(currency, BrokerageName.Binance, AccountType.Cash, new Dictionary<string, string>(), DateTime.MinValue, DateTime.MinValue, null, 0));
+                new AlgorithmConfiguration("AlgorightmName", new HashSet<string>(), currency, BrokerageName.Binance, AccountType.Cash,
+                    new Dictionary<string, string>(), DateTime.MinValue, DateTime.MinValue, null, 0));
             var pointInTimePortfolio = looper.ToList();
 
             Assert.AreEqual(2, pointInTimePortfolio.Count);

@@ -30,6 +30,18 @@ namespace QuantConnect
     public class AlgorithmConfiguration
     {
         /// <summary>
+        /// The algorithm's name
+        /// </summary>
+        [JsonProperty(PropertyName = "Name")]
+        public string Name;
+
+        /// <summary>
+        /// List of tags associated with the algorithm
+        /// </summary>
+        [JsonProperty(PropertyName = "Tags")]
+        public IReadOnlySet<string> Tags;
+
+        /// <summary>
         /// The algorithm's account currency
         /// </summary>
         [JsonProperty(PropertyName = "AccountCurrency", NullValueHandling = NullValueHandling.Ignore)]
@@ -90,9 +102,12 @@ namespace QuantConnect
         /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmConfiguration"/> class
         /// </summary>
-        public AlgorithmConfiguration(string accountCurrency, BrokerageName brokerageName, AccountType accountType, IReadOnlyDictionary<string, string> parameters,
-            DateTime startDate, DateTime endDate, DateTime? outOfSampleMaxEndDate, int outOfSampleDays = 0, int tradingDaysPerYear = 0)
+        public AlgorithmConfiguration(string name, IReadOnlySet<string> tags, string accountCurrency, BrokerageName brokerageName,
+            AccountType accountType, IReadOnlyDictionary<string, string> parameters, DateTime startDate, DateTime endDate,
+            DateTime? outOfSampleMaxEndDate, int outOfSampleDays = 0, int tradingDaysPerYear = 0)
         {
+            Name = name;
+            Tags = tags;
             OutOfSampleMaxEndDate = outOfSampleMaxEndDate;
             TradingDaysPerYear = tradingDaysPerYear;
             OutOfSampleDays = outOfSampleDays;
@@ -122,6 +137,8 @@ namespace QuantConnect
         public static AlgorithmConfiguration Create(IAlgorithm algorithm, BacktestNodePacket backtestNodePacket)
         {
             return new AlgorithmConfiguration(
+                algorithm.Name,
+                algorithm.Tags,
                 algorithm.AccountCurrency,
                 BrokerageModel.GetBrokerageName(algorithm.BrokerageModel),
                 algorithm.BrokerageModel.AccountType,
