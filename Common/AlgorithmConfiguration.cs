@@ -39,7 +39,7 @@ namespace QuantConnect
         /// List of tags associated with the algorithm
         /// </summary>
         [JsonProperty(PropertyName = "Tags")]
-        public IReadOnlySet<string> Tags;
+        public ISet<string> Tags;
 
         /// <summary>
         /// The algorithm's account currency
@@ -102,7 +102,7 @@ namespace QuantConnect
         /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmConfiguration"/> class
         /// </summary>
-        public AlgorithmConfiguration(string name, IReadOnlySet<string> tags, string accountCurrency, BrokerageName brokerageName,
+        public AlgorithmConfiguration(string name, ISet<string> tags, string accountCurrency, BrokerageName brokerageName,
             AccountType accountType, IReadOnlyDictionary<string, string> parameters, DateTime startDate, DateTime endDate,
             DateTime? outOfSampleMaxEndDate, int outOfSampleDays = 0, int tradingDaysPerYear = 0)
         {
