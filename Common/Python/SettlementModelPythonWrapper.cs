@@ -35,7 +35,7 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    return _model.UnsettledCash;
+                    return _model.get_UnsettledCash();
                 }
             }
         }
