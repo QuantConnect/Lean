@@ -87,54 +87,45 @@ namespace QuantConnect.Tests.API
                 Code = HttpUtility.HtmlEncode(File.ReadAllText("../../../Algorithm.CSharp/BubbleAlgorithm.cs"))
             };
 
-            // Create a new project
-            var project = ApiClient.CreateProject($"Test project - {GetTimestamp()}", Language.CSharp, TestOrganization);
-            Assert.IsTrue(project.Success);
-            Assert.IsTrue(project.Projects.First().ProjectId > 0);
-
             // Add random file
-            var randomAdd = ApiClient.AddProjectFile(project.Projects.First().ProjectId, fakeFile.Name, fakeFile.Code);
+            var randomAdd = ApiClient.AddProjectFile(TestProject.ProjectId, fakeFile.Name, fakeFile.Code);
             Assert.IsTrue(randomAdd.Success);
             Assert.IsTrue(randomAdd.Files.First().Code == fakeFile.Code);
             Assert.IsTrue(randomAdd.Files.First().Name == fakeFile.Name);
             // Update names of file
-            var updatedName = ApiClient.UpdateProjectFileName(project.Projects.First().ProjectId, randomAdd.Files.First().Name, realFile.Name);
+            var updatedName = ApiClient.UpdateProjectFileName(TestProject.ProjectId, randomAdd.Files.First().Name, realFile.Name);
             Assert.IsTrue(updatedName.Success);
 
             // Replace content of file
-            var updateContents = ApiClient.UpdateProjectFileContent(project.Projects.First().ProjectId, realFile.Name, realFile.Code);
+            var updateContents = ApiClient.UpdateProjectFileContent(TestProject.ProjectId, realFile.Name, realFile.Code);
             Assert.IsTrue(updateContents.Success);
 
             // Read single file
-            var readFile = ApiClient.ReadProjectFile(project.Projects.First().ProjectId, realFile.Name);
+            var readFile = ApiClient.ReadProjectFile(TestProject.ProjectId, realFile.Name);
             Assert.IsTrue(readFile.Success);
             Assert.IsTrue(readFile.Files.First().Code == realFile.Code);
             Assert.IsTrue(readFile.Files.First().Name == realFile.Name);
 
             // Add a second file
-            var secondFile = ApiClient.AddProjectFile(project.Projects.First().ProjectId, secondRealFile.Name, secondRealFile.Code);
+            var secondFile = ApiClient.AddProjectFile(TestProject.ProjectId, secondRealFile.Name, secondRealFile.Code);
             Assert.IsTrue(secondFile.Success);
             Assert.IsTrue(secondFile.Files.First().Code == secondRealFile.Code);
             Assert.IsTrue(secondFile.Files.First().Name == secondRealFile.Name);
 
             // Read multiple files
-            var readFiles = ApiClient.ReadProjectFiles(project.Projects.First().ProjectId);
+            var readFiles = ApiClient.ReadProjectFiles(TestProject.ProjectId);
             Assert.IsTrue(readFiles.Success);
             Assert.IsTrue(readFiles.Files.Count == 4); // 2 Added + 2 Automatic (Research.ipynb & Main.cs)
 
             // Delete the second file
-            var deleteFile = ApiClient.DeleteProjectFile(project.Projects.First().ProjectId, secondRealFile.Name);
+            var deleteFile = ApiClient.DeleteProjectFile(TestProject.ProjectId, secondRealFile.Name);
             Assert.IsTrue(deleteFile.Success);
 
             // Read files
-            var readFilesAgain = ApiClient.ReadProjectFiles(project.Projects.First().ProjectId);
+            var readFilesAgain = ApiClient.ReadProjectFiles(TestProject.ProjectId);
             Assert.IsTrue(readFilesAgain.Success);
             Assert.IsTrue(readFilesAgain.Files.Count == 3);
             Assert.IsTrue(readFilesAgain.Files.Any(x => x.Name == realFile.Name));
-
-            // Delete the project
-            var deleteProject = ApiClient.DeleteProject(project.Projects.First().ProjectId);
-            Assert.IsTrue(deleteProject.Success);
         }
 
         /// <summary>
@@ -143,15 +134,8 @@ namespace QuantConnect.Tests.API
         [Test]
         public void RU_ProjectNodes_Successfully()
         {
-            // Create a new project
-            var project = ApiClient.CreateProject($"Test project - {GetTimestamp()}", Language.CSharp, TestOrganization);
-            Assert.IsTrue(project.Success);
-
-            var projectId = project.Projects.First().ProjectId;
-            Assert.Greater(projectId, 0);
-
             // Read the nodes
-            var nodesResponse = ApiClient.ReadProjectNodes(projectId);
+            var nodesResponse = ApiClient.ReadProjectNodes(TestProject.ProjectId);
             Assert.IsTrue(nodesResponse.Success);
             Assert.Greater(nodesResponse.Nodes.BacktestNodes.Count, 0);
 
@@ -164,7 +148,7 @@ namespace QuantConnect.Tests.API
             var nodes = node.Active ? Array.Empty<string>() : new[] { nodeId };
 
             // Update the nodes
-            nodesResponse = ApiClient.UpdateProjectNodes(projectId, nodes);
+            nodesResponse = ApiClient.UpdateProjectNodes(TestProject.ProjectId, nodes);
             Assert.IsTrue(nodesResponse.Success);
 
             // Node has a new active state
@@ -174,7 +158,7 @@ namespace QuantConnect.Tests.API
             // Set it back to previous state
             nodes = node.Active ? Array.Empty<string>() : new[] { nodeId };
 
-            nodesResponse = ApiClient.UpdateProjectNodes(projectId, nodes);
+            nodesResponse = ApiClient.UpdateProjectNodes(TestProject.ProjectId, nodes);
             Assert.IsTrue(nodesResponse.Success);
 
             // Node has a new active state
@@ -257,7 +241,7 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(CompileState.BuildError, compileError.State); //Resulting in build fail.
 
             // Using our successful compile; launch a backtest!
-            var backtestName = $"{DateTime.Now.ToStringInvariant("u")} API Backtest";
+            var backtestName = $"{DateTime.UtcNow.ToStringInvariant("u")} API Backtest";
             var backtest = ApiClient.CreateBacktest(project.Projects.First().ProjectId, compileSuccess.CompileId, backtestName);
             Assert.IsTrue(backtest.Success);
 
@@ -313,27 +297,35 @@ namespace QuantConnect.Tests.API
             var projectName = $"{GetTimestamp()} Test {TestAccount} Lang {language}";
 
             // Create a default project
-            var project = ApiClient.CreateProject(projectName, language, TestOrganization);
+            var projectResult = ApiClient.CreateProject(projectName, language, TestOrganization);
+            Assert.IsTrue(projectResult.Success, $"Error creating project:\n    {string.Join("\n    ", projectResult.Errors)}");
+            var project = projectResult.Projects.First();
+
             var file = new ProjectFile { Name = algorithmName, Code = code };
-            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(project.Projects.First().ProjectId, file.Name, file.Code);
-            var compileCreate = ApiClient.CreateCompile(project.Projects.First().ProjectId);
-            var compileSuccess = WaitForCompilerResponse(project.Projects.First().ProjectId, compileCreate.CompileId);
-            var backtestName = $"{DateTime.Now.ToStringInvariant("u")} API Backtest";
-            var backtest = ApiClient.CreateBacktest(project.Projects.First().ProjectId, compileSuccess.CompileId, backtestName);
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(project.ProjectId, file.Name, file.Code);
+            Assert.IsTrue(updateProjectFileContent.Success,
+                $"Error updating project file:\n    {string.Join("\n    ", updateProjectFileContent.Errors)}");
+
+            var compileCreate = ApiClient.CreateCompile(project.ProjectId);
+            var compileSuccess = WaitForCompilerResponse(project.ProjectId, compileCreate.CompileId);
+            Assert.IsTrue(compileSuccess.Success, $"Error compiling project:\n    {string.Join("\n    ", compileSuccess.Errors)}");
+
+            var backtestName = $"ReadBacktestOrders Backtest {GetTimestamp()}";
+            var backtest = ApiClient.CreateBacktest(project.ProjectId, compileSuccess.CompileId, backtestName);
 
             // Read ongoing backtest
-            var backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
+            var backtestRead = ApiClient.ReadBacktest(project.ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Success);
 
             // Now wait until the backtest is completed and request the orders again
-            backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
-            var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId);
+            backtestRead = WaitForBacktestCompletion(project.ProjectId, backtest.BacktestId);
+            var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestOrdersRead.Any());
             Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.First().Symbol.Value);
 
             // Delete the backtest we just created
-            var deleteBacktest = ApiClient.DeleteBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
-            var deleteProject = ApiClient.DeleteProject(project.Projects.First().ProjectId);
+            var deleteBacktest = ApiClient.DeleteBacktest(project.ProjectId, backtest.BacktestId);
+            Assert.IsTrue(deleteBacktest.Success);
         }
 
         [Test]
