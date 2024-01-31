@@ -18,7 +18,6 @@ using System;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System.Collections.Generic;
-using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Packets
 {
@@ -55,9 +54,8 @@ namespace QuantConnect.Packets
             List<OrderEvent> orderEvents,
             IDictionary<string, string> serverStatistics = null,
             AlgorithmConfiguration algorithmConfiguration = null,
-            IDictionary<string, string> state = null,
-            List<PortfolioState> portfolioStates = null)
-            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, algorithmConfiguration, state, portfolioStates)
+            IDictionary<string, string> state = null)
+            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, algorithmConfiguration, state)
         {
             Holdings = holdings;
             CashBook = cashBook;

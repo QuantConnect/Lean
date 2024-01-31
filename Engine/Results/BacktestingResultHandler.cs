@@ -23,6 +23,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
+using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities.Positions;
@@ -88,18 +89,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
-        /// <param name="job">Algorithm job packet for this result handler</param>
-        /// <param name="messagingHandler">The handler responsible for communicating messages to listeners</param>
-        /// <param name="api">The api instance used for handling logs</param>
-        /// <param name="transactionHandler">The transaction handler used to get the algorithms <see cref="Order"/> information</param>
-        public override void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
+        public override void Initialize(ResultHandlerInitializeParameters parameters)
         {
-            _job = (BacktestNodePacket)job;
+            _job = (BacktestNodePacket)parameters.Job;
             State["Name"] = _job.Name;
-            _algorithmId = job.AlgorithmId;
-            _projectId = job.ProjectId;
+            _algorithmId = _job.AlgorithmId;
+            _projectId = _job.ProjectId;
             if (_job == null) throw new Exception("BacktestingResultHandler.Constructor(): Submitted Job type invalid.");
-            base.Initialize(job, messagingHandler, api, transactionHandler);
+            base.Initialize(parameters);
         }
 
         /// <summary>
@@ -219,7 +216,7 @@ namespace QuantConnect.Lean.Engine.Results
                         runtimeStatistics,
                         new Dictionary<string, AlgorithmPerformance>(),
                         // we store the last 100 order events, the final packet will contain the full list
-                        TransactionHandler.OrderEvents.Reverse().Take(100).ToList(), state: GetAlgorithmState(), portfolioStates: GetPortfolioStates()));
+                        TransactionHandler.OrderEvents.Reverse().Take(100).ToList(), state: GetAlgorithmState()));
 
                     StoreResult(new BacktestResultPacket(_job, completeResult, Algorithm.EndDate, Algorithm.StartDate, progress));
 
@@ -307,8 +304,12 @@ namespace QuantConnect.Lean.Engine.Results
                             null, // null order events, we store them separately
                             result.Results.TotalPerformance,
                             result.Results.AlgorithmConfiguration,
-                            result.Results.State,
-                            result.Results.PortfolioState));
+                            result.Results.State));
+
+                        if (result.Results.Charts.TryGetValue(PortfolioMarginKey, out var marginChart))
+                        {
+                            PortfolioMarginChart.RemoveSinglePointSeries(marginChart);
+                        }
                     }
                     // Save results
                     SaveResults(key, results);
@@ -358,7 +359,7 @@ namespace QuantConnect.Lean.Engine.Results
                     result = new BacktestResultPacket(_job,
                         new BacktestResult(new BacktestResultParameters(charts, orders, profitLoss, statisticsResults.Summary, runtime,
                             statisticsResults.RollingPerformances, orderEvents, statisticsResults.TotalPerformance,
-                            AlgorithmConfiguration.Create(Algorithm, _job), GetAlgorithmState(endTime), GetPortfolioStates())),
+                            AlgorithmConfiguration.Create(Algorithm, _job), GetAlgorithmState(endTime))),
                         Algorithm.EndDate, Algorithm.StartDate);
                 }
                 else

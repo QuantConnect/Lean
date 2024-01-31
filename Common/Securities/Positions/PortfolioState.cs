@@ -64,12 +64,10 @@ namespace QuantConnect.Securities.Positions
         /// <summary>
         /// Helper method to create the portfolio state snapshot
         /// </summary>
-        public static PortfolioState Create(SecurityPortfolioManager portfolioManager, DateTime utcNow)
+        public static PortfolioState Create(SecurityPortfolioManager portfolioManager, DateTime utcNow, decimal currentPortfolioValue)
         {
             try
             {
-                var tpv = portfolioManager.TotalPortfolioValue;
-
                 var totalMarginUsed = 0m;
                 var positionGroups = new List<PositionGroupState>(portfolioManager.Positions.Groups.Count);
                 foreach (var group in portfolioManager.Positions.Groups)
@@ -79,11 +77,11 @@ namespace QuantConnect.Securities.Positions
                     var positionGroupState = new PositionGroupState
                     {
                         MarginUsed = buyingPowerForPositionGroup,
-                        Positions = group.Positions.Select(PositionState.Create).ToList()
+                        Positions = group.Positions.ToList()
                     };
-                    if (tpv != 0)
+                    if (currentPortfolioValue != 0)
                     {
-                        positionGroupState.PortfolioValuePercentage = (buyingPowerForPositionGroup / tpv).RoundToSignificantDigits(4);
+                        positionGroupState.PortfolioValuePercentage = (buyingPowerForPositionGroup / currentPortfolioValue).RoundToSignificantDigits(4);
                     }
 
                     positionGroups.Add(positionGroupState);
@@ -93,7 +91,7 @@ namespace QuantConnect.Securities.Positions
                 var result = new PortfolioState
                 {
                     Time = utcNow,
-                    TotalPortfolioValue = tpv,
+                    TotalPortfolioValue = currentPortfolioValue,
                     TotalMarginUsed = totalMarginUsed,
                     CashBook = portfolioManager.CashBook.Where(pair => pair.Value.Amount != 0).ToDictionary(pair => pair.Key, pair => pair.Value)
                 };
@@ -143,38 +141,6 @@ namespace QuantConnect.Securities.Positions
         /// <summary>
         /// The positions which compose this group
         /// </summary>
-        public List<PositionState> Positions { get; set; }
-    }
-
-    public class PositionState
-    {
-        /// <summary>
-        /// The security identifier
-        /// </summary>
-        public SecurityIdentifier ID { get; set; }
-
-        /// <summary>
-        /// The quantity
-        /// </summary>
-        public decimal Quantity { get; set; }
-
-        /// <summary>
-        /// The unit quantity. The unit quantities of a group define the group. For example, a covered
-        /// call has 100 units of stock and -1 units of call contracts.
-        /// </summary>
-        public decimal UnitQuantity {  get; set; }
-
-        /// <summary>
-        /// Creates a new instance
-        /// </summary>
-        public static PositionState Create(IPosition position)
-        {
-            return new PositionState
-            {
-                ID = position.Symbol.ID,
-                Quantity = position.Quantity,
-                UnitQuantity = position.UnitQuantity
-            };
-        }
+        public List<IPosition> Positions { get; set; }
     }
 }

@@ -99,7 +99,7 @@ namespace QuantConnect.Lean.Engine
                 SystemHandlers.Notify.SetAuthentication(job);
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
-                AlgorithmHandlers.Results.Initialize(job, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions);
+                AlgorithmHandlers.Results.Initialize(new (job, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions, AlgorithmHandlers.MapFileProvider));
 
                 IBrokerage brokerage = null;
                 DataManager dataManager = null;

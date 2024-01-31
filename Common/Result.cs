@@ -18,8 +18,6 @@ using Newtonsoft.Json;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using System.Collections.Generic;
-using QuantConnect.Securities.Positions;
-using System.Collections.Concurrent;
 
 namespace QuantConnect
 {
@@ -86,12 +84,6 @@ namespace QuantConnect
         public AlgorithmConfiguration AlgorithmConfiguration;
 
         /// <summary>
-        /// The algorithm's portfolio state
-        /// </summary>
-        [JsonProperty(PropertyName = "PortfolioState", NullValueHandling = NullValueHandling.Ignore)]
-        public List<PortfolioState> PortfolioState;
-
-        /// <summary>
         /// Creates new empty instance
         /// </summary>
         public Result()
@@ -111,7 +103,6 @@ namespace QuantConnect
             OrderEvents = parameters.OrderEvents;
             AlgorithmConfiguration = parameters.AlgorithmConfiguration;
             State = parameters.State;
-            PortfolioState = parameters.PortfolioStates;
         }
     }
 }

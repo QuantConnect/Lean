@@ -48,9 +48,8 @@ namespace QuantConnect.Packets
             List<OrderEvent> orderEvents,
             AlgorithmPerformance totalPerformance = null,
             AlgorithmConfiguration algorithmConfiguration = null,
-            IDictionary<string, string> state = null,
-            List<PortfolioState> portfolioStates = null)
-            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, algorithmConfiguration, state, portfolioStates)
+            IDictionary<string, string> state = null)
+            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, algorithmConfiguration, state)
         {
             RollingWindow = rollingWindow;
             TotalPerformance = totalPerformance;

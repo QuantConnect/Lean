@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
@@ -60,6 +61,7 @@ namespace QuantConnect.Lean.Engine.Results
         protected const string BenchmarkKey = "Benchmark";
         protected const string DrawdownKey = "Drawdown";
         protected const string PortfolioTurnoverKey = "Portfolio Turnover";
+        protected const string PortfolioMarginKey = "Portfolio Margin";
 
         /// <summary>
         /// The main loop update interval
@@ -121,11 +123,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// Storage for the price and equity charts of the live results.
         /// </summary>
         public ConcurrentDictionary<string, Chart> Charts { get; set; }
-
-        /// <summary>
-        /// The algorithms portfolio state
-        /// </summary>
-        public List<PortfolioState> PortfolioStates { get; set; } = new();
 
         /// <summary>
         /// True if the exit has been triggered
@@ -246,6 +243,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// The order event json converter instance to use
         /// </summary>
         protected OrderEventJsonConverter OrderEventJsonConverter { get; set; }
+
+        /// <summary>
+        /// The map file provider instance to use
+        /// </summary>
+        protected IMapFileProvider MapFileProvider { get; set; }
 
         /// <summary>
         /// Creates a new instance
@@ -396,23 +398,21 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
-        /// <param name="job">Algorithm job packet for this result handler</param>
-        /// <param name="messagingHandler">The handler responsible for communicating messages to listeners</param>
-        /// <param name="api">The api instance used for handling logs</param>
-        /// <param name="transactionHandler">The transaction handler used to get the algorithms <see cref="Order"/> information</param>
-        public virtual void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
+        /// <param name="parameters">DTO parameters class to initialize a result handler</param>
+        public virtual void Initialize(ResultHandlerInitializeParameters parameters)
         {
-            _hostName = job.HostName ?? Environment.MachineName;
-            MessagingHandler = messagingHandler;
-            TransactionHandler = transactionHandler;
-            CompileId = job.CompileId;
-            AlgorithmId = job.AlgorithmId;
-            ProjectId = job.ProjectId;
-            RamAllocation = job.RamAllocation.ToStringInvariant();
+            _hostName = parameters.Job.HostName ?? Environment.MachineName;
+            MessagingHandler = parameters.MessagingHandler;
+            TransactionHandler = parameters.TransactionHandler;
+            CompileId = parameters.Job.CompileId;
+            AlgorithmId = parameters.Job.AlgorithmId;
+            ProjectId = parameters.Job.ProjectId;
+            RamAllocation = parameters.Job.RamAllocation.ToStringInvariant();
             OrderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
             _updateRunner = new Thread(Run, 0) { IsBackground = true, Name = "Result Thread" };
             _updateRunner.Start();
             State["Hostname"] = _hostName;
+            MapFileProvider = parameters.MapFileProvider;
         }
 
         /// <summary>
@@ -523,34 +523,12 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Get's the current daily portfolio state samples
-        /// </summary>
-        protected List<PortfolioState> GetPortfolioStates()
-        {
-            List<PortfolioState> portfolioStatesClone;
-            lock (PortfolioStates)
-            {
-                portfolioStatesClone = new(PortfolioStates);
-            }
-            return portfolioStatesClone;
-        }
-
-        /// <summary>
         /// Samples portfolio equity, benchmark, and daily performance
         /// Called by scheduled event every night at midnight algorithm time
         /// </summary>
         /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
         public virtual void Sample(DateTime time)
         {
-            lock (PortfolioStates)
-            {
-                // daily portfolio sampling
-                var state = PortfolioState.Create(Algorithm.Portfolio, time);
-                if (state != null)
-                {
-                    PortfolioStates.Add(state);
-                }
-            }
             var currentPortfolioValue = GetPortfolioValue();
             var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
 
@@ -567,9 +545,25 @@ namespace QuantConnect.Lean.Engine.Results
             SampleExposure(time, currentPortfolioValue);
             SampleCapacity(time);
             SamplePortfolioTurnover(time, currentPortfolioValue);
+            SamplePortfolioMargin(time, currentPortfolioValue);
 
             // Update daily portfolio value; works because we only call sample once a day
             DailyPortfolioValue = currentPortfolioValue;
+        }
+
+        private void SamplePortfolioMargin(DateTime algorithmUtcTime, decimal currentPortfolioValue)
+        {
+            var state = PortfolioState.Create(Algorithm.Portfolio, algorithmUtcTime, currentPortfolioValue);
+
+            lock (ChartLock)
+            {
+                if (!Charts.TryGetValue(PortfolioMarginKey, out var chart))
+                {
+                    chart = new Chart(PortfolioMarginKey);
+                    Charts.AddOrUpdate(PortfolioMarginKey, chart);
+                }
+                PortfolioMarginChart.AddSample(chart, state, MapFileProvider, DateTime.UtcNow.Date);
+            }
         }
 
         /// <summary>

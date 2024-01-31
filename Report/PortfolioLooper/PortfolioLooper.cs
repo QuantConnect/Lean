@@ -130,7 +130,7 @@ namespace QuantConnect.Report
             Algorithm.FromOrders(orders);
 
             // More initialization, this time with Algorithm and other misc. classes
-            _resultHandler.Initialize(job, new Messaging.Messaging(), new Api.Api(), transactions);
+            _resultHandler.Initialize(new (job, new Messaging.Messaging(), new Api.Api(), transactions, mapFileProvider));
             _resultHandler.SetAlgorithm(Algorithm, Algorithm.Portfolio.TotalPortfolioValue);
 
             Algorithm.Transactions.SetOrderProcessor(transactions);

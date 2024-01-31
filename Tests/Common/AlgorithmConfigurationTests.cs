@@ -77,7 +77,8 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(algorithmConfiguration.AccountCurrency, deserialize.AccountCurrency);
             Assert.AreEqual(algorithmConfiguration.AccountType, deserialize.AccountType);
             Assert.AreEqual(algorithmConfiguration.BrokerageName, deserialize.BrokerageName);
-            Assert.AreEqual(new DateTime(2024, 01, 29, 23, 59, 59), deserialize.EndDate);
+            var expected = new DateTime(algorithm.EndDate.Year, algorithm.EndDate.Month, algorithm.EndDate.Day, algorithm.EndDate.Hour, algorithm.EndDate.Minute, algorithm.EndDate.Second);
+            Assert.AreEqual(expected, deserialize.EndDate);
             Assert.AreEqual(algorithmConfiguration.OutOfSampleDays, deserialize.OutOfSampleDays);
             Assert.AreEqual(algorithmConfiguration.TradingDaysPerYear, deserialize.TradingDaysPerYear);
             Assert.AreEqual(algorithmConfiguration.OutOfSampleMaxEndDate, deserialize.OutOfSampleMaxEndDate);
