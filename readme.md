@@ -6,7 +6,7 @@
 
 [Lean Home][1] | [Documentation][2] | [Download Zip][3] | [Docker Hub][8] | [Nuget][9]
 
-----------
+---------- 
 
 ## Introduction ##
 
