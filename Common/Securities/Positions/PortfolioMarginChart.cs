@@ -87,7 +87,7 @@ namespace QuantConnect.Securities.Positions
                 var lastPoint = series.Values.LastOrDefault() as ChartPoint;
                 if (lastPoint != null)
                 {
-                    if (lastPoint.Time != portfolioState.Time && lastPoint.Y.HasValue)
+                    if (lastPoint.Time != portfolioState.Time)
                     {
                         lastPoint = new ChartPoint(portfolioState.Time, null);
                         series.AddPoint(lastPoint);
