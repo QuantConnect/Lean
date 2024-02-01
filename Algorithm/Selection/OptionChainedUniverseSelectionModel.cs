@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Securities.Future;
+using Python.Runtime;
 
 namespace QuantConnect.Algorithm.Selection
 {
@@ -76,6 +77,18 @@ namespace QuantConnect.Algorithm.Selection
         }
 
         /// <summary>
+        /// Creates a new instance of <see cref="OptionChainedUniverseSelectionModel"/>
+        /// </summary>
+        /// <param name="universe">The universe we want to chain to</param>
+        /// <param name="optionFilter">The python option filter universe to use</param>
+        /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
+        public OptionChainedUniverseSelectionModel(Universe universe,
+            PyObject optionFilter,
+            UniverseSettings universeSettings = null): this(universe, ConvertOptionFilter(optionFilter), universeSettings)
+        {
+        }
+
+        /// <summary>
         /// Creates the universes for this algorithm. Called once after <see cref="IAlgorithm.Initialize"/>
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
@@ -87,6 +100,14 @@ namespace QuantConnect.Algorithm.Selection
             foreach (var optionSymbol in _currentSymbols)
             {
                 yield return algorithm.CreateOptionChain(optionSymbol, _optionFilter, _universeSettings);
+            }
+        }
+
+        private static Func<OptionFilterUniverse, OptionFilterUniverse> ConvertOptionFilter(PyObject optionFilter)
+        {
+            using (Py.GIL())
+            {
+                return optionFilter.ConvertToDelegate<Func<OptionFilterUniverse, OptionFilterUniverse>>();
             }
         }
     }
