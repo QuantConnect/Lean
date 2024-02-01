@@ -26,7 +26,6 @@ namespace QuantConnect
     /// <summary>
     /// Single Parent Chart Object for Custom Charting
     /// </summary>
-    [JsonConverter(typeof(ChartJsonConverter))]
     public class Chart
     {
         /// Name of the Chart:
@@ -37,6 +36,7 @@ namespace QuantConnect
         public ChartType ChartType = ChartType.Overlay;
 
         /// List of Series Objects for this Chart:
+        [JsonConverter(typeof(ChartSeriesJsonConverter))]
         public Dictionary<string, BaseSeries> Series = new Dictionary<string, BaseSeries>();
 
         /// <summary>

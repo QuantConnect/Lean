@@ -16,10 +16,11 @@
 using System;
 using System.Linq;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace QuantConnect
 {
-    public class ChartJsonConverter : JsonConverter
+    public class ChartSeriesJsonConverter : JsonConverter
     {
         /// <summary>
         /// This converter wont be used to read JSON. Will throw exception if manually called.
@@ -28,47 +29,26 @@ namespace QuantConnect
 
         public override bool CanConvert(Type objectType)
         {
-            return typeof(Chart).IsAssignableFrom(objectType);
+            return typeof(Dictionary<string, BaseSeries>).IsAssignableFrom(objectType);
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var chart = value as Chart;
-            if (chart == null)
+            var series = value as Dictionary<string, BaseSeries>;
+            if (series == null)
             {
                 return;
             }
 
             writer.WriteStartObject();
-
-            writer.WritePropertyName("Name");
-            writer.WriteValue(chart.Name);
-            writer.WritePropertyName("ChartType");
-            writer.WriteValue(chart.ChartType);
-
-            if (chart.Symbol != null)
-            {
-                writer.WritePropertyName("Symbol");
-                serializer.Serialize(writer, chart.Symbol);
-            }
-
-            if(chart.LegendDisabled)
-            {
-                writer.WritePropertyName("LegendDisabled");
-                writer.WriteValue(true);
-            }
-
-            writer.WritePropertyName("Series");
-            writer.WriteStartObject();
             // we sort the series in ascending count so that they are chart nicely, has value for stacked area series so they're continuous 
-            foreach (var kvp in chart.Series.OrderBy(x => x.Value.Index)
+            foreach (var kvp in series.OrderBy(x => x.Value.Index)
                 .ThenBy(x => x.Value.Values.Count)
                 .ThenBy(x => x.Value.Values.Select(x => (x as ChartPoint)?.Y ?? 0).Sum()))
             {
                 writer.WritePropertyName(kvp.Key);
-                serializer.Serialize(writer, kvp.Value);
+                writer.WriteRawValue(JsonConvert.SerializeObject(kvp.Value));
             }
-            writer.WriteEndObject();
 
             writer.WriteEndObject();
         }

@@ -160,6 +160,30 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void NullChartPointValueArray()
+        {
+            var date = new DateTime(2050, 1, 1, 1, 1, 1);
+            var date2 = date.AddSeconds(1);
+            var series = new Series("Pepito Grillo", SeriesType.Bar, "$", Color.Empty, ScatterMarkerSymbol.Diamond);
+            series.AddPoint(date, 1);
+            series.AddPoint(new ChartPoint(date2, null));
+
+            var result = (Series)JsonConvert.DeserializeObject("{\"Name\":\"Pepito Grillo\",\"Unit\":\"$\",\"Index\":0,\"SeriesType\":3," +
+                "\"Values\":[[2524611661,1.0],[2524611662,null]],\"Color\":\"\",\"ScatterMarkerSymbol\":\"diamond\"}", typeof(Series));
+
+            Assert.AreEqual(2, result.Values.Count);
+            Assert.AreEqual(date, ((ChartPoint)result.Values[0]).Time);
+            Assert.AreEqual(1, ((ChartPoint)result.Values[0]).y);
+            Assert.AreEqual(date2, ((ChartPoint)result.Values[1]).Time);
+            Assert.AreEqual(null, ((ChartPoint)result.Values[1]).y);
+            Assert.AreEqual(series.Name, result.Name);
+            Assert.AreEqual(series.Unit, result.Unit);
+            Assert.AreEqual(series.SeriesType, result.SeriesType);
+            Assert.AreEqual(series.Color.ToArgb(), result.Color.ToArgb());
+            Assert.AreEqual(series.ScatterMarkerSymbol, result.ScatterMarkerSymbol);
+        }
+
+        [Test]
         public void NullCandleStickValue()
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);

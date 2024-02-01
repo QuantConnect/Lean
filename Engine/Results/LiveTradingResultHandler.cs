@@ -210,6 +210,11 @@ namespace QuantConnect.Lean.Engine.Results
                             {
                                 performanceCharts[chart.Key] = chart.Value.Clone();
                             }
+
+                            if (chartUpdates.Name == PortfolioMarginKey)
+                            {
+                                PortfolioMarginChart.RemoveSinglePointSeries(chartUpdates);
+                            }
                         }
                     }
                     Log.Debug("LiveTradingResultHandler.Update(): End build delta charts");

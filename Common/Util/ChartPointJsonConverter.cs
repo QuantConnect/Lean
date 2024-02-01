@@ -37,11 +37,6 @@ namespace QuantConnect.Util
         /// <summary>
         /// This converter wont be used to read JSON. Will throw exception if manually called.
         /// </summary>
-        public override bool CanRead => true;
-
-        /// <summary>
-        /// This converter wont be used to read JSON. Will throw exception if manually called.
-        /// </summary>
         public override bool CanWrite => false;
 
         /// <summary>
@@ -81,7 +76,7 @@ namespace QuantConnect.Util
             }
 
             var jArray = JArray.Load(reader);
-            return new ChartPoint(jArray[0].Value<long>(), jArray[1].Value<decimal>());
+            return new ChartPoint(jArray[0].Value<long>(), jArray[1].Value<decimal?>());
         }
 
         /// <summary>

@@ -208,7 +208,7 @@ namespace QuantConnect
         /// <returns></returns>
         protected List<ISeriesPoint> CloneValues()
         {
-            var clone = new List<ISeriesPoint>();
+            var clone = new List<ISeriesPoint>(Values.Count);
             foreach (var point in Values)
             {
                 clone.Add(point.Clone());
