@@ -47,6 +47,12 @@ namespace QuantConnect
         public int Index { get; set; }
 
         /// <summary>
+        /// Axis name for the chart series.
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string IndexName { get; set; }
+
+        /// <summary>
         /// Defines the visual Z index of the series on the chart.
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]

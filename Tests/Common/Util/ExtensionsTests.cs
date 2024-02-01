@@ -27,7 +27,6 @@ using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
@@ -334,16 +333,15 @@ namespace QuantConnect.Tests.Common.Util
             };
             var orders = new List<Order> { new MarketOrder(btcusd, 1000, DateTime.UtcNow, "ExpensiveOrder") { Id = 1 } };
 
-            var packet1 = new AlphaResultPacket("1", 1, insights: insights, portfolio: new AlphaStreamsPortfolioState { TotalPortfolioValue = 11 });
+            var packet1 = new AlphaResultPacket("1", 1, insights: insights);
             var packet2 = new AlphaResultPacket("1", 1, orders: orders);
-            var packet3 = new AlphaResultPacket("1", 1, orderEvents: orderEvents, portfolio: new AlphaStreamsPortfolioState { TotalPortfolioValue = 12 });
+            var packet3 = new AlphaResultPacket("1", 1, orderEvents: orderEvents);
 
             var result = new List<AlphaResultPacket> { packet1, packet2, packet3 }.Batch();
 
             Assert.AreEqual(2, result.Insights.Count);
             Assert.AreEqual(2, result.OrderEvents.Count);
             Assert.AreEqual(1, result.Orders.Count);
-            Assert.AreEqual(12, result.Portfolio.TotalPortfolioValue);
 
             Assert.IsTrue(result.Insights.SequenceEqual(insights));
             Assert.IsTrue(result.OrderEvents.SequenceEqual(orderEvents));

@@ -55,18 +55,11 @@ namespace QuantConnect.Packets
             IDictionary<string, string> serverStatistics = null,
             AlgorithmConfiguration algorithmConfiguration = null,
             IDictionary<string, string> state = null)
+            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, algorithmConfiguration, state)
         {
-            Charts = charts;
-            Orders = orders;
-            ProfitLoss = profitLoss;
             Holdings = holdings;
             CashBook = cashBook;
-            Statistics = statistics;
-            RuntimeStatistics = runtimeStatistics;
-            OrderEvents = orderEvents;
             ServerStatistics = serverStatistics ?? OS.GetServerStatistics();
-            AlgorithmConfiguration = algorithmConfiguration;
-            State = state;
         }
     }
 }

@@ -104,7 +104,7 @@ namespace QuantConnect
         /// <returns>The sampled chart</returns>
         public Chart SampleChart(Chart chart, DateTime start, DateTime stop)
         {
-            var sampledChart = new Chart(chart.Name);
+            var sampledChart = chart.CloneEmpty();
             foreach (var series in chart.Series.Values)
             {
                 var sampledSeries = Sample(series, start, stop);
@@ -129,7 +129,7 @@ namespace QuantConnect
 
             // we can't sample a single point and it doesn't make sense to sample scatter plots
             // in this case just copy the raw data
-            if (series.Values.Count < 2 || series.SeriesType == SeriesType.Scatter)
+            if (series.Values.Count < 2 || series.SeriesType == SeriesType.Scatter || series.SeriesType == SeriesType.StackedArea)
             {
                 return GetIdentitySeries(sampled, series, start, stop, truncateValues);
             }

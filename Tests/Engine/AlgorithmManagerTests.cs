@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Engine
             algorithm.Initialize();
             algorithm.PostInitialize();
 
-            results.Initialize(job, new QuantConnect.Messaging.Messaging(), new Api.Api(), transactions);
+            results.Initialize(new (job, new QuantConnect.Messaging.Messaging(), new Api.Api(), transactions, null));
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, new BacktestingBrokerage(algorithm), results);
             feed.Initialize(algorithm, job, results, null, null, null, dataManager, null, null);
@@ -183,13 +183,6 @@ namespace QuantConnect.Tests.Engine
             public bool IsActive { get; }
 
             public void OnSecuritiesChanged(SecurityChanges changes)
-            {
-            }
-
-            public void Initialize(AlgorithmNodePacket job,
-                IMessagingHandler messagingHandler,
-                IApi api,
-                ITransactionHandler transactionHandler)
             {
             }
 
@@ -271,6 +264,10 @@ namespace QuantConnect.Tests.Engine
             }
 
             public void AlgorithmNameUpdated(string name)
+            {
+            }
+
+            public void Initialize(ResultHandlerInitializeParameters parameters)
             {
             }
         }

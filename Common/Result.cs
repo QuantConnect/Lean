@@ -82,5 +82,27 @@ namespace QuantConnect
         /// </summary>
         [JsonProperty(PropertyName = "AlgorithmConfiguration", NullValueHandling = NullValueHandling.Ignore)]
         public AlgorithmConfiguration AlgorithmConfiguration;
+
+        /// <summary>
+        /// Creates new empty instance
+        /// </summary>
+        public Result()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new result from the given parameters
+        /// </summary>
+        public Result(BaseResultParameters parameters)
+        {
+            Charts = parameters.Charts;
+            Orders = parameters.Orders;
+            ProfitLoss = parameters.ProfitLoss;
+            Statistics = parameters.Statistics;
+            RuntimeStatistics = parameters.RuntimeStatistics;
+            OrderEvents = parameters.OrderEvents;
+            AlgorithmConfiguration = parameters.AlgorithmConfiguration;
+            State = parameters.State;
+        }
     }
 }

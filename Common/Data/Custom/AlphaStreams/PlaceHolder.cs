@@ -13,25 +13,12 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
+using System;
 
-namespace QuantConnect.Tests.Common
+namespace QuantConnect.Data.Custom.AlphaStreams
 {
-    [TestFixture]
-    public class CandlestickSeriesTest
+    [Obsolete("'QuantConnect.Data.Custom.Alphas' namespace is obsolete")]
+    public static class PlaceHolder
     {
-        [TestCase(null)]
-        [TestCase("IndexName")]
-        public void Clone(string indexName)
-        {
-            var series = new CandlestickSeries("A", 8, "TT") { ZIndex = 98, Index = 8, IndexName = indexName };
-            var result = (CandlestickSeries)series.Clone();
-
-            Assert.AreEqual(series.Name, result.Name);
-            Assert.AreEqual(series.Unit, result.Unit);
-            Assert.AreEqual(series.SeriesType, result.SeriesType);
-            Assert.AreEqual(series.Index, result.Index);
-            Assert.AreEqual(series.ZIndex, result.ZIndex);
-        }
     }
 }

@@ -64,5 +64,27 @@ namespace QuantConnect.Packets
         /// The algorithm's configuration required for report generation
         /// </summary>
         public AlgorithmConfiguration AlgorithmConfiguration { get; set; }
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        public BaseResultParameters(IDictionary<string, Chart> charts,
+            IDictionary<int, Order> orders,
+            IDictionary<DateTime, decimal> profitLoss,
+            IDictionary<string, string> statistics,
+            IDictionary<string, string> runtimeStatistics,
+            List<OrderEvent> orderEvents,
+            AlgorithmConfiguration algorithmConfiguration = null,
+            IDictionary<string, string> state = null)
+        {
+            Charts = charts;
+            Orders = orders;
+            ProfitLoss = profitLoss;
+            Statistics = statistics;
+            RuntimeStatistics = runtimeStatistics;
+            OrderEvents = orderEvents;
+            AlgorithmConfiguration = algorithmConfiguration;
+            State = state;
+        }
     }
 }
