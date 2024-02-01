@@ -64,6 +64,12 @@ namespace QuantConnect
         public SeriesType SeriesType { get; set; }
 
         /// <summary>
+        /// An optional tooltip template
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string Tooltip { get; set; }
+
+        /// <summary>
         /// The series list of values.
         /// These values are assumed to be in ascending time order (first points earliest, last points latest)
         /// </summary>

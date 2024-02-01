@@ -26,18 +26,26 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class SeriesJsonConverterTests
     {
-        [TestCase(null, null, null)]
-        [TestCase(87, null, null)]
-        [TestCase(null, "tooltip", null)]
-        [TestCase(87, "tooltip", null)]
-        [TestCase(null, null, "Index Name")]
-        [TestCase(87, null, "Index Name")]
-        [TestCase(null, "tooltip", "Index Name")]
-        [TestCase(87, "tooltip", "Index Name")]
-        public void SerializeDeserializeReturnsSameSeriesValue(int? zIndex, string tooltip, string indexName)
+        [TestCase(null, null, null, "Tooltip template")]
+        [TestCase(87, null, null, "Tooltip template")]
+        [TestCase(null, "tooltip", null, "Tooltip template")]
+        [TestCase(87, "tooltip", null, "Tooltip template")]
+        [TestCase(null, null, "Index Name", "Tooltip template")]
+        [TestCase(87, null, "Index Name", "Tooltip template")]
+        [TestCase(null, "tooltip", "Index Name", "Tooltip template")]
+        [TestCase(87, "tooltip", "Index Name", "Tooltip template")]
+        [TestCase(null, null, null, null)]
+        [TestCase(87, null, null, null)]
+        [TestCase(null, "tooltip", null, null)]
+        [TestCase(87, "tooltip", null, null)]
+        [TestCase(null, null, "Index Name", null)]
+        [TestCase(87, null, "Index Name", null)]
+        [TestCase(null, "tooltip", "Index Name", null)]
+        [TestCase(87, "tooltip", "Index Name", null)]
+        public void SerializeDeserializeReturnsSameSeriesValue(int? zIndex, string tooltip, string indexName, string toolTip)
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
-            var series = new Series("Pepito Grillo", SeriesType.Bar, "%", Color.Blue, ScatterMarkerSymbol.Diamond) { ZIndex = zIndex, Index = 6, IndexName = indexName };
+            var series = new Series("Pepito Grillo", SeriesType.Bar, "%", Color.Blue, ScatterMarkerSymbol.Diamond) { ZIndex = zIndex, Index = 6, IndexName = indexName, Tooltip = toolTip };
             series.AddPoint(date, 1, tooltip);
             series.AddPoint(date.AddSeconds(1), 2, tooltip);
 
@@ -53,6 +61,7 @@ namespace QuantConnect.Tests.Common.Util
                 Assert.AreEqual(values[i].y, resultValues[i].y);
                 Assert.AreEqual(values[i].Tooltip, resultValues[i].Tooltip);
             }
+            Assert.AreEqual(series.Tooltip, result.Tooltip);
             Assert.AreEqual(series.Name, result.Name);
             Assert.AreEqual(series.Unit, result.Unit);
             Assert.AreEqual(series.SeriesType, result.SeriesType);
@@ -86,14 +95,18 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(series.ScatterMarkerSymbol, result.ScatterMarkerSymbol);
         }
 
-        [TestCase(null, null)]
-        [TestCase(87, null)]
-        [TestCase(null, "Index Name")]
-        [TestCase(87, "Index Name")]
-        public void SerializeDeserializeReturnsSameCandlestickSeriesValue(int? zIndex, string indexName)
+        [TestCase(null, null, "Tooltip template")]
+        [TestCase(87, null, "Tooltip template")]
+        [TestCase(null, "Index Name", "Tooltip template")]
+        [TestCase(87, "Index Name", "Tooltip template")]
+        [TestCase(null, null, null)]
+        [TestCase(87, null, null)]
+        [TestCase(null, "Index Name", null)]
+        [TestCase(87, "Index Name", null)]
+        public void SerializeDeserializeReturnsSameCandlestickSeriesValue(int? zIndex, string indexName, string toolTip)
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
-            var series = new CandlestickSeries("Pepito Grillo") { ZIndex = zIndex, IndexName = indexName, Index = 7 };
+            var series = new CandlestickSeries("Pepito Grillo") { ZIndex = zIndex, IndexName = indexName, Index = 7, Tooltip = toolTip };
             series.AddPoint(date, 100, 110, 80, 90);
             series.AddPoint(date.AddSeconds(1), 105, 115, 85, 95);
 
@@ -111,6 +124,7 @@ namespace QuantConnect.Tests.Common.Util
                 Assert.AreEqual(values[i].Low, resultValues[i].Low);
                 Assert.AreEqual(values[i].Close, resultValues[i].Close);
             }
+            Assert.AreEqual(series.Tooltip, result.Tooltip);
             Assert.AreEqual(series.Name, result.Name);
             Assert.AreEqual(series.Unit, result.Unit);
             Assert.AreEqual(series.SeriesType, result.SeriesType);

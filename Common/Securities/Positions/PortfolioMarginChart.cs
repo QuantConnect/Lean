@@ -28,6 +28,7 @@ namespace QuantConnect.Securities.Positions
     /// </summary>
     public static class PortfolioMarginChart
     {
+        private static string PortfolioMarginTooltip = "{SERIES_NAME}: {VALUE}%";
         private static string PortfolioMarginIndexName = "Margin Used (%)";
         private static readonly int _portfolioMarginSeriesCount = Configuration.Config.GetInt("portfolio-margin-series-count", 5);
 
@@ -86,23 +87,10 @@ namespace QuantConnect.Securities.Positions
                 var lastPoint = series.Values.LastOrDefault() as ChartPoint;
                 if (lastPoint != null)
                 {
-                    if (lastPoint.Time != portfolioState.Time)
+                    if (lastPoint.Time != portfolioState.Time && lastPoint.Y.HasValue)
                     {
                         lastPoint = new ChartPoint(portfolioState.Time, null);
                         series.AddPoint(lastPoint);
-                    }
-
-
-                    if (string.IsNullOrEmpty(lastPoint.Tooltip))
-                    {
-                        if (lastPoint.y.HasValue)
-                        {
-                            lastPoint.Tooltip = $"{series.Name}: {Math.Round(lastPoint.y.Value, 2)}%";
-                        }
-                        else
-                        {
-                            lastPoint.Tooltip = $"{series.Name}: 0%";
-                        }
                     }
                 }
             }
@@ -134,6 +122,7 @@ namespace QuantConnect.Securities.Positions
         {
             var series = portfolioChart.TryAddAndGetSeries(seriesName, SeriesType.StackedArea, 0, "%", Color.Empty, ScatterMarkerSymbol.None);
             series.IndexName = PortfolioMarginIndexName;
+            series.Tooltip = PortfolioMarginTooltip;
             series.AddPoint(new ChartPoint(utcTime, value * 100));
         }
 

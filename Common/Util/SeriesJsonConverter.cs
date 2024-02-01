@@ -64,6 +64,12 @@ namespace QuantConnect.Util
                 writer.WriteValue(baseSeries.IndexName);
             }
 
+            if (baseSeries.Tooltip != null)
+            {
+                writer.WritePropertyName("Tooltip");
+                writer.WriteValue(baseSeries.Tooltip);
+            }
+
             switch (value)
             {
                 case Series series:
@@ -115,19 +121,9 @@ namespace QuantConnect.Util
             var seriesType = (SeriesType)jObject["SeriesType"].Value<int>();
             var values = (JArray)jObject["Values"];
 
-            int? zindex = null;
-            var jZIndex = jObject["ZIndex"];
-            if (jZIndex != null && jZIndex.Type != JTokenType.Null)
-            {
-                zindex = jZIndex.Value<int>();
-            }
-
-            string indexName = null;
-            var jIndexName = jObject["IndexName"];
-            if (jIndexName != null && jIndexName.Type != JTokenType.Null)
-            {
-                indexName = jIndexName.Value<string>();
-            }
+            var zindex = jObject.TryGetPropertyValue<int?>("ZIndex");
+            var indexName = jObject.TryGetPropertyValue<string>("IndexName");
+            var tooltip = jObject.TryGetPropertyValue<string>("Tooltip");
 
             if (seriesType == SeriesType.Candle)
             {
@@ -137,6 +133,7 @@ namespace QuantConnect.Util
                     Unit = unit,
                     Index = index,
                     ZIndex = zindex,
+                    Tooltip = tooltip,
                     IndexName = indexName,
                     SeriesType = seriesType,
                     Values = values.ToObject<List<Candlestick>>(serializer).Where(x => x != null).Cast<ISeriesPoint>().ToList()
@@ -149,6 +146,7 @@ namespace QuantConnect.Util
                 Unit = unit,
                 Index = index,
                 ZIndex = zindex,
+                Tooltip = tooltip,
                 IndexName = indexName,
                 SeriesType = seriesType,
                 Color = jObject["Color"].ToObject<Color>(serializer),
