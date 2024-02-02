@@ -52,7 +52,7 @@ class CustomSettlementModel:
             parameters.Portfolio.CashBook[self.currency].AddAmount(-self.amount)
 
     def GetUnsettledCash(self):
-        return 0
+        return CashAmount(0, Currencies.USD)
 
 class CustomBrokerageModelWithCustomSettlementModel(CustomBrokerageModel):
     def GetSettlementModel(self, security):
