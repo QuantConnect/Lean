@@ -27,6 +27,7 @@ using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
@@ -1708,6 +1709,40 @@ actualDictionary.update({'IBM': 5})
         public void GreatestCommonDivisorTests(int[] values, int expectedResult)
         {
             Assert.AreEqual(expectedResult, values.GreatestCommonDivisor());
+        }
+
+        [Test]
+        public void ConvertsPythonUniverseSelectionSymbolIDDelegateToSymbolDelegate()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(
+                    "ConvertsPythonUniverseSelectionSymbolIDDelegateToSymbolDelegate",
+                    @"
+def select_symbol(fundamental):
+    return [str(x.Symbol.ID) for x in fundamental]
+"
+                );
+                var selectSymbolPythonMethod = module.GetAttr("select_symbol");
+                Assert.IsTrue(selectSymbolPythonMethod.TryConvertToDelegate(out Func<IEnumerable<Fundamental>, object> selectSymbols));
+                Assert.IsNotNull(selectSymbols);
+
+                var selectSymbolsUniverseDelegate = selectSymbols.ConvertToUniverseSelectionSymbolDelegate();
+
+                var reference = new DateTime(2024, 2, 1);
+                var fundamentals = new List<Fundamental>()
+                {
+                    new Fundamental(reference, Symbols.SPY),
+                    new Fundamental(reference, Symbols.AAPL),
+                    new Fundamental(reference, Symbols.IBM),
+                    new Fundamental(reference, Symbols.GOOG)
+                };
+
+                List<Symbol> symbols = null;
+                Assert.DoesNotThrow(() => symbols = selectSymbolsUniverseDelegate(fundamentals).ToList());
+                CollectionAssert.IsNotEmpty(symbols);
+                Assert.That(symbols, Is.All.Matches<Symbol>(x => fundamentals.Any(fund => fund.Symbol == x)));
+            }
         }
 
         private PyObject ConvertToPyObject(object value)

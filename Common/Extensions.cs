@@ -2712,7 +2712,16 @@ namespace QuantConnect
             {
                 var result = selector(data);
                 return ReferenceEquals(result, Universe.Unchanged)
-                    ? Universe.Unchanged : ((object[])result).Select(x => (Symbol)x);
+                    ? Universe.Unchanged
+                    : ((object[])result).Select(x =>
+                    {
+                        if (x is Symbol)
+                        {
+                            return (Symbol)x;
+                        }
+
+                        return SymbolCache.TryGetSymbol((string)x, out var symbol) ? symbol : null;
+                    });
             };
         }
 
