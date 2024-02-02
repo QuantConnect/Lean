@@ -112,10 +112,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The created <see cref="Subscription"/> if successful, null otherwise</returns>
         public override Subscription CreateSubscription(SubscriptionRequest request)
         {
-            // create and add the subscription to our collection
-            var subscription = request.IsUniverseSubscription
-                ? CreateUniverseSubscription(request)
-                : CreateDataSubscription(request);
+            Subscription subscription = null;
+            try
+            {
+                // create and add the subscription to our collection
+                subscription = request.IsUniverseSubscription
+                    ? CreateUniverseSubscription(request)
+                    : CreateDataSubscription(request);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, $"CreateSubscription(): Failed configuration: '{request.Configuration}'");
+                // kill the algorithm, this shouldn't happen
+                _algorithm.SetRuntimeError(err, $"Failed to subscribe to {request.Configuration.Symbol}");
+            }
 
             return subscription;
         }
@@ -189,88 +199,81 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             Subscription subscription = null;
 
-            try
+            var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
+
+            IEnumerator<BaseData> enumerator = null;
+            if (!_channelProvider.ShouldStreamSubscription(request.Configuration))
             {
-                var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
-                var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
-
-                IEnumerator<BaseData> enumerator = null;
-                if (!_channelProvider.ShouldStreamSubscription(request.Configuration))
+                if (!Tiingo.IsAuthCodeSet)
                 {
-                    if (!Tiingo.IsAuthCodeSet)
-                    {
-                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
-                        Tiingo.SetAuthCode(Config.Get("tiingo-auth-token"));
-                    }
-
-                    var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _algorithm.ObjectStore);
-                    var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
-
-                    var enqueable = new EnqueueableEnumerator<BaseData>();
-                    _customExchange.AddEnumerator(request.Configuration.Symbol, enumeratorStack, handleData: data =>
-                    {
-                        enqueable.Enqueue(data);
-
-                        subscription?.OnNewDataAvailable();
-                    });
-
-                    enumerator = enqueable;
-                }
-                else
-                {
-                    var auxEnumerators = new List<IEnumerator<BaseData>>();
-
-                    if (LiveAuxiliaryDataEnumerator.TryCreate(request.Configuration, _timeProvider, _dataQueueHandler,
-                        request.Security.Cache, _mapFileProvider, _factorFileProvider, request.StartTimeLocal, out var auxDataEnumator))
-                    {
-                        auxEnumerators.Add(auxDataEnumator);
-                    }
-
-                    EventHandler handler = (_, _) => subscription?.OnNewDataAvailable();
-                    enumerator = Subscribe(request.Configuration, handler, IsExpired);
-
-                    if (auxEnumerators.Count > 0)
-                    {
-                        enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators);
-                    }
+                    // we're not using the SubscriptionDataReader, so be sure to set the auth token here
+                    Tiingo.SetAuthCode(Config.Get("tiingo-auth-token"));
                 }
 
-                // scale prices before 'SubscriptionFilterEnumerator' since it updates securities realtime price
-                // and before fill forwarding so we don't happen to apply twice the factor
-                if (request.Configuration.PricesShouldBeScaled(liveMode: true))
+                var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _algorithm.ObjectStore);
+                var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
+
+                var enqueable = new EnqueueableEnumerator<BaseData>();
+                _customExchange.AddEnumerator(request.Configuration.Symbol, enumeratorStack, handleData: data =>
                 {
-                    enumerator = new PriceScaleFactorEnumerator(
-                        enumerator,
-                        request.Configuration,
-                        _factorFileProvider,
-                        liveMode: true);
-                }
+                    enqueable.Enqueue(data);
 
-                if (request.Configuration.FillDataForward)
-                {
-                    var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
+                    subscription?.OnNewDataAvailable();
+                });
 
-                    enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone);
-                }
-
-                // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
-                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
-
-                // define market hours and user filters to incoming data after the frontier enumerator so during warmup we avoid any realtime data making it's way into the securities
-                if (request.Configuration.IsFilteredSubscription)
-                {
-                    enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime, request.Configuration.ExtendedMarketHours, true, request.ExchangeHours);
-                }
-
-                enumerator = GetWarmupEnumerator(request, enumerator);
-
-                var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider, enumerator, request.IsUniverseSubscription);
-                subscription = new Subscription(request, subscriptionDataEnumerator, timeZoneOffsetProvider);
+                enumerator = enqueable;
             }
-            catch (Exception err)
+            else
             {
-                Log.Error(err);
+                var auxEnumerators = new List<IEnumerator<BaseData>>();
+
+                if (LiveAuxiliaryDataEnumerator.TryCreate(request.Configuration, _timeProvider, _dataQueueHandler,
+                    request.Security.Cache, _mapFileProvider, _factorFileProvider, request.StartTimeLocal, out var auxDataEnumator))
+                {
+                    auxEnumerators.Add(auxDataEnumator);
+                }
+
+                EventHandler handler = (_, _) => subscription?.OnNewDataAvailable();
+                enumerator = Subscribe(request.Configuration, handler, IsExpired);
+
+                if (auxEnumerators.Count > 0)
+                {
+                    enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators);
+                }
             }
+
+            // scale prices before 'SubscriptionFilterEnumerator' since it updates securities realtime price
+            // and before fill forwarding so we don't happen to apply twice the factor
+            if (request.Configuration.PricesShouldBeScaled(liveMode: true))
+            {
+                enumerator = new PriceScaleFactorEnumerator(
+                    enumerator,
+                    request.Configuration,
+                    _factorFileProvider,
+                    liveMode: true);
+            }
+
+            if (request.Configuration.FillDataForward)
+            {
+                var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
+
+                enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone);
+            }
+
+            // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
+            enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
+
+            // define market hours and user filters to incoming data after the frontier enumerator so during warmup we avoid any realtime data making it's way into the securities
+            if (request.Configuration.IsFilteredSubscription)
+            {
+                enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime, request.Configuration.ExtendedMarketHours, true, request.ExchangeHours);
+            }
+
+            enumerator = GetWarmupEnumerator(request, enumerator);
+
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider, enumerator, request.IsUniverseSubscription);
+            subscription = new Subscription(request, subscriptionDataEnumerator, timeZoneOffsetProvider);
 
             return subscription;
         }
@@ -505,7 +508,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (lastPointTracker != null && lastPointTracker.LastDataPoint != null)
                     {
                         var utcLastPointTime = lastPointTracker.LastDataPoint.Time.ConvertToUtc(warmup.ExchangeHours.TimeZone);
-                        if(utcLastPointTime > startTimeUtc)
+                        if (utcLastPointTime > startTimeUtc)
                         {
                             if (Log.DebuggingEnabled)
                             {
