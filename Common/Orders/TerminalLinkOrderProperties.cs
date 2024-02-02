@@ -76,6 +76,11 @@ namespace QuantConnect.Orders
         public StrategyParameters Strategy { get; set; }
 
         /// <summary>
+        /// Whether to include the position side in the order direction (buy-to-open, sell-to-close, etc.) instead of the default (buy, sell)
+        /// </summary>
+        public bool EnablePositionSide { get; set; }
+
+        /// <summary>
         /// Models an EMSX order strategy parameter
         /// </summary>
         public class StrategyParameters
