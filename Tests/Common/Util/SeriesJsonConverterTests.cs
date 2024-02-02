@@ -59,7 +59,6 @@ namespace QuantConnect.Tests.Common.Util
             {
                 Assert.AreEqual(values[i].x, resultValues[i].x);
                 Assert.AreEqual(values[i].y, resultValues[i].y);
-                Assert.AreEqual(values[i].Tooltip, resultValues[i].Tooltip);
             }
             Assert.AreEqual(series.Tooltip, result.Tooltip);
             Assert.AreEqual(series.Name, result.Name);
@@ -134,7 +133,7 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        public void NullChartPointValue()
+        public void DeserializeChartPointObject()
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
             var date2 = date.AddSeconds(1);
@@ -142,11 +141,9 @@ namespace QuantConnect.Tests.Common.Util
             series.AddPoint(date, 1);
             series.AddPoint(new ChartPoint(date2, null));
 
-            var serializedSeries = JsonConvert.SerializeObject(series);
-            var result = (Series)JsonConvert.DeserializeObject(serializedSeries, typeof(Series));
+            var result = (Series)JsonConvert.DeserializeObject("{\"Name\":\"Pepito Grillo\",\"Unit\":\"$\",\"Index\":0,\"SeriesType\":3," +
+                "\"Values\":[ {\"x\":2524611661,\"y\":1.0},{\"x\":2524611662,\"y\":null}],\"Color\":\"\",\"ScatterMarkerSymbol\":\"diamond\"}", typeof(Series));
 
-            Assert.AreEqual("{\"Name\":\"Pepito Grillo\",\"Unit\":\"$\",\"Index\":0,\"SeriesType\":3," +
-                "\"Values\":[{\"x\":2524611661,\"y\":1.0},{\"x\":2524611662,\"y\":null}],\"Color\":\"\",\"ScatterMarkerSymbol\":\"diamond\"}", serializedSeries);
             Assert.AreEqual(2, result.Values.Count);
             Assert.AreEqual(date, ((ChartPoint)result.Values[0]).Time);
             Assert.AreEqual(1, ((ChartPoint)result.Values[0]).y);
@@ -160,7 +157,7 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        public void NullChartPointValueArray()
+        public void NullChartPointValue()
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
             var date2 = date.AddSeconds(1);
@@ -168,9 +165,11 @@ namespace QuantConnect.Tests.Common.Util
             series.AddPoint(date, 1);
             series.AddPoint(new ChartPoint(date2, null));
 
-            var result = (Series)JsonConvert.DeserializeObject("{\"Name\":\"Pepito Grillo\",\"Unit\":\"$\",\"Index\":0,\"SeriesType\":3," +
-                "\"Values\":[[2524611661,1.0],[2524611662,null]],\"Color\":\"\",\"ScatterMarkerSymbol\":\"diamond\"}", typeof(Series));
+            var serializedSeries = JsonConvert.SerializeObject(series);
+            var result = (Series)JsonConvert.DeserializeObject(serializedSeries, typeof(Series));
 
+            Assert.AreEqual("{\"Name\":\"Pepito Grillo\",\"Unit\":\"$\",\"Index\":0,\"SeriesType\":3," +
+                "\"Values\":[[2524611661,1.0],[2524611662,null]],\"Color\":\"\",\"ScatterMarkerSymbol\":\"diamond\"}", serializedSeries);
             Assert.AreEqual(2, result.Values.Count);
             Assert.AreEqual(date, ((ChartPoint)result.Values[0]).Time);
             Assert.AreEqual(1, ((ChartPoint)result.Values[0]).y);

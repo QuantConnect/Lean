@@ -30,12 +30,6 @@ namespace QuantConnect
         private decimal? _y;
 
         /// <summary>
-        /// A summary of this point for the tooltip
-        /// </summary>
-        [JsonProperty(PropertyName = "tooltip", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Tooltip { get; set; }
-
-        /// <summary>
         /// Time of this chart series point
         /// </summary>
         [JsonIgnore]
@@ -135,7 +129,6 @@ namespace QuantConnect
         {
             Time = time;
             y = value;
-            Tooltip = tooltip;
         }
 
         ///Cloner Constructor:
@@ -144,7 +137,6 @@ namespace QuantConnect
             _time = point._time;
             _x = point._x;
             _y = point._y;
-            Tooltip = point.Tooltip;
         }
 
         /// <summary>
