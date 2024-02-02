@@ -138,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public CashAmount GetUnsettledCash()
         {
-            return new CashAmount(0, Currencies.USD);
+            return default;
         }
     }
 }

@@ -65,7 +65,13 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetUnsettledCash();
+                var result = _model.GetUnsettledCash();
+                if (result == null)
+                {
+                    return default;
+                }
+
+                return result;
             }
         }
     }

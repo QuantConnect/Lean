@@ -130,7 +130,7 @@ namespace QuantConnect.Securities
             {
                 if (_unsettledCashAmounts.Count == 0)
                 {
-                    return new CashAmount(0, accountCurrency);
+                    return default;
                 }
 
                 return new CashAmount(_unsettledCashAmounts.Sum(x => _cashBook.ConvertToAccountCurrency(x.Amount, x.Currency)), accountCurrency);
