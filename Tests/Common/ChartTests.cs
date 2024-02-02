@@ -23,18 +23,26 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class ChartTests
     {
-        [TestCase(false, false, 0)]
-        [TestCase(false, true, 0)]
-        [TestCase(true, false, 0)]
-        [TestCase(true, true, 0)]
-        [TestCase(false, false, 1)]
-        [TestCase(false, true, 1)]
-        [TestCase(true, false, 1)]
-        [TestCase(true, true, 1)]
-        public void SerializeDeserializeReturnsSameSeriesValue(bool setSymbol, bool legendDisabled, int index)
+        [TestCase(false, false, 0, "Tooltip template")]
+        [TestCase(false, true, 0, "Tooltip template")]
+        [TestCase(true, false, 0, "Tooltip template")]
+        [TestCase(true, true, 0, "Tooltip template")]
+        [TestCase(false, false, 1, "Tooltip template")]
+        [TestCase(false, true, 1, "Tooltip template")]
+        [TestCase(true, false, 1, "Tooltip template")]
+        [TestCase(true, true, 1, "Tooltip template")]
+        [TestCase(false, false, 0, null)]
+        [TestCase(false, true, 0, null)]
+        [TestCase(true, false, 0, null)]
+        [TestCase(true, true, 0, null)]
+        [TestCase(false, false, 1, null)]
+        [TestCase(false, true, 1, null)]
+        [TestCase(true, false, 1, null)]
+        [TestCase(true, true, 1, null)]
+        public void SerializeDeserializeReturnsSameSeriesValue(bool setSymbol, bool legendDisabled, int index, string toolTip)
         {
             var chart = new Chart("ChartName") { LegendDisabled = legendDisabled, Symbol = setSymbol ? Symbols.IBM : null };
-            var series1 = new Series("Test1") { Index = index };
+            var series1 = new Series("Test1") { Index = index, Tooltip = toolTip };
             series1.AddPoint(new DateTime(2023, 03, 03), 100);
             series1.AddPoint(new DateTime(2023, 04, 03), 200);
             chart.AddSeries(series1);
@@ -50,6 +58,7 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(result.Symbol, chart.Symbol);
             Assert.AreEqual(result.LegendDisabled, chart.LegendDisabled);
             Assert.AreEqual(result.Series.Count, chart.Series.Count);
+            Assert.AreEqual(result.Series["Test1"].Tooltip, chart.Series["Test1"].Tooltip);
             CollectionAssert.AreEqual(result.Series.Select(x => $"{x.Key}:{string.Join(',', x.Value.Values)}"),
                 chart.Series.OrderBy(x => x.Value.Values.Count).Select(x => $"{x.Key}:{string.Join(',', x.Value.Values)}"));
         }

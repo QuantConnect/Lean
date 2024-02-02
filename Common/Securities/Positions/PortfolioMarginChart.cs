@@ -28,6 +28,7 @@ namespace QuantConnect.Securities.Positions
     /// </summary>
     public static class PortfolioMarginChart
     {
+        private static string PortfolioMarginTooltip = "{SERIES_NAME}: {VALUE}%";
         private static string PortfolioMarginIndexName = "Margin Used (%)";
         private static readonly int _portfolioMarginSeriesCount = Configuration.Config.GetInt("portfolio-margin-series-count", 5);
 
@@ -57,16 +58,12 @@ namespace QuantConnect.Securities.Positions
                 var name = GetPositionGroupName(positionGroup, mapFileProvider, currentTime);
                 if (topSeries.Contains(name))
                 {
-                    AddValueToSeries(portfolioChart, portfolioState.Time, name, positionGroup.PortfolioValuePercentage);
+                    var series = GetOrAddSeries(portfolioChart, name, Color.Empty);
+                    series.AddPoint(new ChartPoint(portfolioState.Time, positionGroup.PortfolioValuePercentage * 100));
                     continue;
                 }
 
-                if (others == null)
-                {
-                    others = portfolioChart.TryAddAndGetSeries("OTHERS", SeriesType.StackedArea, 0, "%", Color.Gray, ScatterMarkerSymbol.None);
-                    others.IndexName = PortfolioMarginIndexName;
-                }
-
+                others ??= GetOrAddSeries(portfolioChart, "OTHERS", Color.Gray);
                 var value = positionGroup.PortfolioValuePercentage * 100;
                 if (currentOthers != null && currentOthers.Time == portfolioState.Time)
                 {
@@ -84,26 +81,9 @@ namespace QuantConnect.Securities.Positions
             {
                 // let's add a null point for the series which have no value for this time
                 var lastPoint = series.Values.LastOrDefault() as ChartPoint;
-                if (lastPoint != null)
+                if (lastPoint == null || lastPoint.Time != portfolioState.Time && lastPoint.Y.HasValue)
                 {
-                    if (lastPoint.Time != portfolioState.Time)
-                    {
-                        lastPoint = new ChartPoint(portfolioState.Time, null);
-                        series.AddPoint(lastPoint);
-                    }
-
-
-                    if (string.IsNullOrEmpty(lastPoint.Tooltip))
-                    {
-                        if (lastPoint.y.HasValue)
-                        {
-                            lastPoint.Tooltip = $"{series.Name}: {Math.Round(lastPoint.y.Value, 2)}%";
-                        }
-                        else
-                        {
-                            lastPoint.Tooltip = $"{series.Name}: 0%";
-                        }
-                    }
+                    series.AddPoint(new ChartPoint(portfolioState.Time, null));
                 }
             }
         }
@@ -130,11 +110,19 @@ namespace QuantConnect.Securities.Positions
             return positionGroup.Name;
         }
 
-        private static void AddValueToSeries(Chart portfolioChart, DateTime utcTime, string seriesName, decimal value)
+        private static Series GetOrAddSeries(Chart portfolioChart, string seriesName, Color color)
         {
-            var series = portfolioChart.TryAddAndGetSeries(seriesName, SeriesType.StackedArea, 0, "%", Color.Empty, ScatterMarkerSymbol.None);
-            series.IndexName = PortfolioMarginIndexName;
-            series.AddPoint(new ChartPoint(utcTime, value * 100));
+            if (!portfolioChart.Series.TryGetValue(seriesName, out var series))
+            {
+                series = portfolioChart.Series[seriesName] = new Series(seriesName, SeriesType.StackedArea, 0, "%")
+                {
+                    Color = color,
+                    Tooltip = PortfolioMarginTooltip,
+                    IndexName = PortfolioMarginIndexName,
+                    ScatterMarkerSymbol = ScatterMarkerSymbol.None
+                };
+            }
+            return (Series)series;
         }
 
         private static Symbol GetMappedSymbol(IMapFileProvider mapFileProvider, Symbol symbol, DateTime referenceTime)

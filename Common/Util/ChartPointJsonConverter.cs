@@ -35,16 +35,6 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// This converter wont be used to read JSON. Will throw exception if manually called.
-        /// </summary>
-        public override bool CanRead => true;
-
-        /// <summary>
-        /// This converter wont be used to read JSON. Will throw exception if manually called.
-        /// </summary>
-        public override bool CanWrite => false;
-
-        /// <summary>
         /// Reads series from Json
         /// </summary>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
@@ -54,42 +44,39 @@ namespace QuantConnect.Util
                 var jObject = JObject.Load(reader);
                 var x = jObject["x"];
 
-                string tooltip = null;
-                var jTooltip = jObject["tooltip"];
-                if (jTooltip != null && jTooltip.Type != JTokenType.Null)
-                {
-                    tooltip = jTooltip.Value<string>();
-                }
-
                 if (!jObject.ContainsKey("y"))
                 {
-                    return new ChartPoint(x.Value<long>(), 0) { Tooltip = tooltip };
+                    return new ChartPoint(x.Value<long>(), 0);
                 }
 
                 var y = jObject["y"];
                 if (y != null && (y.Type == JTokenType.Float || y.Type == JTokenType.Integer))
                 {
-                    return new ChartPoint(x.Value<long>(), y.Value<decimal>()) { Tooltip = tooltip };
+                    return new ChartPoint(x.Value<long>(), y.Value<decimal>());
                 }
 
                 if (y.Type == JTokenType.Null)
                 {
-                    return new ChartPoint(x.Value<long>(), null) { Tooltip = tooltip };
+                    return new ChartPoint(x.Value<long>(), null);
                 }
 
                 return null;
             }
 
             var jArray = JArray.Load(reader);
-            return new ChartPoint(jArray[0].Value<long>(), jArray[1].Value<decimal>());
+            return new ChartPoint(jArray[0].Value<long>(), jArray[1].Value<decimal?>());
         }
 
         /// <summary>
-        /// Not implemented
+        /// Write point to Json
         /// </summary>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            var chartPoint = (ChartPoint)value;
+            writer.WriteStartArray();
+            writer.WriteValue(chartPoint.X);
+            writer.WriteValue(chartPoint.Y);
+            writer.WriteEndArray();
         }
     }
 }

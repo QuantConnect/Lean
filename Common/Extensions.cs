@@ -58,6 +58,7 @@ using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect
 {
@@ -94,6 +95,29 @@ namespace QuantConnect
         /// like future options the market close would match the delisted event time and would cancel all orders and mark the security
         /// as non tradable and delisted.</remarks>
         public static TimeSpan DelistingMarketCloseOffsetSpan { get; set; } = TimeSpan.FromMinutes(-15);
+
+        /// <summary>
+        /// Helper method to get a property in a jobject if available
+        /// </summary>
+        /// <typeparam name="T">The property type</typeparam>
+        /// <param name="jObject">The jobject source</param>
+        /// <param name="name">The property name</param>
+        /// <returns>The property value if present or it's default value</returns>
+        public static T TryGetPropertyValue<T>(this JObject jObject, string name)
+        {
+            T result = default;
+            if (jObject == null)
+            {
+                return result;
+            }
+
+            var jValue = jObject[name];
+            if (jValue != null && jValue.Type != JTokenType.Null)
+            {
+                result = jValue.Value<T>();
+            }
+            return result;
+        }
 
         /// <summary>
         /// Determine if the file is out of date according to our download period.

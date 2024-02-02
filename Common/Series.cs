@@ -199,6 +199,7 @@ namespace QuantConnect
             {
                 Color = Color,
                 ZIndex = ZIndex,
+                Tooltip = Tooltip,
                 IndexName = IndexName,
                 ScatterMarkerSymbol = ScatterMarkerSymbol,
             };

@@ -191,6 +191,11 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             performanceCharts[kvp.Key] = chart.Clone();
                         }
+
+                        if (updates.Name == PortfolioMarginKey)
+                        {
+                            PortfolioMarginChart.RemoveSinglePointSeries(updates);
+                        }
                     }
                 }
 
