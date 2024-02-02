@@ -14,8 +14,10 @@
 */
 
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using System;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -57,6 +59,19 @@ namespace QuantConnect.Tests.Indicators
                 (ind, expected) => Assert.AreEqual(expected, (double) ((AccelerationBands) ind).UpperBand.Current.Value,
                     delta: 1e-4, message: "Upper band test fail.")
             );
+        }
+
+        [Test]
+        public void WorksWithLowValues()
+        {
+            var abands = CreateIndicator();
+            var random = new Random();
+            var time = DateTime.UtcNow;
+            for(int i = 0; i < 40; i++)
+            {
+                var value = random.NextDouble() * 0.000000000000000000000000000001;
+                Assert.DoesNotThrow(() => abands.Update(new TradeBar { High = (decimal)value, Low = (decimal)value, Time = time.AddDays(i)}));
+            }
         }
     }
 }
