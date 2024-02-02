@@ -51,11 +51,8 @@ class CustomSettlementModel:
         if parameters.UtcTime == datetime(2013, 10, 6):
             parameters.Portfolio.CashBook[self.currency].AddAmount(-self.amount)
 
-    def UnsettledCash(self):
+    def GetUnsettledCash(self):
         return 0
-
-    def get_UnsettledCash(self):
-        return self.UnsettledCash()
 
 class CustomBrokerageModelWithCustomSettlementModel(CustomBrokerageModel):
     def GetSettlementModel(self, security):

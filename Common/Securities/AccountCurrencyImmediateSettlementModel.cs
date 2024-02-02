@@ -19,18 +19,13 @@ namespace QuantConnect.Securities
     /// Represents the model responsible for applying cash settlement rules
     /// </summary>
     /// <remarks>This model converts the amount to the account currency and applies cash settlement immediately</remarks>
-    public class AccountCurrencyImmediateSettlementModel : ISettlementModel
+    public class AccountCurrencyImmediateSettlementModel : ImmediateSettlementModel
     {
-        /// <summary>
-        /// Unsettled cash amount for the security
-        /// </summary>
-        public decimal UnsettledCash { get; }
-
         /// <summary>
         /// Applies cash settlement rules
         /// </summary>
         /// <param name="applyFundsParameters">The funds application parameters</param>
-        public void ApplyFunds(ApplyFundsSettlementModelParameters applyFundsParameters)
+        public override void ApplyFunds(ApplyFundsSettlementModelParameters applyFundsParameters)
         {
             var currency = applyFundsParameters.CashAmount.Currency;
             var amount = applyFundsParameters.CashAmount.Amount;
@@ -38,14 +33,8 @@ namespace QuantConnect.Securities
             var amountInAccountCurrency = portfolio.CashBook.ConvertToAccountCurrency(amount, currency);
 
             portfolio.CashBook[portfolio.CashBook.AccountCurrency].AddAmount(amountInAccountCurrency);
-        }
 
-        /// <summary>
-        /// Scan for pending settlements
-        /// </summary>
-        /// <param name="settlementParameters">The settlement parameters</param>
-        public void Scan(ScanSettlementModelParameters settlementParameters)
-        {
+            AccountCurrency = portfolio.CashBook.AccountCurrency;
         }
     }
 }

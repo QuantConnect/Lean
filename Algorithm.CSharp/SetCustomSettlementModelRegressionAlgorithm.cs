@@ -134,8 +134,11 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Unsettled cash amount for the security
+        /// Gets the unsettled cash amount for the security
         /// </summary>
-        public decimal UnsettledCash { get; }
+        public CashAmount GetUnsettledCash()
+        {
+            return new CashAmount(0, Currencies.USD);
+        }
     }
 }

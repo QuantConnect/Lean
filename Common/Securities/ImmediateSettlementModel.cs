@@ -21,10 +21,25 @@ namespace QuantConnect.Securities
     /// <remarks>This model applies cash settlement immediately</remarks>
     public class ImmediateSettlementModel : ISettlementModel
     {
+        private string _accountCurrency;
+
         /// <summary>
-        /// Unsettled cash amount for the security
+        /// The account currency used to return the unsettled cash in the right currency
         /// </summary>
-        public virtual decimal UnsettledCash { get; }
+        protected string AccountCurrency
+        {
+            get
+            {
+                return string.IsNullOrEmpty(_accountCurrency) ? Currencies.USD : _accountCurrency;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(_accountCurrency))
+                {
+                    _accountCurrency = value;
+                }
+            }
+        }
 
         /// <summary>
         /// Applies cash settlement rules
@@ -35,6 +50,9 @@ namespace QuantConnect.Securities
             var currency = applyFundsParameters.CashAmount.Currency;
             var amount = applyFundsParameters.CashAmount.Amount;
             applyFundsParameters.Portfolio.CashBook[currency].AddAmount(amount);
+
+            // Keep it to return unsettled cash in the account currency
+            AccountCurrency = applyFundsParameters.Portfolio.CashBook.AccountCurrency;
         }
 
         /// <summary>
@@ -43,6 +61,14 @@ namespace QuantConnect.Securities
         /// <param name="settlementParameters">The settlement parameters</param>
         public virtual void Scan(ScanSettlementModelParameters settlementParameters)
         {
+        }
+
+        /// <summary>
+        /// Gets the unsettled cash amount for the security
+        /// </summary>
+        public virtual CashAmount GetUnsettledCash()
+        {
+            return new CashAmount(0, AccountCurrency);
         }
     }
 }

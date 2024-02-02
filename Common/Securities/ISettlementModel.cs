@@ -33,8 +33,8 @@ namespace QuantConnect.Securities
         void Scan(ScanSettlementModelParameters settlementParameters);
 
         /// <summary>
-        /// Unsettled cash amount for the security
+        /// Gets the unsettled cash amount for the security
         /// </summary>
-        decimal UnsettledCash { get; }
+        CashAmount GetUnsettledCash();
     }
 }

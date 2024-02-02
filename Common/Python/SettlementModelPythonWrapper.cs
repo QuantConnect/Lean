@@ -26,20 +26,6 @@ namespace QuantConnect.Python
     {
         private readonly dynamic _model;
 
-        /// <summary>
-        /// Unsettled cash amount for the security
-        /// </summary>
-        public decimal UnsettledCash
-        {
-            get
-            {
-                using (Py.GIL())
-                {
-                    return _model.get_UnsettledCash();
-                }
-            }
-        }
-
         /// Constructor for initialising the <see cref="SettlementModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Settlement Python Model</param>
@@ -69,6 +55,17 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 _model.Scan(settlementParameters);
+            }
+        }
+
+        /// <summary>
+        /// Gets the unsettled cash amount for the security
+        /// </summary>
+        public CashAmount GetUnsettledCash()
+        {
+            using (Py.GIL())
+            {
+                return _model.GetUnsettledCash();
             }
         }
     }

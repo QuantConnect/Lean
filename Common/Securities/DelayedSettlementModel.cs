@@ -27,16 +27,12 @@ namespace QuantConnect.Securities
     {
         private readonly int _numberOfDays;
         private readonly TimeSpan _timeOfDay;
+        private CashBook _cashBook;
 
         /// <summary>
         /// The list of pending funds waiting for settlement time
         /// </summary>
         private readonly Queue<UnsettledCashAmount> _unsettledCashAmounts;
-
-        /// <summary>
-        /// Unsettled cash amount for the security
-        /// </summary>
-        public decimal UnsettledCash => _unsettledCashAmounts.Sum(x => x.Amount);
 
         /// <summary>
         /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
@@ -91,6 +87,12 @@ namespace QuantConnect.Securities
 
                 portfolio.CashBook[currency].AddAmount(amount);
             }
+
+            // We just keep it to use currency conversion in GetUnsettledCash method
+            if (_cashBook == null)
+            {
+                _cashBook = portfolio.UnsettledCashBook;
+            }
         }
 
         /// <summary>
@@ -115,6 +117,25 @@ namespace QuantConnect.Securities
                     settlementParameters.Portfolio.CashBook[item.Currency].AddAmount(item.Amount);
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the unsettled cash amount for the security
+        /// </summary>
+        public CashAmount GetUnsettledCash()
+        {
+            var accountCurrency = _cashBook != null ? _cashBook.AccountCurrency : Currencies.USD;
+
+            lock (_unsettledCashAmounts)
+            {
+                if (_unsettledCashAmounts.Count == 0)
+                {
+                    return new CashAmount(0, accountCurrency);
+                }
+
+                return new CashAmount(_unsettledCashAmounts.Sum(x => _cashBook.ConvertToAccountCurrency(x.Amount, x.Currency)), accountCurrency);
+            }
+
         }
     }
 }
