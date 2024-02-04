@@ -19,33 +19,39 @@ using System;
 
 namespace QuantConnect.Tests.Indicators
 {
-    [TestFixture(0.99d, "VaR_99", TestName = nameof(ValueAtRiskTests))]
-    [TestFixture(0.95d, "VaR_95", TestName = nameof(ValueAtRiskTests))]
-    [TestFixture(0.9d, "VaR_90", TestName = nameof(ValueAtRiskTests))]
+    [TestFixture]
     public class ValueAtRiskTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         private const int _tradingDays = 252;
-        private readonly double _confidenceLevel;
-        private readonly string _testColumnName;
         
         protected override string TestFileName => "spy_valueatrisk.csv";
 
-        protected override string TestColumnName => _testColumnName;
-
-        public ValueAtRiskTests(double confidenceLevel, string testColumnName)
-        {
-            _confidenceLevel = confidenceLevel;
-            _testColumnName = testColumnName;
-        }
+        protected override string TestColumnName => "VaR_99";
 
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            return new ValueAtRisk(_tradingDays, _confidenceLevel);
+            return new ValueAtRisk(_tradingDays, 0.99d);
         }
 
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion
         {
             get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-3); }
+        }
+
+        [Test]
+        public void ComparesAgainstExternalData95()
+        {
+            var indicator = new ValueAtRisk(_tradingDays, 0.95);
+
+            TestHelper.TestIndicator(indicator, TestFileName, "VaR_95", Assertion);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalData90()
+        {
+            var indicator = new ValueAtRisk(_tradingDays, 0.9d);
+
+            TestHelper.TestIndicator(indicator, TestFileName, "VaR_90", Assertion);
         }
 
         [Test]
