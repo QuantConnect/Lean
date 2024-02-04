@@ -161,13 +161,15 @@ namespace QuantConnect.Statistics
         public decimal PortfolioTurnover { get; set; }
 
         /// <summary>
-        /// The 1-day VaR for the portfolio, using the Variance-covariance approach. Assumes a 99% confidence level and that the returns are normally distributed.
+        /// The 1-day VaR for the portfolio, using the Variance-covariance approach.
+        /// Assumes a 99% confidence level, 1 year lookback period, and that the returns are normally distributed.
         /// </summary>
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal ValueAtRisk99 { get; set; }
 
         /// <summary>
-        /// The 1-day VaR for the portfolio, using the Variance-covariance approach. Assumes a 95% confidence level and that the returns are normally distributed.
+        /// The 1-day VaR for the portfolio, using the Variance-covariance approach.
+        /// Assumes a 95% confidence level, 1 year lookback period, and that the returns are normally distributed.
         /// </summary>
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal ValueAtRisk95 { get; set; }
