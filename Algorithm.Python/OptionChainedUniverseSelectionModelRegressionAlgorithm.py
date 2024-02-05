@@ -23,10 +23,7 @@ class OptionChainedUniverseSelectionModelRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2014, 6, 6)
         self.SetCash(100000)
         
-        self.aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
-        tradebar = TradeBar()
-        config = SubscriptionDataConfig(type(tradebar), self.aapl, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, False, False, True)
-        universe = self.AddUniverse(ManualUniverse(config, self.UniverseSettings, [ self.aapl ]))
+        universe = self.AddUniverse("my-minute-universe-name", lambda time: [ "AAPL", "TWX" ])
         self.AddUniverseSelection(
             OptionChainedUniverseSelectionModel(
                 universe,
@@ -38,20 +35,18 @@ class OptionChainedUniverseSelectionModelRegressionAlgorithm(QCAlgorithm):
         )
         
     def OnData(self, slice):
-        if self.Portfolio.Invested or not self.IsMarketOpen(self.aapl): return
-        chain = slice.OptionChains.GetValue("?AAPL")
-        if chain is None:
-            return
-        
-        # we sort the contracts to find at the money (ATM) contract with farthest expiration
-        contracts = sorted(sorted(sorted(chain, \
-            key = lambda x: abs(chain.Underlying.Price - x.Strike)), \
-            key = lambda x: x.Expiry, reverse=True), \
-            key = lambda x: x.Right, reverse=True)
+        if self.Portfolio.Invested or not (self.IsMarketOpen("AAPL") and self.IsMarketOpen("AAPL")): return
+        values = list(map(lambda x: x.Value, filter(lambda x: x.Key == "?AAPL" or x.Key == "?TWX",  slice.OptionChains)))
+        for chain in values:
+            # we sort the contracts to find at the money (ATM) contract with farthest expiration
+            contracts = sorted(sorted(sorted(chain, \
+                key = lambda x: abs(chain.Underlying.Price - x.Strike)), \
+                key = lambda x: x.Expiry, reverse=True), \
+                key = lambda x: x.Right, reverse=True)
 
-        # if found, trade it
-        if len(contracts) == 0: return
-        symbol = contracts[0].Symbol
-        self.MarketOrder(symbol, 1)
-        self.MarketOnCloseOrder(symbol, -1)
+            # if found, trade it
+            if len(contracts) == 0: return
+            symbol = contracts[0].Symbol
+            self.MarketOrder(symbol, 1)
+            self.MarketOnCloseOrder(symbol, -1)
             

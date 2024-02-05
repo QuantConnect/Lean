@@ -30,16 +30,14 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class OptionChainedUniverseSelectionModelRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        Symbol _aapl;
         public override void Initialize()
         {
             UniverseSettings.Resolution = Resolution.Minute;
             SetStartDate(2014, 6, 6);
             SetEndDate(2014, 6, 6);
             SetCash(100000);
-            _aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), _aapl, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
-            var universe = AddUniverse(new ManualUniverse(config, UniverseSettings, new[] { _aapl }));
+
+            var universe = AddUniverse("my-minute-universe-name", time => new List<string> { "AAPL", "TWX" });
 
             AddUniverseSelection(new OptionChainedUniverseSelectionModel(universe, u => u.Strikes(-2, +2)
                                    // Expiration method accepts TimeSpan objects or integer for days.
@@ -49,10 +47,11 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (!Portfolio.Invested && IsMarketOpen(_aapl))
+            if (!Portfolio.Invested && IsMarketOpen("AAPL") && IsMarketOpen("TWX"))
             {
-                OptionChain chain;
-                if (slice.OptionChains.TryGetValue("?AAPL", out chain))
+                var values = slice.OptionChains.Where(x => (x.Key == "?AAPL" || x.Key == "?TWX")).Select(x => x.Value);
+
+                foreach (var chain in values)
                 {
                     // we find at the money (ATM) put contract with farthest expiration
                     var atmContract = chain
@@ -84,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 936646;
+        public long DataPoints => 1033404;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -96,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
+            {"Total Trades", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -116,11 +115,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$100000.00"},
+            {"Total Fees", "$4.00"},
+            {"Estimated Strategy Capacity", "$110000.00"},
             {"Lowest Capacity Asset", "AAPL 2ZTXYLO9EQPZA|AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "8.01%"},
-            {"OrderListHash", "3c4bef29d95bf4c3a566bca7531b1df0"}
+            {"Portfolio Turnover", "8.85%"},
+            {"OrderListHash", "6a8e72c22752967e0d5d4e344e794dc4"}
         };
     }
 }
