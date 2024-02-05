@@ -37,7 +37,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Common.Data.Fundamental;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Util;
 
@@ -1655,6 +1654,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void ThrowingDataQueueHandlerRuntimeError()
+        {
+            _algorithm.UniverseSettings.Resolution = Resolution.Daily;
+            _algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
+            var feed = RunDataFeed(dataQueueHandler: new ThrowingDataQueueHandler());
+
+            _algorithm.AddEquity("SPY");
+            _algorithm.OnEndOfTimeStep();
+            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts => { }, secondsTimeStep: 60 * 60 * 3);
+
+            Assert.AreEqual(AlgorithmStatus.RuntimeError, _algorithm.Status);
+        }
+
+        [Test]
         public void FastExitsDoNotThrowUnhandledExceptions()
         {
             var algorithm = new AlgorithmStub();
@@ -2053,7 +2066,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null,
             Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null,
             Func<Symbol, bool, string, IEnumerable<Symbol>> lookupSymbolsFunction = null,
-            Func<bool> canPerformSelection = null)
+            Func<bool> canPerformSelection = null, IDataQueueHandler dataQueueHandler = null)
         {
             _algorithm.SetStartDate(_startDate);
             _algorithm.SetDateTime(_manualTimeProvider.GetUtcNow());
@@ -2115,7 +2128,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }),
                 canPerformSelection ?? (() => true), _manualTimeProvider);
 
-            _feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
+            _feed = new TestableLiveTradingDataFeed(dataQueueHandler ?? _dataQueueHandler);
             var fileProvider = TestGlobals.DataProvider;
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
@@ -2650,13 +2663,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             // let's avoid race conditions and give time for the funDataQueueHandler thread to distribute the data among the consolidators
                             if (!_synchronizer.NewDataEvent.Wait(500))
                             {
-                                Assert.Fail("Timeout waiting for data generation");
+                                if (!shouldThrowException || algorithm.Status != AlgorithmStatus.RuntimeError)
+                                {
+                                    Assert.Fail("Timeout waiting for data generation");
+                                }
                             }
                         }
                     }
                     else
                     {
                         _synchronizer.NewDataEvent.Wait(300);
+                    }
+
+                    if (shouldThrowException && algorithm.Status == AlgorithmStatus.RuntimeError)
+                    {
+                        // expected
+                        return;
                     }
 
                     if (currentTime.ConvertFromUtc(algorithmTimeZone) > endDate)
@@ -3191,6 +3213,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             public void Initialize(IDataProvider dataProvider, bool liveMode)
             {
+            }
+        }
+
+        private class ThrowingDataQueueHandler : IDataQueueHandler
+        {
+            public bool IsConnected => true;
+            public void Dispose()
+            { }
+            public void SetJob(LiveNodePacket job)
+            { }
+            public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+            {
+                throw new NotImplementedException();
+            }
+            public void Unsubscribe(SubscriptionDataConfig dataConfig)
+            {
+                throw new NotImplementedException();
             }
         }
     }
