@@ -13,9 +13,12 @@
  * limitations under the License.
 */
 
+using System;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Packets;
+using System.Collections.Generic;
+using QuantConnect.Lean.Engine.Results;
 
 namespace QuantConnect.Report.ReportElements
 {
@@ -51,9 +54,9 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = ResultsUtil.EquityPoints(_backtest, "Daily Performance");
+            var backtestPoints = GetReturnSeries(_backtest);
             var backtestBenchmarkPoints = ResultsUtil.BenchmarkPoints(_backtest);
-            var livePoints = ResultsUtil.EquityPoints(_live, "Daily Performance");
+            var livePoints = GetReturnSeries(_live);
             var liveBenchmarkPoints = ResultsUtil.BenchmarkPoints(_live);
 
             var base64 = "";
@@ -82,6 +85,17 @@ namespace QuantConnect.Report.ReportElements
             }
 
             return base64;
+        }
+
+        private static SortedList<DateTime, double> GetReturnSeries(Result leanResult)
+        {
+            var returnSeries = ResultsUtil.EquityPoints(leanResult, BaseResultsHandler.ReturnKey);
+            if (returnSeries == null || returnSeries.Count == 0)
+            {
+                // for backwards compatibility
+                returnSeries = ResultsUtil.EquityPoints(leanResult, "Daily Performance");
+            }
+            return returnSeries;
         }
     }
 }

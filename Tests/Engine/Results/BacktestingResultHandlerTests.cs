@@ -61,9 +61,9 @@ namespace QuantConnect.Tests.Engine.Results
             // this test will fail with any daily algorithm, such as BasicTemplateDailyAlgorithm.
 
             var backtestResults = GetResults(algorithm, new DateTime(2013, 10, 7), new DateTime(2013, 10, 11));
-            var benchmarkSeries = backtestResults.Charts["Benchmark"].Series["Benchmark"];
-            var equitySeries = backtestResults.Charts["Strategy Equity"].Series["Equity"];
-            var performanceSeries = backtestResults.Charts["Strategy Equity"].Series["Daily Performance"];
+            var benchmarkSeries = backtestResults.Charts[BaseResultsHandler.BenchmarkKey].Series[BaseResultsHandler.BenchmarkKey];
+            var equitySeries = backtestResults.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.EquityKey];
+            var performanceSeries = backtestResults.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.ReturnKey];
             var benchmark = ToDeedleSeries(benchmarkSeries);
             var equity = ToDeedleSeries(equitySeries);
             var performance = ToDeedleSeries(performanceSeries).SelectValues(x => x / 100);
@@ -134,9 +134,9 @@ namespace QuantConnect.Tests.Engine.Results
         public void BasicTemplateAlgorithmSamplesNotMisalignedAbsolute()
         {
             var backtestResults = GetResults(nameof(BasicTemplateAlgorithm), new DateTime(2013, 10, 7), new DateTime(2013, 10, 11));
-            var benchmarkSeries = backtestResults.Charts["Benchmark"].Series["Benchmark"];
-            var equitySeries = backtestResults.Charts["Strategy Equity"].Series["Equity"];
-            var performanceSeries = backtestResults.Charts["Strategy Equity"].Series["Daily Performance"];
+            var benchmarkSeries = backtestResults.Charts[BaseResultsHandler.BenchmarkKey].Series[BaseResultsHandler.BenchmarkKey];
+            var equitySeries = backtestResults.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.EquityKey];
+            var performanceSeries = backtestResults.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.ReturnKey];
             var benchmark = ToDeedleSeries(benchmarkSeries);
             var equity = ToDeedleSeries(equitySeries);
             var performance = ToDeedleSeries(performanceSeries).SelectValues(x => x / 100);
@@ -230,9 +230,9 @@ namespace QuantConnect.Tests.Engine.Results
         {
             // This test will produce incorrect results, but is here to detect if any changes occur to the Sampling.
             var backtestResults = GetResults(nameof(BasicTemplateDailyAlgorithm), new DateTime(2013, 10, 7), new DateTime(2013, 10, 11));
-            var benchmarkSeries = backtestResults.Charts["Benchmark"].Series["Benchmark"];
-            var equitySeries = backtestResults.Charts["Strategy Equity"].Series["Equity"];
-            var performanceSeries = backtestResults.Charts["Strategy Equity"].Series["Daily Performance"];
+            var benchmarkSeries = backtestResults.Charts[BaseResultsHandler.BenchmarkKey].Series[BaseResultsHandler.BenchmarkKey];
+            var equitySeries = backtestResults.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.EquityKey];
+            var performanceSeries = backtestResults.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.ReturnKey];
             var benchmark = ToDeedleSeries(benchmarkSeries);
             var equity = ToDeedleSeries(equitySeries);
             var performance = ToDeedleSeries(performanceSeries).SelectValues(x => x / 100);
@@ -312,9 +312,9 @@ namespace QuantConnect.Tests.Engine.Results
         public void BasicTemplateFrameworkAlgorithmSamplesNotMisalignedAbsolute()
         {
             var backtestResults = GetResults(nameof(BasicTemplateFrameworkAlgorithm), new DateTime(2013, 10, 7), new DateTime(2013, 10, 11));
-            var benchmarkSeries = backtestResults.Charts["Benchmark"].Series["Benchmark"];
-            var equitySeries = backtestResults.Charts["Strategy Equity"].Series["Equity"];
-            var performanceSeries = backtestResults.Charts["Strategy Equity"].Series["Daily Performance"];
+            var benchmarkSeries = backtestResults.Charts[BaseResultsHandler.BenchmarkKey].Series[BaseResultsHandler.BenchmarkKey];
+            var equitySeries = backtestResults.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.EquityKey];
+            var performanceSeries = backtestResults.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.ReturnKey];
             var benchmark = ToDeedleSeries(benchmarkSeries);
             var equity = ToDeedleSeries(equitySeries);
             var performance = ToDeedleSeries(performanceSeries).SelectValues(x => x / 100);
@@ -394,9 +394,9 @@ namespace QuantConnect.Tests.Engine.Results
         {
             // This test will produce incorrect results, but is here to detect if any changes occur to the Sampling.
             var backtestResults = GetResults(nameof(ResolutionSwitchingAlgorithm), new DateTime(2013, 10, 7), new DateTime(2013, 10, 11));
-            var benchmarkSeries = backtestResults.Charts["Benchmark"].Series["Benchmark"];
-            var equitySeries = backtestResults.Charts["Strategy Equity"].Series["Equity"];
-            var performanceSeries = backtestResults.Charts["Strategy Equity"].Series["Daily Performance"];
+            var benchmarkSeries = backtestResults.Charts[BaseResultsHandler.BenchmarkKey].Series[BaseResultsHandler.BenchmarkKey];
+            var equitySeries = backtestResults.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.EquityKey];
+            var performanceSeries = backtestResults.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.ReturnKey];
             var benchmark = ToDeedleSeries(benchmarkSeries);
             var equity = ToDeedleSeries(equitySeries);
             var performance = ToDeedleSeries(performanceSeries).SelectValues(x => x / 100);
