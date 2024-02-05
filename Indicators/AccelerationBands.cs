@@ -113,7 +113,8 @@ namespace QuantConnect.Indicators
         /// </returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            var coefficient = _width * (input.High - input.Low) / (input.High + input.Low);
+            var denominator = input.High + input.Low;
+            var coefficient = _width * (denominator != 0 ? ((input.High - input.Low) / denominator) : 0);
 
             LowerBand.Update(input.Time, input.Low * (1 - coefficient));
             UpperBand.Update(input.Time, input.High * (1 + coefficient));
