@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm
 
         private static readonly Dictionary<string, List<string>> ReservedChartSeriesNames = new Dictionary<string, List<string>>
         {
-            { "Strategy Equity", new List<string> { "Equity", "Daily Performance" } },
+            { "Strategy Equity", new List<string> { "Equity", "Return" } },
             { "Capacity", new List<string> { "Strategy Capacity" } },
             { "Drawdown", new List<string> { "Equity Drawdown" } },
             { "Benchmark", new List<string>() { "Benchmark" } },

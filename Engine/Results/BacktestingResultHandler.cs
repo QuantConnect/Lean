@@ -21,9 +21,7 @@ using System.Linq;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
-using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities.Positions;
@@ -79,11 +77,6 @@ namespace QuantConnect.Lean.Engine.Results
 
             // Delay uploading first packet
             _nextS3Update = StartTime.AddSeconds(5);
-
-            //Default charts:
-            Charts.AddOrUpdate(StrategyEquityKey, new Chart(StrategyEquityKey));
-            Charts[StrategyEquityKey].Series.Add(EquityKey, new CandlestickSeries(EquityKey, 0, "$"));
-            Charts[StrategyEquityKey].Series.Add(DailyPerformanceKey, new Series(DailyPerformanceKey, SeriesType.Bar, 1, "%"));
         }
 
         /// <summary>
