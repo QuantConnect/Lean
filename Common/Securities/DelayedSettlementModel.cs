@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities
 {
@@ -26,6 +27,7 @@ namespace QuantConnect.Securities
     {
         private readonly int _numberOfDays;
         private readonly TimeSpan _timeOfDay;
+        private CashBook _cashBook;
 
         /// <summary>
         /// The list of pending funds waiting for settlement time
@@ -85,6 +87,12 @@ namespace QuantConnect.Securities
 
                 portfolio.CashBook[currency].AddAmount(amount);
             }
+
+            // We just keep it to use currency conversion in GetUnsettledCash method
+            if (_cashBook == null)
+            {
+                _cashBook = portfolio.UnsettledCashBook;
+            }
         }
 
         /// <summary>
@@ -109,6 +117,25 @@ namespace QuantConnect.Securities
                     settlementParameters.Portfolio.CashBook[item.Currency].AddAmount(item.Amount);
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the unsettled cash amount for the security
+        /// </summary>
+        public CashAmount GetUnsettledCash()
+        {
+            var accountCurrency = _cashBook != null ? _cashBook.AccountCurrency : Currencies.USD;
+
+            lock (_unsettledCashAmounts)
+            {
+                if (_unsettledCashAmounts.Count == 0)
+                {
+                    return default;
+                }
+
+                return new CashAmount(_unsettledCashAmounts.Sum(x => _cashBook.ConvertToAccountCurrency(x.Amount, x.Currency)), accountCurrency);
+            }
+
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -61,6 +61,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // covers the options use case
                     return false;
                 }
+
+                // don't remove if there are unsettled positions
+                var unsettledCash = member.SettlementModel.GetUnsettledCash();
+                if (unsettledCash != default && unsettledCash.Amount > 0)
+                {
+                    return false;
+                }
+
                 return true;
             }
 
