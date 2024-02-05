@@ -16,7 +16,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
-using QuantConnect.ToolBox.AlphaVantageDownloader;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.CoinApiDataConverter;
 using QuantConnect.ToolBox.CryptoiqDownloader;
@@ -93,17 +92,6 @@ namespace QuantConnect.ToolBox
                     case "ydl":
                     case "yahoodownloader":
                         YahooDownloaderProgram.YahooDownloader(tickers, resolution, fromDate, toDate);
-                        break;
-
-                    case "avdl":
-                    case "alphavantagedownloader":
-                        AlphaVantageDownloaderProgram.AlphaVantageDownloader(
-                            tickers,
-                            resolution,
-                            fromDate,
-                            toDate,
-                            GetParameterOrExit(optionsObject, "api-key")
-                        );
                         break;
 
                     default:
