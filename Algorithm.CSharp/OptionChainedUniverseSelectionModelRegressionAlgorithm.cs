@@ -13,10 +13,12 @@
  * limitations under the License.
 */
 
+using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Selection;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,52 +30,44 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class OptionChainedUniverseSelectionModelRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        Symbol _aapl;
         public override void Initialize()
         {
-            UniverseSettings.Resolution = Resolution.Daily;
-            SetStartDate(2014, 03, 22);
-            SetEndDate(2014, 04, 07);
+            UniverseSettings.Resolution = Resolution.Minute;
+            SetStartDate(2014, 6, 6);
+            SetEndDate(2014, 6, 6);
             SetCash(100000);
+            _aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), _aapl, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
+            var universe = AddUniverse(new ManualUniverse(config, UniverseSettings, new[] { _aapl }));
 
-            AddSecurity(SecurityType.Equity, "GOOG", Resolution.Daily);
-
-            var universe = AddUniverse(coarse =>
-            {
-                // select the various google symbols over the period
-                return from c in coarse
-                       let sym = c.Symbol.Value
-                       where sym == "GOOG" || sym == "GOOCV" || sym == "GOOAV"
-                       select c.Symbol;
-
-                // Before March 28th 2014:
-                // - Only GOOG  T1AZ164W5VTX existed
-                // On March 28th 2014
-                // - GOOAV VP83T1ZUHROL and GOOCV VP83T1ZUHROL are listed
-                // On April 02nd 2014
-                // - GOOAV VP83T1ZUHROL is delisted
-                // - GOOG  T1AZ164W5VTX becomes GOOGL
-                // - GOOCV VP83T1ZUHROL becomes GOOG
-            });
-
-            AddUniverseSelection(new OptionChainedUniverseSelectionModel(universe,
-                option_filter_universe => option_filter_universe));
+            AddUniverseSelection(new OptionChainedUniverseSelectionModel(universe, u => u.Strikes(-2, +2)
+                                   // Expiration method accepts TimeSpan objects or integer for days.
+                                   // The following statements yield the same filtering criteria
+                                   .Expiration(0, 180)));
         }
 
-        public override void OnEndOfAlgorithm()
+        public override void OnData(Slice slice)
         {
-            if (!UniverseManager.ContainsKey("?GOOCV"))
+            if (!Portfolio.Invested && IsMarketOpen(_aapl))
             {
-                throw new Exception("Option chain {?GOOCV} should have been in the universe but it was not");
-            }
+                OptionChain chain;
+                if (slice.OptionChains.TryGetValue("?AAPL", out chain))
+                {
+                    // we find at the money (ATM) put contract with farthest expiration
+                    var atmContract = chain
+                        .OrderByDescending(x => x.Expiry)
+                        .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                        .ThenByDescending(x => x.Right)
+                        .FirstOrDefault();
 
-            if (!UniverseManager.ContainsKey("?GOOG"))
-            {
-                throw new Exception("Option chain {?GOOG} should have been in the universe but it was not");
-            }
-
-            if (!UniverseManager.ContainsKey("?GOOAV"))
-            {
-                throw new Exception("Option chain {?GOOAV} should have been in the universe but it was not");
+                    if (atmContract != null)
+                    {
+                        // if found, trade it
+                        MarketOrder(atmContract.Symbol, 1);
+                        MarketOnCloseOrder(atmContract.Symbol, -1);
+                    }
+                }
             }
         }
 
@@ -90,7 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 78080;
+        public long DataPoints => 936646;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -102,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "0"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -119,14 +113,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "1.552"},
-            {"Tracking Error", "0.092"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"Total Fees", "$2.00"},
+            {"Estimated Strategy Capacity", "$100000.00"},
+            {"Lowest Capacity Asset", "AAPL 2ZTXYLO9EQPZA|AAPL R735QTJ8XC9X"},
+            {"Portfolio Turnover", "8.01%"},
+            {"OrderListHash", "3c4bef29d95bf4c3a566bca7531b1df0"}
         };
     }
 }

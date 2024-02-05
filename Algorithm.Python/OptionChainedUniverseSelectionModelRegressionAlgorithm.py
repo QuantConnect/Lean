@@ -18,36 +18,40 @@ from AlgorithmImports import *
 ### </summary>
 class OptionChainedUniverseSelectionModelRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
-        self.UniverseSettings.Resolution = Resolution.Daily
-        self.SetStartDate(2014, 3, 22)
-        self.SetEndDate(2014, 4, 7)
+        self.UniverseSettings.Resolution = Resolution.Minute
+        self.SetStartDate(2014, 6, 6)
+        self.SetEndDate(2014, 6, 6)
         self.SetCash(100000)
         
-        self.AddSecurity(SecurityType.Equity, "GOOG", Resolution.Daily)
-        universe = self.AddUniverse(lambda coarse: self.Selector(coarse))
+        self.aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
+        tradebar = TradeBar()
+        config = SubscriptionDataConfig(type(tradebar), self.aapl, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, False, False, True)
+        universe = self.AddUniverse(ManualUniverse(config, self.UniverseSettings, [ self.aapl ]))
         self.AddUniverseSelection(
             OptionChainedUniverseSelectionModel(
                 universe,
-                lambda option_filter_universe: option_filter_universe,
-                self.UniverseSettings
+                lambda u: (u.Strikes(-2, +2)
+                                     # Expiration method accepts TimeSpan objects or integer for days.
+                                     # The following statements yield the same filtering criteria
+                                     .Expiration(0, 180))
             )
         )
-    
-    def OnEndOfAlgorithm(self):
-        if not self.UniverseManager.ContainsKey("?GOOCV"):
-            raise Exception("Option chain {?GOOCV} should have been in the universe but it was not")
         
-        if not self.UniverseManager.ContainsKey("?GOOG"):
-            raise Exception("Option chain {?GOOG} should have been in the universe but it was not")
+    def OnData(self, slice):
+        if self.Portfolio.Invested or not self.IsMarketOpen(self.aapl): return
+        chain = slice.OptionChains.GetValue("?AAPL")
+        if chain is None:
+            return
         
-        if not self.UniverseManager.ContainsKey("?GOOAV"):
-            raise Exception("Option chain {?GOOAV} should have been in the universe but it was not")
-    
-    def Selector(self, coarse):
-        result = []
-        for c in coarse:
-            sym = c.Symbol.Value
-            if sym == "GOOG" or sym == "GOOCV" or sym == "GOOAV":
-                result.append(c.Symbol)
-        return result
+        # we sort the contracts to find at the money (ATM) contract with farthest expiration
+        contracts = sorted(sorted(sorted(chain, \
+            key = lambda x: abs(chain.Underlying.Price - x.Strike)), \
+            key = lambda x: x.Expiry, reverse=True), \
+            key = lambda x: x.Right, reverse=True)
+
+        # if found, trade it
+        if len(contracts) == 0: return
+        symbol = contracts[0].Symbol
+        self.MarketOrder(symbol, 1)
+        self.MarketOnCloseOrder(symbol, -1)
             
