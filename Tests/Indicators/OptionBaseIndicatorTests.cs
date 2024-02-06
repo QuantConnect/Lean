@@ -32,8 +32,11 @@ namespace QuantConnect.Tests.Indicators
     public abstract class OptionBaseIndicatorTests<T> : CommonIndicatorTests<IndicatorDataPoint>
         where T : OptionIndicatorBase
     {
-        // count of risk free rate calls per each update on greek indicator
+        // count of risk free rate calls per each update on opiton indicator
         protected int RiskFreeRateUpdatesPerIteration { get; set; }
+
+        // count of dividend yield calls per each update on option indicator
+        protected int DividendYieldUpdatesPerIteration { get; set; }
 
         protected static DateTime _reference = new DateTime(2023, 8, 1, 10, 0, 0);
         protected static Symbol _symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2023, 9, 1));
@@ -47,6 +50,11 @@ namespace QuantConnect.Tests.Indicators
         protected virtual OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
         {
             throw new NotImplementedException("method `CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)` is required to be set up");
+        }
+
+        protected virtual OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
+        {
+            throw new NotImplementedException("method `CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)` is required to be set up");
         }
 
         protected virtual OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
@@ -259,6 +267,70 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
 
             // Our interest rate provider should have been called once by each update
             interestRateProviderMock.Verify(x => x.GetInterestRate(_reference.AddDays(1)), Times.Exactly(RiskFreeRateUpdatesPerIteration));
+        }
+
+        [Test]
+        public void UsesDividendYieldModel()
+        {
+            const int count = 20;
+            var dates = Enumerable.Range(0, count).Select(i => new DateTime(2022, 11, 21, 10, 0, 0) + TimeSpan.FromDays(i)).ToList();
+            var dividends = Enumerable.Range(0, count).Select(i => 0m + (10 - 0m) * (i / (count - 1m))).ToList();
+
+            var dividendYieldProviderMock = new Mock<IDividendYieldModel>();
+
+            // Set up
+            for (int i = 0; i < count; i++)
+            {
+                dividendYieldProviderMock.Setup(x => x.GetDividendYield(dates[i])).Returns(dividends[i]).Verifiable();
+            }
+
+            var indicator = CreateIndicator(new ConstantRiskFreeRateInterestRateModel(0.05m), dividendYieldProviderMock.Object);
+
+            for (int i = 0; i < count; i++)
+            {
+                indicator.Update(new IndicatorDataPoint(_symbol, dates[i], 80m + i));
+                indicator.Update(new IndicatorDataPoint(_underlying, dates[i], 500m + i));
+                Assert.AreEqual(dividends[i], indicator.DividendYield.Current.Value);
+            }
+
+            // Assert
+            Assert.IsTrue(indicator.IsReady);
+            dividendYieldProviderMock.Verify(x => x.GetDividendYield(It.IsAny<DateTime>()), Times.Exactly(dates.Count * DividendYieldUpdatesPerIteration));
+            for (int i = 0; i < count; i++)
+            {
+                dividendYieldProviderMock.Verify(x => x.GetDividendYield(dates[i]), Times.Exactly(DividendYieldUpdatesPerIteration));
+            }
+        }
+
+        [Test]
+        public void UsesPythonDefinedDividendYieldModel()
+        {
+            using var _ = Py.GIL();
+
+            var module = PyModule.FromString(Guid.NewGuid().ToString(), $@"
+from AlgorithmImports import *
+
+class TestDividendYieldModel:
+    CallCount = 0
+
+    def GetDividendYield(self, date: datetime) -> float:
+        TestDividendYieldModel.CallCount += 1
+        return 0.5
+
+def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
+    return {typeof(T).Name}(symbol, InterestRateProvider(), TestDividendYieldModel())
+            ");
+
+            var iv = module.GetAttr("getOptionIndicatorBaseIndicator").Invoke(_symbol.ToPython()).GetAndDispose<T>();
+            var modelClass = module.GetAttr("TestDividendYieldModel");
+
+            var reference = new DateTime(2022, 11, 21, 10, 0, 0);
+            for (int i = 0; i < 20; i++)
+            {
+                iv.Update(new IndicatorDataPoint(_symbol, reference + TimeSpan.FromMinutes(i), 10m + i));
+                iv.Update(new IndicatorDataPoint(_underlying, reference + TimeSpan.FromMinutes(i), 1000m + i));
+                Assert.AreEqual((i + 1) * DividendYieldUpdatesPerIteration, modelClass.GetAttr("CallCount").GetAndDispose<int>());
+            }
         }
 
         // Not used
