@@ -78,12 +78,12 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Whether to automatically include the position side in the order direction (buy-to-open, sell-to-close, etc.) instead of the default (buy, sell)
         /// </summary>
-        public bool EnablePositionSide { get; set; }
+        public bool AutomaticPositionSides { get; set; }
 
         /// <summary>
         /// Can optionally specify the position side in the order direction (buy-to-open, sell-to-close, etc.) instead of the default (buy, sell)
         /// </summary>
-        /// <remarks>Has precedence over <see cref="EnablePositionSide"/></remarks>
+        /// <remarks>Has precedence over <see cref="AutomaticPositionSides"/></remarks>
         public OrderPosition? PositionSide { get; set; }
 
         /// <summary>
