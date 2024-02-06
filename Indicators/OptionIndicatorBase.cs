@@ -44,6 +44,11 @@ namespace QuantConnect.Indicators
         protected readonly IRiskFreeInterestRateModel _riskFreeInterestRateModel;
 
         /// <summary>
+        /// Dividend yield model, for continuous dividend yield
+        /// </summary>
+        protected readonly IDividendYieldModel _dividendYieldModel;
+
+        /// <summary>
         /// Gets the expiration time of the option
         /// </summary>
         public DateTime Expiry => _optionSymbol.ID.Date;
@@ -69,6 +74,11 @@ namespace QuantConnect.Indicators
         public Identity RiskFreeRate { get; set; }
 
         /// <summary>
+        /// Dividend Yield
+        /// </summary>
+        public Identity DividendYield { get; set; }
+
+        /// <summary>
         /// Gets the option price level
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> Price { get; }
@@ -84,10 +94,11 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYieldModel">Dividend yield model</param>
         /// <param name="period">The lookback period of volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek/IV</param>
-        protected OptionIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, int period = 2,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
+        protected OptionIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, 
+            int period = 2, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
             : base(name)
         {
             var sid = option.ID;
@@ -98,9 +109,11 @@ namespace QuantConnect.Indicators
 
             _optionSymbol = option;
             _riskFreeInterestRateModel = riskFreeRateModel;
+            _dividendYieldModel = dividendYieldModel;
             _optionModel = optionModel;
 
             RiskFreeRate = new Identity(name + "_RiskFreeRate");
+            DividendYield = new Identity(name + "_DividendYield");
             Price = new Identity(name + "_Close");
             UnderlyingPrice = new Identity(name + "_UnderlyingClose");
 
@@ -118,6 +131,7 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             RiskFreeRate.Reset();
+            DividendYield.Reset();
             Price.Reset();
             UnderlyingPrice.Reset();
             base.Reset();
