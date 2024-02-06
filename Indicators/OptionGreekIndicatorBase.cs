@@ -41,15 +41,16 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYieldModel">Dividend yield model</param>
         /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        protected OptionGreeksIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, int period = 2,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, period, optionModel)
+        protected OptionGreeksIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
+            int period = 2, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            : base(name, option, riskFreeRateModel, dividendYieldModel, period, optionModel)
         {
             ivModel = ivModel ?? optionModel;
-            ImpliedVolatility = new ImpliedVolatility(name + "_IV", option, riskFreeRateModel, period, (OptionPricingModelType)ivModel);
+            ImpliedVolatility = new ImpliedVolatility(name + "_IV", option, riskFreeRateModel, dividendYieldModel, period, (OptionPricingModelType)ivModel);
             
             WarmUpPeriod = period;
         }
@@ -60,12 +61,13 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        protected OptionGreeksIndicatorBase(string name, Symbol option, PyObject riskFreeRateModel, int period = 2,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this(name, option, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), period, optionModel, ivModel)
+        protected OptionGreeksIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m,
+            int period = 2, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            : this(name, option, riskFreeRateModel, new ConstantDividendYieldModel(dividendYield), period, optionModel, ivModel)
         {
         }
 
@@ -75,12 +77,48 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
+        /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        protected OptionGreeksIndicatorBase(string name, Symbol option, decimal riskFreeRate = 0.05m, int period = 2,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this(name, option, new ConstantRiskFreeRateInterestRateModel(riskFreeRate), period, optionModel, ivModel)
+        protected OptionGreeksIndicatorBase(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m,
+            int period = 2, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            : this(name, option, new ConstantRiskFreeRateInterestRateModel(riskFreeRate), 
+                new ConstantDividendYieldModel(dividendYield), period, optionModel, ivModel)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the OptionGreeksIndicatorBase class
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYieldModel">Dividend yield model</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
+        /// <param name="ivModel">The option pricing model used to estimate IV</param>
+        protected OptionGreeksIndicatorBase(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel,
+            int period = 2, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            : this(name, option, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), 
+                DividendYieldModelPythonWrapper.FromPyObject(dividendYieldModel), period, optionModel, ivModel)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the OptionGreeksIndicatorBase class
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYield">Dividend yield, as a constant</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
+        /// <param name="ivModel">The option pricing model used to estimate IV</param>
+        protected OptionGreeksIndicatorBase(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m,
+            int period = 2, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            : this(name, option, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), 
+                new ConstantDividendYieldModel(dividendYield), period, optionModel, ivModel)
         {
         }
 
@@ -117,6 +155,7 @@ namespace QuantConnect.Indicators
             if (Price.Current.Time == UnderlyingPrice.Current.Time)
             {
                 RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
+                DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
                 _greekValue = CalculateGreek(time);
             }
             return _greekValue;
