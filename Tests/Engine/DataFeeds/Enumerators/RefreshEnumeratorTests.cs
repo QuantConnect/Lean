@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,9 +13,10 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using Moq;
+using System.IO;
 using NUnit.Framework;
+using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
@@ -23,6 +24,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
     [TestFixture]
     public class RefreshEnumeratorTests
     {
+        [Test]
+        public void StaleFileHandleException()
+        {
+            var fakeEnumerator = new Mock<IEnumerator<int?>>();
+            fakeEnumerator.Setup(e => e.MoveNext()).Throws(new IOException("stale file handle"));
+            fakeEnumerator.Setup(e => e.Dispose()).Verifiable();
+            var refresher = new RefreshEnumerator<int?>(() => fakeEnumerator.Object);
+
+            // does not throw exception but disposes of enumerator
+            refresher.MoveNext();
+
+            fakeEnumerator.Verify(enumerator => enumerator.Dispose(), Times.Once);
+
+            refresher.Dispose();
+        }
+
         [Test]
         public void RefreshesEnumeratorOnFirstMoveNext()
         {
