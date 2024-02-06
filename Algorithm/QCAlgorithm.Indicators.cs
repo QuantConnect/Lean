@@ -1953,9 +1953,24 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The Variance indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
+        [Obsolete("'VAR' is obsolete please use 'V' instead")]
         public Variance VAR(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"VAR({period})", resolution);
+            return V(symbol, period, resolution, selector);
+        }
+
+        /// <summary>
+        /// Creates a new Variance indicator. This will return the population variance of samples over the specified period.
+        /// </summary>
+        /// <param name="symbol">The symbol whose variance we want</param>
+        /// <param name="period">The period over which to compute the variance</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The Variance indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public Variance V(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"V({period})", resolution);
             var variance = new Variance(name, period);
             InitializeIndicator(symbol, variance, resolution, selector);
 
