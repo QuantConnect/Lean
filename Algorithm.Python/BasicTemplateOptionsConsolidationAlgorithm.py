@@ -34,9 +34,6 @@ class BasicTemplateOptionsConsolidationAlgorithm(QCAlgorithm):
         option.SetFilter(-2, +2, 0, 180)
         # option.SetFilter(-2, +2, timedelta(0), timedelta(180))
         self.consolidators = dict()
-    
-    def OnData(self,slice):
-        pass
 
     def OnQuoteBarConsolidated(self, sender, quoteBar):
         self.Log("OnQuoteBarConsolidated called on " + str(self.Time))

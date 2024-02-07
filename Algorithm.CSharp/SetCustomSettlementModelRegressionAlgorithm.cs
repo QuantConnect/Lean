@@ -15,7 +15,6 @@
 
 using QuantConnect.Data;
 using QuantConnect.Securities;
-using QuantConnect.Brokerages;
 using System;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
@@ -132,6 +131,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 settlementParameters.Portfolio.CashBook[_currency].AddAmount(-_amount);
             }
+        }
+
+        /// <summary>
+        /// Gets the unsettled cash amount for the security
+        /// </summary>
+        public CashAmount GetUnsettledCash()
+        {
+            return default;
         }
     }
 }

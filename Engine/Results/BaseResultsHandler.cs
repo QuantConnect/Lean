@@ -19,7 +19,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
@@ -55,13 +54,13 @@ namespace QuantConnect.Lean.Engine.Results
 
         private Bar _currentAlgorithmEquity;
 
-        protected const string StrategyEquityKey = "Strategy Equity";
-        protected const string EquityKey = "Equity";
-        protected const string DailyPerformanceKey = "Daily Performance";
-        protected const string BenchmarkKey = "Benchmark";
-        protected const string DrawdownKey = "Drawdown";
-        protected const string PortfolioTurnoverKey = "Portfolio Turnover";
-        protected const string PortfolioMarginKey = "Portfolio Margin";
+        public const string StrategyEquityKey = "Strategy Equity";
+        public const string EquityKey = "Equity";
+        public const string ReturnKey = "Return";
+        public const string BenchmarkKey = "Benchmark";
+        public const string DrawdownKey = "Drawdown";
+        public const string PortfolioTurnoverKey = "Portfolio Turnover";
+        public const string PortfolioMarginKey = "Portfolio Margin";
 
         /// <summary>
         /// The main loop update interval
@@ -256,6 +255,11 @@ namespace QuantConnect.Lean.Engine.Results
         {
             ExitEvent = new ManualResetEvent(false);
             Charts = new ConcurrentDictionary<string, Chart>();
+            //Default charts:
+            var equityChart = Charts[StrategyEquityKey] = new Chart(StrategyEquityKey);
+            equityChart.Series.Add(EquityKey, new CandlestickSeries(EquityKey, 0, "$"));
+            equityChart.Series.Add(ReturnKey, new Series(ReturnKey, SeriesType.Bar, 1, "%"));
+
             Messages = new ConcurrentQueue<Packet>();
             RuntimeStatistics = new Dictionary<string, string>();
             StartTime = DateTime.UtcNow;
@@ -590,7 +594,7 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 Log.Debug("BaseResultsHandler.SamplePerformance(): " + time.ToShortTimeString() + " >" + value);
             }
-            Sample(StrategyEquityKey, DailyPerformanceKey, 1, SeriesType.Bar, new ChartPoint(time, value), "%");
+            Sample(StrategyEquityKey, ReturnKey, 1, SeriesType.Bar, new ChartPoint(time, value), "%");
         }
 
         /// <summary>
@@ -851,7 +855,7 @@ namespace QuantConnect.Lean.Engine.Results
                 // make sure we've taken samples for these series before just blindly requesting them
                 if (charts.TryGetValue(StrategyEquityKey, out var strategyEquity) &&
                     strategyEquity.Series.TryGetValue(EquityKey, out var equity) &&
-                    strategyEquity.Series.TryGetValue(DailyPerformanceKey, out var performance) &&
+                    strategyEquity.Series.TryGetValue(ReturnKey, out var performance) &&
                     charts.TryGetValue(BenchmarkKey, out var benchmarkChart) &&
                     benchmarkChart.Series.TryGetValue(BenchmarkKey, out var benchmark))
                 {

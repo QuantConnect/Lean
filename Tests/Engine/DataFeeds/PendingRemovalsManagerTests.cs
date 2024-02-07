@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,13 +30,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class PendingRemovalsManagerTests
     {
+        private static readonly DateTime Noon = new DateTime(2015, 11, 2, 12, 0, 0);
+        private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+
         [Test]
         public void ReturnedRemoved_Add()
         {
             var orderProvider = new FakeOrderProcessor();
             var pendingRemovals = new PendingRemovalsManager(orderProvider);
             var security = SecurityTests.GetSecurity();
-            var universe = new TestUniverse();
+            using var universe = new TestUniverse();
 
             var result = pendingRemovals.TryRemoveMember(security, universe);
 
@@ -54,7 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var orderProvider = new FakeOrderProcessor();
             var pendingRemovals = new PendingRemovalsManager(orderProvider);
             var security = SecurityTests.GetSecurity();
-            var universe = new TestUniverse();
+            using var universe = new TestUniverse();
             orderProvider.AddOrder(new LimitOrder(security.Symbol, 1, 1, DateTime.UtcNow));
             pendingRemovals.TryRemoveMember(security, universe);
             orderProvider.Clear();
@@ -79,7 +82,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             // we add an order of the equity option
             orderProvider.AddOrder(new LimitOrder(equityOption.Symbol, 1, 1, DateTime.UtcNow));
-            var universe = new TestUniverse();
+            using var universe = new TestUniverse();
             universe.AddMember(DateTime.UtcNow, equity, false);
             universe.AddMember(DateTime.UtcNow, equityOption, false);
 
@@ -97,7 +100,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var orderProvider = new FakeOrderProcessor();
             var pendingRemovals = new PendingRemovalsManager(orderProvider);
             var security = SecurityTests.GetSecurity();
-            var universe = new TestUniverse();
+            using var universe = new TestUniverse();
             orderProvider.AddOrder(new LimitOrder(security.Symbol, 1, 1, DateTime.UtcNow));
 
             Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
@@ -113,7 +116,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var orderProvider = new FakeOrderProcessor();
             var pendingRemovals = new PendingRemovalsManager(orderProvider);
             var security = SecurityTests.GetSecurity();
-            var universe = new TestUniverse();
+            using var universe = new TestUniverse();
             orderProvider.AddOrder(new LimitOrder(security.Symbol, 1, 1, DateTime.UtcNow));
 
             Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
@@ -130,7 +133,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var orderProvider = new FakeOrderProcessor();
             var pendingRemovals = new PendingRemovalsManager(orderProvider);
             var security = SecurityTests.GetSecurity();
-            var universe = new TestUniverse();
+            using var universe = new TestUniverse();
             security.Holdings.SetHoldings(10, 10);
 
             Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
@@ -146,7 +149,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var orderProvider = new FakeOrderProcessor();
             var pendingRemovals = new PendingRemovalsManager(orderProvider);
             var security = SecurityTests.GetSecurity();
-            var universe = new TestUniverse();
+            using var universe = new TestUniverse();
             security.Holdings.SetHoldings(10, 10);
 
             Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
@@ -163,7 +166,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var orderProvider = new FakeOrderProcessor();
             var pendingRemovals = new PendingRemovalsManager(orderProvider);
             var security = SecurityTests.GetSecurity();
-            var universe = new TestUniverse();
+            using var universe = new TestUniverse();
             security.Holdings.Target = new PortfolioTarget(security.Symbol, 10);
 
             Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
@@ -179,7 +182,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var orderProvider = new FakeOrderProcessor();
             var pendingRemovals = new PendingRemovalsManager(orderProvider);
             var security = SecurityTests.GetSecurity();
-            var universe = new TestUniverse();
+            using var universe = new TestUniverse();
             security.Holdings.Target = new PortfolioTarget(security.Symbol, 10);
 
             Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
@@ -196,7 +199,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var orderProvider = new FakeOrderProcessor();
             var pendingRemovals = new PendingRemovalsManager(orderProvider);
             var security = SecurityTests.GetSecurity();
-            var universe = new TestUniverse();
+            using var universe = new TestUniverse();
             orderProvider.AddOrder(new LimitOrder(security.Symbol, 1, 1, DateTime.UtcNow));
             pendingRemovals.TryRemoveMember(security, universe);
 
@@ -206,6 +209,29 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // internally it was removed because it was reselected
             Assert.AreEqual(0, pendingRemovals.PendingRemovals.Keys.Count());
             Assert.AreEqual(0, pendingRemovals.PendingRemovals.Values.Count());
+        }
+
+        [Test]
+        public void WontRemoveBecauseUnsettledFunds()
+        {
+            var orderProvider = new FakeOrderProcessor();
+            var pendingRemovals = new PendingRemovalsManager(orderProvider);
+            using var universe = new TestUniverse();
+            var security = SecurityTests.GetSecurity();
+
+            security.SetSettlementModel(new DelayedSettlementModel(1, TimeSpan.FromHours(8)));
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, TimeKeeper.UtcTime.Date.AddDays(1),
+                new CashAmount(1000, Currencies.USD), null));
+
+            Assert.IsNull(pendingRemovals.TryRemoveMember(security, universe));
+            Assert.IsFalse(pendingRemovals.CheckPendingRemovals(new HashSet<Symbol>(), universe).Any());
+            Assert.AreEqual(1, pendingRemovals.PendingRemovals.Keys.Count());
+            Assert.AreEqual(1, pendingRemovals.PendingRemovals.Values.Count());
+            Assert.AreEqual(universe, pendingRemovals.PendingRemovals.Keys.First());
+            Assert.AreEqual(security, pendingRemovals.PendingRemovals.Values.First().First());
         }
 
         private class TestUniverse : Universe

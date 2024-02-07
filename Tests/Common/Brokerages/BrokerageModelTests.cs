@@ -410,6 +410,9 @@ class CustomSettlementModel:
     def Scan(self, parameters):
         raise ValueError(""Pepe2"")
 
+    def GetUnsettledCash(self):
+        raise ValueError(""Pepe3"")
+
 class CustomBrokerageModel(DefaultBrokerageModel):
     def GetSettlementModel(self, securities):
         return CustomSettlementModel()
@@ -429,6 +432,9 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 ex = Assert.Throws<PythonException>(() => ((dynamic)settlementModel).Scan(scanParameters));
                 Assert.AreEqual("ValueError", ex.Type.Name);
                 Assert.AreEqual("Pepe2", ex.Message);
+                ex = Assert.Throws<PythonException>(() => ((dynamic)settlementModel).GetUnsettledCash());
+                Assert.AreEqual("ValueError", ex.Type.Name);
+                Assert.AreEqual("Pepe3", ex.Message);
             }
         }
 
