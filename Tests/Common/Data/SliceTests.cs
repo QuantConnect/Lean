@@ -358,6 +358,15 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(1, slice2.Ticks.Count);
         }
 
+        [TestCase(null)]
+        [TestCase("")]
+        public void AccessingTicksParsedSaleConditinoDoesNotThrow(string saleCondition)
+        {
+            var tick1 = new Tick(_dataTime, Symbols.SPY, 1.1m, 2.1m) { TickType = TickType.Trade };
+            tick1.SaleCondition = saleCondition;
+            Assert.DoesNotThrow(() => tick1.ParsedSaleCondition.ToString());
+        }
+
         [Test]
         public void MergeOptionsAndFuturesChain()
         {
