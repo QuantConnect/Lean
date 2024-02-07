@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using Microsoft.CodeAnalysis;
 using Moq;
 using NodaTime;
 using NUnit.Framework;
@@ -163,6 +164,57 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             secondsTimeStep: 60 * 60 * 6);
 
             Assert.AreEqual(2, selectionHappened);
+        }
+
+        [Test]
+        public void ContinuousFuturesImmediateSelection()
+        {
+            _startDate = new DateTime(2014, 6, 9);
+            var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
+            _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
+            var endDate = _startDate.AddDays(5);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var feed = RunDataFeed();
+
+            var esSelectionTime = DateTime.MinValue;
+            var esFuture = _algorithm.AddFuture("ES", Resolution.Minute, extendedMarketHours: true);
+            esFuture.SetFilter(x =>
+            {
+                esSelectionTime = x.LocalTime.ConvertToUtc(esFuture.Exchange.TimeZone);
+
+                Assert.IsNotEmpty(x);
+
+                return x;
+            });
+
+            // DC future time zone is Chicago while ES is New York, we need to assert that both selection happen right away
+            var dcSelectionTime = DateTime.MinValue;
+            var dcFuture = _algorithm.AddFuture("DC", Resolution.Minute, extendedMarketHours: true);
+            dcFuture.SetFilter(x =>
+            {
+                dcSelectionTime = x.LocalTime.ConvertToUtc(dcFuture.Exchange.TimeZone);
+
+                Assert.IsNotEmpty(x);
+
+                return x;
+            });
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts => {
+                if (esSelectionTime != DateTime.MinValue)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60);
+
+            Assert.AreEqual(startDateUtc, esSelectionTime);
+            Assert.AreEqual(startDateUtc, dcSelectionTime);
         }
 
         [TestCase(false)]
@@ -2174,6 +2226,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             bool startedReceivingata = false;
             using var cancellationTokenSource = new CancellationTokenSource(timeout * 2);
             _algorithm.SetLocked();
+
+            _algorithm.PostInitialize();
+
             foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
             {
                 _algorithm.ProcessSecurityChanges(timeSlice.SecurityChanges);
