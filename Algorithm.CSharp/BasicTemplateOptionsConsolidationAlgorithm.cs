@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public void OnTradeBarConsolidated(object sender, TradeBar tradeBar)
         {
-            Log($"OnQuoteBarConsolidated called on {Time}");
+            Log($"OnTradeBarConsolidated called on {Time}");
             Log(tradeBar.ToString());
         }
 
