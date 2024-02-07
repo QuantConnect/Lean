@@ -42,8 +42,8 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         self.SetStartDate(2014, 3, 25)
         self.SetEndDate(2014, 3, 29)
         self.SetCash(10000000)
+        self.shortableProvider = RegressionTestShortableProvider();
         self.security = self.AddEquity(self._spy)
-        self.security.SetShortableProvider(RegressionTestShortableProvider())
 
         self.AddUniverse(self.CoarseSelection)
         self.UniverseSettings.Resolution = Resolution.Daily
@@ -67,7 +67,7 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
                 self.lastTradeDate = self.Time.date()
 
     def CoarseSelection(self, coarse):
-        shortableSymbols = self.security.ShortableProvider.GetRawShortableProvider().AllShortableSymbols(self.Time)
+        shortableSymbols = self.shortableProvider.AllShortableSymbols(self.Time)
         selectedSymbols = list(sorted(filter(lambda x: (x in shortableSymbols.keys()) and (shortableSymbols[x] >= 500), map(lambda x: x.Symbol, coarse)), key= lambda x: x.Value))
 
         expectedMissing = 0

@@ -50,17 +50,5 @@ namespace QuantConnect.Data.Shortable
                 return (_shortableProvider.ShortableQuantity(symbol, localTime) as PyObject).GetAndDispose<long?>();
             }
         }
-
-        /// <summary>
-        /// Returns the python shortable provider
-        /// </summary>
-        /// <remarks>This method is used just for testing</remarks>
-        public PyObject GetRawShortableProvider()
-        {
-            using (Py.GIL())
-            {
-                return _shortableProvider;
-            }
-        }
     }
 }
