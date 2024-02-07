@@ -165,9 +165,9 @@ namespace QuantConnect.Orders
         public decimal AbsoluteQuantity => Math.Abs(Quantity);
 
         /// <summary>
-        /// Gets the executed value of this order. If the order has not yet filled,
-        /// then this will return zero.
+        /// Deprecated
         /// </summary>
+        [Obsolete("Please use Order.GetValue(security) or security.Holdings.HoldingsValue")]
         public decimal Value => Quantity * Price;
 
         /// <summary>
