@@ -48,7 +48,7 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         self.AddUniverse(self.CoarseSelection)
         self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.SetBrokerageModel(AllShortableSymbolsRegressionAlgorithmBrokerageModel())
+        self.SetBrokerageModel(AllShortableSymbolsRegressionAlgorithmBrokerageModel(self.shortableProvider))
 
     def OnData(self, data):
         if self.Time.date() == self.lastTradeDate:
@@ -92,11 +92,12 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
             raise Exception(f"Expected coarse selection on all dates, but didn't run on: {', '.join(list(map(lambda x: x.Key.strftime('%Y%m%d'), filter(lambda x:not x.Value, self.coarseSelected))))}")
 
 class AllShortableSymbolsRegressionAlgorithmBrokerageModel(DefaultBrokerageModel):
-    def __init__(self):
+    def __init__(self, shortableProvider):
+        self.shortableProvider = shortableProvider
         super().__init__()
 
     def GetShortableProvider(self, security):
-        return RegressionTestShortableProvider()
+        return self.shortableProvider
 
 class RegressionTestShortableProvider(LocalDiskShortableProvider):
     def __init__(self):
