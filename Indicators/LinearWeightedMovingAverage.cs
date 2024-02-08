@@ -77,7 +77,7 @@ namespace QuantConnect.Indicators
 
             // The denominator is calculated each time in case the Size is less than the period.
             // There may be a more efficient way of calculating the factorial.
-            for (var i = 0; i <= index; i++)
+            for (var i = 0; i < index; i++)
             {
                 denominator += i;
             }
@@ -88,7 +88,8 @@ namespace QuantConnect.Indicators
             var minSizeSamples = (int)Math.Min(index, window.Samples);
             for (var i = 0; i < minSizeSamples; i++)
             {
-                numerator += (index-- * window[i].Value);
+                numerator += (index * window[i].Value);
+                index--;
             }
             return numerator / denominator;
         }
