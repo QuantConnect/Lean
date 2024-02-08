@@ -176,7 +176,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             _algorithm.SetBenchmark(x => 1);
 
-            var feed = RunDataFeed();
+            var feed = RunDataFeed(runPostInitialize: false);
 
             var esSelectionTime = DateTime.MinValue;
             var esFuture = _algorithm.AddFuture("ES", Resolution.Minute, extendedMarketHours: true);
@@ -201,20 +201,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return x;
             });
 
+            _algorithm.PostInitialize();
+
+            Assert.IsNull(esFuture.Mapped);
+            Assert.IsNull(dcFuture.Mapped);
+
             // allow time for the exchange to pick up the selection point
             Thread.Sleep(50);
+
+            var timeSliceCount = 0;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts => {
-                if (esSelectionTime != DateTime.MinValue)
+                timeSliceCount++;
+                if (esFuture.Mapped != null && dcFuture.Mapped != null)
                 {
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
             },
             endDate: endDate,
-            secondsTimeStep: 60);
+            secondsTimeStep: 60 * 60);
+
+            // Continuous futures should select the first contract immediately
+            Assert.IsNotNull(esFuture.Mapped);
+            Assert.IsNotNull(dcFuture.Mapped);
 
             Assert.AreEqual(startDateUtc, esSelectionTime);
             Assert.AreEqual(startDateUtc, dcSelectionTime);
+
+            Assert.AreEqual(1, timeSliceCount);
         }
 
         [TestCase(false)]
@@ -444,7 +458,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 _algorithm.SetWarmup(TimeSpan.FromDays(365));
             }
-            var feed = RunDataFeed();
+            var feed = RunDataFeed(runPostInitialize: false);
 
             var continuousContract = _algorithm.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
@@ -453,6 +467,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             );
             // the expiration of this option contract is before the start date of the algorithm but we should still get some data during warmup
             continuousContract.SetFilter(0, 182);
+
+            // Post initialize after securities are added (Initialize)
+            _algorithm.PostInitialize();
 
             var emittedChainData = false;
             var emittedContinuousData = false;
@@ -2118,7 +2135,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null,
             Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null,
             Func<Symbol, bool, string, IEnumerable<Symbol>> lookupSymbolsFunction = null,
-            Func<bool> canPerformSelection = null, IDataQueueHandler dataQueueHandler = null)
+            Func<bool> canPerformSelection = null, IDataQueueHandler dataQueueHandler = null,
+            bool runPostInitialize = true)
         {
             _algorithm.SetStartDate(_startDate);
             _algorithm.SetDateTime(_manualTimeProvider.GetUtcNow());
@@ -2203,7 +2221,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _feed.Initialize(_algorithm, job, resultHandler, TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider, fileProvider, _dataManager, _synchronizer, new TestDataChannelProvider());
 
-            _algorithm.PostInitialize();
+            if (runPostInitialize)
+            {
+                _algorithm.PostInitialize();
+            }
+
             return _feed;
         }
 
@@ -2226,9 +2248,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             bool startedReceivingata = false;
             using var cancellationTokenSource = new CancellationTokenSource(timeout * 2);
             _algorithm.SetLocked();
-
-            _algorithm.PostInitialize();
-
             foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
             {
                 _algorithm.ProcessSecurityChanges(timeSlice.SecurityChanges);
