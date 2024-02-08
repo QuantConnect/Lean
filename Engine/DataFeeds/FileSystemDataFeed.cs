@@ -94,19 +94,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <remarks>Protected so it can be used by the <see cref="LiveTradingDataFeed"/> to warmup requests</remarks>
         protected IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, Resolution? fillForwardResolution = null)
         {
-            if (request.IsUniverseSubscription)
-            {
-                // Let's adjust the start time to the previous tradable date
-                // so universe selection always happens right away at the start of the algorithm.
-                var startTimeLocal = Time.GetStartTimeForTradeBars(request.Security.Exchange.Hours, request.StartTimeLocal, Time.OneDay, 1, true,
-                    request.Configuration.DataTimeZone);
-                var universeRequest = new SubscriptionRequest(request,
-                    startTimeUtc: startTimeLocal.ConvertToUtc(request.Security.Exchange.TimeZone));
-
-                return CreateUniverseEnumerator(universeRequest, CreateDataEnumerator, fillForwardResolution);
-            }
-
-            return CreateDataEnumerator(request, fillForwardResolution);
+            return request.IsUniverseSubscription ? CreateUniverseEnumerator(request, CreateDataEnumerator, fillForwardResolution) : CreateDataEnumerator(request, fillForwardResolution);
         }
 
         private IEnumerator<BaseData> CreateDataEnumerator(SubscriptionRequest request, Resolution? fillForwardResolution)

@@ -109,6 +109,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     new SecurityCache()
                                  );
                             }
+
+                            // TODO: This adjustment should be done for all universes, but we should do it in steps to avoid breaking changes
+                            if (universe is ContinuousContractUniverse)
+                            {
+                                // Let's adjust the start time to the previous tradable date
+                                // so universe selection always happens right away at the start of the algorithm.
+                                start = Time.GetStartTimeForTradeBars(security.Exchange.Hours, start.ConvertFromUtc(security.Exchange.TimeZone),
+                                    Time.OneDay, 1, true, config.DataTimeZone);
+                            }
+
                             AddSubscription(
                                 new SubscriptionRequest(true,
                                     universe,
