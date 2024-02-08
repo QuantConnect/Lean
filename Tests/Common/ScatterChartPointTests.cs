@@ -56,5 +56,20 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(point.Y, clone.Y);
             Assert.AreEqual(point.Tooltip, clone.Tooltip);
         }
+
+        [TestCase("[890370000,1.0]", 1, null)]
+        [TestCase("{ \"x\": 890370000, \"y\": 1.0}", 1, null)]
+        [TestCase("{ \"x\": 890370000, \"y\": null}", null, null)]
+        [TestCase("{ \"x\": 890370000, \"y\": null, \"tooltip\": \"a Test\"}", null, "a Test")]
+        public void Deserialize(string serialized, decimal? expected, string toolTip)
+        {
+            var deserialized = JsonConvert.DeserializeObject<ScatterChartPoint>(serialized);
+
+            var time = new DateTime(1998, 3, 20, 5, 0, 0);
+            Assert.AreEqual(time, deserialized.Time);
+            Assert.AreEqual(890370000, deserialized.X);
+            Assert.AreEqual(expected, deserialized.Y);
+            Assert.AreEqual(toolTip, deserialized.Tooltip);
+        }
     }
 }

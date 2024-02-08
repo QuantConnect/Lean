@@ -114,17 +114,6 @@ namespace QuantConnect
         /// <param name="time">This point time</param>
         /// <param name="value">Y value</param>
         public ChartPoint(DateTime time, decimal? value)
-            : this(time, value, null)
-        {
-        }
-
-        /// <summary>
-        /// Constructor that takes both x, y value pairs
-        /// </summary>
-        /// <param name="time">This point time</param>
-        /// <param name="value">Y value</param>
-        /// <param name="tooltip">Optional summary of this point for the tooltip</param>
-        public ChartPoint(DateTime time, decimal? value, string tooltip)
             : this()
         {
             Time = time;
