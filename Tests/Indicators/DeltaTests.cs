@@ -39,9 +39,9 @@ namespace QuantConnect.Tests.Indicators
         [SetUp]
         public void SetUp()
         {
-            // 3 updates per iteration, 1 for greek, 2 for IV
-            RiskFreeRateUpdatesPerIteration = 3;
-            DividendYieldUpdatesPerIteration = 3;
+            // 2 updates per iteration, 1 for greek, 1 for IV
+            RiskFreeRateUpdatesPerIteration = 2;
+            DividendYieldUpdatesPerIteration = 2;
         }
 
         [TestCase("SPX230811C04300000", 0.021)]

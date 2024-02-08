@@ -550,6 +550,8 @@ namespace QuantConnect.Algorithm
                 : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
             IDividendYieldModel dividendYieldModel = dividendYield.HasValue
                 ? new ConstantDividendYieldModel(dividendYield.Value)
+                : symbol.ID.SecurityType == SecurityType.FutureOption || symbol.ID.SecurityType == SecurityType.IndexOption
+                ? new ConstantDividendYieldModel(0m)
                 : new DividendYieldProvider(symbol.Underlying);
             var delta = new Delta(name, symbol, riskFreeRateModel, dividendYieldModel, optionModel, ivModel);
             RegisterIndicator(symbol, delta, ResolveConsolidator(symbol, resolution));
@@ -916,6 +918,8 @@ namespace QuantConnect.Algorithm
                 : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
             IDividendYieldModel dividendYieldModel = dividendYield.HasValue
                 ? new ConstantDividendYieldModel(dividendYield.Value)
+                : symbol.ID.SecurityType == SecurityType.FutureOption || symbol.ID.SecurityType == SecurityType.IndexOption
+                ? new ConstantDividendYieldModel(0m)
                 : new DividendYieldProvider(symbol.Underlying);
             var iv = new ImpliedVolatility(name, symbol, riskFreeRateModel, dividendYieldModel, period, optionModel);
             RegisterIndicator(symbol, iv, ResolveConsolidator(symbol, resolution));

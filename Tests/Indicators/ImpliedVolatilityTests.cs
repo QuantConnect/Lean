@@ -40,9 +40,8 @@ namespace QuantConnect.Tests.Indicators
         [SetUp]
         public void SetUp()
         {
-            // 2 updates per iteration
-            RiskFreeRateUpdatesPerIteration = 2;
-            DividendYieldUpdatesPerIteration = 2;
+            RiskFreeRateUpdatesPerIteration = 1;
+            DividendYieldUpdatesPerIteration = 1;
         }
 
         // For comparing IB's value

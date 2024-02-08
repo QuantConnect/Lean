@@ -13,14 +13,12 @@
  * limitations under the License.
 */
 
-using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 
 namespace QuantConnect.Data
@@ -31,7 +29,7 @@ namespace QuantConnect.Data
     public class DividendYieldProvider : IDividendYieldModel
     {
         private Symbol _symbol;
-        private static DateTime _firstDividendYieldDate = new DateTime(1998, 1, 1);
+        private static DateTime _firstDividendYieldDate = Time.Start;
         private static DateTime _lastDividendYieldDate;
         private static Dictionary<DateTime, decimal> _dividendYieldRateProvider;
         private static readonly object _lock = new();
@@ -95,8 +93,13 @@ namespace QuantConnect.Data
         /// </summary>
         protected void LoadDividendYieldProvider()
         {
-            var directory = Path.Combine(Globals.DataFolder, "equity", "usa", "factor_files", $"{_symbol.Value.ToLowerInvariant()}.csv");
-            _dividendYieldRateProvider = FromCsvFile(directory);
+            var factorFileProvider = Composer.Instance.GetPart<IFactorFileProvider>();
+            var corporateFactors = factorFileProvider
+                .Get(_symbol)
+                .Select(factorRow => factorRow as CorporateFactorRow)
+                .Where(corporateFactor => corporateFactor != null);
+
+            _dividendYieldRateProvider = FromCorporateFactorRow(corporateFactors);
 
             _lastDividendYieldDate = DateTime.UtcNow.Date;
 
@@ -119,24 +122,17 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="file">The csv file to be read</param>
         /// <returns>Dictionary of historical annualized continuous dividend yield data</returns>
-        public static Dictionary<DateTime, decimal> FromCsvFile(string file)
+        public static Dictionary<DateTime, decimal> FromCorporateFactorRow(IEnumerable<CorporateFactorRow> corporateFactors)
         {
-            var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(
-                Config.Get("data-provider", "DefaultDataProvider"));
-
-            // skip the first header line, also skip #'s as these are comment lines
             var dividendYieldProvider = new Dictionary<DateTime, decimal>();
-            var lines = dataProvider.ReadLines(file).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
 
             // calculate the dividend rate from each payout
-            var previousRate = 0m;
-            for (int i = lines.Length - 1; i >= 0; i--)
+            var subsequentRate = 0m;
+            foreach (var row in corporateFactors.OrderByDescending(corporateFactor => corporateFactor.Date).ToArray())
             {
-                if (TryParse(lines[i], previousRate, out var date, out var dividendYield))
-                {
-                    dividendYieldProvider[date] = dividendYield;
-                    previousRate = dividendYield;
-                }
+                var dividendYield = 1 / row.PriceFactor - 1 - subsequentRate;
+                dividendYieldProvider[row.Date] = dividendYield;
+                subsequentRate = dividendYield;
             }
 
             // cumulative sum by year, since we'll use yearly payouts for estimation
@@ -150,39 +146,10 @@ namespace QuantConnect.Data
 
             if (yearlyDividendYieldProvider.Count == 0)
             {
-                Log.Error($"DividendYieldProvider.FromCsvFile(): no dividend were loaded, please make sure the file is present '{file}'");
+                Log.Error($"DividendYieldProvider.FromCsvFile(): no dividend were loaded");
             }
 
             return yearlyDividendYieldProvider;
-        }
-
-        /// <summary>
-        /// Parse the string into the factoring date and value
-        /// </summary>
-        /// <param name="csvLine">The csv line to be parsed</param>
-        /// <param name="nextPayouts">Dividend payout rate of all subsequent payouts</param>
-        /// <param name="date">Parsed dividend date</param>
-        /// <param name="dividendYield">Parsed dividend value</param>
-        public static bool TryParse(string csvLine, decimal nextPayouts, out DateTime date, out decimal dividendYield)
-        {
-            var line = csvLine.Split(',');
-
-            if (!DateTime.TryParseExact(line[0], "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
-            {
-                Log.Error($"Couldn't parse date/time while reading factor file. Line: {csvLine}");
-                dividendYield = DefaultDividendYieldRate;
-                return false;
-            }
-
-            if (!decimal.TryParse(line[1], NumberStyles.Any, CultureInfo.InvariantCulture, out dividendYield))
-            {
-                Log.Error($"Couldn't parse discounted shares multiplier while reading factor file. Line: {csvLine}");
-                return false;
-            }
-
-            // payout rate
-            dividendYield = 1 / dividendYield - 1 - nextPayouts;
-            return true;
         }
     }
 }

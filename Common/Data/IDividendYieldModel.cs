@@ -14,8 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Data
 {
@@ -30,35 +28,5 @@ namespace QuantConnect.Data
         /// <param name="date">The date</param>
         /// <returns>Dividend yield on the given date</returns>
         decimal GetDividendYield(DateTime date);
-    }
-
-    /// <summary>
-    /// Provide extension and static methods for <see cref="IDividendYieldModel"/>
-    /// </summary>
-    public static class DividendYieldModelExtensions
-    {
-        /// <summary>
-        /// Gets the average dividend yield
-        /// </summary>
-        /// <param name="model">The dividend yield model</param>
-        /// <param name="startDate">Start date to calculate the average</param>
-        /// <param name="endDate">End date to calculate the average</param>
-        public static decimal GetDividendYield(this IDividendYieldModel model, DateTime startDate, DateTime endDate)
-        {
-            return model.GetAverageDividendYield(Time.EachDay(startDate, endDate));
-        }
-
-        /// <summary>
-        /// Gets the average dividend yield from the dividend yield of the given dates
-        /// </summary>
-        /// <param name="model">The dividend yield model</param>
-        /// <param name="dates">
-        /// Collection of dates from which the dividend yield will be computed and then the average of them
-        /// </param>
-        public static decimal GetAverageDividendYield(this IDividendYieldModel model, IEnumerable<DateTime> dates)
-        {
-            var dividendYields = dates.Select(x => model.GetDividendYield(x)).DefaultIfEmpty(0);
-            return dividendYields.Average();
-        }
     }
 }

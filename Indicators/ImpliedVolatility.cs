@@ -209,9 +209,6 @@ namespace QuantConnect.Indicators
         /// <returns>The input is returned unmodified.</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            RiskFreeRate.Update(input.EndTime, _riskFreeInterestRateModel.GetInterestRate(input.EndTime));
-            DividendYield.Update(input.EndTime, _dividendYieldModel.GetDividendYield(input.EndTime));
-
             var inputSymbol = input.Symbol;
             if (inputSymbol == _optionSymbol)
             {
@@ -253,6 +250,9 @@ namespace QuantConnect.Indicators
         // Calculate the IV of the option
         private decimal CalculateIV(DateTime time)
         {
+            RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
+            DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
+
             var price = Price.Current.Value;
             var spotPrice = UnderlyingPrice.Current.Value;
             var timeToExpiration = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
