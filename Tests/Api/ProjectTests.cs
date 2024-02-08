@@ -326,6 +326,10 @@ namespace QuantConnect.Tests.API
             // Delete the backtest we just created
             var deleteBacktest = ApiClient.DeleteBacktest(project.ProjectId, backtest.BacktestId);
             Assert.IsTrue(deleteBacktest.Success);
+
+            // Delete the project we just created
+            var deleteProject = ApiClient.DeleteProject(project.ProjectId);
+            Assert.IsTrue(deleteProject.Success);
         }
 
         [Test]
