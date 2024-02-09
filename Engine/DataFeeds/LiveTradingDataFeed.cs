@@ -228,8 +228,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var auxEnumerators = new List<IEnumerator<BaseData>>();
 
-                if (LiveAuxiliaryDataEnumerator.TryCreate(request.Configuration, _timeProvider, _dataQueueHandler,
-                    request.Security.Cache, _mapFileProvider, _factorFileProvider, request.StartTimeLocal, out var auxDataEnumator))
+                if (LiveAuxiliaryDataEnumerator.TryCreate(request.Configuration, _timeProvider, request.Security.Cache, _mapFileProvider,
+                    _factorFileProvider, request.StartTimeLocal, out var auxDataEnumator))
                 {
                     auxEnumerators.Add(auxDataEnumator);
                 }

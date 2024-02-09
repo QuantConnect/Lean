@@ -17,34 +17,31 @@
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Logging;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Event provider who will emit <see cref="SymbolChangedEvent"/> events
+    /// Delisting event provider implementation which will source the delisting date based on new map files
     /// </summary>
-    /// <remarks>Only special behavior is that it will refresh factor file on each new tradable date event</remarks>
-    public class LiveDividendEventProvider : DividendEventProvider
+    public class LiveDelistingEventProvider : DelistingEventProvider
     {
         /// <summary>
-        /// Check for dividends and returns them
+        /// Check for delistings
         /// </summary>
         /// <param name="eventArgs">The new tradable day event arguments</param>
-        /// <returns>New Dividend event if any</returns>
+        /// <returns>New delisting event if any</returns>
         public override IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
-            var currentInstance = FactorFile;
-            // refresh factor file instance
-            InitializeFactorFile();
-            var newInstance = FactorFile;
+            var currentInstance = MapFile;
+            // refresh map file instance
+            InitializeMapFile();
+            var newInstance = MapFile;
 
-            if (currentInstance?.Count() != newInstance?.Count())
+            if (currentInstance?.LastOrDefault()?.Date != newInstance?.LastOrDefault()?.Date)
             {
-                Log.Trace($"LiveDividendEventProvider({Config}): new tradable date {eventArgs.Date:yyyyMMdd}. " +
-                    $"New FactorFile: {!ReferenceEquals(currentInstance, newInstance)}. " +
-                    $"FactorFile.Count Old: {currentInstance?.Count()} New: {newInstance?.Count()}");
+                Log.Trace($"LiveDelistingEventProvider({Config}): new tradable date {eventArgs.Date:yyyyMMdd}. " +
+                    $"MapFile.LastDate Old: {currentInstance?.LastOrDefault()?.Date:yyyyMMdd} New: {newInstance?.LastOrDefault()?.Date:yyyyMMdd}");
             }
 
             return base.GetEvents(eventArgs);

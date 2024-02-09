@@ -15,12 +15,12 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -34,13 +34,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         // since we need to wait for the next trading day before emitting
         private bool _delisted;
         private bool _delistedWarning;
-
-        private SubscriptionDataConfig _config;
+        private IMapFileProvider _mapFileProvider;
 
         /// <summary>
         /// The delisting date
         /// </summary>
         protected ReferenceWrapper<DateTime> DelistingDate { get; set; }
+
+        /// <summary>
+        /// The current instance being used
+        /// </summary>
+        protected MapFile MapFile { get; private set; }
+
+        /// <summary>
+        /// The associated configuration
+        /// </summary>
+        protected SubscriptionDataConfig Config { get; private set; }
 
         /// <summary>
         /// Initializes this instance
@@ -55,9 +64,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             IMapFileProvider mapFileProvider,
             DateTime startTime)
         {
-            _config = config;
-            var mapFile = mapFileProvider.ResolveMapFile(_config);
-            DelistingDate = new ReferenceWrapper<DateTime>(config.Symbol.GetDelistingDate(mapFile));
+            Config = config;
+            _mapFileProvider = mapFileProvider;
+
+            InitializeMapFile();
         }
 
         /// <summary>
@@ -65,9 +75,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="eventArgs">The new tradable day event arguments</param>
         /// <returns>New delisting event if any</returns>
-        public IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
+        public virtual IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
-            if (_config.Symbol == eventArgs.Symbol)
+            if (Config.Symbol == eventArgs.Symbol)
             {
                 // we send the delisting warning when we reach the delisting date, here we make sure we compare using the date component
                 // of the delisting date since for example some futures can trade a few hours in their delisting date, else we would skip on
@@ -94,6 +104,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         DelistingType.Delisted);
                 }
             }
+        }
+
+        /// <summary>
+        /// Initializes the factor file to use
+        /// </summary>
+        protected void InitializeMapFile()
+        {
+            MapFile = _mapFileProvider.ResolveMapFile(Config);
+            DelistingDate = new ReferenceWrapper<DateTime>(Config.Symbol.GetDelistingDate(MapFile));
         }
     }
 }
