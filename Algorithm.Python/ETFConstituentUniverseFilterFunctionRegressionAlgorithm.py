@@ -59,7 +59,7 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
     def OnData(self, data):
         if not self.filtered and len(data.Bars) != 0 and self.aapl in data.Bars:
             raise Exception("AAPL TradeBar data added to algorithm before constituent universe selection took place")
-        
+
         if len(data.Bars) == 1 and self.spy in data.Bars:
             return
 
@@ -95,11 +95,11 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
         self.securitiesChanged = True
 
     def OnEndOfAlgorithm(self):
-        if self.rebalanceCount != 1:
-            raise Exception(f"Expected 1 rebalance, instead rebalanced: {self.rebalanceCount}")
+        if self.rebalanceCount != 2:
+            raise Exception(f"Expected 2 rebalance, instead rebalanced: {self.rebalanceCount}")
 
-        if self.rebalanceAssetCount != 4:
-            raise Exception(f"Invested in {self.rebalanceAssetCount} assets (expected 4)")
+        if self.rebalanceAssetCount != 8:
+            raise Exception(f"Invested in {self.rebalanceAssetCount} assets (expected 8)")
 
         if not self.filtered:
             raise Exception("Universe selection was never triggered")

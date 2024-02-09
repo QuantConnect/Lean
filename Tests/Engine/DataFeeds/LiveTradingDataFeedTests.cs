@@ -231,6 +231,53 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, timeSliceCount);
         }
 
+        [Test]
+        public void ETFsImmediateSelection()
+        {
+            _startDate = new DateTime(2020, 12, 1, 1, 0, 0);
+            var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
+            _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
+            var endDate = _startDate.AddDays(5);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var feed = RunDataFeed(runPostInitialize: false);
+
+            var spy = _algorithm.AddEquity("SPY").Symbol;
+
+            var selectionTime = DateTime.MinValue;
+            List<Symbol> constituents = null;
+
+            var universe = _algorithm.AddUniverse(_algorithm.Universe.ETF(spy, constituentsData =>
+            {
+                selectionTime = _algorithm.UtcTime;
+                constituents = constituentsData.Select(x => x.Symbol).ToList();
+                return constituents;
+            }));
+
+            _algorithm.PostInitialize();
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+
+            var timeSliceCount = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(10), true, ts => {
+                timeSliceCount++;
+                if (selectionTime != DateTime.MinValue)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60 * 60);
+
+            Assert.AreEqual(startDateUtc, selectionTime);
+            Assert.IsNotNull(constituents);
+            Assert.IsNotEmpty(constituents);
+            Assert.AreEqual(1, timeSliceCount);
+        }
+
         [TestCase(false)]
         [TestCase(true)]
         public void WarmupOptionSelection(bool useWarmupResolution)
