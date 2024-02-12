@@ -20,6 +20,7 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Data
 {
@@ -30,7 +31,7 @@ namespace QuantConnect.Data
     {
         private Symbol _symbol;
         private static DateTime _firstDividendYieldDate = Time.Start;
-        private static DateTime _lastDividendYieldDate;
+        private static decimal _lastDividendYield;
         private static Dictionary<DateTime, decimal> _dividendYieldRateProvider;
         private static readonly object _lock = new();
 
@@ -40,11 +41,43 @@ namespace QuantConnect.Data
         public static readonly decimal DefaultDividendYieldRate = 0.0m;
 
         /// <summary>
+        /// The cached refresh period for the dividend yield rate
+        /// </summary>
+        /// <remarks>Exposed for testing</remarks>
+        protected virtual TimeSpan CacheRefreshPeriod
+        {
+            get
+            {
+                var dueTime = Time.GetNextLiveAuxiliaryDataDueTime();
+                if (dueTime > TimeSpan.FromMinutes(10))
+                {
+                    // Clear the cache before the auxiliary due time to avoid race conditions with consumers
+                    return dueTime - TimeSpan.FromMinutes(10);
+                }
+                return dueTime;
+            }
+        }
+
+        /// <summary>
         /// Instantiates a <see cref="DividendYieldProvider"/> with the specified Symbol
         /// </summary>
         public DividendYieldProvider(Symbol symbol)
         {
             _symbol = symbol;
+            StartExpirationTask();
+        }
+
+        /// <summary>
+        /// Helper method that will clear any cached dividend rate in a daily basis, this is useful for live trading
+        /// </summary>
+        protected virtual void StartExpirationTask()
+        {
+            lock (_lock)
+            {
+                // we clear the dividend yield rate cache so they are reloaded
+                _dividendYieldRateProvider = null;
+            }
+            _ = Task.Delay(CacheRefreshPeriod).ContinueWith(_ => StartExpirationTask());
         }
 
         /// <summary>
@@ -82,7 +115,7 @@ namespace QuantConnect.Data
             {
                 return date < _firstDividendYieldDate
                     ? DefaultDividendYieldRate
-                    : DividendYieldRateProvider[_lastDividendYieldDate];
+                    : _lastDividendYield;
             }
 
             return dividendYield;
@@ -91,7 +124,8 @@ namespace QuantConnect.Data
         /// <summary>
         /// Generate the daily historical dividend yield
         /// </summary>
-        protected void LoadDividendYieldProvider()
+        /// <remarks>Exposed for testing</remarks>
+        protected virtual void LoadDividendYieldProvider()
         {
             var factorFileProvider = Composer.Instance.GetPart<IFactorFileProvider>();
             var corporateFactors = factorFileProvider
@@ -100,12 +134,14 @@ namespace QuantConnect.Data
                 .Where(corporateFactor => corporateFactor != null);
 
             _dividendYieldRateProvider = FromCorporateFactorRow(corporateFactors);
-
-            _lastDividendYieldDate = DateTime.UtcNow.Date;
+            if (_dividendYieldRateProvider.Count == 0)
+            {
+                return;
+            }
 
             // Sparse the discrete data points into continuous data for every day
             var previousDividendYield = DefaultDividendYieldRate;
-            for (var date = _firstDividendYieldDate; date <= _lastDividendYieldDate; date = date.AddDays(1))
+            for (var date = _firstDividendYieldDate; date <= _dividendYieldRateProvider.Keys.Max(); date = date.AddDays(1))
             {
                 if (!_dividendYieldRateProvider.TryGetValue(date, out var currentRate))
                 {
@@ -118,9 +154,9 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Reads factor data and returns a dictionary of historical dividend yield
+        /// Returns a dictionary of historical dividend yield from collection of corporate factor rows
         /// </summary>
-        /// <param name="file">The csv file to be read</param>
+        /// <param name="corporateFactors">The corporate factor rows containing factor data</param>
         /// <returns>Dictionary of historical annualized continuous dividend yield data</returns>
         public static Dictionary<DateTime, decimal> FromCorporateFactorRow(IEnumerable<CorporateFactorRow> corporateFactors)
         {
@@ -128,7 +164,7 @@ namespace QuantConnect.Data
 
             // calculate the dividend rate from each payout
             var subsequentRate = 0m;
-            foreach (var row in corporateFactors.OrderByDescending(corporateFactor => corporateFactor.Date).ToArray())
+            foreach (var row in corporateFactors.OrderByDescending(corporateFactor => corporateFactor.Date))
             {
                 var dividendYield = 1 / row.PriceFactor - 1 - subsequentRate;
                 dividendYieldProvider[row.Date] = dividendYield;
@@ -141,6 +177,7 @@ namespace QuantConnect.Data
             {
                 // 15 days window from 1y to avoid overestimation from last year value
                 var yearlyDividend = dividendYieldProvider.Where(kvp => kvp.Key <= date && kvp.Key > date.AddDays(-350)).Sum(kvp => kvp.Value);
+                // discrete to continuous: LN(1 + i)
                 yearlyDividendYieldProvider[date] = Convert.ToDecimal(Math.Log(1d + (double)yearlyDividend));
             }
 

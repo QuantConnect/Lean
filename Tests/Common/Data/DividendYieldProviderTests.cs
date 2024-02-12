@@ -15,6 +15,8 @@
 
 using NUnit.Framework;
 using QuantConnect.Data;
+using System;
+using System.Threading;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -37,6 +39,70 @@ namespace QuantConnect.Tests.Common.Data
             var result = provider.GetDividendYield(dateTime);
 
             Assert.AreEqual(expected, (double)result, 0.0001d);
+        }
+
+        [TestCase("19700101", 0.0)]   // Date before Time.Start
+        [TestCase("20200101", 0.0)]
+        [TestCase("20500101", 0.0)]   // Date in far future
+        public void GetDividendYieldWithoutFactorFile(string dateString, decimal expected)
+        {
+            var symbol = Symbols.EURUSD;
+            var provider = new DividendYieldProvider(symbol);
+            var dateTime = Parse.DateTimeExact(dateString, "yyyyMMdd");
+            var result = provider.GetDividendYield(dateTime);
+
+            Assert.AreEqual(expected, result);
+        }
+
+        [Test]
+        public void CacheIsCleared()
+        {
+            var symbol = Symbols.AAPL;
+            var fileProviderTest = new DividendYieldProviderTest(symbol);
+
+            fileProviderTest.CacheCleared.Reset();
+
+            fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
+            Assert.AreEqual(1, fileProviderTest.FetchCount);
+            Thread.Sleep(1);
+            fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
+            Assert.AreEqual(1, fileProviderTest.FetchCount);
+
+            fileProviderTest.CacheCleared.WaitOne(TimeSpan.FromSeconds(5));
+
+            fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
+            Assert.AreEqual(2, fileProviderTest.FetchCount);
+
+            fileProviderTest.Enabled = false;
+        }
+
+        private class DividendYieldProviderTest : DividendYieldProvider
+        {
+            public int FetchCount { get; set; }
+            public bool Enabled = true;
+            public readonly ManualResetEvent CacheCleared = new(false);
+
+            protected override TimeSpan CacheRefreshPeriod => TimeSpan.FromSeconds(2);
+
+            public DividendYieldProviderTest(Symbol symbol)
+                : base(symbol) 
+            { 
+            }
+
+            protected override void StartExpirationTask()
+            {
+                if (Enabled)
+                {
+                    base.StartExpirationTask();
+                    CacheCleared.Set();
+                }
+            }
+
+            protected override void LoadDividendYieldProvider()
+            {
+                base.LoadDividendYieldProvider();
+                FetchCount++;
+            }
         }
     }
 }
