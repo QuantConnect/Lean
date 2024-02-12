@@ -19,12 +19,11 @@ using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data;
-using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Assert that ETF universe selection happens right away after algorithm starts
+    /// Assert that CoarseFundamentals universe selection happens right away after algorithm starts
     /// </summary>
     public class CoarseFundamentalImmediateSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

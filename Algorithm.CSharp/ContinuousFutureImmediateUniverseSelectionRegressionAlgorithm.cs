@@ -19,6 +19,8 @@ using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Securities.Future;
 using System;
+using QuantConnect.Data.UniverseSelection;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,10 +36,19 @@ namespace QuantConnect.Algorithm.CSharp
 
         private bool _dataReceived;
 
+        private DateTime _startDateUtc;
+
+        private DateTime _esSelectionTimeUtc;
+        private DateTime _milkSelectionTimeUtc;
+
+        private bool _securitiesChangedEventReceived;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 7);
             SetEndDate(2013, 10, 11);
+
+            _startDateUtc = StartDate.ConvertToUtc(TimeZone);
 
             // ES time zone is New York
             _es = AddFuture(Futures.Indices.SP500EMini,
@@ -52,6 +63,39 @@ namespace QuantConnect.Algorithm.CSharp
                 dataMappingMode: DataMappingMode.OpenInterestAnnual,
                 contractDepthOffset: 0,
                 extendedMarketHours: true);
+
+            _es.SetFilter(universe =>
+            {
+                if (_esSelectionTimeUtc == DateTime.MinValue)
+                {
+                    _esSelectionTimeUtc = universe.LocalTime.ConvertToUtc(_es.Exchange.TimeZone);
+
+                    if (_esSelectionTimeUtc != _startDateUtc)
+                    {
+                        throw new Exception($"Expected ES universe selection to happen on algorithm start ({_startDateUtc}), " +
+                            $"but happened on {_esSelectionTimeUtc}");
+                    }
+
+                }
+
+                return universe.Select(x => x);
+            });
+
+            _milk.SetFilter(universe =>
+            {
+                if (_milkSelectionTimeUtc == DateTime.MinValue)
+                {
+                    _milkSelectionTimeUtc = universe.LocalTime.ConvertToUtc(_milk.Exchange.TimeZone);
+
+                    if (_milkSelectionTimeUtc != _startDateUtc)
+                    {
+                        throw new Exception($"Expected DC universe selection to happen on algorithm start ({_startDateUtc}), " +
+                            $"but happened on {_milkSelectionTimeUtc}");
+                    }
+                }
+
+                return universe.Select(x => x);
+            });
         }
 
         public override void OnData(Slice data)
@@ -67,10 +111,50 @@ namespace QuantConnect.Algorithm.CSharp
             // we should have a mapped contract right away.
             if (_milk.Mapped == null)
             {
-                throw new Exception("Milk mapped contract is null");
+                throw new Exception("DC mapped contract is null");
             }
 
-            Log($"{data.Time} :: ES Mapped Contract: {_es.Mapped}. Milk Mapped Contract: {_milk.Mapped}");
+            Log($"{data.Time} :: ES Mapped Contract: {_es.Mapped}. DC Mapped Contract: {_milk.Mapped}");
+        }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            if (!_securitiesChangedEventReceived)
+            {
+                _securitiesChangedEventReceived = true;
+
+                if (Time != StartDate)
+                {
+                    throw new Exception($"Expected OnSecuritiesChanged to be called on algorithm start ({StartDate}), " +
+                        $"but happened on {Time}");
+                }
+
+                if (_esSelectionTimeUtc == DateTime.MinValue)
+                {
+                    throw new Exception("ES universe selection time was not set");
+                }
+
+                if (_milkSelectionTimeUtc == DateTime.MinValue)
+                {
+                    throw new Exception("DC universe selection time was not set");
+                }
+
+                if (changes.AddedSecurities.Count == 0 || changes.RemovedSecurities.Count != 0)
+                {
+                    throw new Exception($"Unexpected securities changes. Expected multiple securities added and none removed " +
+                        $"but got {changes.AddedSecurities.Count} securities added and {changes.RemovedSecurities.Count} removed.");
+                }
+
+                if (!changes.AddedSecurities.Any(x => !x.Symbol.IsCanonical() && x.Symbol.Canonical == _es.Symbol))
+                {
+                    throw new Exception($"Expected to find a multiple futures for ES");
+                }
+
+                if (!changes.AddedSecurities.Any(x => !x.Symbol.IsCanonical() && x.Symbol.Canonical == _milk.Symbol))
+                {
+                    throw new Exception($"Expected to find a multiple futures for DC");
+                }
+            }
         }
 
         public override void OnEndOfAlgorithm()
@@ -79,6 +163,11 @@ namespace QuantConnect.Algorithm.CSharp
             if (!_dataReceived)
             {
                 throw new Exception("No data was received so no checks were done");
+            }
+
+            if (!_securitiesChangedEventReceived)
+            {
+                throw new Exception("OnSecuritiesChanged was not called");
             }
         }
 
@@ -95,7 +184,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 71753;
+        public long DataPoints => 596351;
 
         /// <summary>
         /// Data Points count of the algorithm history

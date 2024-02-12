@@ -112,7 +112,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
 
                             // TODO: This adjustment should be done for all universes, but we should do it in steps to avoid breaking changes
-                            if (universe is ContinuousContractUniverse or ETFConstituentsUniverse ||
+                            if (universe is ContinuousContractUniverse or FuturesChainUniverse or ETFConstituentsUniverse ||
                                 universe.Configuration.Type == typeof(Fundamentals))
                             {
                                 // Let's adjust the start time to the previous tradable date

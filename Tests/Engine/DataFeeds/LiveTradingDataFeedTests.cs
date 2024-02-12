@@ -329,6 +329,53 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, timeSliceCount);
         }
 
+        [Test]
+        public void FutureChainsImmediateSelection()
+        {
+            _startDate = new DateTime(2014, 6, 9);
+            var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
+            _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
+            var endDate = _startDate.AddDays(5);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var feed = RunDataFeed(runPostInitialize: false);
+
+            var firstSelectionTimeUtc = DateTime.MinValue;
+            List<Symbol> selectedSymbols = null;
+
+            var future = _algorithm.AddFuture("ES");
+            future.SetFilter(x =>
+            {
+                firstSelectionTimeUtc = x.LocalTime.ConvertToUtc(future.Exchange.TimeZone);
+                selectedSymbols = x.ToList();
+
+                return x;
+            });
+
+            _algorithm.PostInitialize();
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+
+            var timeSliceCount = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts => {
+                timeSliceCount++;
+                if (firstSelectionTimeUtc != DateTime.MinValue)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60 * 60);
+
+            Assert.AreEqual(startDateUtc, firstSelectionTimeUtc);
+            Assert.AreEqual(1, timeSliceCount);
+            Assert.IsNotNull(selectedSymbols);
+            Assert.IsNotEmpty(selectedSymbols);
+        }
+
         [TestCase(false)]
         [TestCase(true)]
         public void WarmupOptionSelection(bool useWarmupResolution)
