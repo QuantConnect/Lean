@@ -1551,7 +1551,6 @@ actualDictionary.update({'IBM': 5})
             var algo = new QCAlgorithm();
             var dataFeed = new NullDataFeed();
 
-            algo.SubscriptionManager = new SubscriptionManager();
             algo.SubscriptionManager.SetDataManager(new DataManager(
                 dataFeed,
                 new UniverseSelection(
