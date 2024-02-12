@@ -210,7 +210,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Thread.Sleep(50);
 
             var timeSliceCount = 0;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts => {
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
                 timeSliceCount++;
                 if (esFuture.Mapped != null && dcFuture.Mapped != null)
                 {
@@ -261,7 +262,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Thread.Sleep(50);
 
             var timeSliceCount = 0;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(10), true, ts => {
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
                 timeSliceCount++;
                 if (selectionTime != DateTime.MinValue)
                 {
@@ -275,6 +277,55 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(startDateUtc, selectionTime);
             Assert.IsNotNull(constituents);
             Assert.IsNotEmpty(constituents);
+            Assert.AreEqual(1, timeSliceCount);
+        }
+
+        [Test]
+        public void CoarseFundamentalsImmediateSelection()
+        {
+            _startDate = new DateTime(2014, 03, 26, 9, 0, 0);
+            var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
+            _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
+            var endDate = _startDate.AddDays(5);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var feed = RunDataFeed(runPostInitialize: false);
+
+            var selectionTime = DateTime.MinValue;
+            List<Symbol> selectedSymbols = null;
+
+            IEnumerable<Symbol> CoarseFilter(IEnumerable<CoarseFundamental> coarse)
+            {
+                selectionTime = _algorithm.UtcTime;
+                selectedSymbols = coarse.Select(x => x.Symbol).ToList();
+                return selectedSymbols;
+            };
+
+            _algorithm.UniverseSettings.Resolution = Resolution.Daily;
+            var universe = _algorithm.AddUniverse(CoarseFilter);
+
+            _algorithm.PostInitialize();
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+
+            var timeSliceCount = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                timeSliceCount++;
+                if (selectionTime != DateTime.MinValue)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60 * 60);
+
+            Assert.AreEqual(startDateUtc, selectionTime);
+            Assert.IsNotNull(selectedSymbols);
+            Assert.IsNotEmpty(selectedSymbols);
             Assert.AreEqual(1, timeSliceCount);
         }
 

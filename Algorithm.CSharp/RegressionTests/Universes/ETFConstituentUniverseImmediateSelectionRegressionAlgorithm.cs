@@ -23,7 +23,7 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Tests a custom filter function when creating an ETF constituents universe for SPY
+    /// Assert that ETF universe selection happens right away after algorithm starts
     /// </summary>
     public class ETFConstituentUniverseImmediateSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

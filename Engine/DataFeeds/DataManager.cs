@@ -20,6 +20,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -111,7 +112,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
 
                             // TODO: This adjustment should be done for all universes, but we should do it in steps to avoid breaking changes
-                            if (universe is ContinuousContractUniverse or ETFConstituentsUniverse)
+                            if (universe is ContinuousContractUniverse or ETFConstituentsUniverse ||
+                                universe.Configuration.Type == typeof(Fundamentals))
                             {
                                 // Let's adjust the start time to the previous tradable date
                                 // so universe selection always happens right away at the start of the algorithm.
