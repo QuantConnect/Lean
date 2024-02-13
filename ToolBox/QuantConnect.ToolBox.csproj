@@ -40,7 +40,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.26" />
-    <PackageReference Include="CoinAPI.WebSocket.V1" Version="1.6.7" />
     <PackageReference Include="Common.Logging" Version="3.4.1" />
     <PackageReference Include="Common.Logging.Core" Version="3.4.1" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.6.0" />

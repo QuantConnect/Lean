@@ -35,12 +35,7 @@ namespace QuantConnect.Tests.ToolBox
                 .Where(p => type.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract)
                 .ToList();
 
-            Assert.NotZero(types.Count);
-
-            types.ForEach(t =>
-            {
-                Assert.NotNull(t.GetConstructor(Type.EmptyTypes));
-            });            
+            Assert.Zero(types.Count);       
         }
 
         [TestCase("--app=ydl --tickers=AAPL --resolution=Daily --from-date=20200820-00:00:00 --to-date=20200830-00:00:00", 1)]
