@@ -4041,6 +4041,23 @@ namespace QuantConnect
             return result.Value;
         }
 
+        public static string ToValidPath(string name) {
+            if (OS.IsWindows)
+            {
+                var regex = new Regex("([?])|(\\\\|\\/|^)((CON(\\.))|(PRN(\\.))|(AUX(\\.))|(NUL(\\.))|(COM[0123456789](\\.))|(LPT[0123456789](\\.)))");
+                var match = regex.Match(name);
+                if (match.Success)
+                {
+                    var replaceRegex = new Regex("([?])|CON|PRN|AUX|NUL|COM[0123456789]|LPT[0123456789]");
+                    var replaceValue = replaceRegex.Replace(match.Value, "fixed-$&", 1);
+                    return regex.Replace(name, replaceValue);
+                }
+            }
+
+            return name;
+
+        }
+
         /// <summary>
         /// Gets the greatest common divisor of two numbers
         /// </summary>
