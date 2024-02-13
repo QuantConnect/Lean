@@ -4049,7 +4049,16 @@ namespace QuantConnect
                 if (match.Success)
                 {
                     var replaceRegex = new Regex("([?])|CON|PRN|AUX|NUL|COM[0123456789]|LPT[0123456789]");
-                    var replaceValue = replaceRegex.Replace(match.Value, "fixed-$&", 1);
+                    string replaceValue = "";
+                    if (match.Value.Contains("?"))
+                    {
+                        replaceValue = replaceRegex.Replace(match.Value, "option-", 1);
+                    }
+                    else
+                    {
+                        replaceValue = replaceRegex.Replace(match.Value, "fixed-$&", 1);
+                    }
+
                     return regex.Replace(name, replaceValue);
                 }
             }

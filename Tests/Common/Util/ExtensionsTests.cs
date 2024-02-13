@@ -1792,6 +1792,8 @@ def select_symbol(fundamental):
         [TestCase("LPT7.csv", "fixed-LPT7.csv")]
         [TestCase("LPT8.csv", "fixed-LPT8.csv")]
         [TestCase("LPT9.csv", "fixed-LPT9.csv")]
+        [TestCase("?SPY.csv", "option-SPY.csv")]
+        [TestCase("data\\equity\\usa\\map_files\\?SPY.csv", "data\\equity\\usa\\map_files\\option-SPY.csv")]
         public void ToValidPathReturnsValidPath(string inputName, string expectedName)
         {
             Assert.AreEqual(expectedName, Extensions.ToValidPath(inputName));
