@@ -4044,27 +4044,36 @@ namespace QuantConnect
         public static string ToValidPath(string name) {
             if (OS.IsWindows)
             {
-                var regex = new Regex("([?])|(\\\\|\\/|^)((CON(\\.))|(PRN(\\.))|(AUX(\\.))|(NUL(\\.))|(COM[0123456789](\\.))|(LPT[0123456789](\\.)))");
+                var regex = new Regex("([?])|((?<=(\\\\|^))(CON|PRN|AUX|NUL|(COM[0123456789])|(LPT[0123456789]))(?=(\\.|\\\\|$)))", RegexOptions.IgnoreCase);
+                if (name.Contains("?"))
+                {
+                    return regex.Replace(name, "option-");
+                }
+
+                return regex.Replace(name, "fixed-$&");
+            }
+
+            return name;
+        }
+
+        public static string FromValidPath(string name)
+        {
+            if (OS.IsWindows)
+            {
+                var regex = new Regex("option-|fixed-");
                 var match = regex.Match(name);
                 if (match.Success)
                 {
-                    var replaceRegex = new Regex("([?])|CON|PRN|AUX|NUL|COM[0123456789]|LPT[0123456789]");
-                    string replaceValue = "";
-                    if (match.Value.Contains("?"))
+                    if (match.Value.Contains("option-"))
                     {
-                        replaceValue = replaceRegex.Replace(match.Value, "option-", 1);
-                    }
-                    else
-                    {
-                        replaceValue = replaceRegex.Replace(match.Value, "fixed-$&", 1);
+                        return regex.Replace(name, "?");
                     }
 
-                    return regex.Replace(name, replaceValue);
+                    return regex.Replace(name, "");
                 }
             }
 
             return name;
-
         }
 
         /// <summary>
