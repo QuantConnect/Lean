@@ -67,11 +67,10 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
-        private static readonly Regex LeanPathRegex = new Regex("(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)", RegexOptions.Compiled);
-        private static readonly Regex ToValidWindowPathRegex = new Regex("((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0123456789])|(LPT[0123456789]))(?=(\\.|\\\\|/|$)))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public const string FixWord = "fixed-";
+        private static readonly Regex LeanPathRegex = new Regex("(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)", RegexOptions.Compiled);
+        private static readonly Regex ToValidWindowsPathRegex = new Regex("((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0123456789])|(LPT[0123456789]))(?=(\\.|\\\\|/|$)))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private const string _fixPathRegex = FixWord + "$&";
-        private static readonly Regex FromFixedWindowPathRegex = new Regex(FixWord, RegexOptions.Compiled);
         private static readonly Dictionary<string, bool> _emptyDirectories = new ();
         private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
         private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
@@ -4050,7 +4049,7 @@ namespace QuantConnect
         /// Windows OS
         /// </summary>
         public static string ToValidPath(string path) {
-            return OS.IsWindows ? ToValidWindowPathRegex.Replace(path, _fixPathRegex) : path;
+            return OS.IsWindows ? ToValidWindowsPathRegex.Replace(path, _fixPathRegex) : path;
         }
 
         /// <summary>
@@ -4059,7 +4058,7 @@ namespace QuantConnect
         /// </summary>
         public static string FromValidPath(string path)
         {
-            return OS.IsWindows ? FromFixedWindowPathRegex.Replace(path, string.Empty) : path;
+            return OS.IsWindows ? path.Replace(FixWord, string.Empty) : path;
         }
 
         /// <summary>
