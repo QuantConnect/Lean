@@ -68,8 +68,9 @@ namespace QuantConnect
     public static class Extensions
     {
         private static readonly Regex LeanPathRegex = new Regex("(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)", RegexOptions.Compiled);
-        private static readonly Lazy<Regex> ToValidWindowPathNameRegex = new Lazy<Regex>(new Regex("((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0123456789])|(LPT[0123456789]))(?=(\\.|\\\\|/|$)))", RegexOptions.IgnoreCase | RegexOptions.Compiled));
-        private static readonly Lazy<Regex> FromFixedWindowPathNameRegex = new Lazy<Regex>(new Regex("fixed-", RegexOptions.Compiled));
+        private static readonly Lazy<Regex> ToValidWindowPathRegex = new Lazy<Regex>(new Regex("((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0123456789])|(LPT[0123456789]))(?=(\\.|\\\\|/|$)))", RegexOptions.IgnoreCase | RegexOptions.Compiled));
+        private const string _fixWord = "fixed-";
+        private static readonly Lazy<Regex> FromFixedWindowPathRegex = new Lazy<Regex>(new Regex(_fixWord, RegexOptions.Compiled));
         private static readonly Dictionary<string, bool> _emptyDirectories = new ();
         private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
         private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
@@ -4043,20 +4044,28 @@ namespace QuantConnect
             return result.Value;
         }
 
-        public static string ToValidPath(string name) {
+        /// <summary>
+        /// Takes a given path and (if applicable) returns a modified path accepted by
+        /// Windows OS
+        /// </summary>
+        public static string ToValidPath(string path) {
             if (OS.IsWindows)
             {
-                return ToValidWindowPathNameRegex.Value.Replace(name, "fixed-$&");
+                return ToValidWindowPathRegex.Value.Replace(path, _fixWord + "$&");
             }
 
-            return name;
+            return path;
         }
 
+        /// <summary>
+        /// Takes a modified path (see <see cref="ToValidPath(string)"/>) and (if applicable)
+        /// returns the original path proposed by LEAN
+        /// </summary>
         public static string FromValidPath(string name)
         {
             if (OS.IsWindows)
             {
-                return FromFixedWindowPathNameRegex.Value.Replace(name, "");
+                return FromFixedWindowPathRegex.Value.Replace(name, string.Empty);
             }
 
             return name;
