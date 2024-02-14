@@ -70,6 +70,7 @@ namespace QuantConnect
         private static readonly Regex LeanPathRegex = new Regex("(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)", RegexOptions.Compiled);
         private static readonly Lazy<Regex> ToValidWindowPathRegex = new Lazy<Regex>(new Regex("((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0123456789])|(LPT[0123456789]))(?=(\\.|\\\\|/|$)))", RegexOptions.IgnoreCase | RegexOptions.Compiled));
         private const string _fixWord = "fixed-";
+        private const string _matchRegex = "$&";
         private static readonly Lazy<Regex> FromFixedWindowPathRegex = new Lazy<Regex>(new Regex(_fixWord, RegexOptions.Compiled));
         private static readonly Dictionary<string, bool> _emptyDirectories = new ();
         private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
@@ -4051,7 +4052,7 @@ namespace QuantConnect
         public static string ToValidPath(string path) {
             if (OS.IsWindows)
             {
-                return ToValidWindowPathRegex.Value.Replace(path, _fixWord + "$&");
+                return ToValidWindowPathRegex.Value.Replace(path, _fixWord + _matchRegex);
             }
 
             return path;
@@ -4061,14 +4062,14 @@ namespace QuantConnect
         /// Takes a modified path (see <see cref="ToValidPath(string)"/>) and (if applicable)
         /// returns the original path proposed by LEAN
         /// </summary>
-        public static string FromValidPath(string name)
+        public static string FromValidPath(string path)
         {
             if (OS.IsWindows)
             {
-                return FromFixedWindowPathRegex.Value.Replace(name, string.Empty);
+                return FromFixedWindowPathRegex.Value.Replace(path, string.Empty);
             }
 
-            return name;
+            return path;
         }
 
         /// <summary>
