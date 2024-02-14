@@ -222,14 +222,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             endDate: endDate,
             secondsTimeStep: 60 * 60);
 
-            // Continuous futures should select the first contract immediately
-            Assert.IsNotNull(esFuture.Mapped);
-            Assert.IsNotNull(dcFuture.Mapped);
+            Assert.Multiple(() =>
+            {
+                // Continuous futures should select the first contract immediately
+                Assert.IsNotNull(esFuture.Mapped);
+                Assert.IsNotNull(dcFuture.Mapped);
 
-            Assert.AreEqual(startDateUtc, esSelectionTime);
-            Assert.AreEqual(startDateUtc, dcSelectionTime);
+                Assert.AreEqual(startDateUtc, esSelectionTime);
+                Assert.AreEqual(startDateUtc, dcSelectionTime);
 
-            Assert.AreEqual(1, timeSliceCount);
+                Assert.AreEqual(1, timeSliceCount);
+            });
         }
 
         [Test]
@@ -274,10 +277,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             endDate: endDate,
             secondsTimeStep: 60 * 60);
 
-            Assert.AreEqual(startDateUtc, selectionTime);
-            Assert.IsNotNull(constituents);
-            Assert.IsNotEmpty(constituents);
-            Assert.AreEqual(1, timeSliceCount);
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(startDateUtc, selectionTime);
+                Assert.IsNotNull(constituents);
+                Assert.IsNotEmpty(constituents);
+                Assert.AreEqual(1, timeSliceCount);
+            });
         }
 
         [Test]
@@ -323,10 +329,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             endDate: endDate,
             secondsTimeStep: 60 * 60);
 
-            Assert.AreEqual(startDateUtc, selectionTime);
-            Assert.IsNotNull(selectedSymbols);
-            Assert.IsNotEmpty(selectedSymbols);
-            Assert.AreEqual(1, timeSliceCount);
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(startDateUtc, selectionTime);
+                Assert.IsNotNull(selectedSymbols);
+                Assert.IsNotEmpty(selectedSymbols);
+                Assert.AreEqual(1, timeSliceCount);
+            });
         }
 
         [Test]
@@ -359,7 +368,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Thread.Sleep(50);
 
             var timeSliceCount = 0;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts => {
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
                 timeSliceCount++;
                 if (firstSelectionTimeUtc != DateTime.MinValue)
                 {
@@ -370,10 +380,68 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             endDate: endDate,
             secondsTimeStep: 60 * 60);
 
-            Assert.AreEqual(startDateUtc, firstSelectionTimeUtc);
-            Assert.AreEqual(1, timeSliceCount);
-            Assert.IsNotNull(selectedSymbols);
-            Assert.IsNotEmpty(selectedSymbols);
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(startDateUtc, firstSelectionTimeUtc);
+                Assert.AreEqual(1, timeSliceCount);
+                Assert.IsNotNull(selectedSymbols);
+                Assert.IsNotEmpty(selectedSymbols);
+            });
+        }
+
+        [Test]
+        public void OptionChainImmediateSelection()
+        {
+            _startDate = new DateTime(2015, 12, 24, 11, 0, 0);
+            var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
+            _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
+            var endDate = _startDate.AddDays(5);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var feed = RunDataFeed(runPostInitialize: false);
+
+            var firstSelectionTimeUtc = DateTime.MinValue;
+            List<Symbol> selectedSymbols = null;
+
+            var selectionDone = false;
+
+            var option = _algorithm.AddOption("GOOG");
+            option.SetFilter(universe =>
+            {
+                selectionDone = true;
+                selectedSymbols = universe.ToList();
+
+                return universe;
+            });
+
+            _algorithm.PostInitialize();
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+
+            var timeSliceCount = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(10), true, ts =>
+            {
+                timeSliceCount++;
+                if (selectionDone)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60);
+
+            var expectedSelectionTimeUtc = startDateUtc.Add(option.Resolution.ToTimeSpan());
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsTrue(selectionDone);
+                Assert.AreEqual(2, timeSliceCount);
+                Assert.IsNotNull(selectedSymbols);
+                Assert.IsNotEmpty(selectedSymbols);
+            });
         }
 
         [TestCase(false)]
