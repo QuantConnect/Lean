@@ -68,10 +68,10 @@ namespace QuantConnect
     public static class Extensions
     {
         private static readonly Regex LeanPathRegex = new Regex("(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)", RegexOptions.Compiled);
-        private static readonly Lazy<Regex> ToValidWindowPathRegex = new Lazy<Regex>(new Regex("((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0123456789])|(LPT[0123456789]))(?=(\\.|\\\\|/|$)))", RegexOptions.IgnoreCase | RegexOptions.Compiled));
-        private const string _fixWord = "fixed-";
-        private const string _matchRegex = "$&";
-        private static readonly Lazy<Regex> FromFixedWindowPathRegex = new Lazy<Regex>(new Regex(_fixWord, RegexOptions.Compiled));
+        private static readonly Regex ToValidWindowPathRegex = new Regex("((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0123456789])|(LPT[0123456789]))(?=(\\.|\\\\|/|$)))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public const string FixWord = "fixed-";
+        private const string _fixPathRegex = FixWord + "$&";
+        private static readonly Regex FromFixedWindowPathRegex = new Regex(FixWord, RegexOptions.Compiled);
         private static readonly Dictionary<string, bool> _emptyDirectories = new ();
         private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
         private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
@@ -4050,12 +4050,7 @@ namespace QuantConnect
         /// Windows OS
         /// </summary>
         public static string ToValidPath(string path) {
-            if (OS.IsWindows)
-            {
-                return ToValidWindowPathRegex.Value.Replace(path, _fixWord + _matchRegex);
-            }
-
-            return path;
+            return OS.IsWindows ? ToValidWindowPathRegex.Replace(path, _fixPathRegex) : path;
         }
 
         /// <summary>
@@ -4064,12 +4059,7 @@ namespace QuantConnect
         /// </summary>
         public static string FromValidPath(string path)
         {
-            if (OS.IsWindows)
-            {
-                return FromFixedWindowPathRegex.Value.Replace(path, string.Empty);
-            }
-
-            return path;
+            return OS.IsWindows ? FromFixedWindowPathRegex.Replace(path, string.Empty) : path;
         }
 
         /// <summary>
