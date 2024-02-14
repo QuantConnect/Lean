@@ -1828,7 +1828,6 @@ def select_symbol(fundamental):
         [TestCase("equity\\usa\\minute\\nul\\nul.zip", "equity\\usa\\minute\\fixed-nul\\fixed-nul.zip")]
         [TestCase("equity\\usa\\minute\\prn\\prn.zip", "equity\\usa\\minute\\fixed-prn\\fixed-prn.zip")]
         [TestCase("equity\\usa\\minute\\aux\\aux.zip", "equity\\usa\\minute\\fixed-aux\\fixed-aux.zip")]
-        [TestCase("data\\equity\\usa\\map_files\\?SPY.csv", "data\\equity\\usa\\map_files\\option-SPY.csv")]
         public void ToValidPathReturnsValidPath(string inputName, string expectedName)
         {
             Assert.AreEqual(expectedName, Extensions.ToValidPath(inputName));
@@ -1903,8 +1902,6 @@ def select_symbol(fundamental):
         [TestCase("fixed-LPT7.csv", "LPT7.csv")]
         [TestCase("fixed-LPT8.csv", "LPT8.csv")]
         [TestCase("fixed-LPT9.csv", "LPT9.csv")]
-        [TestCase("option-SPY.csv", "?SPY.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\option-SPY.csv", "data\\equity\\usa\\map_files\\?SPY.csv")]
         public void FromValiReturnsOriginalName(string inputName, string expectedName)
         {
             Assert.AreEqual(expectedName, Extensions.FromValidPath(inputName));

@@ -4044,12 +4044,7 @@ namespace QuantConnect
         public static string ToValidPath(string name) {
             if (OS.IsWindows)
             {
-                var regex = new Regex("([?])|((?<=(\\\\|^))(CON|PRN|AUX|NUL|(COM[0123456789])|(LPT[0123456789]))(?=(\\.|\\\\|$)))", RegexOptions.IgnoreCase);
-                if (name.Contains("?"))
-                {
-                    return regex.Replace(name, "option-");
-                }
-
+                var regex = new Regex("((?<=(\\\\|^))(CON|PRN|AUX|NUL|(COM[0123456789])|(LPT[0123456789]))(?=(\\.|\\\\|$)))", RegexOptions.IgnoreCase);
                 return regex.Replace(name, "fixed-$&");
             }
 
@@ -4060,17 +4055,8 @@ namespace QuantConnect
         {
             if (OS.IsWindows)
             {
-                var regex = new Regex("option-|fixed-");
-                var match = regex.Match(name);
-                if (match.Success)
-                {
-                    if (match.Value.Contains("option-"))
-                    {
-                        return regex.Replace(name, "?");
-                    }
-
-                    return regex.Replace(name, "");
-                }
+                var regex = new Regex("fixed-");
+                return regex.Replace(name, "");
             }
 
             return name;
