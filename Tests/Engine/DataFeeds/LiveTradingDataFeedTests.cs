@@ -222,17 +222,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             endDate: endDate,
             secondsTimeStep: 60 * 60);
 
-            Assert.Multiple(() =>
-            {
-                // Continuous futures should select the first contract immediately
-                Assert.IsNotNull(esFuture.Mapped);
-                Assert.IsNotNull(dcFuture.Mapped);
+            // Continuous futures should select the first contract immediately
+            Assert.IsNotNull(esFuture.Mapped);
+            Assert.IsNotNull(dcFuture.Mapped);
 
-                Assert.AreEqual(startDateUtc, esSelectionTime);
-                Assert.AreEqual(startDateUtc, dcSelectionTime);
+            Assert.AreEqual(startDateUtc, esSelectionTime);
+            Assert.AreEqual(startDateUtc, dcSelectionTime);
 
-                Assert.AreEqual(1, timeSliceCount);
-            });
+            Assert.AreEqual(1, timeSliceCount);
         }
 
         [Test]
@@ -277,13 +274,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             endDate: endDate,
             secondsTimeStep: 60 * 60);
 
-            Assert.Multiple(() =>
-            {
-                Assert.AreEqual(startDateUtc, selectionTime);
-                Assert.IsNotNull(constituents);
-                Assert.IsNotEmpty(constituents);
-                Assert.AreEqual(1, timeSliceCount);
-            });
+            Assert.AreEqual(startDateUtc, selectionTime);
+            Assert.AreEqual(1, timeSliceCount);
+
+            Assert.IsNotNull(constituents);
+            Assert.IsNotEmpty(constituents);
+
+            CollectionAssert.AreEquivalent(constituents, universe.Members.Keys);
+
+            // The algorithm's security collection has all constituents and SPY (added manually)
+            constituents.Add(spy);
+            CollectionAssert.AreEquivalent(constituents, _algorithm.Securities.Keys);
         }
 
         [Test]
@@ -329,13 +330,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             endDate: endDate,
             secondsTimeStep: 60 * 60);
 
-            Assert.Multiple(() =>
-            {
-                Assert.AreEqual(startDateUtc, selectionTime);
-                Assert.IsNotNull(selectedSymbols);
-                Assert.IsNotEmpty(selectedSymbols);
-                Assert.AreEqual(1, timeSliceCount);
-            });
+            Assert.AreEqual(startDateUtc, selectionTime);
+            Assert.AreEqual(1, timeSliceCount);
+
+            Assert.IsNotNull(selectedSymbols);
+            Assert.IsNotEmpty(selectedSymbols);
+            CollectionAssert.AreEquivalent(selectedSymbols, universe.Members.Keys);
+            CollectionAssert.AreEquivalent(selectedSymbols, _algorithm.Securities.Keys);
         }
 
         [Test]
@@ -380,13 +381,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             endDate: endDate,
             secondsTimeStep: 60 * 60);
 
-            Assert.Multiple(() =>
-            {
-                Assert.AreEqual(startDateUtc, firstSelectionTimeUtc);
-                Assert.AreEqual(1, timeSliceCount);
-                Assert.IsNotNull(selectedSymbols);
-                Assert.IsNotEmpty(selectedSymbols);
-            });
+            Assert.AreEqual(startDateUtc, firstSelectionTimeUtc);
+            Assert.AreEqual(1, timeSliceCount);
+            Assert.IsNotNull(selectedSymbols);
+            Assert.IsNotEmpty(selectedSymbols);
         }
 
         [Test]
@@ -435,13 +433,119 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var expectedSelectionTimeUtc = startDateUtc.Add(option.Resolution.ToTimeSpan());
 
-            Assert.Multiple(() =>
+            Assert.IsTrue(selectionDone);
+            Assert.AreEqual(2, timeSliceCount);
+            Assert.IsNotNull(selectedSymbols);
+            Assert.IsNotEmpty(selectedSymbols);
+        }
+
+        [Test]
+        public void CustomUniverseImmediateSelection()
+        {
+            _startDate = new DateTime(2013, 10, 07);
+            var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
+            _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
+            var endDate = _startDate.AddDays(5);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var feed = RunDataFeed(runPostInitialize: false);
+
+            var selectionTime = DateTime.MinValue;
+
+            _algorithm.UniverseSettings.Resolution = Resolution.Daily;
+            var universe = _algorithm.AddUniverse(SecurityType.Equity,
+                "my-custom-universe",
+                Resolution.Daily,
+                Market.USA,
+                _algorithm.UniverseSettings,
+                time =>
+                {
+                    selectionTime = _algorithm.UtcTime;
+                    return new[] { "SPY", "GOOG", "APPL" };
+                });
+
+            _algorithm.PostInitialize();
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+
+            var timeSliceCount = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
-                Assert.IsTrue(selectionDone);
-                Assert.AreEqual(2, timeSliceCount);
-                Assert.IsNotNull(selectedSymbols);
-                Assert.IsNotEmpty(selectedSymbols);
+                timeSliceCount++;
+                if (selectionTime != DateTime.MinValue)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60 * 60);
+
+            var expectedSymbols = new List<Symbol>()
+            {
+                Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+                Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
+                Symbol.Create("APPL", SecurityType.Equity, Market.USA)
+            };
+
+            Assert.AreEqual(startDateUtc, selectionTime);
+            Assert.AreEqual(1, timeSliceCount);
+
+            CollectionAssert.AreEquivalent(expectedSymbols, universe.Members.Keys);
+            CollectionAssert.AreEquivalent(expectedSymbols, _algorithm.Securities.Keys);
+        }
+
+        [Test]
+        public void CustomDataUniverseImmediateSelection()
+        {
+            _startDate = new DateTime(2014, 03, 26, 11, 0, 0);
+            var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
+            _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
+            var endDate = _startDate.AddDays(5);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var feed = RunDataFeed(runPostInitialize: false);
+
+            var selectionTime = DateTime.MinValue;
+            List<Symbol> selectedSymbols = null;
+
+            _algorithm.UniverseSettings.Resolution = Resolution.Daily;
+            var universe = _algorithm.AddUniverse<CoarseFundamental>("my-custom-coarse-universe", stockDataSource =>
+            {
+                selectionTime = _algorithm.UtcTime;
+                selectedSymbols = stockDataSource.Select(x => x.Symbol).ToList();
+
+                return selectedSymbols;
             });
+
+            _algorithm.PostInitialize();
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+
+            var timeSliceCount = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                timeSliceCount++;
+                if (selectionTime != DateTime.MinValue)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60 * 60);
+
+            Assert.AreEqual(startDateUtc, selectionTime);
+            Assert.AreEqual(1, timeSliceCount);
+
+            Assert.IsNotNull(selectedSymbols);
+            Assert.IsNotEmpty(selectedSymbols);
+            CollectionAssert.AreEquivalent(selectedSymbols, universe.Members.Keys);
+            CollectionAssert.AreEquivalent(selectedSymbols, _algorithm.Securities.Keys);
         }
 
         [TestCase(false)]

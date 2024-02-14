@@ -111,9 +111,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                  );
                             }
 
-                            // TODO: This adjustment should be done for all universes, but we should do it in steps to avoid breaking changes
-                            if (universe is ContinuousContractUniverse or FuturesChainUniverse or ETFConstituentsUniverse ||
-                                universe.Configuration.Type == typeof(Fundamentals))
+                            // We don't do this for option chain universes because of how that data is organized and selection performed.
+                            // We might normalize this in the future.
+                            if (universe is not OptionChainUniverse)
                             {
                                 // Let's adjust the start time to the previous tradable date
                                 // so universe selection always happens right away at the start of the algorithm.
