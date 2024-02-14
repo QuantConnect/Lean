@@ -68,6 +68,8 @@ namespace QuantConnect
     public static class Extensions
     {
         private static readonly Regex LeanPathRegex = new Regex("(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)", RegexOptions.Compiled);
+        private static readonly Lazy<Regex> ToValidWindowPathNameRegex = new Lazy<Regex>(new Regex("((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0123456789])|(LPT[0123456789]))(?=(\\.|\\\\|/|$)))", RegexOptions.IgnoreCase | RegexOptions.Compiled));
+        private static readonly Lazy<Regex> FromFixedWindowPathNameRegex = new Lazy<Regex>(new Regex("fixed-", RegexOptions.Compiled));
         private static readonly Dictionary<string, bool> _emptyDirectories = new ();
         private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
         private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
@@ -4044,8 +4046,7 @@ namespace QuantConnect
         public static string ToValidPath(string name) {
             if (OS.IsWindows)
             {
-                var regex = new Regex("((?<=(\\\\|^))(CON|PRN|AUX|NUL|(COM[0123456789])|(LPT[0123456789]))(?=(\\.|\\\\|$)))", RegexOptions.IgnoreCase);
-                return regex.Replace(name, "fixed-$&");
+                return ToValidWindowPathNameRegex.Value.Replace(name, "fixed-$&");
             }
 
             return name;
@@ -4055,8 +4056,7 @@ namespace QuantConnect
         {
             if (OS.IsWindows)
             {
-                var regex = new Regex("fixed-");
-                return regex.Replace(name, "");
+                return FromFixedWindowPathNameRegex.Value.Replace(name, "");
             }
 
             return name;
