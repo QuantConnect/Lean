@@ -322,7 +322,7 @@ namespace QuantConnect
             // Use a 4K buffer. Any larger is a waste.
             var dataBuffer = new byte[4096];
             var newFileOutput = Path.Combine(targetDirectory, Path.GetFileNameWithoutExtension(gzipFileName));
-            using (Stream fileStream = new FileStream(gzipFileName, FileMode.Open, FileAccess.Read))
+            using (Stream fileStream = new FileStream(Extensions.FromValidPath(gzipFileName), FileMode.Open, FileAccess.Read))
             using (var gzipStream = new GZipInputStream(fileStream))
             using (var fileOutput = File.Create(newFileOutput))
             {

@@ -525,7 +525,7 @@ namespace QuantConnect.Util
         public static string GenerateZipFilePath(string dataDirectory, Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
         {
             // we could call 'GenerateRelativeZipFilePath' but we don't to avoid an extra string & path combine we are doing to drop right away
-            return Path.Combine(dataDirectory, GenerateRelativeZipFileDirectory(symbol, resolution), GenerateZipFileName(symbol, date, resolution, tickType));
+            return Extensions.ToValidPath(Path.Combine(dataDirectory, GenerateRelativeZipFileDirectory(symbol, resolution), GenerateZipFileName(symbol, date, resolution, tickType)));
         }
 
         /// <summary>

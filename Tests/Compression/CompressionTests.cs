@@ -203,7 +203,7 @@ namespace QuantConnect.Tests.Compression
 
             Assert.IsTrue(compressed);
 
-            using var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var fileStream = new FileStream(Extensions.FromValidPath(fileName), FileMode.Open, FileAccess.Read, FileShare.Read);
             var result = QuantConnect.Compression.UnzipDataAsync(fileStream).Result;
 
             CollectionAssert.AreEqual(data.OrderBy(kv => kv.Key).ToList(), result.OrderBy(kv => kv.Key).ToList());

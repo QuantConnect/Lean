@@ -230,6 +230,46 @@ namespace QuantConnect.Tests.ToolBox
             Assert.AreEqual(data.First().Value.Count(), 3);
         }
 
+        [TestCase("CON")]
+        [TestCase("PRN")]
+        [TestCase("AUX")]
+        [TestCase("NUL")]
+        [TestCase("COM0")]
+        [TestCase("COM1")]
+        [TestCase("COM2")]
+        [TestCase("COM3")]
+        [TestCase("COM4")]
+        [TestCase("COM5")]
+        [TestCase("COM6")]
+        [TestCase("COM7")]
+        [TestCase("COM8")]
+        [TestCase("COM9")]
+        [TestCase("LPT0")]
+        [TestCase("LPT1")]
+        [TestCase("LPT2")]
+        [TestCase("LPT3")]
+        [TestCase("LPT4")]
+        [TestCase("LPT5")]
+        [TestCase("LPT6")]
+        [TestCase("LPT7")]
+        [TestCase("LPT8")]
+        [TestCase("LPT9")]
+        public void LeanDataWriterHandlesWindowsInvalidNames(string ticker)
+        {
+            var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, symbol, _date, Resolution.Tick, TickType.Trade);
+
+            var leanDataWriter = new LeanDataWriter(Resolution.Tick, symbol, _dataDirectory);
+            leanDataWriter.Write(GetTicks(symbol));
+
+            Assert.IsTrue(File.Exists(filePath));
+            Assert.IsFalse(File.Exists(filePath + ".tmp"));
+
+            var data = QuantConnect.Compression.Unzip(filePath);
+
+            Assert.AreEqual(data.First().Value.Count(), 3);
+        }
+
         [TestCase(null, Resolution.Daily)]
         [TestCase(null, Resolution.Second)]
         [TestCase(WritePolicy.Merge, Resolution.Second)]

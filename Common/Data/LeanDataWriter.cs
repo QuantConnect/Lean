@@ -152,7 +152,7 @@ namespace QuantConnect.Data
 
                         // Reset our dictionary and store new output file
                         currentFileData = new List<TimedLine>();
-                        outputFile = latestOutputFile;
+                        outputFile = Extensions.ToValidPath(latestOutputFile);
                         symbol = latestSymbol;
                     }
                 }
@@ -299,6 +299,7 @@ namespace QuantConnect.Data
         /// a sorted dictionary of DateTimes and strings. </remarks>
         private void WriteFile(string filePath, List<TimedLine> data, Symbol symbol)
         {
+            filePath = Extensions.ToValidPath(filePath);
             if (data == null || data.Count == 0)
             {
                 return;

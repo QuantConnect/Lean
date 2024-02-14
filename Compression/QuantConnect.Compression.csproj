@@ -44,4 +44,9 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="QuantConnect.Common">
+      <HintPath>..\Common\bin\Debug\QuantConnect.Common.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

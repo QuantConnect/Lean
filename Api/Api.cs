@@ -1012,7 +1012,7 @@ namespace QuantConnect.Api
                 var uri = new Uri(dataLink.Url);
                 using var dataStream = _client.Value.GetStreamAsync(uri);
 
-                using var fileStream = new FileStream(filePath, FileMode.Create);
+                using var fileStream = new FileStream(Extensions.FromValidPath(filePath), FileMode.Create);
                 dataStream.Result.CopyTo(fileStream);
             }
             catch
