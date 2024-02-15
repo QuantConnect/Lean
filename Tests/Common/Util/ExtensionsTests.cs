@@ -1855,7 +1855,7 @@ def select_symbol(fundamental):
         [Platform("Win", Reason = "The paths in these testcases are only forbidden in Windows OS")]
         public void ToValidPathReturnsValidPath(string inputName, string expectedName)
         {
-            Assert.AreEqual(expectedName, Extensions.ToValidPath(inputName));
+            Assert.AreEqual(expectedName, inputName.ToValidPath());
         }
 
         [TestCase("data\\equity\\usa\\map_files\\AAUX.csv")]
@@ -1885,7 +1885,7 @@ def select_symbol(fundamental):
         [Platform("Win", Reason = "The paths in these testcases are only forbidden in Windows OS")]
         public void ToValidPathReturnsTheSameName(string inputName)
         {
-            Assert.AreEqual(inputName, Extensions.ToValidPath(inputName));
+            Assert.AreEqual(inputName, inputName.ToValidPath());
         }
 
         [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM0.csv", "data\\equity\\usa\\map_files\\COM0.csv")]
@@ -1963,7 +1963,7 @@ def select_symbol(fundamental):
         [Platform("Win", Reason = "The paths in these testcases are only forbidden in Windows OS")]
         public void FromValiReturnsOriginalName(string inputName, string expectedName)
         {
-            Assert.AreEqual(expectedName, Extensions.FromValidPath(inputName));
+            Assert.AreEqual(expectedName, inputName.FromValidPath());
         }
 
         [TestCaseSource(nameof(DivideCases))]

@@ -299,7 +299,7 @@ namespace QuantConnect.Data
         /// a sorted dictionary of DateTimes and strings. </remarks>
         private void WriteFile(string filePath, List<TimedLine> data, Symbol symbol)
         {
-            filePath = Extensions.ToValidPath(filePath);
+            filePath = filePath.ToValidPath();
             if (data == null || data.Count == 0)
             {
                 return;

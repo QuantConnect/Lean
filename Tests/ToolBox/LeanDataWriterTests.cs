@@ -258,7 +258,7 @@ namespace QuantConnect.Tests.ToolBox
         public void LeanDataWriterHandlesWindowsInvalidNames(string ticker)
         {
             var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
-            var filePath = Extensions.ToValidPath(LeanData.GenerateZipFilePath(_dataDirectory, symbol, _date, Resolution.Tick, TickType.Trade));
+            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, symbol, _date, Resolution.Tick, TickType.Trade).ToValidPath();
 
             var leanDataWriter = new LeanDataWriter(Resolution.Tick, symbol, _dataDirectory);
             leanDataWriter.Write(GetTicks(symbol));
