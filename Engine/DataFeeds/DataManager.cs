@@ -115,6 +115,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             if (universeType == typeof(ContinuousContractUniverse) ||
                                 universeType == typeof(FuturesChainUniverse) ||
                                 universeType == typeof(ETFConstituentsUniverse) ||
+                                universeType == typeof(ConstituentsUniverse) ||
                                 universeType == typeof(FuncUniverse) ||
                                 universe.Configuration.Type == typeof(Fundamentals))
                             {

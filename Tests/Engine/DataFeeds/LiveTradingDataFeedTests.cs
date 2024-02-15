@@ -548,6 +548,67 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             CollectionAssert.AreEquivalent(selectedSymbols, _algorithm.Securities.Keys);
         }
 
+        [Test]
+        public void ConstituentsImmediateSelection()
+        {
+            _startDate = new DateTime(2013, 10, 08);
+            var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
+            _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
+            var endDate = _startDate.AddDays(5);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var feed = RunDataFeed(runPostInitialize: false);
+
+            var selectionTime = DateTime.MinValue;
+            List<Symbol> constituents = null;
+
+            _algorithm.UniverseSettings.Resolution = Resolution.Daily;
+
+            var customUniverseSymbol = new Symbol(
+                SecurityIdentifier.GenerateConstituentIdentifier(
+                    "constituents-universe-qctest",
+                    SecurityType.Equity,
+                    Market.USA),
+                "constituents-universe-qctest");
+
+            var universe = _algorithm.AddUniverse(new ConstituentsUniverse(customUniverseSymbol, _algorithm.UniverseSettings, x =>
+            {
+                selectionTime = _algorithm.UtcTime;
+                constituents = x.Select(x => x.Symbol).ToList();
+
+                return constituents;
+
+            }));
+
+            _algorithm.PostInitialize();
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+
+            var timeSliceCount = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                timeSliceCount++;
+                if (selectionTime != DateTime.MinValue)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60 * 60);
+
+            Assert.AreEqual(startDateUtc, selectionTime);
+            Assert.AreEqual(1, timeSliceCount);
+
+            Assert.IsNotNull(constituents);
+            Assert.IsNotEmpty(constituents);
+
+            CollectionAssert.AreEquivalent(constituents, universe.Members.Keys);
+            CollectionAssert.AreEquivalent(constituents, _algorithm.Securities.Keys);
+        }
+
         [TestCase(false)]
         [TestCase(true)]
         public void WarmupOptionSelection(bool useWarmupResolution)
