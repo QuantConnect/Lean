@@ -1852,7 +1852,7 @@ def select_symbol(fundamental):
         [TestCase("equity\\usa\\minute\\nul\\nul.zip", "equity\\usa\\minute\\"+ Extensions.FixWord +"nul\\"+ Extensions.FixWord +"nul.zip")]
         [TestCase("equity\\usa\\minute\\prn\\prn.zip", "equity\\usa\\minute\\"+ Extensions.FixWord +"prn\\"+ Extensions.FixWord +"prn.zip")]
         [TestCase("equity\\usa\\minute\\aux\\aux.zip", "equity\\usa\\minute\\"+ Extensions.FixWord +"aux\\"+ Extensions.FixWord +"aux.zip")]
-        [Platform("Windows", Reason = "The paths in these testcases are only forbidden in Windows OS")]
+        [Platform(Exclude = "Win", Reason = "The paths in these testcases are only forbidden in Windows OS")]
         public void ToValidPathReturnsValidPath(string inputName, string expectedName)
         {
             Assert.AreEqual(expectedName, Extensions.ToValidPath(inputName));
@@ -1882,7 +1882,7 @@ def select_symbol(fundamental):
         [TestCase("data/equity/usa/map_files/NULA.csv")]
         [TestCase("data/equity/usa/map_files/PRNA.csv")]
         [TestCase("data/equity/usa/map_files/CONA.csv")]
-        [Platform("Windows", Reason = "The paths in these testcases are only forbidden in Windows OS")]
+        [Platform(Exclude = "Win", Reason = "The paths in these testcases are only forbidden in Windows OS")]
         public void ToValidPathReturnsTheSameName(string inputName)
         {
             Assert.AreEqual(inputName, Extensions.ToValidPath(inputName));
@@ -1960,7 +1960,7 @@ def select_symbol(fundamental):
         [TestCase(""+ Extensions.FixWord +"LPT7.csv", "LPT7.csv")]
         [TestCase(""+ Extensions.FixWord +"LPT8.csv", "LPT8.csv")]
         [TestCase(""+ Extensions.FixWord +"LPT9.csv", "LPT9.csv")]
-        [Platform("Windows", Reason = "The paths in these testcases are only forbidden in Windows OS")]
+        [Platform(Exclude = "Win", Reason = "The paths in these testcases are only forbidden in Windows OS")]
         public void FromValiReturnsOriginalName(string inputName, string expectedName)
         {
             Assert.AreEqual(expectedName, Extensions.FromValidPath(inputName));
