@@ -37,16 +37,12 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj" />
+    <ProjectReference Include="..\Common\QuantConnect.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="QuantConnect.Common">
-      <HintPath>..\Common\bin\Debug\QuantConnect.Common.dll</HintPath>
-    </Reference>
   </ItemGroup>
 </Project>

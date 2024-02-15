@@ -4061,6 +4061,15 @@ namespace QuantConnect
             return OS.IsWindows ? path.Replace(FixWord, string.Empty) : path;
         }
 
+        /// <summary>
+        /// Provides a FileStream object that (if needed) transforms the given path
+        /// to one accepted by Windows OS
+        /// </summary>
+        /// <param name="path">Path for the file the FileSteam object will encapsulate</param>
+        /// <param name="fileMode">One of the enumeration values that determines how to open or create the file</param>
+        /// <param name="access">A bitwise combination of the enumeration values that determines how the file can be accessed by the FileStream object</param>
+        /// <param name="fileShare">A bitwise combination of the enumeration values that determines how the file will be shared by processes.</param>
+        /// <returns></returns>
         public static FileStream GetSafeFileStream(string path, FileMode fileMode = FileMode.Create, FileAccess access = FileAccess.ReadWrite, FileShare fileShare = FileShare.None)
         {
             return new FileStream(ToValidPath(path), fileMode, access, fileShare);
