@@ -111,9 +111,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                  );
                             }
 
-                            // We don't do this for option chain universes because of how that data is organized and selection performed.
-                            // We might normalize this in the future.
-                            if (universe is not OptionChainUniverse)
+                            var universeType = universe.GetType();
+                            if (universeType == typeof(ContinuousContractUniverse) ||
+                                universeType == typeof(FuturesChainUniverse) ||
+                                universeType == typeof(ETFConstituentsUniverse) ||
+                                universeType == typeof(FuncUniverse) ||
+                                universe.Configuration.Type == typeof(Fundamentals))
                             {
                                 // Let's adjust the start time to the previous tradable date
                                 // so universe selection always happens right away at the start of the algorithm.
