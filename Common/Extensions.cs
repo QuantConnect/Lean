@@ -4061,6 +4061,11 @@ namespace QuantConnect
             return OS.IsWindows ? path.Replace(FixWord, string.Empty) : path;
         }
 
+        public static FileStream GetSafeFileStream(string path, FileMode fileMode = FileMode.Create, FileAccess access = FileAccess.ReadWrite, FileShare fileShare = FileShare.None)
+        {
+            return new FileStream(ToValidPath(path), fileMode, access, fileShare);
+        }
+
         /// <summary>
         /// Gets the greatest common divisor of two numbers
         /// </summary>

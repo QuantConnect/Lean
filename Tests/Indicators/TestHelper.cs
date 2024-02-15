@@ -288,7 +288,7 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="externalDataFilename">The external CSV file name</param>
         public static IEnumerable<IReadOnlyDictionary<string, string>> GetCsvFileStream(string externalDataFilename)
         {
-            var enumerator = File.ReadLines(Path.Combine("TestData", externalDataFilename)).GetEnumerator();
+            var enumerator = File.ReadLines(Path.Combine("TestData", Extensions.ToValidPath(externalDataFilename))).GetEnumerator();
             if (!enumerator.MoveNext())
             {
                 yield break;

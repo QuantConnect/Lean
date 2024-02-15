@@ -152,7 +152,7 @@ namespace QuantConnect.Data
 
                         // Reset our dictionary and store new output file
                         currentFileData = new List<TimedLine>();
-                        outputFile = Extensions.ToValidPath(latestOutputFile);
+                        outputFile = latestOutputFile;
                         symbol = latestSymbol;
                     }
                 }
