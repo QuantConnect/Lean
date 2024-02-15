@@ -254,6 +254,7 @@ namespace QuantConnect.Tests.ToolBox
         [TestCase("LPT7")]
         [TestCase("LPT8")]
         [TestCase("LPT9")]
+        [Platform("Windows", Reason = "The paths in these testcases are only forbidden in Windows OS")]
         public void LeanDataWriterHandlesWindowsInvalidNames(string ticker)
         {
             var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
