@@ -26,6 +26,7 @@ namespace QuantConnect.Tests.Indicators
     public abstract class CommonIndicatorTests<T>
         where T : IBaseData
     {
+        protected Symbol Symbol = Symbols.SPY;
         [Test]
         public virtual void ComparesAgainstExternalData()
         {
@@ -72,7 +73,7 @@ namespace QuantConnect.Tests.Indicators
 
             for (var i = 0; i < period.Value; i++)
             {
-                var input = GetInput(startDate, i);
+                var input = GetInput(startDate, i, i);
                 indicator.Update(input);
                 Assert.AreEqual(i == period.Value - 1, indicator.IsReady);
             }
@@ -88,7 +89,7 @@ namespace QuantConnect.Tests.Indicators
 
             for (var i = 10; i > 0; i--)
             {
-                var input = GetInput(startDate, i);
+                var input = GetInput(startDate, i, i);
                 indicator.Update(input);
             }
             
@@ -141,6 +142,21 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
+        [Test]
+        public virtual void WorksWithLowValues()
+        {
+            var indicator = CreateIndicator();
+            var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+
+            var random = new Random();
+            var time = DateTime.UtcNow;
+            for (int i = 0; i < 2 * period; i++)
+            {
+                var value = (decimal)(random.NextDouble() * 0.000000000000000000000000000001);
+                Assert.DoesNotThrow(() => indicator.Update(GetInput(Symbol, time, i, value)));
+            }
+        }
+
         protected virtual void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
         {
             Assert.AreNotEqual(0, indicator.Current.Value);
@@ -151,22 +167,22 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreNotEqual(0, indicator.Current.Value);
         }
 
-        protected static IBaseData GetInput(DateTime startDate, int value) => GetInput(Symbols.SPY, startDate, value);
+        protected static IBaseData GetInput(DateTime startDate, int days, decimal value) => GetInput(Symbols.SPY, startDate, days, value);
 
-        protected static IBaseData GetInput(Symbol symbol, DateTime startDate, int value)
+        protected static IBaseData GetInput(Symbol symbol, DateTime startDate, int days, decimal value)
         {
             if (typeof(T) == typeof(IndicatorDataPoint))
             {
-                return new IndicatorDataPoint(startDate.AddDays(value), 100m);
+                return new IndicatorDataPoint(symbol, startDate.AddDays(days), value);
             }
 
             return new TradeBar(
-                startDate.AddDays(value),
+                startDate.AddDays(days),
                 symbol,
-                100m + value,
-                105m + value,
-                95m + value,
-                100m + value,
+                value,
+                value,
+                value,
+                value,
                 100m,
                 Time.OneDay
             );

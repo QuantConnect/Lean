@@ -73,6 +73,21 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public override void WorksWithLowValues()
+        {
+            var indicator = new Beta("testBetaIndicator", Symbols.IBM, Symbols.SPY, 5);
+            var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+
+            var random = new Random();
+            var time = DateTime.UtcNow;
+            for (int i = 0; i < 2 * period; i++)
+            {
+                var value = (decimal)(random.NextDouble() * 0.000000000000000000000000000001);
+                Assert.DoesNotThrow(() => indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = value, High = value, Volume = 100, Close = value, Time = _reference.AddDays(1 + i) }));
+            }
+        }
+
+        [Test]
         public override void AcceptsRenkoBarsAsInput()
         {
             var indicator = CreateIndicator();
