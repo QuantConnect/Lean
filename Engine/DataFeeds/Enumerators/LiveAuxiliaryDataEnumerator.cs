@@ -76,7 +76,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Helper method to create a new instance.
         /// Knows which security types should create one and determines the appropriate delisting event provider to use
         /// </summary>
-        public static bool TryCreate(SubscriptionDataConfig dataConfig, ITimeProvider timeProvider, IDataQueueHandler dataQueueHandler,
+        public static bool TryCreate(SubscriptionDataConfig dataConfig, ITimeProvider timeProvider,
             SecurityCache securityCache, IMapFileProvider mapFileProvider, IFactorFileProvider fileProvider, DateTime startTime,
             out IEnumerator<BaseData> enumerator)
         {
@@ -87,7 +87,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var providers = new List<ITradableDateEventProvider>
                 {
                     securityType == SecurityType.Equity
-                        ? new LiveDataBasedDelistingEventProvider(dataConfig, dataQueueHandler)
+                        ? new LiveDelistingEventProvider()
                         : new DelistingEventProvider()
                 };
 

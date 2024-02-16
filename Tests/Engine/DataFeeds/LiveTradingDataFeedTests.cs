@@ -872,13 +872,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 else
                 {
                     // should of remove trade and quote bar subscription for both (4)
-                    Assert.AreEqual(currentSubscriptionCount - 4, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    Assert.AreEqual(currentSubscriptionCount - 2, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
                         .Count(config => config.Symbol == Symbols.SPY));
-                    // Should be 2 left because of internal subscription trade/quote
-                    Assert.AreEqual(2, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
+                    // Should be 1 left because of internal subscription trade hour
+                    Assert.AreEqual(1, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
                     Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
 
                     // we got what we wanted shortcut unit test
@@ -920,13 +920,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 else
                 {
                     // should of remove trade and quote bar subscription for both (4)
-                    Assert.AreEqual(currentSubscriptionCount - 4, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    Assert.AreEqual(currentSubscriptionCount - 2, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
                         .Count(config => config.Symbol == Symbols.SPY));
-                    // Should be 2 left because of internal subscription trade/quote
-                    Assert.AreEqual(2, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
+                    // Should be 1 left because of internal subscription trade hour
+                    Assert.AreEqual(1, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
                     Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
@@ -1229,21 +1229,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void DelistedEventEmitted_Equity()
         {
-            _startDate = new DateTime(2016, 2, 18, 6, 0, 0);
+            _startDate = new DateTime(2007, 05, 17);
             CustomMockedFileBaseData.StartDate = _startDate;
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
-            var delistingDate = _startDate.Date.AddDays(1);
 
-            var autoResetEvent = new AutoResetEvent(false);
-            var feed = RunDataFeed(getNextTicksFunction: handler =>
-            {
-                autoResetEvent.Set();
-                return new[] { new Delisting(Symbols.AAPL, delistingDate, 1, DelistingType.Warning) };
-            });
-            _algorithm.AddEquity(Symbols.AAPL);
+            var feed = RunDataFeed();
+            var symbol = _algorithm.AddEquity("AAA.1").Symbol;
             _algorithm.OnEndOfTimeStep();
             _algorithm.SetFinishedWarmingUp();
-            Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)));
 
             var receivedDelistedWarning = 0;
             var receivedDelisted = 0;
@@ -1251,7 +1244,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 foreach (var delistingEvent in ts.Slice.Delistings)
                 {
-                    if (delistingEvent.Key != Symbols.AAPL)
+                    if (delistingEvent.Key != symbol)
                     {
                         throw new Exception($"Unexpected delisting for symbol {delistingEvent.Key}");
                     }
@@ -1270,7 +1263,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             },
             alwaysInvoke: false,
             secondsTimeStep: 3600 * 8,
-            endDate: delistingDate.AddDays(2));
+            endDate: _startDate.AddDays(3));
 
             Assert.AreEqual(1, receivedDelistedWarning, $"Did not receive {DelistingType.Warning}");
             Assert.AreEqual(1, receivedDelisted, $"Did not receive {DelistingType.Delisted}");
@@ -1285,7 +1278,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
             var feed = RunDataFeed();
 
-            _algorithm.AddOptionContract(Symbols.SPY_C_192_Feb19_2016);
+            var option = _algorithm.AddOptionContract(Symbols.SPY_C_192_Feb19_2016);
             _algorithm.OnEndOfTimeStep();
             _algorithm.SetFinishedWarmingUp();
 
@@ -1318,6 +1311,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.AreEqual(1, receivedDelistedWarning, $"Did not receive {DelistingType.Warning}");
             Assert.AreEqual(1, receivedDelisted, $"Did not receive {DelistingType.Delisted}");
+
+            Assert.IsTrue(option.IsDelisted);
+            Assert.IsFalse(option.IsTradable);
+            Assert.IsFalse(_algorithm.Securities.Any(x => x.Key == option.Symbol));
         }
 
         [TestCase("20140325", typeof(CoarseFundamental))]
