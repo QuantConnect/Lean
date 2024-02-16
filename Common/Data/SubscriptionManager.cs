@@ -259,7 +259,12 @@ namespace QuantConnect.Data
                     // only update the algorithm time once, it's not cheap because of TZ conversions
                     algorithm.SetDateTime(utcScanTime);
                 }
-                consolidatorToScan.Scan();
+
+                if (consolidatorToScan.UtcScanTime <= utcScanTime)
+                {
+                    // only scan if we still need to
+                    consolidatorToScan.Scan();
+                }
 
                 _consolidatorsSortedByScanTime.Enqueue(consolidatorToScan, consolidatorToScan.UtcScanTime);
             }

@@ -38,7 +38,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// The next utc scan time
         /// </summary>
-        public DateTime UtcScanTime { get; set; }
+        public DateTime UtcScanTime { get; private set; }
 
         /// <summary>
         /// Creates a new instance
@@ -78,7 +78,7 @@ namespace QuantConnect.Data
         /// </summary>
         private void AdvanceScanTime(object _ = null, IBaseData consolidated = null)
         {
-            if (UtcScanTime > _timeKeeper.UtcTime)
+            if (consolidated == null && UtcScanTime > _timeKeeper.UtcTime)
             {
                 // already set
                 return;

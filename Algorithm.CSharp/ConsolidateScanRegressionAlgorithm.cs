@@ -25,7 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class ConsolidateScanRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private readonly Queue<DateTime> _consolidation = new();
+        private readonly Queue<DateTime> _consolidationDaily = new();
+        private readonly Queue<DateTime> _consolidationHourly = new();
+        private readonly Queue<DateTime> _consolidation2Days = new();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -38,9 +40,8 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("SPY", Resolution.Hour);
             Consolidate("SPY", Resolution.Daily, (TradeBar bar) =>
             {
-                Debug($"Consolidated: {Time} {bar}");
-
-                var expectedTime = _consolidation.Dequeue();
+                Debug($"Consolidated.Daily: {Time} {bar}");
+                var expectedTime = _consolidationDaily.Dequeue();
                 if (expectedTime != Time)
                 {
                     throw new Exception($"Unexpected consolidation time {expectedTime} != {Time}");
@@ -51,15 +52,46 @@ namespace QuantConnect.Algorithm.CSharp
                     SetHoldings("SPY", 1);
                 }
             });
+            _consolidationDaily.Enqueue(new DateTime(2013, 10, 8, 0, 0, 0));
+            _consolidationDaily.Enqueue(new DateTime(2013, 10, 9, 0, 0, 0));
+            _consolidationDaily.Enqueue(new DateTime(2013, 10, 10, 0, 0, 0));
 
-            _consolidation.Enqueue(new DateTime(2013, 10, 8, 0, 0, 0));
-            _consolidation.Enqueue(new DateTime(2013, 10, 9, 0, 0, 0));
-            _consolidation.Enqueue(new DateTime(2013, 10, 10, 0, 0, 0));
+            Consolidate("SPY", TimeSpan.FromHours(3), (TradeBar bar) =>
+            {
+                Debug($"Consolidated.FromHours(3): {Time} {bar}");
+                var expectedTime = _consolidationHourly.Dequeue();
+                if (expectedTime != Time)
+                {
+                    throw new Exception($"Unexpected consolidation time {expectedTime} != {Time} 3 hours");
+                }
+            });
+            _consolidationHourly.Enqueue(new DateTime(2013, 10, 7, 12, 0, 0));
+            _consolidationHourly.Enqueue(new DateTime(2013, 10, 7, 15, 0, 0));
+            _consolidationHourly.Enqueue(new DateTime(2013, 10, 7, 18, 0, 0));
+            _consolidationHourly.Enqueue(new DateTime(2013, 10, 8, 12, 0, 0));
+            _consolidationHourly.Enqueue(new DateTime(2013, 10, 8, 15, 0, 0));
+            _consolidationHourly.Enqueue(new DateTime(2013, 10, 8, 18, 0, 0));
+            _consolidationHourly.Enqueue(new DateTime(2013, 10, 9, 12, 0, 0));
+            _consolidationHourly.Enqueue(new DateTime(2013, 10, 9, 15, 0, 0));
+            _consolidationHourly.Enqueue(new DateTime(2013, 10, 9, 18, 0, 0));
+            _consolidationHourly.Enqueue(new DateTime(2013, 10, 10, 12, 0, 0));
+            _consolidationHourly.Enqueue(new DateTime(2013, 10, 10, 15, 0, 0));
+
+            Consolidate("SPY", TimeSpan.FromDays(2), (TradeBar bar) =>
+            {
+                Debug($"Consolidated.2Days: {Time} {bar}");
+                var expectedTime = _consolidation2Days.Dequeue();
+                if (expectedTime != Time)
+                {
+                    throw new Exception($"Unexpected consolidation time {expectedTime} != {Time} 2 days");
+                }
+            });
+            _consolidation2Days.Enqueue(new DateTime(2013, 10, 9, 9, 0, 0));
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_consolidation.Count != 0)
+            if (_consolidationDaily.Count != 0 || _consolidationHourly.Count != 0 || _consolidation2Days.Count != 0)
             {
                 throw new Exception($"Unexpected consolidation count");
             }
