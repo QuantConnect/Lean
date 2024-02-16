@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -144,7 +144,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void SubscriptionsMemberIsThreadSafe()
         {
-            var subscriptionManager = new SubscriptionManager();
+            var subscriptionManager = new SubscriptionManager(NullTimeKeeper.Instance);
             subscriptionManager.SetDataManager(new DataManagerStub());
             var start = DateTime.UtcNow;
             var end = start.AddSeconds(5);
@@ -180,7 +180,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void GetsCustomSubscriptionDataTypes()
         {
-            var subscriptionManager = new SubscriptionManager();
+            var subscriptionManager = new SubscriptionManager(NullTimeKeeper.Instance);
             subscriptionManager.SetDataManager(new DataManagerStub());
             subscriptionManager.AvailableDataTypes[SecurityType.Commodity] = new List<TickType> { TickType.OpenInterest, TickType.Quote, TickType.Trade };
             var types = subscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Commodity, Resolution.Daily, false);
@@ -429,7 +429,7 @@ namespace QuantConnect.Tests.Common.Data
 
         private static List<Tuple<Type, TickType>> GetSubscriptionDataTypes(SecurityType securityType, Resolution resolution, bool isCanonical = false)
         {
-            var subscriptionManager = new SubscriptionManager();
+            var subscriptionManager = new SubscriptionManager(NullTimeKeeper.Instance);
             subscriptionManager.SetDataManager(new DataManagerStub());
             return subscriptionManager.LookupSubscriptionConfigDataTypes(securityType, resolution, isCanonical);
         }

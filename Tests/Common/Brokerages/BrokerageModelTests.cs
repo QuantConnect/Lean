@@ -326,7 +326,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         return super().GetBenchmark(securities)
                 ").GetAttr("CustomBrokerageModel");
                 var timeKeeper = new TimeKeeper(DateTime.Now);
-                var subscriptionManager = new SubscriptionManager();
+                var subscriptionManager = new SubscriptionManager(timeKeeper);
                 var dataManager = new DataManagerStub();
                 subscriptionManager.SetDataManager(dataManager);
                 var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();

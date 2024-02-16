@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
             var existingSecurities = new List<Security>(0);
             var potentialSymbols = new List<Symbol> { Symbols.EURUSD };
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub();
             subscriptions.SetDataManager(dataManager);
 
@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
             var existingSecurities = new List<Security>(0);
             var potentialSymbols = new List<Symbol> { Symbols.BTCUSD, Symbols.EURUSD };
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub();
             subscriptions.SetDataManager(dataManager);
 
@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
             var existingSecurities = new List<Security> { CreateSecurity(Symbols.EURUSD) };
             var potentialSymbols = new List<Symbol> { Symbols.EURUSD };
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub();
             subscriptions.SetDataManager(dataManager);
 
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
             var existingSecurities = new List<Security> { CreateSecurity(Symbols.BTCUSD) };
             var potentialSymbols = new List<Symbol> { Symbols.BTCUSD, Symbols.EURUSD };
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub();
             subscriptions.SetDataManager(dataManager);
 

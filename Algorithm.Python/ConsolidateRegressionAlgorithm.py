@@ -88,7 +88,7 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
         self._weeklyConsolidationCount += 1
 
     def  OnEndOfAlgorithm(self):
-        expectedConsolidations = 8
+        expectedConsolidations = 9
         expectedWeeklyConsolidations = 1
         if (any(i != expectedConsolidations for i in self._consolidationCounts) or
             self._weeklyConsolidationCount != expectedWeeklyConsolidations or
