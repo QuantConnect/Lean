@@ -292,6 +292,7 @@ india,SENSEX,future,BSE S&P Sensex Index,INR,0.05,25,1.0
 # Futures options -- will default to Futures contract specs in case no entry exists
 cbot,OZB,futureoption,U.S. Treasury Bond American Futures Options,USD,1000.0,0.015625,1.0
 cbot,OZC,futureoption,Corn American Futures Options,USD,5000.0,0.00125,1.0,,,100
+cbot,OZN,futureoption,10-Year T-Note American Futures Options,USD,1000.0,0.015625,1.0
 cbot,OZS,futureoption,Soybean American Futures Options,USD,5000.0,0.00125,1.0,,,100
 cbot,OZT,futureoption,2-Year T-Note American Futures Options,USD,2000.0,0.0078125,1.0
 cbot,OZW,futureoption,Chicago SRW Wheat American Futures Options,USD,5000.0,0.00125,1.0,,,100
