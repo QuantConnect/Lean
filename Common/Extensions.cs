@@ -4074,7 +4074,7 @@ namespace QuantConnect
         /// zero. Otherwise, the default failValue or the provided one</returns>
         public static decimal SafeDivision(this decimal numerator, decimal denominator, decimal failValue = 0)
         {
-            return (decimal)SafeDivision((double)numerator, (double)denominator, (double)failValue);
+            return SafeDivision((double)numerator, (double)denominator, (double)failValue).SafeDecimalCast();
         }
     }
 }

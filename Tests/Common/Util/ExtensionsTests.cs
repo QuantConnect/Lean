@@ -1745,6 +1745,12 @@ def select_symbol(fundamental):
             }
         }
 
+        [TestCaseSource(nameof(DivideCases))]
+        public void SafeDivisionWorksAsExpectedWithEdgeCases(decimal numerator, decimal denominator)
+        {
+            Assert.DoesNotThrow(() => numerator.SafeDivision(denominator));
+        }
+
         private PyObject ConvertToPyObject(object value)
         {
             using (Py.GIL())
@@ -1779,5 +1785,14 @@ def select_symbol(fundamental):
                 new SecurityCache()
             );
         }
+
+        private static object[] DivideCases =
+        {
+            new decimal[] { 100000000000000000000m, 0.000000000001m },
+            new decimal[] { -100000000000000000000m, 0.000000000001m },
+            new decimal[] { 1, 0 },
+            new decimal[] { 0.0000000000000001m, 10000000000000000000000000000m },
+            new decimal[] { -0.000000000000001m, 10000000000000000000000000000m },
+        };
     }
 }
