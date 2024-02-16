@@ -67,9 +67,10 @@ namespace QuantConnect.Tests
             MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
 
             // clean up object storage
-            if (Directory.Exists(LocalObjectStore.DefaultObjectStore))
+            var objectStorePath = LocalObjectStore.DefaultObjectStore;
+            if (Directory.Exists(objectStorePath))
             {
-                Directory.Delete(LocalObjectStore.DefaultObjectStore, true);
+                Directory.Delete(objectStorePath, true);
             }
 
             var ordersLogFile = string.Empty;

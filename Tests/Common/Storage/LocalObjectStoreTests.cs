@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Storage
     [TestFixture]
     public class LocalObjectStoreTests
     {
-        private static readonly string TestStorageRoot = $"./{nameof(LocalObjectStoreTests)}";
+        private static readonly string TestStorageRoot = $"{Directory.GetCurrentDirectory()}/{nameof(LocalObjectStoreTests)}";
         private static readonly string StorageRootConfigurationValue = Config.Get("object-store-root");
 
         private ObjectStore _store;
@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Common.Storage
         {
             Config.Set("object-store-root", TestStorageRoot);
 
-            _store = new ObjectStore(new LocalObjectStore());
+            _store = new ObjectStore(new TestLocalObjectStore());
             _store.Initialize(0, 0, "", new Controls() { StorageLimit = 5 * 1024 * 1024, StorageFileCount = 100 });
 
             // Store initial Log Handler
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void ExistingFilesLoadedCorretly()
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
                 var dir = Path.Combine(TestStorageRoot, "location-pepe", "test");
                 Directory.CreateDirectory(dir);
@@ -180,7 +180,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("..\\prefix/")]
         public void InvalidCustomPathsStore(string path)
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 Assert.AreEqual(0, store.Count());
@@ -192,7 +192,7 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void ValidPaths()
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
 
@@ -221,7 +221,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("./a/su-p_er\\pr x=")]
         public void CustomPrefixStore(string prefix)
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 Assert.AreEqual(0, store.Count());
@@ -251,7 +251,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase(0)]
         public void KeysBehavior(int useCase)
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 var key = "ILove";
@@ -298,7 +298,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase(0)]
         public void AfterClearState(int useCase)
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 var key = "ILove";
@@ -307,7 +307,7 @@ namespace QuantConnect.Tests.Common.Storage
                 // CLEAR the state
                 store.Clear();
 
-                if(useCase == 0)
+                if (useCase == 0)
                 {
                     // delete
                     Assert.IsTrue(store.Delete(key));
@@ -354,7 +354,7 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void GetFilePathAndDelete()
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
@@ -376,7 +376,7 @@ namespace QuantConnect.Tests.Common.Storage
             string path;
             using (var store = new TestLocalObjectStore())
             {
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = 1}, new TestFileHandler());
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = 1 }, new TestFileHandler());
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
                 var key = "ILove";
                 path = store.GetFilePath(key);
@@ -551,7 +551,7 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void DisposeDoesNotRemovesEmptyStorageFolder()
         {
-            using (var store = new LocalObjectStore())
+            using (var store = new TestLocalObjectStore())
             {
                 store.Initialize(0, 0, "", new Controls());
 
@@ -567,7 +567,7 @@ namespace QuantConnect.Tests.Common.Storage
             var testHandler = new QueueLogHandler();
             Log.LogHandler = testHandler;
 
-            using (var store = new LocalObjectStore())
+            using (var store = new TestLocalObjectStore())
             {
                 store.Initialize(0, 0, "", new Controls());
 
@@ -582,7 +582,7 @@ namespace QuantConnect.Tests.Common.Storage
         public void DisposeDoesNotDeleteStoreFiles()
         {
             string path;
-            using (var store = new LocalObjectStore())
+            using (var store = new TestLocalObjectStore())
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
@@ -612,7 +612,7 @@ namespace QuantConnect.Tests.Common.Storage
 
                 // Assert the store has only a.txt
                 var store = qb.ObjectStore.GetEnumerator().AsEnumerable().ToList();
-                Assert.IsTrue(store.Count == 1);
+                Assert.AreEqual(1, store.Count);
                 // 0 being the project id, default prefix
                 Assert.AreEqual(Path.Combine("a.txt"), store[0].Key);
 
@@ -639,7 +639,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase(false)]
         public void TooManyObjects(bool usingObjectStore)
         {
-            using (var store = new LocalObjectStore())
+            using (var store = new TestLocalObjectStore())
             {
                 store.Initialize(0, 0, "", new Controls() { StorageLimit = 5 * 1024 * 1024, StorageFileCount = 100 });
                 // Write 100 Files first, should not throw
@@ -652,7 +652,7 @@ namespace QuantConnect.Tests.Common.Storage
                     }
                     else
                     {
-                        File.WriteAllBytes(Path.Combine(LocalObjectStore.DefaultObjectStore, $"{i}"), new byte[1]);
+                        File.WriteAllBytes(Path.Combine(TestStorageRoot, $"{i}"), new byte[1]);
                     }
                 }
 
@@ -670,7 +670,7 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void WriteFromExternalMethodAndSaveFromSource()
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
@@ -691,7 +691,7 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void GetFilePathMethodWorksProperly()
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
@@ -706,7 +706,7 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void TrySaveKeyWithNotFileAssociated()
         {
-            using (var store = new ObjectStore(new LocalObjectStore()))
+            using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
@@ -720,7 +720,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase(0)]
         public void NewUnregisteredFileIsAvailable(int useCase)
         {
-            using (var store = new LocalObjectStore())
+            using (var store = new TestLocalObjectStore())
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
 
@@ -745,7 +745,7 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void NewUnregisteredFileIsNotDeleted()
         {
-            using (var store = new LocalObjectStore())
+            using (var store = new TestLocalObjectStore())
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
 
@@ -767,7 +767,7 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void NewUnregisteredFileCanBeDeleted()
         {
-            using (var store = new LocalObjectStore())
+            using (var store = new TestLocalObjectStore())
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
 
@@ -786,7 +786,7 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void DeletedObjectIsNotReloaded()
         {
-            using (var store = new LocalObjectStore())
+            using (var store = new TestLocalObjectStore())
             {
                 store.Initialize(0, 0, "", new Controls());
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
@@ -807,7 +807,7 @@ namespace QuantConnect.Tests.Common.Storage
                 Assert.IsFalse(store.ContainsKey("a.txt"));
             }
 
-            using (var store = new LocalObjectStore())
+            using (var store = new TestLocalObjectStore())
             {
                 // Check that the dir still exists, it had files so it shouldn't have deleted
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
@@ -858,6 +858,7 @@ namespace QuantConnect.Tests.Common.Storage
                 PersistDataCalled = true;
                 return base.PersistData();
             }
+            protected override string StorageRoot() => TestStorageRoot;
         }
 
         public class TestFileHandler : FileHandler
