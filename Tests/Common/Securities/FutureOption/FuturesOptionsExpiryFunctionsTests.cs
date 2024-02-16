@@ -23,11 +23,12 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
     [TestFixture]
     public class FuturesOptionsExpiryFunctionsTests
     {
-        [TestCase("ES", Market.CME, 12, 0)]
-        [TestCase("ZB", Market.CBOT, 11, 1)]
-        [TestCase("CL", Market.NYMEX, 11, 1)]
-        [TestCase("GC", Market.COMEX, 11, 1)] // No mapping is done for this Symbol as expected, although rules exist.
-        public void FutureContractMonthDelta(string futureTicker, string market, int expiryMonth, int expectedDelta)
+        [TestCase("ES", Market.CME, 0)]
+        [TestCase("ZB", Market.CBOT, 1)]
+        [TestCase("ZN", Market.CBOT, 1)]
+        [TestCase("CL", Market.NYMEX, 1)]
+        [TestCase("GC", Market.COMEX, 1)] // No mapping is done for this Symbol as expected, although rules exist.
+        public void FutureContractMonthDelta(string futureTicker, string market, int expectedDelta)
         {
             var contractMonth = new DateTime(2020, 12, 1);
 
@@ -60,6 +61,7 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
         {
             new TestCaseData("CL", Market.NYMEX, new DateTime(2020, 11, 17)),
             new TestCaseData("ZB", Market.CBOT, new DateTime(2020, 11, 20)),
+            new TestCaseData("ZN", Market.CBOT, new DateTime(2020, 11, 20)),
             new TestCaseData("GC", Market.COMEX, new DateTime(2020, 11, 24, 12, 30, 0))
         };
     }
