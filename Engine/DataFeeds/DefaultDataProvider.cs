@@ -39,7 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var success = true;
             try
             {
-                return key.GetSafeFileStream(FileMode.Open, FileAccess.Read, FileShare.Read);
+                return FileExtension.GetSafeFileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
             catch (Exception exception)
             {

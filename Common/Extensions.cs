@@ -67,10 +67,7 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
-        public const string FixWord = "@";
         private static readonly Regex LeanPathRegex = new Regex("(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)", RegexOptions.Compiled);
-        private static readonly Regex ToValidWindowsPathRegex = new Regex("((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0-9])|(LPT[0-9]))(?=(\\.|\\\\|/|$)))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private const string _fixPathRegex = FixWord + "$&"; // The string "$&" gets the matched word
         private static readonly Dictionary<string, bool> _emptyDirectories = new ();
         private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
         private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
@@ -4042,36 +4039,6 @@ namespace QuantConnect
             }
 
             return result.Value;
-        }
-
-        /// <summary>
-        /// Takes a given path and (if applicable) returns a modified path accepted by
-        /// Windows OS
-        /// </summary>
-        public static string ToValidPath(this string path) {
-            return OS.IsWindows ? ToValidWindowsPathRegex.Replace(path, _fixPathRegex) : path;
-        }
-
-        /// <summary>
-        /// Takes a modified path (see <see cref="ToValidPath(string)"/>) and (if applicable)
-        /// returns the original path proposed by LEAN
-        /// </summary>
-        public static string FromValidPath(this string path)
-        {
-            return OS.IsWindows ? path.Replace(FixWord, string.Empty) : path;
-        }
-
-        /// <summary>
-        /// Returns a FileStream object that (if needed) transforms the given path
-        /// to one accepted by Windows OS
-        /// </summary>
-        /// <param name="path">Path for the file the FileSteam object will encapsulate</param>
-        /// <param name="fileMode">One of the enumeration values that determines how to open or create the file</param>
-        /// <param name="access">A bitwise combination of the enumeration values that determines how the file can be accessed by the FileStream object</param>
-        /// <param name="fileShare">A bitwise combination of the enumeration values that determines how the file will be shared by processes.</param>
-        public static FileStream GetSafeFileStream(this string path, FileMode fileMode = FileMode.Create, FileAccess access = FileAccess.ReadWrite, FileShare fileShare = FileShare.None)
-        {
-            return new FileStream(ToValidPath(path), fileMode, access, fileShare);
         }
 
         /// <summary>

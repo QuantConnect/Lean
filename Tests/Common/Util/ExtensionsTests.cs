@@ -1744,226 +1744,25 @@ def select_symbol(fundamental):
             }
         }
 
-        [TestCase("data\\equity\\usa\\map_files\\AUX", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"AUX")]
-        [TestCase("data\\equity\\usa\\map_files\\NUL", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"NUL")]
-        [TestCase("data\\equity\\usa\\map_files\\PRN", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"PRN")]
-        [TestCase("data\\equity\\usa\\map_files\\CON", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"CON")]
-        [TestCase("data\\equity\\usa\\map_files\\COM0", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM0")]
-        [TestCase("data\\equity\\usa\\map_files\\COM1", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM1")]
-        [TestCase("data\\equity\\usa\\map_files\\COM2", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM2")]
-        [TestCase("data\\equity\\usa\\map_files\\COM3", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM3")]
-        [TestCase("data\\equity\\usa\\map_files\\COM4", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM4")]
-        [TestCase("data\\equity\\usa\\map_files\\COM5", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM5")]
-        [TestCase("data\\equity\\usa\\map_files\\COM6", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM6")]
-        [TestCase("data\\equity\\usa\\map_files\\COM7", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM7")]
-        [TestCase("data\\equity\\usa\\map_files\\COM8", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM8")]
-        [TestCase("data\\equity\\usa\\map_files\\COM9", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM9")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT0", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT0")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT1", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT1")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT2", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT2")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT3", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT3")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT4", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT4")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT5", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT5")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT6", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT6")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT7", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT7")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT8", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT8")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT9", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT9")]
-        [TestCase("data/equity/usa/map_files/AUX", "data/equity/usa/map_files/"+ Extensions.FixWord +"AUX")]
-        [TestCase("data/equity/usa/map_files/NUL", "data/equity/usa/map_files/"+ Extensions.FixWord +"NUL")]
-        [TestCase("data/equity/usa/map_files/PRN", "data/equity/usa/map_files/"+ Extensions.FixWord +"PRN")]
-        [TestCase("data/equity/usa/map_files/CON", "data/equity/usa/map_files/"+ Extensions.FixWord +"CON")]
-        [TestCase("data/equity/usa/map_files/COM0", "data/equity/usa/map_files/"+ Extensions.FixWord +"COM0")]
-        [TestCase("data/equity/usa/map_files/COM1", "data/equity/usa/map_files/"+ Extensions.FixWord +"COM1")]
-        [TestCase("data/equity/usa/map_files/COM2", "data/equity/usa/map_files/"+ Extensions.FixWord +"COM2")]
-        [TestCase("data/equity/usa/map_files/COM3", "data/equity/usa/map_files/"+ Extensions.FixWord +"COM3")]
-        [TestCase("data/equity/usa/map_files/COM4", "data/equity/usa/map_files/"+ Extensions.FixWord +"COM4")]
-        [TestCase("data/equity/usa/map_files/COM5", "data/equity/usa/map_files/"+ Extensions.FixWord +"COM5")]
-        [TestCase("data/equity/usa/map_files/COM6", "data/equity/usa/map_files/"+ Extensions.FixWord +"COM6")]
-        [TestCase("data/equity/usa/map_files/COM7", "data/equity/usa/map_files/"+ Extensions.FixWord +"COM7")]
-        [TestCase("data/equity/usa/map_files/COM8", "data/equity/usa/map_files/"+ Extensions.FixWord +"COM8")]
-        [TestCase("data/equity/usa/map_files/COM9", "data/equity/usa/map_files/"+ Extensions.FixWord +"COM9")]
-        [TestCase("data/equity/usa/map_files/LPT0", "data/equity/usa/map_files/"+ Extensions.FixWord +"LPT0")]
-        [TestCase("data/equity/usa/map_files/LPT1", "data/equity/usa/map_files/"+ Extensions.FixWord +"LPT1")]
-        [TestCase("data/equity/usa/map_files/LPT2", "data/equity/usa/map_files/"+ Extensions.FixWord +"LPT2")]
-        [TestCase("data/equity/usa/map_files/LPT3", "data/equity/usa/map_files/"+ Extensions.FixWord +"LPT3")]
-        [TestCase("data/equity/usa/map_files/LPT4", "data/equity/usa/map_files/"+ Extensions.FixWord +"LPT4")]
-        [TestCase("data/equity/usa/map_files/LPT5", "data/equity/usa/map_files/"+ Extensions.FixWord +"LPT5")]
-        [TestCase("data/equity/usa/map_files/LPT6", "data/equity/usa/map_files/"+ Extensions.FixWord +"LPT6")]
-        [TestCase("data/equity/usa/map_files/LPT7", "data/equity/usa/map_files/"+ Extensions.FixWord +"LPT7")]
-        [TestCase("data/equity/usa/map_files/LPT8", "data/equity/usa/map_files/"+ Extensions.FixWord +"LPT8")]
-        [TestCase("data/equity/usa/map_files/LPT9", "data/equity/usa/map_files/"+ Extensions.FixWord +"LPT9")]
-        [TestCase("data\\equity\\usa\\map_files\\COM0.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM0.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\COM1.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM1.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\COM2.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM2.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\COM3.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM3.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\COM4.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM4.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\COM5.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM5.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\COM6.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM6.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\COM7.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM7.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\COM8.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM8.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\COM9.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM9.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT0.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT0.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT1.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT1.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT2.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT2.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT3.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT3.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT4.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT4.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT5.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT5.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT6.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT6.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT7.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT7.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT8.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT8.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\LPT9.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT9.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\AUX.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"AUX.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\NUL.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"NUL.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\PRN.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"PRN.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\CON.csv", "data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"CON.csv")]
-        [TestCase("AUX.csv", ""+ Extensions.FixWord +"AUX.csv")]
-        [TestCase("NUL.csv", ""+ Extensions.FixWord +"NUL.csv")]
-        [TestCase("PRN.csv", ""+ Extensions.FixWord +"PRN.csv")]
-        [TestCase("CON.csv", ""+ Extensions.FixWord +"CON.csv")]
-        [TestCase("COM0.csv", ""+ Extensions.FixWord +"COM0.csv")]
-        [TestCase("COM1.csv", ""+ Extensions.FixWord +"COM1.csv")]
-        [TestCase("COM2.csv", ""+ Extensions.FixWord +"COM2.csv")]
-        [TestCase("COM3.csv", ""+ Extensions.FixWord +"COM3.csv")]
-        [TestCase("COM4.csv", ""+ Extensions.FixWord +"COM4.csv")]
-        [TestCase("COM5.csv", ""+ Extensions.FixWord +"COM5.csv")]
-        [TestCase("COM6.csv", ""+ Extensions.FixWord +"COM6.csv")]
-        [TestCase("COM7.csv", ""+ Extensions.FixWord +"COM7.csv")]
-        [TestCase("COM8.csv", ""+ Extensions.FixWord +"COM8.csv")]
-        [TestCase("COM9.csv", ""+ Extensions.FixWord +"COM9.csv")]
-        [TestCase("LPT0.csv", ""+ Extensions.FixWord +"LPT0.csv")]
-        [TestCase("LPT1.csv", ""+ Extensions.FixWord +"LPT1.csv")]
-        [TestCase("LPT2.csv", ""+ Extensions.FixWord +"LPT2.csv")]
-        [TestCase("LPT3.csv", ""+ Extensions.FixWord +"LPT3.csv")]
-        [TestCase("LPT4.csv", ""+ Extensions.FixWord +"LPT4.csv")]
-        [TestCase("LPT5.csv", ""+ Extensions.FixWord +"LPT5.csv")]
-        [TestCase("LPT6.csv", ""+ Extensions.FixWord +"LPT6.csv")]
-        [TestCase("LPT7.csv", ""+ Extensions.FixWord +"LPT7.csv")]
-        [TestCase("LPT8.csv", ""+ Extensions.FixWord +"LPT8.csv")]
-        [TestCase("LPT9.csv", ""+ Extensions.FixWord +"LPT9.csv")]
-        [TestCase("AUX.tar.gz", ""+ Extensions.FixWord +"AUX.tar.gz")]
-        [TestCase("NUL.tar.gz", ""+ Extensions.FixWord +"NUL.tar.gz")]
-        [TestCase("PRN.tar.gz", ""+ Extensions.FixWord +"PRN.tar.gz")]
-        [TestCase("CON.tar.gz", ""+ Extensions.FixWord +"CON.tar.gz")]
-        [TestCase("equity\\usa\\minute\\con\\20150903_trade.zip", "equity\\usa\\minute\\"+ Extensions.FixWord +"con\\20150903_trade.zip")]
-        [TestCase("equity\\usa\\minute\\nul\\20150903_trade.zip", "equity\\usa\\minute\\"+ Extensions.FixWord +"nul\\20150903_trade.zip")]
-        [TestCase("equity\\usa\\minute\\prn\\20150903_trade.zip", "equity\\usa\\minute\\"+ Extensions.FixWord +"prn\\20150903_trade.zip")]
-        [TestCase("equity\\usa\\minute\\aux\\20150903_trade.zip", "equity\\usa\\minute\\"+ Extensions.FixWord +"aux\\20150903_trade.zip")]
-        [TestCase("equity\\usa\\minute\\con\\con.zip", "equity\\usa\\minute\\"+ Extensions.FixWord +"con\\"+ Extensions.FixWord +"con.zip")]
-        [TestCase("equity\\usa\\minute\\nul\\nul.zip", "equity\\usa\\minute\\"+ Extensions.FixWord +"nul\\"+ Extensions.FixWord +"nul.zip")]
-        [TestCase("equity\\usa\\minute\\prn\\prn.zip", "equity\\usa\\minute\\"+ Extensions.FixWord +"prn\\"+ Extensions.FixWord +"prn.zip")]
-        [TestCase("equity\\usa\\minute\\aux\\aux.zip", "equity\\usa\\minute\\"+ Extensions.FixWord +"aux\\"+ Extensions.FixWord +"aux.zip")]
+        [TestCaseSource(nameof(ToValidPathReturnsValidPathTestCases))]
         [Platform("Win", Reason = "The paths in these testcases are only forbidden in Windows OS")]
         public void ToValidPathReturnsValidPath(string inputName, string expectedName)
         {
-            Assert.AreEqual(expectedName, inputName.ToValidPath());
+            Assert.AreEqual(expectedName, FileExtension.ToNormalizedPath(inputName));
         }
 
-        [TestCase("data\\equity\\usa\\map_files\\AAUX.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\ANUL.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\APRN.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\ACON.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\AUXA.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\NULA.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\PRNA.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\CONA.csv")]
-        [TestCase("AAUX.csv")]
-        [TestCase("ANUL.csv")]
-        [TestCase("APRN.csv")]
-        [TestCase("ACON.csv")]
-        [TestCase("AUXA.csv")]
-        [TestCase("NULA.csv")]
-        [TestCase("PRNA.csv")]
-        [TestCase("CONA.csv")]
-        [TestCase("data/equity/usa/map_files/AAUX.csv")]
-        [TestCase("data/equity/usa/map_files/ANUL.csv")]
-        [TestCase("data/equity/usa/map_files/APRN.csv")]
-        [TestCase("data/equity/usa/map_files/ACON.csv")]
-        [TestCase("data/equity/usa/map_files/AUXA.csv")]
-        [TestCase("data/equity/usa/map_files/NULA.csv")]
-        [TestCase("data/equity/usa/map_files/PRNA.csv")]
-        [TestCase("data/equity/usa/map_files/CONA.csv")]
+        [TestCaseSource(nameof(ToValidPathReturnsTheSameNameTestCases))]
         [Platform("Win", Reason = "The paths in these testcases are only forbidden in Windows OS")]
         public void ToValidPathReturnsTheSameName(string inputName)
         {
-            Assert.AreEqual(inputName, inputName.ToValidPath());
+            Assert.AreEqual(inputName, FileExtension.ToNormalizedPath(inputName));
         }
 
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM0.csv", "data\\equity\\usa\\map_files\\COM0.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM1.csv", "data\\equity\\usa\\map_files\\COM1.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM2.csv", "data\\equity\\usa\\map_files\\COM2.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM3.csv", "data\\equity\\usa\\map_files\\COM3.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM4.csv", "data\\equity\\usa\\map_files\\COM4.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM5.csv", "data\\equity\\usa\\map_files\\COM5.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM6.csv", "data\\equity\\usa\\map_files\\COM6.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM7.csv", "data\\equity\\usa\\map_files\\COM7.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM8.csv", "data\\equity\\usa\\map_files\\COM8.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"COM9.csv", "data\\equity\\usa\\map_files\\COM9.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT0.csv", "data\\equity\\usa\\map_files\\LPT0.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT1.csv", "data\\equity\\usa\\map_files\\LPT1.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT2.csv", "data\\equity\\usa\\map_files\\LPT2.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT3.csv", "data\\equity\\usa\\map_files\\LPT3.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT4.csv", "data\\equity\\usa\\map_files\\LPT4.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT5.csv", "data\\equity\\usa\\map_files\\LPT5.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT6.csv", "data\\equity\\usa\\map_files\\LPT6.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT7.csv", "data\\equity\\usa\\map_files\\LPT7.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT8.csv", "data\\equity\\usa\\map_files\\LPT8.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"LPT9.csv", "data\\equity\\usa\\map_files\\LPT9.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"AUX.csv", "data\\equity\\usa\\map_files\\AUX.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"NUL.csv", "data\\equity\\usa\\map_files\\NUL.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"PRN.csv", "data\\equity\\usa\\map_files\\PRN.csv")]
-        [TestCase("data\\equity\\usa\\map_files\\"+ Extensions.FixWord +"CON.csv", "data\\equity\\usa\\map_files\\CON.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"COM0.csv", "data/equity/usa/map_files/COM0.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"COM1.csv", "data/equity/usa/map_files/COM1.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"COM2.csv", "data/equity/usa/map_files/COM2.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"COM3.csv", "data/equity/usa/map_files/COM3.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"COM4.csv", "data/equity/usa/map_files/COM4.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"COM5.csv", "data/equity/usa/map_files/COM5.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"COM6.csv", "data/equity/usa/map_files/COM6.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"COM7.csv", "data/equity/usa/map_files/COM7.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"COM8.csv", "data/equity/usa/map_files/COM8.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"COM9.csv", "data/equity/usa/map_files/COM9.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"LPT0.csv", "data/equity/usa/map_files/LPT0.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"LPT1.csv", "data/equity/usa/map_files/LPT1.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"LPT2.csv", "data/equity/usa/map_files/LPT2.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"LPT3.csv", "data/equity/usa/map_files/LPT3.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"LPT4.csv", "data/equity/usa/map_files/LPT4.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"LPT5.csv", "data/equity/usa/map_files/LPT5.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"LPT6.csv", "data/equity/usa/map_files/LPT6.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"LPT7.csv", "data/equity/usa/map_files/LPT7.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"LPT8.csv", "data/equity/usa/map_files/LPT8.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"LPT9.csv", "data/equity/usa/map_files/LPT9.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"AUX.csv", "data/equity/usa/map_files/AUX.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"NUL.csv", "data/equity/usa/map_files/NUL.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"PRN.csv", "data/equity/usa/map_files/PRN.csv")]
-        [TestCase("data/equity/usa/map_files/"+ Extensions.FixWord +"CON.csv", "data/equity/usa/map_files/CON.csv")]
-        [TestCase(""+ Extensions.FixWord +"AUX.csv", "AUX.csv")]
-        [TestCase(""+ Extensions.FixWord +"NUL.csv", "NUL.csv")]
-        [TestCase(""+ Extensions.FixWord +"PRN.csv", "PRN.csv")]
-        [TestCase(""+ Extensions.FixWord +"CON.csv", "CON.csv")]
-        [TestCase(""+ Extensions.FixWord +"COM0.csv", "COM0.csv")]
-        [TestCase(""+ Extensions.FixWord +"COM1.csv", "COM1.csv")]
-        [TestCase(""+ Extensions.FixWord +"COM2.csv", "COM2.csv")]
-        [TestCase(""+ Extensions.FixWord +"COM3.csv", "COM3.csv")]
-        [TestCase(""+ Extensions.FixWord +"COM4.csv", "COM4.csv")]
-        [TestCase(""+ Extensions.FixWord +"COM5.csv", "COM5.csv")]
-        [TestCase(""+ Extensions.FixWord +"COM6.csv", "COM6.csv")]
-        [TestCase(""+ Extensions.FixWord +"COM7.csv", "COM7.csv")]
-        [TestCase(""+ Extensions.FixWord +"COM8.csv", "COM8.csv")]
-        [TestCase(""+ Extensions.FixWord +"COM9.csv", "COM9.csv")]
-        [TestCase(""+ Extensions.FixWord +"LPT0.csv", "LPT0.csv")]
-        [TestCase(""+ Extensions.FixWord +"LPT1.csv", "LPT1.csv")]
-        [TestCase(""+ Extensions.FixWord +"LPT2.csv", "LPT2.csv")]
-        [TestCase(""+ Extensions.FixWord +"LPT3.csv", "LPT3.csv")]
-        [TestCase(""+ Extensions.FixWord +"LPT4.csv", "LPT4.csv")]
-        [TestCase(""+ Extensions.FixWord +"LPT5.csv", "LPT5.csv")]
-        [TestCase(""+ Extensions.FixWord +"LPT6.csv", "LPT6.csv")]
-        [TestCase(""+ Extensions.FixWord +"LPT7.csv", "LPT7.csv")]
-        [TestCase(""+ Extensions.FixWord +"LPT8.csv", "LPT8.csv")]
-        [TestCase(""+ Extensions.FixWord +"LPT9.csv", "LPT9.csv")]
+        [TestCaseSource(nameof(FromValidReturnsOriginalNameTestCases))]
         [Platform("Win", Reason = "The paths in these testcases are only forbidden in Windows OS")]
-        public void FromValiReturnsOriginalName(string inputName, string expectedName)
+        public void FromValidReturnsOriginalName(string inputName, string expectedName)
         {
-            Assert.AreEqual(expectedName, inputName.FromValidPath());
+            Assert.AreEqual(expectedName, FileExtension.ToNormalizedPath(inputName));
         }
 
         [TestCaseSource(nameof(DivideCases))]
@@ -2006,6 +1805,222 @@ def select_symbol(fundamental):
                 new SecurityCache()
             );
         }
+
+        public static object[] ToValidPathReturnsValidPathTestCases =
+        {
+            new object[] {"data\\equity\\usa\\map_files\\AUX", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"AUX"},
+            new object[] {"data\\equity\\usa\\map_files\\NUL", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"NUL"},
+            new object[] {"data\\equity\\usa\\map_files\\PRN", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"PRN"},
+            new object[] {"data\\equity\\usa\\map_files\\CON", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"CON"},
+            new object[] {"data\\equity\\usa\\map_files\\COM0", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM0"},
+            new object[] {"data\\equity\\usa\\map_files\\COM1", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM1"},
+            new object[] {"data\\equity\\usa\\map_files\\COM2", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM2"},
+            new object[] {"data\\equity\\usa\\map_files\\COM3", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM3"},
+            new object[] {"data\\equity\\usa\\map_files\\COM4", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM4"},
+            new object[] {"data\\equity\\usa\\map_files\\COM5", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM5"},
+            new object[] {"data\\equity\\usa\\map_files\\COM6", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM6"},
+            new object[] {"data\\equity\\usa\\map_files\\COM7", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM7"},
+            new object[] {"data\\equity\\usa\\map_files\\COM8", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM8"},
+            new object[] {"data\\equity\\usa\\map_files\\COM9", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM9"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT0", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT0"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT1", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT1"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT2", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT2"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT3", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT3"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT4", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT4"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT5", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT5"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT6", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT6"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT7", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT7"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT8", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT8"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT9", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT9"},
+            new object[] {"data/equity/usa/map_files/AUX", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"AUX"},
+            new object[] {"data/equity/usa/map_files/NUL", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"NUL"},
+            new object[] {"data/equity/usa/map_files/PRN", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"PRN"},
+            new object[] {"data/equity/usa/map_files/CON", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"CON"},
+            new object[] {"data/equity/usa/map_files/COM0", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM0"},
+            new object[] {"data/equity/usa/map_files/COM1", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM1"},
+            new object[] {"data/equity/usa/map_files/COM2", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM2"},
+            new object[] {"data/equity/usa/map_files/COM3", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM3"},
+            new object[] {"data/equity/usa/map_files/COM4", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM4"},
+            new object[] {"data/equity/usa/map_files/COM5", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM5"},
+            new object[] {"data/equity/usa/map_files/COM6", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM6"},
+            new object[] {"data/equity/usa/map_files/COM7", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM7"},
+            new object[] {"data/equity/usa/map_files/COM8", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM8"},
+            new object[] {"data/equity/usa/map_files/COM9", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM9"},
+            new object[] {"data/equity/usa/map_files/LPT0", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT0"},
+            new object[] {"data/equity/usa/map_files/LPT1", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT1"},
+            new object[] {"data/equity/usa/map_files/LPT2", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT2"},
+            new object[] {"data/equity/usa/map_files/LPT3", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT3"},
+            new object[] {"data/equity/usa/map_files/LPT4", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT4"},
+            new object[] {"data/equity/usa/map_files/LPT5", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT5"},
+            new object[] {"data/equity/usa/map_files/LPT6", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT6"},
+            new object[] {"data/equity/usa/map_files/LPT7", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT7"},
+            new object[] {"data/equity/usa/map_files/LPT8", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT8"},
+            new object[] {"data/equity/usa/map_files/LPT9", "data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT9"},
+            new object[] {"data\\equity\\usa\\map_files\\COM0.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM0.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM1.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM1.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM2.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM2.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM3.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM3.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM4.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM4.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM5.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM5.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM6.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM6.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM7.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM7.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM8.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM8.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM9.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM9.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT0.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT0.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT1.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT1.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT2.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT2.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT3.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT3.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT4.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT4.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT5.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT5.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT6.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT6.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT7.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT7.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT8.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT8.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT9.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT9.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\AUX.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"AUX.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\NUL.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"NUL.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\PRN.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"PRN.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\CON.csv", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"CON.csv"},
+            new object[] {"AUX.csv", ""+ FileExtension.ReservedWordsPrefix +"AUX.csv"},
+            new object[] {"NUL.csv", ""+ FileExtension.ReservedWordsPrefix +"NUL.csv"},
+            new object[] {"PRN.csv", ""+ FileExtension.ReservedWordsPrefix +"PRN.csv"},
+            new object[] {"CON.csv", ""+ FileExtension.ReservedWordsPrefix +"CON.csv"},
+            new object[] {"COM0.csv", ""+ FileExtension.ReservedWordsPrefix +"COM0.csv"},
+            new object[] {"COM1.csv", ""+ FileExtension.ReservedWordsPrefix +"COM1.csv"},
+            new object[] {"COM2.csv", ""+ FileExtension.ReservedWordsPrefix +"COM2.csv"},
+            new object[] {"COM3.csv", ""+ FileExtension.ReservedWordsPrefix +"COM3.csv"},
+            new object[] {"COM4.csv", ""+ FileExtension.ReservedWordsPrefix +"COM4.csv"},
+            new object[] {"COM5.csv", ""+ FileExtension.ReservedWordsPrefix +"COM5.csv"},
+            new object[] {"COM6.csv", ""+ FileExtension.ReservedWordsPrefix +"COM6.csv"},
+            new object[] {"COM7.csv", ""+ FileExtension.ReservedWordsPrefix +"COM7.csv"},
+            new object[] {"COM8.csv", ""+ FileExtension.ReservedWordsPrefix +"COM8.csv"},
+            new object[] {"COM9.csv", ""+ FileExtension.ReservedWordsPrefix +"COM9.csv"},
+            new object[] {"LPT0.csv", ""+ FileExtension.ReservedWordsPrefix +"LPT0.csv"},
+            new object[] {"LPT1.csv", ""+ FileExtension.ReservedWordsPrefix +"LPT1.csv"},
+            new object[] {"LPT2.csv", ""+ FileExtension.ReservedWordsPrefix +"LPT2.csv"},
+            new object[] {"LPT3.csv", ""+ FileExtension.ReservedWordsPrefix +"LPT3.csv"},
+            new object[] {"LPT4.csv", ""+ FileExtension.ReservedWordsPrefix +"LPT4.csv"},
+            new object[] {"LPT5.csv", ""+ FileExtension.ReservedWordsPrefix +"LPT5.csv"},
+            new object[] {"LPT6.csv", ""+ FileExtension.ReservedWordsPrefix +"LPT6.csv"},
+            new object[] {"LPT7.csv", ""+ FileExtension.ReservedWordsPrefix +"LPT7.csv"},
+            new object[] {"LPT8.csv", ""+ FileExtension.ReservedWordsPrefix +"LPT8.csv"},
+            new object[] {"LPT9.csv", ""+ FileExtension.ReservedWordsPrefix +"LPT9.csv"},
+            new object[] {"AUX.tar.gz", ""+ FileExtension.ReservedWordsPrefix +"AUX.tar.gz"},
+            new object[] {"NUL.tar.gz", ""+ FileExtension.ReservedWordsPrefix +"NUL.tar.gz"},
+            new object[] {"PRN.tar.gz", ""+ FileExtension.ReservedWordsPrefix +"PRN.tar.gz"},
+            new object[] {"CON.tar.gz", ""+ FileExtension.ReservedWordsPrefix +"CON.tar.gz"},
+            new object[] {"equity\\usa\\minute\\con\\20150903_trade.zip", "equity\\usa\\minute\\"+ FileExtension.ReservedWordsPrefix +"con\\20150903_trade.zip"},
+            new object[] {"equity\\usa\\minute\\nul\\20150903_trade.zip", "equity\\usa\\minute\\"+ FileExtension.ReservedWordsPrefix +"nul\\20150903_trade.zip"},
+            new object[] {"equity\\usa\\minute\\prn\\20150903_trade.zip", "equity\\usa\\minute\\"+ FileExtension.ReservedWordsPrefix +"prn\\20150903_trade.zip"},
+            new object[] {"equity\\usa\\minute\\aux\\20150903_trade.zip", "equity\\usa\\minute\\"+ FileExtension.ReservedWordsPrefix +"aux\\20150903_trade.zip"},
+            new object[] {"equity\\usa\\minute\\con\\con.zip", "equity\\usa\\minute\\"+ FileExtension.ReservedWordsPrefix +"con\\"+ FileExtension.ReservedWordsPrefix +"con.zip"},
+            new object[] {"equity\\usa\\minute\\nul\\nul.zip", "equity\\usa\\minute\\"+ FileExtension.ReservedWordsPrefix +"nul\\"+ FileExtension.ReservedWordsPrefix +"nul.zip"},
+            new object[] {"equity\\usa\\minute\\prn\\prn.zip", "equity\\usa\\minute\\"+ FileExtension.ReservedWordsPrefix +"prn\\"+ FileExtension.ReservedWordsPrefix +"prn.zip"},
+            new object[] {"equity\\usa\\minute\\aux\\aux.zip", "equity\\usa\\minute\\"+ FileExtension.ReservedWordsPrefix +"aux\\"+ FileExtension.ReservedWordsPrefix +"aux.zip" }
+        };
+
+        public static object[] ToValidPathReturnsTheSameNameTestCases =
+        {
+            new object[] {"data\\equity\\usa\\map_files\\AAUX.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\ANUL.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\APRN.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\ACON.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\AUXA.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\NULA.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\PRNA.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\CONA.csv"},
+            new object[] {"AAUX.csv"},
+            new object[] {"ANUL.csv"},
+            new object[] {"APRN.csv"},
+            new object[] {"ACON.csv"},
+            new object[] {"AUXA.csv"},
+            new object[] {"NULA.csv"},
+            new object[] {"PRNA.csv"},
+            new object[] {"CONA.csv"},
+            new object[] {"data/equity/usa/map_files/AAUX.csv"},
+            new object[] {"data/equity/usa/map_files/ANUL.csv"},
+            new object[] {"data/equity/usa/map_files/APRN.csv"},
+            new object[] {"data/equity/usa/map_files/ACON.csv"},
+            new object[] {"data/equity/usa/map_files/AUXA.csv"},
+            new object[] {"data/equity/usa/map_files/NULA.csv"},
+            new object[] {"data/equity/usa/map_files/PRNA.csv"},
+            new object[] {"data/equity/usa/map_files/CONA.csv"}
+        };
+
+        public static object[] FromValidReturnsOriginalNameTestCases =
+        {
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM0.csv", "data\\equity\\usa\\map_files\\COM0.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM1.csv", "data\\equity\\usa\\map_files\\COM1.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM2.csv", "data\\equity\\usa\\map_files\\COM2.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM3.csv", "data\\equity\\usa\\map_files\\COM3.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM4.csv", "data\\equity\\usa\\map_files\\COM4.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM5.csv", "data\\equity\\usa\\map_files\\COM5.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM6.csv", "data\\equity\\usa\\map_files\\COM6.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM7.csv", "data\\equity\\usa\\map_files\\COM7.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM8.csv", "data\\equity\\usa\\map_files\\COM8.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM9.csv", "data\\equity\\usa\\map_files\\COM9.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT0.csv", "data\\equity\\usa\\map_files\\LPT0.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT1.csv", "data\\equity\\usa\\map_files\\LPT1.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT2.csv", "data\\equity\\usa\\map_files\\LPT2.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT3.csv", "data\\equity\\usa\\map_files\\LPT3.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT4.csv", "data\\equity\\usa\\map_files\\LPT4.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT5.csv", "data\\equity\\usa\\map_files\\LPT5.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT6.csv", "data\\equity\\usa\\map_files\\LPT6.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT7.csv", "data\\equity\\usa\\map_files\\LPT7.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT8.csv", "data\\equity\\usa\\map_files\\LPT8.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"LPT9.csv", "data\\equity\\usa\\map_files\\LPT9.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"AUX.csv", "data\\equity\\usa\\map_files\\AUX.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"NUL.csv", "data\\equity\\usa\\map_files\\NUL.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"PRN.csv", "data\\equity\\usa\\map_files\\PRN.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"CON.csv", "data\\equity\\usa\\map_files\\CON.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM0.csv", "data/equity/usa/map_files/COM0.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM1.csv", "data/equity/usa/map_files/COM1.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM2.csv", "data/equity/usa/map_files/COM2.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM3.csv", "data/equity/usa/map_files/COM3.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM4.csv", "data/equity/usa/map_files/COM4.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM5.csv", "data/equity/usa/map_files/COM5.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM6.csv", "data/equity/usa/map_files/COM6.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM7.csv", "data/equity/usa/map_files/COM7.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM8.csv", "data/equity/usa/map_files/COM8.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"COM9.csv", "data/equity/usa/map_files/COM9.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT0.csv", "data/equity/usa/map_files/LPT0.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT1.csv", "data/equity/usa/map_files/LPT1.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT2.csv", "data/equity/usa/map_files/LPT2.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT3.csv", "data/equity/usa/map_files/LPT3.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT4.csv", "data/equity/usa/map_files/LPT4.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT5.csv", "data/equity/usa/map_files/LPT5.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT6.csv", "data/equity/usa/map_files/LPT6.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT7.csv", "data/equity/usa/map_files/LPT7.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT8.csv", "data/equity/usa/map_files/LPT8.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"LPT9.csv", "data/equity/usa/map_files/LPT9.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"AUX.csv", "data/equity/usa/map_files/AUX.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"NUL.csv", "data/equity/usa/map_files/NUL.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"PRN.csv", "data/equity/usa/map_files/PRN.csv"},
+            new object[] {"data/equity/usa/map_files/"+ FileExtension.ReservedWordsPrefix +"CON.csv", "data/equity/usa/map_files/CON.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"AUX.csv", "AUX.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"NUL.csv", "NUL.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"PRN.csv", "PRN.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"CON.csv", "CON.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"COM0.csv", "COM0.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"COM1.csv", "COM1.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"COM2.csv", "COM2.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"COM3.csv", "COM3.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"COM4.csv", "COM4.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"COM5.csv", "COM5.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"COM6.csv", "COM6.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"COM7.csv", "COM7.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"COM8.csv", "COM8.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"COM9.csv", "COM9.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT0.csv", "LPT0.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT1.csv", "LPT1.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT2.csv", "LPT2.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT3.csv", "LPT3.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT4.csv", "LPT4.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT5.csv", "LPT5.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT6.csv", "LPT6.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT7.csv", "LPT7.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT8.csv", "LPT8.csv"},
+            new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT9.csv", "LPT9.csv"},
+        };
 
         private static object[] DivideCases =
         {
