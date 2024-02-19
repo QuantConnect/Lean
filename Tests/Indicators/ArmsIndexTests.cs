@@ -173,19 +173,19 @@ namespace QuantConnect.Tests.Indicators
 
             for (var i = 10; i > 0; i--)
             {
-                var input = GetInput(Symbols.AAPL, startDate, i, i);
+                var input = GetInput(Symbols.AAPL, startDate, i);
                 indicator.Update(input);
             }
 
             for (var i = 10; i > 0; i--)
             {
-                var input = GetInput(Symbols.IBM, startDate, i, i);
+                var input = GetInput(Symbols.IBM, startDate, i);
                 indicator.Update(input);
             }
 
             for (var i = 10; i > 0; i--)
             {
-                var input = GetInput(Symbols.GOOG, startDate, i, i);
+                var input = GetInput(Symbols.GOOG, startDate, i);
                 indicator.Update(input);
             }
 
@@ -195,19 +195,19 @@ namespace QuantConnect.Tests.Indicators
 
             for (var i = 0; i < 10; i++)
             {
-                var input = GetInput(Symbols.AAPL, startDate, i, i);
+                var input = GetInput(Symbols.AAPL, startDate, i);
                 indicator.Update(input);
             }
 
             for (var i = 0; i < 10; i++)
             {
-                var input = GetInput(Symbols.IBM, startDate, i, i);
+                var input = GetInput(Symbols.IBM, startDate, i);
                 indicator.Update(input);
             }
 
             for (var i = 0; i < 10; i++)
             {
-                var input = GetInput(Symbols.GOOG, startDate, i, i);
+                var input = GetInput(Symbols.GOOG, startDate, i);
                 indicator.Update(input);
             }
 
