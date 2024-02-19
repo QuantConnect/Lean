@@ -42,12 +42,7 @@ namespace QuantConnect.Queues
         private const string DefaultHistoryProvider = "SubscriptionDataReaderHistoryProvider";
         private const string DefaultDataQueueHandler = "LiveDataQueue";
         private const string DefaultDataChannelProvider = "DataChannelProvider";
-        private bool _liveMode = Config.GetBool("live-mode");
-        private static readonly string AccessToken = Config.Get("api-access-token");
         private static readonly string Channel = Config.Get("data-channel");
-        private static readonly string OrganizationId = Config.Get("job-organization-id");
-        private static readonly int UserId = Config.GetInt("job-user-id", 0);
-        private static readonly int ProjectId = Config.GetInt("job-project-id", 0);
         private readonly string AlgorithmTypeName = Config.Get("algorithm-type-name");
         private Language? _language;
 
@@ -97,7 +92,7 @@ namespace QuantConnect.Queues
         /// </summary>
         public void Initialize(IApi api)
         {
-            //
+            api.Initialize(Globals.UserId, Globals.UserToken, Globals.DataFolder);
         }
 
         /// <summary>
@@ -157,7 +152,7 @@ namespace QuantConnect.Queues
             var algorithmId = Config.Get("algorithm-id", AlgorithmTypeName);
 
             //If this isn't a backtesting mode/request, attempt a live job.
-            if (_liveMode)
+            if (Globals.LiveMode)
             {
                 var dataHandlers = Config.Get("data-queue-handler", DefaultDataQueueHandler);
                 var liveJob = new LiveNodePacket
@@ -169,10 +164,10 @@ namespace QuantConnect.Queues
                     DataQueueHandler = dataHandlers,
                     DataChannelProvider = Config.Get("data-channel-provider", DefaultDataChannelProvider),
                     Channel = Channel,
-                    UserToken = AccessToken,
-                    UserId = UserId,
-                    ProjectId = ProjectId,
-                    OrganizationId = OrganizationId,
+                    UserToken = Globals.UserToken,
+                    UserId = Globals.UserId,
+                    ProjectId = Globals.ProjectId,
+                    OrganizationId = Globals.OrganizationID,
                     Version = Globals.Version,
                     DeployId = algorithmId,
                     Parameters = parameters,
@@ -230,10 +225,10 @@ namespace QuantConnect.Queues
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),
                 HistoryProvider = Config.Get("history-provider", DefaultHistoryProvider),
                 Channel = Channel,
-                UserToken = AccessToken,
-                UserId = UserId,
-                ProjectId = ProjectId,
-                OrganizationId = OrganizationId,
+                UserToken = Globals.UserToken,
+                UserId = Globals.UserId,
+                ProjectId = Globals.ProjectId,
+                OrganizationId = Globals.OrganizationID,
                 Version = Globals.Version,
                 BacktestId = algorithmId,
                 Language = Language,

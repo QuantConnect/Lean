@@ -50,6 +50,7 @@ namespace QuantConnect.Tests.Engine.Results
             {
                 Config.Set(ResultsDestinationFolderKey, overrideValue);
             }
+            Globals.Reset();
 
             _baseResultsHandler = new BaseResultsHandlerTestable(AlgorithmId);
 

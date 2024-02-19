@@ -39,7 +39,7 @@ namespace QuantConnect.Lean.Engine
                 #endif
 
                 Log.DebuggingEnabled = Config.GetBool("debug-mode");
-                var destinationDir = Config.Get("results-destination-folder");
+                var destinationDir = Globals.ResultsDestinationFolder;
                 if (!string.IsNullOrEmpty(destinationDir))
                 {
                     Directory.CreateDirectory(destinationDir);
