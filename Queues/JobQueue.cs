@@ -89,14 +89,8 @@ namespace QuantConnect.Queues
         /// <summary>
         /// Physical location of Algorithm DLL.
         /// </summary>
-        private string AlgorithmLocation
-        {
-            get
-            {
-                // we expect this dll to be copied into the output directory
-                return Config.Get("algorithm-location", "QuantConnect.Algorithm.CSharp.dll");
-            }
-        }
+        /// <remarks>We expect this dll to be copied into the output directory</remarks>
+        private string AlgorithmLocation { get; } = Config.Get("algorithm-location", "QuantConnect.Algorithm.CSharp.dll");
 
         /// <summary>
         /// Initialize the job queue:

@@ -116,6 +116,7 @@ namespace QuantConnect.Research
                 // Reset our composer; needed for re-creation of QuantBook
                 Composer.Instance.Reset();
                 var composer = Composer.Instance;
+                Config.Reset();
 
                 // Create our handlers with our composer instance
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer, researchMode: true);
