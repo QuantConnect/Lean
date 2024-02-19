@@ -4064,14 +4064,14 @@ namespace QuantConnect
         /// zero. Otherwise, the default failValue or the provided one</returns>
         public static decimal SafeDivision(this decimal numerator, decimal denominator, decimal failValue = 0)
         {
-            var overflowCondition = (double)numerator >= (double)Decimal.MaxValue * (double)denominator;
-            var underflowCondition = (double)numerator <= (double)Decimal.MinValue * (double)denominator;
-            if (overflowCondition || underflowCondition)
+            try
+            {
+                return (denominator == 0) ? failValue : (numerator / denominator);
+            }
+            catch
             {
                 return failValue;
             }
-
-            return (denominator == 0) ? failValue : (numerator / denominator);
         }
     }
 }
