@@ -31,6 +31,7 @@ using QuantConnect.Orders;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using QuantConnect.Notifications;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Api
 {
@@ -41,6 +42,11 @@ namespace QuantConnect.Api
     {
         private readonly HttpClient _client = new HttpClient();
         private string _dataFolder;
+
+        /// <summary>
+        /// The api instance
+        /// </summary>
+        public static Api Instance { get; private set; }
 
         /// <summary>
         /// Returns the underlying API connection
@@ -60,6 +66,8 @@ namespace QuantConnect.Api
             {
                 Converters = { new OrderJsonConverter() }
             };
+
+            Instance = this;
         }
 
         /// <summary>

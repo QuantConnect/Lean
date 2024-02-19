@@ -58,7 +58,7 @@ namespace QuantConnect.Data
         /// </summary>
         public DataMonitor()
         {
-            _resultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
+            _resultsDestinationFolder = Globals.ResultsDestinationFolder;
             _succeededDataRequestsFileName = GetFilePath("succeeded-data-requests.txt");
             _failedDataRequestsFileName = GetFilePath("failed-data-requests.txt");
         }

@@ -31,8 +31,7 @@ namespace QuantConnect.Data.Shortable
         /// <summary>
         /// The data provider instance to use
         /// </summary>
-        protected static IDataProvider DataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
-                "DefaultDataProvider"), forceTypeNameOnExisting: false);
+        protected static IDataProvider DataProvider = Composer.Instance.GetPart<IDataProvider>();
 
         private string _ticker;
         private bool _scheduledCleanup;
