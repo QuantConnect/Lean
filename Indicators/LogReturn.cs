@@ -63,9 +63,12 @@ namespace QuantConnect.Indicators
                 ? window[window.Count - 1]
                 : window.MostRecentlyRemoved;
             var result = Math.Log((double)(valuef.Value.SafeDivision(value0.Value)));
-            return (result == Double.NegativeInfinity |
-                result == Double.PositiveInfinity |
-                result >= (double)Decimal.MaxValue) ? 0 : (decimal)result;
+            if (result == Double.NegativeInfinity || result == Double.PositiveInfinity)
+            {
+                return 0;
+            }
+
+            return result.SafeDecimalCast();
         }
     }
 }
