@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -33,6 +33,8 @@ namespace QuantConnect.Configuration
 
         private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
             {
+                new CommandLineOption("close-automatically", CommandOptionType.SingleValue),
+                new CommandLineOption("data-folder", CommandOptionType.SingleValue),
                 new CommandLineOption("strategy-name", CommandOptionType.SingleValue, "Strategy name"),
                 new CommandLineOption("strategy-description", CommandOptionType.SingleValue, "Strategy description"),
                 new CommandLineOption("live-data-source-file", CommandOptionType.SingleValue, "Live source data json file"),
