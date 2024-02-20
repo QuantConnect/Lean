@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override long DataPoints => 780;
+        public override long DataPoints => 779;
 
         public override int AlgorithmHistoryDataPoints => 4;
 
