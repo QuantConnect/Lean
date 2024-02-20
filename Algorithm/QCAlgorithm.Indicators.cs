@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(target, baseBame, resolution);
 
             // If risk free rate is not specified, use the default risk free rate model
-            IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue 
+            IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue
                 ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
                 : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
 
@@ -457,6 +457,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new ChandeVariableIndexDynamicAverage indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose VIDYA we want</param>
+        /// <param name="period">The period over which to compute the VIDYA</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The ChandeVariableIndexDynamicAverage indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public ChandeVariableIndexDynamicAverage VIDYA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"VIDYA({period})", resolution);
+            var chandeVariableIndexDynamicAverage = new ChandeVariableIndexDynamicAverage(name, period);
+            InitializeIndicator(symbol, chandeVariableIndexDynamicAverage, resolution, selector);
+
+            return chandeVariableIndexDynamicAverage;
+        }
+
+        /// <summary>
         /// Creates a new ChandeMomentumOscillator indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose CMO we want</param>
@@ -539,7 +557,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The desired resolution of the data</param>
         /// <returns>A new Delta indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
-        public Delta D(Symbol symbol, decimal? riskFreeRate = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, 
+        public Delta D(Symbol symbol, decimal? riskFreeRate = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
             OptionPricingModelType? ivModel = null, Resolution? resolution = null)
         {
             var name = CreateIndicatorName(symbol, $"Delta({riskFreeRate},{optionModel},{ivModel})", resolution);
