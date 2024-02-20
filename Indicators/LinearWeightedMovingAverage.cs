@@ -68,7 +68,7 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
             // our first data point just return identity
-            if (window.Size < Period)
+            if (!IsReady)
             {
                 return 0;
             }
