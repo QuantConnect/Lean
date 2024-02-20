@@ -2343,7 +2343,8 @@ namespace QuantConnect.Algorithm
             }
             else if (underlyingSecurity != null && underlyingSecurity.IsDelisted)
             {
-                throw new ArgumentException($"The underlying {underlying.SecurityType} asset ({underlying.Value}) is delisted");
+                throw new ArgumentException($"The underlying {underlying.SecurityType} asset ({underlying.Value}) is delisted " +
+                    $"(current time is {Time})");
             }
             else
             {
