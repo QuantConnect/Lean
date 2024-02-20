@@ -17,6 +17,7 @@ using Fasterflect;
 using Newtonsoft.Json;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -190,12 +191,18 @@ namespace QuantConnect.Queues
                     Log.Error(err, $"Error resolving BrokerageData for live job for brokerage {liveJob.Brokerage}");
                 }
 
-                foreach (var dataHandlerName in dataHandlers.DeserializeList())
+                var brokerageBasedHistoryProvider = liveJob.HistoryProvider.DeserializeList().Select(x =>
+                {
+                    HistoryExtensions.TryGetBrokerageName(x, out var brokerageName);
+                    return brokerageName;
+                }).Where(x => x != null);
+
+                foreach (var dataHandlerName in dataHandlers.DeserializeList().Concat(brokerageBasedHistoryProvider).Distinct())
                 {
                     var brokerageFactoryForDataHandler = GetFactoryFromDataQueueHandler(dataHandlerName);
                     if (brokerageFactoryForDataHandler == null)
                     {
-                        Log.Trace($"JobQueue.NextJob(): Not able to fetch data handler factory with name: {dataHandlerName}");
+                        Log.Trace($"JobQueue.NextJob(): Not able to fetch brokerage factory with name: {dataHandlerName}");
                         continue;
                     }
                     if (brokerageFactoryForDataHandler.BrokerageType == brokerageName)
