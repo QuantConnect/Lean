@@ -33,8 +33,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2014, 10, 07);
-            SetEndDate(2014, 10, 11);
+            SetStartDate(2014, 10, 08);
+            SetEndDate(2014, 10, 13);
 
             UniverseSettings.Resolution = Resolution.Daily;
 
