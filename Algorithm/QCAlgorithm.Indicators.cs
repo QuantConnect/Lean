@@ -544,15 +544,26 @@ namespace QuantConnect.Algorithm
             OptionPricingModelType? ivModel = null, Resolution? resolution = null)
         {
             var name = CreateIndicatorName(symbol, $"Delta({riskFreeRate},{dividendYield},{optionModel},{ivModel})", resolution);
+
             IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue
                 ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
                 // Make it a function so it's lazily evaluated: SetRiskFreeInterestRateModel can be called after this method
                 : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
-            IDividendYieldModel dividendYieldModel = dividendYield.HasValue
-                ? new ConstantDividendYieldModel(dividendYield.Value)
-                : symbol.ID.SecurityType == SecurityType.FutureOption || symbol.ID.SecurityType == SecurityType.IndexOption
-                ? new ConstantDividendYieldModel(0m)
-                : new DividendYieldProvider(symbol.Underlying);
+
+            IDividendYieldModel dividendYieldModel;
+            if (dividendYield.HasValue)
+            {
+                dividendYieldModel = new ConstantDividendYieldModel(dividendYield.Value);
+            }
+            else if (symbol.ID.SecurityType == SecurityType.FutureOption || symbol.ID.SecurityType == SecurityType.IndexOption)
+            {
+                dividendYieldModel = new ConstantDividendYieldModel(0m);
+            }
+            else
+            {
+                dividendYieldModel = new DividendYieldProvider(symbol.Underlying);
+            }
+
             var delta = new Delta(name, symbol, riskFreeRateModel, dividendYieldModel, optionModel, ivModel);
             RegisterIndicator(symbol, delta, ResolveConsolidator(symbol, resolution));
             RegisterIndicator(symbol.Underlying, delta, ResolveConsolidator(symbol, resolution));
@@ -912,15 +923,26 @@ namespace QuantConnect.Algorithm
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, Resolution? resolution = null)
         {
             var name = CreateIndicatorName(symbol, $"IV({riskFreeRate},{period},{optionModel})", resolution);
+
             IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue
                 ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
                 // Make it a function so it's lazily evaluated: SetRiskFreeInterestRateModel can be called after this method
                 : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
-            IDividendYieldModel dividendYieldModel = dividendYield.HasValue
-                ? new ConstantDividendYieldModel(dividendYield.Value)
-                : symbol.ID.SecurityType == SecurityType.FutureOption || symbol.ID.SecurityType == SecurityType.IndexOption
-                ? new ConstantDividendYieldModel(0m)
-                : new DividendYieldProvider(symbol.Underlying);
+
+            IDividendYieldModel dividendYieldModel;
+            if (dividendYield.HasValue)
+            {
+                dividendYieldModel = new ConstantDividendYieldModel(dividendYield.Value);
+            }
+            else if (symbol.ID.SecurityType == SecurityType.FutureOption || symbol.ID.SecurityType == SecurityType.IndexOption)
+            {
+                dividendYieldModel = new ConstantDividendYieldModel(0m);
+            }
+            else
+            {
+                dividendYieldModel = new DividendYieldProvider(symbol.Underlying);
+            }
+
             var iv = new ImpliedVolatility(name, symbol, riskFreeRateModel, dividendYieldModel, period, optionModel);
             RegisterIndicator(symbol, iv, ResolveConsolidator(symbol, resolution));
             RegisterIndicator(symbol.Underlying, iv, ResolveConsolidator(symbol, resolution));
