@@ -1,0 +1,30 @@
+name: Report Generator Tests
+
+on:
+  push:
+    branches: ['*']
+    tags: ['*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Free space
+        run: df -h && rm -rf /opt/hostedtoolcache* && df -h
+
+      - uses: addnab/docker-run-action@v3
+        with:
+          image: quantconnect/lean:foundation
+          options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w
+          shell: bash
+          run: |
+            # Build
+            dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+            # Run Backtest
+            cd ./Launcher/bin/Release && dotnet QuantConnect.Lean.Launcher.dll && cd ../../../
+            # Run Report
+            cd ./Report/bin/Release && dotnet ./QuantConnect.Report.dll --backtest-data-source-file ../../../Launcher/bin/Release/BasicTemplateFrameworkAlgorithm.json --close-automatically true
