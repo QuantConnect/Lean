@@ -457,21 +457,21 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new ChandeVariableIndexDynamicAverage indicator.
+        /// Creates a new Chande's Variable Index Dynamic Average indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose VIDYA we want</param>
         /// <param name="period">The period over which to compute the VIDYA</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The ChandeVariableIndexDynamicAverage indicator for the requested symbol over the specified period</returns>
+        /// <returns>The VariableIndexDynamicAverage indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
         public VariableIndexDynamicAverage VIDYA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"VIDYA({period})", resolution);
-            var chandeVariableIndexDynamicAverage = new VariableIndexDynamicAverage(name, period);
-            InitializeIndicator(symbol, chandeVariableIndexDynamicAverage, resolution, selector);
+            var variableIndexDynamicAverage = new VariableIndexDynamicAverage(name, period);
+            InitializeIndicator(symbol, variableIndexDynamicAverage, resolution, selector);
 
-            return chandeVariableIndexDynamicAverage;
+            return variableIndexDynamicAverage;
         }
 
         /// <summary>
