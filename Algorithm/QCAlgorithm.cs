@@ -2341,6 +2341,11 @@ namespace QuantConnect.Algorithm
                 underlyingConfigs = SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(underlying);
             }
+            else if (underlyingSecurity != null && underlyingSecurity.IsDelisted)
+            {
+                throw new ArgumentException($"The underlying {underlying.SecurityType} asset ({underlying.Value}) is delisted " +
+                    $"(current time is {Time})");
+            }
             else
             {
                 underlyingConfigs = SubscriptionManager.SubscriptionDataConfigService
