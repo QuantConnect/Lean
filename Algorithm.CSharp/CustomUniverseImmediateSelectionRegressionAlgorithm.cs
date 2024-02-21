@@ -14,85 +14,99 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Securities.Future;
+using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Continuous Futures Regression algorithm asserting bug fix for GH issue #6840
+    /// Assert that custom universe selection happens right away after algorithm starts
     /// </summary>
-    public class ContinuousFuturesDailyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CustomUniverseImmediateSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private SymbolChangedEvent _symbolChangedEvent;
-        private Future _continuousContract;
-        private decimal _previousFactor;
+        private static readonly  List<Symbol> ExpectedSymbols = new List<Symbol>()
+        {
+            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+            QuantConnect.Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
+            QuantConnect.Symbol.Create("APPL", SecurityType.Equity, Market.USA)
+        };
 
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
+        private bool _selected;
+        private bool _securitiesChanged;
+
+        private bool _firstOnData = true;
+
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 12, 25);
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
 
-            _continuousContract = AddFuture(Futures.Indices.SP500EMini,
-                dataNormalizationMode: DataNormalizationMode.ForwardPanamaCanal,
-                dataMappingMode: DataMappingMode.LastTradingDay,
-                contractDepthOffset: 0,
-                resolution: Resolution.Daily
-            );
+            UniverseSettings.Resolution = Resolution.Daily;
+
+            AddUniverse(SecurityType.Equity,
+                "my-custom-universe",
+                Resolution.Daily,
+                Market.USA,
+                UniverseSettings,
+                time =>
+                {
+                    _selected = true;
+                    return new[] { "SPY", "GOOG", "APPL" };
+                });
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            foreach (var changedEvent in data.SymbolChangedEvents.Values)
+            if (_firstOnData)
             {
-                if (changedEvent.Symbol == _continuousContract.Symbol)
+                if (!_selected)
                 {
-                    _symbolChangedEvent = changedEvent;
-                    Log($"{Time} - SymbolChanged event: {changedEvent}. New expiration {_continuousContract.Mapped.ID.Date}");
-                }
-            }
-
-            if (!data.Bars.TryGetValue(_continuousContract.Symbol, out var continuousBar))
-            {
-                return;
-            }
-
-            var mappedBar = Securities[_continuousContract.Mapped].Cache.GetData<TradeBar>();
-            if (mappedBar == null || continuousBar.EndTime != mappedBar.EndTime)
-            {
-                return;
-            }
-            var priceFactor = continuousBar.Close - mappedBar.Close;
-            Debug($"{Time} - Price factor {priceFactor}");
-
-            if(_symbolChangedEvent != null)
-            {
-                if(_previousFactor == priceFactor)
-                {
-                    throw new Exception($"Price factor did not change after symbol changed! {Time} {priceFactor}");
+                    throw new Exception("Universe selection should have been triggered right away. " +
+                        "The first OnData call should have had happened after the universe selection");
                 }
 
-                Quit("We asserted what we wanted");
+                _firstOnData = false;
             }
-            _previousFactor = priceFactor;
+        }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            if (!_selected)
+            {
+                throw new Exception("Universe selection should have been triggered right away");
+            }
+
+            if (!_securitiesChanged)
+            {
+                // Selection should be happening right on algorithm start
+                if (Time != StartDate)
+                {
+                    throw new Exception("Universe selection should have been triggered right away");
+                }
+
+                if (changes.AddedSecurities.Count != ExpectedSymbols.Count)
+                {
+                    throw new Exception($"Expected {ExpectedSymbols.Count} stocks to be added to the algorithm, " +
+                        $"but found {changes.AddedSecurities.Count}");
+                }
+
+                if (!ExpectedSymbols.All(x => changes.AddedSecurities.Any(security => security.Symbol == x)))
+                {
+                    throw new Exception("Expected symbols were not added to the algorithm");
+                }
+
+                _securitiesChanged = true;
+            }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_symbolChangedEvent == null)
+            if (_firstOnData || !_selected || !_securitiesChanged)
             {
-                throw new Exception("Unexpected a symbol changed event but got none!");
+                throw new Exception("Expected events didn't happen");
             }
         }
 
@@ -109,7 +123,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1371;
+        public long DataPoints => 52;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -138,8 +152,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-4.63"},
-            {"Tracking Error", "0.088"},
+            {"Information Ratio", "-8.91"},
+            {"Tracking Error", "0.223"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

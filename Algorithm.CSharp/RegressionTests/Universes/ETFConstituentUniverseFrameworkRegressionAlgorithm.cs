@@ -205,7 +205,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1905;
+        public long DataPoints => 2436;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -220,28 +220,28 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "3"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "3.252%"},
-            {"Drawdown", "0.800%"},
+            {"Compounding Annual Return", "3.006%"},
+            {"Drawdown", "0.700%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.525%"},
-            {"Sharpe Ratio", "1.118"},
-            {"Sortino Ratio", "1.623"},
-            {"Probabilistic Sharpe Ratio", "54.664%"},
+            {"Net Profit", "0.485%"},
+            {"Sharpe Ratio", "1.055"},
+            {"Sortino Ratio", "1.53"},
+            {"Probabilistic Sharpe Ratio", "53.609%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.013"},
-            {"Beta", "0.1"},
-            {"Annual Standard Deviation", "0.018"},
+            {"Alpha", "0.012"},
+            {"Beta", "0.096"},
+            {"Annual Standard Deviation", "0.017"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.526"},
+            {"Information Ratio", "-0.544"},
             {"Tracking Error", "0.096"},
-            {"Treynor Ratio", "0.203"},
+            {"Treynor Ratio", "0.191"},
             {"Total Fees", "$3.00"},
-            {"Estimated Strategy Capacity", "$1200000000.00"},
+            {"Estimated Strategy Capacity", "$1400000000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.12%"},
-            {"OrderListHash", "8e078b6ebb55270f9faa460ee56029a7"}
+            {"OrderListHash", "6ab770c88a53e1f488512a41c104a744"}
         };
     }
 }

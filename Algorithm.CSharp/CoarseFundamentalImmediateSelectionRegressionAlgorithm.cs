@@ -14,85 +14,87 @@
 */
 
 using System;
-using QuantConnect.Data;
+using System.Linq;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Securities.Future;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Continuous Futures Regression algorithm asserting bug fix for GH issue #6840
+    /// Assert that CoarseFundamentals universe selection happens right away after algorithm starts
     /// </summary>
-    public class ContinuousFuturesDailyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoarseFundamentalImmediateSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private SymbolChangedEvent _symbolChangedEvent;
-        private Future _continuousContract;
-        private decimal _previousFactor;
+        private const int NumberOfSymbols = 3;
 
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
+        private bool _initialSelectionDone;
+
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 12, 25);
+            UniverseSettings.Resolution = Resolution.Daily;
 
-            _continuousContract = AddFuture(Futures.Indices.SP500EMini,
-                dataNormalizationMode: DataNormalizationMode.ForwardPanamaCanal,
-                dataMappingMode: DataMappingMode.LastTradingDay,
-                contractDepthOffset: 0,
-                resolution: Resolution.Daily
-            );
+            SetStartDate(2014, 03, 25);
+            SetEndDate(2014, 03, 30);
+            SetCash(100000);
+
+            AddUniverse(CoarseSelectionFunction);
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        // sort the data by daily dollar volume and take the top 'NumberOfSymbols'
+        public IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
         {
-            foreach (var changedEvent in data.SymbolChangedEvents.Values)
+            if (!_initialSelectionDone)
             {
-                if (changedEvent.Symbol == _continuousContract.Symbol)
+                if (Time != StartDate)
                 {
-                    _symbolChangedEvent = changedEvent;
-                    Log($"{Time} - SymbolChanged event: {changedEvent}. New expiration {_continuousContract.Mapped.ID.Date}");
+                    throw new Exception($"CoarseSelectionFunction called at unexpected time. " +
+                        $"Expected it to be called on {StartDate} but was called on {Time}");
                 }
             }
 
-            if (!data.Bars.TryGetValue(_continuousContract.Symbol, out var continuousBar))
-            {
-                return;
-            }
+            // sort descending by daily dollar volume
+            var sortedByDollarVolume = coarse.OrderByDescending(x => x.DollarVolume);
 
-            var mappedBar = Securities[_continuousContract.Mapped].Cache.GetData<TradeBar>();
-            if (mappedBar == null || continuousBar.EndTime != mappedBar.EndTime)
-            {
-                return;
-            }
-            var priceFactor = continuousBar.Close - mappedBar.Close;
-            Debug($"{Time} - Price factor {priceFactor}");
+            // take the top entries from our sorted collection
+            var top = sortedByDollarVolume.Take(NumberOfSymbols);
 
-            if(_symbolChangedEvent != null)
-            {
-                if(_previousFactor == priceFactor)
-                {
-                    throw new Exception($"Price factor did not change after symbol changed! {Time} {priceFactor}");
-                }
-
-                Quit("We asserted what we wanted");
-            }
-            _previousFactor = priceFactor;
+            // we need to return only the symbol objects
+            return top.Select(x => x.Symbol);
         }
 
-        public override void OnEndOfAlgorithm()
+        public void OnData(Slice data)
         {
-            if (_symbolChangedEvent == null)
+            Log($"OnData({UtcTime:o}): Keys: {string.Join(", ", data.Keys.OrderBy(x => x))}");
+        }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            Log($"OnSecuritiesChanged({UtcTime:o}):: {changes}");
+
+            // This should also happen right away
+            if (!_initialSelectionDone)
             {
-                throw new Exception("Unexpected a symbol changed event but got none!");
+                _initialSelectionDone = true;
+
+                if (Time != StartDate)
+                {
+                    throw new Exception($"OnSecuritiesChanged called at unexpected time. " +
+                        $"Expected it to be called on {StartDate} but was called on {Time}");
+                }
+
+                if (changes.AddedSecurities.Count != NumberOfSymbols)
+                {
+                    throw new Exception($"Unexpected number of added securities. " +
+                        $"Expected {NumberOfSymbols} but was {changes.AddedSecurities.Count}");
+                }
+
+                if (changes.RemovedSecurities.Count != 0)
+                {
+                    throw new Exception($"Unexpected number of removed securities. " +
+                        $"Expected 0 but was {changes.RemovedSecurities.Count}");
+                }
             }
         }
 
@@ -109,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1371;
+        public long DataPoints => 35405;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -138,8 +140,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-4.63"},
-            {"Tracking Error", "0.088"},
+            {"Information Ratio", "3.134"},
+            {"Tracking Error", "0.097"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

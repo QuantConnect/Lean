@@ -14,85 +14,76 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Securities.Future;
+using System.Linq;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Continuous Futures Regression algorithm asserting bug fix for GH issue #6840
+    /// Assert that constituents universe selection happens right away after algorithm starts
     /// </summary>
-    public class ContinuousFuturesDailyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ConstituentsUniverseImmediateSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private SymbolChangedEvent _symbolChangedEvent;
-        private Future _continuousContract;
-        private decimal _previousFactor;
+        private readonly List<Symbol> _expectedConstituents = new()
+        {
+            QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+            QuantConnect.Symbol.Create("QQQ", SecurityType.Equity, Market.USA)
+        };
 
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
+        private bool _securitiesChanged;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 12, 25);
+            SetEndDate(2013, 10, 09);
+            SetCash(100000);
 
-            _continuousContract = AddFuture(Futures.Indices.SP500EMini,
-                dataNormalizationMode: DataNormalizationMode.ForwardPanamaCanal,
-                dataMappingMode: DataMappingMode.LastTradingDay,
-                contractDepthOffset: 0,
-                resolution: Resolution.Daily
-            );
+            UniverseSettings.Resolution = Resolution.Daily;
+
+            var customUniverseSymbol = new Symbol(
+                SecurityIdentifier.GenerateConstituentIdentifier(
+                    "constituents-universe-qctest",
+                    SecurityType.Equity,
+                    Market.USA),
+                "constituents-universe-qctest");
+
+            AddUniverse(new ConstituentsUniverse(customUniverseSymbol, UniverseSettings));
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            foreach (var changedEvent in data.SymbolChangedEvents.Values)
+            if (!_securitiesChanged)
             {
-                if (changedEvent.Symbol == _continuousContract.Symbol)
+                // Selection should be happening right on algorithm start
+                if (Time != StartDate)
                 {
-                    _symbolChangedEvent = changedEvent;
-                    Log($"{Time} - SymbolChanged event: {changedEvent}. New expiration {_continuousContract.Mapped.ID.Date}");
-                }
-            }
-
-            if (!data.Bars.TryGetValue(_continuousContract.Symbol, out var continuousBar))
-            {
-                return;
-            }
-
-            var mappedBar = Securities[_continuousContract.Mapped].Cache.GetData<TradeBar>();
-            if (mappedBar == null || continuousBar.EndTime != mappedBar.EndTime)
-            {
-                return;
-            }
-            var priceFactor = continuousBar.Close - mappedBar.Close;
-            Debug($"{Time} - Price factor {priceFactor}");
-
-            if(_symbolChangedEvent != null)
-            {
-                if(_previousFactor == priceFactor)
-                {
-                    throw new Exception($"Price factor did not change after symbol changed! {Time} {priceFactor}");
+                    throw new Exception($"Universe selection should have been triggered right away on {StartDate} " +
+                        $"but happened on {Time}");
                 }
 
-                Quit("We asserted what we wanted");
+                // Constituents should have been added to the algorithm
+                if (changes.AddedSecurities.Count != _expectedConstituents.Count)
+                {
+                    throw new Exception($"Expected {_expectedConstituents.Count} stocks to be added to the algorithm, " +
+                        $"instead added: {changes.AddedSecurities.Count}");
+                }
+
+                if (!_expectedConstituents.All(constituent => changes.AddedSecurities.Any(security => security.Symbol == constituent)))
+                {
+                    throw new Exception("Not all constituents were added to the algorithm");
+                }
+
+                _securitiesChanged = true;
             }
-            _previousFactor = priceFactor;
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_symbolChangedEvent == null)
+            if (!_securitiesChanged)
             {
-                throw new Exception("Unexpected a symbol changed event but got none!");
+                throw new Exception("Expected events didn't happen");
             }
         }
 
@@ -109,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1371;
+        public long DataPoints => 28;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -138,8 +129,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-4.63"},
-            {"Tracking Error", "0.088"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
