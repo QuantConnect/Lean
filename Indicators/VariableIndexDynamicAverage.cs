@@ -27,29 +27,31 @@ namespace QuantConnect.Indicators
     /// ABS(CMOi) - is the absolute current value of CMO.
     /// VIDYAi-1 - is the value of the period immediately preceding the period being calculated.
     /// </summary>
-    public class ChandeVariableIndexDynamicAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class VariableIndexDynamicAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         private decimal _vidya;
         private ChandeMomentumOscillator _CMO;
+        private readonly decimal _smoothingFactor;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ChandeVariableIndexDynamicAverage"/> class using the specified period.
+        /// Initializes a new instance of the <see cref="VariableIndexDynamicAverage"/> class using the specified period.
         /// </summary> 
         /// <param name="period">The period of the indicator</param>
-        public ChandeVariableIndexDynamicAverage(int period)
+        public VariableIndexDynamicAverage(int period)
             : this($"VIDYA({period})", period)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ChandeVariableIndexDynamicAverage"/> class using the specified name and period.
+        /// Initializes a new instance of the <see cref="VariableIndexDynamicAverage"/> class using the specified name and period.
         /// </summary> 
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the indicator</param>
-        public ChandeVariableIndexDynamicAverage(string name, int period)
+        public VariableIndexDynamicAverage(string name, int period)
             : base(name, period)
         {
             _CMO = new ChandeMomentumOscillator(period);
+            _smoothingFactor = 2m / (period + 1);
         }
 
         /// <summary>
@@ -76,9 +78,8 @@ namespace QuantConnect.Indicators
                 _vidya = input.Value;
                 return 0m;
             }
-
-            var F = 2m / (Period + 1);
-            _vidya = (input.Value * F * Math.Abs(_CMO.Current.Value / 100)) + (_vidya * (1 - F * Math.Abs(_CMO.Current.Value / 100)));
+            decimal absCMO = Math.Abs(_CMO.Current.Value / 100);
+            _vidya = (input.Value * _smoothingFactor * absCMO) + (_vidya * (1 - _smoothingFactor * absCMO));
 
             return _vidya;
         }
