@@ -88,6 +88,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                         dataQueueHandler = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(brokerageName);
                         // initialize it
                         dataQueueHandler.SetJob((Packets.LiveNodePacket)parameters.Job);
+                        Log.Trace($"HistoryProviderManager.Initialize(): Created and wrapped '{brokerageName}' as '{typeof(BrokerageHistoryProvider).Name}'");
+                    }
+                    else
+                    {
+                        Log.Trace($"HistoryProviderManager.Initialize(): Wrapping '{brokerageName}' instance as '{typeof(BrokerageHistoryProvider).Name}'");
                     }
 
                     // wrap it
@@ -130,6 +135,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 try
                 {
                     var history = historyProvider.GetHistory(historyRequets, sliceTimeZone);
+                    if (history == null)
+                    {
+                        // doesn't support this history request, that's okay
+                        continue;
+                    }
                     historyEnumerators.Add(history.GetEnumerator());
                 }
                 catch (Exception e)
