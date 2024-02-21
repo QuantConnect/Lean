@@ -46,10 +46,10 @@ namespace QuantConnect.Tests.API
         {
             ReloadConfiguration();
 
-            TestAccount = Config.GetInt("job-user-id", 1);
-            TestToken = Config.Get("api-access-token", "EnterTokenHere");
-            TestOrganization = Config.Get("job-organization-id", "EnterOrgHere");
-            DataFolder = Config.Get("data-folder");
+            TestAccount = Globals.UserId;
+            TestToken = Globals.UserToken;
+            TestOrganization = Globals.OrganizationID;
+            DataFolder = Globals.DataFolder;
 
             ApiClient = new Api.Api();
             ApiClient.Initialize(TestAccount, TestToken, DataFolder);
