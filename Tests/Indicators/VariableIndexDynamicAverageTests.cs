@@ -19,11 +19,11 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class ChandeVariableIndexDynamicAverageTests : CommonIndicatorTests<IndicatorDataPoint>
+    public class VariableIndexDynamicAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            return new ChandeVariableIndexDynamicAverage(9);
+            return new VariableIndexDynamicAverage(9);
         }
 
         protected override string TestFileName => "spy_vidya.txt";

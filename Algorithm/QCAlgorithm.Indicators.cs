@@ -465,10 +465,10 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The ChandeVariableIndexDynamicAverage indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
-        public ChandeVariableIndexDynamicAverage VIDYA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public VariableIndexDynamicAverage VIDYA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"VIDYA({period})", resolution);
-            var chandeVariableIndexDynamicAverage = new ChandeVariableIndexDynamicAverage(name, period);
+            var chandeVariableIndexDynamicAverage = new VariableIndexDynamicAverage(name, period);
             InitializeIndicator(symbol, chandeVariableIndexDynamicAverage, resolution, selector);
 
             return chandeVariableIndexDynamicAverage;
