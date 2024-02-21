@@ -68,6 +68,18 @@ namespace QuantConnect.Statistics
         public decimal Expectancy { get; set; }
 
         /// <summary>
+        /// Starting Equity Total Value
+        /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public decimal StartingEquity { get; set; }
+
+        /// <summary>
+        /// Ending Equity Total Value
+        /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public decimal EndingEquity { get; set; }
+
+        /// <summary>
         /// Annual compounded returns statistic based on the final-starting capital and years.
         /// </summary>
         /// <remarks>Also known as Compound Annual Growth Rate (CAGR)</remarks>
@@ -238,6 +250,8 @@ namespace QuantConnect.Statistics
             WinRate = totalTrades == 0 ? 0 : (decimal) totalWins / totalTrades;
             LossRate = totalTrades == 0 ? 0 : (decimal) totalLosses / totalTrades;
             Expectancy = WinRate * ProfitLossRatio - LossRate;
+            StartingEquity = equity.FirstOrDefault().Value;
+            EndingEquity = equity.LastOrDefault().Value;
 
             if (startingCapital != 0)
             {
