@@ -62,7 +62,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => Period + 1;
+        public override int WarmUpPeriod => Period + 1;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -78,7 +78,7 @@ namespace QuantConnect.Indicators
                 _vidya = input.Value;
                 return 0m;
             }
-            decimal absCMO = Math.Abs(_CMO.Current.Value / 100);
+            var absCMO = Math.Abs(_CMO.Current.Value / 100);
             _vidya = (input.Value * _smoothingFactor * absCMO) + (_vidya * (1 - _smoothingFactor * absCMO));
 
             return _vidya;
