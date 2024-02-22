@@ -41,6 +41,8 @@ namespace QuantConnect.Report
         public const string Markets = @"{{$KPI-MARKETS}}";
         public const string PSR = @"{{$KPI-PSR}}";
         public const string StrategyCapacity = @"{{$KPI-STRATEGY-CAPACITY}}";
+        public const string StartingEquity = @"{{$KPI-STARTING-EQUITY}}";
+        public const string EndingEquity = @"{{$KPI-ENDING-EQUITY}}";
 
         public const string MonthlyReturns = @"{{$PLOT-MONTHLY-RETURNS}}";
         public const string CumulativeReturns = @"{{$PLOT-CUMULATIVE-RETURNS}}";

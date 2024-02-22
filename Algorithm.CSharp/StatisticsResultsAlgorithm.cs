@@ -204,6 +204,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "18.903%"},
             {"Drawdown", "0.800%"},
             {"Expectancy", "0.135"},
+            {"Starting Equity", "100000"},
+            {"Ending Equity", "100221.609"},
             {"Net Profit", "0.222%"},
             {"Sharpe Ratio", "6.406"},
             {"Sortino Ratio", "0"},
@@ -222,8 +224,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$1100000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
             {"Portfolio Turnover", "549.26%"},
-            {"Most Traded Security Trade Count", "63"},
             {"Most Traded Security", "IBM"},
+            {"Most Traded Security Trade Count", "63"},
             {"OrderListHash", "3555aa1d5bfc70ba8a460752f3904327"}
         };
     }
