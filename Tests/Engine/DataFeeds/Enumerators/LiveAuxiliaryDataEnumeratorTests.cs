@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var timeProvider = new ManualTimeProvider(time);
 
             var futureTicker1 = "es vhle2yxr5blt";
-            TestMapFileResolver.MapFile = new MapFile(Futures.Indices.SP500EMini, new []
+            TestMapFileResolver.MapFile = new MapFile(Futures.Indices.SP500EMini, new[]
             {
                 new MapFileRow(Time.BeginningOfTime, Futures.Indices.SP500EMini, Exchange.CME),
                 new MapFileRow(new DateTime(2013,06,01), futureTicker1, Exchange.CME, DataMappingMode.FirstDayMonth),
@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             });
 
             IEnumerator<BaseData> enumerator;
-            Assert.IsTrue(LiveAuxiliaryDataEnumerator.TryCreate(config, timeProvider, null, cache, new TestMapFileProvider(), TestGlobals.FactorFileProvider, time, out enumerator));
+            Assert.IsTrue(LiveAuxiliaryDataEnumerator.TryCreate(config, timeProvider, cache, new TestMapFileProvider(), TestGlobals.FactorFileProvider, time, out enumerator));
 
             // get's mapped right away!
             Assert.AreEqual(futureTicker1.ToUpper(), config.MappedSymbol);
@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             var futureTicker2 = "es vk2zrh843z7l";
             TestMapFileResolver.MapFile = new MapFile(Futures.Indices.SP500EMini, TestMapFileResolver.MapFile.Concat(
-                new []
+                new[]
                 {
                     new MapFileRow(new DateTime(2013,09,01), futureTicker2, Exchange.CME, DataMappingMode.FirstDayMonth),
                     new MapFileRow(new DateTime(2013,09,14), futureTicker2, Exchange.CME, DataMappingMode.OpenInterest),
@@ -156,7 +156,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var timeProvider = new ManualTimeProvider(time);
 
             IEnumerator<BaseData> enumerator;
-            Assert.IsTrue(LiveAuxiliaryDataEnumerator.TryCreate(config, timeProvider, null, cache, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, config.Symbol.ID.Date, out enumerator));
+            Assert.IsTrue(LiveAuxiliaryDataEnumerator.TryCreate(config, timeProvider, cache, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, config.Symbol.ID.Date, out enumerator));
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
@@ -190,6 +190,95 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsNull(enumerator.Current);
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void EquityEmitsDelistingEventsBasedOnCurrentTime(bool delayed)
+        {
+            var config = new SubscriptionDataConfig(typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false);
+            var time = new DateTime(2013, 05, 28);
+            var cache = new SecurityCache();
+
+            cache.AddData(new Tick(time, config.Symbol, 20, 10));
+            var timeProvider = new ManualTimeProvider(time);
+
+            TestMapFileResolver.MapFile = new MapFile(config.Symbol.ID.Symbol, new[]
+            {
+                new MapFileRow(Time.BeginningOfTime, config.Symbol.ID.Symbol),
+                new MapFileRow(Time.EndOfTime, config.Symbol.ID.Symbol),
+            });
+
+            IEnumerator<BaseData> enumerator;
+            Assert.IsTrue(LiveAuxiliaryDataEnumerator.TryCreate(config, timeProvider, cache, new TestMapFileProvider(), TestGlobals.FactorFileProvider, time, out enumerator));
+
+            // get's mapped right away!
+            Assert.AreEqual("SPY", config.MappedSymbol);
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+
+            var delistingDate = time.AddDays(2);
+            var delistedMapFile = new MapFile(config.Symbol.ID.Symbol, new[]
+            {
+                new MapFileRow(Time.BeginningOfTime, config.Symbol.ID.Symbol),
+                new MapFileRow(delistingDate, config.Symbol.ID.Symbol),
+            });
+
+            // just advance a day to show nothing happens until mapping time
+            timeProvider.Advance(TimeSpan.FromDays(1));
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+
+            if (!delayed)
+            {
+                TestMapFileResolver.MapFile = delistedMapFile;
+            }
+
+            // we advance to the mapping date, without any new mapFile!
+            timeProvider.Advance(delistingDate.ConvertToUtc(config.ExchangeTimeZone) - timeProvider.GetUtcNow() + Time.LiveAuxiliaryDataOffset);
+
+            if (delayed)
+            {
+                // nothing happens
+                Assert.IsTrue(enumerator.MoveNext());
+                Assert.IsNull(enumerator.Current);
+
+                TestMapFileResolver.MapFile = delistedMapFile;
+
+                timeProvider.Advance(Time.OneDay);
+            }
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNotNull(enumerator.Current);
+
+            var delisted = enumerator.Current as Delisting;
+            Assert.IsNotNull(delisted);
+            Assert.AreEqual(DelistingType.Warning, delisted.Type);
+
+            if (!delayed)
+            {
+                Assert.IsTrue(enumerator.MoveNext());
+                Assert.IsNull(enumerator.Current);
+
+                // delisting passed
+                timeProvider.Advance(TimeSpan.FromDays(1));
+            }
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNotNull(enumerator.Current);
+
+            delisted = enumerator.Current as Delisting;
+            Assert.IsNotNull(delisted);
+            Assert.AreEqual(DelistingType.Delisted, delisted.Type);
+        }
+
         private class TestMapFileProvider : IMapFileProvider
         {
             public void Initialize(IDataProvider dataProvider)
@@ -206,7 +295,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             public static MapFile MapFile { get; set; }
             public TestMapFileResolver()
-                : base(new [] { MapFile })
+                : base(new[] { MapFile })
             {
             }
         }

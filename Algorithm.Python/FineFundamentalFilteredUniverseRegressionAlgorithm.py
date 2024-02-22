@@ -21,8 +21,8 @@ class FineFundamentalFilteredUniverseRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2014,10, 7)
-        self.SetEndDate(2014,10,11)
+        self.SetStartDate(2014, 10, 8)
+        self.SetEndDate(2014, 10, 13)
 
         self.UniverseSettings.Resolution = Resolution.Daily
 

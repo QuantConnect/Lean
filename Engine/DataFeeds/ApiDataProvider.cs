@@ -32,15 +32,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ApiDataProvider : BaseDownloaderDataProvider
     {
-        private readonly int _uid = Config.GetInt("job-user-id", 0);
-        private readonly string _token = Config.Get("api-access-token", "1");
-        private readonly string _organizationId = Config.Get("job-organization-id");
-        private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
         private decimal _purchaseLimit = Config.GetValue("data-purchase-limit", decimal.MaxValue); //QCC
 
         private readonly HashSet<SecurityType> _unsupportedSecurityType;
         private readonly DataPricesList _dataPrices;
-        private readonly Api.Api _api;
+        private readonly IApi _api;
         private readonly bool _subscribedToIndiaEquityMapAndFactorFiles;
         private readonly bool _subscribedToUsaEquityMapAndFactorFiles;
         private readonly bool _subscribedToFutureMapAndFactorFiles;
@@ -51,21 +47,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public ApiDataProvider()
         {
-            _api = new Api.Api();
             _unsupportedSecurityType = new HashSet<SecurityType> { SecurityType.Future, SecurityType.FutureOption, SecurityType.Index, SecurityType.IndexOption };
-            _api.Initialize(_uid, _token, _dataPath);
+
+            _api = Composer.Instance.GetPart<IApi>();
 
             // If we have no value for organization get account preferred
-            if (string.IsNullOrEmpty(_organizationId))
+            if (string.IsNullOrEmpty(Globals.OrganizationID))
             {
                 var account = _api.ReadAccount();
-                _organizationId = account?.OrganizationId;
-                Log.Trace($"ApiDataProvider(): Will use organization Id '{_organizationId}'.");
+                Globals.OrganizationID = account?.OrganizationId;
+                Log.Trace($"ApiDataProvider(): Will use organization Id '{Globals.OrganizationID}'.");
             }
 
             // Read in data prices and organization details
-            _dataPrices = _api.ReadDataPrices(_organizationId);
-            var organization = _api.ReadOrganization(_organizationId);
+            _dataPrices = _api.ReadDataPrices(Globals.OrganizationID);
+            var organization = _api.ReadOrganization(Globals.OrganizationID);
 
             foreach (var productItem in organization.Products.Where(x => x.Type == ProductType.Data).SelectMany(product => product.Items))
             {
@@ -229,7 +225,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Debug($"ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for {filePath}.");
             }
 
-            if (_api.DownloadData(filePath, _organizationId))
+            if (_api.DownloadData(filePath, Globals.OrganizationID))
             {
                 Log.Trace($"ApiDataProvider.Fetch(): Successfully retrieved data for {filePath}.");
                 return true;

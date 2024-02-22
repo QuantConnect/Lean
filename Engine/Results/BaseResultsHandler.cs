@@ -267,7 +267,7 @@ namespace QuantConnect.Lean.Engine.Results
             AlgorithmId = "";
             ChartLock = new object();
             LogStore = new List<LogEntry>();
-            ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
+            ResultsDestinationFolder = Globals.ResultsDestinationFolder;
             State = new Dictionary<string, string>
             {
                 ["StartTime"] = StartTime.ToStringInvariant(DateFormat.UI),

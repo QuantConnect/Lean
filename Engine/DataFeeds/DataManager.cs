@@ -109,6 +109,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     new SecurityCache()
                                  );
                             }
+
+                            // Let's adjust the start time to the previous tradable date
+                            // so universe selection always happens right away at the start of the algorithm.
+                            var universeType = universe.GetType();
+                            if (
+                                // We exclude the OptionChainUniverse because their selection in live trading is based on having a full bar
+                                // of the underlying. In the future, option chain universe file-based selection will be improved
+                                // in order to avoid this.
+                                universeType != typeof(OptionChainUniverse) &&
+                                // We exclude the UserDefinedUniverse because their selection already happens at the algorithm start time.
+                                // For instance, ETFs universe selection depends its first trigger time to be before the equity universe
+                                // (the UserDefinedUniverse), because the ETFs are EndTime-indexed and that would make their first selection
+                                // time to be before the algorithm start time, with the EndTime being the algorithms's start date,
+                                // and both the Equity and the ETFs constituents first selection to happen together.
+                                !universeType.IsAssignableTo(typeof(UserDefinedUniverse)) &&
+                                // We exclude the ScheduledUniverse because it's already scheduled to run at a specific time.
+                                // Adjusting the start time would cause the first selection trigger time to be before the algorithm start time,
+                                // making the selection to be triggered at the first algorithm time, which would be the exact StartDate.
+                                universeType != typeof(ScheduledUniverse))
+                            {
+                                start = Time.GetStartTimeForTradeBars(security.Exchange.Hours, start.ConvertFromUtc(security.Exchange.TimeZone),
+                                    Time.OneDay, 1, true, config.DataTimeZone);
+                                start = start.ConvertToUtc(security.Exchange.TimeZone);
+                            }
+
                             AddSubscription(
                                 new SubscriptionRequest(true,
                                     universe,

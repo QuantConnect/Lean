@@ -4055,5 +4055,23 @@ namespace QuantConnect
             }
             return Math.Abs(a);
         }
+
+        /// <summary>
+        /// Safe method to perform divisions avoiding DivideByZeroException and Overflow/Underflow exceptions
+        /// </summary>
+        /// <param name="failValue">Value to be returned if the denominator is zero</param>
+        /// <returns>The numerator divided by the denominator if the denominator is not
+        /// zero. Otherwise, the default failValue or the provided one</returns>
+        public static decimal SafeDivision(this decimal numerator, decimal denominator, decimal failValue = 0)
+        {
+            try
+            {
+                return (denominator == 0) ? failValue : (numerator / denominator);
+            }
+            catch
+            {
+                return failValue;
+            }
+        }
     }
 }

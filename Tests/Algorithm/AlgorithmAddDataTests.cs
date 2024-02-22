@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Python.Runtime;
 using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
@@ -643,6 +642,33 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreSame(security2, bitcoin);
 
             Assert.AreNotSame(unlinkedData, bitcoin);
+        }
+
+        [TestCase(SecurityType.Equity)]
+        [TestCase(SecurityType.Index)]
+        [TestCase(SecurityType.Future)]
+        public void AddOptionContractWithDelistedUnderlyingThrows(SecurityType underlyingSecurityType)
+        {
+            var algorithm = Algorithm();
+            algorithm.SetStartDate(2007, 05, 25);
+
+            Security underlying = underlyingSecurityType switch
+            {
+                SecurityType.Equity => algorithm.AddEquity("SPY"),
+                SecurityType.Index => algorithm.AddIndex("SPX"),
+                SecurityType.Future => algorithm.AddFuture("ES"),
+                _ => throw new ArgumentException($"Invalid test underlying security type {underlyingSecurityType}")
+            };
+
+            underlying.IsDelisted = true;
+            // let's remove the underlying since it's delisted
+            algorithm.RemoveSecurity(underlying.Symbol);
+
+            var optionContractSymbol = Symbol.CreateOption(underlying.Symbol, Market.USA, OptionStyle.American, OptionRight.Call, 100,
+                new DateTime(2007, 06, 15));
+
+            var exception = Assert.Throws<ArgumentException>(() => algorithm.AddOptionContract(optionContractSymbol));
+            Assert.IsTrue(exception.Message.Contains("is delisted"), $"Unexpected exception message: {exception.Message}");
         }
 
         private static SubscriptionDataConfig GetMatchingSubscription(QCAlgorithm algorithm, Symbol symbol, Type type)

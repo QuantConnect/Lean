@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly Symbol _fb = QuantConnect.Symbol.Create("FB", SecurityType.Equity, Market.USA);
         private int _step;
 
-        /// <summary>
+    /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
@@ -168,7 +168,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 59;
+        public long DataPoints => 52;
 
         /// <summary>
         /// Data Points count of the algorithm history

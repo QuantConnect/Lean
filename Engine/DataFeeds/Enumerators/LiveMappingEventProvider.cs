@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             InitializeMapFile();
             var newInstance = MapFile;
 
-            Log.Trace($"LiveMappingEventProvider({Config}): new tradable date {eventArgs.Date}. " +
+            Log.Trace($"LiveMappingEventProvider({Config}): new tradable date {eventArgs.Date:yyyyMMdd}. " +
                 $"New MapFile: {!ReferenceEquals(currentInstance, newInstance)}. " +
                 $"MapFile.Count Old: {currentInstance?.Count()} New: {newInstance?.Count()}");
 

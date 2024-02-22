@@ -73,6 +73,13 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public override void WorksWithLowValues()
+        {
+            Symbol = "SPX 2T";
+            base.WorksWithLowValues();
+        }
+
+        [Test]
         public override void AcceptsRenkoBarsAsInput()
         {
             var indicator = CreateIndicator();

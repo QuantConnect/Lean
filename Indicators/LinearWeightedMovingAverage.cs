@@ -33,6 +33,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class LinearWeightedMovingAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
+        private readonly int _denominator;
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
@@ -46,6 +47,7 @@ namespace QuantConnect.Indicators
         public LinearWeightedMovingAverage(string name, int period)
             : base(name, period)
         {
+            _denominator = (period * (period + 1)) / 2;
         }
 
         /// <summary>
@@ -66,21 +68,13 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
             // our first data point just return identity
-            if (window.Size == 1)
+            if (!IsReady)
             {
-                return input.Value;
+                return 0;
             }
 
             var numerator = 0m;
-            var denominator = 0;
             var index = window.Size;
-
-            // The denominator is calculated each time in case the Size is less than the period.
-            // There may be a more efficient way of calculating the factorial.
-            for (var i = 0; i <= index; i++)
-            {
-                denominator += i;
-            }
 
             // If the indicator is not ready, the LWMA will still be correct
             // because the numerator has the minimum of the Size (number of
@@ -90,7 +84,7 @@ namespace QuantConnect.Indicators
             {
                 numerator += (index-- * window[i].Value);
             }
-            return numerator / denominator;
+            return numerator / _denominator;
         }
     }
 }

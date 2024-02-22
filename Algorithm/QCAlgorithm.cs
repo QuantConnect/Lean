@@ -181,7 +181,7 @@ namespace QuantConnect.Algorithm
             DefaultOrderProperties = new OrderProperties();
 
             //Initialise Data Manager
-            SubscriptionManager = new SubscriptionManager();
+            SubscriptionManager = new SubscriptionManager(_timeKeeper);
 
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(this, Securities);
@@ -2340,6 +2340,11 @@ namespace QuantConnect.Algorithm
                 underlyingSecurity = AddSecurity(underlying, resolution, fillForward, leverage, extendedMarketHours);
                 underlyingConfigs = SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(underlying);
+            }
+            else if (underlyingSecurity != null && underlyingSecurity.IsDelisted)
+            {
+                throw new ArgumentException($"The underlying {underlying.SecurityType} asset ({underlying.Value}) is delisted " +
+                    $"(current time is {Time})");
             }
             else
             {

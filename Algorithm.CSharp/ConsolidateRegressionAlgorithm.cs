@@ -33,6 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
         private List<int> _consolidationCounts;
         private List<SimpleMovingAverage> _smas;
         private List<DateTime> _lastSmaUpdates;
+        private int _expectedConsolidations;
         private int _customDataConsolidator;
         private Symbol _symbol;
 
@@ -46,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var SP500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
             _symbol = FutureChainProvider.GetFutureContractList(SP500, StartDate).First();
-            AddFutureContract(_symbol);
+            var security = AddFutureContract(_symbol);
 
             _consolidationCounts = Enumerable.Repeat(0, 9).ToList();
             _smas = _consolidationCounts.Select(_ => new SimpleMovingAverage(10)).ToList();
@@ -86,6 +87,12 @@ namespace QuantConnect.Algorithm.CSharp
             Consolidate(_symbol, TimeSpan.FromDays(1), null, (Action<BaseData>)(bar => UpdateBar(bar, 7)));
 
             Consolidate(_symbol, TimeSpan.FromDays(1), (Action<BaseData>)(bar => UpdateBar(bar, 8)));
+
+            _expectedConsolidations = QuantConnect.Time.EachTradeableDayInTimeZone(security.Exchange.Hours,
+                StartDate,
+                EndDate,
+                security.Exchange.TimeZone,
+                false).Count();
         }
         private void UpdateBar(BaseData tradeBar, int position)
         {
@@ -112,18 +119,16 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            var expectedConsolidations = 8;
-
-            if (_consolidationCounts.Any(i => i != expectedConsolidations) || _customDataConsolidator == 0)
+            if (_consolidationCounts.Any(i => i != _expectedConsolidations) || _customDataConsolidator == 0)
             {
                 throw new Exception("Unexpected consolidation count");
             }
 
             for (var i = 0; i < _smas.Count; i++)
             {
-                if (_smas[i].Samples != expectedConsolidations)
+                if (_smas[i].Samples != _expectedConsolidations)
                 {
-                    throw new Exception($"Expected {expectedConsolidations} samples in each SMA but found {_smas[i].Samples} in SMA in index {i}");
+                    throw new Exception($"Expected {_expectedConsolidations} samples in each SMA but found {_smas[i].Samples} in SMA in index {i}");
                 }
 
                 if (_smas[i].Current.Time != _lastSmaUpdates[i])
