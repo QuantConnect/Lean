@@ -17,12 +17,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using NodaTime;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Data.Fundamental;
 
@@ -360,6 +363,65 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void AddDataEquity_OHLC_PythonData()
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+class CustomDataTest(PythonData):
+    def Reader(self, config, line, date, isLiveMode):
+        result = CustomDataTest()
+        result.Symbol = config.Symbol
+        result.Value = 3.7
+        result.Open = 3.1
+        result.High = 4.1
+        result.low = 2.0
+        result.close = 3.7
+        result.Time = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
+        return result");
+
+                var data = GetDataFromModule(testModule);
+
+                var securityCache = new SecurityCache();
+                securityCache.AddData(data);
+
+                Assert.AreEqual(4.1, securityCache.High);
+                Assert.AreEqual(3.7, securityCache.Close);
+                Assert.AreEqual(2.0, securityCache.Low);
+                Assert.AreEqual(3.1, securityCache.Open);
+
+                testModule = PyModule.FromString("testModule",
+                   @"
+from AlgorithmImports import *
+
+class CustomDataTest(PythonData):
+    def Reader(self, config, line, date, isLiveMode):
+        result = CustomDataTest()
+        result.Symbol = config.Symbol
+        result.Value = 3.7
+        result.Open = 3.1
+        result.High = 4
+        result.low = 2.0
+        result.Close = ""test""
+        result.Time = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
+        return result");
+
+                data = GetDataFromModule(testModule);
+
+                securityCache.Reset();
+                securityCache.AddData(data);
+
+                Assert.AreEqual(4, securityCache.High);
+                Assert.AreEqual(0, securityCache.Close);
+                Assert.AreEqual(2.0, securityCache.Low);
+                Assert.AreEqual(3.1, securityCache.Open);
+            }
+        }
+
+        [Test]
         [TestCaseSource(nameof(GetSecurityCacheInitialStates))]
         public void AddDataWithSameEndTime_SetsQuoteBarValues(SecurityCache cache, SecuritySeedData seedType)
         {
@@ -454,6 +516,15 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(2, data.Count);
             Assert.AreEqual(1m, data[0].Ask);
             Assert.AreEqual(2m, data[1].Ask);
+        }
+
+        private static BaseData GetDataFromModule(dynamic testModule)
+        {
+            var type = Extensions.CreateType(testModule.GetAttr("CustomDataTest"));
+            var customDataTest = new PythonData(testModule.GetAttr("CustomDataTest")());
+            var config = new SubscriptionDataConfig(type, Symbols.SPY, Resolution.Daily, DateTimeZone.Utc,
+                DateTimeZone.Utc, false, false, false, isCustom: true);
+            return customDataTest.Reader(config, "something", DateTime.UtcNow, false);
         }
 
         private void AddDataAndAssertChanges(SecurityCache cache, SecuritySeedData seedType, SecuritySeedData dataType, BaseData data, Dictionary<string, string> cacheToBaseDataPropertyMap = null)

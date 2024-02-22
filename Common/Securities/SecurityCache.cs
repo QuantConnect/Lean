@@ -19,6 +19,9 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using QuantConnect.Python;
+using System.Reflection;
+using Python.Runtime;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
@@ -225,6 +228,38 @@ namespace QuantConnect.Securities
                         break;
                 }
                 return;
+            }
+
+            var pythonData = data as PythonData;
+            if (pythonData != null && (_lastQuoteBarUpdate != data.EndTime || _lastOHLCUpdate != data.EndTime) && isDefaultDataType)
+            {
+                // Get matching pythonData and IBar properties
+                IDictionary<string, object> storage = pythonData.GetStorageDictionary();
+                PropertyInfo[] barProperties = typeof(IBar).GetProperties();
+                List<string> fieldsRequired = barProperties.Select(property => property.Name.ToLowerInvariant()).ToList();
+                var matches = storage.Where(kvp => fieldsRequired.Contains(kvp.Key) && kvp.Value != null) ;
+
+                IDictionary<string, decimal> validOHLC = new Dictionary<string, decimal>();
+
+                // Convert OHLC to decimal & update properties
+                if (matches.Count() == fieldsRequired.Count)
+                {
+                    foreach (KeyValuePair<string, object> match in matches)
+                    {
+                        decimal.TryParse(match.Value.ToString(), out decimal result);
+                        validOHLC.Add(match.Key, result);
+                    }
+                    _lastOHLCUpdate = data.EndTime;
+                    if (validOHLC["open"] != 0) Open = validOHLC["open"];
+                    if (validOHLC["high"] != 0) High = validOHLC["high"];
+                    if (validOHLC["low"] != 0) Low = validOHLC["low"];
+                    if (validOHLC["close"] != 0)
+                    {
+                        Price = validOHLC["close"];
+                        Close = validOHLC["close"];
+                    }
+                    return;
+                }
             }
 
             var bar = data as IBar;
