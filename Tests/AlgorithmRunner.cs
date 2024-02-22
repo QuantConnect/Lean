@@ -23,7 +23,6 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -67,9 +66,10 @@ namespace QuantConnect.Tests
             MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
 
             // clean up object storage
-            if (Directory.Exists(LocalObjectStore.DefaultObjectStore))
+            var objectStorePath = LocalObjectStore.DefaultObjectStore;
+            if (Directory.Exists(objectStorePath))
             {
-                Directory.Delete(LocalObjectStore.DefaultObjectStore, true);
+                Directory.Delete(objectStorePath, true);
             }
 
             var ordersLogFile = string.Empty;

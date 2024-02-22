@@ -31,6 +31,9 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionManager
     {
+        private readonly PriorityQueue<ConsolidatorWrapper, DateTime> _consolidatorsSortedByScanTime;
+        private readonly Dictionary<IDataConsolidator, ConsolidatorWrapper> _consolidators;
+        private readonly ITimeKeeper _timeKeeper;
         private IAlgorithmSubscriptionManager _subscriptionManager;
 
         /// <summary>
@@ -53,6 +56,16 @@ namespace QuantConnect.Data
         ///     Get the count of assets:
         /// </summary>
         public int Count => _subscriptionManager.SubscriptionManagerCount();
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        public SubscriptionManager(ITimeKeeper timeKeeper)
+        {
+            _consolidators = new();
+            _timeKeeper = timeKeeper;
+            _consolidatorsSortedByScanTime = new(1000);
+        }
 
         /// <summary>
         ///     Add Market Data Required (Overloaded method for backwards compatibility).
@@ -136,7 +149,7 @@ namespace QuantConnect.Data
         {
             return SubscriptionDataConfigService.Add(symbol, resolution, fillForward,
                 extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
-                new List<Tuple<Type, TickType>> {new Tuple<Type, TickType>(dataType, tickType)},
+                new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, tickType) },
                 dataNormalizationMode).First();
         }
 
@@ -165,6 +178,11 @@ namespace QuantConnect.Data
                 if (IsSubscriptionValidForConsolidator(subscription, consolidator, tickType))
                 {
                     subscription.Consolidators.Add(consolidator);
+
+                    var wrapper = _consolidators[consolidator] =
+                        new ConsolidatorWrapper(consolidator, subscription.Increment, _timeKeeper, _timeKeeper.GetLocalTimeKeeper(subscription.ExchangeTimeZone));
+
+                    _consolidatorsSortedByScanTime.Enqueue(wrapper, wrapper.UtcScanTime);
                     return;
                 }
             }
@@ -210,10 +228,46 @@ namespace QuantConnect.Data
             foreach (var subscription in _subscriptionManager.GetSubscriptionDataConfigs(symbol))
             {
                 subscription.Consolidators.Remove(consolidator);
+                if (_consolidators.Remove(consolidator, out var consolidatorsToScan))
+                {
+                    consolidatorsToScan.Dispose();
+                }
             }
 
             // dispose of the consolidator to remove any remaining event handlers
             consolidator.DisposeSafely();
+        }
+
+        /// <summary>
+        /// Will trigger past consolidator scans
+        /// </summary>
+        /// <param name="newUtcTime">The new utc time</param>
+        /// <param name="algorithm">The algorithm instance</param>
+        public void ScanPastConsolidators(DateTime newUtcTime, IAlgorithm algorithm)
+        {
+            while (_consolidatorsSortedByScanTime.TryPeek(out _, out var utcScanTime) && utcScanTime < newUtcTime)
+            {
+                var consolidatorToScan = _consolidatorsSortedByScanTime.Dequeue();
+                if (consolidatorToScan.Disposed)
+                {
+                    // consolidator has been removed
+                    continue;
+                }
+
+                if (utcScanTime != algorithm.UtcTime)
+                {
+                    // only update the algorithm time once, it's not cheap because of TZ conversions
+                    algorithm.SetDateTime(utcScanTime);
+                }
+
+                if (consolidatorToScan.UtcScanTime <= utcScanTime)
+                {
+                    // only scan if we still need to
+                    consolidatorToScan.Scan();
+                }
+
+                _consolidatorsSortedByScanTime.Enqueue(consolidatorToScan, consolidatorToScan.UtcScanTime);
+            }
         }
 
         /// <summary>

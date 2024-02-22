@@ -105,6 +105,9 @@ class DailyTimeQuoteBarConsolidator(QuoteBarConsolidator):
     def Scan(self, time):
         '''Scans this consolidator to see if it should emit a bar due yet'''
 
+        if self.workingBar is None:
+            return
+
         #If its our desired bar end time take the steps to 
         if time.hour == self.closeTime.hour and time.minute == self.closeTime.minute:
 

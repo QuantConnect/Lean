@@ -77,10 +77,36 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
             foreach (var historyProviderName in dataProvidersList)
             {
-                var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProviderName);
-                if (historyProvider is BrokerageHistoryProvider)
+                IHistoryProvider historyProvider;
+                if (HistoryExtensions.TryGetBrokerageName(historyProviderName, out var brokerageName))
                 {
-                    (historyProvider as BrokerageHistoryProvider).SetBrokerage(_brokerage);
+                    // we get the data queue handler if it already exists
+                    var dataQueueHandler = Composer.Instance.GetPart<IDataQueueHandler>((x) => x.GetType().Name == brokerageName);
+                    if (dataQueueHandler == null)
+                    {
+                        // we need to create the brokerage/data queue handler
+                        dataQueueHandler = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(brokerageName);
+                        // initialize it
+                        dataQueueHandler.SetJob((Packets.LiveNodePacket)parameters.Job);
+                        Log.Trace($"HistoryProviderManager.Initialize(): Created and wrapped '{brokerageName}' as '{typeof(BrokerageHistoryProvider).Name}'");
+                    }
+                    else
+                    {
+                        Log.Trace($"HistoryProviderManager.Initialize(): Wrapping '{brokerageName}' instance as '{typeof(BrokerageHistoryProvider).Name}'");
+                    }
+
+                    // wrap it
+                    var brokerageHistoryProvider = new BrokerageHistoryProvider();
+                    brokerageHistoryProvider.SetBrokerage((IBrokerage)dataQueueHandler);
+                    historyProvider = brokerageHistoryProvider;
+                }
+                else
+                {
+                    historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProviderName);
+                    if (historyProvider is BrokerageHistoryProvider)
+                    {
+                        (historyProvider as BrokerageHistoryProvider).SetBrokerage(_brokerage);
+                    }
                 }
                 historyProvider.Initialize(parameters);
                 historyProvider.InvalidConfigurationDetected += (sender, args) => { OnInvalidConfigurationDetected(args); };
@@ -109,6 +135,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 try
                 {
                     var history = historyProvider.GetHistory(historyRequets, sliceTimeZone);
+                    if (history == null)
+                    {
+                        // doesn't support this history request, that's okay
+                        continue;
+                    }
                     historyEnumerators.Add(history.GetEnumerator());
                 }
                 catch (Exception e)

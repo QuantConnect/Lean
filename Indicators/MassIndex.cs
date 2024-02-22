@@ -88,7 +88,7 @@ namespace QuantConnect.Indicators
             _ema1.Update(input.Time, input.High - input.Low);
             if (_ema2.IsReady)
             {
-                _sum.Update(input.Time, _ema1.Current.Value / _ema2.Current.Value);
+                _sum.Update(input.Time, _ema1.Current.Value.SafeDivision(_ema2.Current.Value));
             }
 
             if (!_sum.IsReady)

@@ -41,6 +41,8 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
         [TestCase("GC", Market.COMEX, 2021, 4, 28, 2021, 3, false)]
         [TestCase("ZC", Market.CBOT, 2021, 3, 12, 2021, 2, false)]
         [TestCase("ZC", Market.CBOT, 2021, 3, 12, 2021, 3, false)]
+        [TestCase("ZN", Market.CBOT, 2021, 3, 22, 2021, 2, false)]
+        [TestCase("ZN", Market.CBOT, 2021, 3, 22, 2021, 3, false)]
         [TestCase("ZS", Market.CBOT, 2021, 3, 12, 2021, 2, false)]
         [TestCase("ZS", Market.CBOT, 2021, 3, 12, 2021, 3, false)]
         [TestCase("ZW", Market.CBOT, 2021, 3, 12, 2021, 2, false)]

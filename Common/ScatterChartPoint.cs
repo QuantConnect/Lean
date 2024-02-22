@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using Newtonsoft.Json;
 
 namespace QuantConnect
@@ -20,7 +21,7 @@ namespace QuantConnect
     /// <summary>
     /// A chart point for a scatter series plot
     /// </summary>
-    [JsonConverter(typeof(DefaultConverter))]
+    [JsonConverter(typeof(ScatterChartPointJsonConverter))]
     public class ScatterChartPoint : ChartPoint
     {
         /// <summary>
@@ -34,6 +35,22 @@ namespace QuantConnect
         /// </summary>
         public ScatterChartPoint()
         {
+        }
+
+        /// <summary>
+        /// Creates a new instance at the specified time and value
+        /// </summary>
+        public ScatterChartPoint(long time, decimal? value, string tooltip = null) : base(time, value)
+        {
+            Tooltip = tooltip;
+        }
+
+        /// <summary>
+        /// Creates a new instance at the specified time and value
+        /// </summary>
+        public ScatterChartPoint(DateTime time, decimal? value, string tooltip = null) : base(time, value)
+        {
+            Tooltip = tooltip;
         }
 
         /// <summary>

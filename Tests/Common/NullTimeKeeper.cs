@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,28 +13,29 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
+using System;
+using NodaTime;
+using QuantConnect.Interfaces;
 
-namespace QuantConnect.ToolBox.CoinApi.Messages
+namespace QuantConnect.Tests.Common
 {
-    public class HelloMessage
+    internal class NullTimeKeeper : ITimeKeeper
     {
-        [JsonProperty("type")]
-        public string Type { get; } = "hello";
+        public static ITimeKeeper Instance = new NullTimeKeeper();
+        public DateTime UtcTime => throw new NotImplementedException();
 
-        [JsonProperty("apikey")]
-        public string ApiKey { get; set; }
+        private NullTimeKeeper()
+        {
+        }
 
-        [JsonProperty("heartbeat")]
-        public bool Heartbeat { get; set; }
+        public void AddTimeZone(DateTimeZone timeZone)
+        {
+            throw new NotImplementedException();
+        }
 
-        [JsonProperty("subscribe_data_type")]
-        public string[] SubscribeDataType { get; set; }
-
-        [JsonProperty("subscribe_filter_symbol_id")]
-        public string[] SubscribeFilterSymbolId { get; set; }
-
-        [JsonProperty("subscribe_filter_asset_id")]
-        public string[] SubscribeFilterAssetId { get; set; }
+        public LocalTimeKeeper GetLocalTimeKeeper(DateTimeZone timeZone)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

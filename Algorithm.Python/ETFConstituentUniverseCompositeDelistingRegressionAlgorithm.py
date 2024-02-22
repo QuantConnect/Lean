@@ -24,6 +24,7 @@ class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm(QCAlgorithm):
         self.SetCash(100000)
 
         self.universeSymbolCount = 0
+        self.universeSelectionDone = False
         self.universeAdded = False
         self.universeRemoved = False
 
@@ -36,11 +37,13 @@ class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm(QCAlgorithm):
         self.AddUniverse(self.Universe.ETF(self.gdvd, self.UniverseSettings, self.FilterETFs))
 
     def FilterETFs(self, constituents):
+        self.universeSelectionDone = True
+
         if self.UtcTime.date() > self.delistingDate:
             raise Exception(f"Performing constituent universe selection on {self.UtcTime.strftime('%Y-%m-%d %H:%M:%S.%f')} after composite ETF has been delisted")
 
         constituentSymbols = [i.Symbol for i in constituents]
-        self.universeSymbolCount = len(constituentSymbols)
+        self.universeSymbolCount = len(set(constituentSymbols))
 
         return constituentSymbols
 
@@ -55,9 +58,19 @@ class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm(QCAlgorithm):
         if len(changes.AddedSecurities) != 0 and self.UtcTime.date() > self.delistingDate:
             raise Exception("New securities added after ETF constituents were delisted")
 
-        self.universeAdded = self.universeAdded or len(changes.AddedSecurities) >= self.universeSymbolCount
-        # Subtract 1 from universe Symbol count for AAPL, since it was manually added to the algorithm
-        self.universeRemoved = self.universeRemoved or (len(changes.RemovedSecurities) == self.universeSymbolCount and self.UtcTime.date() >= self.delistingDate and self.UtcTime.date() < self.EndDate.date())
+        # Since we added the etf subscription it will get delisted and send us a removal event
+        expectedChangesCount = self.universeSymbolCount + 1
+
+        if self.universeSelectionDone:
+            # "_universeSymbolCount + 1" because selection is done right away,
+            # so AddedSecurities includes all ETF constituents (including APPL) plus GDVD
+            self.universeAdded = self.universeAdded or len(changes.AddedSecurities) == expectedChangesCount
+
+        # TODO: shouldn't be sending AAPL as a removed security since it was added by another universe
+        self.universeRemoved = self.universeRemoved or (
+            len(changes.RemovedSecurities) == expectedChangesCount and
+            self.UtcTime.date() >= self.delistingDate and
+            self.UtcTime.date() < self.EndDate.date())
 
     def OnEndOfAlgorithm(self):
         if not self.universeAdded:

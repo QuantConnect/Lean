@@ -116,6 +116,7 @@ namespace QuantConnect.Research
                 // Reset our composer; needed for re-creation of QuantBook
                 Composer.Instance.Reset();
                 var composer = Composer.Instance;
+                Config.Reset();
 
                 // Create our handlers with our composer instance
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer, researchMode: true);
@@ -123,26 +124,29 @@ namespace QuantConnect.Research
 
                 // init the API
                 systemHandlers.Initialize();
+
+                var algorithmPacket = new BacktestNodePacket
+                {
+                    UserToken = Globals.UserToken,
+                    UserId = Globals.UserId,
+                    ProjectId = Globals.ProjectId,
+                    OrganizationId = Globals.OrganizationID,
+                    Version = Globals.Version
+                };
+
+                ProjectId = algorithmPacket.ProjectId;
                 systemHandlers.LeanManager.Initialize(systemHandlers,
                     algorithmHandlers,
-                    new BacktestNodePacket(),
+                    algorithmPacket,
                     new AlgorithmManager(false));
                 systemHandlers.LeanManager.SetAlgorithm(this);
 
-                ProjectId = Config.GetInt("project-id");
 
-                algorithmHandlers.DataPermissionsManager.Initialize(new AlgorithmNodePacket(PacketType.BacktestNode)
-                {
-                    UserToken = Config.Get("api-access-token"),
-                    UserId = Config.GetInt("job-user-id"),
-                    ProjectId = ProjectId,
-                    OrganizationId = Config.Get("job-organization-id"),
-                    Version = Globals.Version
-                });
+                algorithmHandlers.DataPermissionsManager.Initialize(algorithmPacket);
 
-                algorithmHandlers.ObjectStore.Initialize(Config.GetInt("job-user-id"),
-                    ProjectId,
-                    Config.Get("api-access-token"),
+                algorithmHandlers.ObjectStore.Initialize(algorithmPacket.UserId,
+                    algorithmPacket.ProjectId,
+                    algorithmPacket.UserToken,
                     new Controls
                     {
                         // if <= 0 we disable periodic persistence and make it synchronous

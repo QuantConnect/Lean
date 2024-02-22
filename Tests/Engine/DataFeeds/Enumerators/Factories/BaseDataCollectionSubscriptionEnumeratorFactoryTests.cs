@@ -106,8 +106,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
             using (var enumerator = factory.CreateEnumerator(request, TestGlobals.DataProvider))
             {
-                dateStart = dateStart.AddDays(-1);
-                for (var i = 0; i <= days; i++)
+                for (var i = 0; i < days; i++)
                 {
                     Assert.IsTrue(enumerator.MoveNext());
 

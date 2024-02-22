@@ -23,7 +23,6 @@ using QuantConnect.Securities;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Configuration;
 using Timer = System.Timers.Timer;
 using QuantConnect.Lean.Engine.HistoricalData;
 
@@ -69,7 +68,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             _aggregator = dataAggregator;
             _dataPointsPerSecondPerSymbol = dataPointsPerSecondPerSymbol;
             _dataCacheProvider = new ZipDataCacheProvider(new DefaultDataProvider(), true);
-            var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"), false);
+            var mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
             _optionChainProvider = new LiveOptionChainProvider(_dataCacheProvider, mapFileProvider);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolExchangeTimeZones = new Dictionary<Symbol, TimeZoneOffsetProvider>();

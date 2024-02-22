@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(fills.Count + 1, equity.Count);
 
             // we're going to process fills and very our equity after each fill
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(TimeKeeper);
             subscriptions.SetDataManager(new DataManagerStub(TimeKeeper));
             var securities = new SecurityManager(TimeKeeper);
             MarketHoursDatabase.FromDataFolder().SetEntryAlwaysOpen(CASH.ID.Market, CASH.Value, CASH.SecurityType, TimeZones.NewYork);
@@ -174,7 +174,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(fills.Count + 1, equity.Count);
 
             // we're going to process fills and very our equity after each fill
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(TimeKeeper);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
