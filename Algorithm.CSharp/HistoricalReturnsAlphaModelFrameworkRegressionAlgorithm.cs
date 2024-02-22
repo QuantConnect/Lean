@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "1.300%"},
             {"Expectancy", "0.269"},
             {"Starting Equity", "100000"},
-            {"Ending Equity", "102420.764"},
+            {"Ending Equity", "102638.260"},
             {"Net Profit", "2.638%"},
             {"Sharpe Ratio", "4.183"},
             {"Sortino Ratio", "6.011"},
