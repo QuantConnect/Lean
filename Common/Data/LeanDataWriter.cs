@@ -238,15 +238,20 @@ namespace QuantConnect.Data
                     _tickType
                 );
 
-                var history = brokerage.GetHistory(historyRequest)
+                var history = brokerage.GetHistory(historyRequest)?
                     .Select(
                         x =>
                         {
                             // Convert to date timezone before we write it
                             x.Time = x.Time.ConvertTo(exchangeHours.TimeZone, dataTimeZone);
                             return x;
-                        })
+                        })?
                     .ToList();
+
+                if (history == null)
+                {
+                    continue;
+                }
 
                 // Generate a writer for this data and write it
                 var writer = new LeanDataWriter(_resolution, symbol, _dataDirectory, _tickType);
