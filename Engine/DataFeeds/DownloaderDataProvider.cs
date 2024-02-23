@@ -163,7 +163,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         LeanDataWriter writer = null;
                         var getParams = new DataDownloaderGetParameters(symbol, resolution, startTimeUtc, endTimeUtc, tickType);
 
-                        var data = _dataDownloader.Get(getParams)
+                        var downloadData = _dataDownloader.Get(getParams);
+
+                        if (downloadData == null)
+                        {
+                            // doesn't support this download request, that's okay
+                            return;
+                        }
+
+                        var data = downloadData
                             .Where(baseData =>
                             {
                                 if(symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
