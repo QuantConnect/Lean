@@ -251,7 +251,7 @@ namespace QuantConnect.Indicators
         private decimal CalculateIV(DateTime time)
         {
             RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
-            DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
+            DividendYield.Update(time, _dividendYieldModel.GetDividendYield(_underlyingSymbol, time));
 
             var price = Price.Current.Value;
             var spotPrice = UnderlyingPrice.Current.Value;

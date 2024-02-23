@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Data
             var symbol = Symbols.AAPL;
             var provider = new DividendYieldProvider(symbol);
             var dateTime = Parse.DateTimeExact(dateString, "yyyyMMdd");
-            var result = provider.GetDividendYield(dateTime);
+            var result = provider.GetDividendYield(symbol, dateTime);
 
             Assert.AreEqual(expected, (double)result, 0.0001d);
         }
@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Data
             var symbol = Symbols.EURUSD;
             var provider = new DividendYieldProvider(symbol);
             var dateTime = Parse.DateTimeExact(dateString, "yyyyMMdd");
-            var result = provider.GetDividendYield(dateTime);
+            var result = provider.GetDividendYield(symbol, dateTime);
 
             Assert.AreEqual(expected, result);
         }
@@ -62,15 +62,32 @@ namespace QuantConnect.Tests.Common.Data
 
             fileProviderTest.CacheCleared.Reset();
 
-            fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
-            Assert.AreEqual(1, fileProviderTest.FetchCount);
+            fileProviderTest.GetDividendYield(symbol, new DateTime(2020, 1, 1));
+            var fetchCount = fileProviderTest.FetchCount;
             Thread.Sleep(1);
-            fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
+            fileProviderTest.GetDividendYield(symbol, new DateTime(2020, 1, 1));
+            Assert.AreEqual(fetchCount, fileProviderTest.FetchCount);
+
+            fileProviderTest.CacheCleared.WaitOne(TimeSpan.FromSeconds(10));
+
+            fileProviderTest.GetDividendYield(symbol, new DateTime(2020, 1, 1));
+            Assert.Greater(fileProviderTest.FetchCount, fetchCount);
+
+            fileProviderTest.Enabled = false;
+        }
+
+        [Test]
+        public void AnotherSymbolCall()
+        {
+            var symbol = Symbols.AAPL;
+            var fileProviderTest = new DividendYieldProviderTest(symbol);
+
+            fileProviderTest.CacheCleared.Reset();
+
+            fileProviderTest.GetDividendYield(symbol, new DateTime(2020, 1, 1));
             Assert.AreEqual(1, fileProviderTest.FetchCount);
 
-            fileProviderTest.CacheCleared.WaitOne(TimeSpan.FromSeconds(5));
-
-            fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
+            fileProviderTest.GetDividendYield(Symbols.SPY, new DateTime(2020, 1, 1));
             Assert.AreEqual(2, fileProviderTest.FetchCount);
 
             fileProviderTest.Enabled = false;
@@ -82,7 +99,7 @@ namespace QuantConnect.Tests.Common.Data
             public bool Enabled = true;
             public readonly ManualResetEvent CacheCleared = new(false);
 
-            protected override TimeSpan CacheRefreshPeriod => TimeSpan.FromSeconds(2);
+            protected override TimeSpan CacheRefreshPeriod => TimeSpan.FromSeconds(5);
 
             public DividendYieldProviderTest(Symbol symbol)
                 : base(symbol) 
@@ -98,9 +115,9 @@ namespace QuantConnect.Tests.Common.Data
                 }
             }
 
-            protected override void LoadDividendYieldProvider()
+            protected override void LoadDividendYieldProvider(Symbol symbol)
             {
-                base.LoadDividendYieldProvider();
+                base.LoadDividendYieldProvider(symbol);
                 FetchCount++;
             }
         }
