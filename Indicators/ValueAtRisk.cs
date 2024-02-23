@@ -30,9 +30,9 @@ namespace QuantConnect.Indicators
         private readonly double _confidenceLevel;
 
         /// <summary>
-        /// Rolling window to store the input data points
+        /// RateOfChange indicator to calculate the returns
         /// </summary>
-        private readonly RollingWindow<decimal> _dataPoints;
+        private readonly RateOfChange _rateOfChange;
 
         /// <summary>
         /// Rolling window to store the returns of the input data
@@ -47,7 +47,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _dataPoints.Samples >= WarmUpPeriod;
+        public override bool IsReady => Samples >= WarmUpPeriod;
 
         /// <summary>
         /// Creates a new ValueAtRisk indicator with a specified period and confidence level
@@ -63,11 +63,11 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException($"Period parameter for ValueAtRisk indicator must be greater than 2 but was {period}");
             }
 
-            WarmUpPeriod = 3;
+            WarmUpPeriod = period;
             _confidenceLevel = confidenceLevel;
 
-            _dataPoints = new RollingWindow<decimal>(2);
             _returns = new RollingWindow<double>(period);
+            _rateOfChange = new RateOfChange(1);
         }
 
         /// <summary>
@@ -88,13 +88,9 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            _dataPoints.Add(input.Value);
+            _rateOfChange.Update(input);
+            _returns.Add((double)_rateOfChange.Current.Value);
 
-            if (_dataPoints.Samples > 1)
-            {
-                _returns.Add(GetNewReturn(_dataPoints));
-            }
-            
             if (_returns.Count < 2)
             {
                 return 0m;
@@ -106,25 +102,11 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Computes the returns by comparing the new data point and the previous data point
-        /// </summary>
-        /// <param name="rollingWindow">The collection of data points</param>
-        /// <returns>The return value</returns>
-        private static double GetNewReturn(RollingWindow<decimal> rollingWindow)
-        {
-            if (rollingWindow[1] != 0)
-            {
-                return (double)((rollingWindow[0] / rollingWindow[1]) - 1);
-            }
-            return 0;
-        }
-
-        /// <summary>
-        ///     Resets this indicator to its initial state
+        /// Resets this indicator to its initial state
         /// </summary>
         public override void Reset()
         {
-            _dataPoints.Reset();
+            _rateOfChange.Reset();
             _returns.Reset();
             base.Reset();
         }

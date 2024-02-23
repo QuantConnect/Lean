@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Indicators
         {
             var indicator = CreateIndicator();
 
-            for (int i = 0; i < 50; i++)
+            for (int i = 0; i < _tradingDays; i++)
             {
                 var indicatorDataPoint = new IndicatorDataPoint(new DateTime(), 0);
                 indicator.Update(indicatorDataPoint);
