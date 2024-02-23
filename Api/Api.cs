@@ -664,7 +664,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Id of the project on QuantConnect</param>
         /// <param name="compileId">Id of the compilation on QuantConnect</param>
         /// <param name="nodeId">Id of the node that will run the algorithm</param>
-        /// <param name="baseLiveAlgorithmSettings">Brokerage specific <see cref="BaseLiveAlgorithmSettings">BaseLiveAlgorithmSettings</see>.</param>
+        /// <param name="brokerageSettings">Brokerage specific settings</param>
         /// <param name="versionId">The version of the Lean used to run the algorithm.
         ///                         -1 is master, however, sometimes this can create problems with live deployments.
         ///                         If you experience problems using, try specifying the version of Lean you would like to use.</param>
@@ -673,7 +673,7 @@ namespace QuantConnect.Api
         public LiveAlgorithm CreateLiveAlgorithm(int projectId,
                                                  string compileId,
                                                  string nodeId,
-                                                 BaseLiveAlgorithmSettings baseLiveAlgorithmSettings,
+                                                 Dictionary<string, string> brokerageSettings,
                                                  string versionId = "-1")
         {
             var request = new RestRequest("live/create", Method.POST)
@@ -686,7 +686,7 @@ namespace QuantConnect.Api
                 (projectId,
                 compileId,
                 nodeId,
-                baseLiveAlgorithmSettings,
+                brokerageSettings,
                 versionId)
                 ), ParameterType.RequestBody);
 

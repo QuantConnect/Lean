@@ -43,11 +43,16 @@ namespace QuantConnect.Tests.API
             var user = Config.Get("ib-user-name");
             var password = Config.Get("ib-password");
             var account = Config.Get("ib-account");
+            var environment = account.Substring(0, 2) == "DU" ? "paper" : "live";
 
             // Create default algorithm settings
-            var settings = new InteractiveBrokersLiveAlgorithmSettings(user,
-                password,
-                account);
+            var settings = new Dictionary<string, string>() {
+                { "id", "InteractiveBrokersBrokerage" },
+                { "environment", environment },
+                { "user", user },
+                { "password", password },
+                { "account", account }
+            };
 
             var file = new ProjectFile
             {
@@ -69,10 +74,13 @@ namespace QuantConnect.Tests.API
             var account = Config.Get("fxcm-account-id");
 
             // Create default algorithm settings
-            var settings = new FXCMLiveAlgorithmSettings(user,
-                password,
-                BrokerageEnvironment.Paper,
-                account);
+            var settings = new Dictionary<string, string>() {
+                { "id", "FxcmBrokerage" },
+                { "environment", "paper" },
+                { "user", user },
+                { "password", password },
+                { "account", account }
+            };
 
             var file = new ProjectFile
             {
@@ -93,9 +101,14 @@ namespace QuantConnect.Tests.API
             var account = Config.Get("oanda-account-id");
 
             // Create default algorithm settings
-            var settings = new OandaLiveAlgorithmSettings(token,
-                BrokerageEnvironment.Paper,
-                account);
+            var settings = new Dictionary<string, string>()
+            {
+                { "id", "OandaBrokerage" },
+                { "environment", "paper" },
+                { "account", account },
+                { "dateIssued", "1" },
+                { "accessToken", token }
+            };
 
             var file = new ProjectFile
             {
@@ -118,12 +131,16 @@ namespace QuantConnect.Tests.API
             var dateIssued = Config.Get("tradier-issued-at");
 
             // Create default algorithm settings
-            var settings = new TradierLiveAlgorithmSettings(
-                accessToken,
-                dateIssued,
-                refreshToken,
-                account
-            );
+            var settings = new Dictionary<string, string>()
+            {
+                { "id", "TradierBrokerage" },
+                { "environment", "live" },
+                { "accessToken", accessToken },
+                { "dateIssued", dateIssued },
+                { "refreshToken", refreshToken },
+                { "lifetime", "86399"},
+                { "account", account}
+            };
 
             var file = new ProjectFile
             {
@@ -144,7 +161,13 @@ namespace QuantConnect.Tests.API
             var secretKey = Config.Get("bitfinex-api-secret");
 
             // Create default algorithm settings
-            var settings = new BitfinexLiveAlgorithmSettings(key, secretKey);
+            var settings = new Dictionary<string, string>()
+            {
+                { "id", "BitfinexBrokerage" },
+                { "environment", "live" },
+                { "bitfinex-api-secret", key },
+                { "bitfinex-api-key", secretKey }
+            };
 
             var file = new ProjectFile
             {
@@ -167,7 +190,15 @@ namespace QuantConnect.Tests.API
             var wsUrl = Config.Get("coinbase-url");
 
             // Create default algorithm settings
-            var settings = new CoinbaseLiveAlgorithmSettings(key, secretKey, new Uri(apiUrl), new Uri(wsUrl));
+            var settings = new Dictionary<string, string>()
+            {
+                { "id", "CoinbaseBrokerage" },
+                { "environment", "live" },
+                { "key", key },
+                { "secret", secretKey },
+                { "apiUrl", apiUrl },
+                { "wsUrl", wsUrl },
+            };
 
             var file = new ProjectFile
             {
@@ -184,68 +215,117 @@ namespace QuantConnect.Tests.API
         [Test]
         public void LiveAlgorithmSettings_CanBeCreated_Successfully()
         {
-            string user = "";
-            string password = "";
-            BrokerageEnvironment environment = BrokerageEnvironment.Paper;
-            string account = "";
-            string key = "";
-            string secretKey = "";
+            var user = "";
+            var password = "";
+            var environment = "paper";
+            var account = "";
+            var key = "";
+            var secretKey = "";
 
             // Oanda Custom Variables
-            string accessToken = "";
+            var accessToken = "";
 
             // Tradier Custom Variables
-            string dateIssued = "";
-            string refreshToken = "";
+            var dateIssued = "";
+            var refreshToken = "";
 
             // Create and test settings for each brokerage
             foreach (BrokerageName brokerageName in Enum.GetValues(typeof(BrokerageName)))
             {
-                BaseLiveAlgorithmSettings settings = null;
+                Dictionary<string, string> settings = null;
 
                 switch (brokerageName)
                 {
                     case BrokerageName.Default:
                         user = Config.Get("default-username");
                         password = Config.Get("default-password");
-                        settings = new DefaultLiveAlgorithmSettings(user, password, environment, account);
+                        settings = new Dictionary<string, string>()
+                        {
+                            { "id", BrokerageName.Default.ToString() },
+                            { "environment", environment },
+                            { "user", user },
+                            { "password", password },
+                            { "account", account }
+                        };
 
-                        Assert.IsTrue(settings.Id == BrokerageName.Default.ToString());
+                        Assert.IsTrue(settings["id"] == BrokerageName.Default.ToString());
                         break;
                     case BrokerageName.FxcmBrokerage:
                         user = Config.Get("fxcm-user-name");
                         password = Config.Get("fxcm-password");
-                        settings = new FXCMLiveAlgorithmSettings(user, password, environment, account);
+                        settings = new Dictionary<string, string>()
+                        {
+                            { "id", BrokerageName.FxcmBrokerage.ToString() },
+                            { "environment", environment },
+                            { "user", user },
+                            { "password", password },
+                            { "account", account }
+                        };
 
-                        Assert.IsTrue(settings.Id == BrokerageName.FxcmBrokerage.ToString());
+                        Assert.IsTrue(settings["id"] == BrokerageName.FxcmBrokerage.ToString());
                         break;
                     case BrokerageName.InteractiveBrokersBrokerage:
                         user = Config.Get("ib-user-name");
                         password = Config.Get("ib-password");
                         account = Config.Get("ib-account");
-                        settings = new InteractiveBrokersLiveAlgorithmSettings(user, password, account);
+                        settings = new Dictionary<string, string>()
+                        {
+                            { "id", BrokerageName.InteractiveBrokersBrokerage.ToString() },
+                            { "environment", account.Substring(0, 2) == "DU" ? "paper" : "live" },
+                            { "user", user },
+                            { "password", password },
+                            { "acount", account }
+                        };
 
-                        Assert.IsTrue(settings.Id == BrokerageName.InteractiveBrokersBrokerage.ToString());
+                        Assert.IsTrue(settings["id"] == BrokerageName.InteractiveBrokersBrokerage.ToString());
                         break;
                     case BrokerageName.OandaBrokerage:
                         accessToken = Config.Get("oanda-access-token");
                         account = Config.Get("oanda-account-id");
 
-                        settings = new OandaLiveAlgorithmSettings(accessToken, environment, account);
-                        Assert.IsTrue(settings.Id == BrokerageName.OandaBrokerage.ToString());
+                        settings = new Dictionary<string, string>()
+                        {
+                            { "id", BrokerageName.OandaBrokerage.ToStringInvariant() },
+                            { "user", "" },
+                            { "password", "" },
+                            { "environment", environment },
+                            { "account", account },
+                            { "accessToken", accessToken },
+                            { "dateIssued", "1" }
+                        };
+                        Assert.IsTrue(settings["id"] == BrokerageName.OandaBrokerage.ToString());
                         break;
                     case BrokerageName.TradierBrokerage:
                         dateIssued = Config.Get("tradier-issued-at");
                         refreshToken = Config.Get("tradier-refresh-token");
                         account = Config.Get("tradier-account-id");
 
-                        settings = new TradierLiveAlgorithmSettings(refreshToken, dateIssued, refreshToken, account);
+                        settings = new Dictionary<string, string>()
+                        {
+                            { "id", BrokerageName.TradierBrokerage.ToString() },
+                            { "user", "" },
+                            { "password", "" },
+                            { "environment", "live" },
+                            { "accessToken", accessToken },
+                            { "dateIssued", dateIssued },
+                            { "refreshToken", refreshToken },
+                            { "lifetime", "86399" },
+                            { "account", account }
+                        };
                         break;
                     case BrokerageName.Bitfinex:
                         key = Config.Get("bitfinex-api-key");
                         secretKey = Config.Get("bitfinex-api-secret");
 
-                        settings = new BitfinexLiveAlgorithmSettings(key, secretKey);
+                        settings = new Dictionary<string, string>()
+                        {
+                            { "id", "BitfinexBrokerage" },
+                            { "user", "" },
+                            { "password", "" },
+                            { "environment", "live" },
+                            { "key", key },
+                            { "secret", secretKey },
+                        };
                         break;
                     case BrokerageName.GDAX:
                     case BrokerageName.Coinbase:
@@ -253,16 +333,38 @@ namespace QuantConnect.Tests.API
                         secretKey = Config.Get("coinbase-api-secret");
                         var apiUrl = Config.Get("coinbase-rest-api");
                         var wsUrl = Config.Get("coinbase-url");
-                        
-                        settings = new CoinbaseLiveAlgorithmSettings(key, secretKey, new Uri(apiUrl), new Uri(wsUrl));
+
+                        settings = new Dictionary<string, string>()
+                        {
+                            { "id",  "CoinbaseBrokerage"},
+                            { "user", "" },
+                            { "password", "" },
+                            { "environment", "live" },
+                            { "key", key },
+                            { "secret", secretKey },
+                            { "apiUrl", (new Uri(apiUrl)).AbsoluteUri },
+                            { "wsUrl", (new Uri(wsUrl)).AbsoluteUri }
+                        };
                         break;
                     case BrokerageName.AlphaStreams:
                         // No live algorithm settings
-                        settings = new BaseLiveAlgorithmSettings();
+                        settings = new Dictionary<string, string>()
+                        {
+                            { "id", "" },
+                            { "user", "" },
+                            { "password", "" },
+                            { "account", "" }
+                        };
                         break;
                     case BrokerageName.Binance:
                         // No live algorithm settings
-                        settings = new BaseLiveAlgorithmSettings();
+                        settings = new Dictionary<string, string>()
+                        {
+                            { "id", "" },
+                            { "user", "" },
+                            { "password", "" },
+                            { "account", "" }
+                        };
                         break;
                     default:
                         throw new Exception($"Settings have not been implemented for this brokerage: {brokerageName}");
@@ -270,31 +372,30 @@ namespace QuantConnect.Tests.API
 
                 // Tests common to all brokerage configuration classes
                 Assert.IsTrue(settings != null);
-                Assert.IsTrue(settings.Password == password);
-                Assert.IsTrue(settings.User == user);
+                Assert.IsTrue(settings["password"] == password);
+                Assert.IsTrue(settings["user"] == user);
 
                 // Oanda specific settings
                 if (brokerageName == BrokerageName.OandaBrokerage)
                 {
-                    var oandaSetting = settings as OandaLiveAlgorithmSettings;
-
-                    Assert.IsTrue(oandaSetting.AccessToken == accessToken);
+                    var oandaSetting = settings;
+                    Assert.IsTrue(oandaSetting["accessToken"] == accessToken);
                 }
 
                 // Tradier specific settings
                 if (brokerageName == BrokerageName.TradierBrokerage)
                 {
-                    var tradierLiveAlogrithmSettings = settings as TradierLiveAlgorithmSettings;
+                    var tradierLiveAlogrithmSettings = settings;
 
-                    Assert.IsTrue(tradierLiveAlogrithmSettings.DateIssued == dateIssued);
-                    Assert.IsTrue(tradierLiveAlogrithmSettings.RefreshToken == refreshToken);
-                    Assert.IsTrue(settings.Environment == BrokerageEnvironment.Live);
+                    Assert.IsTrue(tradierLiveAlogrithmSettings["dateIssued"] == dateIssued);
+                    Assert.IsTrue(tradierLiveAlogrithmSettings["refreshToken"] == refreshToken);
+                    Assert.IsTrue(settings["environment"] == "life");
                 }
 
                 // reset variables
                 user = "";
                 password = "";
-                environment = BrokerageEnvironment.Paper;
+                environment = "paper";
                 account = "";
             }
         }
@@ -331,7 +432,7 @@ namespace QuantConnect.Tests.API
         /// <param name="stopLiveAlgos">If true the algorithm will be stopped at the end of the method.
         /// Otherwise, it will keep running</param>
         /// <returns>The id of the project created with the algorithm in</returns>
-        private int RunLiveAlgorithm(BaseLiveAlgorithmSettings settings, ProjectFile file, bool stopLiveAlgos)
+        private int RunLiveAlgorithm(Dictionary<string, string> settings, ProjectFile file, bool stopLiveAlgos)
         {
             // Create a new project
             var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
@@ -378,7 +479,14 @@ namespace QuantConnect.Tests.API
         public void ReadLiveOrders()
         {
             // Create default algorithm settings
-            var settings = new DefaultLiveAlgorithmSettings("", "", BrokerageEnvironment.Paper, "");
+            var settings = new Dictionary<string, string>()
+            {
+                { "id", "Default" },
+                { "environment", "paper" },
+                { "user", "" },
+                { "password", "" },
+                { "account", "" }
+            };
 
             var file = new ProjectFile
             {
