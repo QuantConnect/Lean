@@ -155,7 +155,7 @@ namespace QuantConnect.Indicators
             if (Price.Current.Time == UnderlyingPrice.Current.Time)
             {
                 RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
-                DividendYield.Update(time, _dividendYieldModel.GetDividendYield(_underlyingSymbol, time));
+                DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
                 _greekValue = CalculateGreek(time);
             }
             return _greekValue;

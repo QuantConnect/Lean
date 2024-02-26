@@ -25,9 +25,8 @@ namespace QuantConnect.Data
         /// <summary>
         /// Get dividend yield by a given date of a given symbol
         /// </summary>
-        /// <param name="symbol">The symbol</param>
         /// <param name="date">The date</param>
         /// <returns>Dividend yield on the given date of the given symbol</returns>
-        decimal GetDividendYield(Symbol symbol, DateTime date);
+        decimal GetDividendYield(DateTime date);
     }
 }

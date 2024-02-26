@@ -281,7 +281,7 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
             // Set up
             for (int i = 0; i < count; i++)
             {
-                dividendYieldProviderMock.Setup(x => x.GetDividendYield(_underlying, dates[i])).Returns(dividends[i]).Verifiable();
+                dividendYieldProviderMock.Setup(x => x.GetDividendYield(dates[i])).Returns(dividends[i]).Verifiable();
             }
 
             var indicator = CreateIndicator(new ConstantRiskFreeRateInterestRateModel(0.05m), dividendYieldProviderMock.Object);
@@ -295,10 +295,10 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
 
             // Assert
             Assert.IsTrue(indicator.IsReady);
-            dividendYieldProviderMock.Verify(x => x.GetDividendYield(_underlying, It.IsAny<DateTime>()), Times.Exactly(dates.Count * DividendYieldUpdatesPerIteration));
+            dividendYieldProviderMock.Verify(x => x.GetDividendYield(It.IsAny<DateTime>()), Times.Exactly(dates.Count * DividendYieldUpdatesPerIteration));
             for (int i = 0; i < count; i++)
             {
-                dividendYieldProviderMock.Verify(x => x.GetDividendYield(_underlying, dates[i]), Times.Exactly(DividendYieldUpdatesPerIteration));
+                dividendYieldProviderMock.Verify(x => x.GetDividendYield(dates[i]), Times.Exactly(DividendYieldUpdatesPerIteration));
             }
         }
 

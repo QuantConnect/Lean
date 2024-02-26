@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
-using QuantConnect.Util;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Util;
+using QuantConnect.Logging;
 using System.Threading.Tasks;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Data
 {
@@ -29,11 +29,13 @@ namespace QuantConnect.Data
     /// </summary>
     public class DividendYieldProvider : IDividendYieldModel
     {
-        private static DateTime _firstDividendYieldDate = Time.Start;
-        private static decimal _lastDividendYield;
-        private static List<Symbol> _symbols = new();
-        private static Dictionary<Symbol, Dictionary<DateTime, decimal>> _dividendYieldRateProvider = new();
+        protected static Dictionary<Symbol, Dictionary<DateTime, decimal>> _dividendYieldRateProvider;
+        protected static Task _cacheClearTask;
         private static readonly object _lock = new();
+
+        private readonly DateTime _firstDividendYieldDate = Time.Start;
+        private decimal _lastDividendYield;
+        private readonly Symbol _symbol;
 
         /// <summary>
         /// Default no dividend payout
@@ -63,57 +65,49 @@ namespace QuantConnect.Data
         /// </summary>
         public DividendYieldProvider(Symbol symbol)
         {
-            _symbols.Add(symbol);
-            StartExpirationTask();
+            _symbol = symbol;
+
+            if (_cacheClearTask == null)
+            {
+                lock (_lock)
+                {
+                    // only the first triggers the expiration task check
+                    if (_cacheClearTask == null)
+                    {
+                        StartExpirationTask(CacheRefreshPeriod);
+                    }
+                }
+            }
         }
 
         /// <summary>
         /// Helper method that will clear any cached dividend rate in a daily basis, this is useful for live trading
         /// </summary>
-        protected virtual void StartExpirationTask()
+        private static void StartExpirationTask(TimeSpan cacheRefreshPeriod)
         {
             lock (_lock)
             {
                 // we clear the dividend yield rate cache so they are reloaded
-                _dividendYieldRateProvider.Clear();
+                _dividendYieldRateProvider = new();
             }
-            _ = Task.Delay(CacheRefreshPeriod).ContinueWith(_ => StartExpirationTask());
-        }
-
-        /// <summary>
-        /// Lazily loads the dividend provider from disk and returns it
-        /// </summary>
-        private IReadOnlyDictionary<Symbol, Dictionary<DateTime, decimal>> DividendYieldRateProvider
-        {
-            get
-            {
-                // let's not lock if the provider is already loaded
-                if (!_dividendYieldRateProvider.IsNullOrEmpty())
-                {
-                    return _dividendYieldRateProvider;
-                }
-
-                lock (_lock)
-                {
-                    LoadDividendYieldProvider();
-                    return _dividendYieldRateProvider;
-                }
-            }
+            _cacheClearTask = Task.Delay(cacheRefreshPeriod).ContinueWith(_ => StartExpirationTask(cacheRefreshPeriod));
         }
 
         /// <summary>
         /// Get dividend yield by a given date of a given symbol
         /// </summary>
-        /// <param name="symbol">The symbol</param>
         /// <param name="date">The date</param>
         /// <returns>Dividend yield on the given date of the given symbol</returns>
-        public decimal GetDividendYield(Symbol symbol, DateTime date)
+        public decimal GetDividendYield(DateTime date)
         {
-            if (!DividendYieldRateProvider.TryGetValue(symbol, out var symbolDividend))
+            Dictionary<DateTime, decimal> symbolDividend;
+            lock (_lock)
             {
-                // load the symbol factor if it is the first encounter
-                LoadDividendYieldProvider(symbol);
-                symbolDividend = DividendYieldRateProvider[symbol];
+                if (!_dividendYieldRateProvider.TryGetValue(_symbol, out symbolDividend))
+                {
+                    // load the symbol factor if it is the first encounter
+                    symbolDividend = _dividendYieldRateProvider[_symbol] = LoadDividendYieldProvider(_symbol);
+                }
             }
 
             if (!symbolDividend.TryGetValue(date.Date, out var dividendYield))
@@ -129,19 +123,8 @@ namespace QuantConnect.Data
         /// <summary>
         /// Generate the daily historical dividend yield
         /// </summary>
-        private void LoadDividendYieldProvider()
-        {
-            foreach (var symbol in _symbols)
-            {
-                LoadDividendYieldProvider(symbol);
-            }
-        }
-
-        /// <summary>
-        /// Generate the daily historical dividend yield
-        /// </summary>
         /// <remarks>Exposed for testing</remarks>
-        protected virtual void LoadDividendYieldProvider(Symbol symbol)
+        protected virtual Dictionary<DateTime, decimal> LoadDividendYieldProvider(Symbol symbol)
         {
             var factorFileProvider = Composer.Instance.GetPart<IFactorFileProvider>();
             var corporateFactors = factorFileProvider
@@ -149,35 +132,34 @@ namespace QuantConnect.Data
                 .Select(factorRow => factorRow as CorporateFactorRow)
                 .Where(corporateFactor => corporateFactor != null);
 
-            var symbolDividends = FromCorporateFactorRow(corporateFactors);
+            var symbolDividends = FromCorporateFactorRow(corporateFactors, symbol);
             if (symbolDividends.Count == 0)
             {
-                _dividendYieldRateProvider[symbol] = new();
-                return;
+                return new();
             }
 
             // Sparse the discrete data points into continuous data for every day
-            var previousDividendYield = DefaultDividendYieldRate;
+            _lastDividendYield = DefaultDividendYieldRate;
             for (var date = _firstDividendYieldDate; date <= symbolDividends.Keys.Max(); date = date.AddDays(1))
             {
                 if (!symbolDividends.TryGetValue(date, out var currentRate))
                 {
-                    symbolDividends[date] = previousDividendYield;
+                    symbolDividends[date] = _lastDividendYield;
                     continue;
                 }
-
-                previousDividendYield = currentRate;
+                _lastDividendYield = currentRate;
             }
 
-            _dividendYieldRateProvider[symbol] = symbolDividends;
+            return symbolDividends;
         }
 
         /// <summary>
         /// Returns a dictionary of historical dividend yield from collection of corporate factor rows
         /// </summary>
         /// <param name="corporateFactors">The corporate factor rows containing factor data</param>
+        /// <param name="symbol">The target symbol</param>
         /// <returns>Dictionary of historical annualized continuous dividend yield data</returns>
-        public static Dictionary<DateTime, decimal> FromCorporateFactorRow(IEnumerable<CorporateFactorRow> corporateFactors)
+        public static Dictionary<DateTime, decimal> FromCorporateFactorRow(IEnumerable<CorporateFactorRow> corporateFactors, Symbol symbol)
         {
             var dividendYieldProvider = new Dictionary<DateTime, decimal>();
 
@@ -202,7 +184,7 @@ namespace QuantConnect.Data
 
             if (yearlyDividendYieldProvider.Count == 0)
             {
-                Log.Error($"DividendYieldProvider.FromCsvFile(): no dividend were loaded");
+                Log.Error($"DividendYieldProvider.FromCsvFile({symbol}): no dividend were loaded");
             }
 
             return yearlyDividendYieldProvider;
