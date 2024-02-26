@@ -1996,6 +1996,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new ValueAtRisk indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose VAR we want</param>
+        /// <param name="period">The period over which to compute the VAR</param>
+        /// <param name="confidenceLevel">The confidence level for Value at risk calculation</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The ValueAtRisk indicator for the requested Symbol, lookback period, and confidence level</returns>
+        public ValueAtRisk VAR(Symbol symbol, int period, double confidenceLevel, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"VAR({period},{confidenceLevel})", resolution);
+            var valueAtRisk = new ValueAtRisk(name, period, confidenceLevel);
+            InitializeIndicator(symbol, valueAtRisk, resolution, selector);
+
+            return valueAtRisk;
+        }
+
+        /// <summary>
         /// Creates an VolumeWeightedAveragePrice (VWAP) indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
