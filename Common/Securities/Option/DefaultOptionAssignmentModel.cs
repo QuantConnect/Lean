@@ -75,11 +75,12 @@ namespace QuantConnect.Securities.Option
         {
             var symbol = option.Symbol;
             var underlyingPrice = option.Underlying.Close;
+            var strikeMultiplier = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD").StrikeMultiplier;
 
             var result =
                 symbol.ID.OptionRight == OptionRight.Call
-                    ? (underlyingPrice - symbol.ID.StrikePrice) / underlyingPrice > _requiredInTheMoneyPercent
-                    : (symbol.ID.StrikePrice - underlyingPrice) / underlyingPrice > _requiredInTheMoneyPercent;
+                    ? (underlyingPrice - symbol.ID.StrikePrice * strikeMultiplier) / underlyingPrice > _requiredInTheMoneyPercent
+                    : ((symbol.ID.StrikePrice * strikeMultiplier) - underlyingPrice) / underlyingPrice > _requiredInTheMoneyPercent;
 
             return result;
         }

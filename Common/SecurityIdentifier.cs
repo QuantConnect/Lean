@@ -696,7 +696,7 @@ namespace QuantConnect
                 case SecurityType.IndexOption:
                 case SecurityType.FutureOption:
                     result._date = date;
-                    result._strikePrice = strike * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, symbol, securityType, "USD").StrikeMultiplier;
+                    result._strikePrice = strike;
                     result._optionRight = optionRight;
                     result._optionStyle = optionStyle;
                     break;

@@ -116,7 +116,7 @@ namespace QuantConnect.Securities
             if (_refreshUniqueStrikes || _uniqueStrikes == null)
             {
                 // each day we need to recompute the unique strikes list
-                _uniqueStrikes = AllSymbols.Select(x => x.ID.StrikePrice)
+                _uniqueStrikes = AllSymbols.Select(x => x.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(x.ID.Market, x, x.SecurityType, "USD").StrikeMultiplier)
                     .Distinct()
                     .OrderBy(strikePrice => strikePrice)
                     .ToList();
@@ -190,7 +190,7 @@ namespace QuantConnect.Securities
             AllSymbols = AllSymbols
                 .Where(symbol =>
                     {
-                        var price = symbol.ID.StrikePrice;
+                        var price = symbol.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD").StrikeMultiplier;
                         return price >= minPrice && price <= maxPrice;
                     }
                 ).ToList();
