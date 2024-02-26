@@ -1,4 +1,4 @@
-market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size,market_ticker,minimum_order_size,price_magnifier
+market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size,market_ticker,minimum_order_size,price_magnifier,strike-multiplier
 
 #
 # Use # signs for comments
@@ -86,6 +86,7 @@ usa,[*],equity,,USD,1,0.01,1
 
 usa,[*],index,,USD,1,0.01,1
 usa,[*],indexoption,,USD,100,0.05,1
+usa,NQX,indexoption,Nasdaq-100 Reduced-Value Index Options,USD,100,0.05,1,,,,5
 
 # for backwards compatibility, order here is important for futures, since we could have the same symbol for more than 1 market in which case Lean will use the first
 cfe,VX,future,VIX futures ,USD,1000.0,0.05,1.0

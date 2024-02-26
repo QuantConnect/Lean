@@ -93,10 +93,15 @@ namespace QuantConnect.Securities
             get;
         }
 
+        public decimal StrikeMultiplier
+        {
+            get;
+        }
+
         /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker, decimal? minimumOrderSize = null, decimal priceMagnifier = 1)
+        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker, decimal? minimumOrderSize = null, decimal priceMagnifier = 1, decimal strikeMultiplier = 1)
         {
             Description = description;
             QuoteCurrency = quoteCurrency;
@@ -116,6 +121,12 @@ namespace QuantConnect.Securities
             if (PriceMagnifier <= 0)
             {
                 throw new ArgumentException(Messages.SymbolProperties.InvalidPriceMagnifier);
+            }
+
+            StrikeMultiplier = strikeMultiplier;
+            if (strikeMultiplier <= 0)
+            {
+                throw new ArgumentException(Messages.SymbolProperties.InvalidStrikeMultiplier);
             }
         }
 

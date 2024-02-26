@@ -24,6 +24,7 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 
@@ -222,7 +223,7 @@ namespace QuantConnect
 
         /// <summary>
         /// Gets the option strike price. This only applies to SecurityType.Option
-        /// and will thrown anexception if accessed otherwse.
+        /// and will thrown anexception if accessed otherwise.
         /// </summary>
         public decimal StrikePrice
         {
@@ -695,7 +696,7 @@ namespace QuantConnect
                 case SecurityType.IndexOption:
                 case SecurityType.FutureOption:
                     result._date = date;
-                    result._strikePrice = strike;
+                    result._strikePrice = strike * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, symbol, securityType, "USD").StrikeMultiplier;
                     result._optionRight = optionRight;
                     result._optionStyle = optionStyle;
                     break;
