@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(target, baseBame, resolution);
 
             // If risk free rate is not specified, use the default risk free rate model
-            IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue 
+            IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue
                 ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
                 : new FuncRiskFreeRateInterestRateModel((datetime) => RiskFreeInterestRateModel.GetInterestRate(datetime));
 
@@ -455,7 +455,7 @@ namespace QuantConnect.Algorithm
             return chaikinMoneyFlow;
 
         }
-
+                
         /// <summary>
         /// Creates a new ChandeMomentumOscillator indicator.
         /// </summary>
@@ -539,7 +539,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The desired resolution of the data</param>
         /// <returns>A new Delta indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
-        public Delta D(Symbol symbol, decimal? riskFreeRate = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, 
+        public Delta D(Symbol symbol, decimal? riskFreeRate = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
             OptionPricingModelType? ivModel = null, Resolution? resolution = null)
         {
             var name = CreateIndicatorName(symbol, $"Delta({riskFreeRate},{optionModel},{ivModel})", resolution);
@@ -1942,6 +1942,24 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(symbol, ultimateOscillator, resolution, selector);
 
             return ultimateOscillator;
+        }
+        
+        /// <summary>
+        /// Creates a new Chande's Variable Index Dynamic Average indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose VIDYA we want</param>
+        /// <param name="period">The period over which to compute the VIDYA</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The VariableIndexDynamicAverage indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public VariableIndexDynamicAverage VIDYA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"VIDYA({period})", resolution);
+            var variableIndexDynamicAverage = new VariableIndexDynamicAverage(name, period);
+            InitializeIndicator(symbol, variableIndexDynamicAverage, resolution, selector);
+
+            return variableIndexDynamicAverage;
         }
 
         /// <summary>
