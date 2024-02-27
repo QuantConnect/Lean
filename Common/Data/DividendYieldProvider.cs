@@ -138,9 +138,11 @@ namespace QuantConnect.Data
                 return new();
             }
 
+            var lastDate = symbolDividends.Keys.Where(x => x != Time.EndOfTime).Max();
+
             // Sparse the discrete data points into continuous data for every day
             _lastDividendYield = DefaultDividendYieldRate;
-            for (var date = _firstDividendYieldDate; date <= symbolDividends.Keys.Max(); date = date.AddDays(1))
+            for (var date = _firstDividendYieldDate; date <= lastDate; date = date.AddDays(1))
             {
                 if (!symbolDividends.TryGetValue(date, out var currentRate))
                 {
