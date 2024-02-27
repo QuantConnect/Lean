@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (currentInstance?.Count() != newInstance?.Count())
             {
-                Log.Trace($"LiveDividendEventProvider({Config}): new tradable date {eventArgs.Date}. " +
+                Log.Trace($"LiveDividendEventProvider({Config}): new tradable date {eventArgs.Date:yyyyMMdd}. " +
                     $"New FactorFile: {!ReferenceEquals(currentInstance, newInstance)}. " +
                     $"FactorFile.Count Old: {currentInstance?.Count()} New: {newInstance?.Count()}");
             }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,9 +14,10 @@
 */
 
 using System;
+using System.IO;
+using QuantConnect.Util;
 using System.Collections;
 using System.Collections.Generic;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -55,12 +56,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 _enumerator = _enumeratorFactory.Invoke();
             }
 
-            var moveNext = _enumerator.MoveNext();
-            if (moveNext)
+            var moveNext = false;
+            try
             {
+                moveNext = _enumerator.MoveNext();
                 _current = _enumerator.Current;
             }
-            else
+            catch (IOException exception)
+            {
+                // we will ignore stale file handle exceptions and retry instead, enumerator will be refreshed
+                if (exception.Message == null || !exception.Message.Contains("Stale file handle", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw;
+                }
+            }
+
+            if (!moveNext)
             {
                 _enumerator.DisposeSafely();
 

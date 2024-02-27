@@ -164,6 +164,13 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public override void WorksWithLowValues()
+        {
+            Symbol = _symbol;
+            base.WorksWithLowValues();
+        }
+
+        [Test]
         public void UsesRiskFreeInterestRateModel()
         {
             const int count = 20;

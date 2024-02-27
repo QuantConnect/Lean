@@ -174,7 +174,7 @@ namespace QuantConnect.Indicators
         /// <returns>The returns with the new given data point</returns>
         private static double GetNewReturn(RollingWindow<decimal> rollingWindow)
         {
-            return (double) ((rollingWindow[0] / rollingWindow[1]) - 1);
+            return (double) ((rollingWindow[0].SafeDivision(rollingWindow[1]) - 1));
         }
 
         /// <summary>

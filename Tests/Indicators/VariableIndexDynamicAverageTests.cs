@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,28 +13,21 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
+using NUnit.Framework;
+using QuantConnect.Indicators;
 
-namespace QuantConnect.ToolBox.CoinApi.Messages
+namespace QuantConnect.Tests.Indicators
 {
-    public class HelloMessage
+    [TestFixture]
+    public class VariableIndexDynamicAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        [JsonProperty("type")]
-        public string Type { get; } = "hello";
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        {
+            return new VariableIndexDynamicAverage(9);
+        }
 
-        [JsonProperty("apikey")]
-        public string ApiKey { get; set; }
+        protected override string TestFileName => "spy_vidya.txt";
 
-        [JsonProperty("heartbeat")]
-        public bool Heartbeat { get; set; }
-
-        [JsonProperty("subscribe_data_type")]
-        public string[] SubscribeDataType { get; set; }
-
-        [JsonProperty("subscribe_filter_symbol_id")]
-        public string[] SubscribeFilterSymbolId { get; set; }
-
-        [JsonProperty("subscribe_filter_asset_id")]
-        public string[] SubscribeFilterAssetId { get; set; }
+        protected override string TestColumnName => "VIDYA_9";
     }
 }

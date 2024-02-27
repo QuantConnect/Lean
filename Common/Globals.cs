@@ -31,9 +31,39 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// The user Id
+        /// </summary>
+        public static int UserId { get; set; }
+
+        /// <summary>
+        /// The project id
+        /// </summary>
+        public static int ProjectId { get; set; }
+
+        /// <summary>
+        /// The user token
+        /// </summary>
+        public static string UserToken { get; set; }
+
+        /// <summary>
+        /// The organization id
+        /// </summary>
+        public static string OrganizationID { get; set; }
+
+        /// <summary>
+        /// The results destination folder
+        /// </summary>
+        public static string ResultsDestinationFolder { get; set; }
+
+        /// <summary>
         /// The root directory of the data folder for this application
         /// </summary>
         public static string DataFolder { get; private set; }
+
+        /// <summary>
+        /// True if running in live mode
+        /// </summary>
+        public static bool LiveMode { get; private set; }
 
         /// <summary>
         /// Resets global values with the Config data.
@@ -54,6 +84,14 @@ namespace QuantConnect
             {
                 CacheDataFolder = cacheLocation;
             }
+
+            LiveMode = Config.GetBool("live-mode");
+
+            UserId = Config.GetInt("job-user-id");
+            ProjectId = Config.GetInt("project-id");
+            UserToken = Config.Get("api-access-token");
+            OrganizationID = Config.Get("job-organization-id");
+            ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
         }
 
         /// <summary>

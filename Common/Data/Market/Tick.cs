@@ -104,6 +104,11 @@ namespace QuantConnect.Data.Market
         {
             get
             {
+                if (string.IsNullOrEmpty(SaleCondition))
+                {
+                    return 0;
+                }
+
                 if (!_parsedSaleCondition.HasValue)
                 {
                     _parsedSaleCondition = uint.Parse(SaleCondition, NumberStyles.HexNumber, CultureInfo.InvariantCulture);

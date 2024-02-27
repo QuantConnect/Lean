@@ -204,12 +204,21 @@ namespace QuantConnect.Util
         /// <typeparam name="T">The contract type</typeparam>
         public T GetPart<T>()
         {
+            return GetPart<T>(null);
+        }
+
+        /// <summary>
+        /// Gets the first type T instance if any
+        /// </summary>
+        /// <typeparam name="T">The contract type</typeparam>
+        public T GetPart<T>(Func<T, bool> filter)
+        {
             lock (_exportedValuesLockObject)
             {
                 IEnumerable values;
                 if (_exportedValues.TryGetValue(typeof(T), out values))
                 {
-                    return ((IList<T>)values).FirstOrDefault();
+                    return ((IList<T>)values).Where(x => filter == null || filter(x)).FirstOrDefault();
                 }
                 return default(T);
             }

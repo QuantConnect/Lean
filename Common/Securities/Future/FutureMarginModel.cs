@@ -33,7 +33,6 @@ namespace QuantConnect.Securities.Future
     {
         private static IDataProvider _dataProvider;
         private static readonly object _locker = new();
-        private static readonly string DataProvider = Config.Get("data-provider", "DefaultDataProvider");
         private static Dictionary<string, MarginRequirementsEntry[]> _marginRequirementsCache = new();
 
         // historical database of margin requirements
@@ -263,7 +262,7 @@ namespace QuantConnect.Securities.Future
             if(_dataProvider == null)
             {
                 ClearMarginCache();
-                _dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(DataProvider, forceTypeNameOnExisting: false);
+                _dataProvider = Composer.Instance.GetPart<IDataProvider>();
             }
 
             // skip the first header line, also skip #'s as these are comment lines

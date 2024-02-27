@@ -17,7 +17,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
-using QuantConnect.ToolBox.CoinApiDataConverter;
 using QuantConnect.ToolBox.CryptoiqDownloader;
 using QuantConnect.ToolBox.DukascopyDownloader;
 using QuantConnect.ToolBox.IVolatilityEquityConverter;
@@ -119,15 +118,6 @@ namespace QuantConnect.ToolBox
                         KaikoDataConverterProgram.KaikoDataConverter(GetParameterOrExit(optionsObject, "source-dir"),
                                                                      GetParameterOrExit(optionsObject, "date"),
                                                                      GetParameterOrDefault(optionsObject, "exchange", string.Empty));
-                        break;
-                    case "cadc":
-                    case "coinapidataconverter":
-                        CoinApiDataConverterProgram.CoinApiDataProgram(
-                            GetParameterOrExit(optionsObject, "date"),
-                            GetParameterOrExit(optionsObject, "source-dir"),
-                            GetParameterOrExit(optionsObject, "destination-dir"),
-                            GetParameterOrDefault(optionsObject, "market", null),
-                            GetParameterOrDefault(optionsObject, "security-type", null));
                         break;
                     case "nmdc":
                     case "nsemarketdataconverter":

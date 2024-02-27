@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash("JPY", quantity, conversionRate);
             var cashBook = new CashBook();
             cashBook.Add("JPY", cash);
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var abcConfig = subscriptions.Add(Symbols.SPY, Resolution.Minute, TimeZone, TimeZone);
@@ -123,7 +123,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash("JPY", quantity, conversionRate);
             var cashBook = new CashBook();
             cashBook.Add("JPY", cash);
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var abcConfig = subscriptions.Add(Symbols.SPY, Resolution.Minute, TimeZone, TimeZone);
@@ -159,7 +159,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cashBook = new CashBook();
             cashBook.Add("JPY", cash);
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
@@ -201,7 +201,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cashBook = new CashBook();
             cashBook.Add("JPY", cash);
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
@@ -232,7 +232,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cashBook = new CashBook();
             cashBook.Add("JPY", cash);
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
@@ -282,7 +282,7 @@ namespace QuantConnect.Tests.Common.Securities
             var symbol = Symbol.Create(baseCurrency + quoteCurrency,
                 securityType,
                 market);
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper)
@@ -337,7 +337,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var symbol = Symbol.Create("GBPJPY", SecurityType.Forex, Market.FXCM);
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
@@ -377,7 +377,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var symbol = Symbol.Create("GBPJPY", SecurityType.Forex, Market.FXCM);
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
@@ -429,7 +429,7 @@ namespace QuantConnect.Tests.Common.Securities
                 {"XAU", new Cash("XAU", 100, 17) }
             };
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
@@ -462,7 +462,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cashBook = new CashBook();
             cashBook.Add("JPY", cash);
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
@@ -497,7 +497,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cashBook = new CashBook();
             cashBook.Add("GBP", cash);
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
@@ -567,7 +567,7 @@ namespace QuantConnect.Tests.Common.Securities
                 {Currencies.USD, new Cash(Currencies.USD, 100, 1) },
                 {"EUR", new Cash("EUR", 100, 1.2m) }
             };
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
@@ -585,7 +585,7 @@ namespace QuantConnect.Tests.Common.Securities
                 {Currencies.USD, new Cash(Currencies.USD, 100, 1) },
                 {"ILS", new Cash("ILS", 0, 0.3m) }
             };
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
@@ -601,7 +601,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash(stableCoin, 10m, 1m);
             cashBook.Add(cash.Symbol, cash);
 
-            var subscriptions = new SubscriptionManager();
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
             var dataManager = new DataManagerStub(TimeKeeper);
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);

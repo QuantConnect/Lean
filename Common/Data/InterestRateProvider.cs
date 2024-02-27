@@ -113,8 +113,7 @@ namespace QuantConnect.Data
         /// <returns>Dictionary of historical credit rate change events</returns>
         public static Dictionary<DateTime, decimal> FromCsvFile(string file, out decimal firstInterestRate)
         {
-            var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(
-                Config.Get("data-provider", "DefaultDataProvider"));
+            var dataProvider = Composer.Instance.GetPart<IDataProvider>();
 
             var firstInterestRateSet = false;
             firstInterestRate = DefaultRiskFreeRate;

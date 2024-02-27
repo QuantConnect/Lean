@@ -56,8 +56,7 @@ namespace QuantConnect.Data.UniverseSelection
             _security = security;
             _liveMode = liveMode;
             UniverseSettings = universeSettings;
-            var mapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
-            _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName);
+            _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
 
             _config = new SubscriptionDataConfig(Configuration, dataMappingMode: UniverseSettings.DataMappingMode, symbol: _security.Symbol.Canonical);
         }

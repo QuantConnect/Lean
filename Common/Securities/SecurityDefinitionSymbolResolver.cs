@@ -49,11 +49,9 @@ namespace QuantConnect.Securities
         {
             _securitiesDefinitionKey = securitiesDefinitionKey ?? Path.Combine(Globals.GetDataFolderPath("symbol-properties"), "security-database.csv");
 
-            _dataProvider = dataProvider ??
-                Composer.Instance.GetExportedValueByTypeName<IDataProvider>(
-                    Config.Get("data-provider", "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider"));
+            _dataProvider = dataProvider ?? Composer.Instance.GetPart<IDataProvider>();
 
-            _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
+            _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
             _mapFileProvider.Initialize(_dataProvider);
         }
 

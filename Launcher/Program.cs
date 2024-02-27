@@ -57,7 +57,6 @@ namespace QuantConnect.Lean.Launcher
                 Config.MergeCommandLineArgumentsWithConfiguration(LeanArgumentParser.ParseArguments(args));
             }
 
-            var liveMode = Config.GetBool("live-mode");
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
 
@@ -65,8 +64,7 @@ namespace QuantConnect.Lean.Launcher
             leanEngineSystemHandlers = Initializer.GetSystemHandlers();
 
             //-> Pull job from QuantConnect job queue, or, pull local build:
-            string assemblyPath;
-            job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
+            job = leanEngineSystemHandlers.JobQueue.NextJob(out var assemblyPath);
 
             leanEngineAlgorithmHandlers = Initializer.GetAlgorithmHandlers();
 
@@ -100,13 +98,13 @@ namespace QuantConnect.Lean.Launcher
                 Console.CancelKeyPress += new ConsoleCancelEventHandler(ExitKeyPress);
 
                 // Create the algorithm manager and start our engine
-                algorithmManager = new AlgorithmManager(liveMode, job);
+                algorithmManager = new AlgorithmManager(Globals.LiveMode, job);
 
                 leanEngineSystemHandlers.LeanManager.Initialize(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job, algorithmManager);
 
                 OS.Initialize();
 
-                var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
+                var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, Globals.LiveMode);
                 engine.Run(job, algorithmManager, assemblyPath, WorkerThread.Instance);
             }
             finally

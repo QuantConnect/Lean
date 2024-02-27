@@ -26,28 +26,20 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class SeriesJsonConverterTests
     {
-        [TestCase(null, null, null, "Tooltip template")]
-        [TestCase(87, null, null, "Tooltip template")]
-        [TestCase(null, "tooltip", null, "Tooltip template")]
-        [TestCase(87, "tooltip", null, "Tooltip template")]
-        [TestCase(null, null, "Index Name", "Tooltip template")]
-        [TestCase(87, null, "Index Name", "Tooltip template")]
-        [TestCase(null, "tooltip", "Index Name", "Tooltip template")]
-        [TestCase(87, "tooltip", "Index Name", "Tooltip template")]
-        [TestCase(null, null, null, null)]
-        [TestCase(87, null, null, null)]
-        [TestCase(null, "tooltip", null, null)]
-        [TestCase(87, "tooltip", null, null)]
-        [TestCase(null, null, "Index Name", null)]
-        [TestCase(87, null, "Index Name", null)]
-        [TestCase(null, "tooltip", "Index Name", null)]
-        [TestCase(87, "tooltip", "Index Name", null)]
-        public void SerializeDeserializeReturnsSameSeriesValue(int? zIndex, string tooltip, string indexName, string toolTip)
+        [TestCase(null, null, "Tooltip template")]
+        [TestCase(87, null, "Tooltip template")]
+        [TestCase(null, "Index Name", "Tooltip template")]
+        [TestCase(87, "Index Name", "Tooltip template")]
+        [TestCase(null,null, null)]
+        [TestCase(87, null, null)]
+        [TestCase(null, "Index Name", null)]
+        [TestCase(87, "Index Name", null)]
+        public void SerializeDeserializeReturnsSameSeriesValue(int? zIndex, string indexName, string toolTip)
         {
             var date = new DateTime(2050, 1, 1, 1, 1, 1);
             var series = new Series("Pepito Grillo", SeriesType.Bar, "%", Color.Blue, ScatterMarkerSymbol.Diamond) { ZIndex = zIndex, Index = 6, IndexName = indexName, Tooltip = toolTip };
-            series.AddPoint(date, 1, tooltip);
-            series.AddPoint(date.AddSeconds(1), 2, tooltip);
+            series.AddPoint(date, 1);
+            series.AddPoint(date.AddSeconds(1), 2);
 
             var serializedSeries = JsonConvert.SerializeObject(series);
             var result = (Series) JsonConvert.DeserializeObject(serializedSeries, typeof(Series));

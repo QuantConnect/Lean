@@ -71,6 +71,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             foreach (var request in requests)
             {
                 var history = _brokerage.GetHistory(request);
+                if (history == null)
+                {
+                    // doesn't support this history request, that's okay
+                    continue;
+                }
                 var subscription = CreateSubscription(request, history);
 
                 _dataPermissionManager.AssertConfiguration(subscription.Configuration, request.StartTimeLocal, request.EndTimeLocal);
@@ -78,6 +83,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 subscriptions.Add(subscription);
             }
 
+            if (subscriptions.Count == 0)
+            {
+                return null;
+            }
             return CreateSliceEnumerableFromSubscriptions(subscriptions, sliceTimeZone);
         }
     }

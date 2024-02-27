@@ -467,13 +467,21 @@ namespace QuantConnect.Securities
                 default:
                     throw new ArgumentOutOfRangeException(nameof(localDateTime), localDateTime, null);
             }
+
+            var hasEarlyClose = _earlyCloses.TryGetValue(localDateTime.Date, out var earlyCloseTime);
+            var hasLateOpen = _lateOpens.TryGetValue(localDateTime.Date, out var lateOpenTime);
+            if (!hasEarlyClose && !hasLateOpen)
+            {
+                return marketHours;
+            }
+
             IReadOnlyList<MarketHoursSegment> marketHoursSegments = marketHours.Segments;
 
             // If the earlyCloseTime is between a segment, change the close time with it
             // and add it after the segments prior to the earlyCloseTime
             // Otherwise, just take the segments prior to the earlyCloseTime
             List<MarketHoursSegment> segmentsEarlyClose = null;
-            if (_earlyCloses.TryGetValue(localDateTime.Date, out var earlyCloseTime))
+            if (hasEarlyClose)
             {
                 var index = marketHoursSegments.Count;
                 MarketHoursSegment newSegment = null;
@@ -500,8 +508,6 @@ namespace QuantConnect.Securities
                     segmentsEarlyClose.Add(newSegment);
                 }
             }
-
-            var hasLateOpen = _lateOpens.TryGetValue(localDateTime.Date, out var lateOpenTime);
 
             // It could be the case we have a late open after an early close (the market resumes after the early close), in that case, we should take
             // the segments before the early close and the the segments after the late opens and append them. Therefore, if that's not the case, this is,

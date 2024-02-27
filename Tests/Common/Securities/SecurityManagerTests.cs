@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common.Securities
             SymbolCache.Clear();
 
             var timeKeeper = new TimeKeeper(new DateTime(2015, 12, 07));
-            _subscriptionManager = new SubscriptionManager();
+            _subscriptionManager = new SubscriptionManager(NullTimeKeeper.Instance);
             _subscriptionManager.SetDataManager(new DataManagerStub(timeKeeper));
         }
 

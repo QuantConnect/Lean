@@ -35,9 +35,11 @@ namespace QuantConnect.Tests.Research
         [TestCase(null)]
         public void SetsDeploymentTarget(DeploymentTarget? deploymentTarget)
         {
+            Config.Reset();
             if (deploymentTarget.HasValue)
             {
                 Config.Set("deployment-target", JToken.FromObject(deploymentTarget));
+                Config.Write();
             }
             else
             {
