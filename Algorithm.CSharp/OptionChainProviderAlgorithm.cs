@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (otmCalls.Count() != 0)
                 {
                     _optionContract = otmCalls.OrderBy(x => x.ID.Date)
-                    .ThenBy(x => (x.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(x.ID.Market, x, x.SecurityType, "USD").StrikeMultiplier) - underlyingPrice)
+                        .ThenBy(x => (x.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(x.ID.Market, x, x.SecurityType, "USD").StrikeMultiplier) - underlyingPrice)
                                           .FirstOrDefault();
                     if (_contractsAdded.Add(_optionContract))
                     {

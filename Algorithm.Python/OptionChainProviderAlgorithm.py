@@ -57,11 +57,11 @@ class OptionChainProviderAlgorithm(QCAlgorithm):
         self.underlyingPrice = self.Securities[self.equity.Symbol].Price
         # filter the out-of-money call options from the contract list which expire in 10 to 30 days from now on
         otm_calls = [i for i in contracts if i.ID.OptionRight == OptionRight.Call and
-                                            i.ID.StrikePrice - self.underlyingPrice > 0 and
+                                            (i.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(i.ID.Market, i, i.SecurityType, "USD").StrikeMultiplier) - self.underlyingPrice > 0 and
                                             10 < (i.ID.Date - data.Time).days < 30]
         if len(otm_calls) > 0:
             contract = sorted(sorted(otm_calls, key = lambda x: x.ID.Date),
-                                                     key = lambda x: x.ID.StrikePrice - self.underlyingPrice)[0]
+                                                     key = lambda x: (x.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(x.ID.Market, x, x.SecurityType, "USD").StrikeMultiplier) - self.underlyingPrice)[0]
             if contract not in self.contractsAdded:
                 self.contractsAdded.add(contract)
                 # use AddOptionContract() to subscribe the data for specified contract
