@@ -134,7 +134,7 @@ namespace QuantConnect.Securities.Option
             }
 
             // calculating P/L of the two transactions (exercise option and then close underlying position)
-            var altPnL = (underlyingPrice - option.StrikePrice) * underlyingQuantity * underlying.QuoteCurrency.ConversionRate * option.ContractUnitOfTrade
+            var altPnL = (underlyingPrice - option.ScaledStrikePrice) * underlyingQuantity * underlying.QuoteCurrency.ConversionRate * option.ContractUnitOfTrade
                         - underlyingOrderFee2Amount
                         - holding.AveragePrice * holding.AbsoluteQuantity * option.SymbolProperties.ContractMultiplier * option.QuoteCurrency.ConversionRate
                         - optionOrderFee2;

@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
             var isFirstStep = !Portfolio.Invested;
             if (isFirstStep)
             {
-                _atmStrike = chain.MinBy(x => Math.Abs(x.Strike - chain.Underlying.Price)).Strike;
+                _atmStrike = chain.MinBy(x => Math.Abs(x.ScaledStrike - chain.Underlying.Price)).Strike;
             }
 
             var puts = chain.Where(x => x.Strike == _atmStrike && x.Right == OptionRight.Put).ToList();

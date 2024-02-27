@@ -49,6 +49,11 @@ namespace QuantConnect.Data.Market
         public decimal Strike => Symbol.ID.StrikePrice;
 
         /// <summary>
+        /// Gets the strike price multiplied by the strike multiplier
+        /// </summary>
+        public decimal ScaledStrike => Strike * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Symbol.ID.Market, Symbol, Symbol.SecurityType, "USD").StrikeMultiplier;
+
+        /// <summary>
         /// Gets the expiration date
         /// </summary>
         public DateTime Expiry => Symbol.ID.Date;

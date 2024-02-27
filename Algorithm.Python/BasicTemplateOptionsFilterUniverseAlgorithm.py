@@ -44,7 +44,7 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
         universe = universe.WeeklysOnly().Expiration(0, 1)
         return [symbol for symbol in universe 
                 if symbol.ID.OptionRight != OptionRight.Put 
-                and -10 < universe.Underlying.Price - symbol.ID.StrikePrice < 10]
+                and -10 < universe.Underlying.Price - (symbol.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD").StrikeMultiplier) < 10]
 
     def OnData(self,slice):
         if self.Portfolio.Invested: return

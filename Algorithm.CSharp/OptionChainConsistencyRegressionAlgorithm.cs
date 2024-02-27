@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
                         from optionContract in chain.OrderByDescending(x => x.Strike)
                         where optionContract.Right == OptionRight.Call
                         where optionContract.Expiry == Time.Date
-                        where optionContract.Strike < chain.Underlying.Price
+                        where optionContract.ScaledStrike < chain.Underlying.Price
                         select optionContract
                         ).Skip(2).FirstOrDefault();
 

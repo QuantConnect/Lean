@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var oufOfTheMoneyCall = contracts.First(contract => contract.Right == OptionRight.Call
                         && contract.Expiry == oufOfTheMoneyPut.Expiry
-                        && contract.Strike > chain.Underlying.Price);
+                        && contract.ScaledStrike > chain.Underlying.Price);
 
                     var moreOufOfTheMoneyCall = contracts.First(contract => contract.Right == OptionRight.Call
                         && contract.Expiry == oufOfTheMoneyPut.Expiry

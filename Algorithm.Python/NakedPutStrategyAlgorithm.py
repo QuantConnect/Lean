@@ -25,7 +25,7 @@ class NakedPutStrategyAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
         return 2
 
     def TradeStrategy(self, chain: OptionChain, option_symbol: Symbol):
-        contracts = sorted(sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.Strike)),
+        contracts = sorted(sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.ScaledStrike)),
                            key = lambda x: x.Expiry, reverse=True)
 
         if len(contracts) == 0: return

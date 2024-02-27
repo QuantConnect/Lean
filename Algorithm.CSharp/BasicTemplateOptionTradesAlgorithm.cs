@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     // find the second call strike under market price expiring today
                     var contract = chain
-                        .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                        .OrderBy(x => Math.Abs(chain.Underlying.Price - x.ScaledStrike))
                         .ThenByDescending(x => x.Expiry)
                         .FirstOrDefault();
 

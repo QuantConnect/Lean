@@ -87,7 +87,7 @@ namespace QuantConnect.Securities.Option
                 var optionValue = optionSecurity.Holdings.GetQuantityValue(optionPosition.Quantity).InAccountCurrency;
 
                 // mark price, strike price
-                var underlyingPriceToEvaluate = Math.Min(underlyingSecurity.Price, optionSecurity.StrikePrice);
+                var underlyingPriceToEvaluate = Math.Min(underlyingSecurity.Price, optionSecurity.ScaledStrikePrice);
                 var underlyingHypotheticalValue = underlyingSecurity.Holdings.GetQuantityValue(underlyingPosition.Quantity, underlyingPriceToEvaluate).InAccountCurrency;
 
                 var hypotheticalMarginRequired = underlyingSecurity.BuyingPowerModel.GetMaintenanceMargin(

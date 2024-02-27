@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             var optionContracts = slice.OptionChains.GetValue(_optionSymbol);
             var underlyingPrice = Securities[_optionSymbol.Underlying].Price;
-            var strikes = optionContracts.Select(o => o.Strike)
+            var strikes = optionContracts.Select(o => o.ScaledStrike)
                 // when the strike matches the underlying price it's not taken into account in the +1 -1 range
                 .Where(strike => strike != underlyingPrice)
                 .ToHashSet();

@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // we find at the money (ATM) put contract with closest expiration
                 var atmContract = chain
                     .OrderBy(x => x.Expiry)
-                    .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                    .ThenBy(x => Math.Abs(chain.Underlying.Price - x.ScaledStrike))
                     .ThenByDescending(x => x.Right)
                     .FirstOrDefault();
 

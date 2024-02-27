@@ -45,9 +45,9 @@ namespace QuantConnect.Algorithm.CSharp
                         .ThenBy(x => x.Strike)
                         .ToList();
 
-                    var oufOfTheMoneyCall = contracts.Last(contract => contract.Right == OptionRight.Call && contract.Strike > chain.Underlying.Price);
+                    var oufOfTheMoneyCall = contracts.Last(contract => contract.Right == OptionRight.Call && contract.ScaledStrike > chain.Underlying.Price);
                     var oufOfTheMoneyPut = contracts.Last(contract => contract.Right == OptionRight.Put && contract.Expiry == oufOfTheMoneyCall.Expiry
-                        && contract.Strike < chain.Underlying.Price);
+                        && contract.ScaledStrike < chain.Underlying.Price);
 
                     var initialMargin = Portfolio.MarginRemaining;
                     MarketOrder(oufOfTheMoneyPut.Symbol, 10);

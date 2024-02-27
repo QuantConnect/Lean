@@ -210,6 +210,11 @@ namespace QuantConnect.Securities.Option
         public decimal StrikePrice => Symbol.ID.StrikePrice;
 
         /// <summary>
+        /// Gets the strike price multiplied by the strike multiplier
+        /// </summary>
+        public decimal ScaledStrikePrice => StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Symbol.ID.Market, Symbol, Symbol.SecurityType, "USD").StrikeMultiplier;
+
+        /// <summary>
         /// Gets the expiration date
         /// </summary>
         public DateTime Expiry => Symbol.ID.Date;
@@ -329,7 +334,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public decimal GetIntrinsicValue(decimal underlyingPrice)
         {
-            return OptionPayoff.GetIntrinsicValue(underlyingPrice, StrikePrice, Right);
+            return OptionPayoff.GetIntrinsicValue(underlyingPrice, ScaledStrikePrice, Right);
         }
 
         /// <summary>
@@ -339,7 +344,7 @@ namespace QuantConnect.Securities.Option
         /// <returns></returns>
         public decimal GetPayOff(decimal underlyingPrice)
         {
-            return OptionPayoff.GetPayOff(underlyingPrice, StrikePrice, Right);
+            return OptionPayoff.GetPayOff(underlyingPrice, ScaledStrikePrice, Right);
         }
 
         /// <summary>
@@ -349,7 +354,7 @@ namespace QuantConnect.Securities.Option
         /// <returns></returns>
         public decimal OutOfTheMoneyAmount(decimal underlyingPrice)
         {
-            return Math.Max(0, Right == OptionRight.Call ? StrikePrice - underlyingPrice : underlyingPrice - StrikePrice);
+            return Math.Max(0, Right == OptionRight.Call ? ScaledStrikePrice - underlyingPrice : underlyingPrice - ScaledStrikePrice);
         }
 
         /// <summary>

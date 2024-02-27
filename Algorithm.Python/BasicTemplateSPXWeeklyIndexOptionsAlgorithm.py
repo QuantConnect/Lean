@@ -51,7 +51,7 @@ class BasicTemplateSPXWeeklyIndexOptionsAlgorithm(QCAlgorithm):
         # we sort the contracts to find at the money (ATM) contract with closest expiration
         contracts = sorted(sorted(sorted(chain, \
             key = lambda x: x.Expiry), \
-            key = lambda x: abs(chain.Underlying.Price - x.Strike)), \
+            key = lambda x: abs(chain.Underlying.Price - x.ScaledStrike)), \
             key = lambda x: x.Right, reverse=True)
 
         # if found, buy until it expires
