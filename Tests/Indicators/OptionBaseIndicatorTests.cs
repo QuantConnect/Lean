@@ -320,7 +320,7 @@ from AlgorithmImports import *
 class TestDividendYieldModel:
     CallCount = 0
 
-    def GetDividendYield(self, symbol: Symbol, date: datetime) -> float:
+    def GetDividendYield(self, date: datetime) -> float:
         TestDividendYieldModel.CallCount += 1
         return 0.5
 

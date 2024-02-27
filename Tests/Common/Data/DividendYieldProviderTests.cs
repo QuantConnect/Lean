@@ -84,8 +84,8 @@ namespace QuantConnect.Tests.Common.Data
 
             using var fileProviderTest2 = new DividendYieldProviderTest(Symbols.SPY);
 
-            var spyYield = fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
-            Assert.AreEqual(1, fileProviderTest.FetchCount);
+            var spyYield = fileProviderTest2.GetDividendYield(new DateTime(2020, 1, 1));
+            Assert.AreEqual(1, fileProviderTest2.FetchCount);
 
             Assert.AreNotEqual(applYield, spyYield);
         }
