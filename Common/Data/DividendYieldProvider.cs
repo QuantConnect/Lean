@@ -33,8 +33,8 @@ namespace QuantConnect.Data
         protected static Task _cacheClearTask;
         private static readonly object _lock = new();
 
-        private readonly DateTime _firstDividendYieldDate = Time.Start;
-        private decimal _lastDividendYield;
+        private DateTime _firstDividendYieldDate = Time.Start;
+        private decimal _lastDividendYield = -1;
         private readonly Symbol _symbol;
 
         /// <summary>
@@ -110,8 +110,18 @@ namespace QuantConnect.Data
                 }
             }
 
+            if (symbolDividend == null)
+            {
+                return DefaultDividendYieldRate;
+            }
+
             if (!symbolDividend.TryGetValue(date.Date, out var dividendYield))
             {
+                if (_lastDividendYield == -1)
+                {
+                    _firstDividendYieldDate = symbolDividend.OrderBy(x => x.Key).First().Key;
+                    _lastDividendYield = symbolDividend.OrderBy(x => x.Key).Last().Value;
+                }
                 return date < _firstDividendYieldDate
                     ? DefaultDividendYieldRate
                     : _lastDividendYield;
@@ -135,9 +145,10 @@ namespace QuantConnect.Data
             var symbolDividends = FromCorporateFactorRow(corporateFactors, symbol);
             if (symbolDividends.Count == 0)
             {
-                return new();
+                return null;
             }
 
+            _firstDividendYieldDate = symbolDividends.Keys.Min();
             var lastDate = symbolDividends.Keys.Where(x => x != Time.EndOfTime).Max();
 
             // Sparse the discrete data points into continuous data for every day
@@ -167,7 +178,7 @@ namespace QuantConnect.Data
 
             // calculate the dividend rate from each payout
             var subsequentRate = 0m;
-            foreach (var row in corporateFactors.OrderByDescending(corporateFactor => corporateFactor.Date))
+            foreach (var row in corporateFactors.Where(x => x.Date != Time.EndOfTime).OrderByDescending(corporateFactor => corporateFactor.Date))
             {
                 var dividendYield = 1 / row.PriceFactor - 1 - subsequentRate;
                 dividendYieldProvider[row.Date] = dividendYield;
