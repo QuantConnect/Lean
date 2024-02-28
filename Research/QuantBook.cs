@@ -119,11 +119,11 @@ namespace QuantConnect.Research
                 Config.Reset();
 
                 // Create our handlers with our composer instance
-                var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer, researchMode: true);
                 var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
-
                 // init the API
                 systemHandlers.Initialize();
+                var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer, researchMode: true);
+;
 
                 var algorithmPacket = new BacktestNodePacket
                 {
