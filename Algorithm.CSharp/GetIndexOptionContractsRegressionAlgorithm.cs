@@ -15,56 +15,73 @@
 
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Util;
-using System.Diagnostics.Contracts;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm to test we can get option contracts for NQX index option
+    /// Regression algorithm to test we can get and trade option contracts for NQX index option
     /// </summary>
     public class GetIndexOptionContractsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _nqx;
+        private HashSet<int> _orderIds;
+        private DateTime _expiration = new DateTime(2021, 3, 19);
+        private const decimal _initialCash = 100000m;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2021, 2, 8);
-            SetEndDate(2021, 2, 20);
-            SetCash(100000);
+            SetStartDate(2021, 3, 18);
+            SetEndDate(2021, 3, 30);
+            SetCash(_initialCash);
             UniverseSettings.Resolution = Resolution.Hour;
 
             var index = AddIndex("NDX", Resolution.Hour).Symbol;
             var option = AddIndexOption(index, "NQX", Resolution.Hour);
-            option.SetFilter(universe => universe.IncludeWeeklys().Strikes(-2, 2).Expiration(0, 30));
+            option.SetFilter(universe => universe.IncludeWeeklys().Strikes(-1, 1).Expiration(0, 30));
 
             _nqx = option.Symbol;
+            _orderIds = new HashSet<int>();
         }
 
         public override void OnData(Slice slice)
         {
             var weekly_chain = slice.OptionChains.get(_nqx);
 
-            if (!weekly_chain.IsNullOrEmpty())
+            if (!weekly_chain.IsNullOrEmpty() && !Portfolio.Invested)
             {
-                foreach (var contract in weekly_chain)
+                foreach (var contract in weekly_chain.Where(x => x.Symbol.ID.Date == _expiration))
                 {
-                    if (Portfolio.Invested)
-                    {
-                        continue;
-                    }
-
-                    MarketOrder(contract.Symbol, 1);
+                    //var option = AddOptionContract(contract.Symbol).Symbol;
+                    var ticket = MarketOrder(contract.Symbol, 1);
+                    _orderIds.Add(ticket.OrderId);
                 }
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
+            var exerciseOrders = Transactions.GetOrders().Where(x => !_orderIds.Contains(x.Id));
+            if (!exerciseOrders.Where(x => x.Tag.Contains("OTM")).Any())
+            {
+                throw new Exception($"At least one order should have been exercised OTM");
+            }
+
+            if (!exerciseOrders.Where(x => !x.Tag.Contains("OTM")).Any())
+            {
+                throw new Exception($"At least one order should have been exercised ITM");
+            }
+
+            if (Portfolio.TotalPortfolioValue <= _initialCash)
+            {
+                throw new Exception($"Since one order was expected to be exercised ITM, Total Portfolio Value was expected to be higher than {_initialCash}, but was {Portfolio.TotalPortfolioValue}");
+            }
         }
 
         /// <summary>
@@ -80,7 +97,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1568755;
+        public long DataPoints => 310;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -92,31 +109,31 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "3"},
+            {"Total Trades", "4"},
             {"Average Win", "0%"},
-            {"Average Loss", "-1.98%"},
-            {"Compounding Annual Return", "2914.619%"},
-            {"Drawdown", "2.700%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "11.545%"},
-            {"Sharpe Ratio", "30.282"},
-            {"Sortino Ratio", "1978.245"},
-            {"Probabilistic Sharpe Ratio", "99.961%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Average Loss", "-20.28%"},
+            {"Compounding Annual Return", "356046085524216.00%"},
+            {"Drawdown", "2.100%"},
+            {"Expectancy", "-0.5"},
+            {"Net Profit", "173.533%"},
+            {"Sharpe Ratio", "16684569461391.4"},
+            {"Sortino Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "93.836%"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "12.417"},
-            {"Beta", "0.116"},
-            {"Annual Standard Deviation", "0.41"},
-            {"Annual Variance", "0.168"},
-            {"Information Ratio", "30.268"},
-            {"Tracking Error", "0.411"},
-            {"Treynor Ratio", "107.13"},
+            {"Alpha", "126933886627694"},
+            {"Beta", "-3.622"},
+            {"Annual Standard Deviation", "7.608"},
+            {"Annual Variance", "57.88"},
+            {"Information Ratio", "16672547463440.3"},
+            {"Tracking Error", "7.613"},
+            {"Treynor Ratio", "-35041543127385.24"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "NQX XLZL7QT89Z7Y|NDX 31"},
-            {"Portfolio Turnover", "0.30%"},
-            {"OrderListHash", "7bedffc0a9d66947510a794411b54dd9"}
+            {"Estimated Strategy Capacity", "$8000.00"},
+            {"Lowest Capacity Asset", "NQX 31M220FF62ZSE|NDX 31"},
+            {"Portfolio Turnover", "3.01%"},
+            {"OrderListHash", "8290e263bf44a7be878bdb0289878547"}
         };
     }
 }
