@@ -29,6 +29,11 @@ namespace QuantConnect.Indicators
         protected readonly Symbol _optionSymbol;
 
         /// <summary>
+        /// Mirror option symbol (by option right), for implied volatility
+        /// </summary>
+        protected Symbol _oppositeOptionSymbol { get; private set; }
+
+        /// <summary>
         /// Underlying security's symbol object
         /// </summary>
         protected Symbol _underlyingSymbol => _optionSymbol.Underlying;
@@ -84,9 +89,19 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> Price { get; }
 
         /// <summary>
+        /// Gets the mirror option price level, for implied volatility
+        /// </summary>
+        protected IndicatorBase<IndicatorDataPoint> _oppositePrice { get; private set; }
+
+        /// <summary>
         /// Gets the underlying's price level
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> UnderlyingPrice { get; }
+
+        /// <summary>
+        /// Flag if mirror option is implemented for parity type calculation
+        /// </summary>
+        public bool UseMirrorContract => _oppositeOptionSymbol != null;
 
         /// <summary>
         /// Initializes a new instance of the OptionIndicatorBase class
@@ -98,7 +113,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The lookback period of volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek/IV</param>
         protected OptionIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, 
-            int period = 2, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 2)
             : base(name)
         {
             var sid = option.ID;
@@ -121,6 +136,16 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// To set the mirror option contract for parity type calculation
+        /// </summary>
+        /// <param name="mirrorOption">the mirror option contract symbol</param>
+        public void SetMirrorOptionContract(Symbol mirrorOption)
+        {
+            _oppositeOptionSymbol = mirrorOption;
+            _oppositePrice = new Identity(Name + "_OppositeClose");
+        }
+
+        /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public int WarmUpPeriod { get; set; }
@@ -135,6 +160,11 @@ namespace QuantConnect.Indicators
             Price.Reset();
             UnderlyingPrice.Reset();
             base.Reset();
+
+            if (UseMirrorContract)
+            {
+                _oppositePrice.Reset();
+            }
         }
     }
 }
