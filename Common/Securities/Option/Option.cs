@@ -212,7 +212,7 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Gets the strike price multiplied by the strike multiplier
         /// </summary>
-        public decimal ScaledStrikePrice => StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Symbol.ID.Market, Symbol, Symbol.SecurityType, "USD").StrikeMultiplier;
+        public decimal ScaledStrikePrice => StrikePrice * SymbolProperties.StrikeMultiplier;
 
         /// <summary>
         /// Gets the expiration date
