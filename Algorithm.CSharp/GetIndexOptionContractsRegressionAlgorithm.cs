@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2021, 3, 18);
-            SetEndDate(2021, 3, 30);
+            SetEndDate(2021, 3, 23);
             SetCash(_initialCash);
             UniverseSettings.Resolution = Resolution.Hour;
 
@@ -97,7 +97,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 310;
+        public long DataPoints => 160;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -112,27 +112,27 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "-20.28%"},
-            {"Compounding Annual Return", "356046085524216.00%"},
+            {"Compounding Annual Return", "79228162514264337593543950335%"},
             {"Drawdown", "2.100%"},
             {"Expectancy", "-0.5"},
             {"Net Profit", "173.533%"},
-            {"Sharpe Ratio", "16684569461391.4"},
+            {"Sharpe Ratio", "6.71649879978702E+27"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "93.836%"},
+            {"Probabilistic Sharpe Ratio", "95.428%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "126933886627694"},
-            {"Beta", "-3.622"},
-            {"Annual Standard Deviation", "7.608"},
-            {"Annual Variance", "57.88"},
-            {"Information Ratio", "16672547463440.3"},
-            {"Tracking Error", "7.613"},
-            {"Treynor Ratio", "-35041543127385.24"},
+            {"Alpha", "7.922816251426434E+28"},
+            {"Beta", "4.588"},
+            {"Annual Standard Deviation", "11.796"},
+            {"Annual Variance", "139.147"},
+            {"Information Ratio", "6.718097080548688E+27"},
+            {"Tracking Error", "11.793"},
+            {"Treynor Ratio", "1.726981543228595E+28"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$8000.00"},
             {"Lowest Capacity Asset", "NQX 31M220FF62ZSE|NDX 31"},
-            {"Portfolio Turnover", "3.01%"},
+            {"Portfolio Turnover", "6.51%"},
             {"OrderListHash", "8290e263bf44a7be878bdb0289878547"}
         };
     }
