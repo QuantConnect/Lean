@@ -29,6 +29,11 @@ namespace QuantConnect.Indicators
         /// The Cox-Ross-Rubinstein binomial tree model (CRR model)
         /// </summary>
         /// <remarks>Preferred on calculating greeks for American options</remarks>
-        BinomialCoxRossRubinstein
+        BinomialCoxRossRubinstein,
+        /// <summary>
+        /// The forward binomial tree model, or Cox-Ross-Rubinstein with drift model
+        /// </summary>
+        /// <remarks>Preferred on replicating IB IV for American options</remarks>
+        ForwardTree
     }
 }

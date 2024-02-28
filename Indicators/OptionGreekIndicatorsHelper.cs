@@ -85,8 +85,36 @@ namespace QuantConnect.Indicators
             }
             var downFactor = 1m / upFactor;
             var probUp = (DecimalMath(Math.Exp, (riskFreeRate - dividendYield) * deltaTime) - downFactor) / (upFactor - downFactor);
-            var probDown = 1m - probUp;
 
+            return BinomialTheoreticalPrice(deltaTime, probUp, upFactor, riskFreeRate, spotPrice, strikePrice, optionType, steps);
+        }
+
+        internal static decimal ForwardTreeTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice,
+            decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, OptionRight optionType, int steps = Steps)
+        {
+            var deltaTime = timeToExpiration / steps;
+            var discount = DecimalMath(Math.Exp, (riskFreeRate - dividendYield) * deltaTime);
+            var upFactor = DecimalMath(Math.Exp, volatility * DecimalMath(Math.Sqrt, deltaTime)) * discount;
+            if (upFactor == 1m)
+            {
+                // Introduce a very small factor to avoid constant tree while staying low volatility
+                upFactor = 1.0001m;
+            }
+            var downFactor = DecimalMath(Math.Exp, -volatility * DecimalMath(Math.Sqrt, deltaTime)) * discount;
+            if (downFactor == 1m)
+            {
+                // Introduce a very small factor to avoid constant tree while staying low volatility
+                downFactor = 0.9999m;
+            }
+            var probUp = (discount - downFactor) / (upFactor - downFactor);
+
+            return BinomialTheoreticalPrice(deltaTime, probUp, upFactor, riskFreeRate, spotPrice, strikePrice, optionType, steps);
+        }
+
+        private static decimal BinomialTheoreticalPrice(decimal deltaTime, decimal probUp, decimal upFactor, decimal riskFreeRate,
+            decimal spotPrice, decimal strikePrice, OptionRight optionType, int steps = Steps)
+        {
+            var probDown = 1m - probUp;
             var values = new decimal[steps + 1];
 
             for (int i = 0; i <= steps; i++)
@@ -100,6 +128,12 @@ namespace QuantConnect.Indicators
                 for (int i = 0; i <= period; i++)
                 {
                     var binomialValue = DecimalMath(Math.Exp, -riskFreeRate * deltaTime) * (values[i] * probDown + values[i + 1] * probUp);
+                    // No advantage for American put option to exercise early in risk-neutral setting
+                    if (optionType == OptionRight.Put)
+                    {
+                        values[i] = binomialValue;
+                        continue;
+                    }
                     var nextPrice = spotPrice * Convert.ToDecimal(Math.Pow((double)upFactor, 2 * i - period));
                     var exerciseValue = OptionPayoff.GetIntrinsicValue(nextPrice, strikePrice, optionType);
                     values[i] = Math.Max(binomialValue, exerciseValue);
