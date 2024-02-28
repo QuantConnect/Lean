@@ -27,7 +27,7 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
         interestRateProvider = InterestRateProvider()
         dividendYieldProvider = DividendYieldProvider(self.aapl)
 
-        self.impliedVolatility = ImpliedVolatility(self.option, interestRateProvider, dividendYieldProvider, 2, OptionPricingModelType.BlackScholes)
+        self.impliedVolatility = ImpliedVolatility(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BlackScholes, 2)
         self.delta = Delta(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BinomialCoxRossRubinstein, OptionPricingModelType.BlackScholes)
 
     def OnData(self, slice):
