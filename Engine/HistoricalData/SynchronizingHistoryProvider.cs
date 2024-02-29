@@ -14,18 +14,20 @@
 */
 
 using System;
-using System.Collections.Generic;
+using NodaTime;
 using System.Linq;
 using System.Threading;
-using NodaTime;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
-using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Data;
+using QuantConnect.Securities;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
+using System.Collections.Immutable;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Lean.Engine.HistoricalData
 {
@@ -150,5 +152,34 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
             return SubscriptionUtils.Create(subscriptionRequest, reader);
         }
+
+#pragma warning disable CA1822
+        /// <summary>
+        /// Some historical provider supports very old data. In fact, the ticker could be restructured to new one.
+        /// </summary>
+        /// <param name="mapFileProvider">Provides instances of <see cref="MapFileResolver"/> at run time</param>
+        /// <param name="symbol">Represents a unique security identifier</param>
+        /// <param name="startDateTime">The date since we began our search for the historical name of the symbol.</param>
+        /// <returns>Distinct and immutable HashSet of ticker names</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="mapFileProvider"/> is null.</exception>
+        /// <example>
+        /// GOOGLE: IPO: August 19, 2004 Name = GOOG then it was restructured: from "GOOG" to "GOOGL" on April 2, 2014
+        /// For instances:
+        /// startDateTime = 2013 year, it returns { "GOOG", "GOOGL" }
+        /// startDateTime = 2023 year, it returns { "GOOGL" }
+        /// </example>
+        protected ImmutableHashSet<string> RetrieveSymbolHistoricalDefinitions(IMapFileProvider mapFileProvider, Symbol symbol, DateTime startDateTime)
+        {
+            if (mapFileProvider == null)
+            {
+                throw new ArgumentNullException(nameof(mapFileProvider));
+            }
+
+            var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
+            var symbolMapFile = mapFileResolver.ResolveMapFile(symbol);
+
+            return symbolMapFile.Where(x => x.Date >= startDateTime).Select(x => x.MappedSymbol).ToImmutableHashSet();
+        }
+#pragma warning restore CA1822
     }
 }

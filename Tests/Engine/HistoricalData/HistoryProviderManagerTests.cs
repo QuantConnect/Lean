@@ -16,7 +16,7 @@
 
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
+using System.Globalization;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
@@ -69,24 +69,12 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         {
             var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
 
-            var result = _historyProviderWrapper.GetHistory(
-                new[]
-                {
-                    new HistoryRequest(new DateTime(2008, 01,01),
-                        new DateTime(2008, 01,05),
-                        typeof(TradeBar),
-                        symbol,
-                        Resolution.Daily,
-                        SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                        TimeZones.NewYork,
-                        null,
-                        false,
-                        false,
-                        DataNormalizationMode.Raw,
-                        TickType.Trade)
-                },
-                TimeZones.NewYork).ToList();
+            var request = GetHistoryRequest(symbol, new DateTime(2008, 01, 01), new DateTime(2008, 01, 05), Resolution.Daily, TickType.Trade);
 
+            var result = _historyProviderWrapper.GetHistory(new[] { request }, TimeZones.NewYork).ToList();
+
+            Assert.IsNotNull(result);
+            Assert.IsNotEmpty(result);
             Assert.AreEqual(5, _historyProviderWrapper.DataPointCount);
         }
 
@@ -124,23 +112,9 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 32,
                 new DateTime(2013, 07, 20));
 
-            var result = _historyProviderWrapper.GetHistory(
-                new[]
-                {
-                    new HistoryRequest(new DateTime(2013, 06,28),
-                        new DateTime(2013, 07,03),
-                        typeof(QuoteBar),
-                        symbol,
-                        Resolution.Minute,
-                        SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                        TimeZones.NewYork,
-                        null,
-                        false,
-                        false,
-                        DataNormalizationMode.Raw,
-                        TickType.Quote)
-                },
-                TimeZones.NewYork).ToList();
+            var request = GetHistoryRequest(symbol, new DateTime(2013, 06, 28), new DateTime(2013, 07, 03), Resolution.Minute, TickType.Quote);
+
+            var result = _historyProviderWrapper.GetHistory(new[] { request }, TimeZones.NewYork).ToList();
 
             Assert.IsNotEmpty(result);
 
@@ -161,23 +135,9 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         {
             var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
 
-            var result = _historyProviderWrapper.GetHistory(
-                new[]
-                {
-                    new HistoryRequest(new DateTime(2008, 01,01),
-                        new DateTime(2008, 01,05),
-                        typeof(TradeBar),
-                        symbol,
-                        Resolution.Daily,
-                        SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                        TimeZones.NewYork,
-                        null,
-                        false,
-                        false,
-                        DataNormalizationMode.Raw,
-                        TickType.Trade)
-                },
-                TimeZones.NewYork).ToList();
+            var request = GetHistoryRequest(symbol, new DateTime(2008, 01, 01), new DateTime(2008, 01, 05), Resolution.Daily, TickType.Trade);
+
+            var result = _historyProviderWrapper.GetHistory(new[] { request }, TimeZones.NewYork).ToList();
 
             Assert.IsNotEmpty(result);
             var firstBar = result.First().Values.Single();
@@ -191,23 +151,9 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         {
             var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
 
-            var result = _historyProviderWrapper.GetHistory(
-                new[]
-                {
-                    new HistoryRequest(new DateTime(2008, 01,01),
-                        new DateTime(2008, 01,05),
-                        typeof(TradeBar),
-                        symbol,
-                        Resolution.Daily,
-                        SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                        TimeZones.NewYork,
-                        null,
-                        false,
-                        false,
-                        DataNormalizationMode.Raw,
-                        TickType.Trade)
-                },
-                TimeZones.NewYork).ToList();
+            var request = GetHistoryRequest(symbol, new DateTime(2008, 01, 01), new DateTime(2008, 01, 05), Resolution.Daily, TickType.Trade);
+
+            var result = _historyProviderWrapper.GetHistory(new[] { request }, TimeZones.NewYork).ToList();
 
             var initialTime = DateTime.MinValue;
             foreach (var slice in result)
@@ -215,6 +161,55 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 Assert.That(slice.UtcTime, Is.GreaterThan(initialTime));
                 initialTime = slice.UtcTime;
             }
+        }
+
+        [TestCase("GOOGL", "2004/08/19", 2)] // IPO: August 19, 2004
+        [TestCase("GOOGL", "2008/02/01", 2)]
+        [TestCase("GOOGL", "2014/04/02", 2)] // The restructuring: "GOOG" to "GOOGL" 
+        [TestCase("GOOGL", "2014/02/01", 2)]
+        [TestCase("GOOGL", "2020/02/01", 1)]
+        [TestCase("GOOG", "2020/02/01", 1)]
+        [TestCase("GOOGL", "2023/02/01", 1)]
+        [TestCase("AAPL", "2008/02/01", 1)]
+        [TestCase("AAPL", "2008/02/01", 1)]
+        [TestCase("GOOCV", "2010/01/01", 2)] // IPO: March 27, 2014
+        [TestCase("GOOG", "2014/01/01", 2)]
+        [TestCase("GOOG", "2014/04/03", 1)] // The restructuring: April 2, 2014 "GOOCV" to "GOOG"
+        [TestCase("SPWR", "2005/11/17", 2)] // IPO: November 17, 2005
+        [TestCase("SPWR", "2023/11/16", 1)]
+        public void GetHistoricalSymbolNamesByDateRequest(string ticker, string startDateTimeRequest, int expectedAmount)
+        {
+            var startDateTime = DateTime.ParseExact(startDateTimeRequest, "yyyy/MM/dd", CultureInfo.InvariantCulture);
+            var endDateTime = new DateTime(2008, 01, 05);
+
+            var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+
+            var historyRequest = GetHistoryRequest(symbol, startDateTime, endDateTime, Resolution.Daily, TickType.Trade);
+
+            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(nameof(TestHistoryProvider));
+            var tickers = (historyProvider as TestHistoryProvider).RetrieveSymbolHistoricalDefinitions(historyRequest);
+
+            Assert.IsTrue(tickers.Count == expectedAmount);
+        }
+
+        private HistoryRequest GetHistoryRequest(Symbol symbol, DateTime startDateTime, DateTime endDateTime, Resolution resolution, TickType tickType)
+        {
+            var dataType = LeanData.GetDataType(resolution, tickType);
+
+            return new HistoryRequest(
+                startDateTime,
+                endDateTime,
+                dataType,
+                symbol,
+                resolution,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                TimeZones.NewYork,
+                null,
+                false,
+                false,
+                DataNormalizationMode.Raw,
+                tickType
+                );
         }
     }
 }

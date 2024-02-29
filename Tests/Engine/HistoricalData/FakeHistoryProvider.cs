@@ -17,16 +17,17 @@ using System;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using QuantConnect.Lean.Engine.HistoricalData;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Engine.HistoricalData
 {
     /// <summary>
-    /// Provides FAKE implementation of <see cref="IHistoryProvider"/>
+    /// Provides FAKE implementation of <see cref="SynchronizingHistoryProvider"/>
     /// </summary>
-    internal class TestHistoryProvider : HistoryProviderBase
+    internal class TestHistoryProvider : SynchronizingHistoryProvider
     {
         public override int DataPointCount => 2;
 
@@ -86,6 +87,16 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             OnStartDateLimited(new StartDateLimitedEventArgs(Symbols.SPY, "invalid config"));
             OnDownloadFailed(new DownloadFailedEventArgs(Symbols.SPY, "invalid config"));
             OnReaderErrorDetected(new ReaderErrorDetectedEventArgs(Symbols.SPY, "invalid config"));
+        }
+
+        /// <summary>
+        /// Get Historical Ticker Names
+        /// </summary>
+        /// <param name="requests">The historical data requests</param>
+        /// <returns></returns>
+        public ImmutableHashSet<string> RetrieveSymbolHistoricalDefinitions(HistoryRequest requests)
+        {
+            return RetrieveSymbolHistoricalDefinitions(TestGlobals.MapFileProvider, requests.Symbol, requests.StartTimeUtc);
         }
     }
 }
