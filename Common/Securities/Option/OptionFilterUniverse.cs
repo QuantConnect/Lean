@@ -54,6 +54,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Constructs OptionFilterUniverse
         /// </summary>
+        /// <param name="option">The canonical option chain security</param>
         public OptionFilterUniverse(Option.Option option)
         {
             _strikeMultiplier = option.SymbolProperties.StrikeMultiplier;
