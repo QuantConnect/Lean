@@ -55,9 +55,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             var underlyingPrice = Securities[_symbol].Price;
             var contractSymbol = OptionChainProvider.GetOptionContractList(_symbol, Time)
-            .Where(x => x.ID.StrikePrice - underlyingPrice > 0)
-            .OrderBy(x => x.ID.Date)
-            .FirstOrDefault();
+                .Where(x => x.ID.StrikePrice - underlyingPrice > 0)
+                .OrderBy(x => x.ID.Date)
+                .FirstOrDefault();
             if (contractSymbol != null)
             {
                 _optionSymbol = AddOptionContract(contractSymbol).Symbol;
