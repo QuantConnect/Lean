@@ -33,6 +33,7 @@ namespace QuantConnect.Securities
         private List<decimal> _uniqueStrikes;
         private bool _refreshUniqueStrikes;
         private DateTime _lastExchangeDate;
+        private decimal _strikeMultiplier;
 
         /// <summary>
         /// The underlying price data
@@ -53,8 +54,9 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Constructs OptionFilterUniverse
         /// </summary>
-        public OptionFilterUniverse()
+        public OptionFilterUniverse(Option.Option option)
         {
+            _strikeMultiplier = option.SymbolProperties.StrikeMultiplier;
         }
 
         /// <summary>
@@ -121,7 +123,7 @@ namespace QuantConnect.Securities
                 // the underlying. Thus we need to scale their strike prices
                 // so that we can find the underlying price among them when
                 // using BinarySearch method(as it is used below)
-                _uniqueStrikes = AllSymbols.Select(x => x.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(x.ID.Market, x, x.SecurityType, "USD").StrikeMultiplier)
+                _uniqueStrikes = AllSymbols.Select(x => x.ID.StrikePrice * _strikeMultiplier)
                     .Distinct()
                     .OrderBy(strikePrice => strikePrice)
                     .ToList();

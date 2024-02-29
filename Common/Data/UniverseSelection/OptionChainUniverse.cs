@@ -61,7 +61,7 @@ namespace QuantConnect.Data.UniverseSelection
             Option = option;
             _underlyingSymbol = new[] { Option.Symbol.Underlying };
             _universeSettings = new UniverseSettings(universeSettings) { DataNormalizationMode = DataNormalizationMode.Raw };
-            _optionFilterUniverse = new OptionFilterUniverse();
+            _optionFilterUniverse = new OptionFilterUniverse(Option);
         }
 
         /// <summary>

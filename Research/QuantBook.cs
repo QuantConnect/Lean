@@ -426,7 +426,7 @@ namespace QuantConnect.Research
                     }
                 }
 
-                var optionFilterUniverse = new OptionFilterUniverse();
+                var optionFilterUniverse = new OptionFilterUniverse(option);
                 var distinctSymbols = allSymbols.Distinct();
                 symbols = base.History(symbol.Underlying, start, end.Value, resolution)
                     .SelectMany(x =>

@@ -26,6 +26,7 @@ namespace QuantConnect.Data.Market
     public class OptionContract
     {
         private Lazy<OptionPriceModelResult> _optionPriceModelResult = new(() => OptionPriceModelResult.None);
+        private readonly decimal _strikeMultipler;
 
         /// <summary>
         /// Gets the option contract's symbol
@@ -51,7 +52,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the strike price multiplied by the strike multiplier
         /// </summary>
-        public decimal ScaledStrike => Strike * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Symbol.ID.Market, Symbol, Symbol.SecurityType, "USD").StrikeMultiplier;
+        public decimal ScaledStrike => Strike * _strikeMultipler;
 
         /// <summary>
         /// Gets the expiration date
@@ -163,6 +164,7 @@ namespace QuantConnect.Data.Market
         public OptionContract(Symbol symbol, Symbol underlyingSymbol)
         {
             Symbol = symbol;
+            _strikeMultipler = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Symbol.ID.Market, Symbol, Symbol.SecurityType, "USD").StrikeMultiplier;
             UnderlyingSymbol = underlyingSymbol;
         }
 
