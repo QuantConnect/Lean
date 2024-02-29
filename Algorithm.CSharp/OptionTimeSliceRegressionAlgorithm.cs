@@ -58,6 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
                 .Where(x => x.ID.StrikePrice - underlyingPrice > 0)
                 .OrderBy(x => x.ID.Date)
                 .FirstOrDefault();
+
             if (contractSymbol != null)
             {
                 _optionSymbol = AddOptionContract(contractSymbol).Symbol;
