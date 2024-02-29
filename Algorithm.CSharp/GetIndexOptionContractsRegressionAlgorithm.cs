@@ -28,13 +28,10 @@ namespace QuantConnect.Algorithm.CSharp
     public class GetIndexOptionContractsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _nqx;
-        private HashSet<int> _orderIds;
+        private HashSet<int> _orderIds = new HashSet<int>();
         private DateTime _expiration = new DateTime(2021, 3, 19);
         private const decimal _initialCash = 100000m;
 
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
         public override void Initialize()
         {
             SetStartDate(2021, 3, 18);
@@ -47,7 +44,6 @@ namespace QuantConnect.Algorithm.CSharp
             option.SetFilter(universe => universe.IncludeWeeklys().Strikes(-1, 1).Expiration(0, 30));
 
             _nqx = option.Symbol;
-            _orderIds = new HashSet<int>();
         }
 
         public override void OnData(Slice slice)
@@ -58,7 +54,6 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var contract in weekly_chain.Where(x => x.Symbol.ID.Date == _expiration))
                 {
-                    //var option = AddOptionContract(contract.Symbol).Symbol;
                     var ticket = MarketOrder(contract.Symbol, 1);
                     _orderIds.Add(ticket.OrderId);
                 }

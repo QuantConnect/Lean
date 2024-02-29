@@ -51,8 +51,8 @@ namespace QuantConnect.Algorithm.CSharp
             // Set our custom universe filter, Expires today, is a call, and is within 10 dollars of the current price
             option.SetFilter(universe => from symbol in universe.WeeklysOnly().Expiration(0, 1)
                                          where symbol.ID.OptionRight != OptionRight.Put &&
-                                              -10 < universe.Underlying.Price - (symbol.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD").StrikeMultiplier) &&
-                                              universe.Underlying.Price - (symbol.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD").StrikeMultiplier) < 10
+                                              -10 < universe.Underlying.Price - symbol.ID.StrikePrice &&
+                                              universe.Underlying.Price - symbol.ID.StrikePrice < 10
                                          select symbol);
 
             // use the underlying equity as the benchmark

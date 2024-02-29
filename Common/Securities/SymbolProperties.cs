@@ -93,6 +93,12 @@ namespace QuantConnect.Securities
             get;
         }
 
+        /// <summary>
+        /// Scale factor for option's strike price. For some options, such as NQX, the strike price
+        /// is based on a fraction of the underlying, thus this paramater scales the strike price so
+        /// that it can be used in comparation with the underlying such as
+        /// in <see cref="OptionFilterUniverse.Strikes(int, int)"/>
+        /// </summary>
         public decimal StrikeMultiplier
         {
             get;

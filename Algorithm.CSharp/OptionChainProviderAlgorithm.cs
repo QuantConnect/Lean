@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -60,14 +59,14 @@ namespace QuantConnect.Algorithm.CSharp
                 // filter the out-of-money call options from the contract list which expire in 10 to 30 days from now on
                 var otmCalls = (from symbol in contracts
                                 where symbol.ID.OptionRight == OptionRight.Call
-                                where (symbol.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD").StrikeMultiplier) - underlyingPrice > 0
+                                where symbol.ID.StrikePrice - underlyingPrice > 0
                                 where ((symbol.ID.Date - data.Time).TotalDays < 30 && (symbol.ID.Date - data.Time).TotalDays > 10)
                                 select symbol);
 
                 if (otmCalls.Count() != 0)
                 {
                     _optionContract = otmCalls.OrderBy(x => x.ID.Date)
-                        .ThenBy(x => (x.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(x.ID.Market, x, x.SecurityType, "USD").StrikeMultiplier) - underlyingPrice)
+                        .ThenBy(x => x.ID.StrikePrice - underlyingPrice)
                                           .FirstOrDefault();
                     if (_contractsAdded.Add(_optionContract))
                     {

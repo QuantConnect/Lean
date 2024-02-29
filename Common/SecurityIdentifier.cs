@@ -24,7 +24,6 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 

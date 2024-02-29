@@ -57,7 +57,10 @@ namespace QuantConnect.Securities.Option
                  properties.ContractMultiplier,
                  properties.MinimumPriceVariation,
                  properties.LotSize,
-                 properties.MarketTicker)
+                 properties.MarketTicker,
+                 properties.MinimumOrderSize,
+                 properties.PriceMagnifier,
+                 properties.StrikeMultiplier)
         {
             ContractUnitOfTrade = (int)properties.ContractMultiplier;
         }

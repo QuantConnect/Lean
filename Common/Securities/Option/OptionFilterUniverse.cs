@@ -115,7 +115,12 @@ namespace QuantConnect.Securities
 
             if (_refreshUniqueStrikes || _uniqueStrikes == null)
             {
-                // each day we need to recompute the unique strikes list
+                // Each day we need to recompute the unique strikes list.
+                // When computing the strike prices we need to take into account
+                // that some option's strike prices are based on a fraction of
+                // the underlying. Thus we need to scale their strike prices
+                // so that we can find the underlying price among them when
+                // using BinarySearch method(as it is used below)
                 _uniqueStrikes = AllSymbols.Select(x => x.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(x.ID.Market, x, x.SecurityType, "USD").StrikeMultiplier)
                     .Distinct()
                     .OrderBy(strikePrice => strikePrice)

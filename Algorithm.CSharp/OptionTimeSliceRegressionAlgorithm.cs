@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -56,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var underlyingPrice = Securities[_symbol].Price;
             var contractSymbol = OptionChainProvider.GetOptionContractList(_symbol, Time)
-            .Where(x => (x.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(x.ID.Market, x, x.SecurityType, "USD").StrikeMultiplier) - underlyingPrice > 0)
+            .Where(x => x.ID.StrikePrice - underlyingPrice > 0)
             .OrderBy(x => x.ID.Date)
             .FirstOrDefault();
             if (contractSymbol != null)
