@@ -78,13 +78,12 @@ namespace QuantConnect.Securities.Option
 
             // For some options, the price is based on a fraction of the underlying, such as for NQX.
             // Therefore, for those options we need to scale the price when comparing it with the
-            // underlying. Still the default value of the Strike Multiplier is 1.
-            var strikeMultiplier = option.ScaledStrikePrice;
-
+            // underlying. For that reason we use option.ScaledStrikePrice instead of
+            // option.StrikePrice
             var result =
                 symbol.ID.OptionRight == OptionRight.Call
-                    ? (underlyingPrice - symbol.ID.StrikePrice * strikeMultiplier) / underlyingPrice > _requiredInTheMoneyPercent
-                    : ((symbol.ID.StrikePrice * strikeMultiplier) - underlyingPrice) / underlyingPrice > _requiredInTheMoneyPercent;
+                    ? (underlyingPrice - option.ScaledStrikePrice) / underlyingPrice > _requiredInTheMoneyPercent
+                    : (option.ScaledStrikePrice - underlyingPrice) / underlyingPrice > _requiredInTheMoneyPercent;
 
             return result;
         }

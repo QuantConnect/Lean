@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Common.Data
             var estimator = new FedRateQLRiskFreeRateEstimator();
             var result = estimator.Estimate(option, 
                 new Slice(evaluationDate, new List<BaseData> { tick }, evaluationDate), 
-                new OptionContract(optionSymbol, spx));
+                new OptionContract(option, spx));
 
             Assert.AreEqual(rate, result);
         }

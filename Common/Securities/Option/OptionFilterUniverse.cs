@@ -33,7 +33,7 @@ namespace QuantConnect.Securities
         private List<decimal> _uniqueStrikes;
         private bool _refreshUniqueStrikes;
         private DateTime _lastExchangeDate;
-        private decimal _strikeMultiplier;
+        private decimal _underlyingScaleFactor = 1;
 
         /// <summary>
         /// The underlying price data
@@ -57,7 +57,7 @@ namespace QuantConnect.Securities
         /// <param name="option">The canonical option chain security</param>
         public OptionFilterUniverse(Option.Option option)
         {
-            _strikeMultiplier = option.SymbolProperties.StrikeMultiplier;
+            _underlyingScaleFactor = option.SymbolProperties.StrikeMultiplier;
         }
 
         /// <summary>
@@ -119,12 +119,7 @@ namespace QuantConnect.Securities
             if (_refreshUniqueStrikes || _uniqueStrikes == null)
             {
                 // Each day we need to recompute the unique strikes list.
-                // When computing the strike prices we need to take into account
-                // that some option's strike prices are based on a fraction of
-                // the underlying. Thus we need to scale their strike prices
-                // so that we can find the underlying price among them when
-                // using BinarySearch method(as it is used below)
-                _uniqueStrikes = AllSymbols.Select(x => x.ID.StrikePrice * _strikeMultiplier)
+                _uniqueStrikes = AllSymbols.Select(x => x.ID.StrikePrice)
                     .Distinct()
                     .OrderBy(strikePrice => strikePrice)
                     .ToList();
@@ -132,8 +127,13 @@ namespace QuantConnect.Securities
             }
 
             // find the current price in the list of strikes
+            // When computing the strike prices we need to take into account
+            // that some option's strike prices are based on a fraction of
+            // the underlying. Thus we need to scale the underlying internal
+            // price so that we can find it among the strike prices
+            // using BinarySearch() method(as it is used below)
             var exactPriceFound = true;
-            var index = _uniqueStrikes.BinarySearch(UnderlyingInternal.Price);
+            var index = _uniqueStrikes.BinarySearch(UnderlyingInternal.Price / _underlyingScaleFactor);
 
             // Return value of BinarySearch (from MSDN):
             // The zero-based index of item in the sorted List<T>, if item is found;
@@ -198,7 +198,7 @@ namespace QuantConnect.Securities
             AllSymbols = AllSymbols
                 .Where(symbol =>
                     {
-                        var price = symbol.ID.StrikePrice * _strikeMultiplier;
+                        var price = symbol.ID.StrikePrice;
                         return price >= minPrice && price <= maxPrice;
                     }
                 ).ToList();

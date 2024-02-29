@@ -208,10 +208,11 @@ namespace QuantConnect.Tests.Common
             var spy = Symbols.SPY;
             var evaluationDate = new DateTime(2015, 2, 19);
             var SPY_C_192_Feb19_2016E = GetOptionSymbol(spy, OptionStyle.American, OptionRight.Call);
+            var option = CreateOption(SPY_C_192_Feb19_2016E);
 
             var equity = GetEquity(spy, underlyingPrice, underlyingVol, tz);
 
-            var contract = new OptionContract(Symbols.SPY_C_192_Feb19_2016, Symbols.SPY) { Time = evaluationDate };
+            var contract = new OptionContract(option, Symbols.SPY) { Time = evaluationDate };
             var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
             optionCall.SetMarketPrice(new Tick { Value = price });
 
@@ -938,6 +939,19 @@ namespace QuantConnect.Tests.Common
             return Symbol.CreateOption(underlying.Value, Market.USA, optionStyle, optionRight, strike, (DateTime)expiry);
         }
 
+        private static Option CreateOption(Symbol symbol)
+        {
+            return new Option(
+                        SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                        new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true),
+                        new Cash(Currencies.USD, 0, 1m),
+                        new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                        ErrorCurrencyConverter.Instance,
+                        RegisteredSecurityDataTypesProvider.Null
+                    )
+            { ExerciseSettlement = SettlementType.Cash };
+        }
+
         public static Equity GetEquity(Symbol symbol, decimal underlyingPrice, decimal underlyingVol, NodaTime.DateTimeZone tz)
         {
             var equity = new Equity(
@@ -956,7 +970,8 @@ namespace QuantConnect.Tests.Common
 
         public OptionContract GetOptionContract(Symbol symbol, Symbol underlying, DateTime evaluationDate)
         {
-            return new OptionContract(symbol, underlying) { Time = evaluationDate };
+            var option = CreateOption(symbol);
+            return new OptionContract(option, underlying) { Time = evaluationDate };
         }
 
         public static Option GetOption(Symbol symbol, Equity underlying, NodaTime.DateTimeZone tz)

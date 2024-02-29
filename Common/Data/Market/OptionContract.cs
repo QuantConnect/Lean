@@ -159,12 +159,12 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionContract"/> class
         /// </summary>
-        /// <param name="symbol">The option contract symbol</param>
+        /// <param name="security">The option contract security</param>
         /// <param name="underlyingSymbol">The symbol of the underlying security</param>
-        public OptionContract(Symbol symbol, Symbol underlyingSymbol)
+        public OptionContract(ISecurityPrice security, Symbol underlyingSymbol)
         {
-            Symbol = symbol;
-            _strikeMultipler = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Symbol.ID.Market, Symbol, Symbol.SecurityType, "USD").StrikeMultiplier;
+            Symbol = security.Symbol;
+            _strikeMultipler = security.SymbolProperties.StrikeMultiplier;
             UnderlyingSymbol = underlyingSymbol;
         }
 
@@ -206,7 +206,7 @@ namespace QuantConnect.Data.Market
         /// <returns>Option contract</returns>
         public static OptionContract Create(Symbol symbol, Symbol underlyingSymbol, DateTime endTime, ISecurityPrice security, decimal underlyingLastPrice)
         {
-            return new OptionContract(symbol, underlyingSymbol)
+            return new OptionContract(security, underlyingSymbol)
             {
                 Time = endTime,
                 LastPrice = security.Close,
