@@ -52,7 +52,11 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the strike price multiplied by the strike multiplier
         /// </summary>
-        public decimal ScaledStrike => Strike * _strikeMultipler;
+        public decimal ScaledStrike
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Gets the expiration date
@@ -166,6 +170,7 @@ namespace QuantConnect.Data.Market
             Symbol = security.Symbol;
             _strikeMultipler = security.SymbolProperties.StrikeMultiplier;
             UnderlyingSymbol = underlyingSymbol;
+            ScaledStrike = Strike * _strikeMultipler;
         }
 
         /// <summary>

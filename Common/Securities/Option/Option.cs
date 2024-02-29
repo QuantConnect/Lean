@@ -189,6 +189,7 @@ namespace QuantConnect.Securities.Option
             SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));
             Underlying = underlying;
             OptionAssignmentModel = new DefaultOptionAssignmentModel();
+            ScaledStrikePrice = StrikePrice * SymbolProperties.StrikeMultiplier;
         }
 
         // save off a strongly typed version of symbol properties
@@ -212,7 +213,11 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Gets the strike price multiplied by the strike multiplier
         /// </summary>
-        public decimal ScaledStrikePrice => StrikePrice * SymbolProperties.StrikeMultiplier;
+        public decimal ScaledStrikePrice
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Gets the expiration date
