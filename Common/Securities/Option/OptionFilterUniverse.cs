@@ -197,7 +197,7 @@ namespace QuantConnect.Securities
             AllSymbols = AllSymbols
                 .Where(symbol =>
                     {
-                        var price = symbol.ID.StrikePrice * SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD").StrikeMultiplier;
+                        var price = symbol.ID.StrikePrice * _strikeMultiplier;
                         return price >= minPrice && price <= maxPrice;
                     }
                 ).ToList();
