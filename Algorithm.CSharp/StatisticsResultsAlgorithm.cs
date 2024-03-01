@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug($"\nStatistics after fill:\n\t{statisticsStr}");
 
                 // Access a single statistic
-                Log($"Total trades so far: {statistics[PerformanceMetrics.TotalTrades]}");
+                Log($"Total trades so far: {statistics[PerformanceMetrics.TotalOrders]}");
                 Log($"Sharpe Ratio: {statistics[PerformanceMetrics.SharpeRatio]}");
 
                 // --------
@@ -198,7 +198,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "93"},
+            {"Total Orders", "94"},
             {"Average Win", "0.09%"},
             {"Average Loss", "-0.03%"},
             {"Compounding Annual Return", "18.903%"},

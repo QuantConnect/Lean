@@ -31,6 +31,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Util;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -79,7 +80,7 @@ namespace QuantConnect.Tests.Algorithm
             }
 
             AlgorithmRunner.RunLocalBacktest(nameof(TestWarmupAlgorithm),
-                new Dictionary<string, string> { { "Total Trades", "1" } },
+                new Dictionary<string, string> { { PerformanceMetrics.TotalOrders, "1" } },
                 Language.CSharp,
                 AlgorithmStatus.Completed,
                 setupHandler: "TestSetupHandler");

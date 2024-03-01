@@ -14,6 +14,7 @@
 */
 
 using NUnit.Framework;
+using QuantConnect.Statistics;
 using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common
@@ -26,7 +27,7 @@ namespace QuantConnect.Tests.Common
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("SliceGetByTypeRegressionAlgorithm",
                 new Dictionary<string, string> {
-                    {"Total Trades", "1"},
+                    {PerformanceMetrics.TotalOrders, "1"},
                     {"Average Win", "0%"},
                     {"Average Loss", "0%"},
                     {"Compounding Annual Return", "284.284%"},
