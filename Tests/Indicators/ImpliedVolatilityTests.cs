@@ -46,84 +46,69 @@ namespace QuantConnect.Tests.Indicators
             DividendYieldUpdatesPerIteration = 1;
         }
 
-        [TestCase(7, 6)]
-        public void ComparesAgainstExternalData1(int callColumn, int putColumn, double errorMargin = 0.08)
+        [TestCase("american/third_party_1_greeks.csv")]
+        public void ComparesAgainstExternalDataMirrorContractMethod(string subPath, int callColumn = 7, int putColumn = 6, double errorMargin = 0.08)
         {
-            var path = Path.Combine("TestData", "greeksindicator");
-            foreach (var style in new string[] { "european", "american" })
+            var path = Path.Combine("TestData", "greeksindicator", subPath);
+            foreach (var line in File.ReadAllLines(path).Skip(3))
             {
-                var file = Path.Combine(path, style, "third_party_1_greeks.csv");
+                var items = line.Split(',');
 
-                foreach (var line in File.ReadAllLines(file).Skip(3))
-                {
-                    var items = line.Split(',');
+                var interestRate = decimal.Parse(items[^2]);
+                var dividendYield = decimal.Parse(items[^1]);
 
-                    var interestRate = decimal.Parse(items[^2]);
-                    var dividendYield = decimal.Parse(items[^1]);
+                var model = ParseSymbols(items, path.Contains("american"), out var call, out var put);
 
-                    var model = ParseSymbols(items, file.Contains("american"), out var call, out var put);
+                var callIndicator = new ImpliedVolatility(call, put, interestRate, dividendYield, model);
+                var putIndicator = new ImpliedVolatility(put, call, interestRate, dividendYield, model);
 
-                    var callIndicator = new ImpliedVolatility(call, put, interestRate, dividendYield, model);
-                    var putIndicator = new ImpliedVolatility(put, call, interestRate, dividendYield, model);
-
-                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
-                }
+                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
             }
         }
 
         // We are unsure about the smoothing function
-        [TestCase(7, 6)]
-        public void ComparesAgainstExternalData2(int callColumn, int putColumn, double errorMargin = 10)
+        [TestCase("american/third_party_2_greeks.csv")]
+        public void ComparesAgainstExternalDataSingleContractMethod(string subPath, int callColumn = 7, int putColumn = 6, double errorMargin = 10)
         {
-            var path = Path.Combine("TestData", "greeksindicator");
-            foreach (var style in new string[] { "european", "american" })
+            var path = Path.Combine("TestData", "greeksindicator", subPath);
+            foreach (var line in File.ReadAllLines(path).Skip(3))
             {
-                var file = Path.Combine(path, style, "third_party_2_greeks.csv");
+                var items = line.Split(',');
 
-                foreach (var line in File.ReadAllLines(file).Skip(3))
-                {
-                    var items = line.Split(',');
+                var interestRate = decimal.Parse(items[^2]);
+                var dividendYield = decimal.Parse(items[^1]);
 
-                    var interestRate = decimal.Parse(items[^2]);
-                    var dividendYield = decimal.Parse(items[^1]);
+                var model = ParseSymbols(items, path.Contains("american"), out var call, out var put);
 
-                    var model = ParseSymbols(items, file.Contains("american"), out var call, out var put);
+                var callIndicator = new ImpliedVolatility(call, interestRate, dividendYield, model);
+                var putIndicator = new ImpliedVolatility(put, interestRate, dividendYield, model);
 
-                    var callIndicator = new ImpliedVolatility(call, interestRate, dividendYield, model);
-                    var putIndicator = new ImpliedVolatility(put, interestRate, dividendYield, model);
-
-                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
-                }
+                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
             }
         }
 
-        [TestCase(7, 6)]
-        public void ComparesAgainstExternalDataAfterReset(int callColumn, int putColumn, double errorMargin = 0.08)
+        [TestCase("american/third_party_1_greeks.csv")]
+        public void ComparesAgainstExternalDataAfterReset(string subPath, int callColumn = 7, int putColumn = 6, double errorMargin = 0.08)
         {
-            var path = Path.Combine("TestData", "greeksindicator");
-            foreach (var style in new string[] { "european", "american" })
+            var path = Path.Combine("TestData", "greeksindicator", subPath);
+            foreach (var line in File.ReadAllLines(path).Skip(3))
             {
-                var file = Path.Combine(path, style, "third_party_1_greeks.csv");
+                var items = line.Split(',');
 
-                foreach (var line in File.ReadAllLines(file).Skip(3))
-                {
-                    var items = line.Split(',');
+                var interestRate = decimal.Parse(items[^2]);
+                var dividendYield = decimal.Parse(items[^1]);
 
-                    var interestRate = decimal.Parse(items[^2]);
-                    var dividendYield = decimal.Parse(items[^1]);
+                var model = ParseSymbols(items, path.Contains("american"), out var call, out var put);
 
-                    var model = ParseSymbols(items, file.Contains("american"), out var call, out var put);
+                var callIndicator = new ImpliedVolatility(call, put, interestRate, dividendYield, model);
+                var putIndicator = new ImpliedVolatility(put, call, interestRate, dividendYield, model);
 
-                    var callIndicator = new ImpliedVolatility(call, put, interestRate, dividendYield, model);
-                    var putIndicator = new ImpliedVolatility(put, call, interestRate, dividendYield, model);
+                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
 
-                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
+                callIndicator.Reset();
+                putIndicator.Reset();
 
-                    callIndicator.Reset();
-                    putIndicator.Reset();
-
-                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
-                }
+                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
             }
         }
 

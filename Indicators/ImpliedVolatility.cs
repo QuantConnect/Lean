@@ -388,12 +388,12 @@ namespace QuantConnect.Indicators
         {
         }
 
+        private bool _isReady => Price.Current.Time == UnderlyingPrice.Current.Time && Price.IsReady && UnderlyingPrice.IsReady;
+
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => UseMirrorContract ?
-            Price.Current.Time == UnderlyingPrice.Current.Time && Price.Current.Time == _oppositePrice.Current.Time && Price.IsReady && UnderlyingPrice.IsReady && _oppositePrice.IsReady :
-            Price.Current.Time == UnderlyingPrice.Current.Time && Price.IsReady && UnderlyingPrice.IsReady;
+        public override bool IsReady => UseMirrorContract ? _isReady && Price.Current.Time == _oppositePrice.Current.Time && _oppositePrice.IsReady : _isReady;
 
         /// <summary>
         /// Computes the next value
@@ -421,7 +421,7 @@ namespace QuantConnect.Indicators
             }
 
             var time = Price.Current.Time;
-            if (time == UnderlyingPrice.Current.Time && Price.IsReady && UnderlyingPrice.IsReady)
+            if (_isReady)
             {
                 if (UseMirrorContract)
                 {

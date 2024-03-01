@@ -45,84 +45,71 @@ namespace QuantConnect.Tests.Indicators
             DividendYieldUpdatesPerIteration = 2;
         }
 
-        [TestCase(9, 8)]
-        public void ComparesAgainstExternalData1(int callColumn, int putColumn, double errorMargin = 0.03)
+
+
+        [TestCase("american/third_party_1_greeks.csv")]
+        public void ComparesAgainstExternalDataMirrorContractMethod(string subPath, int callColumn = 9, int putColumn = 8, double errorMargin = 0.03)
         {
-            var path = Path.Combine("TestData", "greeksindicator");
-            foreach (var style in new string[] { "european", "american" })
+            var path = Path.Combine("TestData", "greeksindicator", subPath);
+            foreach (var line in File.ReadAllLines(path).Skip(3))
             {
-                var file = Path.Combine(path, style, "third_party_1_greeks.csv");
+                var items = line.Split(',');
 
-                foreach (var line in File.ReadAllLines(file).Skip(3))
-                {
-                    var items = line.Split(',');
+                var interestRate = decimal.Parse(items[^2]);
+                var dividendYield = decimal.Parse(items[^1]);
 
-                    var interestRate = decimal.Parse(items[^2]);
-                    var dividendYield = decimal.Parse(items[^1]);
+                var model = ParseSymbols(items, path.Contains("american"), out var call, out var put);
 
-                    var model = ParseSymbols(items, file.Contains("american"), out var call, out var put);
+                var callIndicator = new Delta(call, put, interestRate, dividendYield, model);
+                var putIndicator = new Delta(put, call, interestRate, dividendYield, model);
 
-                    var callIndicator = new Delta(call, put, interestRate, dividendYield, model);
-                    var putIndicator = new Delta(put, call, interestRate, dividendYield, model);
-
-                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
-                }
+                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
             }
         }
 
-        // We are unsure about the smoothing function
-        [TestCase(9, 8)]
-        public void ComparesAgainstExternalData2(int callColumn, int putColumn, double errorMargin = 10000)
+        // Just placing the test and data here, we are unsure about the smoothing function and not going to reverse engineer
+        [TestCase("american/third_party_2_greeks.csv")]
+        public void ComparesAgainstExternalDataSingleContractMethod(string subPath, int callColumn = 9, int putColumn = 8, double errorMargin = 10000)
         {
-            var path = Path.Combine("TestData", "greeksindicator");
-            foreach (var style in new string[] { "european", "american" })
+            var path = Path.Combine("TestData", "greeksindicator", subPath);
+            foreach (var line in File.ReadAllLines(path).Skip(3))
             {
-                var file = Path.Combine(path, style, "third_party_2_greeks.csv");
+                var items = line.Split(',');
 
-                foreach (var line in File.ReadAllLines(file).Skip(3))
-                {
-                    var items = line.Split(',');
+                var interestRate = decimal.Parse(items[^2]);
+                var dividendYield = decimal.Parse(items[^1]);
 
-                    var interestRate = decimal.Parse(items[^2]);
-                    var dividendYield = decimal.Parse(items[^1]);
+                var model = ParseSymbols(items, path.Contains("american"), out var call, out var put);
 
-                    var model = ParseSymbols(items, file.Contains("american"), out var call, out var put);
+                var callIndicator = new Delta(call, interestRate, dividendYield, model);
+                var putIndicator = new Delta(put, interestRate, dividendYield, model);
 
-                    var callIndicator = new Delta(call, interestRate, dividendYield, model);
-                    var putIndicator = new Delta(put, interestRate, dividendYield, model);
-
-                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
-                }
+                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
             }
         }
 
-        [TestCase(9, 8)]
-        public void ComparesAgainstExternalDataAfterReset(int callColumn, int putColumn, double errorMargin = 0.03)
+        [TestCase("american/third_party_1_greeks.csv")]
+        public void ComparesAgainstExternalDataAfterReset(string subPath, int callColumn = 9, int putColumn = 8, double errorMargin = 0.03)
         {
-            var path = Path.Combine("TestData", "greeksindicator");
-            foreach (var style in new string[] { "european", "american" })
+            var path = Path.Combine("TestData", "greeksindicator", subPath);
+            foreach (var line in File.ReadAllLines(path).Skip(3))
             {
-                var file = Path.Combine(path, style, "third_party_1_greeks.csv");
+                var items = line.Split(',');
 
-                foreach (var line in File.ReadAllLines(file).Skip(3))
-                {
-                    var items = line.Split(',');
+                var interestRate = decimal.Parse(items[^2]);
+                var dividendYield = decimal.Parse(items[^1]);
 
-                    var interestRate = decimal.Parse(items[^2]);
-                    var dividendYield = decimal.Parse(items[^1]);
+                var model = ParseSymbols(items, path.Contains("american"), out var call, out var put);
 
-                    var model = ParseSymbols(items, file.Contains("american"), out var call, out var put);
+                var callIndicator = new Delta(call, put, interestRate, dividendYield, model);
+                var putIndicator = new Delta(put, call, interestRate, dividendYield, model);
 
-                    var callIndicator = new Delta(call, put, interestRate, dividendYield, model);
-                    var putIndicator = new Delta(put, call, interestRate, dividendYield, model);
+                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
 
-                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
+                callIndicator.Reset();
+                putIndicator.Reset();
 
-                    callIndicator.Reset();
-                    putIndicator.Reset();
-
-                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
-                }
+                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
             }
         }
 
