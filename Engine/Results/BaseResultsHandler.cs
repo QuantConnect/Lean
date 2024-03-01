@@ -893,11 +893,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         protected int TotalTradesCount()
         {
-            if (TransactionHandler == null)
-            {
-                return 0;
-            }
-            return TransactionHandler.GetOrders(x => x.Status.IsFill()).Count();
+            return TransactionHandler?.OrdersCount ?? 0;
         }
 
         /// <summary>

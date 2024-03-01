@@ -19,6 +19,7 @@ using System.Threading;
 using QuantConnect.Data;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.CSharp;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Common.Data.UniverseSelection
 {
@@ -31,7 +32,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             // allow the system to stabilize
             Thread.Sleep(1000);
             var results = AlgorithmRunner.RunLocalBacktest(nameof(TestUserDefinedUniverseAlgorithm),
-                new Dictionary<string, string> { { "Total Trades", "1" } },
+                new Dictionary<string, string> { { PerformanceMetrics.TotalOrders, "1" } },
                 Language.CSharp,
                 AlgorithmStatus.Completed,
                 algorithmLocation: "QuantConnect.Tests.dll");
