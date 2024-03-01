@@ -18,7 +18,6 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using QuantConnect.Lean.Engine.HistoricalData;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -94,9 +93,19 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         /// </summary>
         /// <param name="requests">The historical data requests</param>
         /// <returns></returns>
-        public ImmutableHashSet<string> RetrieveSymbolHistoricalDefinitions(HistoryRequest requests)
+        public IList<(string, DateTime)> RetrieveSymbolHistoricalDefinitions(HistoryRequest requests)
         {
             return RetrieveSymbolHistoricalDefinitions(TestGlobals.MapFileProvider, requests.Symbol, requests.StartTimeUtc);
+        }
+
+        /// <summary>
+        /// Get Split History Requests with various DateTime range and mapped Symbol
+        /// </summary>
+        /// <param name="requests">Represents a request for historical data</param>
+        /// <returns>Return Split History Requests</returns>
+        public IList<HistoryRequest> SplitHistoryRequestWithUpdatedMappedSymbol(HistoryRequest requests)
+        {
+            return SplitHistoryRequestWithUpdatedMappedSymbol(TestGlobals.MapFileProvider, requests);
         }
     }
 }
