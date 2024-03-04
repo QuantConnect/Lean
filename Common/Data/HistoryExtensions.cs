@@ -74,16 +74,12 @@ namespace QuantConnect.Data
                 request.Symbol.RetrieveSymbolHistoricalDefinitionsInDateRange(mapFileProvider, request.StartTimeUtc, request.EndTimeUtc)
                 .GetEnumerator();
 
-            if (symbolInDateRangeEnumerator.MoveNext())
+            if (request.Symbol.RequiresMapping() && symbolInDateRangeEnumerator.MoveNext())
             {
                 do
                 {
                     var (ticker, startDateTime, endDateTime) = symbolInDateRangeEnumerator.Current;
-                    var symbol = request.Symbol;
-                    if (symbol.RequiresMapping())
-                    {
-                        symbol = symbol.UpdateMappedSymbol(ticker);
-                    }
+                    var symbol = request.Symbol.UpdateMappedSymbol(ticker);
                     yield return new HistoryRequest(request, symbol, startDateTime, endDateTime);
                 } while (symbolInDateRangeEnumerator.MoveNext());
             }

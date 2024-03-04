@@ -1765,6 +1765,7 @@ def select_symbol(fundamental):
         [TestCase("GOOG", "2014/04/03", 1)] // The restructuring: April 2, 2014 "GOOCV" to "GOOG"
         [TestCase("SPWR", "2005/11/17", 3)] // IPO: November 17, 2005
         [TestCase("SPWR", "2023/11/16", 1)]
+        [TestCase("NFLX", "2023/11/16", 0)] // not mapped
         public void GetHistoricalSymbolNamesByDateRequest(string ticker, DateTime startDateTime, int expectedAmount)
         {
             var endDateTime = new DateTime(2024, 03, 01);
@@ -1774,6 +1775,18 @@ def select_symbol(fundamental):
             var request = TestsHelpers.GetHistoryRequest(symbol, startDateTime, endDateTime, Resolution.Daily, TickType.Trade);
 
             var tickers = symbol.RetrieveSymbolHistoricalDefinitionsInDateRange(TestGlobals.MapFileProvider, request.StartTimeUtc, request.EndTimeUtc).ToList();
+
+            Assert.That(tickers.Count, Is.EqualTo(expectedAmount));
+        }
+
+        [TestCase(Futures.Indices.SP500EMini, "2023/11/16", 1)]
+        [TestCase(Futures.Metals.Gold,"2023/11/16", 0)]
+        public void GetHistoricalFutureSymbolNamesByDateRequest(string ticker, DateTime expiryTickerDate, int expectedAmount)
+        {
+            var futureSymbol = Symbols.CreateFutureSymbol(ticker, expiryTickerDate);
+
+            var tickers = 
+                futureSymbol.RetrieveSymbolHistoricalDefinitionsInDateRange(TestGlobals.MapFileProvider, expiryTickerDate, new DateTime(2023, 11, 24)).ToList();
 
             Assert.That(tickers.Count, Is.EqualTo(expectedAmount));
         }

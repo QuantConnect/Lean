@@ -18,6 +18,7 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Util;
 using QuantConnect.Data;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
 
 namespace QuantConnect.Tests.Common.Util
@@ -61,6 +62,21 @@ namespace QuantConnect.Tests.Common.Util
                 Assert.That(firstHistoryRequest.StartTimeLocal, Is.Not.EqualTo(secondHistoryRequest.StartTimeLocal));
                 Assert.That(firstHistoryRequest.EndTimeLocal, Is.Not.EqualTo(secondHistoryRequest.EndTimeLocal));
             }
+        }
+
+        [TestCase(Futures.Metals.Gold, 1)]
+        [TestCase(Futures.Indices.SP500EMini, 1)]
+        public void GetSplitHistoricalRequestFutureSymbol(string ticker, int expectedAmount)
+        {
+            var futureSymbol = Symbols.CreateFutureSymbol(ticker, new DateTime(2024, 3, 29));
+
+            var historyRequest = TestsHelpers.GetHistoryRequest(futureSymbol, new DateTime(2024, 3, 4), new DateTime(2024, 3, 5), Resolution.Daily, TickType.Trade);
+
+            var historyRequests = historyRequest.SplitHistoryRequestWithUpdatedMappedSymbol(TestGlobals.MapFileProvider).ToList();
+
+            Assert.IsNotNull(historyRequests);
+            Assert.IsNotEmpty(historyRequests);
+            Assert.That(historyRequests.Count, Is.EqualTo(expectedAmount));
         }
     }
 }
