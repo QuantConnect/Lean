@@ -56,9 +56,8 @@ namespace QuantConnect.Brokerages
         /// <param name="position">The new option position</param>
         /// <param name="tag">The tag to be used for the order</param>
         public OptionNotificationEventArgs(Symbol symbol, decimal position, string tag)
+            : this(symbol, position)
         {
-            Symbol = symbol;
-            Position = position;
             Tag = tag;
         }
 

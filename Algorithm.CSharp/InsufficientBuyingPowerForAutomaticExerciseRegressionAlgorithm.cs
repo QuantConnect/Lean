@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QLNet;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
