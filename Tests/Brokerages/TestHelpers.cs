@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Util;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
@@ -56,6 +57,31 @@ namespace QuantConnect.Tests.Brokerages
             }
 
             return new SubscriptionDataConfig(typeof(TradeBar), actualSymbol, resolution, TimeZones.Utc, TimeZones.Utc, false, true, false);
+        }
+
+        public static HistoryRequest GetHistoryRequest(Symbol symbol, DateTime startDateTime, DateTime endDateTime, Resolution resolution, TickType tickType)
+        {
+            if (startDateTime > endDateTime)
+            {
+                throw new ArgumentException("The startDateTime is greater then endDateTime");
+            }
+
+            var dataType = LeanData.GetDataType(resolution, tickType);
+
+            return new HistoryRequest(
+                startDateTime,
+                endDateTime,
+                dataType,
+                symbol,
+                resolution,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                TimeZones.NewYork,
+                null,
+                false,
+                false,
+                DataNormalizationMode.Raw,
+                tickType
+                );
         }
     }
 }

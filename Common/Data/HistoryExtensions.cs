@@ -13,6 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 using System.Text.RegularExpressions;
 
 namespace QuantConnect.Data
@@ -39,6 +44,53 @@ namespace QuantConnect.Data
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Split <see cref="HistoryRequest"/> on several request with update mapped symbol.
+        /// </summary>
+        /// <param name="request">Represents historical data requests</param>
+        /// <param name="mapFileProvider">Provides instances of <see cref="MapFileResolver"/> at run time</param>
+        /// <returns>
+        /// Return HistoryRequests with different <see cref="BaseDataRequest.StartTimeUtc"/> - <seealso cref="BaseDataRequest.EndTimeUtc"/> range
+        /// and <seealso cref="Symbol.Value"/>
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="mapFileProvider"/> is null.</exception>
+        /// <example>
+        /// For instances:
+        /// request = { StartTimeUtc = 2013/01/01, EndTimeUtc = 2017/02/02, Symbol = "GOOGL" }  split request on:
+        /// 1: request = { StartTimeUtc = 2013/01/01, EndTimeUtc = 2014/04/02, Symbol.Value = "GOOG" }
+        /// 2: request = { StartTimeUtc = 2014/04/**03**, EndTimeUtc = 2017/02/02, Symbol.Value = "GOOGL" }
+        /// > GOOGLE: IPO: August 19, 2004 Name = GOOG then it was restructured: from "GOOG" to "GOOGL" on April 2, 2014
+        /// </example>
+        public static IEnumerable<HistoryRequest> SplitHistoryRequestWithUpdatedMappedSymbol(this HistoryRequest request, IMapFileProvider mapFileProvider)
+        {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var symbolInDateRangeEnumerator =
+                request.Symbol.RetrieveSymbolHistoricalDefinitionsInDateRange(mapFileProvider, request.StartTimeUtc, request.EndTimeUtc)
+                .GetEnumerator();
+
+            if (symbolInDateRangeEnumerator.MoveNext())
+            {
+                do
+                {
+                    var (ticker, startDateTime, endDateTime) = symbolInDateRangeEnumerator.Current;
+                    var symbol = request.Symbol;
+                    if (symbol.RequiresMapping())
+                    {
+                        symbol = symbol.UpdateMappedSymbol(ticker);
+                    }
+                    yield return new HistoryRequest(request, symbol, startDateTime, endDateTime);
+                } while (symbolInDateRangeEnumerator.MoveNext());
+            }
+            else
+            {
+                yield return request;
+            }
         }
     }
 }

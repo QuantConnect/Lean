@@ -87,25 +87,5 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             OnDownloadFailed(new DownloadFailedEventArgs(Symbols.SPY, "invalid config"));
             OnReaderErrorDetected(new ReaderErrorDetectedEventArgs(Symbols.SPY, "invalid config"));
         }
-
-        /// <summary>
-        /// Get Historical Ticker Names
-        /// </summary>
-        /// <param name="requests">The historical data requests</param>
-        /// <returns></returns>
-        public IList<(string, DateTime)> RetrieveSymbolHistoricalDefinitions(HistoryRequest requests)
-        {
-            return RetrieveSymbolHistoricalDefinitions(TestGlobals.MapFileProvider, requests.Symbol, requests.StartTimeUtc);
-        }
-
-        /// <summary>
-        /// Get Split History Requests with various DateTime range and mapped Symbol
-        /// </summary>
-        /// <param name="requests">Represents a request for historical data</param>
-        /// <returns>Return Split History Requests</returns>
-        public IList<HistoryRequest> SplitHistoryRequestWithUpdatedMappedSymbol(HistoryRequest requests)
-        {
-            return SplitHistoryRequestWithUpdatedMappedSymbol(TestGlobals.MapFileProvider, requests);
-        }
     }
 }

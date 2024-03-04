@@ -23,8 +23,6 @@ using QuantConnect.Securities;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Data.Auxiliary;
-using System.Collections.ObjectModel;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -152,83 +150,5 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
             return SubscriptionUtils.Create(subscriptionRequest, reader);
         }
-
-#pragma warning disable CA1822
-        /// <summary>
-        /// Split <see cref="HistoryRequest"/> on several request with update mapped symbol.
-        /// </summary>
-        /// <param name="mapFileProvider">Provides instances of <see cref="MapFileResolver"/> at run time</param>
-        /// <param name="request">Represents a request for historical data</param>
-        /// <returns>
-        /// Return HistoryRequests with different <see cref="BaseDataRequest.StartTimeUtc"/> - <seealso cref="BaseDataRequest.EndTimeUtc"/> range
-        /// and <seealso cref="Symbol.Value"/>
-        /// </returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="mapFileProvider"/> is null.</exception>
-        /// <example>
-        /// For instances:
-        /// request = { StartTimeUtc = 2013/01/01, EndTimeUtc = 2017/02/02, Symbol = "GOOGL" }  split request on:
-        /// 1: request = { StartTimeUtc = 2013/01/01, EndTimeUtc = 2014/04/02, Symbol.Value = "GOOG" }
-        /// 2: request = { StartTimeUtc = 2014/04/**03**, EndTimeUtc = 2017/02/02, Symbol.Value = "GOOGL" }
-        /// > GOOGLE: IPO: August 19, 2004 Name = GOOG then it was restructured: from "GOOG" to "GOOGL" on April 2, 2014
-        /// </example>
-        protected ReadOnlyCollection<HistoryRequest> SplitHistoryRequestWithUpdatedMappedSymbol(IMapFileProvider mapFileProvider, HistoryRequest request)
-        {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            var historicalSymbolNames = RetrieveSymbolHistoricalDefinitions(mapFileProvider, request.Symbol, request.StartTimeUtc);
-
-            var requests = new List<HistoryRequest>();
-            var startDateTime = request.StartTimeUtc;
-            foreach (var (ticker, tickerEndSupportDate) in historicalSymbolNames)
-            {
-
-                var symbol = request.Symbol.UpdateMappedSymbol(ticker);
-
-                if (tickerEndSupportDate >= request.EndTimeUtc)
-                {
-                    requests.Add(new HistoryRequest(request, symbol, startDateTime, request.EndTimeUtc));
-                    // the request EndDateTime was achieved
-                    break;
-                }
-                else
-                {
-                    requests.Add(new HistoryRequest(request, symbol, startDateTime, tickerEndSupportDate));
-                    startDateTime = tickerEndSupportDate.AddDays(1);
-                }
-            }
-
-            return requests.AsReadOnly();
-        }
-
-        /// <summary>
-        /// Some historical provider supports ancient data. In fact, the ticker could be restructured to new one.
-        /// </summary>
-        /// <param name="mapFileProvider">Provides instances of <see cref="MapFileResolver"/> at run time</param>
-        /// <param name="symbol">Represents a unique security identifier</param>
-        /// <param name="startDateTime">The date since we began our search for the historical name of the symbol.</param>
-        /// <returns>Distinct and immutable HashSet of Ticker names and his last support DateTime </returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="mapFileProvider"/> is null.</exception>
-        /// <example>
-        /// GOOGLE: IPO: August 19, 2004 Name = GOOG then it was restructured: from "GOOG" to "GOOGL" on April 2, 2014
-        /// For instances:
-        /// startDateTime = 2013 year, it returns { "GOOG", "GOOGL" }
-        /// startDateTime = 2023 year, it returns { "GOOGL" }
-        /// </example>
-        protected ReadOnlyCollection<(string Ticker, DateTime TickerSupportEndDate)> RetrieveSymbolHistoricalDefinitions(IMapFileProvider mapFileProvider, Symbol symbol, DateTime startDateTime)
-        {
-            if (mapFileProvider == null)
-            {
-                throw new ArgumentNullException(nameof(mapFileProvider));
-            }
-
-            var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
-            var symbolMapFile = mapFileResolver.ResolveMapFile(symbol);
-
-            return symbolMapFile.Where(x => x.Date >= startDateTime).Select(x => (x.MappedSymbol, x.Date)).ToList().AsReadOnly();
-        }
-#pragma warning restore CA1822
     }
 }
