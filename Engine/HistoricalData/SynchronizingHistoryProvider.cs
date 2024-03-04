@@ -14,18 +14,18 @@
 */
 
 using System;
-using NodaTime;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using QuantConnect.Util;
+using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Securities;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.HistoricalData
 {

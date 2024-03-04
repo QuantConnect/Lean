@@ -17,16 +17,16 @@ using System;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Lean.Engine.HistoricalData;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Engine.HistoricalData
 {
     /// <summary>
-    /// Provides FAKE implementation of <see cref="SynchronizingHistoryProvider"/>
+    /// Provides FAKE implementation of <see cref="IHistoryProvider"/>
     /// </summary>
-    internal class TestHistoryProvider : SynchronizingHistoryProvider
+    internal class TestHistoryProvider : HistoryProviderBase
     {
         public override int DataPointCount => 2;
 
