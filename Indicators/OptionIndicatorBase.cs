@@ -91,7 +91,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the mirror option price level, for implied volatility
         /// </summary>
-        protected IndicatorBase<IndicatorDataPoint> _oppositePrice { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> OppositePrice { get; private set; }
 
         /// <summary>
         /// Gets the underlying's price level
@@ -139,10 +139,10 @@ namespace QuantConnect.Indicators
         /// To set the mirror option contract for parity type calculation
         /// </summary>
         /// <param name="mirrorOption">the mirror option contract symbol</param>
-        public void SetMirrorOptionContract(Symbol mirrorOption)
+        protected void SetMirrorOptionContract(Symbol mirrorOption)
         {
             _oppositeOptionSymbol = mirrorOption;
-            _oppositePrice = new Identity(Name + "_OppositeClose");
+            OppositePrice = new Identity(Name + "_OppositeClose");
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace QuantConnect.Indicators
 
             if (UseMirrorContract)
             {
-                _oppositePrice.Reset();
+                OppositePrice.Reset();
             }
         }
     }

@@ -40,24 +40,6 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> HistoricalVolatility { get; }
 
         /// <summary>
-        /// Set the smoothing function of IV, using both call and put IV value
-        /// </summary>
-        /// <param name="function">the smoothing function</param>
-        public void SetSmoothingFunction(Func<decimal, decimal, decimal> function)
-        {
-            SmoothingFunction = function;
-        }
-
-        /// <summary>
-        /// Set the smoothing function of IV, using both call and put IV value
-        /// </summary>
-        /// <param name="function">the smoothing function</param>
-        public void SetSmoothingFunction(PyObject function)
-        {
-            SmoothingFunction = PythonUtil.ToFunc<decimal, decimal, decimal>(function);
-        }
-
-        /// <summary>
         /// Initializes a new instance of the ImpliedVolatility class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
@@ -233,6 +215,10 @@ namespace QuantConnect.Indicators
         {
             SetMirrorOptionContract(mirrorOption);
 
+            // Default smoothing function will be assuming Law of One Price hold,
+            // so both call and put will have the same IV
+            // and using on OTM/ATM options to calculate the IV
+            // by assuming extra volatility coming from extrinsic value
             SmoothingFunction = (impliedVol, mirrorImpliedVol) =>
             {
                 if (Strike > UnderlyingPrice && Right == OptionRight.Put)
@@ -388,12 +374,30 @@ namespace QuantConnect.Indicators
         {
         }
 
+        /// <summary>
+        /// Set the smoothing function of IV, using both call and put IV value
+        /// </summary>
+        /// <param name="function">the smoothing function</param>
+        public void SetSmoothingFunction(Func<decimal, decimal, decimal> function)
+        {
+            SmoothingFunction = function;
+        }
+
+        /// <summary>
+        /// Set the smoothing function of IV, using both call and put IV value
+        /// </summary>
+        /// <param name="function">the smoothing function</param>
+        public void SetSmoothingFunction(PyObject function)
+        {
+            SmoothingFunction = PythonUtil.ToFunc<decimal, decimal, decimal>(function);
+        }
+
         private bool _isReady => Price.Current.Time == UnderlyingPrice.Current.Time && Price.IsReady && UnderlyingPrice.IsReady;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => UseMirrorContract ? _isReady && Price.Current.Time == _oppositePrice.Current.Time && _oppositePrice.IsReady : _isReady;
+        public override bool IsReady => UseMirrorContract ? _isReady && Price.Current.Time == OppositePrice.Current.Time && OppositePrice.IsReady : _isReady;
 
         /// <summary>
         /// Computes the next value
@@ -408,7 +412,7 @@ namespace QuantConnect.Indicators
             }
             else if (input.Symbol == _oppositeOptionSymbol)
             {
-                _oppositePrice.Update(input.EndTime, input.Price);
+                OppositePrice.Update(input.EndTime, input.Price);
             }
             else if (input.Symbol == _underlyingSymbol)
             {
@@ -425,7 +429,7 @@ namespace QuantConnect.Indicators
             {
                 if (UseMirrorContract)
                 {
-                    if (time != _oppositePrice.Current.Time)
+                    if (time != OppositePrice.Current.Time)
                     {
                         return _impliedVolatility;
                     }
@@ -484,7 +488,7 @@ namespace QuantConnect.Indicators
                 try
                 {
                     Func<double, double> f = (vol) => (double)(TheoreticalPrice(
-                        Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, _oppositeOptionSymbol.ID.OptionRight, _optionModel) - _oppositePrice);
+                        Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, _oppositeOptionSymbol.ID.OptionRight, _optionModel) - OppositePrice);
                     mirrorImpliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 2.0d, 1e-4d, 100));
                 }
                 catch

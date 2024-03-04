@@ -135,22 +135,12 @@ namespace QuantConnect.Indicators
         /// <param name="period">The lookback period of historical volatility</param>
         protected OptionGreeksIndicatorBase(string name, Symbol option, Symbol mirrorOption, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
-            : this(name, option, riskFreeRateModel, dividendYieldModel, optionModel, ivModel, period)
+            : base(name, option, riskFreeRateModel, dividendYieldModel, optionModel, period)
         {
             SetMirrorOptionContract(mirrorOption);
-            ImpliedVolatility.SetMirrorOptionContract(mirrorOption);
-            ImpliedVolatility.SetSmoothingFunction((iv, mirrorIV) =>
-            {
-                if (Strike > UnderlyingPrice && Right == OptionRight.Put)
-                {
-                    return mirrorIV;
-                }
-                else if (Strike < UnderlyingPrice && Right == OptionRight.Call)
-                {
-                    return mirrorIV;
-                }
-                return iv;
-            });
+            ivModel = ivModel ?? optionModel;
+            ImpliedVolatility = new ImpliedVolatility(name + "_IV", option, mirrorOption, riskFreeRateModel, dividendYieldModel, (OptionPricingModelType)ivModel, period);
+            WarmUpPeriod = period;
         }
 
         /// <summary>
@@ -247,7 +237,7 @@ namespace QuantConnect.Indicators
             else if (inputSymbol == _oppositeOptionSymbol)
             {
                 ImpliedVolatility.Update(input);
-                _oppositePrice.Update(time, input.Price);
+                OppositePrice.Update(time, input.Price);
             }
             else if (inputSymbol == _underlyingSymbol)
             {
@@ -263,7 +253,7 @@ namespace QuantConnect.Indicators
             {
                 if (UseMirrorContract)
                 {
-                    if (Price.Current.Time != _oppositePrice.Current.Time)
+                    if (Price.Current.Time != OppositePrice.Current.Time)
                     {
                         return _greekValue;
                     }

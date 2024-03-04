@@ -45,118 +45,77 @@ namespace QuantConnect.Tests.Indicators
             DividendYieldUpdatesPerIteration = 2;
         }
 
-
-
-        [TestCase("american/third_party_1_greeks.csv")]
-        public void ComparesAgainstExternalDataMirrorContractMethod(string subPath, int callColumn = 9, int putColumn = 8, double errorMargin = 0.03)
-        {
-            var path = Path.Combine("TestData", "greeksindicator", subPath);
-            foreach (var line in File.ReadAllLines(path).Skip(3))
-            {
-                var items = line.Split(',');
-
-                var interestRate = decimal.Parse(items[^2]);
-                var dividendYield = decimal.Parse(items[^1]);
-
-                var model = ParseSymbols(items, path.Contains("american"), out var call, out var put);
-
-                var callIndicator = new Delta(call, put, interestRate, dividendYield, model);
-                var putIndicator = new Delta(put, call, interestRate, dividendYield, model);
-
-                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
-            }
-        }
-
+        [TestCase("american/third_party_1_greeks.csv", true, 0.03, false)]
+        [TestCase("american/third_party_1_greeks.csv", false, 0.03, false)]
         // Just placing the test and data here, we are unsure about the smoothing function and not going to reverse engineer
-        [TestCase("american/third_party_2_greeks.csv")]
-        public void ComparesAgainstExternalDataSingleContractMethod(string subPath, int callColumn = 9, int putColumn = 8, double errorMargin = 10000)
+        [TestCase("american/third_party_2_greeks.csv", false, 10000, true)]
+        public void ComparesAgainstExternalData(string subPath, bool reset, double errorMargin, bool singleContract, int callColumn = 9, int putColumn = 8)
         {
             var path = Path.Combine("TestData", "greeksindicator", subPath);
             foreach (var line in File.ReadAllLines(path).Skip(3))
             {
                 var items = line.Split(',');
 
-                var interestRate = decimal.Parse(items[^2]);
-                var dividendYield = decimal.Parse(items[^1]);
+                var interestRate = Parse.Decimal(items[^2]);
+                var dividendYield = Parse.Decimal(items[^1]);
 
                 var model = ParseSymbols(items, path.Contains("american"), out var call, out var put);
 
-                var callIndicator = new Delta(call, interestRate, dividendYield, model);
-                var putIndicator = new Delta(put, interestRate, dividendYield, model);
-
-                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
-            }
-        }
-
-        [TestCase("american/third_party_1_greeks.csv")]
-        public void ComparesAgainstExternalDataAfterReset(string subPath, int callColumn = 9, int putColumn = 8, double errorMargin = 0.03)
-        {
-            var path = Path.Combine("TestData", "greeksindicator", subPath);
-            foreach (var line in File.ReadAllLines(path).Skip(3))
-            {
-                var items = line.Split(',');
-
-                var interestRate = decimal.Parse(items[^2]);
-                var dividendYield = decimal.Parse(items[^1]);
-
-                var model = ParseSymbols(items, path.Contains("american"), out var call, out var put);
-
-                var callIndicator = new Delta(call, put, interestRate, dividendYield, model);
-                var putIndicator = new Delta(put, call, interestRate, dividendYield, model);
+                Delta callIndicator;
+                Delta putIndicator;
+                if (singleContract == true)
+                {
+                    callIndicator = new Delta(call, interestRate, dividendYield, model);
+                    putIndicator = new Delta(put, interestRate, dividendYield, model);
+                }
+                else
+                {
+                    callIndicator = new Delta(call, put, interestRate, dividendYield, model);
+                    putIndicator = new Delta(put, call, interestRate, dividendYield, model);
+                }
 
                 RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
 
-                callIndicator.Reset();
-                putIndicator.Reset();
+                if (reset == true)
+                {
+                    callIndicator.Reset();
+                    putIndicator.Reset();
 
-                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
+                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
+                }
             }
         }
 
         // Reference values from QuantLib
-        [TestCase(23.753, 450.0, OptionRight.Call, 60, 0.546)]
-        [TestCase(35.830, 450.0, OptionRight.Put, 60, -0.446)]
-        [TestCase(33.928, 470.0, OptionRight.Call, 60, 0.693)]
-        [TestCase(6.428, 470.0, OptionRight.Put, 60, -0.260)]
-        [TestCase(3.219, 430.0, OptionRight.Call, 60, 0.243)]
-        [TestCase(47.701, 430.0, OptionRight.Put, 60, -0.526)]
-        [TestCase(16.528, 450.0, OptionRight.Call, 180, 0.632)]
-        [TestCase(21.784, 450.0, OptionRight.Put, 180, -0.417)]
-        [TestCase(35.207, 470.0, OptionRight.Call, 180, 0.765)]
-        [TestCase(0.409, 470.0, OptionRight.Put, 180, -0.052)]
-        [TestCase(2.642, 430.0, OptionRight.Call, 180, 0.263)]
-        [TestCase(27.772, 430.0, OptionRight.Put, 180, -0.556)]
-        public void ComparesDeltaOnBSMModel(decimal price, decimal spotPrice, OptionRight right, int expiry, double refDelta)
+        [TestCase(23.753, 450.0, OptionRight.Call, 60, 0.546, OptionStyle.European)]
+        [TestCase(35.830, 450.0, OptionRight.Put, 60, -0.446, OptionStyle.European)]
+        [TestCase(33.928, 470.0, OptionRight.Call, 60, 0.693, OptionStyle.European)]
+        [TestCase(6.428, 470.0, OptionRight.Put, 60, -0.260, OptionStyle.European)]
+        [TestCase(3.219, 430.0, OptionRight.Call, 60, 0.243, OptionStyle.European)]
+        [TestCase(47.701, 430.0, OptionRight.Put, 60, -0.526, OptionStyle.European)]
+        [TestCase(16.528, 450.0, OptionRight.Call, 180, 0.632, OptionStyle.European)]
+        [TestCase(21.784, 450.0, OptionRight.Put, 180, -0.417, OptionStyle.European)]
+        [TestCase(35.207, 470.0, OptionRight.Call, 180, 0.765, OptionStyle.European)]
+        [TestCase(0.409, 470.0, OptionRight.Put, 180, -0.052, OptionStyle.European)]
+        [TestCase(2.642, 430.0, OptionRight.Call, 180, 0.263, OptionStyle.European)]
+        [TestCase(27.772, 430.0, OptionRight.Put, 180, -0.556, OptionStyle.European)]
+        [TestCase(23.753, 450.0, OptionRight.Call, 60, 0.546, OptionStyle.American)]
+        [TestCase(35.830, 450.0, OptionRight.Put, 60, -0.446, OptionStyle.American)]
+        [TestCase(33.928, 470.0, OptionRight.Call, 60, 0.693, OptionStyle.American)]
+        [TestCase(6.428, 470.0, OptionRight.Put, 60, -0.260, OptionStyle.American)]
+        [TestCase(3.219, 430.0, OptionRight.Call, 60, 0.243, OptionStyle.American)]
+        [TestCase(47.701, 430.0, OptionRight.Put, 60, -0.526, OptionStyle.American)]
+        [TestCase(16.528, 450.0, OptionRight.Call, 180, 0.632, OptionStyle.American)]
+        [TestCase(21.784, 450.0, OptionRight.Put, 180, -0.417, OptionStyle.American)]
+        [TestCase(35.207, 470.0, OptionRight.Call, 180, 0.765, OptionStyle.American)]
+        [TestCase(0.409, 470.0, OptionRight.Put, 180, -0.052, OptionStyle.American)]
+        [TestCase(2.642, 430.0, OptionRight.Call, 180, 0.264, OptionStyle.American)]
+        [TestCase(27.772, 430.0, OptionRight.Put, 180, -0.556, OptionStyle.American)]
+        public void ComparesAgainstExternalData2(decimal price, decimal spotPrice, OptionRight right, int expiry, double refDelta, OptionStyle style)
         {
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new Delta(symbol, 0.0403m, 0.0m, OptionPricingModelType.BlackScholes);
-
-            var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
-            var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
-            indicator.Update(optionDataPoint);
-            indicator.Update(spotDataPoint);
-
-            Assert.AreEqual(refDelta, (double)indicator.Current.Value, 0.0005d);
-        }
-
-        // Reference values from QuantLib
-        [TestCase(23.753, 450.0, OptionRight.Call, 60, 0.546)]
-        [TestCase(35.830, 450.0, OptionRight.Put, 60, -0.446)]
-        [TestCase(33.928, 470.0, OptionRight.Call, 60, 0.693)]
-        [TestCase(6.428, 470.0, OptionRight.Put, 60, -0.260)]
-        [TestCase(3.219, 430.0, OptionRight.Call, 60, 0.243)]
-        [TestCase(47.701, 430.0, OptionRight.Put, 60, -0.526)]
-        [TestCase(16.528, 450.0, OptionRight.Call, 180, 0.632)]
-        [TestCase(21.784, 450.0, OptionRight.Put, 180, -0.417)]
-        [TestCase(35.207, 470.0, OptionRight.Call, 180, 0.765)]
-        [TestCase(0.409, 470.0, OptionRight.Put, 180, -0.052)]
-        [TestCase(2.642, 430.0, OptionRight.Call, 180, 0.264)]
-        [TestCase(27.772, 430.0, OptionRight.Put, 180, -0.556)]
-        public void ComparesDeltaOnCRRModel(decimal price, decimal spotPrice, OptionRight right, int expiry, double refDelta)
-        {
-            // Under CRR framework
-            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new Delta(symbol, 0.0403m, 0.0m, OptionPricingModelType.BinomialCoxRossRubinstein, OptionPricingModelType.BlackScholes);
+            var model = style == OptionStyle.European ? OptionPricingModelType.BlackScholes : OptionPricingModelType.BinomialCoxRossRubinstein;
+            var indicator = new Delta(symbol, 0.0403m, 0.0m, model, OptionPricingModelType.BlackScholes);
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
             var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
