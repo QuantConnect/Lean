@@ -51,7 +51,6 @@ namespace QuantConnect.Algorithm.CSharp
                 .OrderBy(c => c.ID.Date)
                 .First(c => c.ID.StrikePrice == 800m);
 
-            //_option = QuantConnect.Symbol.CreateOption(_stock, Market.USA, OptionStyle.American, OptionRight.Put, 41m, new DateTime(2014, 06, 21));
             AddOptionContract(_option);
         }
 
