@@ -15,7 +15,6 @@
 
 using System;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
@@ -62,36 +61,49 @@ namespace QuantConnect.Tests.Indicators
             throw new NotImplementedException("method `CreateIndicator(QCAlgorithm algorithm)` is required to be set up");
         }
 
-        protected Symbol ParseOptionSymbol(string fileName)
+        protected OptionPricingModelType ParseSymbols(string[] items, bool american, out Symbol call, out Symbol put)
         {
-            var ticker = fileName.Substring(0, 3);
-            var expiry = DateTime.ParseExact(fileName.Substring(3, 6), "yyMMdd", CultureInfo.InvariantCulture);
-            var right = fileName[9] == 'C' ? OptionRight.Call : OptionRight.Put;
-            var strike = Parse.Decimal(fileName.Substring(10, 8)) / 1000m;
-            var style = ticker == "SPY" ? OptionStyle.American : OptionStyle.European;
+            var ticker = items[0];
+            var expiry = DateTime.ParseExact(items[1], "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+            var strike = Parse.Decimal(items[2]);
+            var style = american ? OptionStyle.American : OptionStyle.European;
 
-            return Symbol.CreateOption(ticker, Market.USA, style, right, strike, expiry);
+            call = Symbol.CreateOption(ticker, Market.USA, style, OptionRight.Call, strike, expiry);
+            put = Symbol.CreateOption(ticker, Market.USA, style, OptionRight.Put, strike, expiry);
+
+            return american ? OptionPricingModelType.ForwardTree : OptionPricingModelType.BlackScholes;
         }
 
-        protected void RunTestIndicator(string path, OptionIndicatorBase indicator, Symbol symbol, Symbol underlying, double errorMargin, int column)
+        protected void RunTestIndicator(Symbol call, Symbol put, OptionIndicatorBase callIndicator, OptionIndicatorBase putIndicator,
+            string[] items, int callColumn, int putColumn, double errorMargin)
         {
-            foreach (var line in File.ReadAllLines(path).Skip(1))
+            var time = DateTime.ParseExact(items[3], "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+
+            var callDataPoint = new IndicatorDataPoint(call, time, decimal.Parse(items[5], NumberStyles.Any, CultureInfo.InvariantCulture));
+            var putDataPoint = new IndicatorDataPoint(put, time, decimal.Parse(items[4], NumberStyles.Any, CultureInfo.InvariantCulture));
+            var underlyingDataPoint = new IndicatorDataPoint(call.Underlying, time, decimal.Parse(items[^4], NumberStyles.Any, CultureInfo.InvariantCulture));
+
+            callIndicator.Update(callDataPoint);
+            callIndicator.Update(underlyingDataPoint);
+            if (callIndicator.UseMirrorContract)
             {
-                var items = line.Split(',');
-
-                var time = DateTime.ParseExact(items[0], "yyyyMMdd HH:mm:ss.ffffff", CultureInfo.InvariantCulture);
-                var price = Parse.Decimal(items[1]);
-                var spotPrice = Parse.Decimal(items[^1]);
-                var refValue = Parse.Double(items[column]);
-
-                var optionTradeBar = new IndicatorDataPoint(symbol, time, price);
-                var spotTradeBar = new IndicatorDataPoint(underlying, time, spotPrice);
-                indicator.Update(optionTradeBar);
-                indicator.Update(spotTradeBar);
-
-                // We're not sure IB's parameters and models
-                Assert.AreEqual(refValue, (double)indicator.Current.Value, errorMargin);
+                callIndicator.Update(putDataPoint);
             }
+            
+            var expected = double.Parse(items[callColumn], NumberStyles.Any, CultureInfo.InvariantCulture);
+            var acceptance = Math.Max(errorMargin * Math.Abs(expected), 1e-4);     // percentage error
+            Assert.AreEqual(expected, (double)callIndicator.Current.Value, acceptance);
+
+            putIndicator.Update(putDataPoint);
+            putIndicator.Update(underlyingDataPoint);
+            if (putIndicator.UseMirrorContract)
+            {
+                putIndicator.Update(callDataPoint);
+            }
+
+            expected = double.Parse(items[putColumn], NumberStyles.Any, CultureInfo.InvariantCulture);
+            acceptance = Math.Max(errorMargin * Math.Abs(expected), 1e-4);     // percentage error
+            Assert.AreEqual(expected, (double)putIndicator.Current.Value, acceptance);
         }
 
         [Test]
@@ -328,14 +340,14 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
     return {typeof(T).Name}(symbol, InterestRateProvider(), TestDividendYieldModel())
             ");
 
-            var iv = module.GetAttr("getOptionIndicatorBaseIndicator").Invoke(_symbol.ToPython()).GetAndDispose<T>();
+            var indicator = module.GetAttr("getOptionIndicatorBaseIndicator").Invoke(_symbol.ToPython()).GetAndDispose<T>();
             var modelClass = module.GetAttr("TestDividendYieldModel");
 
             var reference = new DateTime(2022, 11, 21, 10, 0, 0);
             for (int i = 0; i < 20; i++)
             {
-                iv.Update(new IndicatorDataPoint(_symbol, reference + TimeSpan.FromMinutes(i), 10m + i));
-                iv.Update(new IndicatorDataPoint(_underlying, reference + TimeSpan.FromMinutes(i), 1000m + i));
+                indicator.Update(new IndicatorDataPoint(_symbol, reference + TimeSpan.FromMinutes(i), 10m + i));
+                indicator.Update(new IndicatorDataPoint(_underlying, reference + TimeSpan.FromMinutes(i), 1000m + i));
                 Assert.AreEqual((i + 1) * DividendYieldUpdatesPerIteration, modelClass.GetAttr("CallCount").GetAndDispose<int>());
             }
         }

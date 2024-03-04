@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Logging;
 using QuantConnect.Python;
+using QuantConnect.Util;
 
 namespace QuantConnect.Indicators
 {
@@ -31,6 +32,7 @@ namespace QuantConnect.Indicators
         private BaseDataConsolidator _consolidator;
         private RateOfChange _roc;
         private decimal _impliedVolatility;
+        private Func<decimal, decimal, decimal> SmoothingFunction;
 
         /// <summary>
         /// Gets the historical volatility of the underlying
@@ -44,11 +46,11 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
-        /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
         public ImpliedVolatility(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
-            int period = 252, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
-            : base(name, option, riskFreeRateModel, dividendYieldModel, period, optionModel)
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : base(name, option, riskFreeRateModel, dividendYieldModel, optionModel, period)
         {
             _roc = new(1);
             HistoricalVolatility = IndicatorExtensions.Times(
@@ -71,11 +73,11 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
-        /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
         public ImpliedVolatility(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
-            int period = 252, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
-            : this($"IV({option.Value},{riskFreeRateModel},{dividendYieldModel},{period},{optionModel})", option, riskFreeRateModel, dividendYieldModel, period, optionModel)
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this($"IV({option.Value},{riskFreeRateModel},{dividendYieldModel},{optionModel},{period})", option, riskFreeRateModel, dividendYieldModel, optionModel, period)
         {
         }
 
@@ -86,12 +88,12 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
-        /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate IV</param>
-        public ImpliedVolatility(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, int period = 252,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
             : this(name, option, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), 
-                DividendYieldModelPythonWrapper.FromPyObject(dividendYieldModel), period, optionModel)
+                DividendYieldModelPythonWrapper.FromPyObject(dividendYieldModel), optionModel, period)
         {
         }
 
@@ -101,11 +103,11 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
-        /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate IV</param>
-        public ImpliedVolatility(Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, int period = 252,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
-            : this($"IV({option.Value},{period},{riskFreeRateModel},{dividendYieldModel},{optionModel})", option, riskFreeRateModel, dividendYieldModel, period, optionModel)
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this($"IV({option.Value},{riskFreeRateModel},{dividendYieldModel},{optionModel},{period})", option, riskFreeRateModel, dividendYieldModel, optionModel, period)
         {
         }
 
@@ -116,11 +118,11 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
-        /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
         public ImpliedVolatility(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m,
-            int period = 252, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
-            : this(name, option, riskFreeRateModel, new ConstantDividendYieldModel(dividendYield), period, optionModel)
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this(name, option, riskFreeRateModel, new ConstantDividendYieldModel(dividendYield), optionModel, period)
         {
         }
 
@@ -130,11 +132,11 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
-        /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate IV</param>
-        public ImpliedVolatility(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, int period = 252,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
-            : this($"IV({option.Value},{period},{riskFreeRateModel},{dividendYield},{optionModel})", option, riskFreeRateModel, dividendYield, period, optionModel)
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this($"IV({option.Value},{riskFreeRateModel},{dividendYield},{optionModel},{period})", option, riskFreeRateModel, dividendYield, optionModel, period)
         {
         }
 
@@ -145,12 +147,12 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
-        /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
         public ImpliedVolatility(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m,
-            int period = 252, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
             : this(name, option, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), 
-                new ConstantDividendYieldModel(dividendYield), period, optionModel)
+                new ConstantDividendYieldModel(dividendYield), optionModel, period)
         {
         }
 
@@ -160,11 +162,11 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
-        /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate IV</param>
-        public ImpliedVolatility(Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, int period = 252,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
-            : this($"IV({option.Value},{period},{riskFreeRateModel},{dividendYield},{optionModel})", option, riskFreeRateModel, dividendYield, period, optionModel)
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this($"IV({option.Value},{riskFreeRateModel},{dividendYield},{optionModel},{period})", option, riskFreeRateModel, dividendYield, optionModel, period)
         {
         }
 
@@ -175,11 +177,11 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
-        /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
         public ImpliedVolatility(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m,
-            int period = 252, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
-            : this(name, option, new ConstantRiskFreeRateInterestRateModel(riskFreeRate), new ConstantDividendYieldModel(dividendYield), period, optionModel)
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this(name, option, new ConstantRiskFreeRateInterestRateModel(riskFreeRate), new ConstantDividendYieldModel(dividendYield), optionModel, period)
         {
         }
 
@@ -189,18 +191,213 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
-        /// <param name="period">The lookback period of historical volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate IV</param>
-        public ImpliedVolatility(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, int period = 252,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
-            : this($"IV({option.Value},{period},{riskFreeRate},{dividendYield},{optionModel})", option, riskFreeRate, dividendYield, period, optionModel)
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this($"IV({option.Value},{riskFreeRate},{dividendYield},{optionModel},{period})", option, riskFreeRate, dividendYield, optionModel, period)
         {
         }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYieldModel">Dividend yield model</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(string name, Symbol option, Symbol mirrorOption, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this(name, option, riskFreeRateModel, dividendYieldModel, optionModel, period)
+        {
+            SetMirrorOptionContract(mirrorOption);
+
+            // Default smoothing function will be assuming Law of One Price hold,
+            // so both call and put will have the same IV
+            // and using on OTM/ATM options to calculate the IV
+            // by assuming extra volatility coming from extrinsic value
+            SmoothingFunction = (impliedVol, mirrorImpliedVol) =>
+            {
+                if (Strike > UnderlyingPrice && Right == OptionRight.Put)
+                {
+                    return mirrorImpliedVol;
+                }
+                else if (Strike < UnderlyingPrice && Right == OptionRight.Call)
+                {
+                    return mirrorImpliedVol;
+                }
+                return impliedVol;
+            };
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYieldModel">Dividend yield model</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(Symbol option, Symbol mirrorOption, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this($"IV({option.Value},{riskFreeRateModel},{dividendYieldModel},{optionModel},{period})", option, mirrorOption, riskFreeRateModel, dividendYieldModel, optionModel, period)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYieldModel">Dividend yield model</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(string name, Symbol option, Symbol mirrorOption, PyObject riskFreeRateModel, PyObject dividendYieldModel,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this(name, option, mirrorOption, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), 
+                DividendYieldModelPythonWrapper.FromPyObject(dividendYieldModel), optionModel, period)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYieldModel">Dividend yield model</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(Symbol option, Symbol mirrorOption, PyObject riskFreeRateModel, PyObject dividendYieldModel,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this($"IV({option.Value},{mirrorOption.Value},{riskFreeRateModel},{dividendYieldModel},{optionModel},{period})", option, mirrorOption, riskFreeRateModel, dividendYieldModel, optionModel, period)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYield">Dividend yield, as a constant</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(string name, Symbol option, Symbol mirrorOption, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this(name, option, mirrorOption, riskFreeRateModel, new ConstantDividendYieldModel(dividendYield), optionModel, period)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYield">Dividend yield, as a constant</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(Symbol option, Symbol mirrorOption, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this($"IV({option.Value},{mirrorOption.Value},{riskFreeRateModel},{dividendYield},{optionModel},{period})", option, mirrorOption, riskFreeRateModel, dividendYield, optionModel, period)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYield">Dividend yield, as a constant</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(string name, Symbol option, Symbol mirrorOption, PyObject riskFreeRateModel, decimal dividendYield = 0.0m,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this(name, option, mirrorOption, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), 
+                new ConstantDividendYieldModel(dividendYield), optionModel, period)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYield">Dividend yield, as a constant</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(Symbol option, Symbol mirrorOption, PyObject riskFreeRateModel, decimal dividendYield = 0.0m,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this($"IV({option.Value},{mirrorOption.Value},{riskFreeRateModel},{dividendYield},{optionModel},{period})", option, mirrorOption, riskFreeRateModel, dividendYield, optionModel, period)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
+        /// <param name="dividendYield">Dividend yield, as a constant</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(string name, Symbol option, Symbol mirrorOption, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this(name, option, mirrorOption, new ConstantRiskFreeRateInterestRateModel(riskFreeRate), new ConstantDividendYieldModel(dividendYield), optionModel, period)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ImpliedVolatility class
+        /// </summary>
+        /// <param name="option">The option to be tracked</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
+        /// <param name="dividendYield">Dividend yield, as a constant</param>
+        /// <param name="optionModel">The option pricing model used to estimate IV</param>
+        /// <param name="period">The lookback period of historical volatility</param>
+        public ImpliedVolatility(Symbol option, Symbol mirrorOption, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m,
+            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
+            : this($"IV({option.Value},{mirrorOption.Value},{riskFreeRate},{dividendYield},{optionModel},{period})", option, mirrorOption, riskFreeRate, dividendYield, optionModel, period)
+        {
+        }
+
+        /// <summary>
+        /// Set the smoothing function of IV, using both call and put IV value
+        /// </summary>
+        /// <param name="function">the smoothing function</param>
+        public void SetSmoothingFunction(Func<decimal, decimal, decimal> function)
+        {
+            SmoothingFunction = function;
+        }
+
+        /// <summary>
+        /// Set the smoothing function of IV, using both call and put IV value
+        /// </summary>
+        /// <param name="function">the smoothing function</param>
+        public void SetSmoothingFunction(PyObject function)
+        {
+            SmoothingFunction = PythonUtil.ToFunc<decimal, decimal, decimal>(function);
+        }
+
+        private bool _isReady => Price.Current.Time == UnderlyingPrice.Current.Time && Price.IsReady && UnderlyingPrice.IsReady;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => HistoricalVolatility.Samples >= 2 && Price.Current.Time == UnderlyingPrice.Current.Time;
+        public override bool IsReady => UseMirrorContract ? _isReady && Price.Current.Time == OppositePrice.Current.Time && OppositePrice.IsReady : _isReady;
 
         /// <summary>
         /// Computes the next value
@@ -209,12 +406,15 @@ namespace QuantConnect.Indicators
         /// <returns>The input is returned unmodified.</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            var inputSymbol = input.Symbol;
-            if (inputSymbol == _optionSymbol)
+            if (input.Symbol == _optionSymbol)
             {
                 Price.Update(input.EndTime, input.Price);
             }
-            else if (inputSymbol == _underlyingSymbol)
+            else if (input.Symbol == _oppositeOptionSymbol)
+            {
+                OppositePrice.Update(input.EndTime, input.Price);
+            }
+            else if (input.Symbol == _underlyingSymbol)
             {
                 _consolidator.Update(input);
                 UnderlyingPrice.Update(input.EndTime, input.Price);
@@ -225,10 +425,19 @@ namespace QuantConnect.Indicators
             }
 
             var time = Price.Current.Time;
-            if (time == UnderlyingPrice.Current.Time && Price.IsReady && UnderlyingPrice.IsReady)
+            if (_isReady)
             {
+                if (UseMirrorContract)
+                {
+                    if (time != OppositePrice.Current.Time)
+                    {
+                        return _impliedVolatility;
+                    }
+                }
+
                 _impliedVolatility = CalculateIV(time);
             }
+
             return _impliedVolatility;
         }
 
@@ -241,33 +450,56 @@ namespace QuantConnect.Indicators
                 // Binomial model also follows BSM process (log-normal)
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
                     return OptionGreekIndicatorsHelper.CRRTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, dividendYield, optionType);
+                case OptionPricingModelType.ForwardTree:
+                    return OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, dividendYield, optionType);
                 case OptionPricingModelType.BlackScholes:
                 default:
                     return OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, dividendYield, optionType);
             }
         }
 
-        // Calculate the IV of the option
-        private decimal CalculateIV(DateTime time)
+        /// <summary>
+        /// Computes the IV of the option
+        /// </summary>
+        /// <param name="time">the datetime at this calculation</param>
+        /// <returns>Smoothened IV of the option</returns>
+        protected virtual decimal CalculateIV(DateTime time)
         {
             RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
             DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
 
-            var price = Price.Current.Value;
-            var spotPrice = UnderlyingPrice.Current.Value;
             var timeToExpiration = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
 
-            Func<double, double> f = (vol) => (double)(price - TheoreticalPrice(
-                Convert.ToDecimal(vol), spotPrice, Strike, timeToExpiration, RiskFreeRate.Current.Value, DividendYield.Current.Value, Right, _optionModel));
+            var impliedVol = 0m;
             try
             {
-                return Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 2.0d, 1e-4d, 100));
+                Func<double, double> f = (vol) => (double)(TheoreticalPrice(
+                    Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right, _optionModel) - Price);
+                impliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 2.0d, 1e-4d, 100));
             }
             catch
             {
                 Log.Error("ImpliedVolatility.CalculateIV(): Fail to converge, returning 0.");
-                return 0m;
             }
+
+            if (UseMirrorContract)
+            {
+                var mirrorImpliedVol = 0m;
+                try
+                {
+                    Func<double, double> f = (vol) => (double)(TheoreticalPrice(
+                        Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, _oppositeOptionSymbol.ID.OptionRight, _optionModel) - OppositePrice);
+                    mirrorImpliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 2.0d, 1e-4d, 100));
+                }
+                catch
+                {
+                    Log.Error("ImpliedVolatility.CalculateIV(): Fail to converge, returning 0.");
+                }
+
+                return SmoothingFunction(impliedVol, mirrorImpliedVol);
+            }
+
+            return impliedVol;
         }
 
         /// <summary>

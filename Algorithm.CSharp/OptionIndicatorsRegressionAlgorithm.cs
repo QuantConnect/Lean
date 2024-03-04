@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             var interestRateProvider = new InterestRateProvider();
             var dividendYieldProvider = new DividendYieldProvider(_aapl);
 
-            _impliedVolatility = new ImpliedVolatility(_option, interestRateProvider, dividendYieldProvider, 2, OptionPricingModelType.BlackScholes);
+            _impliedVolatility = new ImpliedVolatility(_option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BlackScholes, 2);
             _delta = new Delta(_option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BinomialCoxRossRubinstein, OptionPricingModelType.BlackScholes);
         }
 
