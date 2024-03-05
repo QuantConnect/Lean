@@ -1551,9 +1551,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
 
             AddOpenOrder(order, _algorithm);
-
-            order.SetBrokerId();
-
             return order;
         }
 
