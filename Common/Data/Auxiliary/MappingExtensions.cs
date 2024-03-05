@@ -98,7 +98,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <remarks>
         /// GOOGLE: IPO: August 19, 2004 Name = GOOG then it was restructured: from "GOOG" to "GOOGL" on April 2, 2014
         /// </remarks>
-        public static IEnumerable<(string Ticker, DateTime startDateTime, DateTime endDateTime)> RetrieveSymbolHistoricalDefinitionsInDateRange
+        public static IEnumerable<TickerDateRange> RetrieveSymbolHistoricalDefinitionsInDateRange
             (this IMapFileProvider mapFileProvider, Symbol symbol, DateTime startDateTime, DateTime endDateTime)
         {
             if (mapFileProvider == null)
@@ -109,6 +109,13 @@ namespace QuantConnect.Data.Auxiliary
             var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
             var symbolMapFile = mapFileResolver.ResolveMapFile(symbol);
 
+            if (!symbolMapFile.Any())
+            {
+                // If empty: should return the same request data
+                yield return new (symbolMapFile.Permtick, startDateTime, endDateTime);
+                yield break;
+            }
+
             var newStartDateTime = startDateTime;
             foreach (var mappedTicker in symbolMapFile.Skip(1)) // Skip: IPO Ticker's DateTime 
             {
@@ -116,11 +123,11 @@ namespace QuantConnect.Data.Auxiliary
                 {
                     if (endDateTime <= mappedTicker.Date)
                     {
-                        yield return (mappedTicker.MappedSymbol, newStartDateTime, endDateTime);
+                        yield return new (mappedTicker.MappedSymbol, newStartDateTime, endDateTime);
                         // the request EndDateTime was achieved
                         yield break;
                     }
-                    yield return (mappedTicker.MappedSymbol, newStartDateTime, mappedTicker.Date);
+                    yield return new (mappedTicker.MappedSymbol, newStartDateTime, mappedTicker.Date);
                     newStartDateTime = mappedTicker.Date.AddDays(1);
                 }
             }

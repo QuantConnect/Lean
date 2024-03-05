@@ -70,18 +70,13 @@ namespace QuantConnect.Data
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var symbolInDateRangeEnumerator =
-                mapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(request.Symbol, request.StartTimeUtc, request.EndTimeUtc)
-                .GetEnumerator();
-
-            if (request.Symbol.RequiresMapping() && symbolInDateRangeEnumerator.MoveNext())
+            if (request.Symbol.RequiresMapping())
             {
-                do
+                foreach (var tickerDateRange in mapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(request.Symbol, request.StartTimeUtc, request.EndTimeUtc))
                 {
-                    var (ticker, startDateTime, endDateTime) = symbolInDateRangeEnumerator.Current;
-                    var symbol = request.Symbol.UpdateMappedSymbol(ticker);
-                    yield return new HistoryRequest(request, symbol, startDateTime, endDateTime);
-                } while (symbolInDateRangeEnumerator.MoveNext());
+                    var symbol = request.Symbol.UpdateMappedSymbol(tickerDateRange.Ticker);
+                    yield return new HistoryRequest(request, symbol, tickerDateRange.StartDateTimeUtc, tickerDateRange.EndDateTimeUtc);
+                }
             }
             else
             {

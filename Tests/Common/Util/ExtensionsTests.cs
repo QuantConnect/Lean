@@ -1765,7 +1765,7 @@ def select_symbol(fundamental):
         [TestCase("GOOG", "2014/04/03", 1)] // The restructuring: April 2, 2014 "GOOCV" to "GOOG"
         [TestCase("SPWR", "2005/11/17", 3)] // IPO: November 17, 2005
         [TestCase("SPWR", "2023/11/16", 1)]
-        [TestCase("NFLX", "2023/11/16", 0)] // not mapped
+        [TestCase("NFLX", "2023/11/16", 1)] // not mapped
         public void GetHistoricalSymbolNamesByDateRequest(string ticker, DateTime startDateTime, int expectedAmount)
         {
             var endDateTime = new DateTime(2024, 03, 01);
