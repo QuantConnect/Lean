@@ -331,6 +331,18 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Sets the Lean order id as a broker id
+        /// </summary>
+        internal void SetBrokerId()
+        {
+            var orderId = Id.ToStringInvariant();
+            if (!BrokerId.Contains(orderId))
+            {
+                BrokerId.Add(orderId);
+            }
+        }
+
+        /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>
         /// <returns>
