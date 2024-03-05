@@ -1774,7 +1774,7 @@ def select_symbol(fundamental):
 
             var request = TestsHelpers.GetHistoryRequest(symbol, startDateTime, endDateTime, Resolution.Daily, TickType.Trade);
 
-            var tickers = symbol.RetrieveSymbolHistoricalDefinitionsInDateRange(TestGlobals.MapFileProvider, request.StartTimeUtc, request.EndTimeUtc).ToList();
+            var tickers = TestGlobals.MapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(symbol, request.StartTimeUtc, request.EndTimeUtc).ToList();
 
             Assert.That(tickers.Count, Is.EqualTo(expectedAmount));
         }
@@ -1785,8 +1785,8 @@ def select_symbol(fundamental):
         {
             var futureSymbol = Symbols.CreateFutureSymbol(ticker, expiryTickerDate);
 
-            var tickers = 
-                futureSymbol.RetrieveSymbolHistoricalDefinitionsInDateRange(TestGlobals.MapFileProvider, expiryTickerDate, new DateTime(2023, 11, 24)).ToList();
+            var tickers =
+                TestGlobals.MapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(futureSymbol, expiryTickerDate, new DateTime(2023, 11, 24)).ToList();
 
             Assert.That(tickers.Count, Is.EqualTo(expectedAmount));
         }
