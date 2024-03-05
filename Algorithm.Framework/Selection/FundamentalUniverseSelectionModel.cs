@@ -110,7 +110,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             if (_fundamentalData)
             {
                 var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
-                yield return new FundamentalUniverse(universeSettings, fundamental => Select(algorithm, fundamental));
+                yield return new FundamentalUniverseConfig(universeSettings, fundamental => Select(algorithm, fundamental));
             }
             else
             {

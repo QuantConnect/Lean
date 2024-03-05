@@ -16,6 +16,7 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
@@ -53,9 +54,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             foreach (var point in base.Read(source))
             {
-                if (point is BaseDataCollection)
+                if (point is BaseDataCollection collection && !collection.Data.IsNullOrEmpty())
                 {
-                    // if underlying already is returning a collection let it through as is
+                    // if underlying already is returning an aggregated collection let it through as is
                     yield return point;
                 }
                 else

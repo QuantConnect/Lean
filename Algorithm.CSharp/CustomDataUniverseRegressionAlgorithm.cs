@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception($"Unexpected selection time {Time} expected {expectedTime}");
                 }
-                return coarse.OrderByDescending(x => x.DollarVolume)
+                return coarse.OfType<CoarseFundamental>().OrderByDescending(x => x.DollarVolume)
                     .SelectMany(x => new[] {
                         x.Symbol,
                         QuantConnect.Symbol.CreateBase(typeof(CustomData), x.Symbol)})

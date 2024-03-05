@@ -21,14 +21,20 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Lean fundamentals universe data class
     /// </summary>
-    public class Fundamentals : BaseDataCollection
+    [Obsolete("'Fundamentals' was renamed to 'FundamentalUniverse'")]
+    public class Fundamentals : FundamentalUniverse { }
+
+    /// <summary>
+    /// Lean fundamentals universe data class
+    /// </summary>
+    public class FundamentalUniverse : BaseDataCollection
     {
         private static readonly Fundamental _factory = new();
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public Fundamentals()
+        public FundamentalUniverse()
         {
         }
 
@@ -37,7 +43,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="time">The current time</param>
         /// <param name="symbol">The associated symbol</param>
-        public Fundamentals(DateTime time, Symbol symbol) : base(time, symbol)
+        public FundamentalUniverse(DateTime time, Symbol symbol) : base(time, symbol)
         {
         }
 
@@ -78,7 +84,19 @@ namespace QuantConnect.Data.Fundamental
         /// <returns>The cloned instance</returns>
         public override BaseData Clone()
         {
-            return new Fundamentals(Time, Symbol) { Data = Data, EndTime = EndTime };
+            return new FundamentalUniverse(Time, Symbol) { Data = Data, EndTime = EndTime };
+        }
+
+        /// <summary>
+        /// Creates the universe symbol
+        /// </summary>
+        /// <returns></returns>
+        public static Symbol UniverseSymbol()
+        {
+            var market = QuantConnect.Market.USA;
+            var ticker = $"universe-fundamental-{market}-{Guid.NewGuid()}";
+            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
+            return new Symbol(sid, ticker);
         }
 
         /// <summary>

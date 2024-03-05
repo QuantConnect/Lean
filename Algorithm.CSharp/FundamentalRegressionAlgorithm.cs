@@ -32,13 +32,16 @@ namespace QuantConnect.Algorithm.CSharp
         private const int NumberOfSymbolsFundamental = 2;
 
         private SecurityChanges _changes = SecurityChanges.None;
+        private Universe _universe;
 
         public override void Initialize()
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2014, 03, 25);
+            SetStartDate(2014, 03, 26);
             SetEndDate(2014, 04, 07);
+
+            _universe = AddUniverse(FundamentalSelectionFunction);
 
             // before we add any symbol
             AssertFundamentalUniverseData();
@@ -85,26 +88,45 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
             AssertFundamentalUniverseData();
-
-            AddUniverse(FundamentalSelectionFunction);
         }
 
         private void AssertFundamentalUniverseData()
         {
-            // Request historical fundamental data for all symbols
-            var history2 = History<Fundamentals>(new TimeSpan(1, 0, 0, 0)).ToList();
-            if (history2.Count != 1)
+            // we run it twice just to match the history request data point count with the python version which has 1 extra different api test/assert
+            for (var i = 0; i < 2; i++)
             {
-                throw new Exception($"Unexpected {nameof(Fundamentals)} history count {history2.Count}! Expected 1");
+                // Request historical fundamental data for all symbols, passing the universe instance
+                var universeDataPerTime = History(_universe, new TimeSpan(2, 0, 0, 0)).ToList();
+                if (universeDataPerTime.Count != 2)
+                {
+                    throw new Exception($"Unexpected {nameof(Fundamentals)} history count {universeDataPerTime.Count}! Expected 1");
+                }
+
+                foreach (var universeDataCollection in universeDataPerTime)
+                {
+                    AssertFundamentalEnumerator(universeDataCollection, "1");
+                }
             }
-            var data = history2[0].Single().Value.Data;
-            if (data.Count < 7000)
+
+            // Passing through the unvierse type and symbol
+            var enumerableOfDataDictionary = History<FundamentalUniverse>(new[] { _universe.Symbol }, 100);
+            foreach (var selectionCollectionForADay in enumerableOfDataDictionary)
             {
-                throw new Exception($"Unexpected {nameof(Fundamentals)} data count {data.Count}! Expected > 7000");
+                AssertFundamentalEnumerator(selectionCollectionForADay[_universe.Symbol], "2");
             }
-            if (data.Any(x => x.GetType() != typeof(Fundamental)))
+        }
+
+        private void AssertFundamentalEnumerator(IEnumerable<BaseData> enumerable, string caseName)
+        {
+            var dataPointCount = 0;
+            // note we need to cast to Fundamental type
+            foreach (Fundamental fundamental in enumerable)
             {
-                throw new Exception($"Unexpected {nameof(Fundamentals)} data type!");
+                dataPointCount++;
+            }
+            if (dataPointCount < 7000)
+            {
+                throw new Exception($"Unexpected historical {nameof(Fundamentals)} data count {dataPointCount} case {caseName}! Expected > 7000");
             }
         }
 
@@ -168,12 +190,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 85867;
+        public long DataPoints => 77967;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 4;
+        public virtual int AlgorithmHistoryDataPoints => 14;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -183,28 +205,28 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.223%"},
+            {"Compounding Annual Return", "-2.572%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-0.009%"},
-            {"Sharpe Ratio", "-6.313"},
-            {"Sortino Ratio", "-8.551"},
-            {"Probabilistic Sharpe Ratio", "12.055%"},
+            {"Net Profit", "-0.093%"},
+            {"Sharpe Ratio", "-4.883"},
+            {"Sortino Ratio", "-6.653"},
+            {"Probabilistic Sharpe Ratio", "22.758%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.019"},
-            {"Beta", "0.027"},
-            {"Annual Standard Deviation", "0.004"},
+            {"Alpha", "-0.014"},
+            {"Beta", "0.023"},
+            {"Annual Standard Deviation", "0.003"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "1.749"},
+            {"Information Ratio", "0.597"},
             {"Tracking Error", "0.095"},
-            {"Treynor Ratio", "-0.876"},
+            {"Treynor Ratio", "-0.694"},
             {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$2200000000.00"},
+            {"Estimated Strategy Capacity", "$1500000000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.28%"},
-            {"OrderListHash", "490a9beb7a7b09c88db446e4fbd392cc"}
+            {"Portfolio Turnover", "0.30%"},
+            {"OrderListHash", "1e19c27ee1573978a10370b6a243edf7"}
         };
     }
 }

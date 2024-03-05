@@ -2584,10 +2584,13 @@ namespace QuantConnect
                     {
                         result = (T)pyObject.AsManagedObject(type);
                         // pyObject is a C# object wrapped in PyObject, in this case return true
+                        if(!pyObject.HasAttr("__name__"))
+                        {
+                            return true;
+                        }
                         // Otherwise, pyObject is a python object that subclass a C# class, only return true if 'allowPythonDerivative'
                         var castedResult = (Type)pyObject.AsManagedObject(type);
                         var pythonName = pyObject.GetAttr("__name__").GetAndDispose<string>();
-
                         return pythonName == castedResult.Name;
                     }
 
@@ -2739,11 +2742,10 @@ namespace QuantConnect
                     ? Universe.Unchanged
                     : ((object[])result).Select(x =>
                     {
-                        if (x is Symbol)
+                        if (x is Symbol castedSymbol)
                         {
-                            return (Symbol)x;
+                            return castedSymbol;
                         }
-
                         return SymbolCache.TryGetSymbol((string)x, out var symbol) ? symbol : null;
                     });
             };

@@ -287,7 +287,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Universes)]
         public Universe AddUniverse(PyObject pyObject)
         {
-            Func<IEnumerable<Fundamental>, object> coarseFunc;
+            Func<IEnumerable<Fundamental>, object> fundamentalSelector;
             Universe universe;
 
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
@@ -299,9 +299,9 @@ namespace QuantConnect.Algorithm
             {
                 return AddUniverse(new UniversePythonWrapper(pyObject));
             }
-            else if (pyObject.TryConvertToDelegate(out coarseFunc))
+            else if (pyObject.TryConvertToDelegate(out fundamentalSelector))
             {
-                return AddUniverse(new FundamentalUniverse(UniverseSettings, pyObject));
+                return AddUniverse(new FundamentalUniverseConfig(UniverseSettings, fundamentalSelector));
             }
             else
             {
@@ -852,6 +852,14 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
+            if (tickers.TryConvert<Universe>(out var universe))
+            {
+                resolution ??= universe.Configuration.Resolution;
+                var requests = CreateBarCountHistoryRequests(new[] { universe.Symbol }, universe.DataType, periods, resolution, fillForward, extendedMarketHours,
+                    dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
+                return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+            }
             if (tickers.TryConvert<Type>(out var type))
             {
                 var requests = CreateBarCountHistoryRequests(Securities.Keys, type, periods, resolution, fillForward, extendedMarketHours,
@@ -905,6 +913,14 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
+            if (tickers.TryConvert<Universe>(out var universe))
+            {
+                resolution ??= universe.Configuration.Resolution;
+                var requests = CreateDateRangeHistoryRequests(new[] { universe.Symbol }, universe.DataType, start, end, resolution, fillForward, extendedMarketHours,
+                    dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
+                return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+            }
             if (tickers.TryConvert<Type>(out var type))
             {
                 var requests = CreateDateRangeHistoryRequests(Securities.Keys, type, start, end, resolution, fillForward, extendedMarketHours,
@@ -1478,23 +1494,50 @@ namespace QuantConnect.Algorithm
 
         protected PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
         {
-            var memoizingEnumerable = data as MemoizingEnumerable<Slice>;
+            var history = PandasConverter.GetDataFrame(RemoveMemoizing(data), dataType);
+            return TryCleanupCollectionDataFrame(dataType, history);
+        }
+
+        protected PyObject GetDataFrame<T>(IEnumerable<T> data)
+            where T : IBaseData
+        {
+            var history = PandasConverter.GetDataFrame(RemoveMemoizing(data));
+            return TryCleanupCollectionDataFrame(typeof(T), history);
+        }
+
+        private IEnumerable<T> RemoveMemoizing<T>(IEnumerable<T> data)
+        {
+            var memoizingEnumerable = data as MemoizingEnumerable<T>;
             if (memoizingEnumerable != null)
             {
                 // we don't need the internal buffer which will just generate garbage, so we disable it
                 // the user will only have access to the final pandas data frame object
                 memoizingEnumerable.Enabled = false;
             }
-            var history = PandasConverter.GetDataFrame(data, dataType);
-            if(dataType != null && dataType.IsAssignableTo(typeof(BaseDataCollection)))
+            return data;
+        }
+
+        private PyObject TryCleanupCollectionDataFrame(Type dataType, PyObject history)
+        {
+            if (dataType != null && dataType.IsAssignableTo(typeof(BaseDataCollection)))
             {
                 // clear out the first symbol level since it doesn't make sense, it's the universe generic symbol
+                // let's directly return the data property which is where all the data points are in a BaseDataCollection, save the user some pain
                 dynamic dynamic = history;
                 using (Py.GIL())
                 {
                     if (!dynamic.empty)
                     {
-                        dynamic.index = dynamic.index.droplevel("symbol");
+                        using PyObject columns = dynamic.columns;
+                        if (columns.As<string[]>().Contains("data"))
+                        {
+                            history = dynamic["data"];
+                        }
+                        else
+                        {
+                            dynamic.index = dynamic.index.droplevel("symbol");
+                            history = dynamic;
+                        }
                     }
                 }
             }

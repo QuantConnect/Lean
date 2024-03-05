@@ -39,7 +39,7 @@ class FundamentalUniverseSelectionModel:
             The universe defined by this model'''
         if self._fundamentalData:
             universeSettings = algorithm.UniverseSettings if self.universeSettings is None else self.universeSettings
-            universe = FundamentalUniverse(universeSettings, lambda fundamental: self.Select(algorithm, fundamental))
+            universe = FundamentalUniverseConfig(universeSettings, lambda fundamental: self.Select(algorithm, fundamental))
             return [universe]
         else:
             universe = self.CreateCoarseFundamentalUniverse(algorithm)

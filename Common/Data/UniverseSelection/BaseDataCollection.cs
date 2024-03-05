@@ -48,8 +48,19 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public override DateTime EndTime
         {
-            get { return _endTime; }
-            set { _endTime = value; }
+            get
+            {
+                if (_endTime == default)
+                {
+                    // to be user friendly let's return Time if not set, like BaseData does
+                    return Time;
+                }
+                return _endTime;
+            }
+            set
+            {
+                _endTime = value;
+            }
         }
 
         /// <summary>
@@ -101,27 +112,15 @@ namespace QuantConnect.Data.UniverseSelection
             _endTime = endTime;
             Underlying = underlying;
             FilteredContracts = filteredContracts;
-            if(data != null && data.Count == 1 && data[0] is BaseDataCollection)
+            if (data != null && data.Count == 1 && data[0] is BaseDataCollection collection && collection.Data.Count > 0)
             {
-                // we were given a base data collection, let's be nice and fetch it's data
-                Data = ((BaseDataCollection)data[0]).Data;
+                // we were given a base data collection, let's be nice and fetch it's data if it has any
+                Data = collection.Data;
             }
             else
             {
                 Data = data ?? new List<BaseData>();
             }
-        }
-
-        /// <summary>
-        /// Creates the universe symbol
-        /// </summary>
-        /// <returns></returns>
-        public virtual Symbol UniverseSymbol()
-        {
-            var market = QuantConnect.Market.USA;
-            var ticker = $"universe-{GetType().Name}-{market}-{Guid.NewGuid()}";
-            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
-            return new Symbol(sid, ticker);
         }
 
         /// <summary>
