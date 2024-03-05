@@ -34,6 +34,11 @@ namespace QuantConnect.Brokerages
         public decimal Position { get; }
 
         /// <summary>
+        /// The tag that will be used in the order
+        /// </summary>
+        public string Tag { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OptionNotificationEventArgs"/> class
         /// </summary>
         /// <param name="symbol">The symbol</param>
@@ -45,11 +50,29 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="OptionNotificationEventArgs"/> class
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="position">The new option position</param>
+        /// <param name="tag">The tag to be used for the order</param>
+        public OptionNotificationEventArgs(Symbol symbol, decimal position, string tag)
+            : this(symbol, position)
+        {
+            Tag = tag;
+        }
+
+        /// <summary>
         /// Returns the string representation of this event
         /// </summary>
         public override string ToString()
         {
-            return $"{Symbol} position: {Position}";
+            var str = $"{Symbol} position: {Position}";
+            if (!string.IsNullOrEmpty(Tag))
+            {
+                str += $", tag: {Tag}";
+            }
+
+            return str;
         }
     }
 }

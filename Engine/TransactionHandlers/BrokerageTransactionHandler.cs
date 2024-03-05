@@ -1453,7 +1453,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             // If the quantity is already 0 for Lean and the brokerage there is nothing else todo here
                             if (quantity != 0)
                             {
-                                var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
+                                var exerciseOrder = GenerateOptionExerciseOrder(security, quantity, e.Tag);
 
                                 EmitOptionNotificationEvents(security, exerciseOrder);
                             }
@@ -1514,7 +1514,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                                 {
                                     var quantity = e.Position - security.Holdings.Quantity;
 
-                                    var exerciseOrder = GenerateOptionExerciseOrder(security, quantity);
+                                    var exerciseOrder = GenerateOptionExerciseOrder(security, quantity, e.Tag);
 
                                     EmitOptionNotificationEvents(security, exerciseOrder);
                                 }
@@ -1541,10 +1541,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
         }
 
-        private OptionExerciseOrder GenerateOptionExerciseOrder(Security security, decimal quantity)
+        private OptionExerciseOrder GenerateOptionExerciseOrder(Security security, decimal quantity, string tag)
         {
             // generate new exercise order and ticket for the option
-            var order = new OptionExerciseOrder(security.Symbol, quantity, CurrentTimeUtc);
+            var order = new OptionExerciseOrder(security.Symbol, quantity, CurrentTimeUtc, tag);
 
             // save current security prices
             order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
