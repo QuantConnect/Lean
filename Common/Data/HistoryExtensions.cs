@@ -71,7 +71,7 @@ namespace QuantConnect.Data
             }
 
             var symbolInDateRangeEnumerator =
-                request.Symbol.RetrieveSymbolHistoricalDefinitionsInDateRange(mapFileProvider, request.StartTimeUtc, request.EndTimeUtc)
+                mapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(request.Symbol, request.StartTimeUtc, request.EndTimeUtc)
                 .GetEnumerator();
 
             if (request.Symbol.RequiresMapping() && symbolInDateRangeEnumerator.MoveNext())
