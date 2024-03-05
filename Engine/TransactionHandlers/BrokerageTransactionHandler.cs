@@ -1545,6 +1545,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             // generate new exercise order and ticket for the option
             var order = new OptionExerciseOrder(security.Symbol, quantity, CurrentTimeUtc);
+
+            // save current security prices
+            order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
+            order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
+
             AddOpenOrder(order, _algorithm);
             return order;
         }
