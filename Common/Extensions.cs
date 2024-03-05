@@ -3121,53 +3121,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Some historical provider supports ancient data. In fact, the ticker could be restructured to new one.
-        /// </summary>
-        /// <param name="symbol">Represents a unique security identifier</param>
-        /// <param name="mapFileProvider">Provides instances of <see cref="MapFileResolver"/> at run time</param>
-        /// <param name="startDateTime">The date since we began our search for the historical name of the symbol.</param>
-        /// <param name="endDateTime">The end date and time of the historical data range.</param>
-        /// <returns>
-        /// An enumerable collection of tuples containing symbol ticker, start date and time, and end date and time
-        /// representing the historical definitions of the symbol within the specified time range.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="mapFileProvider"/> is null.</exception>
-        /// <example>
-        /// For instances, get "GOOGL" since 2013 to 2018:
-        /// It returns: { ("GOOG", 2013, 2014), ("GOOGL", 2014, 2018) }
-        /// </example>
-        /// <remarks>
-        /// GOOGLE: IPO: August 19, 2004 Name = GOOG then it was restructured: from "GOOG" to "GOOGL" on April 2, 2014
-        /// </remarks>
-        public static IEnumerable<(string Ticker, DateTime startDateTime, DateTime endDateTime)> RetrieveSymbolHistoricalDefinitionsInDateRange
-            (this Symbol symbol, IMapFileProvider mapFileProvider, DateTime startDateTime, DateTime endDateTime)
-        {
-            if (mapFileProvider == null)
-            {
-                throw new ArgumentNullException(nameof(mapFileProvider));
-            }
-
-            var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
-            var symbolMapFile = mapFileResolver.ResolveMapFile(symbol);
-
-            var newStartDateTime = startDateTime;
-            foreach (var mappedTicker in symbolMapFile.Skip(1)) // Skip: IPO Ticker's DateTime 
-            {
-                if (mappedTicker.Date >= newStartDateTime)
-                {
-                    if (endDateTime <= mappedTicker.Date)
-                    {
-                        yield return (mappedTicker.MappedSymbol, newStartDateTime, endDateTime);
-                        // the request EndDateTime was achieved
-                        yield break;
-                    }
-                    yield return (mappedTicker.MappedSymbol, newStartDateTime, mappedTicker.Date);
-                    newStartDateTime = mappedTicker.Date.AddDays(1);
-                }
-            }
-        }
-
-        /// <summary>
         /// Helper method to determine if a given symbol is of custom data
         /// </summary>
         public static bool IsCustomDataType<T>(this Symbol symbol)
