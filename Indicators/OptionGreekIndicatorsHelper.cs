@@ -67,7 +67,7 @@ namespace QuantConnect.Indicators
             return numerator / denominator;
         }
 
-        private static decimal CalculateD2(decimal d1, decimal volatility, decimal timeToExpiration)
+        internal static decimal CalculateD2(decimal d1, decimal volatility, decimal timeToExpiration)
         {
             return d1 - volatility * DecimalMath(Math.Sqrt, timeToExpiration);
         }
