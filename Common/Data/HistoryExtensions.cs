@@ -70,7 +70,7 @@ namespace QuantConnect.Data
                 throw new ArgumentNullException(nameof(request));
             }
 
-            if (request.Symbol.RequiresMapping())
+            if (request.Symbol.RequiresMappingExceptFuture())
             {
                 var isReturnHistoryRequest = default(bool);
                 foreach (var tickerDateRange in mapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(request.Symbol, request.StartTimeUtc, request.EndTimeUtc))
