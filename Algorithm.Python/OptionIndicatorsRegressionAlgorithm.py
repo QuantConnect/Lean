@@ -29,6 +29,7 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
 
         self.impliedVolatility = ImpliedVolatility(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BlackScholes, 2)
         self.delta = Delta(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BinomialCoxRossRubinstein, OptionPricingModelType.BlackScholes)
+        self.gamma = Gamma(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.ForwardTree, OptionPricingModelType.BlackScholes)
 
     def OnData(self, slice):
         if slice.Bars.ContainsKey(self.aapl) and slice.QuoteBars.ContainsKey(self.option):
@@ -41,9 +42,13 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
             self.delta.Update(underlyingDataPoint)
             self.delta.Update(optionDataPoint)
 
+            self.gamma.Update(underlyingDataPoint)
+            self.gamma.Update(optionDataPoint)
+
     def OnEndOfAlgorithm(self):
-        if self.impliedVolatility.Current.Value == 0 or self.delta.Current.Value == 0:
+        if self.impliedVolatility.Current.Value == 0 or self.delta.Current.Value == 0 or self.gamma.Current.Value == 0:
             raise Exception("Expected IV/greeks calculated")
 
         self.Debug(f"""Implied Volatility: {self.impliedVolatility.Current.Value},
-Delta: {self.delta.Current.Value}""")
+Delta: {self.delta.Current.Value},
+Gamma: {self.gamma.Current.Value}""")
