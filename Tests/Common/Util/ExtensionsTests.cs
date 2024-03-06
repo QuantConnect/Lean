@@ -1751,25 +1751,26 @@ def select_symbol(fundamental):
             Assert.DoesNotThrow(() => numerator.SafeDivision(denominator));
         }
 
-        [TestCase("GOOGL", "2004/08/19", 2)] // IPO: August 19, 2004
-        [TestCase("GOOGL", "2008/02/01", 2)]
-        [TestCase("GOOGL", "2014/04/02", 2)] // The restructuring: "GOOG" to "GOOGL" 
-        [TestCase("GOOGL", "2014/02/01", 2)]
-        [TestCase("GOOGL", "2020/02/01", 1)]
-        [TestCase("GOOG", "2020/02/01", 1)]
-        [TestCase("GOOGL", "2023/02/01", 1)]
-        [TestCase("AAPL", "2008/02/01", 1)]
-        [TestCase("AAPL", "2008/02/01", 1)]
-        [TestCase("GOOG", "2014/04/03", 1)] // The restructuring: April 2, 2014 "GOOCV" to "GOOG"
-        [TestCase("SPWR", "2005/11/17", 3)] // IPO: November 17, 2005
-        [TestCase("SPWR", "2023/11/16", 1)]
-        [TestCase("GOOCV", "2010/01/01", 0, Description = "The startDateTime greater then IPO(March 27, 2014) DateTime")]
-        [TestCase("GOOG", "2014/01/01", 0, Description = "The startDateTime greater then IPO DateTime")]
-        [TestCase("NFLX", "2023/11/16", 0, Description = "The Symbol is not mapped")]
-        public void GetHistoricalSymbolNamesByDateRequest(string ticker, DateTime startDateTime, int expectedAmount)
+        [TestCase("GOOGL", "2004/08/19", "2024/03/01", 2)] // IPO: August 19, 2004
+        [TestCase("GOOGL", "2008/02/01", "2023/03/01", 2)]
+        [TestCase("GOOGL", "2014/04/02", "2024/03/01", 2)] // The restructuring: "GOOG" to "GOOGL" 
+        [TestCase("GOOGL", "2014/02/01", "2024/03/01", 2)]
+        [TestCase("GOOGL", "2020/02/01", "2024/03/01", 1)]
+        [TestCase("GOOG", "2020/02/01", "2024/03/01", 1)]
+        [TestCase("GOOGL", "2023/02/01", "2024/03/01", 1)]
+        [TestCase("AAPL", "2008/02/01", "2024/03/01", 1)]
+        [TestCase("AAPL", "2008/02/01", "2024/03/01", 1)]
+        [TestCase("GOOG", "2014/04/03", "2024/03/01", 1)] // The restructuring: April 2, 2014 "GOOCV" to "GOOG"
+        [TestCase("GOOG", "2013/04/03", "2014/04/01", 1)]
+        [TestCase("GOOG", "2013/04/03", "2024/03/01", 2)]
+        [TestCase("GOOG", "2015/04/03", "2024/03/01", 1)]
+        [TestCase("SPWR", "2005/11/17", "2024/03/01", 3)] // IPO: November 17, 2005
+        [TestCase("SPWR", "2023/11/16", "2024/03/01", 1)]
+        [TestCase("GOOCV", "2010/01/01", "2024/03/01", 2)]
+        [TestCase("GOOG", "2014/01/01", "2024/03/01", 2)]
+        [TestCase("NFLX", "2023/11/16", "2024/03/01", 0, Description = "The Symbol is not mapped")]
+        public void GetHistoricalSymbolNamesByDateRequest(string ticker, DateTime startDateTime, DateTime endDateTime, int expectedAmount)
         {
-            var endDateTime = new DateTime(2024, 03, 01);
-
             var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
 
             var request = TestsHelpers.GetHistoryRequest(symbol, startDateTime, endDateTime, Resolution.Daily, TickType.Trade);
@@ -1777,6 +1778,12 @@ def select_symbol(fundamental):
             var tickers = TestGlobals.MapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(symbol, request.StartTimeUtc, request.EndTimeUtc).ToList();
 
             Assert.That(tickers.Count, Is.EqualTo(expectedAmount));
+
+            if (tickers.Count != 0)
+            {
+                Assert.That(tickers.First().StartDateTimeUtc, Is.EqualTo(startDateTime));
+                Assert.That(tickers.Last().EndDateTimeUtc, Is.EqualTo(endDateTime));
+            }
         }
 
         [TestCase(Futures.Indices.SP500EMini, "2023/11/16", 1)]
@@ -1786,7 +1793,7 @@ def select_symbol(fundamental):
             var futureSymbol = Symbols.CreateFutureSymbol(ticker, expiryTickerDate);
 
             var tickers =
-                TestGlobals.MapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(futureSymbol, expiryTickerDate, new DateTime(2023, 11, 24)).ToList();
+                TestGlobals.MapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(futureSymbol, new DateTime(2023, 11, 5), expiryTickerDate).ToList();
 
             Assert.That(tickers.Count, Is.EqualTo(expectedAmount));
         }

@@ -26,13 +26,14 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class HistoryExtensionsTests
     {
-        [TestCase("GOOGL", "2010/01/01", "2014/02/04", 1)]
+        [TestCase("GOOGL", "2010/01/01", "2014/02/04", 1, Description = "[GOOG: 2004/08/19 - 2014/04/02][GOOGL: 2014/04/03 - ...)")]
         [TestCase("GOOGL", "2010/01/01", "2015/02/16", 2)]
         [TestCase("GOOGL", "2020/01/01", "2024/01/01", 1)]
-        [TestCase("SPWR", "2007/11/17", "2023/01/01", 3)]
+        [TestCase("GOOG", "2013/04/03", "2023/01/01", 2)]
+        [TestCase("SPWR", "2007/11/17", "2023/01/01", 3, Description = "[SPWR: 2005/11/17 - 2008/09/29][SPWRA: 2008/09/21 - 2011/11/16][SPWR: 2011/11/17 - ...)")]
         [TestCase("SPWR", "2011/11/17", "2023/01/01", 1)]
-        [TestCase("AAPL", "2008/02/01", "2024/03/01", 1)]
-        [TestCase("NFLX", "2022/02/01", "2024/03/01", 1)]
+        [TestCase("AAPL", "2008/02/01", "2024/03/01", 1, Description = "The Symbol is not presented in map files")]
+        [TestCase("NFLX", "2022/02/01", "2024/03/01", 1, Description = "The Symbol is not presented in map files")]
         public void GetSplitHistoricalRequestWithTheSameSymbolButDifferentTicker(string ticker, DateTime startDateTime, DateTime endDateTime, int expectedAmount)
         {
             var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
