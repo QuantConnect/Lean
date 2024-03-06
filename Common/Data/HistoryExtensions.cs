@@ -72,10 +72,17 @@ namespace QuantConnect.Data
 
             if (request.Symbol.RequiresMapping())
             {
+                var isReturnHistoryRequest = default(bool);
                 foreach (var tickerDateRange in mapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(request.Symbol, request.StartTimeUtc, request.EndTimeUtc))
                 {
+                    isReturnHistoryRequest = true;
                     var symbol = request.Symbol.UpdateMappedSymbol(tickerDateRange.Ticker);
                     yield return new HistoryRequest(request, symbol, tickerDateRange.StartDateTimeUtc, tickerDateRange.EndDateTimeUtc);
+                }
+
+                if (!isReturnHistoryRequest)
+                {
+                    yield return request;
                 }
             }
             else
