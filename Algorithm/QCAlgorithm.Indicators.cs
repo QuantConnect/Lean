@@ -1879,6 +1879,91 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Rho indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The option symbol whose values we want as an indicator</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="dividendYield">The dividend yield</param>
+        /// <param name="optionModel">The option pricing model used to estimate Rho</param>
+        /// <param name="ivModel">The option pricing model used to estimate IV</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <returns>A new Rho indicator for the specified symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public Rho R(Symbol symbol, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        {
+            var name = InitializeOptionIndicator<Rho>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
+
+            var rho = new Rho(name, symbol, riskFreeRateModel, dividendYieldModel, optionModel, ivModel);
+            RegisterIndicator(symbol, rho, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol.Underlying, rho, ResolveConsolidator(symbol.Underlying, resolution));
+            return rho;
+        }
+
+        /// <summary>
+        /// Creates a new Rho indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The option symbol whose values we want as an indicator</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="dividendYield">The dividend yield</param>
+        /// <param name="optionModel">The option pricing model used to estimate Rho</param>
+        /// <param name="ivModel">The option pricing model used to estimate IV</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <returns>A new Rho indicator for the specified symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public Rho ρ(Symbol symbol, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        {
+            return R(symbol, riskFreeRate, dividendYield, optionModel, ivModel, resolution);
+        }
+
+        /// <summary>
+        /// Creates a new Rho indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The option symbol whose values we want as an indicator</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="dividendYield">The dividend yield</param>
+        /// <param name="optionModel">The option pricing model used to estimate Rho</param>
+        /// <param name="ivModel">The option pricing model used to estimate IV</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <returns>A new Rho indicator for the specified symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public Rho R(Symbol symbol, Symbol mirrorOption, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        {
+            var name = InitializeOptionIndicator<Rho>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
+
+            var rho = new Rho(name, symbol, mirrorOption, riskFreeRateModel, dividendYieldModel, optionModel, ivModel);
+            RegisterIndicator(symbol, rho, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(mirrorOption, rho, ResolveConsolidator(mirrorOption, resolution));
+            RegisterIndicator(symbol.Underlying, rho, ResolveConsolidator(symbol.Underlying, resolution));
+            return rho;
+        }
+
+        /// <summary>
+        /// Creates a new Rho indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The option symbol whose values we want as an indicator</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="dividendYield">The dividend yield</param>
+        /// <param name="optionModel">The option pricing model used to estimate Rho</param>
+        /// <param name="ivModel">The option pricing model used to estimate IV</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <returns>A new Rho indicator for the specified symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public Rho ρ(Symbol symbol, Symbol mirrorOption, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        {
+            return R(symbol, mirrorOption, riskFreeRate, dividendYield, optionModel, ivModel, resolution);
+        }
+
+        /// <summary>
         /// Creates a new T3MovingAverage indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose T3 we want</param>
