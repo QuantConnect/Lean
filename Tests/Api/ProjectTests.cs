@@ -250,7 +250,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtestRead.Success);
             Assert.AreEqual(1, backtestRead.Progress);
             Assert.AreEqual(backtestName, backtestRead.Name);
-            Assert.AreEqual("1", backtestRead.Statistics["Total Trades"]);
+            Assert.AreEqual("1", backtestRead.Statistics["Total Orders"]);
             Assert.Greater(backtestRead.Charts["Benchmark"].Series.Count, 0);
 
             // In the same way, read the orders returned in the backtest

@@ -23,6 +23,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Common.Packets
 {
@@ -47,7 +48,7 @@ namespace QuantConnect.Tests.Common.Packets
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(BasicTemplateDailyAlgorithm),
                 new Dictionary<string, string> {
-                    { "Total Trades", "1" },
+                    { PerformanceMetrics.TotalOrders, "1" },
                     {"Average Win", "0%"},
                     { "Average Loss", "0%"},
                     { "Compounding Annual Return", "17.457%"},
@@ -82,7 +83,7 @@ namespace QuantConnect.Tests.Common.Packets
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(CoarseFundamentalTop3Algorithm),
                 new Dictionary<string, string> {
-                    { "Total Trades", "3" },
+                    { PerformanceMetrics.TotalOrders, "3" },
                     {"Average Win", "0%"},
                     { "Average Loss", "0%"},
                     { "Compounding Annual Return", "0%"},
@@ -173,7 +174,7 @@ namespace QuantConnect.Tests.Common.Packets
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(BasicTemplateDailyAlgorithm),
                 new Dictionary<string, string> {
-                    {"Total Trades", "1"},
+                    {PerformanceMetrics.TotalOrders, "1"},
                     {"Average Win", "0%"},
                     {"Average Loss", "0%"},
                     {"Compounding Annual Return", "246.546%"},
@@ -209,7 +210,7 @@ namespace QuantConnect.Tests.Common.Packets
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(TestInitialCashAmountAlgorithm),
                 new Dictionary<string, string> {
-                    {"Total Trades", "1"},
+                    {PerformanceMetrics.TotalOrders, "1"},
                     {"Average Win", "0%"},
                     {"Average Loss", "0%"},
                     {"Compounding Annual Return", "214.949%"},

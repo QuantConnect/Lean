@@ -23,6 +23,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Algorithm;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Python
 {
@@ -157,7 +158,7 @@ namespace QuantConnect.Tests.Python
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("CustomConsolidatorRegressionAlgorithm",
                 new Dictionary<string, string> {
-                    {"Total Trades", "15"},
+                    {PerformanceMetrics.TotalOrders, "15"},
                     {"Average Win", "0.42%"},
                     {"Average Loss", "-0.03%"},
                     {"Compounding Annual Return", "76.673%"},
