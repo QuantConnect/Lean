@@ -29,6 +29,7 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
 
         self.impliedVolatility = ImpliedVolatility(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BlackScholes, 2)
         self.delta = Delta(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BinomialCoxRossRubinstein, OptionPricingModelType.BlackScholes)
+        self.theta = Theta(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.ForwardTree, OptionPricingModelType.BlackScholes)
         self.rho = Rho(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.ForwardTree, OptionPricingModelType.BlackScholes)
 
     def OnData(self, slice):
@@ -42,13 +43,17 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
             self.delta.Update(underlyingDataPoint)
             self.delta.Update(optionDataPoint)
 
+            self.theta.Update(underlyingDataPoint)
+            self.theta.Update(optionDataPoint)
+
             self.rho.Update(underlyingDataPoint)
             self.rho.Update(optionDataPoint)
 
     def OnEndOfAlgorithm(self):
-        if self.impliedVolatility.Current.Value == 0 or self.delta.Current.Value == 0 or self.rho.Current.Value == 0:
+        if self.impliedVolatility.Current.Value == 0 or self.delta.Current.Value == 0 or self.rho.Current.Value == 0 or self.theta.Current.Value == 0:
             raise Exception("Expected IV/greeks calculated")
 
         self.Debug(f"""Implied Volatility: {self.impliedVolatility.Current.Value},
 Delta: {self.delta.Current.Value},
+Theta: {self.theta.Current.Value},
 Rho: {self.rho.Current.Value}""")

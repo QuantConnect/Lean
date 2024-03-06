@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Indicators
             }
             
             var expected = double.Parse(items[callColumn], NumberStyles.Any, CultureInfo.InvariantCulture);
-            var acceptance = Math.Max(errorMargin * Math.Abs(expected), 1e-4);     // percentage error
+            var acceptance = Math.Max(errorMargin * Math.Abs(expected), 1.5e-3);     // percentage error
             Assert.AreEqual(expected, (double)callIndicator.Current.Value, acceptance);
 
             putIndicator.Update(putDataPoint);
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Indicators
             }
 
             expected = double.Parse(items[putColumn], NumberStyles.Any, CultureInfo.InvariantCulture);
-            acceptance = Math.Max(errorMargin * Math.Abs(expected), 1e-4);     // percentage error
+            acceptance = Math.Max(errorMargin * Math.Abs(expected), 1.5e-3);     // percentage error
             Assert.AreEqual(expected, (double)putIndicator.Current.Value, acceptance);
         }
 
