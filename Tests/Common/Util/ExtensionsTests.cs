@@ -1751,25 +1751,25 @@ def select_symbol(fundamental):
             Assert.DoesNotThrow(() => numerator.SafeDivision(denominator));
         }
 
-        [TestCase("GOOGL", "2004/08/19", "2024/03/01", 2)] // IPO: August 19, 2004
-        [TestCase("GOOGL", "2008/02/01", "2023/03/01", 2)]
-        [TestCase("GOOGL", "2014/04/02", "2024/03/01", 2)] // The restructuring: "GOOG" to "GOOGL" 
-        [TestCase("GOOGL", "2014/02/01", "2024/03/01", 2)]
-        [TestCase("GOOGL", "2020/02/01", "2024/03/01", 1)]
-        [TestCase("GOOG", "2020/02/01", "2024/03/01", 1)]
-        [TestCase("GOOGL", "2023/02/01", "2024/03/01", 1)]
-        [TestCase("AAPL", "2008/02/01", "2024/03/01", 1)]
-        [TestCase("AAPL", "2008/02/01", "2024/03/01", 1)]
-        [TestCase("GOOG", "2014/04/03", "2024/03/01", 1)] // The restructuring: April 2, 2014 "GOOCV" to "GOOG"
-        [TestCase("GOOG", "2013/04/03", "2014/04/01", 1)]
-        [TestCase("GOOG", "2013/04/03", "2024/03/01", 2)]
-        [TestCase("GOOG", "2015/04/03", "2024/03/01", 1)]
-        [TestCase("SPWR", "2005/11/17", "2024/03/01", 3)] // IPO: November 17, 2005
-        [TestCase("SPWR", "2023/11/16", "2024/03/01", 1)]
-        [TestCase("GOOCV", "2010/01/01", "2024/03/01", 2)]
-        [TestCase("GOOG", "2014/01/01", "2024/03/01", 2)]
-        [TestCase("NFLX", "2023/11/16", "2024/03/01", 0, Description = "The Symbol is not mapped")]
-        public void GetHistoricalSymbolNamesByDateRequest(string ticker, DateTime startDateTime, DateTime endDateTime, int expectedAmount)
+        [TestCase("GOOGL", "2004/08/19", "2024/03/01", 2, "GOOG,GOOGL")] // IPO: August 19, 2004
+        [TestCase("GOOGL", "2010/02/01", "2012/03/01", 1, "GOOG")]
+        [TestCase("GOOGL", "2014/04/02", "2024/03/01", 2, "GOOG,GOOGL")] // The restructuring: "GOOG" to "GOOGL" 
+        [TestCase("GOOGL", "2014/02/01", "2024/03/01", 2, "GOOG,GOOGL")]
+        [TestCase("GOOGL", "2020/02/01", "2024/03/01", 1, "GOOGL")]
+        [TestCase("GOOGL", "2023/02/01", "2024/03/01", 1, "GOOGL")]
+        [TestCase("GOOG", "2020/02/01", "2024/03/01", 1, "GOOG")]
+        [TestCase("AAPL", "2008/02/01", "2024/03/01", 1, "AAPL")]
+        [TestCase("AAPL", "2008/02/01", "2024/03/01", 1, "AAPL")]
+        [TestCase("GOOG", "2014/04/03", "2024/03/01", 1, "GOOG")] // The restructuring: April 2, 2014 "GOOCV" to "GOOG"
+        [TestCase("GOOG", "2013/04/03", "2014/04/01", 1, "GOOCV")]
+        [TestCase("GOOG", "2013/04/03", "2024/03/01", 2, "GOOCV,GOOG")]
+        [TestCase("GOOG", "2015/04/03", "2024/03/01", 1, "GOOG")]
+        [TestCase("GOOCV", "2010/01/01", "2024/03/01", 2, "GOOCV,GOOG")]
+        [TestCase("GOOG", "2014/01/01", "2024/03/01", 2, "GOOCV,GOOG")]
+        [TestCase("SPWR", "2005/11/17", "2024/03/01", 3, "SPWR,SPWRA,SPWR")] // IPO: November 17, 2005
+        [TestCase("SPWR", "2023/11/16", "2024/03/01", 1, "SPWR")]
+        [TestCase("NFLX", "2023/11/16", "2024/03/01", 0, null, Description = "The Symbol is not mapped")]
+        public void GetHistoricalSymbolNamesByDateRequest(string ticker, DateTime startDateTime, DateTime endDateTime, int expectedAmount, string expectedTickers)
         {
             var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
 
@@ -1783,6 +1783,14 @@ def select_symbol(fundamental):
             {
                 Assert.That(tickers.First().StartDateTimeUtc, Is.EqualTo(startDateTime));
                 Assert.That(tickers.Last().EndDateTimeUtc, Is.EqualTo(endDateTime));
+
+                if (expectedTickers != null)
+                {
+                    foreach (var (actualTicker, expectedTicker) in tickers.Zip(expectedTickers.Split(','), (t, et) => (t.Ticker, et)))
+                    {
+                        Assert.That(actualTicker, Is.EqualTo(expectedTicker));
+                    }
+                }
             }
         }
 
