@@ -109,10 +109,8 @@ namespace QuantConnect.Data.Auxiliary
             var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
             var symbolMapFile = mapFileResolver.ResolveMapFile(symbol);
 
-            if (!symbolMapFile.Any())
+            if (!symbolMapFile.HasData(startDateTime))
             {
-                // If empty: should return the same request data
-                yield return new (symbolMapFile.Permtick, startDateTime, endDateTime);
                 yield break;
             }
 

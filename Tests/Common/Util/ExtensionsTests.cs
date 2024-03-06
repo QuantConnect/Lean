@@ -1760,12 +1760,12 @@ def select_symbol(fundamental):
         [TestCase("GOOGL", "2023/02/01", 1)]
         [TestCase("AAPL", "2008/02/01", 1)]
         [TestCase("AAPL", "2008/02/01", 1)]
-        [TestCase("GOOCV", "2010/01/01", 2)] // IPO: March 27, 2014
-        [TestCase("GOOG", "2014/01/01", 2)]
         [TestCase("GOOG", "2014/04/03", 1)] // The restructuring: April 2, 2014 "GOOCV" to "GOOG"
         [TestCase("SPWR", "2005/11/17", 3)] // IPO: November 17, 2005
         [TestCase("SPWR", "2023/11/16", 1)]
-        [TestCase("NFLX", "2023/11/16", 1)] // not mapped
+        [TestCase("GOOCV", "2010/01/01", 0, Description = "The startDateTime greater then IPO(March 27, 2014) DateTime")]
+        [TestCase("GOOG", "2014/01/01", 0, Description = "The startDateTime greater then IPO DateTime")]
+        [TestCase("NFLX", "2023/11/16", 0, Description = "The Symbol is not mapped")]
         public void GetHistoricalSymbolNamesByDateRequest(string ticker, DateTime startDateTime, int expectedAmount)
         {
             var endDateTime = new DateTime(2024, 03, 01);
@@ -1780,7 +1780,7 @@ def select_symbol(fundamental):
         }
 
         [TestCase(Futures.Indices.SP500EMini, "2023/11/16", 1)]
-        [TestCase(Futures.Metals.Gold,"2023/11/16", 0)]
+        [TestCase(Futures.Metals.Gold,"2023/11/16", 0, Description = "The startDateTime is not mapped")]
         public void GetHistoricalFutureSymbolNamesByDateRequest(string ticker, DateTime expiryTickerDate, int expectedAmount)
         {
             var futureSymbol = Symbols.CreateFutureSymbol(ticker, expiryTickerDate);
