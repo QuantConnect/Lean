@@ -31,6 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _option;
         private ImpliedVolatility _impliedVolatility;
         private Delta _delta;
+        private Rho _rho;
 
         public override void Initialize()
         {
@@ -47,6 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             _impliedVolatility = new ImpliedVolatility(_option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BlackScholes, 2);
             _delta = new Delta(_option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BinomialCoxRossRubinstein, OptionPricingModelType.BlackScholes);
+            _rho = new Rho(_option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.ForwardTree, OptionPricingModelType.BlackScholes);
         }
 
         public override void OnData(Slice slice)
@@ -61,17 +63,21 @@ namespace QuantConnect.Algorithm.CSharp
 
                 _delta.Update(underlyingDataPoint);
                 _delta.Update(optionDataPoint);
+
+                _rho.Update(underlyingDataPoint);
+                _rho.Update(optionDataPoint);
             }    
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_impliedVolatility == 0m || _delta == 0m)
+            if (_impliedVolatility == 0m || _delta == 0m || _rho == 0m)
             {
                 throw new Exception("Expected IV/greeks calculated");
             }
             Debug(@$"Implied Volatility: {_impliedVolatility.Current.Value},
-Delta: {_delta.Current.Value}");
+Delta: {_delta.Current.Value},
+Rho: {_rho.Current.Value}");
         }
 
         /// <summary>
