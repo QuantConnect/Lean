@@ -134,5 +134,91 @@ namespace QuantConnect.Data.Auxiliary
                 }
             }
         }
+
+        /// <summary>
+        /// Retrieves all ticker data download parameters from map files for a specific symbol and ticker.
+        /// </summary>
+        /// <param name="mapFileProvider">The provider for map files containing ticker data.</param>
+        /// <param name="symbol">The symbol to get <see cref="MapFileResolver"/> and generate new Symbol.</param>
+        /// <param name="ticker">The ticker symbol for which to retrieve the data parameters.</param>
+        /// <param name="resolution">The resolution of the data to be downloaded.</param>
+        /// <param name="startDateTimeUtc">The start date and time for the data download in UTC.</param>
+        /// <param name="endDateTimeUtc">The end date and time for the data download in UTC.</param>
+        /// <param name="tickType">The tick type of the data to be downloaded.</param>
+        /// <returns>An enumerable collection of DataDownloaderGetParameters objects representing the parameters for downloading ticker data.</returns>
+        /// <exception cref="ArgumentException">Throw if <paramref name="mapFileProvider"/> is null.</exception>
+        public static IEnumerable<DataDownloaderGetParameters> GetAllTickerFromMapFiles(
+            this IMapFileProvider mapFileProvider, 
+            Symbol symbol, 
+            string ticker, 
+            Resolution resolution, 
+            DateTime startDateTimeUtc, 
+            DateTime endDateTimeUtc, 
+            TickType tickType)
+        {
+            if (mapFileProvider == null)
+            {
+                throw new ArgumentException("The map file provider cannot be null.", nameof(mapFileProvider));
+            }
+
+            var tickerUpperCase = ticker?.ToUpperInvariant();
+
+            var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
+
+            foreach (var mapFile in mapFileResolver)
+            {
+                // Check if 'mapFile' contains the desired ticker symbol.
+                if (!mapFile.Any(mapFileRow => mapFileRow.MappedSymbol == tickerUpperCase))
+                {
+                    continue;
+                }
+
+                // Exclude: When resolution is less then hour, we downloaded with using specific start/end DateTime
+                if (startDateTimeUtc > mapFile.DelistingDate && Resolution.Hour > resolution)
+                {
+                    continue;
+                }
+
+                var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.Permtick, symbol?.ID.Market);
+
+                var newEndDateTimeUtc = endDateTimeUtc;
+                foreach (var tickerDateRange in mapFile.GetTickerDateRanges(tickerUpperCase))
+                {
+                    // We have downloaded all range with date from MapFile
+                    if (resolution >= Resolution.Hour)
+                    {
+                        startDateTimeUtc = tickerDateRange.StartDate;
+                        newEndDateTimeUtc = tickerDateRange.EndDate > endDateTimeUtc ? endDateTimeUtc : tickerDateRange.EndDate;
+                    }
+
+                    yield return new DataDownloaderGetParameters(new Symbol(sid, tickerUpperCase), resolution, startDateTimeUtc, newEndDateTimeUtc, tickType);
+
+                    // Prevent dublicate data downloader parameters
+                    if (resolution < Resolution.Hour)
+                    {
+                        yield break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the date ranges associated with a specific ticker symbol from the provided map file.
+        /// </summary>
+        /// <param name="mapFile">The map file containing the data ranges for various ticker.</param>
+        /// <param name="ticker">The ticker for which to retrieve the date ranges.</param>
+        /// <returns>An enumerable collection of tuples representing the start and end dates for each date range associated with the specified ticker symbol.</returns>
+        private static IEnumerable<(DateTime StartDate, DateTime EndDate)> GetTickerDateRanges(this MapFile mapFile, string ticker)
+        {
+            for (var i = 0; i < mapFile.MapFileRowCounter - 1; i++)
+            {
+                if (ticker != mapFile[i + 1].MappedSymbol)
+                {
+                    continue;
+                }
+
+                yield return (mapFile[i].Date, mapFile[i + 1].Date);
+            }
+        }
     }
 }
