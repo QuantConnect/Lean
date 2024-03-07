@@ -34,6 +34,11 @@ namespace QuantConnect.Data.Auxiliary
         private readonly List<MapFileRow> _data;
 
         /// <summary>
+        /// Gets the number of Row in MapFile
+        /// </summary>
+        public int MapFileRowCounter => _data.Count;
+
+        /// <summary>
         /// Gets the entity's unique symbol, i.e OIH.1
         /// </summary>
         public string Permtick { get; }
@@ -205,6 +210,16 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         #endregion
+
+        /// <summary>
+        /// Define the indexer to allow client code to use [] notation.
+        /// </summary>
+        /// <param name="index">index</param>
+        /// <returns><see cref="MapFileRow"/></returns>
+        public MapFileRow this[int index]
+        {
+            get { return _data[index]; }
+        }
 
         /// <summary>
         /// Reads all the map files in the specified directory
