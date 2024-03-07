@@ -1999,7 +1999,35 @@ namespace QuantConnect.Algorithm
 
             return ultimateOscillator;
         }
-        
+
+        /// <summary>
+        /// Creates a new Vega indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The option symbol whose values we want as an indicator</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="dividendYield">The dividend yield</param>
+        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
+        /// <param name="ivModel">The option pricing model used to estimate IV</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <returns>A new Vega indicator for the specified symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public Vega V(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        {
+            var name = InitializeOptionIndicator<Vega>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
+
+            var vega = new Vega(name, symbol, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel);
+            RegisterIndicator(symbol, vega, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol.Underlying, vega, ResolveConsolidator(symbol.Underlying, resolution));
+            if (mirrorOption != null)
+            {
+                RegisterIndicator(mirrorOption, vega, ResolveConsolidator(mirrorOption, resolution));
+            }
+            return vega;
+        }
+
         /// <summary>
         /// Creates a new Chande's Variable Index Dynamic Average indicator.
         /// </summary>
