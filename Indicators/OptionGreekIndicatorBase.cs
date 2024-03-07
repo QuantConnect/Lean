@@ -42,17 +42,21 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         /// <param name="period">The lookback period of historical volatility</param>
         protected OptionGreeksIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
+            Symbol mirrorOption = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
             : base(name, option, riskFreeRateModel, dividendYieldModel, optionModel, period)
         {
             ivModel = ivModel ?? optionModel;
-            ImpliedVolatility = new ImpliedVolatility(name + "_IV", option, riskFreeRateModel, dividendYieldModel, (OptionPricingModelType)ivModel, period);
-            
             WarmUpPeriod = period;
+            ImpliedVolatility = new ImpliedVolatility(name + "_IV", option, riskFreeRateModel, dividendYieldModel, mirrorOption, (OptionPricingModelType)ivModel, period);
+            if (mirrorOption != null)
+            {
+                SetMirrorOptionContract(mirrorOption);
+            }
         }
 
         /// <summary>
@@ -62,12 +66,13 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         /// <param name="period">The lookback period of historical volatility</param>
         protected OptionGreeksIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
-            : this(name, option, riskFreeRateModel, new ConstantDividendYieldModel(dividendYield), optionModel, ivModel, period)
+            Symbol mirrorOption = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
+            : this(name, option, riskFreeRateModel, new ConstantDividendYieldModel(dividendYield), mirrorOption, optionModel, ivModel, period)
         {
         }
 
@@ -78,13 +83,14 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         /// <param name="period">The lookback period of historical volatility</param>
-        protected OptionGreeksIndicatorBase(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m,
+        protected OptionGreeksIndicatorBase(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
-            : this(name, option, new ConstantRiskFreeRateInterestRateModel(riskFreeRate), 
-                new ConstantDividendYieldModel(dividendYield), optionModel, ivModel, period)
+            : this(name, option, new ConstantRiskFreeRateInterestRateModel(riskFreeRate), new ConstantDividendYieldModel(dividendYield), 
+                  mirrorOption, optionModel, ivModel, period)
         {
         }
 
@@ -95,13 +101,14 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         /// <param name="period">The lookback period of historical volatility</param>
-        protected OptionGreeksIndicatorBase(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel,
+        protected OptionGreeksIndicatorBase(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
             : this(name, option, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), 
-                DividendYieldModelPythonWrapper.FromPyObject(dividendYieldModel), optionModel, ivModel, period)
+                DividendYieldModelPythonWrapper.FromPyObject(dividendYieldModel), mirrorOption, optionModel, ivModel, period)
         {
         }
 
@@ -112,105 +119,14 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         /// <param name="period">The lookback period of historical volatility</param>
-        protected OptionGreeksIndicatorBase(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m,
+        protected OptionGreeksIndicatorBase(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
             : this(name, option, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), 
-                new ConstantDividendYieldModel(dividendYield), optionModel, ivModel, period)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the OptionGreeksIndicatorBase class
-        /// </summary>
-        /// <param name="name">The name of this indicator</param>
-        /// <param name="option">The option to be tracked</param>
-        /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="riskFreeRateModel">Risk-free rate model</param>
-        /// <param name="dividendYieldModel">Dividend yield model</param>
-        /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
-        /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        /// <param name="period">The lookback period of historical volatility</param>
-        protected OptionGreeksIndicatorBase(string name, Symbol option, Symbol mirrorOption, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
-            : base(name, option, riskFreeRateModel, dividendYieldModel, optionModel, period)
-        {
-            SetMirrorOptionContract(mirrorOption);
-            ivModel = ivModel ?? optionModel;
-            ImpliedVolatility = new ImpliedVolatility(name + "_IV", option, mirrorOption, riskFreeRateModel, dividendYieldModel, (OptionPricingModelType)ivModel, period);
-            WarmUpPeriod = period;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the OptionGreeksIndicatorBase class
-        /// </summary>
-        /// <param name="name">The name of this indicator</param>
-        /// <param name="option">The option to be tracked</param>
-        /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="riskFreeRateModel">Risk-free rate model</param>
-        /// <param name="dividendYield">Dividend yield, as a constant</param>
-        /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
-        /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        /// <param name="period">The lookback period of historical volatility</param>
-        protected OptionGreeksIndicatorBase(string name, Symbol option, Symbol mirrorOption, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
-            : this(name, option, mirrorOption, riskFreeRateModel, new ConstantDividendYieldModel(dividendYield), optionModel, ivModel, period)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the OptionGreeksIndicatorBase class
-        /// </summary>
-        /// <param name="name">The name of this indicator</param>
-        /// <param name="option">The option to be tracked</param>
-        /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
-        /// <param name="dividendYield">Dividend yield, as a constant</param>
-        /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
-        /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        /// <param name="period">The lookback period of historical volatility</param>
-        protected OptionGreeksIndicatorBase(string name, Symbol option, Symbol mirrorOption, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
-            : this(name, option, mirrorOption, new ConstantRiskFreeRateInterestRateModel(riskFreeRate), 
-                new ConstantDividendYieldModel(dividendYield), optionModel, ivModel, period)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the OptionGreeksIndicatorBase class
-        /// </summary>
-        /// <param name="name">The name of this indicator</param>
-        /// <param name="option">The option to be tracked</param>
-        /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="riskFreeRateModel">Risk-free rate model</param>
-        /// <param name="dividendYieldModel">Dividend yield model</param>
-        /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
-        /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        /// <param name="period">The lookback period of historical volatility</param>
-        protected OptionGreeksIndicatorBase(string name, Symbol option, Symbol mirrorOption, PyObject riskFreeRateModel, PyObject dividendYieldModel,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
-            : this(name, option, mirrorOption, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), 
-                DividendYieldModelPythonWrapper.FromPyObject(dividendYieldModel), optionModel, ivModel, period)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the OptionGreeksIndicatorBase class
-        /// </summary>
-        /// <param name="name">The name of this indicator</param>
-        /// <param name="option">The option to be tracked</param>
-        /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="riskFreeRateModel">Risk-free rate model</param>
-        /// <param name="dividendYield">Dividend yield, as a constant</param>
-        /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
-        /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        /// <param name="period">The lookback period of historical volatility</param>
-        protected OptionGreeksIndicatorBase(string name, Symbol option, Symbol mirrorOption, PyObject riskFreeRateModel, decimal dividendYield = 0.0m,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
-            : this(name, option, mirrorOption, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), 
-                new ConstantDividendYieldModel(dividendYield), optionModel, ivModel, period)
+                new ConstantDividendYieldModel(dividendYield), mirrorOption, optionModel, ivModel, period)
         {
         }
 

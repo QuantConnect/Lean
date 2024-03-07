@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class OptionIndicatorsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _aapl;
+        private Symbol _aapl; 
         private Symbol _option;
         private ImpliedVolatility _impliedVolatility;
         private Delta _delta;
@@ -43,12 +43,9 @@ namespace QuantConnect.Algorithm.CSharp
             _option = QuantConnect.Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505m, new DateTime(2014, 6, 27));
             AddOptionContract(_option);
 
-            var interestRateProvider = new InterestRateProvider();
-            var dividendYieldProvider = new DividendYieldProvider(_aapl);
-
-            _impliedVolatility = new ImpliedVolatility(_option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BlackScholes, 2);
-            _delta = new Delta(_option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BinomialCoxRossRubinstein, OptionPricingModelType.BlackScholes);
-            _gamma = new Gamma(_option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.ForwardTree, OptionPricingModelType.BlackScholes);
+            _impliedVolatility = IV(_option, period: 2);
+            _delta = D(_option, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
+            _gamma = G(_option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
         }
 
         public override void OnData(Slice slice)
@@ -66,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 _gamma.Update(underlyingDataPoint);
                 _gamma.Update(optionDataPoint);
-            }    
+            }
         }
 
         public override void OnEndOfAlgorithm()
@@ -75,9 +72,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Expected IV/greeks calculated");
             }
-            Debug(@$"Implied Volatility: {_impliedVolatility.Current.Value},
-Delta: {_delta.Current.Value},
-Gamma: {_gamma.Current.Value}");
+            Debug(@$"Implied Volatility: {_impliedVolatility},
+Delta: {_delta},
+Gamma: {_gamma}");
         }
 
         /// <summary>

@@ -63,13 +63,13 @@ namespace QuantConnect.Tests.Indicators
                 Gamma putIndicator;
                 if (singleContract == true)
                 {
-                    callIndicator = new Gamma(call, interestRate, dividendYield, model);
-                    putIndicator = new Gamma(put, interestRate, dividendYield, model);
+                    callIndicator = new Gamma(call, interestRate, dividendYield, optionModel: model);
+                    putIndicator = new Gamma(put, interestRate, dividendYield, optionModel: model);
                 }
                 else
                 {
-                    callIndicator = new Gamma(call, put, interestRate, dividendYield, model);
-                    putIndicator = new Gamma(put, call, interestRate, dividendYield, model);
+                    callIndicator = new Gamma(call, interestRate, dividendYield, put, optionModel: model);
+                    putIndicator = new Gamma(put, interestRate, dividendYield, call, optionModel: model);
                 }
 
                 RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
@@ -111,9 +111,9 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(27.772, 430.0, OptionRight.Put, 180, 0.0073, OptionStyle.American)]
         public void ComparesAgainstExternalData2(decimal price, decimal spotPrice, OptionRight right, int expiry, double refGamma, OptionStyle style)
         {
-            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
+            var symbol = Symbol.CreateOption("SPY", Market.USA, style, right, 450m, _reference.AddDays(expiry));
             var model = style == OptionStyle.European ? OptionPricingModelType.BlackScholes : OptionPricingModelType.BinomialCoxRossRubinstein;
-            var indicator = new Gamma(symbol, 0.0403m, 0.0m, model, OptionPricingModelType.BlackScholes);
+            var indicator = new Gamma(symbol, 0.0403m, 0.0m, optionModel: model, ivModel: OptionPricingModelType.BlackScholes);
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
             var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);

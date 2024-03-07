@@ -24,12 +24,9 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
         self.option = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505, datetime(2014, 6, 27))
         self.AddOptionContract(self.option)
 
-        interestRateProvider = InterestRateProvider()
-        dividendYieldProvider = DividendYieldProvider(self.aapl)
-
-        self.impliedVolatility = ImpliedVolatility(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BlackScholes, 2)
-        self.delta = Delta(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BinomialCoxRossRubinstein, OptionPricingModelType.BlackScholes)
-        self.gamma = Gamma(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.ForwardTree, OptionPricingModelType.BlackScholes)
+        self.impliedVolatility = self.IV(self.option, optionModel = OptionPricingModelType.BlackScholes, period = 2)
+        self.delta = self.D(self.option, optionModel = OptionPricingModelType.BinomialCoxRossRubinstein, ivModel = OptionPricingModelType.BlackScholes)
+        self.gamma = self.G(self.option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
 
     def OnData(self, slice):
         if slice.Bars.ContainsKey(self.aapl) and slice.QuoteBars.ContainsKey(self.option):

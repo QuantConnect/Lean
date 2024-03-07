@@ -66,13 +66,13 @@ namespace QuantConnect.Tests.Indicators
                 ImpliedVolatility putIndicator;
                 if (singleContract == true)
                 {
-                    callIndicator = new ImpliedVolatility(call, interestRate, dividendYield, model);
-                    putIndicator = new ImpliedVolatility(put, interestRate, dividendYield, model);
+                    callIndicator = new ImpliedVolatility(call, interestRate, dividendYield, optionModel: model);
+                    putIndicator = new ImpliedVolatility(put, interestRate, dividendYield, optionModel: model);
                 }
                 else
                 {
-                    callIndicator = new ImpliedVolatility(call, put, interestRate, dividendYield, model);
-                    putIndicator = new ImpliedVolatility(put, call, interestRate, dividendYield, model);
+                    callIndicator = new ImpliedVolatility(call, interestRate, dividendYield, put, optionModel: model);
+                    putIndicator = new ImpliedVolatility(put, interestRate, dividendYield, call, optionModel: model);
                 }
 
                 RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
@@ -95,7 +95,7 @@ namespace QuantConnect.Tests.Indicators
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
             var mirrorSymbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right == OptionRight.Call ? OptionRight.Put : OptionRight.Call,
                 450m, _reference.AddDays(expiry));
-            var indicator = new ImpliedVolatility(symbol, mirrorSymbol, 0.0530m, 0.0153m, OptionPricingModelType.BlackScholes);
+            var indicator = new ImpliedVolatility(symbol, 0.0530m, 0.0153m, mirrorSymbol, OptionPricingModelType.BlackScholes);
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
             var mirrorOptionDataPoint = new IndicatorDataPoint(mirrorSymbol, _reference, mirrorPrice);
@@ -132,7 +132,7 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
             var mirrorSymbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right == OptionRight.Call ? OptionRight.Put : OptionRight.Call,
                 450m, _reference.AddDays(expiry));
-            var indicator = new ImpliedVolatility(symbol, mirrorSymbol, 0.0530m, 0.0153m, OptionPricingModelType.BlackScholes);
+            var indicator = new ImpliedVolatility(symbol, 0.0530m, 0.0153m, mirrorSymbol, OptionPricingModelType.BlackScholes);
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
             var mirrorOptionDataPoint = new IndicatorDataPoint(mirrorSymbol, _reference, mirrorPrice);
@@ -171,7 +171,7 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
         public void ComparesAgainstExternalData2(decimal price, decimal spotPrice, OptionRight right, int expiry, double refIV)
         {
             var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new ImpliedVolatility(symbol, 0.0530m, 0.0153m, OptionPricingModelType.BlackScholes);
+            var indicator = new ImpliedVolatility(symbol, 0.0530m, 0.0153m, optionModel: OptionPricingModelType.BlackScholes);
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
             var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
