@@ -473,6 +473,26 @@ namespace QuantConnect.Algorithm
 
             return chandeMomentumOscillator;
         }
+        /// <summary>
+        /// Creates a Covariance indicator for the given target symbol in relation with the reference used.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="target">The target symbol whose Covariance value we want</param>
+        /// <param name="reference">The reference symbol to compare with the target symbol</param>
+        /// <param name="period">The period of the Covariance indicator</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Covariance indicator for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public Covariance COV(Symbol target, Symbol reference, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"COV({period})", resolution);
+            var covariance = new Covariance(name, target, reference, period);
+            InitializeIndicator(target, covariance, resolution, selector);
+            InitializeIndicator(reference, covariance, resolution, selector);
+
+            return covariance;
+        }
 
         ///<summary>
         /// Creates a new DeMarker Indicator (DEM), an oscillator-type indicator measuring changes in terms of an asset's
