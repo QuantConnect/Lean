@@ -31,8 +31,10 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _option;
         private ImpliedVolatility _impliedVolatility;
         private Delta _delta;
-        private Vega _vega;
         private Gamma _gamma;
+        private Vega _vega;
+        private Theta _theta;
+        private Rho _rho;
 
         public override void Initialize()
         {
@@ -48,6 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
             _delta = D(_option, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
             _gamma = G(_option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
             _vega = V(_option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            _theta = T(_option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            _rho = R(_option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
         }
 
         public override void OnData(Slice slice)
@@ -68,19 +72,27 @@ namespace QuantConnect.Algorithm.CSharp
 
                 _vega.Update(underlyingDataPoint);
                 _vega.Update(optionDataPoint);
-            }
+
+                _theta.Update(underlyingDataPoint);
+                _theta.Update(optionDataPoint);
+
+                _rho.Update(underlyingDataPoint);
+                _rho.Update(optionDataPoint);
+            }    
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_impliedVolatility == 0m || _delta == 0m || _gamma == 0m || _vega == 0m)
+            if (_impliedVolatility == 0m || _delta == 0m || _gamma == 0m || _vega == 0m || _theta == 0m || _rho == 0m)
             {
                 throw new Exception("Expected IV/greeks calculated");
             }
             Debug(@$"Implied Volatility: {_impliedVolatility},
 Delta: {_delta},
 Gamma: {_gamma},
-Vega: {_vega}");
+Vega: {_vega},
+Theta: {_theta},
+Rho: {_rho}");
         }
 
         /// <summary>

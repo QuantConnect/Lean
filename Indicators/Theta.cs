@@ -21,167 +21,167 @@ using QuantConnect.Data;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Option Vega indicator that calculate the Vega of an option
+    /// Option Theta indicator that calculate the theta of an option
     /// </summary>
-    /// <remarks>sensitivity of option price on IV changes</remarks>
-    public class Vega : OptionGreeksIndicatorBase
+    /// <remarks>sensitivity of option price on time decay</remarks>
+    public class Theta : OptionGreeksIndicatorBase
     {
         /// <summary>
-        /// Initializes a new instance of the Vega class
+        /// Initializes a new instance of the Theta class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
+        /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
+        public Theta(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
                 OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Vega class
+        /// Initializes a new instance of the Theta class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
+        /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
+        public Theta(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
+            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Vega class
+        /// Initializes a new instance of the Theta class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
+        /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
+        public Theta(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Vega class
+        /// Initializes a new instance of the Theta class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
+        /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
+        public Theta(Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
+            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Vega class
+        /// Initializes a new instance of the Theta class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
+        /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
+        public Theta(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
                 OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Vega class
+        /// Initializes a new instance of the Theta class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
+        /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
+        public Theta(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
+            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Vega class
+        /// Initializes a new instance of the Theta class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
+        /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
+        public Theta(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Vega class
+        /// Initializes a new instance of the Theta class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
+        /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
+        public Theta(Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
+            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Vega class
+        /// Initializes a new instance of the Theta class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>am>
         /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
+        /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null, 
+        public Theta(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Vega class
+        /// Initializes a new instance of the Theta class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
+        /// <param name="optionModel">The option pricing model used to estimate Theta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Vega(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
+        public Theta(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
+            : this($"Theta({option},{mirrorOption},{optionModel})", option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
-        // Calculate the Vega of the option
+        // Calculate the Theta of the option
         protected override decimal CalculateGreek(DateTime time)
         {
             var timeToExpiration = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
@@ -191,30 +191,47 @@ namespace QuantConnect.Indicators
             {
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
                 case OptionPricingModelType.ForwardTree:
-                    // finite differencing method with 1% IV changes
-                    var deltaSigma = 0.01m;
+                    var deltaTime = timeToExpiration / OptionGreekIndicatorsHelper.Steps;
 
-                    var newPrice = 0m;
+                    var forwardPrice = 0m;
                     var price = 0m;
                     if (_optionModel == OptionPricingModelType.BinomialCoxRossRubinstein)
                     {
-                        newPrice = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility + deltaSigma, UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
+                        forwardPrice = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeToExpiration - 2 * deltaTime, RiskFreeRate, DividendYield, Right);
                         price = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
                     }
                     else if (_optionModel == OptionPricingModelType.ForwardTree)
                     {
-                        newPrice = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility + deltaSigma, UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
+                        forwardPrice = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeToExpiration - 2 * deltaTime, RiskFreeRate, DividendYield, Right); price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
                         price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
                     }
 
-                    return (newPrice - price) / deltaSigma / 100;
+                    return (forwardPrice - price) * 0.5m / deltaTime / 365m;
 
                 case OptionPricingModelType.BlackScholes:
                 default:
                     var norm = new Normal();
                     var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, ImpliedVolatility);
+                    var d2 = OptionGreekIndicatorsHelper.CalculateD2(d1, ImpliedVolatility, timeToExpiration);
+                    var discount = math(Math.Exp, -RiskFreeRate * timeToExpiration);
+                    var adjustment = math(Math.Exp, -DividendYield * timeToExpiration);
 
-                    return UnderlyingPrice * math(Math.Sqrt, timeToExpiration) * math(norm.Density, d1) * math(Math.Exp, -DividendYield * timeToExpiration) / 100;
+                    // allow at least 1% IV
+                    var theta = -UnderlyingPrice * Math.Max(ImpliedVolatility, 0.01m) * math(norm.Density, d1) * adjustment * 0.5m / math(Math.Sqrt, timeToExpiration);
+
+                    if (Right == OptionRight.Call)
+                    {
+                        d1 = math(norm.CumulativeDistribution, d1);
+                        d2 = -math(norm.CumulativeDistribution, d2);
+                    }
+                    else
+                    {
+                        d1 = -math(norm.CumulativeDistribution, -d1);
+                        d2 = math(norm.CumulativeDistribution, -d2);
+                    }
+
+                    theta += DividendYield * UnderlyingPrice * d1 * adjustment + RiskFreeRate * Strike * discount * d2;
+                    return theta / 365m;
             }
         }
     }

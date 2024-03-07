@@ -28,6 +28,8 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
         self.delta = self.D(self.option, optionModel = OptionPricingModelType.BinomialCoxRossRubinstein, ivModel = OptionPricingModelType.BlackScholes)
         self.gamma = self.G(self.option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
         self.vega = self.V(self.option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
+        self.theta = self.T(self.option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
+        self.rho = self.R(self.option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
 
     def OnData(self, slice):
         if slice.Bars.ContainsKey(self.aapl) and slice.QuoteBars.ContainsKey(self.option):
@@ -46,11 +48,20 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
             self.vega.Update(underlyingDataPoint)
             self.vega.Update(optionDataPoint)
 
+            self.theta.Update(underlyingDataPoint)
+            self.theta.Update(optionDataPoint)
+
+            self.rho.Update(underlyingDataPoint)
+            self.rho.Update(optionDataPoint)
+
     def OnEndOfAlgorithm(self):
-        if self.impliedVolatility.Current.Value == 0 or self.delta.Current.Value == 0 or self.gamma.Current.Value == 0 or self.vega.Current.Value == 0:
+        if self.impliedVolatility.Current.Value == 0 or self.delta.Current.Value == 0 or self.gamma.Current.Value == 0 \
+        or self.vega.Current.Value == 0 or self.theta.Current.Value == 0 or self.rho.Current.Value == 0:
             raise Exception("Expected IV/greeks calculated")
 
         self.Debug(f"""Implied Volatility: {self.impliedVolatility.Current.Value},
 Delta: {self.delta.Current.Value},
 Gamma: {self.gamma.Current.Value},
-Vega: {self.vega.Current.Value}""")
+Vega: {self.vega.Current.Value},
+Theta: {self.theta.Current.Value},
+Rho: {self.rho.Current.Value}""")

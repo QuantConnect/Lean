@@ -569,7 +569,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The desired resolution of the data</param>
         /// <returns>A new Delta indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
-        public Delta Δ(Symbol symbol, Symbol mirrorOption, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+        public Delta Δ(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
             OptionPricingModelType? ivModel = null, Resolution? resolution = null)
         {
             return D(symbol, mirrorOption, riskFreeRate, dividendYield, optionModel, ivModel, resolution);
@@ -800,7 +800,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The desired resolution of the data</param>
         /// <returns>A new Gamma indicator for the specified symbol</returns>
         [DocumentationAttribute(Indicators)]
-        public Gamma Γ(Symbol symbol, Symbol mirrorOption, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+        public Gamma Γ(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
             OptionPricingModelType? ivModel = null, Resolution? resolution = null)
         {
             return G(symbol, mirrorOption, riskFreeRate, dividendYield, optionModel, ivModel, resolution);
@@ -1650,6 +1650,53 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Rho indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The option symbol whose values we want as an indicator</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="dividendYield">The dividend yield</param>
+        /// <param name="optionModel">The option pricing model used to estimate Rho</param>
+        /// <param name="ivModel">The option pricing model used to estimate IV</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <returns>A new Rho indicator for the specified symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public Rho R(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        {
+            var name = InitializeOptionIndicator<Rho>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
+
+            var rho = new Rho(name, symbol, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel);
+            RegisterIndicator(symbol, rho, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol.Underlying, rho, ResolveConsolidator(symbol.Underlying, resolution));
+            if (mirrorOption != null)
+            {
+                RegisterIndicator(mirrorOption, rho, ResolveConsolidator(mirrorOption, resolution));
+            }
+            return rho;
+        }
+
+        /// <summary>
+        /// Creates a new Rho indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The option symbol whose values we want as an indicator</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="dividendYield">The dividend yield</param>
+        /// <param name="optionModel">The option pricing model used to estimate Rho</param>
+        /// <param name="ivModel">The option pricing model used to estimate IV</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <returns>A new Rho indicator for the specified symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public Rho ρ(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        {
+            return R(symbol, mirrorOption, riskFreeRate, dividendYield, optionModel, ivModel, resolution);
+        }
+
+        /// <summary>
         /// Creates a new SuperTrend indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose SuperTrend indicator we want.</param>
@@ -1865,6 +1912,53 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(symbol, swissArmyKnife, resolution, selector);
 
             return swissArmyKnife;
+        }
+
+        /// <summary>
+        /// Creates a new Theta indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The option symbol whose values we want as an indicator</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="dividendYield">The dividend yield</param>
+        /// <param name="optionModel">The option pricing model used to estimate Theta</param>
+        /// <param name="ivModel">The option pricing model used to estimate IV</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <returns>A new Theta indicator for the specified symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public Theta T(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        {
+            var name = InitializeOptionIndicator<Theta>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
+
+            var theta = new Theta(name, symbol, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel);
+            RegisterIndicator(symbol, theta, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol.Underlying, theta, ResolveConsolidator(symbol.Underlying, resolution));
+            if (mirrorOption != null)
+            {
+                RegisterIndicator(mirrorOption, theta, ResolveConsolidator(mirrorOption, resolution));
+            }
+            return theta;
+        }
+
+        /// <summary>
+        /// Creates a new Theta indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The option symbol whose values we want as an indicator</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="dividendYield">The dividend yield</param>
+        /// <param name="optionModel">The option pricing model used to estimate Theta</param>
+        /// <param name="ivModel">The option pricing model used to estimate IV</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <returns>A new Theta indicator for the specified symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public Theta Θ(Symbol symbol, Symbol mirrorOption = null, decimal? riskFreeRate = null, decimal? dividendYield = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes,
+            OptionPricingModelType? ivModel = null, Resolution? resolution = null)
+        {
+            return T(symbol, mirrorOption, riskFreeRate, dividendYield, optionModel, ivModel, resolution);
         }
 
         /// <summary>
