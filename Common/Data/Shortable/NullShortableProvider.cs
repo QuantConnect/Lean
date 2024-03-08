@@ -30,6 +30,28 @@ namespace QuantConnect.Data.Shortable
         public static NullShortableProvider Instance { get; } = new ();
 
         /// <summary>
+        /// Gets the fee rate for the Symbol at the given date.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup fee rate</param>
+        /// <param name="localTime">Time of the algorithm</param>
+        /// <returns>zero indicating that it is does have borrowing costs</returns>
+        public decimal FeeRate(Symbol symbol, DateTime localTime)
+        {
+            return 0m;       
+        }
+
+        /// <summary>
+        /// Gets the rebate rate for the Symbol at the given date.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup rebate rate</param>
+        /// <param name="localTime">Time of the algorithm</param>
+        /// <returns>zero indicating that it is does have borrowing costs</returns>
+        public decimal RebateRate(Symbol symbol, DateTime localTime)
+        {
+            return 0m;
+        }
+
+        /// <summary>
         /// Gets the quantity shortable for the Symbol at the given time.
         /// </summary>
         /// <param name="symbol">Symbol to check</param>

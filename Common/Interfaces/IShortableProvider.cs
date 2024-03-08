@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Interfaces
 {
@@ -23,6 +22,22 @@ namespace QuantConnect.Interfaces
     /// </summary>
     public interface IShortableProvider
     {
+        /// <summary>
+        /// Gets the fee rate for the Symbol at the given date.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup fee rate</param>
+        /// <param name="localTime">Time of the algorithm</param>
+        /// <returns>Fee rate. Zero if the data for the brokerage/date does not exist.</returns>
+        decimal FeeRate(Symbol symbol, DateTime localTime);
+
+        /// <summary>
+        /// Gets the rebate rate for the Symbol at the given date.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup rebate rate</param>
+        /// <param name="localTime">Time of the algorithm</param>
+        /// <returns>Rebate fee. Zero if the data for the brokerage/date does not exist.</returns>
+        decimal RebateRate(Symbol symbol, DateTime localTime);
+
         /// <summary>
         /// Gets the quantity shortable for a <see cref="Symbol"/>.
         /// </summary>
