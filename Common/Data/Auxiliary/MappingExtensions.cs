@@ -37,7 +37,7 @@ namespace QuantConnect.Data.Auxiliary
         public static MapFile ResolveMapFile(this IMapFileProvider mapFileProvider, SubscriptionDataConfig dataConfig)
         {
             var resolver = MapFileResolver.Empty;
-            if(dataConfig.TickerShouldBeMapped())
+            if (dataConfig.TickerShouldBeMapped())
             {
                 resolver = mapFileProvider.Get(AuxiliaryDataKey.Create(dataConfig.Symbol));
             }
@@ -126,15 +126,12 @@ namespace QuantConnect.Data.Auxiliary
                         yield break;
                     }
 
-                    var newEndDateTime = mappedTicker.Date;
-                    if (mappedTicker.Date.AddDays(1) <= endDateTime)
-                    {
-                        // Shifts endDateTime by one day to include all data up to and including the endDateTime.
-                        newEndDateTime = mappedTicker.Date.AddDays(1);
-                    }
+                    // Shifts endDateTime by one day to include all data up to and including the endDateTime.
+                    var newEndDateTime = mappedTicker.Date.AddDays(1);
 
                     yield return new(mappedTicker.MappedSymbol, newStartDateTime, newEndDateTime);
-                    newStartDateTime = newEndDateTime.AddDays(1);
+                    // the end of the current request is the start of the next
+                    newStartDateTime = newEndDateTime;
                 }
             }
         }

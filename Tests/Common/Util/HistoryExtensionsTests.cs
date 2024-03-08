@@ -20,7 +20,6 @@ using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -56,6 +55,9 @@ namespace QuantConnect.Tests.Common.Util
 
                 Assert.That(startDateTime, Is.EqualTo(firstHistoryRequest.StartTimeUtc));
                 Assert.That(startDateTime, Is.Not.EqualTo(secondHistoryRequest.StartTimeUtc));
+
+                Assert.That(firstHistoryRequest.EndTimeLocal, Is.EqualTo(secondHistoryRequest.StartTimeLocal));
+                Assert.That(firstHistoryRequest.EndTimeUtc, Is.EqualTo(secondHistoryRequest.StartTimeUtc));
 
                 Assert.That(endDateTime, Is.Not.EqualTo(firstHistoryRequest.EndTimeUtc));
                 Assert.That(endDateTime, Is.EqualTo(historyRequests[expectedAmount - 1].EndTimeUtc));
@@ -99,20 +101,29 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("SPWR", "2011/11/17", "2023/01/01")]
         [TestCase("AAPL", "2008/02/01", "2024/03/01")]
         [TestCase("NFLX", "2022/02/01", "2024/03/01")]
-        public void GetSplitHistoricalRequestWithTheSameSymbolButDifferentTickers(string ticker, DateTime startDateTime, DateTime endDateTime)
+        public void GetSplitHistoricalRequestAndValidateEndDateInDifferentTimeZones(string ticker, DateTime userRequestedStartDateTime, DateTime userRequestedEndDateTime)
         {
             var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
 
             foreach (var timeZone in TestsHelpers.GetTimeZones())
             {
-                var newEndDateTime = endDateTime.ConvertFromUtc(timeZone);
-
-                var historyRequest = TestsHelpers.GetHistoryRequest(symbol, startDateTime, endDateTime, Resolution.Daily, TickType.Trade, timeZone);
+                var historyRequest = TestsHelpers.GetHistoryRequest(symbol, userRequestedStartDateTime, userRequestedEndDateTime, Resolution.Daily, TickType.Trade, timeZone);
 
                 var historyRequests = historyRequest.SplitHistoryRequestWithUpdatedMappedSymbol(TestGlobals.MapFileProvider).ToList();
 
-                Assert.That(endDateTime, Is.EqualTo(historyRequests.Last().EndTimeUtc));
-                Assert.That(newEndDateTime, Is.EqualTo(historyRequests.Last().EndTimeLocal));
+                // Ensure that the user-requested end date time matches the end time of the last history request.
+                Assert.That(userRequestedEndDateTime, Is.EqualTo(historyRequests.Last().EndTimeUtc));
+                Assert.That(userRequestedEndDateTime.ConvertFromUtc(timeZone), Is.EqualTo(historyRequests.Last().EndTimeLocal));
+
+                Assert.That(userRequestedStartDateTime, Is.EqualTo(historyRequests.First().StartTimeUtc));
+                Assert.That(userRequestedStartDateTime.ConvertFromUtc(timeZone), Is.EqualTo(historyRequests.First().StartTimeLocal));
+
+                // Ensure that the end time of the previous history request matches the start time of the next one.
+                for (int i = 0; i < historyRequests.Count - 1; i++)
+                {
+                    Assert.That(historyRequests[i].EndTimeLocal, Is.EqualTo(historyRequests[i + 1].StartTimeLocal));
+                    Assert.That(historyRequests[i].EndTimeUtc, Is.EqualTo(historyRequests[i + 1].StartTimeUtc));
+                }
             }
         }
     }
