@@ -89,5 +89,31 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsNotEmpty(historyRequests);
             Assert.That(historyRequests.Count, Is.EqualTo(expectedAmount));
         }
+
+        [TestCase("GOOGL", "2010/01/01", "2014/02/04")]
+        [TestCase("GOOGL", "2000/01/01", "2002/02/04")]
+        [TestCase("GOOGL", "2010/01/01", "2015/02/16")]
+        [TestCase("GOOGL", "2020/01/01", "2024/01/01")]
+        [TestCase("GOOG", "2013/04/03", "2023/01/01")]
+        [TestCase("SPWR", "2007/11/17", "2023/01/01")]
+        [TestCase("SPWR", "2011/11/17", "2023/01/01")]
+        [TestCase("AAPL", "2008/02/01", "2024/03/01")]
+        [TestCase("NFLX", "2022/02/01", "2024/03/01")]
+        public void GetSplitHistoricalRequestWithTheSameSymbolButDifferentTickers(string ticker, DateTime startDateTime, DateTime endDateTime)
+        {
+            var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+
+            foreach (var timeZone in TestsHelpers.GetTimeZones())
+            {
+                var newEndDateTime = endDateTime.ConvertFromUtc(timeZone);
+
+                var historyRequest = TestsHelpers.GetHistoryRequest(symbol, startDateTime, endDateTime, Resolution.Daily, TickType.Trade, timeZone);
+
+                var historyRequests = historyRequest.SplitHistoryRequestWithUpdatedMappedSymbol(TestGlobals.MapFileProvider).ToList();
+
+                Assert.That(endDateTime, Is.EqualTo(historyRequests.Last().EndTimeUtc));
+                Assert.That(newEndDateTime, Is.EqualTo(historyRequests.Last().EndTimeLocal));
+            }
+        }
     }
 }
