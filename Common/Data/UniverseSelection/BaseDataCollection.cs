@@ -124,6 +124,17 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Creates the universe symbol for the target market
+        /// </summary>
+        /// <returns>The universe symbol to use</returns>
+        public virtual Symbol UniverseSymbol(string market = null)
+        {
+            market ??= QuantConnect.Market.USA;
+            var ticker = $"{GetType().Name}-{market}-{Guid.NewGuid()}";
+            return Symbol.Create(ticker, SecurityType.Base, market, baseDataType: GetType());
+        }
+
+        /// <summary>
         /// Indicates whether this contains data that should be stored in the security cache
         /// </summary>
         /// <returns>Whether this contains data that should be stored in the security cache</returns>

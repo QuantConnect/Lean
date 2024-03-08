@@ -28,6 +28,7 @@ class FundamentalUniverseSelectionModel:
             self._fundamentalData = True
         else:
             self._fundamentalData = False
+        self.market = Market.USA
         self.universeSettings = universeSettings
 
 
@@ -39,7 +40,7 @@ class FundamentalUniverseSelectionModel:
             The universe defined by this model'''
         if self._fundamentalData:
             universeSettings = algorithm.UniverseSettings if self.universeSettings is None else self.universeSettings
-            universe = FundamentalUniverseConfig(universeSettings, lambda fundamental: self.Select(algorithm, fundamental))
+            universe = FundamentalUniverseFactory(self.market, universeSettings, lambda fundamental: self.Select(algorithm, fundamental))
             return [universe]
         else:
             universe = self.CreateCoarseFundamentalUniverse(algorithm)

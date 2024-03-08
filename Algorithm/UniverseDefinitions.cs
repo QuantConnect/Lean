@@ -345,11 +345,11 @@ namespace QuantConnect.Algorithm
             universeSettings ??= _algorithm.UniverseSettings;
 
             var symbol = Symbol.Create("us-equity-dollar-volume-top-" + count, SecurityType.Equity, Market.USA);
-            return new FundamentalUniverseConfig(universeSettings, selectionData => (
+            return FundamentalUniverse.USA(selectionData => (
                 from c in selectionData
                 orderby c.DollarVolume descending
-                select c.Symbol).Take(count)
-                );
+                select c.Symbol).Take(count),
+                universeSettings);
         }
     }
 }

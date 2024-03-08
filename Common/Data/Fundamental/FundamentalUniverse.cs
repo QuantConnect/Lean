@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
@@ -88,18 +89,6 @@ namespace QuantConnect.Data.Fundamental
         }
 
         /// <summary>
-        /// Creates the universe symbol
-        /// </summary>
-        /// <returns></returns>
-        public static Symbol UniverseSymbol()
-        {
-            var market = QuantConnect.Market.USA;
-            var ticker = $"universe-fundamental-{market}-{Guid.NewGuid()}";
-            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
-            return new Symbol(sid, ticker);
-        }
-
-        /// <summary>
         /// Gets the default resolution for this data and security type
         /// </summary>
         /// <remarks>This is a method and not a property so that python
@@ -107,6 +96,39 @@ namespace QuantConnect.Data.Fundamental
         public override Resolution DefaultResolution()
         {
             return Resolution.Daily;
+        }
+
+        /// <summary>
+        /// Creates the universe symbol for the target market
+        /// </summary>
+        /// <returns>The universe symbol to use</returns>
+        public override Symbol UniverseSymbol(string market = null)
+        {
+            market ??= QuantConnect.Market.USA;
+            var ticker = $"{GetType().Name}-{market}-{Guid.NewGuid()}";
+            return Symbol.Create(ticker, SecurityType.Equity, market, baseDataType: GetType());
+        }
+
+        /// <summary>
+        /// Creates a new fundamental universe for the USA market
+        /// </summary>
+        /// <param name="selector">The selector function</param>
+        /// <param name="universeSettings">The universe settings to use, will default to algorithms if not provided</param>
+        /// <returns>A configured new universe instance</returns>
+        public static FundamentalUniverseFactory USA(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector, UniverseSettings universeSettings = null)
+        {
+            return new FundamentalUniverseFactory(QuantConnect.Market.USA, universeSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new fundamental universe for the USA market
+        /// </summary>
+        /// <param name="selector">The selector function</param>
+        /// <param name="universeSettings">The universe settings to use, will default to algorithms if not provided</param>
+        /// <returns>A configured new universe instance</returns>
+        public static FundamentalUniverseFactory USA(Func<IEnumerable<Fundamental>, object> selector, UniverseSettings universeSettings = null)
+        {
+            return new FundamentalUniverseFactory(QuantConnect.Market.USA, universeSettings, selector);
         }
     }
 }

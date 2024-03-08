@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2017, 07, 06);
             SetEndDate(2018, 07, 04);
 
-            var universe = AddUniverse<StockDataSource>("my-stock-data-source", stockDataSource =>
+            var universe = AddUniverse<StockDataSource>(stockDataSource =>
             {
                 return stockDataSource.OfType<StockDataSource>().SelectMany(x => x.Symbols);
             });

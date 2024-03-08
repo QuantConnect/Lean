@@ -35,7 +35,7 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
         self.SetStartDate(2017, 7, 6)
         self.SetEndDate(2018, 7, 4)
 
-        universe = self.AddUniverse(StockDataSource, "my-stock-data-source", self.stockDataSource)
+        universe = self.AddUniverse(StockDataSource, self.stockDataSource)
 
         historicalSelectionData = self.History(universe, 3)
         if len(historicalSelectionData) != 3:

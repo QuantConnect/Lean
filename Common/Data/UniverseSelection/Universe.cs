@@ -58,7 +58,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                if(UniverseSettings.Asynchronous.HasValue)
+                if (UniverseSettings.Asynchronous.HasValue)
                 {
                     return UniverseSettings.Asynchronous.Value;
                 }
@@ -107,9 +107,9 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the settings used for subscriptions added for this universe
         /// </summary>
-        public abstract UniverseSettings UniverseSettings
+        public virtual UniverseSettings UniverseSettings
         {
-            get;
+            get; set;
         }
 
         /// <summary>

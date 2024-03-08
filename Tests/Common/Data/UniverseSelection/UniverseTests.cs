@@ -137,8 +137,6 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             {
                 UniverseSettings = universeSettings;
             }
-
-            public override UniverseSettings UniverseSettings { get; }
             public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
             {
                 throw new NotImplementedException();
