@@ -1781,8 +1781,8 @@ def select_symbol(fundamental):
 
             if (tickers.Count != 0)
             {
-                Assert.That(tickers.First().StartDateTimeUtc, Is.EqualTo(startDateTime));
-                Assert.That(tickers.Last().EndDateTimeUtc, Is.EqualTo(endDateTime));
+                Assert.That(tickers.First().StartDateTimeLocal, Is.EqualTo(startDateTime));
+                Assert.That(tickers.Last().EndDateTimeLocal, Is.EqualTo(endDateTime));
 
                 if (expectedTickers != null)
                 {

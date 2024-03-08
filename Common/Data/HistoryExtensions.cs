@@ -73,11 +73,16 @@ namespace QuantConnect.Data
             if (request.Symbol.RequiresMappingExceptFuture())
             {
                 var isReturnHistoryRequest = default(bool);
-                foreach (var tickerDateRange in mapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(request.Symbol, request.StartTimeUtc, request.EndTimeUtc))
+                foreach (var tickerDateRange in mapFileProvider.RetrieveSymbolHistoricalDefinitionsInDateRange(request.Symbol, request.StartTimeLocal, request.EndTimeLocal))
                 {
                     isReturnHistoryRequest = true;
                     var symbol = request.Symbol.UpdateMappedSymbol(tickerDateRange.Ticker);
-                    yield return new HistoryRequest(request, symbol, tickerDateRange.StartDateTimeUtc, tickerDateRange.EndDateTimeUtc);
+                    yield return new HistoryRequest(
+                        request,
+                        symbol,
+                        tickerDateRange.StartDateTimeLocal.ConvertToUtc(request.ExchangeHours.TimeZone),
+                        tickerDateRange.EndDateTimeLocal.ConvertToUtc(request.ExchangeHours.TimeZone)
+                        );
                 }
 
                 if (!isReturnHistoryRequest)

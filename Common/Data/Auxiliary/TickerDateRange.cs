@@ -32,24 +32,24 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Ticker Start Date Time in UTC
         /// </summary>
-        public DateTime StartDateTimeUtc { get; }
+        public DateTime StartDateTimeLocal { get; }
 
         /// <summary>
         /// Ticker End Date Time in UTC
         /// </summary>
-        public DateTime EndDateTimeUtc { get; }
+        public DateTime EndDateTimeLocal { get; }
 
         /// <summary>
         /// Create the instance of <see cref="TickerDateRange"/> struct.
         /// </summary>
         /// <param name="ticker">Name of ticker</param>
-        /// <param name="startDateTimeUtc">Start Date Time in UTC</param>
-        /// <param name="endDateTimeUtc">End Date Time in UTC</param>
-        public TickerDateRange(string ticker, DateTime startDateTimeUtc, DateTime endDateTimeUtc)
+        /// <param name="startDateTimeLocal">Start Date Time Local</param>
+        /// <param name="endDateTimeLocal">End Date Time Local</param>
+        public TickerDateRange(string ticker, DateTime startDateTimeLocal, DateTime endDateTimeLocal)
         {
             Ticker = ticker;
-            StartDateTimeUtc = startDateTimeUtc;
-            EndDateTimeUtc = endDateTimeUtc;
+            StartDateTimeLocal = startDateTimeLocal;
+            EndDateTimeLocal = endDateTimeLocal;
         }
     }
 #pragma warning restore CA1815

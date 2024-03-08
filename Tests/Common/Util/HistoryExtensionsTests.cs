@@ -32,9 +32,9 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("GOOGL", "2010/01/01", "2015/02/16", 2, "GOOG,GOOGL")]
         [TestCase("GOOGL", "2020/01/01", "2024/01/01", 1, "GOOGL")]
         [TestCase("GOOG", "2013/04/03", "2023/01/01", 2, "GOOCV,GOOG")]
-        [TestCase("SPWR", "2007/11/17", "2023/01/01", 3, "SPWR,SPWRA,SPWR", Description = "[SPWR: 2005/11/17 - 2008/09/29][SPWRA: 2008/09/21 - 2011/11/16][SPWR: 2011/11/17 - ...)")]
+        [TestCase("SPWR", "2007/11/17", "2023/01/01", 3, "SPWR,SPWRA,SPWR", Description = "[SPWR: 2005/11/17 - 2008/09/29][SPWRA: 2008/09/30 - 2011/11/16][SPWR: 2011/11/17 - ...)")]
         [TestCase("SPWR", "2011/11/17", "2023/01/01", 1, "SPWR")]
-        [TestCase("AAPL", "2008/02/01", "2024/03/01", 1, "AAPL", Description = "The Symbol is not presented in map files")]
+        [TestCase("AAPL", "2008/02/01", "2024/03/01", 1, "AAPL")]
         [TestCase("NFLX", "2022/02/01", "2024/03/01", 1, "NFLX", Description = "The Symbol is not presented in map files")]
         public void GetSplitHistoricalRequestWithTheSameSymbolButDifferentTicker(string ticker, DateTime startDateTime, DateTime endDateTime, int expectedAmount, string expectedTickers)
         {
