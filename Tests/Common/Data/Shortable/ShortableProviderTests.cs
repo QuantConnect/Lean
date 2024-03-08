@@ -42,14 +42,14 @@ namespace QuantConnect.Tests.Common.Data.Shortable
             {
                 new Dictionary<Symbol, ShortableData>
                 {
-                    { _symbols[0], new(2000, 5.07m, 0.25m) },
-                    { _symbols[1], new(5000, 5.17m, 0.35m) },
+                    { _symbols[0], new(2000, 0.0507m, 0.0025m) },
+                    { _symbols[1], new(5000, 0.0517m, 0.0035m) },
                     { _symbols[2], new(null, 0, 0) } // we have no data for this symbol
                 },
                 new Dictionary<Symbol, ShortableData>
                 {
-                    { _symbols[0], new(4000, 5.09m, 0.30m) },
-                    { _symbols[1], new(10000, 5.19m, 0.40m) },
+                    { _symbols[0], new(4000, 0.0509m, 0.003m) },
+                    { _symbols[1], new(10000, 0.0519m, 0.004m) },
                     { _symbols[2], new(null, 0, 0) } // we have no data for this symbol
                 }
             };

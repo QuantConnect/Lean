@@ -62,23 +62,23 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception($"Quantity of order {_orderId} should be -1001, but was {orderQuantity}");
             }
-            var feeRate = _spy.ShortableProvider.FeeRate(_spy.Symbol, Time);
-            if (feeRate != 0.25m)
+            var feeRate = BorrowFeeRate(_spy.Symbol);
+            if (feeRate != 0.0025m)
             {
-                throw new Exception($"Fee rate should be 0.25, but was {feeRate}");
+                throw new Exception($"Fee rate should be 0.0025, but was {feeRate}");
             }
-            var rebateRate = _spy.ShortableProvider.RebateRate(_spy.Symbol, Time);
-            if (rebateRate != 5.07m)
+            var rebateRate = BorrowRebateRate(_spy.Symbol);
+            if (rebateRate != 0.0507m)
             {
-                throw new Exception($"Fee rate should be 5.07, but was {rebateRate}");
+                throw new Exception($"Fee rate should be 0.0507, but was {rebateRate}");
             }
         }
 
         private class CustomSPYShortableProvider : IShortableProvider
         {
-            public decimal FeeRate(Symbol symbol, DateTime localTime) => 0.25m;
+            public decimal FeeRate(Symbol symbol, DateTime localTime) => 0.0025m;
 
-            public decimal RebateRate(Symbol symbol, DateTime localTime) => 5.07m;
+            public decimal RebateRate(Symbol symbol, DateTime localTime) => 0.0507m;
 
             public long? ShortableQuantity(Symbol symbol, DateTime localTime)
             {

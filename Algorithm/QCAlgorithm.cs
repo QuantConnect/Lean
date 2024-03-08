@@ -3149,6 +3149,33 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets interest rate charged on borrowed shares for a given asset
+        /// </summary>
+        /// <returns>
+        /// Interest rate charged on borrowed shares for a given asset. Zero if not available.
+        /// </returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public decimal BorrowFeeRate(Symbol symbol)
+        {
+            var security = Securities[symbol];
+            return security.ShortableProvider.FeeRate(symbol, security.LocalTime);
+        }
+
+        /// <summary>
+        /// Gets the Fed funds or other currency-relevant benchmark rate minus the interest rate charged on borrowed shares for a given asset.
+        /// E.g.: Interest rate - borrow fee rate = borrow rebate rate: 5.32% - 0.25% = 5.07%.
+        /// </summary>
+        /// <returns>
+        /// Rebate rate charged on borrowed shares for a given asset. Zero if not available.
+        /// </returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public decimal BorrowRebateRate(Symbol symbol)
+        {
+            var security = Securities[symbol];
+            return security.ShortableProvider.RebateRate(symbol, security.LocalTime);
+        }
+
+        /// <summary>
         /// Gets the quantity shortable for the given asset
         /// </summary>
         /// <returns>
