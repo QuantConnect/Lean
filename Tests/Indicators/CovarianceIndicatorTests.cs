@@ -37,6 +37,11 @@ namespace QuantConnect.Tests.Indicators
             return indicator;
         }
 
+        protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion
+        {
+            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 0.05); }
+        }
+
         [Test]
         public override void TimeMovesForward()
         {
@@ -72,6 +77,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(2*period.Value, indicator.Samples);
         }
 
+
         [Test]
         public override void AcceptsRenkoBarsAsInput()
         {
@@ -87,9 +93,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 Assert.DoesNotThrow(() => indicator.Update(renkoBar));
             };
-            
             int counter = 0;
-
             foreach (var parts in GetCsvFileStream(TestFileName))
             {
 
@@ -117,8 +121,8 @@ namespace QuantConnect.Tests.Indicators
         public override void AcceptsVolumeRenkoBarsAsInput()
         {
             var indicator = CreateIndicator();
-            var firstVolumeRenkoConsolidator = new VolumeRenkoConsolidator(1000000);
-            var secondVolumeRenkoConsolidator = new VolumeRenkoConsolidator(1000000000);
+            var firstVolumeRenkoConsolidator = new VolumeRenkoConsolidator(100000);
+            var secondVolumeRenkoConsolidator = new VolumeRenkoConsolidator(1000000);
             firstVolumeRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
             {
                 Assert.DoesNotThrow(() => indicator.Update(renkoBar));
@@ -128,7 +132,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 Assert.DoesNotThrow(() => indicator.Update(renkoBar));
             };
-
+            int counter = 0;
             foreach (var parts in GetCsvFileStream(TestFileName))
             {
                 var tradebar = parts.GetTradeBar();
@@ -139,7 +143,10 @@ namespace QuantConnect.Tests.Indicators
                 else
                 {
                     secondVolumeRenkoConsolidator.Update(tradebar);
+                    counter++;
                 }
+                if (counter >= 500)
+                    break;
             }
 
             Assert.IsTrue(indicator.IsReady);

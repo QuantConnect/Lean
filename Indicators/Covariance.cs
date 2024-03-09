@@ -14,9 +14,8 @@
 */
 
 using System;
-using QuantConnect.Data.Market;
 using MathNet.Numerics.Statistics;
-using System.Collections.Generic;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
@@ -34,16 +33,6 @@ namespace QuantConnect.Indicators
         /// RollingWindow to store the data points of the reference symbol
         /// </summary>
         private readonly RollingWindow<decimal> _referenceDataPoints;
-
-        /// <summary>
-        /// RollingWindow of returns of the target symbol in the given period
-        /// </summary>
-        private readonly RollingWindow<decimal> _targetReturns;
-
-        /// <summary>
-        /// RollingWindow of returns of the reference symbol in the given period
-        /// </summary>
-        private readonly RollingWindow<decimal> _referenceReturns;
 
         /// <summary>
         /// Symbol of the reference used
@@ -95,9 +84,6 @@ namespace QuantConnect.Indicators
             _targetDataPoints = new RollingWindow<decimal>(period);
             _referenceDataPoints = new RollingWindow<decimal>(period);
 
-            _targetReturns = new RollingWindow<decimal>(period);
-            _referenceReturns = new RollingWindow<decimal>(period);
-
             _covariance = 0;
         }
 
@@ -143,11 +129,11 @@ namespace QuantConnect.Indicators
             var inputSymbol = input.Symbol;
             if (inputSymbol == _targetSymbol)
             {
-                _targetDataPoints.Add(input.Close);
+                _targetDataPoints.Add(input.Value);
             }
             else if (inputSymbol == _referenceSymbol)
             {
-                _referenceDataPoints.Add(input.Close);
+                _referenceDataPoints.Add(input.Value);
             }
             else
             {
@@ -156,25 +142,11 @@ namespace QuantConnect.Indicators
 
             if (_targetDataPoints.Samples == _referenceDataPoints.Samples && _referenceDataPoints.Count > 1)
             {
-                _targetReturns.Add(GetNewReturn(_targetDataPoints));
-                _referenceReturns.Add(GetNewReturn(_referenceDataPoints));
-
                 ComputeCovariance();
             }
             
             return _covariance;
 
-        }
-
-        /// <summary>
-        /// Computes the returns with the new given data point and the last given data point
-        /// </summary>
-        /// <param name="rollingWindow">The collection of data points from which we want
-        /// to compute the return</param>
-        /// <returns>The returns with the new given data point</returns>
-        private static decimal GetNewReturn(RollingWindow<decimal> rollingWindow)
-        {
-            return rollingWindow[0].SafeDivision(rollingWindow[1]) - 1;
         }
 
         /// <summary>
@@ -184,20 +156,26 @@ namespace QuantConnect.Indicators
         private void ComputeCovariance()
         {
 
+            if (!IsReady)
+            {
+                _covariance = 0m;
+                return;
+            }
+
             decimal mean1 = 0;
             decimal mean2 = 0;
             decimal sumProduct = 0;
 
-            int windowSize = _targetReturns.Size;
+            int windowSize = _targetDataPoints.Count;
             for (int i = 0; i < windowSize; i++)
             {
-                mean1 += _targetReturns[i] / windowSize;
-                mean2 += _referenceReturns[i] / windowSize;
+                mean1 += _targetDataPoints[i] / windowSize;
+                mean2 += _referenceDataPoints[i] / windowSize;
             }
 
             for (int i = 0; i < windowSize; i++)
             {
-                sumProduct += (_targetReturns[i] - mean1) * (_referenceReturns[i] - mean2);
+                sumProduct += (_targetDataPoints[i] - mean1) * (_referenceDataPoints[i] - mean2);
             }
 
             _covariance = sumProduct / (windowSize - 1);
@@ -215,5 +193,6 @@ namespace QuantConnect.Indicators
             _covariance = 0;
             base.Reset();
         }
+
     }
 }
