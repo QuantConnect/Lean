@@ -17,13 +17,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
-using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util.RateLimit;
@@ -128,7 +126,7 @@ namespace QuantConnect.Tests.Common.Scheduling
 
             var eventTriggerTimes = new List<DateTime>();
             var scheduledEvent = algorithm.Schedule.On(algorithm.Schedule.DateRules.WeekStart(spy),
-                algorithm.Schedule.TimeRules.BeforeMarketClose(spy, 30),
+                algorithm.Schedule.TimeRules.BeforeMarketClose(spy, 60),
                 () =>
                 {
                     eventTriggerTimes.Add(handler.ManualTimeProvider.GetUtcNow());
@@ -136,21 +134,25 @@ namespace QuantConnect.Tests.Common.Scheduling
 
             handler.ManualTimeProvider.SetCurrentTime(time);
             algorithm.SetFinishedWarmingUp();
-            handler.SetTime(time);
 
-            using var finished = new ManualResetEventSlim();
+            using var finished = new ManualResetEventSlim(false);
 
-            Task.Run(() =>
-            {
-                var now = DateTime.MinValue;
-                while ((now = handler.ManualTimeProvider.GetUtcNow()).Month < 4)
+            // Schedule a task to advance time
+            var timeStep = TimeSpan.FromMinutes(60);
+            algorithm.Schedule.On(algorithm.Schedule.DateRules.EveryDay(),
+                algorithm.Schedule.TimeRules.Every(timeStep),
+                () =>
                 {
-                    handler.ManualTimeProvider.SetCurrentTime(now.AddMinutes(30));
-                    Thread.Sleep(1);
-                }
+                    handler.ManualTimeProvider.Advance(timeStep);
+                    var now = handler.ManualTimeProvider.GetUtcNow();
+                    if (now.Month >= 4)
+                    {
+                        finished.Set();
+                    }
+                });
 
-                finished.Set();
-            });
+            // Start
+            handler.SetTime(time);
 
             finished.Wait();
 
@@ -158,13 +160,13 @@ namespace QuantConnect.Tests.Common.Scheduling
 
             var expectedEventTriggerTimes = new List<DateTime>()
             {
-                new DateTime(2024, 02, 20, 20, 30, 0),
-                new DateTime(2024, 02, 26, 20, 30, 0),
-                new DateTime(2024, 03, 04, 20, 30, 0),
+                new DateTime(2024, 02, 20, 20, 0, 0),
+                new DateTime(2024, 02, 26, 20, 0, 0),
+                new DateTime(2024, 03, 04, 20, 0, 0),
                 // Daylight saving adjustment
-                new DateTime(2024, 03, 11, 19, 30, 0),
-                new DateTime(2024, 03, 18, 19, 30, 0),
-                new DateTime(2024, 03, 25, 19, 30, 0),
+                new DateTime(2024, 03, 11, 19, 0, 0),
+                new DateTime(2024, 03, 18, 19, 0, 0),
+                new DateTime(2024, 03, 25, 19, 0, 0),
             };
             CollectionAssert.AreEqual(expectedEventTriggerTimes, eventTriggerTimes);
         }
