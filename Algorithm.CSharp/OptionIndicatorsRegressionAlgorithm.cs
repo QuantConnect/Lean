@@ -15,8 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-
-using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 
@@ -27,8 +25,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class OptionIndicatorsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _aapl; 
-        private Symbol _option;
         private ImpliedVolatility _impliedVolatility;
         private Delta _delta;
         private Gamma _gamma;
@@ -42,43 +38,16 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 6, 7);
             SetCash(100000);
 
-            _aapl = AddEquity("AAPL", Resolution.Daily).Symbol;
-            _option = QuantConnect.Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505m, new DateTime(2014, 6, 27));
-            AddOptionContract(_option);
+            AddEquity("AAPL", Resolution.Minute);
+            var option = QuantConnect.Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505m, new DateTime(2014, 6, 27));
+            AddOptionContract(option, Resolution.Minute);
 
-            _impliedVolatility = IV(_option, period: 2);
-            _delta = D(_option, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
-            _gamma = G(_option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _vega = V(_option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _theta = T(_option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _rho = R(_option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-        }
-
-        public override void OnData(Slice slice)
-        {
-            if (slice.Bars.ContainsKey(_aapl) && slice.QuoteBars.ContainsKey(_option))
-            {
-                var underlyingDataPoint = new IndicatorDataPoint(_aapl, slice.Time, slice.Bars[_aapl].Close);
-                var optionDataPoint = new IndicatorDataPoint(_option, slice.Time, slice.QuoteBars[_option].Close);
-
-                _impliedVolatility.Update(underlyingDataPoint);
-                _impliedVolatility.Update(optionDataPoint);
-
-                _delta.Update(underlyingDataPoint);
-                _delta.Update(optionDataPoint);
-
-                _gamma.Update(underlyingDataPoint);
-                _gamma.Update(optionDataPoint);
-
-                _vega.Update(underlyingDataPoint);
-                _vega.Update(optionDataPoint);
-
-                _theta.Update(underlyingDataPoint);
-                _theta.Update(optionDataPoint);
-
-                _rho.Update(underlyingDataPoint);
-                _rho.Update(optionDataPoint);
-            }    
+            _impliedVolatility = IV(option, period: 2);
+            _delta = D(option, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
+            _gamma = G(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            _vega = V(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            _theta = T(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            _rho = R(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
         }
 
         public override void OnEndOfAlgorithm()
@@ -108,7 +77,7 @@ Rho: {_rho}");
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1197;
+        public long DataPoints => 1974;
 
         /// <summary>
         /// Data Points count of the algorithm history

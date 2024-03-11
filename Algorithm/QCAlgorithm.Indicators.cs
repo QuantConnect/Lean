@@ -547,11 +547,11 @@ namespace QuantConnect.Algorithm
             var name = InitializeOptionIndicator<Delta>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
 
             var delta = new Delta(name, symbol, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel);
-            RegisterIndicator(symbol, delta, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol, delta, ResolveConsolidator(symbol, resolution, typeof(QuoteBar)));
             RegisterIndicator(symbol.Underlying, delta, ResolveConsolidator(symbol.Underlying, resolution));
             if (mirrorOption != null)
             {
-                RegisterIndicator(mirrorOption, delta, ResolveConsolidator(mirrorOption, resolution));
+                RegisterIndicator(mirrorOption, delta, ResolveConsolidator(mirrorOption, resolution, typeof(QuoteBar)));
             }
             return delta;
         }
@@ -778,11 +778,11 @@ namespace QuantConnect.Algorithm
             var name = InitializeOptionIndicator<Gamma>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
 
             var gamma = new Gamma(name, symbol, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel);
-            RegisterIndicator(symbol, gamma, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol, gamma, ResolveConsolidator(symbol, resolution, typeof(QuoteBar)));
             RegisterIndicator(symbol.Underlying, gamma, ResolveConsolidator(symbol.Underlying, resolution));
             if (mirrorOption != null)
             {
-                RegisterIndicator(mirrorOption, gamma, ResolveConsolidator(mirrorOption, resolution));
+                RegisterIndicator(mirrorOption, gamma, ResolveConsolidator(mirrorOption, resolution, typeof(QuoteBar)));
             }
             return gamma;
         }
@@ -960,11 +960,11 @@ namespace QuantConnect.Algorithm
             var name = InitializeOptionIndicator<ImpliedVolatility>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
 
             var iv = new ImpliedVolatility(name, symbol, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel);
-            RegisterIndicator(symbol, iv, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol, iv, ResolveConsolidator(symbol, resolution, typeof(QuoteBar)));
             RegisterIndicator(symbol.Underlying, iv, ResolveConsolidator(symbol.Underlying, resolution));
             if (mirrorOption != null)
             {
-                RegisterIndicator(mirrorOption, iv, ResolveConsolidator(mirrorOption, resolution));
+                RegisterIndicator(mirrorOption, iv, ResolveConsolidator(mirrorOption, resolution, typeof(QuoteBar)));
             }
             return iv;
         }
@@ -1668,11 +1668,11 @@ namespace QuantConnect.Algorithm
             var name = InitializeOptionIndicator<Rho>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
 
             var rho = new Rho(name, symbol, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel);
-            RegisterIndicator(symbol, rho, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol, rho, ResolveConsolidator(symbol, resolution, typeof(QuoteBar)));
             RegisterIndicator(symbol.Underlying, rho, ResolveConsolidator(symbol.Underlying, resolution));
             if (mirrorOption != null)
             {
-                RegisterIndicator(mirrorOption, rho, ResolveConsolidator(mirrorOption, resolution));
+                RegisterIndicator(mirrorOption, rho, ResolveConsolidator(mirrorOption, resolution, typeof(QuoteBar)));
             }
             return rho;
         }
@@ -1933,11 +1933,11 @@ namespace QuantConnect.Algorithm
             var name = InitializeOptionIndicator<Theta>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
 
             var theta = new Theta(name, symbol, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel);
-            RegisterIndicator(symbol, theta, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol, theta, ResolveConsolidator(symbol, resolution, typeof(QuoteBar)));
             RegisterIndicator(symbol.Underlying, theta, ResolveConsolidator(symbol.Underlying, resolution));
             if (mirrorOption != null)
             {
-                RegisterIndicator(mirrorOption, theta, ResolveConsolidator(mirrorOption, resolution));
+                RegisterIndicator(mirrorOption, theta, ResolveConsolidator(mirrorOption, resolution, typeof(QuoteBar)));
             }
             return theta;
         }
@@ -2113,11 +2113,11 @@ namespace QuantConnect.Algorithm
             var name = InitializeOptionIndicator<Vega>(symbol, out var riskFreeRateModel, out var dividendYieldModel, riskFreeRate, dividendYield, optionModel, resolution);
 
             var vega = new Vega(name, symbol, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel);
-            RegisterIndicator(symbol, vega, ResolveConsolidator(symbol, resolution));
+            RegisterIndicator(symbol, vega, ResolveConsolidator(symbol, resolution, typeof(QuoteBar)));
             RegisterIndicator(symbol.Underlying, vega, ResolveConsolidator(symbol.Underlying, resolution));
             if (mirrorOption != null)
             {
-                RegisterIndicator(mirrorOption, vega, ResolveConsolidator(mirrorOption, resolution));
+                RegisterIndicator(mirrorOption, vega, ResolveConsolidator(mirrorOption, resolution, typeof(QuoteBar)));
             }
             return vega;
         }

@@ -20,39 +20,16 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2014, 6, 7)
         self.SetCash(1000000)
 
-        self.aapl = self.AddEquity("AAPL", Resolution.Daily).Symbol
-        self.option = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505, datetime(2014, 6, 27))
-        self.AddOptionContract(self.option)
+        self.AddEquity("AAPL", Resolution.Minute)
+        option = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505, datetime(2014, 6, 27))
+        self.AddOptionContract(option, Resolution.Minute)
 
-        self.impliedVolatility = self.IV(self.option, optionModel = OptionPricingModelType.BlackScholes, period = 2)
-        self.delta = self.D(self.option, optionModel = OptionPricingModelType.BinomialCoxRossRubinstein, ivModel = OptionPricingModelType.BlackScholes)
-        self.gamma = self.G(self.option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
-        self.vega = self.V(self.option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
-        self.theta = self.T(self.option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
-        self.rho = self.R(self.option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
-
-    def OnData(self, slice):
-        if slice.Bars.ContainsKey(self.aapl) and slice.QuoteBars.ContainsKey(self.option):
-            underlyingDataPoint = IndicatorDataPoint(self.aapl, slice.Time, slice.Bars[self.aapl].Close)
-            optionDataPoint = IndicatorDataPoint(self.option, slice.Time, slice.QuoteBars[self.option].Close)
-
-            self.impliedVolatility.Update(underlyingDataPoint)
-            self.impliedVolatility.Update(optionDataPoint)
-
-            self.delta.Update(underlyingDataPoint)
-            self.delta.Update(optionDataPoint)
-
-            self.gamma.Update(underlyingDataPoint)
-            self.gamma.Update(optionDataPoint)
-
-            self.vega.Update(underlyingDataPoint)
-            self.vega.Update(optionDataPoint)
-
-            self.theta.Update(underlyingDataPoint)
-            self.theta.Update(optionDataPoint)
-
-            self.rho.Update(underlyingDataPoint)
-            self.rho.Update(optionDataPoint)
+        self.impliedVolatility = self.IV(option, optionModel = OptionPricingModelType.BlackScholes, period = 2)
+        self.delta = self.D(option, optionModel = OptionPricingModelType.BinomialCoxRossRubinstein, ivModel = OptionPricingModelType.BlackScholes)
+        self.gamma = self.G(option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
+        self.vega = self.V(option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
+        self.theta = self.T(option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
+        self.rho = self.R(option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
 
     def OnEndOfAlgorithm(self):
         if self.impliedVolatility.Current.Value == 0 or self.delta.Current.Value == 0 or self.gamma.Current.Value == 0 \

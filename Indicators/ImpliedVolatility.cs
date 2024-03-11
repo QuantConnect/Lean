@@ -51,7 +51,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The lookback period of historical volatility</param>
         public ImpliedVolatility(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 252)
-            : base(name, option, riskFreeRateModel, dividendYieldModel, optionModel, period)
+            : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, period)
         {
             _roc = new(1);
             HistoricalVolatility = IndicatorExtensions.Times(
@@ -69,8 +69,6 @@ namespace QuantConnect.Indicators
 
             if (mirrorOption != null)
             {
-                SetMirrorOptionContract(mirrorOption);
-
                 // Default smoothing function will be assuming Law of One Price hold,
                 // so both call and put will have the same IV
                 // and using on OTM/ATM options to calculate the IV
@@ -297,46 +295,45 @@ namespace QuantConnect.Indicators
                     }
                 }
 
-                _impliedVolatility = CalculateIV(time);
+                RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
+                DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
+
+                var timeTillExpiry = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
+                _impliedVolatility = CalculateIV(timeTillExpiry);
             }
 
             return _impliedVolatility;
         }
 
         // Calculate the theoretical option price
-        private decimal TheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, 
+        private decimal TheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeTillExpiry, decimal riskFreeRate, 
             decimal dividendYield, OptionRight optionType, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
         {
             switch (optionModel)
             {
                 // Binomial model also follows BSM process (log-normal)
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
-                    return OptionGreekIndicatorsHelper.CRRTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, dividendYield, optionType);
+                    return OptionGreekIndicatorsHelper.CRRTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType);
                 case OptionPricingModelType.ForwardTree:
-                    return OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, dividendYield, optionType);
+                    return OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType);
                 case OptionPricingModelType.BlackScholes:
                 default:
-                    return OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeToExpiration, riskFreeRate, dividendYield, optionType);
+                    return OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType);
             }
         }
 
         /// <summary>
         /// Computes the IV of the option
         /// </summary>
-        /// <param name="time">the datetime at this calculation</param>
+        /// <param name="timeTillExpiry">the time until expiration in years</param>
         /// <returns>Smoothened IV of the option</returns>
-        protected virtual decimal CalculateIV(DateTime time)
+        protected virtual decimal CalculateIV(decimal timeTillExpiry)
         {
-            RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
-            DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
-
-            var timeToExpiration = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
-
             var impliedVol = 0m;
             try
             {
                 Func<double, double> f = (vol) => (double)(TheoreticalPrice(
-                    Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right, _optionModel) - Price);
+                    Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right, _optionModel) - Price);
                 impliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 2.0d, 1e-4d, 100));
             }
             catch
@@ -350,7 +347,7 @@ namespace QuantConnect.Indicators
                 try
                 {
                     Func<double, double> f = (vol) => (double)(TheoreticalPrice(
-                        Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, _oppositeOptionSymbol.ID.OptionRight, _optionModel) - OppositePrice);
+                        Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, _oppositeOptionSymbol.ID.OptionRight, _optionModel) - OppositePrice);
                     mirrorImpliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 2.0d, 1e-4d, 100));
                 }
                 catch

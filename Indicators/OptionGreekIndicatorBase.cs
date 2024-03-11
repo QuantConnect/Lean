@@ -48,15 +48,11 @@ namespace QuantConnect.Indicators
         /// <param name="period">The lookback period of historical volatility</param>
         protected OptionGreeksIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
             Symbol mirrorOption = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null, int period = 2)
-            : base(name, option, riskFreeRateModel, dividendYieldModel, optionModel, period)
+            : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, period)
         {
             ivModel = ivModel ?? optionModel;
             WarmUpPeriod = period;
             ImpliedVolatility = new ImpliedVolatility(name + "_IV", option, riskFreeRateModel, dividendYieldModel, mirrorOption, (OptionPricingModelType)ivModel, period);
-            if (mirrorOption != null)
-            {
-                SetMirrorOptionContract(mirrorOption);
-            }
         }
 
         /// <summary>
@@ -177,14 +173,16 @@ namespace QuantConnect.Indicators
 
                 RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
                 DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
-                _greekValue = CalculateGreek(time);
+
+                var timeTillExpiry = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
+                _greekValue = CalculateGreek(timeTillExpiry);
             }
 
             return _greekValue;
         }
 
         // Calculate the greek of the option
-        protected virtual decimal CalculateGreek(DateTime time)
+        protected virtual decimal CalculateGreek(decimal timeTillExpiry)
         {
             throw new NotImplementedException("'CalculateGreek' method must be implemented");
         }

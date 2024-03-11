@@ -45,14 +45,16 @@ namespace QuantConnect.Tests.Indicators
             DividendYieldUpdatesPerIteration = 2;
         }
 
-        [TestCase("american/third_party_1_greeks.csv", true, 0.03, false)]
-        [TestCase("american/third_party_1_greeks.csv", false, 0.03, false)]
+        [TestCase("american/third_party_1_greeks.csv", true, false, 0.03)]
+        [TestCase("american/third_party_1_greeks.csv", false, false, 0.03)]
         // Just placing the test and data here, we are unsure about the smoothing function and not going to reverse engineer
-        [TestCase("american/third_party_2_greeks.csv", false, 10000, true)]
-        public void ComparesAgainstExternalData(string subPath, bool reset, double errorMargin, bool singleContract, int callColumn = 9, int putColumn = 8)
+        [TestCase("american/third_party_2_greeks.csv", false, true, 10000)]
+        public void ComparesAgainstExternalData(string subPath, bool reset, bool singleContract, double errorRate, double errorMargin = 1e-4,
+            int callColumn = 9, int putColumn = 8)
         {
             var path = Path.Combine("TestData", "greeksindicator", subPath);
-            foreach (var line in File.ReadAllLines(path).Skip(3))
+            // skip last entry since for deep ITM, IV will not affect much on price. Thus root finding will not be optimizing a non-convex function.
+            foreach (var line in File.ReadAllLines(path).Skip(3).SkipLast(1))
             {
                 var items = line.Split(',');
 
@@ -63,25 +65,25 @@ namespace QuantConnect.Tests.Indicators
 
                 Delta callIndicator;
                 Delta putIndicator;
-                if (singleContract == true)
+                if (singleContract)
                 {
                     callIndicator = new Delta(call, interestRate, dividendYield, optionModel: model);
                     putIndicator = new Delta(put, interestRate, dividendYield, optionModel: model);
                 }
                 else
                 {
-                    callIndicator = new Delta(call, interestRate, dividendYield, put, optionModel: model);
-                    putIndicator = new Delta(put, interestRate, dividendYield, call, optionModel: model);
+                    callIndicator = new Delta(call, interestRate, dividendYield, put, model);
+                    putIndicator = new Delta(put, interestRate, dividendYield, call, model);
                 }
 
-                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
+                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);
 
                 if (reset == true)
                 {
                     callIndicator.Reset();
                     putIndicator.Reset();
 
-                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
+                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);
                 }
             }
         }

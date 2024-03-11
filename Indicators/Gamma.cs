@@ -182,23 +182,22 @@ namespace QuantConnect.Indicators
         }
 
         // Calculate the Gamma of the option
-        protected override decimal CalculateGreek(DateTime time)
+        protected override decimal CalculateGreek(decimal timeTillExpiry)
         {
-            var timeToExpiration = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
             var math = OptionGreekIndicatorsHelper.DecimalMath;
 
             switch (_optionModel)
             {
                 case OptionPricingModelType.BlackScholes:
                     var norm = new Normal();
-                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, ImpliedVolatility);
+                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, ImpliedVolatility);
 
                     // allow at least 1% IV
-                    return math(norm.Density, -d1) / UnderlyingPrice / Math.Max(ImpliedVolatility, 0.01m) / math(Math.Sqrt, timeToExpiration);
+                    return math(norm.Density, -d1) / UnderlyingPrice / Math.Max(ImpliedVolatility, 0.01m) / math(Math.Sqrt, timeTillExpiry);
 
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
                 case OptionPricingModelType.ForwardTree:
-                    var upFactor = math(Math.Exp, ImpliedVolatility * math(Math.Sqrt, timeToExpiration / OptionGreekIndicatorsHelper.Steps));
+                    var upFactor = math(Math.Exp, ImpliedVolatility * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps));
                     if (upFactor == 1)
                     {
                         // provide a small step to estimate gamma
@@ -214,15 +213,15 @@ namespace QuantConnect.Indicators
                     var fD = 0m;
                     if (_optionModel == OptionPricingModelType.BinomialCoxRossRubinstein)
                     {
-                        fU = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, sU, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
-                        fM = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
-                        fD = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, sD, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
+                        fU = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, sU, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        fM = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        fD = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
                     }
                     else if (_optionModel == OptionPricingModelType.ForwardTree)
                     {
-                        fU = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, sU, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
-                        fM = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
-                        fD = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, sD, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
+                        fU = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, sU, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        fM = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        fD = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
                     }
 
                     var gammaU = (fU - fM) / (sU - UnderlyingPrice);

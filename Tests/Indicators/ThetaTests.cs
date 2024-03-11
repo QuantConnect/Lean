@@ -46,12 +46,15 @@ namespace QuantConnect.Tests.Indicators
         }
 
         // close to expiry prone to vary
-        [TestCase("american/third_party_1_greeks.csv", true, 0.6, false)]
-        [TestCase("american/third_party_1_greeks.csv", false, 0.6, false)]
-        public void ComparesAgainstExternalData(string subPath, bool reset, double errorMargin, bool singleContract, int callColumn = 15, int putColumn = 14)
+        [TestCase("american/third_party_1_greeks.csv", true, false, 0.6, 1.5e-3)]
+        [TestCase("american/third_party_1_greeks.csv", false, false, 0.6, 1.5e-3)]
+        // Just placing the test and data here, we are unsure about the smoothing function and not going to reverse engineer
+        [TestCase("american/third_party_2_greeks.csv", false, true, 10000, 0.03)]
+        public void ComparesAgainstExternalData(string subPath, bool reset, bool singleContract, double errorRate, double errorMargin = 1e-4,
+            int callColumn = 15, int putColumn = 14)
         {
             var path = Path.Combine("TestData", "greeksindicator", subPath);
-            // deep ITM have wild theta due to IV inaccuracy, as IV is not optimized due to insensitivity from non-convex
+            // skip last entry since for deep ITM, IV will not affect much on price. Thus root finding will not be optimizing a non-convex function.
             foreach (var line in File.ReadAllLines(path).Skip(3).SkipLast(1))
             {
                 var items = line.Split(',');
@@ -63,7 +66,7 @@ namespace QuantConnect.Tests.Indicators
 
                 Theta callIndicator;
                 Theta putIndicator;
-                if (singleContract == true)
+                if (singleContract)
                 {
                     callIndicator = new Theta(call, interestRate, dividendYield, optionModel: model);
                     putIndicator = new Theta(put, interestRate, dividendYield, optionModel: model);
@@ -74,14 +77,14 @@ namespace QuantConnect.Tests.Indicators
                     putIndicator = new Theta(put, interestRate, dividendYield, call, model);
                 }
 
-                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
+                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);
 
                 if (reset == true)
                 {
                     callIndicator.Reset();
                     putIndicator.Reset();
 
-                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorMargin);
+                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);
                 }
             }
         }

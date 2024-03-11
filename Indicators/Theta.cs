@@ -182,28 +182,27 @@ namespace QuantConnect.Indicators
         }
 
         // Calculate the Theta of the option
-        protected override decimal CalculateGreek(DateTime time)
+        protected override decimal CalculateGreek(decimal timeTillExpiry)
         {
-            var timeToExpiration = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
             var math = OptionGreekIndicatorsHelper.DecimalMath;
 
             switch (_optionModel)
             {
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
                 case OptionPricingModelType.ForwardTree:
-                    var deltaTime = timeToExpiration / OptionGreekIndicatorsHelper.Steps;
+                    var deltaTime = timeTillExpiry / OptionGreekIndicatorsHelper.Steps;
 
                     var forwardPrice = 0m;
                     var price = 0m;
                     if (_optionModel == OptionPricingModelType.BinomialCoxRossRubinstein)
                     {
-                        forwardPrice = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeToExpiration - 2 * deltaTime, RiskFreeRate, DividendYield, Right);
-                        price = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
+                        forwardPrice = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry - 2 * deltaTime, RiskFreeRate, DividendYield, Right);
+                        price = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
                     }
                     else if (_optionModel == OptionPricingModelType.ForwardTree)
                     {
-                        forwardPrice = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeToExpiration - 2 * deltaTime, RiskFreeRate, DividendYield, Right); price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
-                        price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
+                        forwardPrice = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry - 2 * deltaTime, RiskFreeRate, DividendYield, Right); price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
                     }
 
                     return (forwardPrice - price) * 0.5m / deltaTime / 365m;
@@ -211,13 +210,13 @@ namespace QuantConnect.Indicators
                 case OptionPricingModelType.BlackScholes:
                 default:
                     var norm = new Normal();
-                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, ImpliedVolatility);
-                    var d2 = OptionGreekIndicatorsHelper.CalculateD2(d1, ImpliedVolatility, timeToExpiration);
-                    var discount = math(Math.Exp, -RiskFreeRate * timeToExpiration);
-                    var adjustment = math(Math.Exp, -DividendYield * timeToExpiration);
+                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, ImpliedVolatility);
+                    var d2 = OptionGreekIndicatorsHelper.CalculateD2(d1, ImpliedVolatility, timeTillExpiry);
+                    var discount = math(Math.Exp, -RiskFreeRate * timeTillExpiry);
+                    var adjustment = math(Math.Exp, -DividendYield * timeTillExpiry);
 
                     // allow at least 1% IV
-                    var theta = -UnderlyingPrice * Math.Max(ImpliedVolatility, 0.01m) * math(norm.Density, d1) * adjustment * 0.5m / math(Math.Sqrt, timeToExpiration);
+                    var theta = -UnderlyingPrice * Math.Max(ImpliedVolatility, 0.01m) * math(norm.Density, d1) * adjustment * 0.5m / math(Math.Sqrt, timeTillExpiry);
 
                     if (Right == OptionRight.Call)
                     {

@@ -181,15 +181,15 @@ namespace QuantConnect.Indicators
         {
         }
 
-        // Calculate the theoretical option price
-        private decimal TheoreticalDelta(decimal timeToExpiration, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
+        // Calculate the Delta of the option
+        protected override decimal CalculateGreek(decimal timeTillExpiry)
         {
             var math = OptionGreekIndicatorsHelper.DecimalMath;
-                
-            switch (optionModel)
+
+            switch (_optionModel)
             {
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
-                    var upFactor = math(Math.Exp, ImpliedVolatility * math(Math.Sqrt, timeToExpiration / OptionGreekIndicatorsHelper.Steps));
+                    var upFactor = math(Math.Exp, ImpliedVolatility * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps));
                     if (upFactor == 1)
                     {
                         // provide a small step to estimate delta
@@ -200,21 +200,21 @@ namespace QuantConnect.Indicators
                     var sD = UnderlyingPrice / upFactor;
 
                     var fU = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
-                        ImpliedVolatility, sU, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
+                        ImpliedVolatility, sU, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
                     var fD = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
-                        ImpliedVolatility, sD, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
+                        ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
 
                     return (fU - fD) / (sU - sD);
 
                 case OptionPricingModelType.ForwardTree:
-                    var discount = math(Math.Exp, (RiskFreeRate - DividendYield) * timeToExpiration / OptionGreekIndicatorsHelper.Steps);
-                    upFactor = math(Math.Exp, ImpliedVolatility * math(Math.Sqrt, timeToExpiration / OptionGreekIndicatorsHelper.Steps)) * discount;
+                    var discount = math(Math.Exp, (RiskFreeRate - DividendYield) * timeTillExpiry / OptionGreekIndicatorsHelper.Steps);
+                    upFactor = math(Math.Exp, ImpliedVolatility * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps)) * discount;
                     if (upFactor == 1)
                     {
                         // provide a small step to estimate delta
                         upFactor = 1.00001m;
                     }
-                    var downFactor = math(Math.Exp, -ImpliedVolatility * math(Math.Sqrt, timeToExpiration / OptionGreekIndicatorsHelper.Steps)) * discount;
+                    var downFactor = math(Math.Exp, -ImpliedVolatility * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps)) * discount;
                     if (downFactor == 1)
                     {
                         // provide a small step to estimate delta
@@ -225,16 +225,16 @@ namespace QuantConnect.Indicators
                     sD = UnderlyingPrice * downFactor;
 
                     fU = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
-                        ImpliedVolatility, sU, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
+                        ImpliedVolatility, sU, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
                     fD = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
-                        ImpliedVolatility, sD, Strike, timeToExpiration, RiskFreeRate, DividendYield, Right);
+                        ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
 
                     return (fU - fD) / (sU - sD);
 
                 case OptionPricingModelType.BlackScholes:
                 default:
                     var norm = new Normal();
-                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeToExpiration, RiskFreeRate, DividendYield, ImpliedVolatility);
+                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, ImpliedVolatility);
 
                     decimal wholeShareDelta;
                     if (Right == OptionRight.Call)
@@ -246,16 +246,8 @@ namespace QuantConnect.Indicators
                         wholeShareDelta = -math(norm.CumulativeDistribution, -d1);
                     }
 
-                    return wholeShareDelta * math(Math.Exp, -DividendYield * timeToExpiration);
+                    return wholeShareDelta * math(Math.Exp, -DividendYield * timeTillExpiry);
             }
-        }
-
-        // Calculate the Delta of the option
-        protected override decimal CalculateGreek(DateTime time)
-        {
-            var timeToExpiration = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
-
-            return TheoreticalDelta(timeToExpiration, _optionModel);
         }
     }
 }
