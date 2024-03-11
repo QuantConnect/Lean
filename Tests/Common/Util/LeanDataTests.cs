@@ -220,11 +220,12 @@ namespace QuantConnect.Tests.Common.Util
         public void UniversesDataPath()
         {
             var path = "equity/usa/universes/etf/spy/20200102.csv";
-            Assert.IsTrue(LeanData.TryParsePath(path, out var symbol, out var date, out var resolution));
+            Assert.IsTrue(LeanData.TryParsePath(path, out var symbol, out var date, out var resolution, out var ticker));
 
             Assert.AreEqual(SecurityType.Base, symbol.SecurityType);
             Assert.AreEqual(Market.USA, symbol.ID.Market);
             Assert.AreEqual(Resolution.Daily, resolution);
+            Assert.AreEqual("spy", ticker);
             Assert.AreEqual("SPY.ETFConstituentData", symbol.ID.Symbol);
             Assert.AreEqual(new DateTime(2020, 1, 2), date);
             Assert.IsTrue(SecurityIdentifier.TryGetCustomDataType(symbol.ID.Symbol, out var dataType));
@@ -239,22 +240,22 @@ namespace QuantConnect.Tests.Common.Util
             Resolution resolution;
 
             var invalidPath = "forex/fxcm/eurusd/20160101_quote.zip";
-            Assert.IsFalse(LeanData.TryParsePath(invalidPath, out symbol, out date, out resolution));
+            Assert.IsFalse(LeanData.TryParsePath(invalidPath, out symbol, out date, out resolution, out var ticker));
 
             var nonExistantPath = "Data/f/fxcm/eurusd/20160101_quote.zip";
-            Assert.IsFalse(LeanData.TryParsePath(nonExistantPath, out symbol, out date, out resolution));
+            Assert.IsFalse(LeanData.TryParsePath(nonExistantPath, out symbol, out date, out resolution, out ticker));
 
             var notAPath = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
-            Assert.IsFalse(LeanData.TryParsePath(notAPath, out symbol, out date, out resolution));
+            Assert.IsFalse(LeanData.TryParsePath(notAPath, out symbol, out date, out resolution, out ticker));
 
             var  emptyPath = "";
-            Assert.IsFalse(LeanData.TryParsePath(emptyPath, out symbol, out date, out resolution));
+            Assert.IsFalse(LeanData.TryParsePath(emptyPath, out symbol, out date, out resolution, out ticker));
 
             string nullPath = null;
-            Assert.IsFalse(LeanData.TryParsePath(nullPath, out symbol, out date, out resolution));
+            Assert.IsFalse(LeanData.TryParsePath(nullPath, out symbol, out date, out resolution, out ticker));
 
             var optionsTradePath = "Data/option/u sa/minute/aapl/20140606_trade_american.zip";
-            Assert.IsFalse(LeanData.TryParsePath(optionsTradePath, out symbol, out date, out resolution));
+            Assert.IsFalse(LeanData.TryParsePath(optionsTradePath, out symbol, out date, out resolution, out ticker));
         }
 
         [Test]
@@ -263,60 +264,68 @@ namespace QuantConnect.Tests.Common.Util
             DateTime date;
             Symbol symbol;
             Resolution resolution;
+            var ticker = string.Empty;
 
             var customPath = "a/very/custom/path/forex/oanda/tick/eurusd/20170104_quote.zip";
-            Assert.IsTrue(LeanData.TryParsePath(customPath, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(customPath, out symbol, out date, out resolution, out ticker));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
             Assert.AreEqual(symbol.ID.Market, Market.Oanda);
             Assert.AreEqual(resolution, Resolution.Tick);
+            Assert.AreEqual("eurusd", ticker);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "eurusd");
             Assert.AreEqual(date.Date, Parse.DateTime("2017-01-04").Date);
 
             var mixedPathSeperators = @"Data//forex/fxcm\/minute//eurusd\\20160101_quote.zip";
-            Assert.IsTrue(LeanData.TryParsePath(mixedPathSeperators, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(mixedPathSeperators, out symbol, out date, out resolution, out ticker));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
             Assert.AreEqual(symbol.ID.Market, Market.FXCM);
             Assert.AreEqual(resolution, Resolution.Minute);
+            Assert.AreEqual("eurusd", ticker);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "eurusd");
             Assert.AreEqual(date.Date, Parse.DateTime("2016-01-01").Date);
 
             var longRelativePath = "../../../../../../../../../Data/forex/fxcm/hour/gbpusd.zip";
-            Assert.IsTrue(LeanData.TryParsePath(longRelativePath, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(longRelativePath, out symbol, out date, out resolution, out ticker));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
             Assert.AreEqual(symbol.ID.Market, Market.FXCM);
             Assert.AreEqual(resolution, Resolution.Hour);
+            Assert.AreEqual("gbpusd", ticker);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "gbpusd");
             Assert.AreEqual(date.Date, DateTime.MinValue);
 
             var shortRelativePath = "Data/forex/fxcm/minute/eurusd/20160102_quote.zip";
-            Assert.IsTrue(LeanData.TryParsePath(shortRelativePath, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(shortRelativePath, out symbol, out date, out resolution, out ticker));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
             Assert.AreEqual(symbol.ID.Market, Market.FXCM);
             Assert.AreEqual(resolution, Resolution.Minute);
+            Assert.AreEqual("eurusd", ticker);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "eurusd");
             Assert.AreEqual(date.Date, Parse.DateTime("2016-01-02").Date);
 
             var dailyEquitiesPath = "Data/equity/usa/daily/aapl.zip";
-            Assert.IsTrue(LeanData.TryParsePath(dailyEquitiesPath, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(dailyEquitiesPath, out symbol, out date, out resolution, out ticker));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Equity);
             Assert.AreEqual(symbol.ID.Market, Market.USA);
             Assert.AreEqual(resolution, Resolution.Daily);
+            Assert.AreEqual("aapl", ticker);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "aapl");
             Assert.AreEqual(date.Date, DateTime.MinValue);
 
             var minuteEquitiesPath = "Data/equity/usa/minute/googl/20070103_trade.zip";
-            Assert.IsTrue(LeanData.TryParsePath(minuteEquitiesPath, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(minuteEquitiesPath, out symbol, out date, out resolution, out ticker));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Equity);
             Assert.AreEqual(symbol.ID.Market, Market.USA);
             Assert.AreEqual(resolution, Resolution.Minute);
+            Assert.AreEqual("googl", ticker);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "goog");
             Assert.AreEqual(date.Date, Parse.DateTime("2007-01-03").Date);
 
             var cfdPath = "Data/cfd/oanda/minute/bcousd/20160101_trade.zip";
-            Assert.IsTrue(LeanData.TryParsePath(cfdPath, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(cfdPath, out symbol, out date, out resolution, out ticker));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Cfd);
             Assert.AreEqual(symbol.ID.Market, Market.Oanda);
             Assert.AreEqual(resolution, Resolution.Minute);
+            Assert.AreEqual("bcousd", ticker);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "bcousd");
             Assert.AreEqual(date.Date, Parse.DateTime("2016-01-01").Date);
         }
@@ -326,12 +335,13 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("Data\\futureoption\\comex\\minute\\og\\20210428\\20210104_quote_american.zip", "OG", "GC")]
         public void MappedTickersCorreclty(string path, string expectedSymbol, string expectedUnderlying)
         {
-            Assert.IsTrue(LeanData.TryParsePath(path, out var symbol, out var date, out var resolution));
+            Assert.IsTrue(LeanData.TryParsePath(path, out var symbol, out var date, out var resolution, out var ticker));
 
             Assert.AreEqual(Resolution.Minute, resolution);
             Assert.AreEqual(expectedSymbol, symbol.ID.Symbol);
             Assert.AreEqual(expectedUnderlying, symbol.ID.Underlying.Symbol);
             Assert.AreEqual(new DateTime(2021, 01, 04), date);
+            Assert.AreEqual(expectedSymbol, ticker);
         }
 
         [TestCase("Data\\alternative\\estimize\\consensus\\aapl.csv", "aapl", null)]
@@ -342,12 +352,9 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("Data\\alternative\\ustreasury\\yieldcurverates.zip", "yieldcurverates", null)]
         public void AlternativePaths_CanBeParsedCorrectly(string path, string expectedSymbol, string expectedDate)
         {
-            DateTime date;
-            Symbol symbol;
-            Resolution resolution;
-
-            Assert.IsTrue(LeanData.TryParsePath(path, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(path, out var symbol, out var date, out var resolution, out var ticker));
             Assert.AreEqual(SecurityType.Base, symbol.SecurityType);
+            Assert.AreEqual(expectedSymbol, ticker);
             Assert.AreEqual(Market.USA, symbol.ID.Market);
             Assert.AreEqual(Resolution.Daily, resolution);
             Assert.AreEqual(expectedSymbol, symbol.ID.Symbol.ToLowerInvariant());
@@ -357,29 +364,28 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void CryptoPaths_CanBeParsedCorrectly()
         {
-            DateTime date;
-            Symbol symbol;
-            Resolution resolution;
-
             var cryptoPath = "Data\\crypto\\coinbase\\daily\\btcusd_quote.zip";
-            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out var symbol, out _, out var resolution, out var ticker));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
+            Assert.AreEqual("btcusd", ticker);
             Assert.AreEqual(symbol.ID.Market, Market.Coinbase);
             Assert.AreEqual(resolution, Resolution.Daily);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
 
             cryptoPath = "Data\\crypto\\coinbase\\hour\\btcusd_quote.zip";
-            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out _, out resolution, out ticker));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
             Assert.AreEqual(symbol.ID.Market, Market.Coinbase);
             Assert.AreEqual(resolution, Resolution.Hour);
+            Assert.AreEqual("btcusd", ticker);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
 
             cryptoPath = "Data\\crypto\\coinbase\\minute\\btcusd\\20161007_quote.zip";
-            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out var date, out resolution, out ticker));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
             Assert.AreEqual(symbol.ID.Market, Market.Coinbase);
             Assert.AreEqual(resolution, Resolution.Minute);
+            Assert.AreEqual("btcusd", ticker);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
             Assert.AreEqual(date.Date, Parse.DateTime("2016-10-07").Date);
         }

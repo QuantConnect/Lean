@@ -76,7 +76,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             return DownloadOnce(key, s =>
             {
-                if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution, out var tickType, out var dataType))
+                if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution, out var tickType, out var dataType, out var ticker))
                 {
                     if (symbol.SecurityType == SecurityType.Base)
                     {
