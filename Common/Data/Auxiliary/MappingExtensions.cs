@@ -142,18 +142,18 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="symbol">The symbol to get <see cref="MapFileResolver"/> and generate new Symbol.</param>
         /// <param name="ticker">The ticker symbol for which to retrieve the data parameters.</param>
         /// <param name="resolution">The resolution of the data to be downloaded.</param>
-        /// <param name="startDateTimeUtc">The start date and time for the data download in UTC.</param>
-        /// <param name="endDateTimeUtc">The end date and time for the data download in UTC.</param>
+        /// <param name="startDateTime">The start date and time for the data download.</param>
+        /// <param name="endDateTime">The end date and time for the data download.</param>
         /// <param name="tickType">The tick type of the data to be downloaded.</param>
         /// <returns>An enumerable collection of DataDownloaderGetParameters objects representing the parameters for downloading ticker data.</returns>
         /// <exception cref="ArgumentException">Throw if <paramref name="mapFileProvider"/> is null.</exception>
         public static IEnumerable<DataDownloaderGetParameters> GetAllTickerFromMapFiles(
-            this IMapFileProvider mapFileProvider, 
-            Symbol symbol, 
-            string ticker, 
-            Resolution resolution, 
-            DateTime startDateTimeUtc, 
-            DateTime endDateTimeUtc, 
+            this IMapFileProvider mapFileProvider,
+            Symbol symbol,
+            string ticker,
+            Resolution resolution,
+            DateTime startDateTime,
+            DateTime endDateTime,
             TickType tickType)
         {
             if (mapFileProvider == null)
@@ -165,6 +165,12 @@ namespace QuantConnect.Data.Auxiliary
 
             var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
 
+            if (!mapFileResolver.ResolveMapFile(symbol).Any())
+            {
+                yield return new DataDownloaderGetParameters(symbol, resolution, startDateTime, endDateTime, tickType);
+                yield break;
+            }
+
             foreach (var mapFile in mapFileResolver)
             {
                 // Check if 'mapFile' contains the desired ticker symbol.
@@ -174,30 +180,30 @@ namespace QuantConnect.Data.Auxiliary
                 }
 
                 // Exclude: When resolution is less then hour, we downloaded with using specific start/end DateTime
-                if (startDateTimeUtc > mapFile.DelistingDate && Resolution.Hour > resolution)
+                if (startDateTime > mapFile.DelistingDate && Resolution.Hour > resolution)
                 {
                     continue;
                 }
 
                 var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.Permtick, symbol?.ID.Market);
 
-                var newEndDateTimeUtc = endDateTimeUtc;
+                var newEndDateTimeUtc = endDateTime;
                 foreach (var tickerDateRange in mapFile.GetTickerDateRanges(tickerUpperCase))
                 {
+                    // Exclude: requested startDateTimeUtc is not passed mapFile's Date Range 
+                    if (resolution < Resolution.Hour && !(tickerDateRange.StartDate <= startDateTime && startDateTime < tickerDateRange.EndDate))
+                    {
+                        continue;
+                    }
+
                     // We have downloaded all range with date from MapFile
                     if (resolution >= Resolution.Hour)
                     {
-                        startDateTimeUtc = tickerDateRange.StartDate;
-                        newEndDateTimeUtc = tickerDateRange.EndDate > endDateTimeUtc ? endDateTimeUtc : tickerDateRange.EndDate;
+                        startDateTime = tickerDateRange.StartDate;
+                        newEndDateTimeUtc = tickerDateRange.EndDate > endDateTime ? endDateTime : tickerDateRange.EndDate;
                     }
 
-                    yield return new DataDownloaderGetParameters(new Symbol(sid, tickerUpperCase), resolution, startDateTimeUtc, newEndDateTimeUtc, tickType);
-
-                    // Prevent dublicate data downloader parameters
-                    if (resolution < Resolution.Hour)
-                    {
-                        yield break;
-                    }
+                    yield return new DataDownloaderGetParameters(new Symbol(sid, tickerUpperCase), resolution, startDateTime, newEndDateTimeUtc, tickType);
                 }
             }
         }
@@ -216,8 +222,8 @@ namespace QuantConnect.Data.Auxiliary
                 {
                     continue;
                 }
-
-                yield return (mapFile[i].Date, mapFile[i + 1].Date);
+                // Shifts endDateTime by one day to include all data up to and including the endDateTime.
+                yield return (mapFile[i].Date, mapFile[i + 1].Date.AddDays(1));
             }
         }
     }
