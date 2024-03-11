@@ -119,15 +119,14 @@ namespace QuantConnect.Data.Auxiliary
             {
                 if (mappedTicker.Date >= newStartDateTime)
                 {
-                    if (endDateTime <= mappedTicker.Date)
+                    // Shifts endDateTime by one day to include all data up to and including the endDateTime.
+                    var newEndDateTime = mappedTicker.Date.AddDays(1);
+                    if (newEndDateTime > endDateTime)
                     {
                         yield return new(mappedTicker.MappedSymbol, newStartDateTime, endDateTime);
                         // the request EndDateTime was achieved
                         yield break;
                     }
-
-                    // Shifts endDateTime by one day to include all data up to and including the endDateTime.
-                    var newEndDateTime = mappedTicker.Date.AddDays(1);
 
                     yield return new(mappedTicker.MappedSymbol, newStartDateTime, newEndDateTime);
                     // the end of the current request is the start of the next
