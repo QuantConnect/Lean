@@ -430,7 +430,7 @@ namespace QuantConnect.Tests.Common.Securities
             );
         }
 
-        private static Option CreateOption(Security underlying, OptionRight optionRight, decimal strikePrice, string targetOption = null, OptionSymbolProperties symbolProperties = null)
+        private static Option CreateOption(Security underlying, OptionRight optionRight, decimal strikePrice, string targetOption = null)
         {
             var tz = TimeZones.NewYork;
             var optionSymbol = targetOption.IsNullOrEmpty() ? Symbol.CreateOption(underlying.Symbol, Market.USA, OptionStyle.American, optionRight, strikePrice,
