@@ -21,167 +21,167 @@ using QuantConnect.Data;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Option Delta indicator that calculate the delta of an option
+    /// Option Vega indicator that calculate the Vega of an option
     /// </summary>
-    /// <remarks>sensitivity of option price relative to $1 of underlying change</remarks>
-    public class Delta : OptionGreeksIndicatorBase
+    /// <remarks>sensitivity of option price on IV changes</remarks>
+    public class Vega : OptionGreeksIndicatorBase
     {
         /// <summary>
-        /// Initializes a new instance of the Delta class
+        /// Initializes a new instance of the Vega class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Delta</param>
+        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Delta(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
+        public Vega(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
                 OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Delta class
+        /// Initializes a new instance of the Vega class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Delta</param>
+        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Delta(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
+        public Vega(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Delta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
+            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Delta class
+        /// Initializes a new instance of the Vega class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Delta</param>
+        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Delta(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
+        public Vega(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Delta class
+        /// Initializes a new instance of the Vega class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Delta</param>
+        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Delta(Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
+        public Vega(Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Delta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
+            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Delta class
+        /// Initializes a new instance of the Vega class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Delta</param>
+        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Delta(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
+        public Vega(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
                 OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Delta class
+        /// Initializes a new instance of the Vega class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Delta</param>
+        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Delta(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
+        public Vega(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Delta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
+            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Delta class
+        /// Initializes a new instance of the Vega class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Delta</param>
+        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Delta(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
+        public Vega(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Delta class
+        /// Initializes a new instance of the Vega class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Delta</param>
+        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Delta(Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
+        public Vega(Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Delta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
+            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Delta class
+        /// Initializes a new instance of the Vega class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>am>
         /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Delta</param>
+        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Delta(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
+        public Vega(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null, 
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the Delta class
+        /// Initializes a new instance of the Vega class
         /// </summary>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRate">Risk-free rate, as a constant</param>
         /// <param name="dividendYield">Dividend yield, as a constant</param>
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
-        /// <param name="optionModel">The option pricing model used to estimate Delta</param>
+        /// <param name="optionModel">The option pricing model used to estimate Vega</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
-        public Delta(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
+        public Vega(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
             OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Delta({option},{mirrorOption},{optionModel})", option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
+            : this($"Vega({option},{mirrorOption},{optionModel})", option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
-        // Calculate the Delta of the option
+        // Calculate the Vega of the option
         protected override decimal CalculateGreek(decimal timeTillExpiry)
         {
             var math = OptionGreekIndicatorsHelper.DecimalMath;
@@ -189,64 +189,31 @@ namespace QuantConnect.Indicators
             switch (_optionModel)
             {
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
-                    var upFactor = math(Math.Exp, ImpliedVolatility * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps));
-                    if (upFactor == 1)
-                    {
-                        // provide a small step to estimate delta
-                        upFactor = 1.00001m;
-                    }
-
-                    var sU = UnderlyingPrice * upFactor;
-                    var sD = UnderlyingPrice / upFactor;
-
-                    var fU = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
-                        ImpliedVolatility, sU, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                    var fD = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
-                        ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-
-                    return (fU - fD) / (sU - sD);
-
                 case OptionPricingModelType.ForwardTree:
-                    var discount = math(Math.Exp, (RiskFreeRate - DividendYield) * timeTillExpiry / OptionGreekIndicatorsHelper.Steps);
-                    upFactor = math(Math.Exp, ImpliedVolatility * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps)) * discount;
-                    if (upFactor == 1)
+                    // finite differencing method with 1% IV changes
+                    var deltaSigma = 0.01m;
+
+                    var newPrice = 0m;
+                    var price = 0m;
+                    if (_optionModel == OptionPricingModelType.BinomialCoxRossRubinstein)
                     {
-                        // provide a small step to estimate delta
-                        upFactor = 1.00001m;
+                        newPrice = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility + deltaSigma, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        price = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
                     }
-                    var downFactor = math(Math.Exp, -ImpliedVolatility * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps)) * discount;
-                    if (downFactor == 1)
+                    else if (_optionModel == OptionPricingModelType.ForwardTree)
                     {
-                        // provide a small step to estimate delta
-                        downFactor = 0.99999m;
+                        newPrice = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility + deltaSigma, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
                     }
 
-                    sU = UnderlyingPrice * upFactor;
-                    sD = UnderlyingPrice * downFactor;
-
-                    fU = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
-                        ImpliedVolatility, sU, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                    fD = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
-                        ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-
-                    return (fU - fD) / (sU - sD);
+                    return (newPrice - price) / deltaSigma / 100;
 
                 case OptionPricingModelType.BlackScholes:
                 default:
                     var norm = new Normal();
                     var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, ImpliedVolatility);
 
-                    decimal wholeShareDelta;
-                    if (Right == OptionRight.Call)
-                    {
-                        wholeShareDelta = math(norm.CumulativeDistribution, d1);
-                    }
-                    else
-                    {
-                        wholeShareDelta = -math(norm.CumulativeDistribution, -d1);
-                    }
-
-                    return wholeShareDelta * math(Math.Exp, -DividendYield * timeTillExpiry);
+                    return UnderlyingPrice * math(Math.Sqrt, timeTillExpiry) * math(norm.Density, d1) * math(Math.Exp, -DividendYield * timeTillExpiry) / 100;
             }
         }
     }

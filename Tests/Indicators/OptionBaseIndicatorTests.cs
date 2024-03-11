@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         protected void RunTestIndicator(Symbol call, Symbol put, OptionIndicatorBase callIndicator, OptionIndicatorBase putIndicator,
-            string[] items, int callColumn, int putColumn, double errorMargin)
+            string[] items, int callColumn, int putColumn, double errorRate, double errorMargin = 1e-4)
         {
             var time = DateTime.ParseExact(items[3], "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
 
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Indicators
             }
             
             var expected = double.Parse(items[callColumn], NumberStyles.Any, CultureInfo.InvariantCulture);
-            var acceptance = Math.Max(errorMargin * Math.Abs(expected), 1e-4);     // percentage error
+            var acceptance = Math.Max(errorRate * Math.Abs(expected), errorMargin);     // percentage error
             Assert.AreEqual(expected, (double)callIndicator.Current.Value, acceptance);
 
             putIndicator.Update(putDataPoint);
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Indicators
             }
 
             expected = double.Parse(items[putColumn], NumberStyles.Any, CultureInfo.InvariantCulture);
-            acceptance = Math.Max(errorMargin * Math.Abs(expected), 1e-4);     // percentage error
+            acceptance = Math.Max(errorRate * Math.Abs(expected), errorMargin);     // percentage error
             Assert.AreEqual(expected, (double)putIndicator.Current.Value, acceptance);
         }
 

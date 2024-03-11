@@ -29,7 +29,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public const int Steps = 200;
      
-        internal static decimal BlackTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, OptionRight optionType)
+        public static decimal BlackTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, OptionRight optionType)
         {
             var d1 = CalculateD1(spotPrice, strikePrice, timeToExpiration, riskFreeRate, dividendYield, volatility);
             var d2 = CalculateD2(d1, volatility, timeToExpiration);
@@ -67,13 +67,13 @@ namespace QuantConnect.Indicators
             return numerator / denominator;
         }
 
-        private static decimal CalculateD2(decimal d1, decimal volatility, decimal timeToExpiration)
+        internal static decimal CalculateD2(decimal d1, decimal volatility, decimal timeToExpiration)
         {
             return d1 - volatility * DecimalMath(Math.Sqrt, timeToExpiration);
         }
 
         // Reference: https://en.wikipedia.org/wiki/Binomial_options_pricing_model#Step_1:_Create_the_binomial_price_tree
-        internal static decimal CRRTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice,
+        public static decimal CRRTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice,
             decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, OptionRight optionType, int steps = Steps)
         {
             var deltaTime = timeToExpiration / steps;
@@ -89,21 +89,18 @@ namespace QuantConnect.Indicators
             return BinomialTheoreticalPrice(deltaTime, probUp, upFactor, riskFreeRate, spotPrice, strikePrice, optionType, steps);
         }
 
-        internal static decimal ForwardTreeTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice,
+        public static decimal ForwardTreeTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice,
             decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, OptionRight optionType, int steps = Steps)
         {
             var deltaTime = timeToExpiration / steps;
             var discount = DecimalMath(Math.Exp, (riskFreeRate - dividendYield) * deltaTime);
             var upFactor = DecimalMath(Math.Exp, volatility * DecimalMath(Math.Sqrt, deltaTime)) * discount;
-            if (upFactor == 1m)
-            {
-                // Introduce a very small factor to avoid constant tree while staying low volatility
-                upFactor = 1.0001m;
-            }
             var downFactor = DecimalMath(Math.Exp, -volatility * DecimalMath(Math.Sqrt, deltaTime)) * discount;
-            if (downFactor == 1m)
+            if (upFactor - downFactor == 0m)
             {
-                // Introduce a very small factor to avoid constant tree while staying low volatility
+                // Introduce a very small factor
+                // to avoid constant tree while staying low volatility
+                upFactor = 1.0001m;
                 downFactor = 0.9999m;
             }
             var probUp = (discount - downFactor) / (upFactor - downFactor);
