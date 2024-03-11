@@ -61,7 +61,7 @@ namespace QuantConnect.Data.Shortable
         {
             if (symbol != null && GetCacheData(symbol).TryGetValue(localTime.Date, out var result))
             {
-                return result.FeeRate / 100;
+                return result.FeeRate;
             }
             // Any missing entry will be considered to be zero.
             return 0m;
@@ -78,7 +78,7 @@ namespace QuantConnect.Data.Shortable
         {
             if (symbol != null && GetCacheData(symbol).TryGetValue(localTime.Date, out var result))
             {
-                return result.RebateFee / 100;
+                return result.RebateFee;
             }
             // Any missing entry will be considered to be zero.
             return 0m;
@@ -134,13 +134,15 @@ namespace QuantConnect.Data.Shortable
                     // ignore empty or comment lines
                     continue;
                 }
+                // Data example. The rates, if available, are expressed in percentage.
+                // 20201221,2000,5.0700,0.2500
                 var csv = line.Split(',');
                 var date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
                 var lenght = csv.Length;
-                result[date] = new ShortableData(
-                    csv[1].IfNotNullOrEmpty(s => long.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)),
-                    csv.Length > 2 ? csv[2].IfNotNullOrEmpty(s => decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)) : 0m,
-                    csv.Length > 3 ? csv[3].IfNotNullOrEmpty(s => decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)) : 0m);
+                var shortableQuantity = csv[1].IfNotNullOrEmpty(s => long.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture));
+                var rebateRate = csv.Length > 2 ? csv[2].IfNotNullOrEmpty(s => decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)) : 0;
+                var feeRate = csv.Length > 3 ? csv[3].IfNotNullOrEmpty(s => decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)) : 0;
+                result[date] = new ShortableData(shortableQuantity, rebateRate / 100, feeRate / 100);
             }
 
             return result;
