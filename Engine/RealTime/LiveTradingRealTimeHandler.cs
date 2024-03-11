@@ -75,6 +75,8 @@ namespace QuantConnect.Lean.Engine.RealTime
             return 500;
         }
 
+        protected ITimeProvider TimeProvider { get; set; } = RealTimeProvider.Instance;
+
         /// <summary>
         /// Execute the live realtime event thread montioring.
         /// It scans every second monitoring for an event trigger.
@@ -86,7 +88,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             // continue thread until cancellation is requested
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                var time = DateTime.UtcNow;
+                var time = TimeProvider.GetUtcNow();
 
                 // pause until the next second
                 var nextSecond = time.RoundUp(TimeSpan.FromSeconds(1));
