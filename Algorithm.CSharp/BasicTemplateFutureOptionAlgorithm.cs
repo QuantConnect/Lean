@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!Portfolio.Invested)
                 {
-                    var atmStrike = chain.OrderBy(x => Math.Abs(chain.Underlying.Price - x.ScaledStrike)).First().Strike;
+                    var atmStrike = chain.OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike)).First().Strike;
                     var selectedContract = chain.Where(x => x.Strike == atmStrike).OrderByDescending(x => x.Expiry).First();
                     MarketOrder(selectedContract.Symbol, 1);
                 }

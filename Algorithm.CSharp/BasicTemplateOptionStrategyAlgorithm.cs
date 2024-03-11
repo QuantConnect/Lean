@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                 {
                     var atmStraddle = chain
-                        .OrderBy(x => Math.Abs(chain.Underlying.Price - x.ScaledStrike))
+                        .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
                         .ThenByDescending(x => x.Expiry)
                         .FirstOrDefault();
 

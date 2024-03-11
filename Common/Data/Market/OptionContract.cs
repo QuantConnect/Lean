@@ -26,7 +26,6 @@ namespace QuantConnect.Data.Market
     public class OptionContract
     {
         private Lazy<OptionPriceModelResult> _optionPriceModelResult = new(() => OptionPriceModelResult.None);
-        private readonly decimal _strikeMultipler;
 
         /// <summary>
         /// Gets the option contract's symbol
@@ -168,9 +167,8 @@ namespace QuantConnect.Data.Market
         public OptionContract(ISecurityPrice security, Symbol underlyingSymbol)
         {
             Symbol = security.Symbol;
-            _strikeMultipler = security.SymbolProperties.StrikeMultiplier;
             UnderlyingSymbol = underlyingSymbol;
-            ScaledStrike = Strike * _strikeMultipler;
+            ScaledStrike = Strike * security.SymbolProperties.StrikeMultiplier;
         }
 
         /// <summary>
@@ -198,18 +196,17 @@ namespace QuantConnect.Data.Market
         /// <param name="underlyingLastPrice">last price the underlying security traded at</param>
         /// <returns>Option contract</returns>
         public static OptionContract Create(BaseData baseData, ISecurityPrice security, decimal underlyingLastPrice)
-            => Create(baseData.Symbol, baseData.Symbol.Underlying, baseData.EndTime, security, underlyingLastPrice);
+            => Create(baseData.Symbol.Underlying, baseData.EndTime, security, underlyingLastPrice);
 
         /// <summary>
         /// Creates a <see cref="OptionContract"/>
         /// </summary>
-        /// <param name="symbol">The option contract symbol</param>
         /// <param name="underlyingSymbol">The symbol of the underlying security</param>
         /// <param name="endTime">local date time this contract's data was last updated</param>
         /// <param name="security">provides price properties for a <see cref="Security"/></param>
         /// <param name="underlyingLastPrice">last price the underlying security traded at</param>
         /// <returns>Option contract</returns>
-        public static OptionContract Create(Symbol symbol, Symbol underlyingSymbol, DateTime endTime, ISecurityPrice security, decimal underlyingLastPrice)
+        public static OptionContract Create(Symbol underlyingSymbol, DateTime endTime, ISecurityPrice security, decimal underlyingLastPrice)
         {
             return new OptionContract(security, underlyingSymbol)
             {

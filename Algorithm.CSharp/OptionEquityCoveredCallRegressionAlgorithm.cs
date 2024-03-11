@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // we find at the money (ATM) call contract with farthest expiration
                     var atmContract = chain
                         .OrderByDescending(x => x.Expiry)
-                        .Where(contract => contract.Right == OptionRight.Call && chain.Underlying.Price < contract.ScaledStrike)
+                        .Where(contract => contract.Right == OptionRight.Call && chain.Underlying.Price < contract.Strike)
                         .OrderBy(x => x.Strike)
                         .First();
 

@@ -44,7 +44,7 @@ class OptionExerciseAssignRegressionAlgorithm(QCAlgorithm):
             # find the call options expiring today
             contracts = filter(lambda x:
                                x.Expiry.date() == self.Time.date() and
-                               x.ScaledStrike < chain.Underlying.Price and
+                               x.Strike < chain.Underlying.Price and
                                x.Right == OptionRight.Call, chain)
             
             # sorted the contracts by their strikes, find the second strike under market price 

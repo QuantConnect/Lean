@@ -26,7 +26,7 @@ class LongAndShortStraddleStrategiesAlgorithm(OptionStrategyFactoryMethodsBaseAl
         return 4
 
     def TradeStrategy(self, chain: OptionChain, option_symbol: Symbol):
-        contracts = sorted(sorted(chain, key=lambda x: abs(chain.Underlying.Price - x.ScaledStrike)),
+        contracts = sorted(sorted(chain, key=lambda x: abs(chain.Underlying.Price - x.Strike)),
                            key=lambda x: x.Expiry, reverse=True)
         groupedContracts = [list(group) for _, group in itertools.groupby(contracts, lambda x: (x.Strike, x.Expiry))]
         groupedContracts = (group

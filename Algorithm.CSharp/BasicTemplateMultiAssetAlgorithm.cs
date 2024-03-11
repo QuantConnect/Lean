@@ -112,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         // find a farthest ATM contract
                         var contract = optionChain
-                            .OrderBy(x => Math.Abs(optionChain.Underlying.Price - x.ScaledStrike))
+                            .OrderBy(x => Math.Abs(optionChain.Underlying.Price - x.Strike))
                             .ThenByDescending(x => x.Expiry)
                             .FirstOrDefault();
 

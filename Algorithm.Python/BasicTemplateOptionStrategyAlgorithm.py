@@ -49,7 +49,7 @@ class BasicTemplateOptionStrategyAlgorithm(QCAlgorithm):
         if not self.Portfolio.Invested:
             for kvp in slice.OptionChains:
                 chain = kvp.Value
-                contracts = sorted(sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.ScaledStrike)),
+                contracts = sorted(sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.Strike)),
                                                  key = lambda x: x.Expiry, reverse=False)
 
                 if len(contracts) == 0: continue

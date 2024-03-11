@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
@@ -25,10 +26,9 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class OptionFilterTests
     {
-        [Test]
-        [TestCase(9.5)]
-        [TestCase(10)]
-        public void FiltersStrikeRange(decimal underlyingPrice)
+
+        [TestCaseSource(nameof(FiltersStrikeRangeTests))]
+        public void FiltersStrikeRange(decimal underlyingPrice, Symbol[] symbols, int filteredNumber)
         {
             var expiry = new DateTime(2016, 03, 04);
             var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
@@ -41,23 +41,10 @@ namespace QuantConnect.Tests.Common.Securities
                 universe => universeFunc(universe as OptionFilterUniverse);
 
             var filter = new FuncSecurityDerivativeFilter(func);
-            var symbols = new[]
-            {
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry),  // 1
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry),  // 2
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry),  // 3
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry),  // 4
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry), // 5
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry), // 6
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry), // 7
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 8
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
-            };
 
             var filterUniverse = new OptionFilterUniverse(symbols, underlying);
             var filtered = filter.Filter(filterUniverse).ToList();
-            Assert.AreEqual(underlyingPrice == 10 ? 6 : 5, filtered.Count);
+            Assert.AreEqual(filteredNumber, filtered.Count);
             Assert.AreEqual(symbols[3], filtered[0]);
             Assert.AreEqual(symbols[4], filtered[1]);
             Assert.AreEqual(symbols[5], filtered[2]);
@@ -517,5 +504,49 @@ namespace QuantConnect.Tests.Common.Securities
             var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(3, filtered.Count);
         }
+
+        static Symbol[] CreateOptions(string ticker, string targetOption = null)
+        {
+            var expiry = new DateTime(2016, 03, 04);
+            if (string.IsNullOrEmpty(targetOption))
+            {
+                return new[] {
+                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
+                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry),  // 1
+                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry),  // 2
+                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry),  // 3
+                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry),  // 4
+                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry), // 5
+                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry), // 6
+                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry), // 7
+                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 8
+                    Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
+                };
+            }
+            else
+            {
+                var indexSymbol = Symbol.Create(ticker, SecurityType.Index, Market.USA);
+                return new[] {
+                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
+                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry),  // 1
+                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry),  // 2
+                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry),  // 3
+                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry),  // 4
+                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry), // 5
+                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry), // 6
+                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry), // 7
+                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 8
+                    Symbol.CreateOption(indexSymbol, targetOption, Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
+                };
+            }
+        }
+
+        public static object[] FiltersStrikeRangeTests =
+        {
+            new object[] {9.5m, CreateOptions("SPY", null), 5},
+            new object[] {10m, CreateOptions("SPY", null), 6},
+            new object[] {45.5m, CreateOptions("NDX", "NQX"), 5},
+            new object[] {50m, CreateOptions("NDX", "NQX"), 6}
+        };
     }
 }

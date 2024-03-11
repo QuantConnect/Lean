@@ -33,7 +33,7 @@ namespace QuantConnect.Securities
         private List<decimal> _uniqueStrikes;
         private bool _refreshUniqueStrikes;
         private DateTime _lastExchangeDate;
-        private decimal _underlyingScaleFactor = 1;
+        private readonly decimal _underlyingScaleFactor = 1;
 
         /// <summary>
         /// The underlying price data
@@ -69,6 +69,7 @@ namespace QuantConnect.Securities
         {
             UnderlyingInternal = underlying;
             _refreshUniqueStrikes = true;
+            _underlyingScaleFactor = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Market.USA, allSymbols.FirstOrDefault(), allSymbols.FirstOrDefault()?.SecurityType ?? SecurityType.Option, "USD").StrikeMultiplier;
         }
 
         /// <summary>

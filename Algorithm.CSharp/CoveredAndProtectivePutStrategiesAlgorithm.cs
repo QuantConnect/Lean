@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
         protected override void TradeStrategy(OptionChain chain)
         {
             var contract = chain
-                .OrderBy(x => Math.Abs(chain.Underlying.Price - x.ScaledStrike))
+                .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
                 .ThenByDescending(x => x.Expiry)
                 .FirstOrDefault();
 

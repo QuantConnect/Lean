@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var chain = kvp.Value;
                 // Find the call options expiring today
                 var contracts = chain
-                    .Where(contract => contract.Expiry.Date == Time.Date && contract.ScaledStrike < chain.Underlying.Price)
+                    .Where(contract => contract.Expiry.Date == Time.Date && contract.Strike < chain.Underlying.Price)
                     .ToList();
 
                 if (contracts.Count == 0)

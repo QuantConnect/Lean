@@ -164,7 +164,7 @@ namespace QuantConnect.Securities.Option
             var priceRatioOTM = amountOTM / (absValue / quantityRatio);
             var underlyingValueRatioOTM = multiplierRatio * quantityRatio * priceRatioOTM;
 
-            var strikePriceRatio = option.StrikePrice / (absValue / quantityRatio);
+            var strikePriceRatio = option.ScaledStrikePrice / (absValue / quantityRatio);
             strikePriceRatio = multiplierRatio * quantityRatio * strikePriceRatio;
 
             var nakedMarginRequirement = option.Right == OptionRight.Call

@@ -47,7 +47,7 @@ class OptionChainConsistencyRegressionAlgorithm(QCAlgorithm):
                     self.Log("Inconsistency found: option chains contains contract {0} that is not available in securities manager and not available for trading".format(o.Symbol.Value))           
 
             contracts = filter(lambda x: x.Expiry.date() == self.Time.date() and
-                                         x.ScaledStrike < chain.Underlying.Price and
+                                         x.Strike < chain.Underlying.Price and
                                          x.Right ==  OptionRight.Call, chain)
 
             sorted_contracts = sorted(contracts, key = lambda x: x.Strike, reverse = True)
