@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 Assert.DoesNotThrow(() => indicator.Update(renkoBar));
             };
-            int counter = 0;
+
             foreach (var parts in GetCsvFileStream(TestFileName))
             {
 
@@ -105,10 +105,7 @@ namespace QuantConnect.Tests.Indicators
                 else
                 {
                     secondRenkoConsolidator.Update(tradebar);
-                    counter++;
                 }
-                if (counter >= 100)
-                    break;
             }
 
             Assert.IsTrue(indicator.IsReady);
@@ -132,7 +129,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 Assert.DoesNotThrow(() => indicator.Update(renkoBar));
             };
-            int counter = 0;
+
             foreach (var parts in GetCsvFileStream(TestFileName))
             {
                 var tradebar = parts.GetTradeBar();
@@ -143,10 +140,7 @@ namespace QuantConnect.Tests.Indicators
                 else
                 {
                     secondVolumeRenkoConsolidator.Update(tradebar);
-                    counter++;
                 }
-                if (counter >= 500)
-                    break;
             }
 
             Assert.IsTrue(indicator.IsReady);

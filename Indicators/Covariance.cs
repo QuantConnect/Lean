@@ -14,7 +14,6 @@
 */
 
 using System;
-using MathNet.Numerics.Statistics;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
