@@ -3970,16 +3970,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Determine if this SecurityType requires mapping except future
-        /// </summary>
-        /// <param name="symbol">Type to check</param>
-        /// <returns>True if it needs to be mapped</returns>
-        public static bool RequiresMappingExceptFuture(this Symbol symbol)
-        {
-            return symbol.SecurityType != SecurityType.Future && symbol.RequiresMapping();
-        }
-
-        /// <summary>
         /// Checks whether the fill event for closing a trade is a winning trade
         /// </summary>
         /// <param name="fill">The fill event</param>
