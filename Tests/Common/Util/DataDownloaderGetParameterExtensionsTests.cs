@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("../../../Data/option/usa/daily/goog_2015_quote_american.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/02-2024/03/07")]
         public void GetDataDownloaderParam(string pathToFile, int expectedDownloadDataAmount, string expectedTicker, string expectedDateTimeRanges)
         {
-            _ = LeanData.TryParsePath(pathToFile, out var symbol, out var parsedDate, out var resolution, out var tickType, out _, out var ticker);
+            _ = LeanData.TryParsePath(pathToFile, out var symbol, out var parsedDate, out var resolution, out var tickType, out _);
 
             var startDateTimeUtc = default(DateTime);
             var endDateTimeUtc = new DateTime(2024, 3, 7);
@@ -66,9 +66,8 @@ namespace QuantConnect.Tests.Common.Util
                 }
             }
 
-            var downloaderDataParameters = _mapFileProvider.GetAllTickerFromMapFiles(symbol, ticker, resolution, startDateTimeUtc, endDateTimeUtc, tickType).OrderBy(d => d.StartUtc).ToList();
+            var downloaderDataParameters = _mapFileProvider.GetAllTickerFromMapFiles(symbol, resolution, startDateTimeUtc, endDateTimeUtc, tickType).OrderBy(d => d.StartUtc).ToList();
 
-            Assert.That(expectedTicker, Is.EqualTo(ticker.ToUpperInvariant()));
             Assert.That(downloaderDataParameters.Count, Is.EqualTo(expectedDownloadDataAmount));
 
             var dateRanges = expectedDateTimeRanges?.Split(',').Select(x => x.Split('-'))

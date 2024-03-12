@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             return DownloadOnce(key, s =>
             {
-                if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution, out var tickType, out var dataType, out var ticker))
+                if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution, out var tickType, out var dataType))
                 {
                     if (symbol.SecurityType == SecurityType.Base)
                     {
@@ -166,7 +166,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         LeanDataWriter writer = null;
 
-                        var downloaderDataParameters = _mapFileProvider.GetAllTickerFromMapFiles(symbol, ticker, resolution, startTimeUtc, endTimeUtc, tickType).ToList();
+                        var downloaderDataParameters = _mapFileProvider.GetAllTickerFromMapFiles(symbol, resolution, startTimeUtc, endTimeUtc, tickType).ToList();
 
                         var data = GetDownloadedData(downloaderDataParameters, symbol, exchangeTimeZone, dataTimeZone, dataType);
 
@@ -243,7 +243,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         protected override Stream GetStream(string key)
         {
-            if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution, out var ticker) && resolution > Resolution.Minute && symbol.RequiresMapping())
+            if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution) && resolution > Resolution.Minute && symbol.RequiresMapping())
             {
                 // because the file could be updated even after it's created because of symbol mapping we can't stream from disk
                 return DiskSynchronizer.Execute(key, () =>

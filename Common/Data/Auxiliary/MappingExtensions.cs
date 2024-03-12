@@ -140,7 +140,6 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         /// <param name="mapFileProvider">The provider for map files containing ticker data.</param>
         /// <param name="symbol">The symbol to get <see cref="MapFileResolver"/> and generate new Symbol.</param>
-        /// <param name="ticker">The ticker symbol for which to retrieve the data parameters.</param>
         /// <param name="resolution">The resolution of the data to be downloaded.</param>
         /// <param name="startDateTime">The start date and time for the data download.</param>
         /// <param name="endDateTime">The end date and time for the data download.</param>
@@ -150,7 +149,6 @@ namespace QuantConnect.Data.Auxiliary
         public static IEnumerable<DataDownloaderGetParameters> GetAllTickerFromMapFiles(
             this IMapFileProvider mapFileProvider,
             Symbol symbol,
-            string ticker,
             Resolution resolution,
             DateTime startDateTime,
             DateTime endDateTime,
@@ -161,7 +159,7 @@ namespace QuantConnect.Data.Auxiliary
                 throw new ArgumentException("The map file provider cannot be null.", nameof(mapFileProvider));
             }
 
-            var tickerUpperCase = ticker?.ToUpperInvariant();
+            var tickerUpperCase = symbol?.Value.ToUpperInvariant();
 
             var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
 

@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Fasterflect;
 using Ionic.Zip;
 using NodaTime;
 using QuantConnect.Data;
@@ -79,7 +78,7 @@ namespace QuantConnect.ToolBox
             }
 
             var fileInfo = new FileInfo(filepath);
-            if (!LeanData.TryParsePath(fileInfo.FullName, out symbol, out date, out resolution, out var tickType, out var dataType, out var ticker))
+            if (!LeanData.TryParsePath(fileInfo.FullName, out symbol, out date, out resolution, out var tickType, out var dataType))
             {
                 throw new ArgumentException($"File {filepath} cannot be parsed.");
             }

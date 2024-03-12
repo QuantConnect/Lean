@@ -1052,20 +1052,18 @@ namespace QuantConnect.Util
         /// <param name="resolution">The resolution of the symbol as parsed from the filePath</param>
         /// <param name="tickType">The tick type</param>
         /// <param name="dataType">The data type</param>
-        /// <param name="ticker">The original ticker name of Symbol</param>
         public static bool TryParsePath(string filePath, out Symbol symbol, out DateTime date,
-            out Resolution resolution, out TickType tickType, out Type dataType, out string ticker)
+            out Resolution resolution, out TickType tickType, out Type dataType)
         {
             symbol = default;
             tickType = default;
             dataType = default;
             date = default;
             resolution = default;
-            ticker = default;
 
             try
             {
-                if (!TryParsePath(filePath, out symbol, out date, out resolution, out ticker))
+                if (!TryParsePath(filePath, out symbol, out date, out resolution))
                 {
                     return false;
                 }
@@ -1102,13 +1100,11 @@ namespace QuantConnect.Util
         /// <param name="symbol">The symbol as parsed from the fileName</param>
         /// <param name="date">Date of data in the file path. Only returned if the resolution is lower than Hourly</param>
         /// <param name="resolution">The resolution of the symbol as parsed from the filePath</param>
-        /// <param name="ticker">The original ticker name of Symbol</param>
-        public static bool TryParsePath(string fileName, out Symbol symbol, out DateTime date, out Resolution resolution, out string ticker)
+        public static bool TryParsePath(string fileName, out Symbol symbol, out DateTime date, out Resolution resolution)
         {
             symbol = null;
             resolution = Resolution.Daily;
-            date = default;
-            ticker = default;
+            date = default(DateTime);
 
             try
             {
@@ -1129,7 +1125,7 @@ namespace QuantConnect.Util
                 var securityType = ParseDataSecurityType(info[startIndex]);
 
                 var market = Market.USA;
-
+                string ticker;
                 var isUniverses = false;
                 if (!Enum.TryParse(info[startIndex + 2], true, out resolution))
                 {
