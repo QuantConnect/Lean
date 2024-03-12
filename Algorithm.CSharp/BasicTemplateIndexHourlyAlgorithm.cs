@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "71"},
+            {"Total Orders", "81"},
             {"Average Win", "1.28%"},
             {"Average Loss", "-0.06%"},
             {"Compounding Annual Return", "-20.546%"},

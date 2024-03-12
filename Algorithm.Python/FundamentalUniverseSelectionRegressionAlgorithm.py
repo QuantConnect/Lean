@@ -24,7 +24,7 @@ from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelec
 class FundamentalUniverseSelectionRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2014, 3, 25)
+        self.SetStartDate(2014, 3, 26)
         self.SetEndDate(2014, 4, 7)
 
         self.UniverseSettings.Resolution = Resolution.Daily

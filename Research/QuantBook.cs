@@ -119,11 +119,11 @@ namespace QuantConnect.Research
                 Config.Reset();
 
                 // Create our handlers with our composer instance
-                var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer, researchMode: true);
                 var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
-
                 // init the API
                 systemHandlers.Initialize();
+                var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer, researchMode: true);
+;
 
                 var algorithmPacket = new BacktestNodePacket
                 {
@@ -670,67 +670,32 @@ namespace QuantConnect.Research
         /// <summary>
         /// Will return the universe selection data and will optionally perform selection
         /// </summary>
-        /// <typeparam name="T1">The universe selection universe data type, for example Fundamentals</typeparam>
-        /// <typeparam name="T2">The selection data type, for example Fundamental</typeparam>
+        /// <param name="universe">The universe to fetch the data for</param>
         /// <param name="start">The start date</param>
         /// <param name="end">Optionally the end date, will default to today</param>
-        /// <param name="func">Optionally the universe selection function</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public IEnumerable<IEnumerable<T2>> UniverseHistory<T1, T2>(DateTime start, DateTime? end = null, Func<IEnumerable<T2>, IEnumerable<Symbol>> func = null)
-            where T1 : BaseDataCollection
-            where T2 : IBaseData
+        public IEnumerable<IEnumerable<BaseData>> UniverseHistory(Universe universe, DateTime start, DateTime? end = null)
         {
-            end ??= DateTime.UtcNow.Date;
-            var history = History<T1>(Enumerable.Empty<Symbol>(), start, end.Value);
-
-            HashSet<Symbol> filteredSymbols = null;
-            foreach (var dataPoints in history)
-            {
-                var data = dataPoints.Values.Single();
-                var castedType = data.Data.OfType<T2>();
-
-                if (func != null)
-                {
-                    var selection = func(castedType);
-                    if(!ReferenceEquals(selection, Universe.Unchanged))
-                    {
-                        filteredSymbols = selection.ToHashSet();
-                    }
-                    yield return castedType.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol));
-                }
-                else
-                {
-                    yield return castedType;
-                }
-            }
+            return RunUniverseSelection(universe, start, end);
         }
 
         /// <summary>
         /// Will return the universe selection data and will optionally perform selection
         /// </summary>
-        /// <param name="type">The universe selection universe data type, for example Fundamentals</param>
+        /// <param name="universe">The universe to fetch the data for</param>
         /// <param name="start">The start date</param>
         /// <param name="end">Optionally the end date, will default to today</param>
-        /// <param name="func">Optionally the universe selection function</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public PyObject UniverseHistory(PyObject type, DateTime start, DateTime? end = null, PyObject func = null)
+        public PyObject UniverseHistory(PyObject universe, DateTime start, DateTime? end = null)
         {
-            end ??= DateTime.UtcNow.Date;
-            if (func == null)
+            if (universe.TryConvert<Universe>(out var convertedUniverse))
             {
-                return History(type, start, end.Value);
+                var filteredUniverseSelectionData = RunUniverseSelection(convertedUniverse, start, end);
+
+                return GetDataFrame(filteredUniverseSelectionData);
             }
 
-            if (type.TryConvert<Type>(out var convertedType))
-            {
-                var requests = CreateDateRangeHistoryRequests(Enumerable.Empty<Symbol>(), convertedType, start, end.Value);
-                var history = History(requests).ToList();
-
-                return GetDataFrame(GetFilteredSlice(history, func), convertedType);
-            }
-
-            throw new ArgumentException($"Failed to convert given universe selection data type {type}. " +
-                $"Please provider a valid {nameof(BaseDataCollection)} inherited data type");
+            throw new ArgumentException($"Failed to convert given universe {universe}. Please provider a valid {nameof(Universe)}");
         }
 
         /// <summary>
@@ -803,30 +768,23 @@ namespace QuantConnect.Research
         }
 
         /// <summary>
-        /// Helper method to perform selection on the given data and filter it
+        /// Helper method to perform selection on the given data and filter it using the given universe
         /// </summary>
-        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func)
+        private IEnumerable<BaseDataCollection> RunUniverseSelection(Universe universe, DateTime start, DateTime? end = null)
         {
+            var history = History(universe, start, end ?? DateTime.UtcNow.Date);
+
             HashSet<Symbol> filteredSymbols = null;
-            foreach (var slice in history)
+            foreach (var dataPoint in history)
             {
-                var filteredData = slice.AllData.OfType<BaseDataCollection>();
-                using (Py.GIL())
+                var utcTime = dataPoint.EndTime.ConvertToUtc(universe.Configuration.ExchangeTimeZone);
+                var selection = universe.SelectSymbols(utcTime, dataPoint);
+                if (!ReferenceEquals(selection, Universe.Unchanged))
                 {
-                    using PyObject selection = func(filteredData.SelectMany(baseData => baseData.Data));
-                    if (!selection.TryConvert<object>(out var result) || !ReferenceEquals(result, Universe.Unchanged))
-                    {
-                        filteredSymbols = ((Symbol[])selection.AsManagedObject(typeof(Symbol[]))).ToHashSet();
-                    }
+                    filteredSymbols = selection.ToHashSet();
                 }
-                yield return new Slice(slice.Time, filteredData.Where(x => {
-                    if (filteredSymbols == null)
-                    {
-                        return true;
-                    }
-                    x.Data = new List<BaseData>(x.Data.Where(dataPoint => filteredSymbols.Contains(dataPoint.Symbol)));
-                    return true;
-                }), slice.UtcTime);
+                dataPoint.Data = dataPoint.Data.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol)).ToList();
+                yield return dataPoint;
             }
         }
 

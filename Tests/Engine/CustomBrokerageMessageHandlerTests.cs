@@ -14,7 +14,6 @@
 */
 
 using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
@@ -22,6 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Engine
 {
@@ -32,11 +32,11 @@ namespace QuantConnect.Tests.Engine
         public void RunRegressionAlgorithm([Values(Language.CSharp, Language.Python)] Language language)
         {
             // We expect only half of the orders to be processed
-            var expectedOrdersCount = CustomBacktestingBrokerage.MaxOrderCount / 2;
+            var expectedOrdersCount = (CustomBacktestingBrokerage.MaxOrderCount / 2) + 1;
 
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("CustomBrokerageSideOrderHandlingRegressionAlgorithm",
                 new Dictionary<string, string> {
-                    {"Total Trades", expectedOrdersCount.ToStringInvariant()},
+                    {PerformanceMetrics.TotalOrders, expectedOrdersCount.ToStringInvariant()},
                     {"Average Win", "0%"},
                     {"Average Loss", "0%"},
                     {"Compounding Annual Return", "-10.771%"},

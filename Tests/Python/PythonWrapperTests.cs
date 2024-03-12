@@ -18,6 +18,7 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Python;
 using System.Collections.Generic;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Python
 {
@@ -66,7 +67,7 @@ namespace QuantConnect.Tests.Python
                 var results = AlgorithmRunner.RunLocalBacktest("CustomSettlementModelRegressionAlgorithm",
                     new Dictionary<string, string>()
                     {
-                        {"Total Trades", "0"},
+                        {PerformanceMetrics.TotalOrders, "0"},
                         {"Average Win", "0%"},
                         {"Average Loss", "0%"},
                         {"Compounding Annual Return", "108.257%"},
@@ -104,7 +105,7 @@ namespace QuantConnect.Tests.Python
                 var results = AlgorithmRunner.RunLocalBacktest("CustomBenchmarkRegressionAlgorithm",
                     new Dictionary<string, string>()
                     {
-                        {"Total Trades", "0"},
+                        {PerformanceMetrics.TotalOrders, "0"},
                         {"Average Win", "0%"},
                         {"Average Loss", "0%"},
                         {"Compounding Annual Return", "0%"},

@@ -67,7 +67,7 @@ namespace QuantConnect.DataLibrary.Tests
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "31"},
+            {"Total Orders", "31"},
             {"Average Win", "0.01%"},
             {"Average Loss", "-0.01%"},
             {"Compounding Annual Return", "5.011%"},

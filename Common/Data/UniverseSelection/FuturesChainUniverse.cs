@@ -28,7 +28,6 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class FuturesChainUniverse : Universe
     {
-        private readonly UniverseSettings _universeSettings;
         private DateTime _cacheDate;
 
         /// <summary>
@@ -56,7 +55,7 @@ namespace QuantConnect.Data.UniverseSelection
             : base(future.SubscriptionDataConfig)
         {
             Future = future;
-            _universeSettings = new UniverseSettings(universeSettings) { DataNormalizationMode = DataNormalizationMode.Raw };
+            UniverseSettings = universeSettings;
         }
 
         /// <summary>
@@ -69,7 +68,14 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public override UniverseSettings UniverseSettings
         {
-            get { return _universeSettings; }
+            set
+            {
+                if (value != null)
+                {
+                    // make sure data mode is raw
+                    base.UniverseSettings = new UniverseSettings(value) { DataNormalizationMode = DataNormalizationMode.Raw };
+                }
+            }
         }
 
         /// <summary>

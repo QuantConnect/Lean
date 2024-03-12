@@ -859,7 +859,6 @@ namespace QuantConnect.Lean.Engine.Results
                     charts.TryGetValue(BenchmarkKey, out var benchmarkChart) &&
                     benchmarkChart.Series.TryGetValue(BenchmarkKey, out var benchmark))
                 {
-                    var totalTransactions = Algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
                     var trades = Algorithm.TradeBuilder.ClosedTrades;
 
                     BaseSeries portfolioTurnover;
@@ -873,7 +872,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performance.Values, benchmark.Values,
-                        portfolioTurnover.Values, StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions,
+                        portfolioTurnover.Values, StartingPortfolioValue, Algorithm.Portfolio.TotalFees, TotalTradesCount(),
                         estimatedStrategyCapacity, AlgorithmCurrencySymbol, Algorithm.Transactions, Algorithm.RiskFreeInterestRateModel,
                         Algorithm.Settings.TradingDaysPerYear.Value // already set in Brokerage|Backtesting-SetupHandler classes
                         );
@@ -887,6 +886,14 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             return statisticsResults;
+        }
+
+        /// <summary>
+        /// Helper method to get the total trade count statistic
+        /// </summary>
+        protected int TotalTradesCount()
+        {
+            return TransactionHandler?.OrdersCount ?? 0;
         }
 
         /// <summary>

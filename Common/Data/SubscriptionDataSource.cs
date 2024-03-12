@@ -51,6 +51,15 @@ namespace QuantConnect.Data
         /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class.
         /// </summary>
         /// <param name="source">The subscription's data source location</param>
+        public SubscriptionDataSource(string source)
+            : this(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class.
+        /// </summary>
+        /// <param name="source">The subscription's data source location</param>
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
         public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium)
             : this(source, transportMedium, FileFormat.Csv)

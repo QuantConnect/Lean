@@ -39,7 +39,7 @@ namespace QuantConnect.Statistics
         /// <param name="pointsPortfolioTurnover">The list of portfolio turnover daily samples</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <param name="totalFees">The total fees</param>
-        /// <param name="totalTransactions">The total number of transactions</param>
+        /// <param name="totalOrders">The total number of transactions</param>
         /// <param name="estimatedStrategyCapacity">The estimated capacity of this strategy</param>
         /// <param name="accountCurrencySymbol">The account currency symbol</param>
         /// <param name="transactions">
@@ -57,7 +57,7 @@ namespace QuantConnect.Statistics
             List<ISeriesPoint> pointsPortfolioTurnover,
             decimal startingCapital,
             decimal totalFees,
-            int totalTransactions,
+            int totalOrders,
             CapacityEstimate estimatedStrategyCapacity,
             string accountCurrencySymbol,
             SecurityTransactionManager transactions,
@@ -73,7 +73,7 @@ namespace QuantConnect.Statistics
                 pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel, tradingDaysPerYear);
             var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark,
                 pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel, tradingDaysPerYear);
-            var summary = GetSummary(totalPerformance, estimatedStrategyCapacity, totalFees, totalTransactions, accountCurrencySymbol);
+            var summary = GetSummary(totalPerformance, estimatedStrategyCapacity, totalFees, totalOrders, accountCurrencySymbol);
 
             return new StatisticsResults(totalPerformance, rollingPerformances, summary);
         }
@@ -203,7 +203,7 @@ namespace QuantConnect.Statistics
         /// Returns a summary of the algorithm performance as a dictionary
         /// </summary>
         private static Dictionary<string, string> GetSummary(AlgorithmPerformance totalPerformance, CapacityEstimate estimatedStrategyCapacity,
-            decimal totalFees, int totalTransactions, string accountCurrencySymbol)
+            decimal totalFees, int totalOrders, string accountCurrencySymbol)
         {
             var capacity = 0m;
             var lowestCapacitySymbol = Symbol.Empty;
@@ -215,7 +215,7 @@ namespace QuantConnect.Statistics
 
             return new Dictionary<string, string>
             {
-                { PerformanceMetrics.TotalTrades, totalTransactions.ToStringInvariant() },
+                { PerformanceMetrics.TotalOrders, totalOrders.ToStringInvariant() },
                 { PerformanceMetrics.AverageWin, Math.Round(totalPerformance.PortfolioStatistics.AverageWinRate.SafeMultiply100(), 2).ToStringInvariant() + "%"  },
                 { PerformanceMetrics.AverageLoss, Math.Round(totalPerformance.PortfolioStatistics.AverageLossRate.SafeMultiply100(), 2).ToStringInvariant() + "%" },
                 { PerformanceMetrics.CompoundingAnnualReturn, Math.Round(totalPerformance.PortfolioStatistics.CompoundingAnnualReturn.SafeMultiply100(), 3).ToStringInvariant() + "%" },

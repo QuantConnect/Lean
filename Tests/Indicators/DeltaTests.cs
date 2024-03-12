@@ -13,160 +13,118 @@
  * limitations under the License.
 */
 
-using System.IO;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
+using System.IO;
+using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
     public class DeltaTests : OptionBaseIndicatorTests<Delta>
     {
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator() 
-            => new Delta("testDeltaIndicator", _symbol, 0.04m);
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+            => new Delta("testDeltaIndicator", _symbol, 0.0403m, 0.0m);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
             => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel);
 
-        protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm) 
+        protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
+            => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+
+        protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
             => algorithm.D(_symbol);
 
         [SetUp]
         public void SetUp()
         {
-            // 3 updates per iteration, 1 for greek, 2 for IV
-            RiskFreeRateUpdatesPerIteration = 3;
+            // 2 updates per iteration, 1 for greek, 1 for IV
+            RiskFreeRateUpdatesPerIteration = 2;
+            DividendYieldUpdatesPerIteration = 2;
         }
 
-        [TestCase("SPX230811C04300000")]
-        [TestCase("SPX230811C04500000")]
-        [TestCase("SPX230811C04700000")]
-        [TestCase("SPX230811P04300000")]
-        [TestCase("SPX230811P04500000")]
-        [TestCase("SPX230811P04700000")]
-        [TestCase("SPX230901C04300000")]
-        [TestCase("SPX230901C04500000")]
-        [TestCase("SPX230901C04700000")]
-        [TestCase("SPX230901P04300000")]
-        [TestCase("SPX230901P04500000")]
-        [TestCase("SPX230901P04700000")]
-        [TestCase("SPY230811C00430000")]
-        [TestCase("SPY230811C00450000")]
-        [TestCase("SPY230811C00470000")]
-        [TestCase("SPY230811P00430000")]
-        [TestCase("SPY230811P00450000")]
-        [TestCase("SPY230811P00470000", 0.07)]
-        [TestCase("SPY230901C00430000")]
-        [TestCase("SPY230901C00450000")]
-        [TestCase("SPY230901C00470000")]
-        [TestCase("SPY230901P00430000")]
-        [TestCase("SPY230901P00450000")]
-        [TestCase("SPY230901P00470000", 0.17)]
-
-        public void ComparesAgainstExternalData(string fileName, double errorMargin = 0.03333, int column = 3)
+        [TestCase("american/third_party_1_greeks.csv", true, false, 0.03)]
+        [TestCase("american/third_party_1_greeks.csv", false, false, 0.03)]
+        // Just placing the test and data here, we are unsure about the smoothing function and not going to reverse engineer
+        [TestCase("american/third_party_2_greeks.csv", false, true, 10000)]
+        public void ComparesAgainstExternalData(string subPath, bool reset, bool singleContract, double errorRate, double errorMargin = 1e-4,
+            int callColumn = 9, int putColumn = 8)
         {
-            var path = Path.Combine("TestData", "greeks", $"{fileName}.csv");
-            var symbol = ParseOptionSymbol(fileName);
-            var underlying = symbol.Underlying;
+            var path = Path.Combine("TestData", "greeksindicator", subPath);
+            // skip last entry since for deep ITM, IV will not affect much on price. Thus root finding will not be optimizing a non-convex function.
+            foreach (var line in File.ReadAllLines(path).Skip(3).SkipLast(1))
+            {
+                var items = line.Split(',');
 
-            var indicator = new Delta(symbol, 0.04m);
-            RunTestIndicator(path, indicator, symbol, underlying, errorMargin, column);
-        }
+                var interestRate = Parse.Decimal(items[^2]);
+                var dividendYield = Parse.Decimal(items[^1]);
 
-        [TestCase("SPX230811C04300000")]
-        [TestCase("SPX230811C04500000")]
-        [TestCase("SPX230811C04700000")]
-        [TestCase("SPX230811P04300000")]
-        [TestCase("SPX230811P04500000")]
-        [TestCase("SPX230811P04700000")]
-        [TestCase("SPX230901C04300000")]
-        [TestCase("SPX230901C04500000")]
-        [TestCase("SPX230901C04700000")]
-        [TestCase("SPX230901P04300000")]
-        [TestCase("SPX230901P04500000")]
-        [TestCase("SPX230901P04700000")]
-        [TestCase("SPY230811C00430000")]
-        [TestCase("SPY230811C00450000")]
-        [TestCase("SPY230811C00470000")]
-        [TestCase("SPY230811P00430000")]
-        [TestCase("SPY230811P00450000")]
-        [TestCase("SPY230811P00470000", 0.07)]
-        [TestCase("SPY230901C00430000")]
-        [TestCase("SPY230901C00450000")]
-        [TestCase("SPY230901C00470000")]
-        [TestCase("SPY230901P00430000")]
-        [TestCase("SPY230901P00450000")]
-        [TestCase("SPY230901P00470000", 0.17)]
+                var model = ParseSymbols(items, path.Contains("american"), out var call, out var put);
 
-        public void ComparesAgainstExternalDataAfterReset(string fileName, double errorMargin = 0.03333, int column = 3)
-        {
-            var path = Path.Combine("TestData", "greeks", $"{fileName}.csv");
-            var symbol = ParseOptionSymbol(fileName);
-            var underlying = symbol.Underlying;
+                Delta callIndicator;
+                Delta putIndicator;
+                if (singleContract)
+                {
+                    callIndicator = new Delta(call, interestRate, dividendYield, optionModel: model);
+                    putIndicator = new Delta(put, interestRate, dividendYield, optionModel: model);
+                }
+                else
+                {
+                    callIndicator = new Delta(call, interestRate, dividendYield, put, model);
+                    putIndicator = new Delta(put, interestRate, dividendYield, call, model);
+                }
 
-            var indicator = new Delta(symbol, 0.04m);
-            RunTestIndicator(path, indicator, symbol, underlying, errorMargin, column);
+                RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);
 
-            indicator.Reset();
-            RunTestIndicator(path, indicator, symbol, underlying, errorMargin, column);
+                if (reset == true)
+                {
+                    callIndicator.Reset();
+                    putIndicator.Reset();
+
+                    RunTestIndicator(call, put, callIndicator, putIndicator, items, callColumn, putColumn, errorRate, errorMargin);
+                }
+            }
         }
 
         // Reference values from QuantLib
-        [TestCase(23.753, 450.0, OptionRight.Call, 60, 0.5458)]
-        [TestCase(35.830, 450.0, OptionRight.Put, 60, -0.4460)]
-        [TestCase(33.928, 470.0, OptionRight.Call, 60, 0.6928)]
-        [TestCase(6.428, 470.0, OptionRight.Put, 60, -0.2602)]
-        [TestCase(3.219, 430.0, OptionRight.Call, 60, 0.2425)]
-        [TestCase(47.701, 430.0, OptionRight.Put, 60, -0.5261)]
-        [TestCase(16.528, 450.0, OptionRight.Call, 180, 0.6311)]
-        [TestCase(21.784, 450.0, OptionRight.Put, 180, -0.4176)]
-        [TestCase(35.207, 470.0, OptionRight.Call, 180, 0.7639)]
-        [TestCase(0.409, 470.0, OptionRight.Put, 180, -0.05187)]
-        [TestCase(2.642, 430.0, OptionRight.Call, 180, 0.2628)]
-        [TestCase(27.772, 430.0, OptionRight.Put, 180, -0.5570)]
-        public void ComparesDeltaOnBSMModel(decimal price, decimal spotPrice, OptionRight right, int expiry, double refDelta)
+        [TestCase(23.753, 450.0, OptionRight.Call, 60, 0.546, OptionStyle.European)]
+        [TestCase(35.830, 450.0, OptionRight.Put, 60, -0.446, OptionStyle.European)]
+        [TestCase(33.928, 470.0, OptionRight.Call, 60, 0.693, OptionStyle.European)]
+        [TestCase(6.428, 470.0, OptionRight.Put, 60, -0.260, OptionStyle.European)]
+        [TestCase(3.219, 430.0, OptionRight.Call, 60, 0.243, OptionStyle.European)]
+        [TestCase(47.701, 430.0, OptionRight.Put, 60, -0.526, OptionStyle.European)]
+        [TestCase(16.528, 450.0, OptionRight.Call, 180, 0.632, OptionStyle.European)]
+        [TestCase(21.784, 450.0, OptionRight.Put, 180, -0.417, OptionStyle.European)]
+        [TestCase(35.207, 470.0, OptionRight.Call, 180, 0.765, OptionStyle.European)]
+        [TestCase(0.409, 470.0, OptionRight.Put, 180, -0.052, OptionStyle.European)]
+        [TestCase(2.642, 430.0, OptionRight.Call, 180, 0.263, OptionStyle.European)]
+        [TestCase(27.772, 430.0, OptionRight.Put, 180, -0.556, OptionStyle.European)]
+        [TestCase(23.753, 450.0, OptionRight.Call, 60, 0.546, OptionStyle.American)]
+        [TestCase(35.830, 450.0, OptionRight.Put, 60, -0.446, OptionStyle.American)]
+        [TestCase(33.928, 470.0, OptionRight.Call, 60, 0.693, OptionStyle.American)]
+        [TestCase(6.428, 470.0, OptionRight.Put, 60, -0.260, OptionStyle.American)]
+        [TestCase(3.219, 430.0, OptionRight.Call, 60, 0.243, OptionStyle.American)]
+        [TestCase(47.701, 430.0, OptionRight.Put, 60, -0.526, OptionStyle.American)]
+        [TestCase(16.528, 450.0, OptionRight.Call, 180, 0.632, OptionStyle.American)]
+        [TestCase(21.784, 450.0, OptionRight.Put, 180, -0.417, OptionStyle.American)]
+        [TestCase(35.207, 470.0, OptionRight.Call, 180, 0.765, OptionStyle.American)]
+        [TestCase(0.409, 470.0, OptionRight.Put, 180, -0.052, OptionStyle.American)]
+        [TestCase(2.642, 430.0, OptionRight.Call, 180, 0.264, OptionStyle.American)]
+        [TestCase(27.772, 430.0, OptionRight.Put, 180, -0.556, OptionStyle.American)]
+        public void ComparesAgainstExternalData2(decimal price, decimal spotPrice, OptionRight right, int expiry, double refDelta, OptionStyle style)
         {
-            // Under CRR framework
-            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new Delta(symbol, 0.04m, optionModel: OptionPricingModelType.BlackScholes);
+            var symbol = Symbol.CreateOption("SPY", Market.USA, style, right, 450m, _reference.AddDays(expiry));
+            var model = style == OptionStyle.European ? OptionPricingModelType.BlackScholes : OptionPricingModelType.BinomialCoxRossRubinstein;
+            var indicator = new Delta(symbol, 0.0403m, 0.0m, optionModel: model, ivModel: OptionPricingModelType.BlackScholes);
 
             var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
             var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
             indicator.Update(optionDataPoint);
             indicator.Update(spotDataPoint);
 
-            Assert.AreEqual(refDelta, (double)indicator.Current.Value, 0.005d);
-        }
-
-        // Reference values from QuantLib
-        [TestCase(23.753, 450.0, OptionRight.Call, 60, 0.6041)]
-        [TestCase(35.830, 450.0, OptionRight.Put, 60, -0.4167)]
-        [TestCase(33.928, 470.0, OptionRight.Call, 60, 0.7400)]
-        [TestCase(6.428, 470.0, OptionRight.Put, 60, -0.2458)]
-        [TestCase(3.219, 430.0, OptionRight.Call, 60, 0.2612)]
-        [TestCase(47.701, 430.0, OptionRight.Put, 60, -0.5117)]
-        [TestCase(16.528, 450.0, OptionRight.Call, 180, 0.6587)]
-        [TestCase(21.784, 450.0, OptionRight.Put, 180, -0.4184)]
-        [TestCase(35.207, 470.0, OptionRight.Call, 180, 0.7991)]
-        [TestCase(0.409, 470.0, OptionRight.Put, 180, -0.0571)]
-        [TestCase(2.642, 430.0, OptionRight.Call, 180, 0.2773)]
-        [TestCase(27.772, 430.0, OptionRight.Put, 180, -0.6066)]
-        public void ComparesDeltaOnCRRModel(decimal price, decimal spotPrice, OptionRight right, int expiry, double refDelta)
-        {
-            // Under CRR framework
-            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, _reference.AddDays(expiry));
-            var indicator = new Delta(symbol, 0.04m,
-                    optionModel: OptionPricingModelType.BinomialCoxRossRubinstein,
-                    ivModel: OptionPricingModelType.BlackScholes);
-
-            var optionDataPoint = new IndicatorDataPoint(symbol, _reference, price);
-            var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, _reference, spotPrice);
-            indicator.Update(optionDataPoint);
-            indicator.Update(spotDataPoint);
-
-            Assert.AreEqual(refDelta, (double)indicator.Current.Value, 0.005d);
+            Assert.AreEqual(refDelta, (double)indicator.Current.Value, 0.0005d);
         }
     }
 }
