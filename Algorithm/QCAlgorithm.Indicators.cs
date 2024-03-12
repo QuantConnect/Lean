@@ -296,6 +296,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+/// Creates a new AverageDailyRange indicator for the symbol. The indicator will be automatically
+/// updated on the given resolution.
+/// </summary>
+/// <param name="symbol">The symbol whose ADR we want</param>
+/// <param name="period">The period over which to calculate the average daily range</param>
+/// <param name="resolution">The resolution</param>
+/// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+/// <returns>A new AverageDailyRange indicator with the specified period</returns>
+[DocumentationAttribute(Indicators)]
+public AverageDailyRange ADR(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+{
+    var name = CreateIndicatorName(symbol, $"ADR({period})", resolution);
+    var averageDailyRange = new AverageDailyRange(name, period);
+    InitializeIndicator(symbol, averageDailyRange, resolution, selector);
+
+    return averageDailyRange;
+}
+
+        /// <summary>
         /// Creates an AugenPriceSpike indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
