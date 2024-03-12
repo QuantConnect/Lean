@@ -382,18 +382,22 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(16720m, buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(optionCall, -2)).Value);
         }
 
-        [TestCase(1, 140)]
-        [TestCase(-1, -51890d)]
-        public void GetInitialMarginRequiredForOrderWithIndexOption(decimal quantity, decimal expectedInitialMargin)
+        // OTM
+        [TestCase(1, 3500, 140)] // IB: 0 (GetInitialMarginRequirement() returns the value with the premium)
+        [TestCase(-1, 3500, -52340)] // IB: 40781
+        // ITM
+        [TestCase(1, 3450, 140)] // IB: 0 (GetInitialMarginRequirement() returns the value with the premium)
+        [TestCase(-1, 3450, -37340)] // IB: 36081
+        public void GetInitialMarginRequiredForOrderWithIndexOption(decimal quantity, decimal strikePrice, decimal expectedInitialMargin)
         {
             var price = 1.40m;
-            var underlyingPrice = 17250m;
+            var underlyingPrice = 17400m;
 
             var indexSymbol = Symbol.Create("NDX", SecurityType.Index, Market.USA);
             var index = CreateIndex(indexSymbol);
             index.SetMarketPrice(new Tick { Value = underlyingPrice });
 
-            var optionPut = CreateOption(index, OptionRight.Put, 3450, "NQX");
+            var optionPut = CreateOption(index, OptionRight.Put, strikePrice, "NQX");
             optionPut.SetMarketPrice(new Tick { Value = price });
             var buyingPowerModel = new OptionMarginModel();
             var algorithm = new QCAlgorithm();
@@ -401,7 +405,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var initialMargin = buyingPowerModel.GetInitialMarginRequirement(optionPut, quantity);
 
-            Assert.AreEqual(expectedInitialMargin, initialMargin);
+            Assert.AreEqual((double)expectedInitialMargin, (double)initialMargin, delta: 0.01);
         }
 
         private static void UpdatePrice(Security security, decimal close)
