@@ -71,6 +71,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the market hours for this exchange
         /// </summary>
+        /// <remarks>
+        /// This returns the regular schedule for each day, without taking into account special cases
+        /// such as holidays, early closes, or late opens.
+        /// In order to get the actual market hours for a specific date, use <see cref="GetMarketHours(DateTime)"/>
+        /// </remarks>
         public IReadOnlyDictionary<DayOfWeek, LocalMarketHours> MarketHours => _openHoursByDay;
 
         /// <summary>
@@ -433,6 +438,12 @@ namespace QuantConnect.Securities
         /// Helper to access the market hours field based on the day of week
         /// </summary>
         /// <param name="localDateTime">The local date time to retrieve market hours for</param>
+        /// <remarks>
+        /// This method will return an adjusted instance of <see cref="LocalMarketHours"/> for the specified date,
+        /// that is, it will account for holidays, early closes, and late opens (e.g. if the security trades regularly on Mondays,
+        /// but a specific Monday is a holiday, this method will return a <see cref="LocalMarketHours"/> that is closed all day).
+        /// In order to get the regular schedule, use the <see cref="MarketHours"/> property.
+        /// </remarks>
         public LocalMarketHours GetMarketHours(DateTime localDateTime)
         {
             if (_holidays.Contains(localDateTime.Ticks))

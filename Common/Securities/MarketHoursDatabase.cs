@@ -125,7 +125,6 @@ namespace QuantConnect.Securities
             lock (DataFolderMarketHoursDatabaseLock)
             {
                 Reset();
-
                 var fileEntries = FromDataFolder()._entries.Where(x => !_customEntries.ContainsKey(x.Key));
                 var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
                 _entries = newEntries;
