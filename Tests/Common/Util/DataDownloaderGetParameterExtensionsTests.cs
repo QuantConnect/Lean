@@ -39,9 +39,15 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("../../../Data/equity/usa/daily/spwr.zip", 2, "SPWR", "2005/11/17-2008/09/29,2011/11/16-2024/03/07")]
         [TestCase("../../../Data/equity/usa/minute/spwr/20140401_trade.zip", 1, "SPWR", "4/1/2014-4/2/2014")]
         [TestCase("../../../Data/equity/usa/minute/fb/20000401_trade.zip", 1, "FB", "2000/04/01-2000/04/02")]
+        [TestCase("../../../Data/equity/usa/minute/fb/20200401_trade.zip", 1, "FB", "2020/04/01-2000/04/02")]
         [TestCase("../../../Data/equity/usa/minute/xyz/20000401_trade.zip", 1, "XYZ", null)]
         [TestCase("../../../Data/cfd/oanda/daily/xauusd.zip", 1, "XAUUSD", null)]
         [TestCase("../../../Data/option/usa/daily/goog_2015_quote_american.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/02-2024/03/07")]
+        [TestCase("../../../Data/crypto/binance/hour/btcusdt_trade.zip", 1, "BTCUSDT", null)]
+        [TestCase("../../../Data/future/binance/hour/btcusdt_trade.zip", 1, "/BTCUSDT", null)]
+        [TestCase("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", 1, "GC28J20", "2020/01/05-2020/01/06")]
+        [TestCase("../../../Data/option/usa/minute/goog/20151223_trade_american", 1, "GOOG", "2015/12/23-2015/12/24")]
+        [TestCase("../../../Data/future/cme/minute/es/20131008_quote.zip", 1, "/ES", "2013/10/08-2013/10/09")]
         public void GetDataDownloaderParam(string pathToFile, int expectedDownloadDataAmount, string expectedTicker, string expectedDateTimeRanges)
         {
             _ = LeanData.TryParsePath(pathToFile, out var symbol, out var parsedDate, out var resolution, out var tickType, out _);
@@ -77,7 +83,10 @@ namespace QuantConnect.Tests.Common.Util
             {
                 var downloaderParameter = downloaderDataParameters[i];
 
-                Assert.That(downloaderParameter.Symbol.Value, Is.EqualTo(expectedTicker));
+                var rightTicker = downloaderParameter.Symbol.HasUnderlying ? downloaderParameter.Symbol.Underlying.Value : downloaderParameter.Symbol.Value;
+                Assert.That(rightTicker, Is.EqualTo(expectedTicker));
+
+                Assert.That(downloaderParameter.Symbol.SecurityType, Is.EqualTo(symbol.SecurityType));
 
                 if (dateRanges != null)
                 {
