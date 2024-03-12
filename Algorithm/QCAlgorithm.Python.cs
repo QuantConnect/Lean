@@ -290,8 +290,12 @@ namespace QuantConnect.Algorithm
             Func<IEnumerable<Fundamental>, object> fundamentalSelector;
             Universe universe;
 
+            if (pyObject.TryCreateType(out var type))
+            {
+                return AddUniverse(pyObject, null, null);
+            }
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
-            if (pyObject.TryConvert(out universe))
+            else if(pyObject.TryConvert(out universe))
             {
                 return AddUniverse(universe);
             }
@@ -499,16 +503,21 @@ namespace QuantConnect.Algorithm
                 market = Market.USA;
             }
             securityType ??= SecurityType.Equity;
-            var selector = pySelector.ConvertToDelegate<Func<IEnumerable<IBaseData>, object>>();
-            return AddUniverseSymbolSelector(dataType, name, resolution, market, universeSettings, baseDatas =>
+            Func<IEnumerable<BaseData>, IEnumerable<Symbol>> wrappedSelector = null;
+            if (pySelector != null)
             {
-                var result = selector(baseDatas);
-                if (ReferenceEquals(result, Universe.Unchanged))
+                var selector = pySelector.ConvertToDelegate<Func<IEnumerable<IBaseData>, object>>();
+                wrappedSelector = baseDatas =>
                 {
-                    return Universe.Unchanged;
-                }
-                return ((object[])result).Select(x => x is Symbol symbol ? symbol : QuantConnect.Symbol.Create((string)x, securityType.Value, market, baseDataType: dataType));
-            });
+                    var result = selector(baseDatas);
+                    if (ReferenceEquals(result, Universe.Unchanged))
+                    {
+                        return Universe.Unchanged;
+                    }
+                    return ((object[])result).Select(x => x is Symbol symbol ? symbol : QuantConnect.Symbol.Create((string)x, securityType.Value, market, baseDataType: dataType));
+                };
+            }
+            return AddUniverseSymbolSelector(dataType, name, resolution, market, universeSettings, wrappedSelector);
         }
 
         /// <summary>

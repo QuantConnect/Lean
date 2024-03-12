@@ -76,7 +76,7 @@ namespace QuantConnect.Data.UniverseSelection
             selector.TryConvertToDelegate(out func);
             _dateRule = dateRule;
             _timeRule = timeRule;
-            _selector = func.ConvertToUniverseSelectionSymbolDelegate();
+            _selector = func.ConvertSelectionSymbolDelegate();
             UniverseSettings = settings;
         }
 
