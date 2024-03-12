@@ -195,7 +195,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1015"},
+            {"Total Orders", "1015"},
             {"Average Win", "0.01%"},
             {"Average Loss", "0.00%"},
             {"Compounding Annual Return", "-12.674%"},

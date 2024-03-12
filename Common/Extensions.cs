@@ -2584,10 +2584,13 @@ namespace QuantConnect
                     {
                         result = (T)pyObject.AsManagedObject(type);
                         // pyObject is a C# object wrapped in PyObject, in this case return true
+                        if(!pyObject.HasAttr("__name__"))
+                        {
+                            return true;
+                        }
                         // Otherwise, pyObject is a python object that subclass a C# class, only return true if 'allowPythonDerivative'
                         var castedResult = (Type)pyObject.AsManagedObject(type);
                         var pythonName = pyObject.GetAttr("__name__").GetAndDispose<string>();
-
                         return pythonName == castedResult.Name;
                     }
 
@@ -2710,7 +2713,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="universeFilterFunc">Universe filter function from Python</param>
         /// <returns>Function that provides <typeparamref name="T"/> and returns an enumerable of Symbols</returns>
-        public static Func<IEnumerable<T>, IEnumerable<Symbol>> ConvertPythonUniverseFilterFunction<T>(this PyObject universeFilterFunc)
+        public static Func<IEnumerable<T>, IEnumerable<Symbol>> ConvertPythonUniverseFilterFunction<T>(this PyObject universeFilterFunc) where T : BaseData
         {
             Func<IEnumerable<T>, object> convertedFunc;
             Func<IEnumerable<T>, IEnumerable<Symbol>> filterFunc = null;
@@ -2730,7 +2733,23 @@ namespace QuantConnect
         /// <remarks>This method is a work around for the fact that currently we can not create a delegate which returns
         /// an <see cref="IEnumerable{Symbol}"/> from a python method returning an array, plus the fact that
         /// <see cref="Universe.Unchanged"/> can not be cast to an array</remarks>
-        public static Func<T, IEnumerable<Symbol>> ConvertToUniverseSelectionSymbolDelegate<T>(this Func<T, object> selector)
+        public static Func<IEnumerable<T>, IEnumerable<Symbol>> ConvertToUniverseSelectionSymbolDelegate<T>(this Func<IEnumerable<T>, object> selector) where T : BaseData
+        {
+            if (selector == null)
+            {
+                return (dataPoints) => dataPoints.Select(x => x.Symbol);
+            }
+            return selector.ConvertSelectionSymbolDelegate();
+        }
+
+        /// <summary>
+        /// Wraps the provided universe selection selector checking if it returned <see cref="Universe.Unchanged"/>
+        /// and returns it instead, else enumerates result as <see cref="IEnumerable{Symbol}"/>
+        /// </summary>
+        /// <remarks>This method is a work around for the fact that currently we can not create a delegate which returns
+        /// an <see cref="IEnumerable{Symbol}"/> from a python method returning an array, plus the fact that
+        /// <see cref="Universe.Unchanged"/> can not be cast to an array</remarks>
+        public static Func<T, IEnumerable<Symbol>> ConvertSelectionSymbolDelegate<T>(this Func<T, object> selector)
         {
             return data =>
             {
@@ -2739,11 +2758,10 @@ namespace QuantConnect
                     ? Universe.Unchanged
                     : ((object[])result).Select(x =>
                     {
-                        if (x is Symbol)
+                        if (x is Symbol castedSymbol)
                         {
-                            return (Symbol)x;
+                            return castedSymbol;
                         }
-
                         return SymbolCache.TryGetSymbol((string)x, out var symbol) ? symbol : null;
                     });
             };
@@ -2919,6 +2937,38 @@ namespace QuantConnect
                 }
             }
         }
+
+        /// <summary>
+        /// Try to create a type with a given name, if PyObject is not a CLR type. Otherwise, convert it.
+        /// </summary>
+        /// <param name="pyObject">Python object representing a type.</param>
+        /// <param name="type">Type object</param>
+        /// <returns>True if was able to create the type</returns>
+        public static bool TryCreateType(this PyObject pyObject, out Type type)
+        {
+            if (pyObject.TryConvert(out type))
+            {
+                // handles pure C# types
+                return true;
+            }
+
+            if (!PythonActivators.TryGetValue(pyObject.Handle, out var pythonType))
+            {
+                // Some examples:
+                // pytype: "<class 'DropboxBaseDataUniverseSelectionAlgorithm.StockDataSource'>"
+                // method: "<bound method CoarseFineFundamentalComboAlgorithm.CoarseSelectionFunction of <CoarseFineFunda..."
+                // array: "[<QuantConnect.Symbol object at 0x000001EEF21ED480>]"
+                if (pyObject.ToString().StartsWith("<class '", StringComparison.InvariantCulture))
+                {
+                    type = CreateType(pyObject);
+                    return true;
+                }
+                return false;
+            }
+            type = pythonType.Type;
+            return true;
+        }
+
 
         /// <summary>
         /// Creates a type with a given name, if PyObject is not a CLR type. Otherwise, convert it.

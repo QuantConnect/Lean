@@ -94,8 +94,30 @@ namespace QuantConnect.Util
                 {
                     return null;
                 }
-                dynamic method = GetModule().GetAttr("to_func");
+                dynamic method = GetModule().GetAttr("to_func1");
                 return method(pyObject, typeof(T1), typeof(T2)).AsManagedObject(typeof(Func<T1, T2>));
+            }
+        }
+
+        /// <summary>
+        /// Encapsulates a python method with a <see cref="System.Func{T1, T2, T3}"/>
+        /// </summary>
+        /// <typeparam name="T1">The first argument's type</typeparam>
+        /// <typeparam name="T2">The first argument's type</typeparam>
+        /// <typeparam name="T3">The output type</typeparam>
+        /// <param name="pyObject">The python method</param>
+        /// <returns>A <see cref="System.Func{T1, T2, T3}"/> that encapsulates the python method</returns>
+        public static Func<T1, T2, T3> ToFunc<T1, T2, T3>(PyObject pyObject)
+        {
+            using (Py.GIL())
+            {
+                long count = 0;
+                if (!TryGetArgLength(pyObject, out count) || count != 2)
+                {
+                    return null;
+                }
+                dynamic method = GetModule().GetAttr("to_func2");
+                return method(pyObject, typeof(T1), typeof(T2), typeof(T3)).AsManagedObject(typeof(Func<T1, T2, T3>));
             }
         }
 
@@ -262,8 +284,10 @@ namespace QuantConnect.Util
                 "    return Action[t1](pyobject)\n" +
                 "def to_action2(pyobject, t1, t2):\n" +
                 "    return Action[t1, t2](pyobject)\n" +
-                "def to_func(pyobject, t1, t2):\n" +
-                "    return Func[t1, t2](pyobject)");
+                "def to_func1(pyobject, t1, t2):\n" +
+                "    return Func[t1, t2](pyobject)\n" +
+                "def to_func2(pyobject, t1, t2, t3):\n" +
+                "    return Func[t1, t2, t3](pyobject)");
         }
 
         /// <summary>

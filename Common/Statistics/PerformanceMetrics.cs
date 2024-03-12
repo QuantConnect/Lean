@@ -38,7 +38,7 @@ namespace QuantConnect.Statistics
         public const string SharpeRatio = "Sharpe Ratio";
         public const string SortinoRatio = "Sortino Ratio";
         public const string TotalFees = "Total Fees";
-        public const string TotalTrades = "Total Trades";
+        public const string TotalOrders = "Total Orders";
         public const string TrackingError = "Tracking Error";
         public const string TreynorRatio = "Treynor Ratio";
         public const string WinRate = "Win Rate";

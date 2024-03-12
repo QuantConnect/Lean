@@ -32,7 +32,7 @@
   </PropertyGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.26" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.28" />
     <PackageReference Include="Accord" Version="3.6.0" />
     <PackageReference Include="Accord.Math" Version="3.6.0" />
     <PackageReference Include="Common.Logging" Version="3.4.1" />
@@ -59,6 +59,12 @@
     <None Include="..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
+    </None>
+    <None Include="TestData\greeksindicator\american\third_party_1_greeks.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData\greeksindicator\american\third_party_2_greeks.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="TestData\greeks\SPY230811C00430000.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -332,6 +338,9 @@
     <None Update="TestData\spy_sortino.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TestData\spy_valueatrisk.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TestData\target_downside_deviation.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -455,6 +464,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_ker.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_vidya.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_tr.txt">

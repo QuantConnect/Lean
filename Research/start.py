@@ -32,6 +32,7 @@ from AlgorithmImports import *
 # Used by pythonNet
 AddReference("Fasterflect")
 
+Config.Reset()
 Initializer.Start()
 api = Initializer.GetSystemHandlers().Api
 algorithmHandlers = Initializer.GetAlgorithmHandlers(researchMode=True)

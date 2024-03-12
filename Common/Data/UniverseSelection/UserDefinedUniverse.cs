@@ -38,7 +38,6 @@ namespace QuantConnect.Data.UniverseSelection
         // `UniverseSelection.RemoveSecurityFromUniverse()` will query us at `GetSubscriptionRequests()` to get the `SubscriptionDataConfig` and remove it from the DF
         // and we need to return the config even after the call to `Remove()`
         private readonly HashSet<SubscriptionDataConfig> _pendingRemovedConfigs = new HashSet<SubscriptionDataConfig>();
-        private readonly UniverseSettings _universeSettings;
         private readonly Func<DateTime, IEnumerable<Symbol>> _selector;
         private readonly object _lock = new ();
 
@@ -56,14 +55,6 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Gets the settings used for subscriptons added for this universe
-        /// </summary>
-        public override UniverseSettings UniverseSettings
-        {
-            get { return _universeSettings; }
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="UserDefinedUniverse"/> class
         /// </summary>
         /// <param name="configuration">The configuration used to resolve the data for universe selection</param>
@@ -75,7 +66,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             _interval = interval;
             _symbols = symbols.ToHashSet();
-            _universeSettings = universeSettings;
+            UniverseSettings = universeSettings;
             // the selector Func will be the union of the provided symbols and the added symbols or subscriptions data configurations
             _selector = time => {
                 lock(_lock)
@@ -97,7 +88,7 @@ namespace QuantConnect.Data.UniverseSelection
             : base(configuration)
         {
             _interval = interval;
-            _universeSettings = universeSettings;
+            UniverseSettings = universeSettings;
             _selector = time =>
             {
                 var selectSymbolsResult = selector(time.ConvertFromUtc(Configuration.ExchangeTimeZone));
