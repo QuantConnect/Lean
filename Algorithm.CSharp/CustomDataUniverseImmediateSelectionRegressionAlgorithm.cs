@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse<StockDataSource>("my-stock-data-source", stockDataSource =>
             {
                 _selected = true;
-                return stockDataSource.SelectMany(x => x.Symbols);
+                return stockDataSource.OfType<StockDataSource>().SelectMany(x => x.Symbols);
             });
         }
 

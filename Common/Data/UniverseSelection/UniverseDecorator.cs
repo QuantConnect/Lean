@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -41,7 +41,14 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public override UniverseSettings UniverseSettings
         {
-            get { return Universe.UniverseSettings; }
+            get
+            {
+                return Universe.UniverseSettings;
+            }
+            set
+            {
+                Universe.UniverseSettings = value;
+            }
         }
 
         /// <summary>

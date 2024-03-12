@@ -49,13 +49,28 @@ namespace QuantConnect.Algorithm.CSharp
             // Commented so regression algorithm is more sensitive
             //Settings.MinimumOrderMarginPortfolioPercentage = 0.005m;
 
-            SetStartDate(2017, 07, 04);
+            SetStartDate(2017, 07, 06);
             SetEndDate(2018, 07, 04);
 
-            AddUniverse<StockDataSource>("my-stock-data-source", stockDataSource =>
+            var universe = AddUniverse<StockDataSource>(stockDataSource =>
             {
-                return stockDataSource.SelectMany(x => x.Symbols);
+                return stockDataSource.OfType<StockDataSource>().SelectMany(x => x.Symbols);
             });
+
+            var historicalSelectionData = History(universe, 3).ToList();
+            if (historicalSelectionData.Count != 3)
+            {
+                throw new Exception($"Unexpected universe data count {historicalSelectionData.Count}");
+            }
+
+            foreach (var universeData in historicalSelectionData)
+            {
+                var stockDataSource = (StockDataSource)universeData.Single();
+                if (stockDataSource.Symbols.Count != 5)
+                {
+                    throw new Exception($"Unexpected universe data receieved");
+                }
+            }
         }
 
         /// <summary>
@@ -104,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Our custom data type that defines where to get and how to read our backtest and live data.
         /// </summary>
-        class StockDataSource : BaseData
+        class StockDataSource : BaseDataCollection
         {
             private const string LiveUrl = @"https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1";
             private const string BacktestUrl = @"https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1";
@@ -133,7 +148,7 @@ namespace QuantConnect.Algorithm.CSharp
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 var url = isLiveMode ? LiveUrl : BacktestUrl;
-                return new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile);
+                return new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile, FileFormat.FoldingCollection);
             }
 
             /// <summary>
@@ -186,43 +201,43 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5301;
+        public long DataPoints => 5282;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 3;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "6467"},
+            {"Total Orders", "6441"},
             {"Average Win", "0.07%"},
             {"Average Loss", "-0.07%"},
-            {"Compounding Annual Return", "14.841%"},
-            {"Drawdown", "10.400%"},
-            {"Expectancy", "0.068"},
-            {"Net Profit", "14.841%"},
-            {"Sharpe Ratio", "0.795"},
-            {"Sortino Ratio", "0.746"},
-            {"Probabilistic Sharpe Ratio", "46.586%"},
+            {"Compounding Annual Return", "15.505%"},
+            {"Drawdown", "10.500%"},
+            {"Expectancy", "0.070"},
+            {"Net Profit", "15.414%"},
+            {"Sharpe Ratio", "0.846"},
+            {"Sortino Ratio", "0.789"},
+            {"Probabilistic Sharpe Ratio", "48.709%"},
             {"Loss Rate", "46%"},
             {"Win Rate", "54%"},
-            {"Profit-Loss Ratio", "0.97"},
+            {"Profit-Loss Ratio", "0.98"},
             {"Alpha", "0.008"},
             {"Beta", "0.987"},
             {"Annual Standard Deviation", "0.11"},
             {"Annual Variance", "0.012"},
-            {"Information Ratio", "0.166"},
+            {"Information Ratio", "0.161"},
             {"Tracking Error", "0.041"},
-            {"Treynor Ratio", "0.089"},
-            {"Total Fees", "$7497.26"},
-            {"Estimated Strategy Capacity", "$320000.00"},
+            {"Treynor Ratio", "0.094"},
+            {"Total Fees", "$7489.03"},
+            {"Estimated Strategy Capacity", "$220000.00"},
             {"Lowest Capacity Asset", "BNO UN3IMQ2JU1YD"},
-            {"Portfolio Turnover", "136.11%"},
-            {"OrderListHash", "776d059e40150c00dd3df117239491fd"}
+            {"Portfolio Turnover", "136.17%"},
+            {"OrderListHash", "5186452592597aa6f9c94f5a237472d8"}
         };
     }
 }

@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2014, 03, 25);
+            SetStartDate(2014, 03, 26);
             SetEndDate(2014, 04, 07);
 
             AddEquity("SPY");
