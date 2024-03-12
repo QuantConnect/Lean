@@ -35,6 +35,7 @@ namespace QuantConnect.Lean.Engine.RealTime
     {
         private Thread _realTimeThread;
         private CancellationTokenSource _cancellationTokenSource = new();
+        private readonly bool _forceExchangeAlwaysOpen = Config.GetBool("force-exchange-always-open");
 
         /// <summary>
         /// Gets the current market hours database instance
@@ -192,7 +193,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <remarks>This is done after a MHDB refresh</remarks>
         protected virtual void UpdateMarketHours(Security security)
         {
-            var hours = Config.GetBool("force-exchange-always-open")
+            var hours = _forceExchangeAlwaysOpen
                 ? SecurityExchangeHours.AlwaysOpen(security.Exchange.TimeZone)
                 : MarketHoursDatabase.GetExchangeHours(security.Symbol.ID.Market, security.Symbol, security.Symbol.ID.SecurityType);
 
