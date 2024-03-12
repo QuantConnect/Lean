@@ -191,16 +191,15 @@ namespace QuantConnect.Tests.Engine.RealTime
                 AssertMarketHours(security, time, expectedSegment);
             }
 
-            protected override IEnumerable<MarketHoursSegment> GetMarketHours(DateTime time, Symbol symbol)
+            protected override void UpdateMarketHours(Security security)
             {
-                var results = base.GetMarketHours(time, symbol);
+                base.UpdateMarketHours(security);
                 OnSecurityUpdated.Set();
-                return results;
             }
 
             public void AssertMarketHours(Security security, DateTime time, MarketHoursSegment expectedSegment)
             {
-                var marketHours = security.Exchange.Hours.MarketHours[time.DayOfWeek];
+                var marketHours = security.Exchange.Hours.GetMarketHours(time);
                 var segment = marketHours.Segments.SingleOrDefault();
 
                 if (expectedSegment == null)
@@ -240,11 +239,10 @@ namespace QuantConnect.Tests.Engine.RealTime
                 Exit();
             }
 
-            protected override IEnumerable<MarketHoursSegment> GetMarketHours(DateTime time, Symbol symbol)
+            protected override void UpdateMarketHours(Security security)
             {
-                var results = base.GetMarketHours(time, symbol);
+                base.UpdateMarketHours(security);
                 OnSecurityUpdated.Set();
-                return results;
             }
 
             protected override void ResetMarketHoursDatabase()

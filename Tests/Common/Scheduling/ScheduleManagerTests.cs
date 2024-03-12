@@ -68,13 +68,14 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var algorithm = new AlgorithmStub();
 
-            var handler = new LiveTradingRealTimeHandler();
+            var handler = new BacktestingRealTimeHandler();
+            var time = new DateTime(2024, 02, 10);
+            handler.SetTime(time);
             var timeLimitManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.FromMinutes(20));
             handler.Setup(algorithm, new AlgorithmNodePacket(PacketType.BacktestNode), null, null, timeLimitManager);
 
             algorithm.Schedule.SetEventSchedule(handler);
 
-            var time = new DateTime(2024, 02, 18);
             algorithm.SetDateTime(time);
 
             var spy = algorithm.AddEquity("SPY").Symbol;
@@ -97,7 +98,8 @@ namespace QuantConnect.Tests.Common.Scheduling
 
             var expectedEventTriggerTimes = new List<DateTime>()
             {
-                new DateTime(2024, 02, 20, 20, 57, 0),
+                new DateTime(2024, 02, 12, 20, 57, 0),
+                new DateTime(2024, 02, 20, 20, 57, 0),  // Monday is 19th but it's a holiday
                 new DateTime(2024, 02, 26, 20, 57, 0),
                 new DateTime(2024, 03, 04, 20, 57, 0),
                 // Daylight saving adjustment
@@ -114,12 +116,13 @@ namespace QuantConnect.Tests.Common.Scheduling
             var algorithm = new AlgorithmStub();
 
             var handler = new  TestableLiveTradingRealTimeHandler();
+            var time = new DateTime(2024, 02, 10);
+            handler.ManualTimeProvider.SetCurrentTime(time);
             var timeLimitManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.FromMinutes(20));
             handler.Setup(algorithm, new LiveNodePacket(), null, null, timeLimitManager);
 
             algorithm.Schedule.SetEventSchedule(handler);
 
-            var time = new DateTime(2024, 02, 18);
             algorithm.SetDateTime(time);
 
             var spy = algorithm.AddEquity("SPY").Symbol;
@@ -132,7 +135,6 @@ namespace QuantConnect.Tests.Common.Scheduling
                     eventTriggerTimes.Add(handler.ManualTimeProvider.GetUtcNow());
                 });
 
-            handler.ManualTimeProvider.SetCurrentTime(time);
             algorithm.SetFinishedWarmingUp();
 
             using var finished = new ManualResetEventSlim(false);
@@ -160,7 +162,8 @@ namespace QuantConnect.Tests.Common.Scheduling
 
             var expectedEventTriggerTimes = new List<DateTime>()
             {
-                new DateTime(2024, 02, 20, 20, 0, 0),
+                new DateTime(2024, 02, 12, 20, 0, 0),
+                new DateTime(2024, 02, 20, 20, 0, 0),   // Monday is 19th but it's a holiday
                 new DateTime(2024, 02, 26, 20, 0, 0),
                 new DateTime(2024, 03, 04, 20, 0, 0),
                 // Daylight saving adjustment
@@ -175,10 +178,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             public ManualTimeProvider ManualTimeProvider = new ManualTimeProvider();
 
-            public TestableLiveTradingRealTimeHandler()
-            {
-                TimeProvider = ManualTimeProvider;
-            }
+            protected override ITimeProvider TimeProvider => ManualTimeProvider;
         }
     }
 }
