@@ -160,15 +160,15 @@ namespace QuantConnect.Data.Auxiliary
             }
 
             var tickerUpperCase = symbol?.Value.ToUpperInvariant();
+            // Sometime Symbol is started from special sign.
+            if (!Char.IsLetter(symbol.Value[0]))
+            {
+                tickerUpperCase = tickerUpperCase[1..];
+            }
 
             var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
 
-            if (!mapFileResolver.ResolveMapFile(symbol).Any())
-            {
-                yield return new DataDownloaderGetParameters(symbol, resolution, startDateTime, endDateTime, tickType);
-                yield break;
-            }
-
+            var yieldStatus = default(bool);
             foreach (var mapFile in mapFileResolver)
             {
                 // Check if 'mapFile' contains the desired ticker symbol.
@@ -202,7 +202,13 @@ namespace QuantConnect.Data.Auxiliary
                     }
 
                     yield return new DataDownloaderGetParameters(new Symbol(sid, tickerUpperCase), resolution, startDateTime, newEndDateTimeUtc, tickType);
+                    yieldStatus = true;
                 }
+            }
+
+            if (!yieldStatus)
+            {
+                yield return new DataDownloaderGetParameters(symbol, resolution, startDateTime, endDateTime, tickType);
             }
         }
 
