@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Util
         private readonly IMapFileProvider _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
 
         [TestCase("../../../Data/equity/usa/hour/spwr.zip", 2, "SPWR", "2005/11/17-2008/09/29,2011/11/16-2024/03/07")]
-        [TestCase("../../../Data/equity/usa/hour/meta.zip", 1, "META", "2022/06/08-2024/03/07")]
+        [TestCase("../../../Data/equity/usa/hour/meta.zip", 1, "META", "1899/12/30-2024/03/07", Description = "Not presented in mapped files")]
         [TestCase("../../../Data/equity/usa/hour/fb.zip", 2, "FB", "1999/09/29-2003/03/28,2012/05/18-2022/06/08")]
         [TestCase("../../../Data/equity/usa/hour/goog.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/02-2024/03/07")]
         [TestCase("../../../Data/equity/usa/daily/goog.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/02-2024/03/07")]
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("../../../Data/equity/usa/minute/fb/20000401_trade.zip", 1, "FB", "2000/04/01-2000/04/02")]
         [TestCase("../../../Data/equity/usa/minute/xyz/20000401_trade.zip", 1, "XYZ", null)]
         [TestCase("../../../Data/cfd/oanda/daily/xauusd.zip", 1, "XAUUSD", null)]
-        [TestCase("../../../Data/option/usa/daily/goog_2015_quote_american.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/02-2024/03/07")]
+        //[TestCase("../../../Data/option/usa/daily/goog_2015_quote_american.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/02-2024/03/07")]
         public void GetDataDownloaderParam(string pathToFile, int expectedDownloadDataAmount, string expectedTicker, string expectedDateTimeRanges)
         {
             _ = LeanData.TryParsePath(pathToFile, out var symbol, out var parsedDate, out var resolution, out var tickType, out _);

@@ -214,14 +214,15 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>An enumerable collection of tuples representing the start and end dates for each date range associated with the specified ticker symbol.</returns>
         private static IEnumerable<(DateTime StartDate, DateTime EndDate)> GetTickerDateRanges(this MapFile mapFile, string ticker)
         {
-            for (var i = 0; i < mapFile.MapFileRowCounter - 1; i++)
+            var mapFileRows = mapFile.ToList();
+            for (var i = 0; i < mapFileRows.Count - 1; i++)
             {
-                if (ticker != mapFile[i + 1].MappedSymbol)
+                if (ticker != mapFileRows[i + 1].MappedSymbol)
                 {
                     continue;
                 }
                 // Shifts endDateTime by one day to include all data up to and including the endDateTime.
-                yield return (mapFile[i].Date, mapFile[i + 1].Date.AddDays(1));
+                yield return (mapFileRows[i].Date, mapFileRows[i + 1].Date.AddDays(1));
             }
         }
     }
