@@ -156,7 +156,7 @@ namespace QuantConnect.Securities.Option
             // inferring ratios of the option and its underlying to get underlying security value
             var multiplierRatio = underlying.SymbolProperties.ContractMultiplier / optionProperties.ContractMultiplier;
             var quantityRatio = optionProperties.ContractUnitOfTrade;
-            var priceRatio = underlying.Close / (absValue / quantityRatio);
+            var priceRatio = (underlying.Close / option.SymbolProperties.StrikeMultiplier) / (absValue / quantityRatio);
             var underlyingValueRatio = multiplierRatio * quantityRatio * priceRatio;
 
             // calculating underlying security value less out-of-the-money amount
@@ -164,7 +164,7 @@ namespace QuantConnect.Securities.Option
             var priceRatioOTM = amountOTM / (absValue / quantityRatio);
             var underlyingValueRatioOTM = multiplierRatio * quantityRatio * priceRatioOTM;
 
-            var strikePriceRatio = option.ScaledStrikePrice / (absValue / quantityRatio);
+            var strikePriceRatio = option.StrikePrice / (absValue / quantityRatio);
             strikePriceRatio = multiplierRatio * quantityRatio * strikePriceRatio;
 
             var nakedMarginRequirement = option.Right == OptionRight.Call

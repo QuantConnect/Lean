@@ -64,12 +64,12 @@ namespace QuantConnect.Securities
         /// Constructs OptionFilterUniverse
         /// </summary>
         /// <remarks>Used for testing only</remarks>
-        public OptionFilterUniverse(IEnumerable<Symbol> allSymbols, BaseData underlying)
+        public OptionFilterUniverse(IEnumerable<Symbol> allSymbols, BaseData underlying, decimal underlyingScaleFactor = 1)
             : base(allSymbols, underlying.EndTime)
         {
             UnderlyingInternal = underlying;
             _refreshUniqueStrikes = true;
-            _underlyingScaleFactor = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Market.USA, allSymbols.FirstOrDefault(), allSymbols.FirstOrDefault()?.SecurityType ?? SecurityType.Option, "USD").StrikeMultiplier;
+            _underlyingScaleFactor = underlyingScaleFactor;
         }
 
         /// <summary>

@@ -42,7 +42,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             var filter = new FuncSecurityDerivativeFilter(func);
 
-            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
+            var underlyingScaleFactor = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Market.USA, symbols.First(), symbols.First().SecurityType, "USD").StrikeMultiplier;
+            var filterUniverse = new OptionFilterUniverse(symbols, underlying, underlyingScaleFactor);
             var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(filteredNumber, filtered.Count);
             Assert.AreEqual(symbols[3], filtered[0]);
