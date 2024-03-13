@@ -23,26 +23,34 @@ using Microsoft.CodeAnalysis;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Tests.Common.Data.Fundamental;
 
 namespace QuantConnect.Tests.Common.Util
 {
     [TestFixture]
     public class DataDownloaderGetParameterExtensionsTests
     {
-        private readonly IMapFileProvider _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
+        private IMapFileProvider _mapFileProvider;
 
-        [TestCase("../../../Data/equity/usa/hour/spwr.zip", 2, "SPWR", "2005/11/17-2008/09/29,2011/11/16-2024/03/07")]
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            _mapFileProvider = TestGlobals.MapFileProvider;
+        }
+
+        [TestCase("../../../Data/equity/usa/hour/spwr.zip", 2, "SPWR", "2005/11/17-2008/09/29,2011/11/17-2024/03/07")]
         [TestCase("../../../Data/equity/usa/hour/meta.zip", 1, "META", "1899/12/30-2024/03/07", Description = "Not presented in mapped files")]
-        [TestCase("../../../Data/equity/usa/hour/fb.zip", 2, "FB", "1999/09/29-2003/03/28,2012/05/18-2022/06/08")]
-        [TestCase("../../../Data/equity/usa/hour/goog.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/02-2024/03/07")]
-        [TestCase("../../../Data/equity/usa/daily/goog.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/02-2024/03/07")]
-        [TestCase("../../../Data/equity/usa/daily/spwr.zip", 2, "SPWR", "2005/11/17-2008/09/29,2011/11/16-2024/03/07")]
-        [TestCase("../../../Data/equity/usa/minute/spwr/20140401_trade.zip", 1, "SPWR", "4/1/2014-4/2/2014")]
+        [TestCase("../../../Data/equity/usa/hour/fb.zip", 2, "FB", "1999/09/29-2003/03/28,2012/05/18-2024/03/07")]
+        [TestCase("../../../Data/equity/usa/hour/goog.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/03-2024/03/07")]
+        [TestCase("../../../Data/equity/usa/daily/goog.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/03-2024/03/07")]
+        [TestCase("../../../Data/equity/usa/daily/spwr.zip", 2, "SPWR", "2005/11/17-2008/09/29,2011/11/17-2024/03/07")]
+        [TestCase("../../../Data/equity/usa/minute/spwr/20140401_trade.zip", 1, "SPWR", "2014/04/01-2014/04/01")]
         [TestCase("../../../Data/equity/usa/minute/fb/20000401_trade.zip", 1, "FB", "2000/04/01-2000/04/02")]
         [TestCase("../../../Data/equity/usa/minute/fb/20200401_trade.zip", 1, "FB", "2020/04/01-2000/04/02")]
         [TestCase("../../../Data/equity/usa/minute/xyz/20000401_trade.zip", 1, "XYZ", null)]
         [TestCase("../../../Data/cfd/oanda/daily/xauusd.zip", 1, "XAUUSD", null)]
-        [TestCase("../../../Data/option/usa/daily/goog_2015_quote_american.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/02-2024/03/07")]
+        [TestCase("../../../Data/option/usa/daily/goog_2015_quote_american.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/03-2024/03/07")]
         [TestCase("../../../Data/crypto/binance/hour/btcusdt_trade.zip", 1, "BTCUSDT", null)]
         [TestCase("../../../Data/future/binance/hour/btcusdt_trade.zip", 1, "/BTCUSDT", null)]
         [TestCase("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", 1, "GC28J20", "2020/01/05-2020/01/06")]

@@ -166,17 +166,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         LeanDataWriter writer = null;
 
-                        var downloaderDataParameters = _mapFileProvider.GetAllTickerFromMapFiles(symbol, resolution, startTimeUtc, endTimeUtc, tickType).ToList();
+                        var downloaderDataParameters = _mapFileProvider.GetAllTickerFromMapFiles(symbol, resolution, startTimeUtc, endTimeUtc, tickType);
 
-                        var data = GetDownloadedData(downloaderDataParameters, symbol, exchangeTimeZone, dataTimeZone, dataType);
+                        var downloadedData = GetDownloadedData(downloaderDataParameters, symbol, exchangeTimeZone, dataTimeZone, dataType);
 
-                        if (writer == null)
+                        foreach (var dataPerSymbol in downloadedData)
                         {
-                            writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
+                            if (writer == null)
+                            {
+                                writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
+                            }
+                            // Save the data
+                            writer.Write(dataPerSymbol);
                         }
-
-                        // Save the data
-                        writer.Write(data);
                     }
                     catch (Exception e)
                     {
@@ -187,15 +189,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// 
+        /// Retrieves downloaded data grouped by symbol based on <see cref="IDownloadProvider"/>.
         /// </summary>
-        /// <param name="downloaderDataParameters"></param>
-        /// <param name="symbol"></param>
-        /// <param name="exchangeTimeZone"></param>
-        /// <param name="dataTimeZone"></param>
-        /// <param name="dataType"></param>
-        /// <returns></returns>
-        public IEnumerable<BaseData> GetDownloadedData(
+        /// <param name="downloaderDataParameters">Parameters specifying the data to be retrieved.</param>
+        /// <param name="symbol">Represents a unique security identifier, generate by ticker name.</param>
+        /// <param name="exchangeTimeZone">The time zone of the exchange where the symbol is traded.</param>
+        /// <param name="dataTimeZone">The time zone in which the data is represented.</param>
+        /// <param name="dataType">The type of data to be retrieved. (e.g. <see cref="Data.Market.TradeBar"/>)</param>
+        /// <returns>An IEnumerable containing groups of data grouped by symbol. Each group contains data related to a specific symbol.</returns>
+        /// <exception cref="ArgumentException"> Thrown when the downloaderDataParameters collection is null or empty.</exception>
+        public IEnumerable<IGrouping<Symbol, BaseData>> GetDownloadedData(
             IEnumerable<DataDownloaderGetParameters> downloaderDataParameters,
             Symbol symbol,
             DateTimeZone exchangeTimeZone,
@@ -204,7 +207,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (downloaderDataParameters.IsNullOrEmpty())
             {
-                throw new Exception("");
+                throw new ArgumentException($"{nameof(DownloaderDataProvider)}.{nameof(GetDownloadedData)}: DataDownloaderGetParameters are empty or equal to null.");
             }
 
             foreach (var downloaderDataParameter in downloaderDataParameters)
@@ -217,24 +220,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     continue;
                 }
 
-                // TODO: not implemented part with grouping ?
-                var dataGrouping = downloadedData
-                .Where(baseData =>
-                {
-                    if (symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
+                var groupedData = downloadedData
+                    .Where(baseData =>
                     {
-                        // we need to store the data in data time zone
-                        baseData.Time = baseData.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
-                        baseData.EndTime = baseData.EndTime.ConvertTo(exchangeTimeZone, dataTimeZone);
-                        return true;
-                    }
-                    return false;
-                })
-                // for canonical symbols, downloader will return data for all of the chain
-                .GroupBy(baseData => baseData.Symbol);
+                        // Sometimes, external Downloader provider returns excess data
+                        if (baseData.Time < downloaderDataParameter.StartUtc || baseData.Time > downloaderDataParameter.EndUtc)
+                        {
+                            return false;
+                        }
 
-                foreach (var data in downloadedData)
+                        if (symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
+                        {
+                            // we need to store the data in data time zone
+                            baseData.Time = baseData.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
+                            baseData.EndTime = baseData.EndTime.ConvertTo(exchangeTimeZone, dataTimeZone);
+                            return true;
+                        }
+                        return false;
+                    })
+                    // for canonical symbols, downloader will return data for all of the chain
+                    .GroupBy(baseData => baseData.Symbol);
+
+                foreach (var data in groupedData)
+                {
                     yield return data;
+                }
             }
         }
 

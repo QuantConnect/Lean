@@ -178,7 +178,7 @@ namespace QuantConnect.Data.Auxiliary
             {
                 var resolvedMapFile = mapFileResolver.ResolveMapFile(tickerUpperCase, startDateTime);
 
-                var sid = SecurityIdentifier.GenerateEquity(resolvedMapFile.FirstDate, resolvedMapFile.Permtick, symbol?.ID.Market);
+                var sid = SecurityIdentifier.GenerateEquity(resolvedMapFile.FirstDate, resolvedMapFile.FirstTicker, symbol?.ID.Market);
 
                 var newSymbol = new Symbol(sid, tickerUpperCase);
                 if (symbol.SecurityType == SecurityType.Option)
@@ -197,9 +197,9 @@ namespace QuantConnect.Data.Auxiliary
                 if (!mapFile.Any(mapFileRow => mapFileRow.MappedSymbol == tickerUpperCase))
                 {
                     continue;
-                }            
+                }
 
-                var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.Permtick, symbol?.ID.Market);
+                var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, symbol?.ID.Market);
 
                 var newEndDateTimeUtc = endDateTime;
                 foreach (var tickerDateRange in mapFile.GetTickerDateRanges(tickerUpperCase))
@@ -232,14 +232,15 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>An enumerable collection of tuples representing the start and end dates for each date range associated with the specified ticker symbol.</returns>
         private static IEnumerable<(DateTime StartDate, DateTime EndDate)> GetTickerDateRanges(this MapFile mapFile, string ticker)
         {
-            var previousRow = mapFile.FirstOrDefault();
+            var previousRowDate = mapFile.FirstOrDefault().Date;
             foreach (var currentRow in mapFile.Skip(1))
             {
                 if (ticker == currentRow.MappedSymbol)
                 {
-                    yield return (previousRow.Date, currentRow.Date.AddDays(1));
+                    yield return (previousRowDate, currentRow.Date.AddDays(1));
                 }
-                previousRow = currentRow;
+                // MapFile maintains the latest date associated with each ticker name, except first Row
+                previousRowDate = currentRow.Date.AddDays(1);
             }
         }
     }
