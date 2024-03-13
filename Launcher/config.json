@@ -66,7 +66,7 @@
   "transaction-log": "",
 
   // Prefix for Windows reserved filenames
-  "reserved-words-prefix": "",
+  "reserved-words-prefix": "@",
 
   // To get your api access token go to quantconnect.com/account
   "job-user-id": "0",

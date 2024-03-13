@@ -15,6 +15,7 @@
 
 using QuantConnect.Configuration;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace QuantConnect
@@ -27,23 +28,26 @@ namespace QuantConnect
         public static readonly string ReservedWordsPrefix = Config.Get("reserved-words-prefix", "@");
         private static readonly Regex ToValidWindowsPathRegex = new Regex("((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0-9])|(LPT[0-9]))(?=(\\.|\\\\|/|$)))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly string _fixPathRegex = ReservedWordsPrefix + "$&"; // The string "$&" gets the matched word
+        private static readonly bool _isWindows = OS.IsWindows;
 
         /// <summary>
         /// Takes a given path and (if applicable) returns a modified path accepted by
         /// Windows OS
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ToNormalizedPath(string path)
         {
-            return OS.IsWindows ? ToValidWindowsPathRegex.Replace(path, _fixPathRegex) : path;
+            return _isWindows ? ToValidWindowsPathRegex.Replace(path, _fixPathRegex) : path;
         }
 
         /// <summary>
         /// Takes a modified path (see <see cref="ToNormalizedPath(string)"/>) and (if applicable)
         /// returns the original path proposed by LEAN
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string FromNormalizedPath(string path)
         {
-            return OS.IsWindows ? path.Replace(ReservedWordsPrefix, string.Empty) : path;
+            return _isWindows ? path.Replace(ReservedWordsPrefix, string.Empty) : path;
         }
 
         /// <summary>
@@ -54,6 +58,7 @@ namespace QuantConnect
         /// <param name="fileMode">One of the enumeration values that determines how to open or create the file</param>
         /// <param name="access">A bitwise combination of the enumeration values that determines how the file can be accessed by the FileStream object</param>
         /// <param name="fileShare">A bitwise combination of the enumeration values that determines how the file will be shared by processes.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FileStream GetSafeFileStream(string path, FileMode fileMode = FileMode.Create, FileAccess access = FileAccess.ReadWrite, FileShare fileShare = FileShare.None)
         {
             return new FileStream(ToNormalizedPath(path), fileMode, access, fileShare);
