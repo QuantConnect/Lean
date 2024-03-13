@@ -178,13 +178,7 @@ namespace QuantConnect.Data.Auxiliary
             {
                 var resolvedMapFile = mapFileResolver.ResolveMapFile(tickerUpperCase, startDateTime);
 
-                var sid = SecurityIdentifier.GenerateEquity(resolvedMapFile.FirstDate, resolvedMapFile.FirstTicker, symbol?.ID.Market);
-
-                var newSymbol = new Symbol(sid, tickerUpperCase);
-                if (symbol.SecurityType == SecurityType.Option)
-                {
-                    newSymbol = Symbol.CreateCanonicalOption(newSymbol);
-                }
+                var newSymbol = Symbol.Create(resolvedMapFile.FirstTicker, resolvedMapFile.FirstDate, symbol.SecurityType, tickerUpperCase, symbol?.ID.Market);
 
                 yield return new DataDownloaderGetParameters(newSymbol, resolution, startDateTime, endDateTime, tickType);
                 yield break;
@@ -199,19 +193,13 @@ namespace QuantConnect.Data.Auxiliary
                     continue;
                 }
 
-                var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, symbol?.ID.Market);
-
                 var newEndDateTimeUtc = endDateTime;
                 foreach (var tickerDateRange in mapFile.GetTickerDateRanges(tickerUpperCase))
                 {
+                    var newSymbol = Symbol.Create(mapFile.FirstTicker, mapFile.FirstDate, symbol.SecurityType, tickerUpperCase, symbol?.ID.Market);
+
                     startDateTime = tickerDateRange.StartDate;
                     newEndDateTimeUtc = tickerDateRange.EndDate > endDateTime ? endDateTime : tickerDateRange.EndDate;
-
-                    var newSymbol = new Symbol(sid, tickerUpperCase);
-                    if (symbol.SecurityType == SecurityType.Option)
-                    {
-                        newSymbol = Symbol.CreateCanonicalOption(newSymbol);
-                    }
 
                     yield return new DataDownloaderGetParameters(newSymbol, resolution, startDateTime, newEndDateTimeUtc, tickType);
                     yieldMappedSymbol = true;
