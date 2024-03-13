@@ -20,28 +20,35 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class FileExtensionTests
     {
-        [TestCaseSource(nameof(ToValidPathReturnsValidPathTestCases))]
+        [TestCaseSource(nameof(ToNormalizedPathReturnsNormalizedPathTestCases))]
         [Platform("Win", Reason = "The paths in these testcases are only forbidden in Windows OS")]
-        public void ToValidPathReturnsValidPath(string inputName, string expectedName)
+        public void ToNormalizedPathReturnsNormalizedPath(string inputName, string expectedName)
         {
             Assert.AreEqual(expectedName, FileExtension.ToNormalizedPath(inputName));
         }
 
-        [TestCaseSource(nameof(ToValidPathReturnsTheSameNameTestCases))]
+        [TestCaseSource(nameof(ToNormalizedPathReturnsTheSamePathTestCases))]
         [Platform("Win", Reason = "The paths in these testcases are only forbidden in Windows OS")]
-        public void ToValidPathReturnsTheSameName(string inputName)
+        public void ToNormalizedPathReturnsTheSamePath(string inputName)
         {
             Assert.AreEqual(inputName, FileExtension.ToNormalizedPath(inputName));
         }
 
-        [TestCaseSource(nameof(FromValidReturnsOriginalNameTestCases))]
+        [TestCaseSource(nameof(FromValidReturnsOriginalPathTestCases))]
         [Platform("Win", Reason = "The paths in these testcases are only forbidden in Windows OS")]
         public void FromValidReturnsOriginalName(string inputName, string expectedName)
         {
             Assert.AreEqual(expectedName, FileExtension.FromNormalizedPath(inputName));
         }
 
-        public static object[] ToValidPathReturnsValidPathTestCases =
+        [TestCaseSource(nameof(ToNormalizedPathAndFromNormalizedPathReturnTheSameNameWhenOSIsNotWindowsTestCases))]
+        [Platform(Exclude = "Win")]
+        public void ToNormalizedPathAndFromNormalizedPathReturnsTheSameNameWhenOSIsNotWindows(string inputName)
+        {
+            Assert.AreEqual(inputName, FileExtension.ToNormalizedPath(inputName));
+        }
+
+        public static object[] ToNormalizedPathReturnsNormalizedPathTestCases =
         {
             new object[] {"data\\equity\\usa\\map_files\\AUX", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"AUX"},
             new object[] {"data\\equity\\usa\\map_files\\NUL", "data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"NUL"},
@@ -153,7 +160,7 @@ namespace QuantConnect.Tests.Common.Util
             new object[] {"equity\\usa\\minute\\aux\\aux.zip", "equity\\usa\\minute\\"+ FileExtension.ReservedWordsPrefix +"aux\\"+ FileExtension.ReservedWordsPrefix +"aux.zip" }
         };
 
-        public static object[] ToValidPathReturnsTheSameNameTestCases =
+        public static object[] ToNormalizedPathReturnsTheSamePathTestCases =
         {
             new object[] {"data\\equity\\usa\\map_files\\AAUX.csv"},
             new object[] {"data\\equity\\usa\\map_files\\ANUL.csv"},
@@ -181,7 +188,7 @@ namespace QuantConnect.Tests.Common.Util
             new object[] {"data/equity/usa/map_files/CONA.csv"}
         };
 
-        public static object[] FromValidReturnsOriginalNameTestCases =
+        public static object[] FromValidReturnsOriginalPathTestCases =
         {
             new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM0.csv", "data\\equity\\usa\\map_files\\COM0.csv"},
             new object[] {"data\\equity\\usa\\map_files\\"+ FileExtension.ReservedWordsPrefix +"COM1.csv", "data\\equity\\usa\\map_files\\COM1.csv"},
@@ -255,6 +262,118 @@ namespace QuantConnect.Tests.Common.Util
             new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT7.csv", "LPT7.csv"},
             new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT8.csv", "LPT8.csv"},
             new object[] {""+ FileExtension.ReservedWordsPrefix +"LPT9.csv", "LPT9.csv"},
+        };
+
+        public static object[] ToNormalizedPathAndFromNormalizedPathReturnTheSameNameWhenOSIsNotWindowsTestCases =
+        {
+            new object[] {"data\\equity\\usa\\map_files\\AUX"},
+            new object[] {"data\\equity\\usa\\map_files\\NUL"},
+            new object[] {"data\\equity\\usa\\map_files\\PRN"},
+            new object[] {"data\\equity\\usa\\map_files\\CON"},
+            new object[] {"data\\equity\\usa\\map_files\\COM0"},
+            new object[] {"data\\equity\\usa\\map_files\\COM1"},
+            new object[] {"data\\equity\\usa\\map_files\\COM2"},
+            new object[] {"data\\equity\\usa\\map_files\\COM3"},
+            new object[] {"data\\equity\\usa\\map_files\\COM4"},
+            new object[] {"data\\equity\\usa\\map_files\\COM5"},
+            new object[] {"data\\equity\\usa\\map_files\\COM6"},
+            new object[] {"data\\equity\\usa\\map_files\\COM7"},
+            new object[] {"data\\equity\\usa\\map_files\\COM8"},
+            new object[] {"data\\equity\\usa\\map_files\\COM9"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT0"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT1"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT2"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT3"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT4"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT5"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT6"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT7"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT8"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT9"},
+            new object[] {"data/equity/usa/map_files/AUX"},
+            new object[] {"data/equity/usa/map_files/NUL"},
+            new object[] {"data/equity/usa/map_files/PRN"},
+            new object[] {"data/equity/usa/map_files/CON"},
+            new object[] {"data/equity/usa/map_files/COM0"},
+            new object[] {"data/equity/usa/map_files/COM1"},
+            new object[] {"data/equity/usa/map_files/COM2"},
+            new object[] {"data/equity/usa/map_files/COM3"},
+            new object[] {"data/equity/usa/map_files/COM4"},
+            new object[] {"data/equity/usa/map_files/COM5"},
+            new object[] {"data/equity/usa/map_files/COM6"},
+            new object[] {"data/equity/usa/map_files/COM7"},
+            new object[] {"data/equity/usa/map_files/COM8"},
+            new object[] {"data/equity/usa/map_files/COM9"},
+            new object[] {"data/equity/usa/map_files/LPT0"},
+            new object[] {"data/equity/usa/map_files/LPT1"},
+            new object[] {"data/equity/usa/map_files/LPT2"},
+            new object[] {"data/equity/usa/map_files/LPT3"},
+            new object[] {"data/equity/usa/map_files/LPT4"},
+            new object[] {"data/equity/usa/map_files/LPT5"},
+            new object[] {"data/equity/usa/map_files/LPT6"},
+            new object[] {"data/equity/usa/map_files/LPT7"},
+            new object[] {"data/equity/usa/map_files/LPT8"},
+            new object[] {"data/equity/usa/map_files/LPT9"},
+            new object[] {"data\\equity\\usa\\map_files\\COM0.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM1.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM2.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM3.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM4.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM5.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM6.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM7.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM8.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\COM9.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT0.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT1.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT2.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT3.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT4.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT5.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT6.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT7.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT8.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\LPT9.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\AUX.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\NUL.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\PRN.csv"},
+            new object[] {"data\\equity\\usa\\map_files\\CON.csv"},
+            new object[] {"AUX.csv"},
+            new object[] {"NUL.csv"},
+            new object[] {"PRN.csv"},
+            new object[] {"CON.csv"},
+            new object[] {"COM0.csv"},
+            new object[] {"COM1.csv"},
+            new object[] {"COM2.csv"},
+            new object[] {"COM3.csv"},
+            new object[] {"COM4.csv"},
+            new object[] {"COM5.csv"},
+            new object[] {"COM6.csv"},
+            new object[] {"COM7.csv"},
+            new object[] {"COM8.csv"},
+            new object[] {"COM9.csv"},
+            new object[] {"LPT0.csv"},
+            new object[] {"LPT1.csv"},
+            new object[] {"LPT2.csv"},
+            new object[] {"LPT3.csv"},
+            new object[] {"LPT4.csv"},
+            new object[] {"LPT5.csv"},
+            new object[] {"LPT6.csv"},
+            new object[] {"LPT7.csv"},
+            new object[] {"LPT8.csv"},
+            new object[] {"LPT9.csv"},
+            new object[] {"AUX.tar.gz"},
+            new object[] {"NUL.tar.gz"},
+            new object[] {"PRN.tar.gz"},
+            new object[] {"CON.tar.gz"},
+            new object[] {"equity\\usa\\minute\\con\\20150903_trade.zip"},
+            new object[] {"equity\\usa\\minute\\nul\\20150903_trade.zip"},
+            new object[] {"equity\\usa\\minute\\prn\\20150903_trade.zip"},
+            new object[] {"equity\\usa\\minute\\aux\\20150903_trade.zip"},
+            new object[] {"equity\\usa\\minute\\con\\con.zip"},
+            new object[] {"equity\\usa\\minute\\nul\\nul.zip"},
+            new object[] {"equity\\usa\\minute\\prn\\prn.zip"},
+            new object[] {"equity\\usa\\minute\\aux\\aux.zip"}
         };
     }
 }
