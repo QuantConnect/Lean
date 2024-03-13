@@ -46,6 +46,7 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("../../../Data/equity/usa/daily/goog.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/03-2024/03/07")]
         [TestCase("../../../Data/equity/usa/daily/spwr.zip", 2, "SPWR", "2005/11/17-2008/09/29,2011/11/17-2024/03/07")]
         [TestCase("../../../Data/equity/usa/minute/spwr/20140401_trade.zip", 1, "SPWR", "2014/04/01-2014/04/01")]
+        [TestCase("../../../Data/equity/usa/minute/spwra/20100401_trade.zip", 1, "SPWRA", "2010/04/01-2010/04/01")]
         [TestCase("../../../Data/equity/usa/minute/fb/20000401_trade.zip", 1, "FB", "2000/04/01-2000/04/02")]
         [TestCase("../../../Data/equity/usa/minute/fb/20200401_trade.zip", 1, "FB", "2020/04/01-2000/04/02")]
         [TestCase("../../../Data/equity/usa/minute/xyz/20000401_trade.zip", 1, "XYZ", null)]

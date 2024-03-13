@@ -165,6 +165,12 @@ namespace QuantConnect.Data.Auxiliary
                 yield break;
             }
 
+            if (resolution < Resolution.Hour)
+            {
+                yield return new DataDownloaderGetParameters(symbol, resolution, startDateTime, endDateTime, tickType);
+                yield break;
+            }
+
             var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
 
             var tickerUpperCase = symbol?.Value.ToUpperInvariant();
@@ -172,16 +178,6 @@ namespace QuantConnect.Data.Auxiliary
             if (!Char.IsLetter(symbol.Value[0]))
             {
                 tickerUpperCase = tickerUpperCase[1..];
-            }
-
-            if (resolution < Resolution.Hour)
-            {
-                var resolvedMapFile = mapFileResolver.ResolveMapFile(tickerUpperCase, startDateTime);
-
-                var newSymbol = Symbol.Create(resolvedMapFile.FirstTicker, resolvedMapFile.FirstDate, symbol.SecurityType, tickerUpperCase, symbol?.ID.Market);
-
-                yield return new DataDownloaderGetParameters(newSymbol, resolution, startDateTime, endDateTime, tickType);
-                yield break;
             }
 
             var yieldMappedSymbol = default(bool);
@@ -196,7 +192,13 @@ namespace QuantConnect.Data.Auxiliary
                 var newEndDateTimeUtc = endDateTime;
                 foreach (var tickerDateRange in mapFile.GetTickerDateRanges(tickerUpperCase))
                 {
-                    var newSymbol = Symbol.Create(mapFile.FirstTicker, mapFile.FirstDate, symbol.SecurityType, tickerUpperCase, symbol?.ID.Market);
+                    var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, symbol?.ID.Market);
+
+                    var newSymbol = new Symbol(sid, tickerUpperCase);
+                    if (symbol.SecurityType == SecurityType.Option)
+                    {
+                        newSymbol = Symbol.CreateCanonicalOption(newSymbol);
+                    }
 
                     startDateTime = tickerDateRange.StartDate;
                     newEndDateTimeUtc = tickerDateRange.EndDate > endDateTime ? endDateTime : tickerDateRange.EndDate;

@@ -19,7 +19,6 @@ using ProtoBuf;
 using Python.Runtime;
 using Newtonsoft.Json;
 using QuantConnect.Securities;
-using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect
 {
@@ -119,27 +118,6 @@ namespace QuantConnect
             }
 
             return new Symbol(sid, alias ?? ticker);
-        }
-
-        /// <summary>
-        /// Creates a new Symbol for custom data. This method allows for the creation of a new Symbol using the first ticker and the first traded date.
-        /// </summary>
-        /// <param name="firstTickerName">The first ticker Name like in <see cref="MapFile"/></param>
-        /// <param name="firstTickerDate">The first ticker Date like in <see cref="MapFile"/></param>
-        /// <param name="securityType">The security type of the symbol</param>
-        /// <param name="alias">The new current symbol for this ticker</param>
-        /// <param name="market">The market name</param>
-        /// <returns>New non-mapped Symbol that contains special value name.</returns>
-        public static Symbol Create(string firstTickerName, DateTime firstTickerDate, SecurityType securityType, string alias, string market)
-        {
-            var sid = SecurityIdentifier.GenerateEquity(firstTickerDate, firstTickerName, market);
-            var symbol = new Symbol(sid, alias);
-
-            return securityType switch
-            {
-                SecurityType.Option => CreateCanonicalOption(symbol),
-                _ => symbol
-            };
         }
 
         /// <summary>
