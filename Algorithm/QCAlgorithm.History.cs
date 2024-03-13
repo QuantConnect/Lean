@@ -854,7 +854,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>
         /// This method will check for Python custom data types in order to call the right Slice.Get dynamic method
         /// </remarks>
-        private IEnumerable<DataDictionary<T>> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests)
+        protected IEnumerable<DataDictionary<T>> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests)
             where T : IBaseData
         {
             var historyRequests = requests.Where(x => x != null).ToList();

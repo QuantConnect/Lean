@@ -670,6 +670,46 @@ namespace QuantConnect.Research
         /// <summary>
         /// Will return the universe selection data and will optionally perform selection
         /// </summary>
+        /// <typeparam name="T1">The universe selection universe data type, for example Fundamentals</typeparam>
+        /// <typeparam name="T2">The selection data type, for example Fundamental</typeparam>
+        /// <param name="start">The start date</param>
+        /// <param name="end">Optionally the end date, will default to today</param>
+        /// <param name="func">Optionally the universe selection function</param>
+        /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
+        public IEnumerable<IEnumerable<T2>> UniverseHistory<T1, T2>(DateTime start, DateTime? end = null, Func<IEnumerable<T2>, IEnumerable<Symbol>> func = null)
+            where T1 : BaseDataCollection
+            where T2 : IBaseData
+        {
+            var universeSymbol = ((BaseDataCollection)typeof(T1).GetBaseDataInstance()).UniverseSymbol();
+
+            var symbols = new[] { universeSymbol };
+            var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, typeof(T1), start, end ?? DateTime.UtcNow.Date);
+            var history = GetDataTypedHistory<BaseDataCollection>(requests).Select(x => x.Values.Single());
+
+            HashSet<Symbol> filteredSymbols = null;
+            foreach (var data in history)
+            {
+                var castedType = data.Data.OfType<T2>();
+
+                if (func != null)
+                {
+                    var selection = func(castedType);
+                    if (!ReferenceEquals(selection, Universe.Unchanged))
+                    {
+                        filteredSymbols = selection.ToHashSet();
+                    }
+                    yield return castedType.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol));
+                }
+                else
+                {
+                    yield return castedType;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Will return the universe selection data and will optionally perform selection
+        /// </summary>
         /// <param name="universe">The universe to fetch the data for</param>
         /// <param name="start">The start date</param>
         /// <param name="end">Optionally the end date, will default to today</param>
@@ -685,14 +725,34 @@ namespace QuantConnect.Research
         /// <param name="universe">The universe to fetch the data for</param>
         /// <param name="start">The start date</param>
         /// <param name="end">Optionally the end date, will default to today</param>
+        /// <param name="func">Optionally the universe selection function</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public PyObject UniverseHistory(PyObject universe, DateTime start, DateTime? end = null)
+        public PyObject UniverseHistory(PyObject universe, DateTime start, DateTime? end = null, PyObject func = null)
         {
             if (universe.TryConvert<Universe>(out var convertedUniverse))
             {
+                if (func != null)
+                {
+                    throw new ArgumentException($"When providing a universe, the selection func argument isn't supported. Please provider a universe or a type and a func");
+                }
                 var filteredUniverseSelectionData = RunUniverseSelection(convertedUniverse, start, end);
 
                 return GetDataFrame(filteredUniverseSelectionData);
+            }
+            // for backwards compatibility
+            if (universe.TryConvert<Type>(out var convertedType) && convertedType.IsAssignableTo(typeof(BaseDataCollection)))
+            {
+                end ??= DateTime.UtcNow.Date;
+                var universeSymbol = ((BaseDataCollection)convertedType.GetBaseDataInstance()).UniverseSymbol();
+                if (func == null)
+                {
+                    return History(universe, universeSymbol, start, end.Value);
+                }
+
+                var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, end.Value);
+                var history = History(requests);
+
+                return GetDataFrame(GetFilteredSlice(history, func), convertedType);
             }
 
             throw new ArgumentException($"Failed to convert given universe {universe}. Please provider a valid {nameof(Universe)}");
@@ -764,6 +824,34 @@ namespace QuantConnect.Research
                 result.SetItem("Treynor Ratio", Convert.ToDouble(stats.TreynorRatio).ToPython());
 
                 return result;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to perform selection on the given data and filter it
+        /// </summary>
+        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func)
+        {
+            HashSet<Symbol> filteredSymbols = null;
+            foreach (var slice in history)
+            {
+                var filteredData = slice.AllData.OfType<BaseDataCollection>();
+                using (Py.GIL())
+                {
+                    using PyObject selection = func(filteredData.SelectMany(baseData => baseData.Data));
+                    if (!selection.TryConvert<object>(out var result) || !ReferenceEquals(result, Universe.Unchanged))
+                    {
+                        filteredSymbols = ((Symbol[])selection.AsManagedObject(typeof(Symbol[]))).ToHashSet();
+                    }
+                }
+                yield return new Slice(slice.Time, filteredData.Where(x => {
+                    if (filteredSymbols == null)
+                    {
+                        return true;
+                    }
+                    x.Data = new List<BaseData>(x.Data.Where(dataPoint => filteredSymbols.Contains(dataPoint.Symbol)));
+                    return true;
+                }), slice.UtcTime);
             }
         }
 
