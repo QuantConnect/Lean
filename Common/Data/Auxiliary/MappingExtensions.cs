@@ -159,13 +159,7 @@ namespace QuantConnect.Data.Auxiliary
                 throw new ArgumentException("The map file provider cannot be null.", nameof(mapFileProvider));
             }
 
-            if (symbol?.SecurityType == SecurityType.Future || !symbol.RequiresMapping())
-            {
-                yield return new DataDownloaderGetParameters(symbol, resolution, startDateTime, endDateTime, tickType);
-                yield break;
-            }
-
-            if (resolution < Resolution.Hour)
+            if (symbol?.SecurityType == SecurityType.Future || !symbol.RequiresMapping() || resolution < Resolution.Hour)
             {
                 yield return new DataDownloaderGetParameters(symbol, resolution, startDateTime, endDateTime, tickType);
                 yield break;
