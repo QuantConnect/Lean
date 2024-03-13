@@ -31,7 +31,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the <see cref="SecurityExchangeHours"/> for this exchange
         /// </summary>
-        public SecurityExchangeHours Hours { get; internal set; }
+        public SecurityExchangeHours Hours { get; private set; }
 
         /// <summary>
         /// Gets the time zone for this exchange

@@ -32,19 +32,19 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class SecurityExchangeHours
     {
-        private readonly HashSet<long> _holidays;
-        private readonly IReadOnlyDictionary<DateTime, TimeSpan> _earlyCloses;
-        private readonly IReadOnlyDictionary<DateTime, TimeSpan> _lateOpens;
+        private HashSet<long> _holidays;
+        private IReadOnlyDictionary<DateTime, TimeSpan> _earlyCloses;
+        private IReadOnlyDictionary<DateTime, TimeSpan> _lateOpens;
 
         // these are listed individually for speed
-        private readonly LocalMarketHours _sunday;
-        private readonly LocalMarketHours _monday;
-        private readonly LocalMarketHours _tuesday;
-        private readonly LocalMarketHours _wednesday;
-        private readonly LocalMarketHours _thursday;
-        private readonly LocalMarketHours _friday;
-        private readonly LocalMarketHours _saturday;
-        private readonly Dictionary<DayOfWeek, LocalMarketHours> _openHoursByDay;
+        private LocalMarketHours _sunday;
+        private LocalMarketHours _monday;
+        private LocalMarketHours _tuesday;
+        private LocalMarketHours _wednesday;
+        private LocalMarketHours _thursday;
+        private LocalMarketHours _friday;
+        private LocalMarketHours _saturday;
+        private Dictionary<DayOfWeek, LocalMarketHours> _openHoursByDay;
         private static List<DayOfWeek> daysOfWeek = new List<DayOfWeek>() {
                 DayOfWeek.Sunday,
                 DayOfWeek.Monday,
@@ -58,7 +58,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the time zone this exchange resides in
         /// </summary>
-        public DateTimeZone TimeZone { get; }
+        public DateTimeZone TimeZone { get; private set; }
 
         /// <summary>
         /// Gets the holidays for the exchange
@@ -94,7 +94,7 @@ namespace QuantConnect.Securities
         /// This does NOT account for extended market hours and only
         /// considers <see cref="MarketHoursState.Market"/>
         /// </summary>
-        public TimeSpan RegularMarketDuration { get; }
+        public TimeSpan RegularMarketDuration { get; private set; }
 
         /// <summary>
         /// Checks whether the market is always open or not
@@ -130,8 +130,14 @@ namespace QuantConnect.Securities
             IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses,
             IReadOnlyDictionary<DateTime, TimeSpan> lateOpens)
         {
+            var holidays = holidayDates.Select(x => x.Date.Ticks).ToHashSet();
+            Initialize(timeZone, holidays, marketHoursForEachDayOfWeek, earlyCloses, lateOpens);
+        }
+
+        private void Initialize(DateTimeZone timeZone, HashSet<long> holidays, Dictionary<DayOfWeek, LocalMarketHours> marketHoursForEachDayOfWeek, IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses, IReadOnlyDictionary<DateTime, TimeSpan> lateOpens)
+        {
             TimeZone = timeZone;
-            _holidays = holidayDates.Select(x => x.Date.Ticks).ToHashSet();
+            _holidays = holidays;
             _earlyCloses = earlyCloses;
             _lateOpens = lateOpens;
             _openHoursByDay = marketHoursForEachDayOfWeek;
@@ -598,6 +604,20 @@ namespace QuantConnect.Securities
             }
 
             return date;
+        }
+
+        /// <summary>
+        /// Sets the exchange hours to be the same as the given exchange hours without changing the reference
+        /// </summary>
+        /// <param name="other">The hours to set</param>
+        internal void Update(SecurityExchangeHours other)
+        {
+            if (other == null)
+            {
+                return;
+            }
+
+            Initialize(other.TimeZone, other._holidays, other._openHoursByDay, other._earlyCloses, other._lateOpens);
         }
     }
 }

@@ -156,7 +156,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             // Start
             handler.SetTime(time);
 
-            finished.Wait();
+            finished.Wait(TimeSpan.FromSeconds(15));
 
             handler.Exit();
 

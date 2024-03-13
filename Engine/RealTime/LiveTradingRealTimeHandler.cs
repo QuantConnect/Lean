@@ -197,7 +197,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 ? SecurityExchangeHours.AlwaysOpen(security.Exchange.TimeZone)
                 : MarketHoursDatabase.GetExchangeHours(security.Symbol.ID.Market, security.Symbol, security.Symbol.ID.SecurityType);
 
-            security.Exchange.Hours = hours;
+            // Use Update method to avoid replacing the reference
+            security.Exchange.Hours.Update(hours);
         }
 
         /// <summary>
