@@ -27,9 +27,8 @@ using QuantConnect.Securities;
 using QuantConnect.Data;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Forex;
-using QuantConnect.Securities.IndexOption;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Securities.FutureOption;
+using QuantConnect.Securities.Cfd;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -111,6 +110,39 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsFalse(result);
             var expectedMessage = "The InteractiveBrokersBrokerageModel does not support MarketOnClose order type. Only supports [Market,MarketOnOpen,Limit,StopMarket,StopLimit,TrailingStop,LimitIfTouched,ComboMarket,ComboLimit,ComboLegLimit,OptionExercise]";
             Assert.AreEqual(expectedMessage, message.Message);
+        }
+
+        [TestCase(AccountType.Cash, 1)]
+        [TestCase(AccountType.Margin, 10)]
+        public void GetsCorrectLeverageForCfds(AccountType accounType, decimal expectedLeverage)
+        {
+            var brokerageModel = new InteractiveBrokersBrokerageModel(accounType);
+            var security = new Cfd(Symbols.DE10YBEUR,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash("USD", 0, 0),
+                SymbolProperties.GetDefault("USD"),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+
+            Assert.AreEqual(expectedLeverage, brokerageModel.GetLeverage(security));
+        }
+
+        [Test]
+        public void CanSubmitCfdOrder()
+        {
+            var security = new Cfd(Symbols.DE10YBEUR,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash("USD", 0, 0),
+                SymbolProperties.GetDefault("USD"),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+            var order = new MarketOrder(security.Symbol, 1, new DateTime(2023, 1, 20));
+
+            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+
+            Assert.IsTrue(canSubmit);
         }
 
         private static List<Security> GetUnsupportedOptions()

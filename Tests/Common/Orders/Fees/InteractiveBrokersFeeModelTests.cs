@@ -23,6 +23,7 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
+using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
@@ -97,6 +98,30 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual(1000 * expectedFee, fee.Value.Amount);
+        }
+
+        [TestCase(10000, 1)] // The calculated fee will be under 1, but the minimum fee is 1
+        [TestCase(70000, 0.00002 * 70000)]
+        [TestCase(100000, 0.00002 * 100000)]
+        public void CalculatesCFDFee(decimal price, decimal expectedFee)
+        {
+            var security = new Cfd(Symbols.DE10YBEUR,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash("USD", 0, 0),
+                SymbolProperties.GetDefault("USD"),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+            security.QuoteCurrency.ConversionRate = 1;
+
+
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price, price));
+
+            var order = new MarketOrder(security.Symbol, 1, DateTime.UtcNow);
+            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(expectedFee, fee.Value.Amount);
         }
 
         [TestCase(OrderType.ComboMarket, 0.01, 250)]
@@ -256,13 +281,15 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 () =>
                 {
                     var tz = TimeZones.NewYork;
-                    var security = new Cfd(
+                    var security = new Crypto(
+                        Symbols.BTCUSD,
                         SecurityExchangeHours.AlwaysOpen(tz),
-                        new Cash("EUR", 0, 0),
-                        new SubscriptionDataConfig(typeof(QuoteBar), Symbols.DE30EUR, Resolution.Minute, tz, tz, true, false, false),
-                        new SymbolProperties("DE30EUR", "EUR", 1, 0.01m, 1m, string.Empty),
+                        new Cash("USD", 0, 0),
+                        new Cash("BTC", 0, 0),
+                        SymbolProperties.GetDefault("USD"),
                         ErrorCurrencyConverter.Instance,
-                        RegisteredSecurityDataTypesProvider.Null
+                        RegisteredSecurityDataTypesProvider.Null,
+                        new SecurityCache()
                     );
                     security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 12000, 12000));
 

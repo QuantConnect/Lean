@@ -18,8 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Util;
 using QuantConnect.Benchmarks;
-using QuantConnect.Data.Shortable;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
@@ -110,6 +108,21 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Gets the brokerage's leverage for the specified security
+        /// </summary>
+        /// <param name="security">The security's whose leverage we seek</param>
+        /// <returns>The leverage for the specified security</returns>
+        public override decimal GetLeverage(Security security)
+        {
+            if (AccountType == AccountType.Cash)
+            {
+                return 1m;
+            }
+
+            return security.Type == SecurityType.Cfd ? 10m : base.GetLeverage(security);
+        }
+
+        /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
         /// </summary>
@@ -147,7 +160,8 @@ namespace QuantConnect.Brokerages
                 security.Type != SecurityType.Future &&
                 security.Type != SecurityType.FutureOption &&
                 security.Type != SecurityType.Index &&
-                security.Type != SecurityType.IndexOption)
+                security.Type != SecurityType.IndexOption &&
+                security.Type != SecurityType.Cfd)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
