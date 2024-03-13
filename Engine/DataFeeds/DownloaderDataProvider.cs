@@ -219,12 +219,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // doesn't support this download request, that's okay
                     continue;
                 }
+                var startDateTimeInExchangeTimeZone = downloaderDataParameter.StartUtc.ConvertFromUtc(exchangeTimeZone);
+                var endDateTimeInExchangeTimeZone = downloaderDataParameter.EndUtc.ConvertFromUtc(exchangeTimeZone);
 
                 var groupedData = downloadedData
                     .Where(baseData =>
                     {
                         // Sometimes, external Downloader provider returns excess data
-                        if (baseData.Time < downloaderDataParameter.StartUtc || baseData.Time > downloaderDataParameter.EndUtc)
+                        if (baseData.Time < startDateTimeInExchangeTimeZone || baseData.Time > endDateTimeInExchangeTimeZone)
                         {
                             return false;
                         }
