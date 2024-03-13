@@ -65,6 +65,9 @@
   // save list of transactions to the specified csv file
   "transaction-log": "",
 
+  // Prefix for Windows reserved filenames
+  "reserved-words-prefix": "@",
+
   // To get your api access token go to quantconnect.com/account
   "job-user-id": "0",
   "api-access-token": "",
