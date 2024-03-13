@@ -46,6 +46,7 @@ namespace QuantConnect.Tests.Common.Util
         public void ToNormalizedPathAndFromNormalizedPathReturnsTheSameNameWhenOSIsNotWindows(string inputName)
         {
             Assert.AreEqual(inputName, FileExtension.ToNormalizedPath(inputName));
+            Assert.AreEqual(inputName, FileExtension.FromNormalizedPath(inputName));
         }
 
         public static object[] ToNormalizedPathReturnsNormalizedPathTestCases =
