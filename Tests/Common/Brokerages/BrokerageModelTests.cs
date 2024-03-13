@@ -572,6 +572,10 @@ class CustomBrokerageModel(DefaultBrokerageModel):
 from AlgorithmImports import *
 
 class CustomShortableProvider:
+    def FeeRate(self, symbol, localTime):
+        raise ValueError(""Pepe"")
+    def RebateRate(self, symbol, localTime):
+        raise ValueError(""Pepe"")
     def ShortableQuantity(self, symbol, localTime):
         raise ValueError(""Pepe"")
 
