@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm to test we can get and trade option contracts for NQX index option
     /// </summary>
-    public class GetIndexOptionContractsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class IndexOptionScaledStrikeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _nqx;
         private HashSet<int> _orderIds = new HashSet<int>();
