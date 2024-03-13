@@ -130,14 +130,8 @@ namespace QuantConnect.Securities
             IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses,
             IReadOnlyDictionary<DateTime, TimeSpan> lateOpens)
         {
-            var holidays = holidayDates.Select(x => x.Date.Ticks).ToHashSet();
-            Initialize(timeZone, holidays, marketHoursForEachDayOfWeek, earlyCloses, lateOpens);
-        }
-
-        private void Initialize(DateTimeZone timeZone, HashSet<long> holidays, Dictionary<DayOfWeek, LocalMarketHours> marketHoursForEachDayOfWeek, IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses, IReadOnlyDictionary<DateTime, TimeSpan> lateOpens)
-        {
             TimeZone = timeZone;
-            _holidays = holidays;
+            _holidays = holidayDates.Select(x => x.Date.Ticks).ToHashSet();
             _earlyCloses = earlyCloses;
             _lateOpens = lateOpens;
             _openHoursByDay = marketHoursForEachDayOfWeek;
@@ -617,7 +611,20 @@ namespace QuantConnect.Securities
                 return;
             }
 
-            Initialize(other.TimeZone, other._holidays, other._openHoursByDay, other._earlyCloses, other._lateOpens);
+            _holidays = other._holidays;
+            _earlyCloses = other._earlyCloses;
+            _lateOpens = other._lateOpens;
+            _sunday = other._sunday;
+            _monday = other._monday;
+            _tuesday = other._tuesday;
+            _wednesday = other._wednesday;
+            _thursday = other._thursday;
+            _friday = other._friday;
+            _saturday = other._saturday;
+            _openHoursByDay = other._openHoursByDay;
+            TimeZone = other.TimeZone;
+            RegularMarketDuration = other.RegularMarketDuration;
+            IsMarketAlwaysOpen = other.IsMarketAlwaysOpen;
         }
     }
 }
