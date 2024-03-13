@@ -156,7 +156,11 @@ namespace QuantConnect.Securities.Option
             // inferring ratios of the option and its underlying to get underlying security value
             var multiplierRatio = underlying.SymbolProperties.ContractMultiplier / optionProperties.ContractMultiplier;
             var quantityRatio = optionProperties.ContractUnitOfTrade;
-            var priceRatio = underlying.Close / (absValue / quantityRatio);
+
+            // Some options are based on a fraction of their underlying security value, such as NQX for example. Thus,
+            // for them we need to scale the underlying value so that the later comparisons made with the option's strike
+            // value are correct
+            var priceRatio = (underlying.Close / option.SymbolProperties.StrikeMultiplier) / (absValue / quantityRatio);
             var underlyingValueRatio = multiplierRatio * quantityRatio * priceRatio;
 
             // calculating underlying security value less out-of-the-money amount

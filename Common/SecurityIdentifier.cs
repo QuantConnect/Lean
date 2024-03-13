@@ -222,7 +222,7 @@ namespace QuantConnect
 
         /// <summary>
         /// Gets the option strike price. This only applies to SecurityType.Option
-        /// and will thrown anexception if accessed otherwse.
+        /// and will thrown anexception if accessed otherwise.
         /// </summary>
         public decimal StrikePrice
         {
