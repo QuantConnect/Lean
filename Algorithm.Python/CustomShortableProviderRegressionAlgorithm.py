@@ -19,7 +19,7 @@ from AlgorithmImports import *
 class CustomShortableProviderRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetCash(1000000);
+        self.SetCash(10000000);
         self.SetStartDate(2013,10,4)
         self.SetEndDate(2013,10,6)
         self.spy = self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily)

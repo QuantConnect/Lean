@@ -19,7 +19,7 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2014, 6, 5)
         self.SetEndDate(2014, 6, 7)
-        self.SetCash(1000000)
+        self.SetCash(100000)
 
         equity = self.AddEquity("AAPL", Resolution.Daily).Symbol
         option = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 650, datetime(2014, 6, 21))
