@@ -33,11 +33,6 @@ namespace QuantConnect.Data.UniverseSelection
         private readonly Func<DateTime, IEnumerable<Symbol>> _selector;
 
         /// <summary>
-        /// Gets the settings used for subscriptons added for this universe
-        /// </summary>
-        public override UniverseSettings UniverseSettings { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="ScheduledUniverse"/> class
         /// </summary>
         /// <param name="timeZone">The time zone the date/time rules are in</param>
@@ -81,7 +76,7 @@ namespace QuantConnect.Data.UniverseSelection
             selector.TryConvertToDelegate(out func);
             _dateRule = dateRule;
             _timeRule = timeRule;
-            _selector = func.ConvertToUniverseSelectionSymbolDelegate();
+            _selector = func.ConvertSelectionSymbolDelegate();
             UniverseSettings = settings;
         }
 

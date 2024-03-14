@@ -39,7 +39,7 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.26" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.28" />
     <PackageReference Include="Common.Logging" Version="3.4.1" />
     <PackageReference Include="Common.Logging.Core" Version="3.4.1" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.6.0" />

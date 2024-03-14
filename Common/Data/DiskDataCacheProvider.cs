@@ -127,7 +127,7 @@ namespace QuantConnect.Data
         {
             return _synchronizer.Execute(zipFile, () =>
             {
-                using var stream = new FileStream(zipFile, FileMode.Open, FileAccess.Read);
+                using var stream = new FileStream(FileExtension.ToNormalizedPath(zipFile), FileMode.Open, FileAccess.Read);
                 return Compression.GetZipEntryFileNames(stream).ToList();
             });
         }

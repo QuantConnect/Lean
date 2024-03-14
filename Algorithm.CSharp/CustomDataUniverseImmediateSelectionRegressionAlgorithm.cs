@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse<StockDataSource>("my-stock-data-source", stockDataSource =>
             {
                 _selected = true;
-                return stockDataSource.SelectMany(x => x.Symbols);
+                return stockDataSource.OfType<StockDataSource>().SelectMany(x => x.Symbols);
             });
         }
 
@@ -168,7 +168,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "0"},
+            {"Total Orders", "0"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},

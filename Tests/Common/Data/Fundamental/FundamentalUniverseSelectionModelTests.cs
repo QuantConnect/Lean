@@ -14,6 +14,7 @@
 */
 
 using NUnit.Framework;
+using QuantConnect.Statistics;
 using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Data.Fundamental
@@ -26,7 +27,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("FundamentalUniverseSelectionAlgorithm",
                 new Dictionary<string, string> {
-                    {"Total Trades", "2"},
+                    {PerformanceMetrics.TotalOrders, "2"},
                     {"Average Win", "0%"},
                     {"Average Loss", "0%"},
                     {"Compounding Annual Return", "-0.223%"},

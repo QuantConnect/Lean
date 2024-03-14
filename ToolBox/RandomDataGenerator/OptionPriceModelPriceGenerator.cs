@@ -66,7 +66,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     _option,
                     null,
                     OptionContract.Create(
-                        _option.Symbol,
                         _option.Symbol.Underlying,
                         referenceDate,
                         _option,

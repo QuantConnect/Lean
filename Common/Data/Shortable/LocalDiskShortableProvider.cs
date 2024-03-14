@@ -18,8 +18,8 @@ using System.IO;
 using QuantConnect.Util;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
-using QuantConnect.Configuration;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace QuantConnect.Data.Shortable
 {
@@ -35,7 +35,7 @@ namespace QuantConnect.Data.Shortable
 
         private string _ticker;
         private bool _scheduledCleanup;
-        private Dictionary<DateTime, long> _shortableQuantityPerDate;
+        private Dictionary<DateTime, ShortableData> _shortableDataPerDate;
 
         /// <summary>
         /// The short availability provider
@@ -52,6 +52,39 @@ namespace QuantConnect.Data.Shortable
         }
 
         /// <summary>
+        /// Gets interest rate charged on borrowed shares for a given asset.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup fee rate</param>
+        /// <param name="localTime">Time of the algorithm</param>
+        /// <returns>Fee rate. Zero if the data for the brokerage/date does not exist.</returns>
+        public decimal FeeRate(Symbol symbol, DateTime localTime)
+        {
+            if (symbol != null && GetCacheData(symbol).TryGetValue(localTime.Date, out var result))
+            {
+                return result.FeeRate;
+            }
+            // Any missing entry will be considered to be zero.
+            return 0m;
+        }
+
+        /// <summary>
+        /// Gets the Fed funds or other currency-relevant benchmark rate minus the interest rate charged on borrowed shares for a given asset.
+        /// E.g.: Interest rate - borrow fee rate = borrow rebate rate: 5.32% - 0.25% = 5.07%.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup rebate rate</param>
+        /// <param name="localTime">Time of the algorithm</param>
+        /// <returns>Rebate fee. Zero if the data for the brokerage/date does not exist.</returns>
+        public decimal RebateRate(Symbol symbol, DateTime localTime)
+        {
+            if (symbol != null && GetCacheData(symbol).TryGetValue(localTime.Date, out var result))
+            {
+                return result.RebateFee;
+            }
+            // Any missing entry will be considered to be zero.
+            return 0m;
+        }
+
+        /// <summary>
         /// Gets the quantity shortable for the Symbol at the given date.
         /// </summary>
         /// <param name="symbol">Symbol to lookup shortable quantity</param>
@@ -59,22 +92,21 @@ namespace QuantConnect.Data.Shortable
         /// <returns>Quantity shortable. Null if the data for the brokerage/date does not exist.</returns>
         public long? ShortableQuantity(Symbol symbol, DateTime localTime)
         {
-            var shortableQuantityPerDate = GetCacheData(symbol);
-            if (!shortableQuantityPerDate.TryGetValue(localTime.Date, out var result))
+            if (symbol != null && GetCacheData(symbol).TryGetValue(localTime.Date, out var result))
             {
-                // Any missing entry will be considered to be Shortable.
-                return null;
+                return result.ShortableQuantity;
             }
-            return result;
+            // Any missing entry will be considered to be Shortable.
+            return null;
         }
 
         /// <summary>
         /// We cache data per ticker
         /// </summary>
         /// <param name="symbol">The requested symbol</param>
-        private Dictionary<DateTime, long> GetCacheData(Symbol symbol)
+        private Dictionary<DateTime, ShortableData> GetCacheData(Symbol symbol)
         {
-            var result = _shortableQuantityPerDate;
+            var result = _shortableDataPerDate;
             if (_ticker == symbol.Value)
             {
                 return result;
@@ -89,7 +121,7 @@ namespace QuantConnect.Data.Shortable
 
             // create a new collection
             _ticker = symbol.Value;
-            result = _shortableQuantityPerDate = new();
+            result = _shortableDataPerDate = new();
 
             // Implicitly trusts that Symbol.Value has been mapped and updated to the latest ticker
             var shortableSymbolFile = Path.Combine(Globals.DataFolder, symbol.SecurityType.SecurityTypeToLower(), symbol.ID.Market,
@@ -102,10 +134,15 @@ namespace QuantConnect.Data.Shortable
                     // ignore empty or comment lines
                     continue;
                 }
+                // Data example. The rates, if available, are expressed in percentage.
+                // 20201221,2000,5.0700,0.2500
                 var csv = line.Split(',');
                 var date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
-                var quantity = Parse.Long(csv[1]);
-                result[date] = quantity;
+                var lenght = csv.Length;
+                var shortableQuantity = csv[1].IfNotNullOrEmpty(s => long.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture));
+                var rebateRate = csv.Length > 2 ? csv[2].IfNotNullOrEmpty(s => decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)) : 0;
+                var feeRate = csv.Length > 3 ? csv[3].IfNotNullOrEmpty(s => decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)) : 0;
+                result[date] = new ShortableData(shortableQuantity, rebateRate / 100, feeRate / 100);
             }
 
             return result;
@@ -124,10 +161,12 @@ namespace QuantConnect.Data.Shortable
             {
                 // create new instances so we don't need to worry about locks
                 _ticker = null;
-                _shortableQuantityPerDate = new();
+                _shortableDataPerDate = new();
 
                 ClearCache();
             });
         }
+
+        protected record ShortableData(long? ShortableQuantity, decimal RebateFee, decimal FeeRate);
     }
 }

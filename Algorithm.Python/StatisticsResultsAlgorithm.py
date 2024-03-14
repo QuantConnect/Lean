@@ -58,7 +58,7 @@ class StatisticsResultsAlgorithm(QCAlgorithm):
             self.Debug(f"\nStatistics after fill:\n\t{statisticsStr}")
 
             # Access a single statistic
-            self.Log(f"Total trades so far: {statistics[PerformanceMetrics.TotalTrades]}")
+            self.Log(f"Total trades so far: {statistics[PerformanceMetrics.TotalOrders]}")
             self.Log(f"Sharpe Ratio: {statistics[PerformanceMetrics.SharpeRatio]}")
 
             # --------

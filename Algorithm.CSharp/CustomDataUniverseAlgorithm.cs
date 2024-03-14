@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse<NyseTopGainers>("universe-nyse-top-gainers", Resolution.Daily, data =>
             {
                 // define our selection criteria
-                return from d in data
+                return from NyseTopGainers d in data
                        // pick top 2 gainers to bet against
                        where d.TopGainersRank <= 2
                        select d.Symbol;

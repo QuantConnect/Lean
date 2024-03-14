@@ -38,8 +38,19 @@ class CustomShortableProviderRegressionAlgorithm(QCAlgorithm):
         orderQuantity = self.Transactions.GetOrderById(self.orderId).Quantity
         if orderQuantity != -1001:
             raise Exception("Quantity of order " + str(_orderId) + " should be " + str(-1001)+", but was {orderQuantity}")
+        
+        fee_rate = self.spy.ShortableProvider.FeeRate(self.spy.Symbol, self.Time)
+        if fee_rate != 0.0025:
+            raise Exception(f"Fee rate should be 0.0025, but was {fee_rate}")
+        rebate_rate = self.spy.ShortableProvider.RebateRate(self.spy.Symbol, self.Time)
+        if rebate_rate != 0.0507:
+            raise Exception(f"Rebate rate should be 0.0507, but was {rebate_rate}")
 
 class CustomShortableProvider(NullShortableProvider):
+    def FeeRate(self, symbol: Symbol, localTime: DateTime):
+        return 0.0025
+    def RebateRate(self, symbol: Symbol, localTime: DateTime):
+        return 0.0507
     def ShortableQuantity(self, symbol: Symbol, localTime: DateTime):
         if localTime < datetime(2013,10,5):
             return 10

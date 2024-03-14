@@ -119,11 +119,11 @@ namespace QuantConnect.Research
                 Config.Reset();
 
                 // Create our handlers with our composer instance
-                var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer, researchMode: true);
                 var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
-
                 // init the API
                 systemHandlers.Initialize();
+                var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer, researchMode: true);
+;
 
                 var algorithmPacket = new BacktestNodePacket
                 {
@@ -426,7 +426,7 @@ namespace QuantConnect.Research
                     }
                 }
 
-                var optionFilterUniverse = new OptionFilterUniverse();
+                var optionFilterUniverse = new OptionFilterUniverse(option);
                 var distinctSymbols = allSymbols.Distinct();
                 symbols = base.History(symbol.Underlying, start, end.Value, resolution)
                     .SelectMany(x =>
@@ -680,19 +680,21 @@ namespace QuantConnect.Research
             where T1 : BaseDataCollection
             where T2 : IBaseData
         {
-            end ??= DateTime.UtcNow.Date;
-            var history = History<T1>(Enumerable.Empty<Symbol>(), start, end.Value);
+            var universeSymbol = ((BaseDataCollection)typeof(T1).GetBaseDataInstance()).UniverseSymbol();
+
+            var symbols = new[] { universeSymbol };
+            var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, typeof(T1), start, end ?? DateTime.UtcNow.Date);
+            var history = GetDataTypedHistory<BaseDataCollection>(requests).Select(x => x.Values.Single());
 
             HashSet<Symbol> filteredSymbols = null;
-            foreach (var dataPoints in history)
+            foreach (var data in history)
             {
-                var data = dataPoints.Values.Single();
                 var castedType = data.Data.OfType<T2>();
 
                 if (func != null)
                 {
                     var selection = func(castedType);
-                    if(!ReferenceEquals(selection, Universe.Unchanged))
+                    if (!ReferenceEquals(selection, Universe.Unchanged))
                     {
                         filteredSymbols = selection.ToHashSet();
                     }
@@ -708,29 +710,52 @@ namespace QuantConnect.Research
         /// <summary>
         /// Will return the universe selection data and will optionally perform selection
         /// </summary>
-        /// <param name="type">The universe selection universe data type, for example Fundamentals</param>
+        /// <param name="universe">The universe to fetch the data for</param>
+        /// <param name="start">The start date</param>
+        /// <param name="end">Optionally the end date, will default to today</param>
+        /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
+        public IEnumerable<IEnumerable<BaseData>> UniverseHistory(Universe universe, DateTime start, DateTime? end = null)
+        {
+            return RunUniverseSelection(universe, start, end);
+        }
+
+        /// <summary>
+        /// Will return the universe selection data and will optionally perform selection
+        /// </summary>
+        /// <param name="universe">The universe to fetch the data for</param>
         /// <param name="start">The start date</param>
         /// <param name="end">Optionally the end date, will default to today</param>
         /// <param name="func">Optionally the universe selection function</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public PyObject UniverseHistory(PyObject type, DateTime start, DateTime? end = null, PyObject func = null)
+        public PyObject UniverseHistory(PyObject universe, DateTime start, DateTime? end = null, PyObject func = null)
         {
-            end ??= DateTime.UtcNow.Date;
-            if (func == null)
+            if (universe.TryConvert<Universe>(out var convertedUniverse))
             {
-                return History(type, start, end.Value);
-            }
+                if (func != null)
+                {
+                    throw new ArgumentException($"When providing a universe, the selection func argument isn't supported. Please provider a universe or a type and a func");
+                }
+                var filteredUniverseSelectionData = RunUniverseSelection(convertedUniverse, start, end);
 
-            if (type.TryConvert<Type>(out var convertedType))
+                return GetDataFrame(filteredUniverseSelectionData);
+            }
+            // for backwards compatibility
+            if (universe.TryConvert<Type>(out var convertedType) && convertedType.IsAssignableTo(typeof(BaseDataCollection)))
             {
-                var requests = CreateDateRangeHistoryRequests(Enumerable.Empty<Symbol>(), convertedType, start, end.Value);
-                var history = History(requests).ToList();
+                end ??= DateTime.UtcNow.Date;
+                var universeSymbol = ((BaseDataCollection)convertedType.GetBaseDataInstance()).UniverseSymbol();
+                if (func == null)
+                {
+                    return History(universe, universeSymbol, start, end.Value);
+                }
+
+                var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, end.Value);
+                var history = History(requests);
 
                 return GetDataFrame(GetFilteredSlice(history, func), convertedType);
             }
 
-            throw new ArgumentException($"Failed to convert given universe selection data type {type}. " +
-                $"Please provider a valid {nameof(BaseDataCollection)} inherited data type");
+            throw new ArgumentException($"Failed to convert given universe {universe}. Please provider a valid {nameof(Universe)}");
         }
 
         /// <summary>
@@ -827,6 +852,27 @@ namespace QuantConnect.Research
                     x.Data = new List<BaseData>(x.Data.Where(dataPoint => filteredSymbols.Contains(dataPoint.Symbol)));
                     return true;
                 }), slice.UtcTime);
+            }
+        }
+
+        /// <summary>
+        /// Helper method to perform selection on the given data and filter it using the given universe
+        /// </summary>
+        private IEnumerable<BaseDataCollection> RunUniverseSelection(Universe universe, DateTime start, DateTime? end = null)
+        {
+            var history = History(universe, start, end ?? DateTime.UtcNow.Date);
+
+            HashSet<Symbol> filteredSymbols = null;
+            foreach (var dataPoint in history)
+            {
+                var utcTime = dataPoint.EndTime.ConvertToUtc(universe.Configuration.ExchangeTimeZone);
+                var selection = universe.SelectSymbols(utcTime, dataPoint);
+                if (!ReferenceEquals(selection, Universe.Unchanged))
+                {
+                    filteredSymbols = selection.ToHashSet();
+                }
+                dataPoint.Data = dataPoint.Data.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol)).ToList();
+                yield return dataPoint;
             }
         }
 
