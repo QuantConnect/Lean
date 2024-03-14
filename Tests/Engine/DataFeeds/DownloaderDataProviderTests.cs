@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         var count = 0;
                         while (count++ < 10)
                         {
-                            var requestSymbol = Symbol.Create($"TEST{count + Math.Pow(9, myLockId)}", SecurityType.Equity, Market.USA);
+                            var requestSymbol = Symbol.Create($"TEST{count + Math.Pow(10, myLockId)}", SecurityType.Equity, Market.USA);
                             var path = LeanData.GenerateZipFilePath(Globals.DataFolder, requestSymbol, date, Resolution.Daily, TickType.Trade);
                             // we will get null back because the data is stored to another path, the 'dataSymbol' path which is read bellow
                             Assert.IsNull(dataProvider.Fetch(path));
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var data = QuantConnect.Compression.Unzip(actualPath).Single();
 
             // the data was merged
-            Assert.AreEqual(84, data.Value.Count);
+            Assert.AreEqual(66, data.Value.Count);
         }
 
         [Test]
