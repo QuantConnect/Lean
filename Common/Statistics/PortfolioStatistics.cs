@@ -198,6 +198,9 @@ namespace QuantConnect.Statistics
             int? winCount = null,
             int? lossCount = null)
         {
+            StartingEquity = startingCapital;
+            EndingEquity = equity.LastOrDefault().Value;
+
             if (portfolioTurnover.Count > 0)
             {
                 PortfolioTurnover = portfolioTurnover.Select(kvp => kvp.Value).Average();
@@ -250,9 +253,6 @@ namespace QuantConnect.Statistics
             WinRate = totalTrades == 0 ? 0 : (decimal) totalWins / totalTrades;
             LossRate = totalTrades == 0 ? 0 : (decimal) totalLosses / totalTrades;
             Expectancy = WinRate * ProfitLossRatio - LossRate;
-
-            StartingEquity = startingCapital;
-            EndingEquity = equity.LastOrDefault().Value;
 
             if (startingCapital != 0)
             {
