@@ -1,100 +1,60 @@
-﻿/*
- * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
- * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
-using System;
+﻿using System;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
-    /// <summary>
-    /// The AverageDailyRange indicator calculates the average price range of a security over a specific period.
-    /// </summary>
     public class AverageDailyRange : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private readonly int _period;
-        private readonly RollingWindow<decimal> _dailyRanges;
+        private readonly IndicatorBase<IndicatorDataPoint> _smoother;
 
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => _dailyRanges.IsReady;
+        public IndicatorBase<IBaseDataBar> DailyRange { get; }
 
-        /// <summary>
-        /// Gets the required warm-up period in data points for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod => _period;
+        public override bool IsReady => _smoother.IsReady;
 
-        /// <summary>
-        /// Creates a new instance of the AverageDailyRange indicator with the specified period.
-        /// </summary>
-        /// <param name="name">The name of the indicator</param>
-        /// <param name="period">The period over which to calculate the average daily range</param>
-        public AverageDailyRange(string name, int period)
+        public int WarmUpPeriod { get; }
+
+        public AverageDailyRange(string name, int period, MovingAverageType movingAverageType = MovingAverageType.Wilders)
             : base(name)
         {
-            _period = period;
-            _dailyRanges = new RollingWindow<decimal>(period);
+            WarmUpPeriod = period;
 
-            // Warm up the indicator by populating the rolling window with zeros
-            for (int i = 0; i < period; i++)
+            _smoother = movingAverageType.AsIndicator($"{name}_{movingAverageType}", period);
+
+            DailyRange = new FunctionalIndicator<IBaseDataBar>(name + "_DailyRange", currentBar =>
             {
-                _dailyRanges.Add(0m);
+                var nextValue = ComputeDailyRange(currentBar);
+                return nextValue;
             }
+            , dailyRangeIndicator => dailyRangeIndicator.Samples >= 1
+            );
         }
 
-        /// <summary>
-        /// Creates a new instance of the AverageDailyRange indicator with the specified period.
-        /// </summary>
-        /// <param name="period">The period over which to calculate the average daily range</param>
-        public AverageDailyRange(int period)
-            : this($"ADR({period})", period)
+        public AverageDailyRange(int period, MovingAverageType movingAverageType = MovingAverageType.Wilders)
+            : this($"ADR({period})", period, movingAverageType)
         {
         }
 
-        /// <summary>
-        /// Computes the next value of the AverageDailyRange indicator.
-        /// </summary>
-        /// <param name="input">The input bar</param>
-        /// <returns>The next value of the indicator</returns>
+        public static decimal ComputeDailyRange(IBaseDataBar current)
+        {
+            return current.High - current.Low;
+        }
+
         protected override decimal ComputeNextValue(IBaseDataBar input)
-{
-    // Calculate the daily range for the current bar
-    decimal dailyRange = input.High - input.Low;
+        {
+            DailyRange.Update(input);
+            _smoother.Update(input.Time, DailyRange.Current.Value);
 
-    // Add the daily range to the rolling window
-    _dailyRanges.Add(dailyRange);
+            // Round off the ADR value to the desired precision
+            decimal roundedAverageDailyRange = Math.Round(_smoother.Current.Value, 6);
 
-    // Compute the sum of the daily ranges in the rolling window
-    decimal sum = 0m;
-    foreach (var range in _dailyRanges)
-    {
-        sum += range;
-    }
+            return roundedAverageDailyRange;
+        }
 
-    // Compute the average daily range over the specified period
-    decimal averageDailyRange = sum / _dailyRanges.Count;
-
-    return averageDailyRange;
-}
-
-public override void Reset()
-{
-    // Reset the rolling window and base class
-    _dailyRanges.Reset();
-    base.Reset();
-}
-
+        public override void Reset()
+        {
+            _smoother.Reset();
+            DailyRange.Reset();
+            base.Reset();
+        }
     }
 }
