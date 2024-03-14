@@ -49,7 +49,7 @@ class ObjectStoreExampleAlgorithm(QCAlgorithm):
 
             history = pd.read_csv(StringIO(values), header=None, index_col=0, squeeze=True)
             history.index = pd.to_datetime(history.index)
-            for time, close in history.iteritems():
+            for time, close in history.items():
                 self.SPY_Close.Update(time, close)
 
         else:
@@ -59,7 +59,7 @@ class ObjectStoreExampleAlgorithm(QCAlgorithm):
             # we're pulling the last year's worth of SPY daily trade bars to fee into our indicators
             history = self.History(self.SPY, timedelta(365), Resolution.Daily).close.unstack(0).squeeze()
 
-            for time, close in history.iteritems():
+            for time, close in history.items():
                 self.SPY_Close.Update(time, close)
 
             # save our warm up data so next time we don't need to issue the history request
