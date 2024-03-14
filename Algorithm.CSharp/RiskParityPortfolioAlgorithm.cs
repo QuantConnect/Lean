@@ -74,7 +74,7 @@ namespace QuantConnect.DataLibrary.Tests
             {"Drawdown", "4.900%"},
             {"Expectancy", "-0.273"},
             {"Starting Equity", "100000"},
-            {"Ending Equity", "100509.815"},
+            {"Ending Equity", "100509.82"},
             {"Net Profit", "0.510%"},
             {"Sharpe Ratio", "0.265"},
             {"Sortino Ratio", "0.371"},

@@ -250,7 +250,8 @@ namespace QuantConnect.Statistics
             WinRate = totalTrades == 0 ? 0 : (decimal) totalWins / totalTrades;
             LossRate = totalTrades == 0 ? 0 : (decimal) totalLosses / totalTrades;
             Expectancy = WinRate * ProfitLossRatio - LossRate;
-            StartingEquity = equity.FirstOrDefault().Value;
+
+            StartingEquity = startingCapital;
             EndingEquity = equity.LastOrDefault().Value;
 
             if (startingCapital != 0)
