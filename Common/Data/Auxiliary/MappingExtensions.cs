@@ -144,19 +144,14 @@ namespace QuantConnect.Data.Auxiliary
         /// <exception cref="ArgumentException">Throw if <paramref name="mapFileProvider"/> is null.</exception>
         public static IEnumerable<SymbolDateRange> RetrieveAllMappedSymbolInDateRange(this IMapFileProvider mapFileProvider, Symbol symbol)
         {
-            if (mapFileProvider == null)
+            if (mapFileProvider == null || symbol == null)
             {
-                throw new ArgumentException("The map file provider cannot be null.", nameof(mapFileProvider));
+                throw new ArgumentException($"The map file provider and symbol cannot be null. {(mapFileProvider == null ? nameof(mapFileProvider) : nameof(symbol))}");
             }
 
             var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
 
-            var tickerUpperCase = symbol?.Value.ToUpperInvariant();
-            // Sometime Symbol is started from special sign.
-            if (!Char.IsLetter(symbol.Value[0]))
-            {
-                tickerUpperCase = tickerUpperCase[1..];
-            }
+            var tickerUpperCase = symbol.HasUnderlying ? symbol.Underlying.Value.ToUpperInvariant() : symbol.Value.ToUpperInvariant();
 
             var isOptionSymbol = symbol.SecurityType == SecurityType.Option;
             foreach (var mapFile in mapFileResolver)
