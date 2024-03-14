@@ -189,6 +189,7 @@ namespace QuantConnect.Securities.Option
             SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));
             Underlying = underlying;
             OptionAssignmentModel = new DefaultOptionAssignmentModel();
+            ScaledStrikePrice = StrikePrice * SymbolProperties.StrikeMultiplier;
         }
 
         // save off a strongly typed version of symbol properties
@@ -208,6 +209,15 @@ namespace QuantConnect.Securities.Option
         /// Gets the strike price
         /// </summary>
         public decimal StrikePrice => Symbol.ID.StrikePrice;
+
+        /// <summary>
+        /// Gets the strike price multiplied by the strike multiplier
+        /// </summary>
+        public decimal ScaledStrikePrice
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Gets the expiration date
@@ -329,7 +339,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public decimal GetIntrinsicValue(decimal underlyingPrice)
         {
-            return OptionPayoff.GetIntrinsicValue(underlyingPrice, StrikePrice, Right);
+            return OptionPayoff.GetIntrinsicValue(underlyingPrice, ScaledStrikePrice, Right);
         }
 
         /// <summary>
@@ -339,7 +349,7 @@ namespace QuantConnect.Securities.Option
         /// <returns></returns>
         public decimal GetPayOff(decimal underlyingPrice)
         {
-            return OptionPayoff.GetPayOff(underlyingPrice, StrikePrice, Right);
+            return OptionPayoff.GetPayOff(underlyingPrice, ScaledStrikePrice, Right);
         }
 
         /// <summary>
@@ -349,7 +359,7 @@ namespace QuantConnect.Securities.Option
         /// <returns></returns>
         public decimal OutOfTheMoneyAmount(decimal underlyingPrice)
         {
-            return Math.Max(0, Right == OptionRight.Call ? StrikePrice - underlyingPrice : underlyingPrice - StrikePrice);
+            return Math.Max(0, Right == OptionRight.Call ? ScaledStrikePrice - underlyingPrice : underlyingPrice - ScaledStrikePrice);
         }
 
         /// <summary>

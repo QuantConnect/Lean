@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using QuantConnect.Data.Custom.IconicTypes;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 
@@ -360,6 +361,12 @@ namespace QuantConnect.Data
         /// <remarks>Supports both C# and Python use cases</remarks>
         protected dynamic GetImpl(Type type, Slice instance)
         {
+            if (type == typeof(Fundamentals))
+            {
+                // backwards compatibility for users doing a get of fundamentals type
+                type = typeof(FundamentalUniverse);
+            }
+
             if (instance._dataByType == null)
             {
                 // for performance we only really create this collection if someone used it

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
@@ -21,14 +22,20 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Lean fundamentals universe data class
     /// </summary>
-    public class Fundamentals : BaseDataCollection
+    [Obsolete("'Fundamentals' was renamed to 'FundamentalUniverse'")]
+    public class Fundamentals : FundamentalUniverse { }
+
+    /// <summary>
+    /// Lean fundamentals universe data class
+    /// </summary>
+    public class FundamentalUniverse : BaseDataCollection
     {
         private static readonly Fundamental _factory = new();
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public Fundamentals()
+        public FundamentalUniverse()
         {
         }
 
@@ -37,7 +44,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="time">The current time</param>
         /// <param name="symbol">The associated symbol</param>
-        public Fundamentals(DateTime time, Symbol symbol) : base(time, symbol)
+        public FundamentalUniverse(DateTime time, Symbol symbol) : base(time, symbol)
         {
         }
 
@@ -78,7 +85,7 @@ namespace QuantConnect.Data.Fundamental
         /// <returns>The cloned instance</returns>
         public override BaseData Clone()
         {
-            return new Fundamentals(Time, Symbol) { Data = Data, EndTime = EndTime };
+            return new FundamentalUniverse(Time, Symbol) { Data = Data, EndTime = EndTime };
         }
 
         /// <summary>
@@ -89,6 +96,39 @@ namespace QuantConnect.Data.Fundamental
         public override Resolution DefaultResolution()
         {
             return Resolution.Daily;
+        }
+
+        /// <summary>
+        /// Creates the universe symbol for the target market
+        /// </summary>
+        /// <returns>The universe symbol to use</returns>
+        public override Symbol UniverseSymbol(string market = null)
+        {
+            market ??= QuantConnect.Market.USA;
+            var ticker = $"{GetType().Name}-{market}-{Guid.NewGuid()}";
+            return Symbol.Create(ticker, SecurityType.Equity, market, baseDataType: GetType());
+        }
+
+        /// <summary>
+        /// Creates a new fundamental universe for the USA market
+        /// </summary>
+        /// <param name="selector">The selector function</param>
+        /// <param name="universeSettings">The universe settings to use, will default to algorithms if not provided</param>
+        /// <returns>A configured new universe instance</returns>
+        public static FundamentalUniverseFactory USA(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector, UniverseSettings universeSettings = null)
+        {
+            return new FundamentalUniverseFactory(QuantConnect.Market.USA, universeSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new fundamental universe for the USA market
+        /// </summary>
+        /// <param name="selector">The selector function</param>
+        /// <param name="universeSettings">The universe settings to use, will default to algorithms if not provided</param>
+        /// <returns>A configured new universe instance</returns>
+        public static FundamentalUniverseFactory USA(Func<IEnumerable<Fundamental>, object> selector, UniverseSettings universeSettings = null)
+        {
+            return new FundamentalUniverseFactory(QuantConnect.Market.USA, universeSettings, selector);
         }
     }
 }

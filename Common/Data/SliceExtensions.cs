@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -47,6 +48,21 @@ namespace QuantConnect.Data
         public static IEnumerable<Ticks> Ticks(this IEnumerable<Slice> slices)
         {
             return slices.Where(x => x.Ticks.Count > 0).Select(x => x.Ticks);
+        }
+
+        /// <summary>
+        /// Gets the data dictionaries or points of the requested type in each slice
+        /// </summary>
+        /// <param name="slices">The enumerable of slice</param>
+        /// <param name="type">Data type of the data that will be fetched</param>
+        /// <returns>An enumerable of data dictionary or data point of the requested type</returns>
+        public static IEnumerable<DataDictionary<BaseDataCollection>> GetUniverseData(this IEnumerable<Slice> slices)
+        {
+            return slices.SelectMany(x => x.AllData).Select(x =>
+            {
+                // we wrap the universe data collection into a data dictionary so it fits the api pattern
+                return new DataDictionary<BaseDataCollection>(new[] { (BaseDataCollection)x }, (y) => y.Symbol);
+            });
         }
 
         /// <summary>

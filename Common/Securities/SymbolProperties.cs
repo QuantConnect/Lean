@@ -94,9 +94,20 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Scale factor for option's strike price. For some options, such as NQX, the strike price
+        /// is based on a fraction of the underlying, thus this paramater scales the strike price so
+        /// that it can be used in comparation with the underlying such as
+        /// in <see cref="OptionFilterUniverse.Strikes(int, int)"/>
+        /// </summary>
+        public decimal StrikeMultiplier
+        {
+            get;
+        }
+
+        /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker, decimal? minimumOrderSize = null, decimal priceMagnifier = 1)
+        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker, decimal? minimumOrderSize = null, decimal priceMagnifier = 1, decimal strikeMultiplier = 1)
         {
             Description = description;
             QuoteCurrency = quoteCurrency;
@@ -116,6 +127,12 @@ namespace QuantConnect.Securities
             if (PriceMagnifier <= 0)
             {
                 throw new ArgumentException(Messages.SymbolProperties.InvalidPriceMagnifier);
+            }
+
+            StrikeMultiplier = strikeMultiplier;
+            if (strikeMultiplier <= 0)
+            {
+                throw new ArgumentException(Messages.SymbolProperties.InvalidStrikeMultiplier);
             }
         }
 

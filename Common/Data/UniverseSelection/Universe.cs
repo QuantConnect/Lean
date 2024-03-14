@@ -58,7 +58,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                if(UniverseSettings.Asynchronous.HasValue)
+                if (UniverseSettings.Asynchronous.HasValue)
                 {
                     return UniverseSettings.Asynchronous.Value;
                 }
@@ -78,18 +78,22 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the security type of this universe
         /// </summary>
-        public SecurityType SecurityType
-        {
-            get { return Configuration.SecurityType; }
-        }
+        public SecurityType SecurityType => Configuration.SecurityType;
 
         /// <summary>
         /// Gets the market of this universe
         /// </summary>
-        public string Market
-        {
-            get { return Configuration.Market; }
-        }
+        public string Market => Configuration.Market;
+
+        /// <summary>
+        /// Gets the symbol of this universe
+        /// </summary>
+        public Symbol Symbol => Configuration.Symbol;
+
+        /// <summary>
+        /// Gets the data type of this universe
+        /// </summary>
+        public Type DataType => Configuration.Type;
 
         /// <summary>
         /// Flag indicating if disposal of this universe has been requested
@@ -103,9 +107,9 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the settings used for subscriptions added for this universe
         /// </summary>
-        public abstract UniverseSettings UniverseSettings
+        public virtual UniverseSettings UniverseSettings
         {
-            get;
+            get; set;
         }
 
         /// <summary>

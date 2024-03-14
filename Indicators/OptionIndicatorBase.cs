@@ -29,6 +29,11 @@ namespace QuantConnect.Indicators
         protected readonly Symbol _optionSymbol;
 
         /// <summary>
+        /// Mirror option symbol (by option right), for implied volatility
+        /// </summary>
+        protected Symbol _oppositeOptionSymbol { get; private set; }
+
+        /// <summary>
         /// Underlying security's symbol object
         /// </summary>
         protected Symbol _underlyingSymbol => _optionSymbol.Underlying;
@@ -42,6 +47,11 @@ namespace QuantConnect.Indicators
         /// Risk-free rate model
         /// </summary>
         protected readonly IRiskFreeInterestRateModel _riskFreeInterestRateModel;
+
+        /// <summary>
+        /// Dividend yield model, for continuous dividend yield
+        /// </summary>
+        protected readonly IDividendYieldModel _dividendYieldModel;
 
         /// <summary>
         /// Gets the expiration time of the option
@@ -69,9 +79,19 @@ namespace QuantConnect.Indicators
         public Identity RiskFreeRate { get; set; }
 
         /// <summary>
+        /// Dividend Yield
+        /// </summary>
+        public Identity DividendYield { get; set; }
+
+        /// <summary>
         /// Gets the option price level
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> Price { get; }
+
+        /// <summary>
+        /// Gets the mirror option price level, for implied volatility
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> OppositePrice { get; private set; }
 
         /// <summary>
         /// Gets the underlying's price level
@@ -79,15 +99,22 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> UnderlyingPrice { get; }
 
         /// <summary>
+        /// Flag if mirror option is implemented for parity type calculation
+        /// </summary>
+        public bool UseMirrorContract => _oppositeOptionSymbol != null;
+
+        /// <summary>
         /// Initializes a new instance of the OptionIndicatorBase class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
+        /// <param name="dividendYieldModel">Dividend yield model</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="period">The lookback period of volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek/IV</param>
-        protected OptionIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, int period = 2,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
+        protected OptionIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, 
+            Symbol mirrorOption = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 2)
             : base(name)
         {
             var sid = option.ID;
@@ -98,11 +125,19 @@ namespace QuantConnect.Indicators
 
             _optionSymbol = option;
             _riskFreeInterestRateModel = riskFreeRateModel;
+            _dividendYieldModel = dividendYieldModel;
             _optionModel = optionModel;
 
             RiskFreeRate = new Identity(name + "_RiskFreeRate");
+            DividendYield = new Identity(name + "_DividendYield");
             Price = new Identity(name + "_Close");
             UnderlyingPrice = new Identity(name + "_UnderlyingClose");
+
+            if (mirrorOption != null)
+            {
+                _oppositeOptionSymbol = mirrorOption;
+                OppositePrice = new Identity(Name + "_OppositeClose");
+            }
 
             WarmUpPeriod = period;
         }
@@ -118,9 +153,15 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             RiskFreeRate.Reset();
+            DividendYield.Reset();
             Price.Reset();
             UnderlyingPrice.Reset();
             base.Reset();
+
+            if (UseMirrorContract)
+            {
+                OppositePrice.Reset();
+            }
         }
     }
 }

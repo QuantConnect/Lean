@@ -180,7 +180,7 @@ namespace QuantConnect.Api
                 // TODO: Add StartingEquity
                 // TODO: Add EndingEquity
                 { PerformanceMetrics.TotalFees, jStatistics[16].Value<string>() },
-                { PerformanceMetrics.TotalTrades, jStatistics[17].Value<string>() },
+                { PerformanceMetrics.TotalOrders, jStatistics[17].Value<string>() },
                 { PerformanceMetrics.TrackingError, jStatistics[18].Value<string>() },
                 { PerformanceMetrics.TreynorRatio, jStatistics[19].Value<string>() },
                 { PerformanceMetrics.WinRate, jStatistics[20].Value<string>() },

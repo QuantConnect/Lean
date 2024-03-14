@@ -107,20 +107,18 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            foreach (var symbol in ActiveSecurities.Keys.OrderBy(symbol => symbol))
+            foreach (var (symbol, security) in ActiveSecurities.Where(kvp => !kvp.Value.Invested).OrderBy(kvp => kvp.Key))
             {
-                if (!Portfolio.ContainsKey(symbol) || !Portfolio[symbol].Invested)
+                var shortableQuantity = security.ShortableProvider.ShortableQuantity(symbol, Time);
+                if (shortableQuantity == null)
                 {
-                    if (!Shortable(symbol))
-                    {
-                        throw new Exception($"Expected {symbol} to be shortable on {Time:yyyy-MM-dd}");
-                    }
-
-                    // Buy at least once into all Symbols. Since daily data will always use
-                    // MOO orders, it makes the testing of liquidating buying into Symbols difficult.
-                    MarketOrder(symbol, -(decimal)ShortableQuantity(symbol));
-                    _lastTradeDate = Time.Date;
+                    throw new Exception($"Expected {symbol} to be shortable on {Time:yyyy-MM-dd}");
                 }
+
+                // Buy at least once into all Symbols. Since daily data will always use
+                // MOO orders, it makes the testing of liquidating buying into Symbols difficult.
+                MarketOrder(symbol, -(decimal)shortableQuantity);
+                _lastTradeDate = Time.Date;
             }
         }
 
@@ -252,7 +250,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "5"},
+            {"Total Orders", "5"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "19.147%"},

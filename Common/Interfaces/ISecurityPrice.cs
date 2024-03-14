@@ -73,6 +73,11 @@ namespace QuantConnect.Interfaces
         Symbol Symbol { get; }
 
         /// <summary>
+        /// <see cref="SymbolProperties"/> of the symbol
+        /// </summary>
+        SymbolProperties SymbolProperties { get; }
+
+        /// <summary>
         /// Update any security properties based on the latest market data and time
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>

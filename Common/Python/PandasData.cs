@@ -141,7 +141,9 @@ namespace QuantConnect.Python
 
             if (IsCustomData)
             {
-                var keys = (data as DynamicData)?.GetStorageDictionary().ToHashSet(x => x.Key);
+                var keys = (data as DynamicData)?.GetStorageDictionary()
+                    // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
+                    .Where(x => !x.Key.StartsWith("__", StringComparison.InvariantCulture)).ToHashSet(x => x.Key);
 
                 // C# types that are not DynamicData type
                 if (keys == null)
@@ -214,7 +216,9 @@ namespace QuantConnect.Python
                 var value = ((IBaseData) baseData).Value;
                 AddToSeries("value", endTime, value);
 
-                foreach (var kvp in storage.Where(x => x.Key != "value"))
+                foreach (var kvp in storage.Where(x => x.Key != "value"
+                    // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
+                    && !x.Key.StartsWith("__", StringComparison.InvariantCulture)))
                 {
                     AddToSeries(kvp.Key, endTime, kvp.Value);
                 }

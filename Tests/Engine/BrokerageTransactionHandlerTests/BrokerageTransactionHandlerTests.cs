@@ -2409,6 +2409,17 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             {
                 return new Dictionary<Symbol, long>();
             }
+
+            public decimal FeeRate(Symbol symbol, DateTime localTime)
+            {
+                return 0;
+            }
+
+            public decimal RebateRate(Symbol symbol, DateTime localTime)
+            {
+                return 0;
+            }
+
             public long? ShortableQuantity(Symbol symbol, DateTime localTime)
             {
                 return 0;

@@ -294,7 +294,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 Algorithm.Portfolio.TotalPortfolioValue,
                                 GetNetReturn(),
                                 Algorithm.Portfolio.TotalSaleVolume,
-                                TransactionHandler.OrdersCount, 0);
+                                TotalTradesCount(), 0);
                         }
                         catch (Exception err)
                         {

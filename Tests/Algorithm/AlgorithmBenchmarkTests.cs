@@ -25,6 +25,7 @@ using QuantConnect.Packets;
 using QuantConnect.Benchmarks;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -54,7 +55,7 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.EndDateToUse = new DateTime(2014, 05, 04);
 
             var results = AlgorithmRunner.RunLocalBacktest(nameof(TestBenchmarkAlgorithm),
-                new Dictionary<string, string> { { "Total Trades", "0" } },
+                new Dictionary<string, string> { { PerformanceMetrics.TotalOrders, "0" } },
                 Language.CSharp,
                 AlgorithmStatus.Completed,
                 setupHandler: "BenchmarkTestSetupHandler");

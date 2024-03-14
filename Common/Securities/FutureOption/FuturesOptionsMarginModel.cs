@@ -148,7 +148,7 @@ namespace QuantConnect.Securities.Option
 
             // we normalize the curve growth rate by dividing by the underlyings price
             // this way, contracts with different order of magnitude price and strike (like CL & ES) share this logic
-            var denominator = Math.Pow(Math.E, (double) (-curveGrowthRate * (option.StrikePrice - underlyingPrice) / underlyingPrice));
+            var denominator = Math.Pow(Math.E, (double) (-curveGrowthRate * (option.ScaledStrikePrice - underlyingPrice) / underlyingPrice));
 
             if (double.IsInfinity(denominator))
             {

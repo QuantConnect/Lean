@@ -156,8 +156,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if should download</returns>
         protected override bool NeedToDownload(string filePath)
         {
-            // Ignore null and fine fundamental data requests
-            if (filePath == null || filePath.Contains("fine", StringComparison.InvariantCultureIgnoreCase) && filePath.Contains("fundamental", StringComparison.InvariantCultureIgnoreCase))
+            // Ignore null
+            if (filePath == null)
             {
                 return false;
             }
@@ -176,6 +176,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     return false;
                 }
+            }
+
+            if (securityType == SecurityType.Equity && filePath.Contains("fine", StringComparison.InvariantCultureIgnoreCase) && filePath.Contains("fundamental", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // Ignore fine fundamental data requests
+                return false;
             }
 
             // Only download if it doesn't exist or is out of date.

@@ -240,8 +240,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 : base(SecurityTests.CreateTradeBarConfig())
             {
             }
-
-            public override UniverseSettings UniverseSettings { get; }
             public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
             {
                 throw new NotImplementedException();

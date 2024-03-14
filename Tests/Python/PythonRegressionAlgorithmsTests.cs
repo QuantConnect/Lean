@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Python
 {
@@ -25,7 +26,7 @@ namespace QuantConnect.Tests.Python
         public void SelectUniverseSymbolsFromIDRegressionAlgorithm()
         {
             var parameters = new RegressionTests.AlgorithmStatisticsTestParameters("SelectUniverseSymbolsFromIDRegressionAlgorithm",
-                new Dictionary<string, string> { {"Total Trades", "0"} },
+                new Dictionary<string, string> { {PerformanceMetrics.TotalOrders, "0"} },
                 Language.Python,
                 AlgorithmStatus.Completed);
 
