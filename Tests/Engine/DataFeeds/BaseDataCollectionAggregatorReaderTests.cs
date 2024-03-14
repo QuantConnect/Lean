@@ -27,13 +27,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class BaseDataCollectionAggregatorReaderTests
     {
-        [TestCase(Resolution.Daily, 1, true)]
-        [TestCase( Resolution.Hour, 1, true)]
-        [TestCase(Resolution.Daily, 5849, false)]
-        [TestCase(Resolution.Hour, 40832, false)]
-        public void AggregatesDataPerTime(Resolution resolution, int expectedCount, bool singleDate)
+        [TestCase(Resolution.Daily, 1, true, true)]
+        [TestCase( Resolution.Hour, 1, true, true)]
+        [TestCase(Resolution.Daily, 5849, false, true)]
+        [TestCase(Resolution.Hour, 40832, false, true)]
+        [TestCase(Resolution.Daily, 1, true, false)]
+        [TestCase(Resolution.Hour, 1, true, false)]
+        [TestCase(Resolution.Daily, 5849, false, false)]
+        [TestCase(Resolution.Hour, 40832, false, false)]
+        public void AggregatesDataPerTime(Resolution resolution, int expectedCount, bool singleDate, bool isDataEphemeral)
         {
-            var reader = Initialize(false, resolution, out var dataSource);
+            var reader = Initialize(false, resolution, isDataEphemeral, out var dataSource);
             TestBaseDataCollection.SingleDate = singleDate;
 
             var result = reader.Read(dataSource).ToList();
@@ -47,13 +51,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Assert.IsNotNull(collection);
                 Assert.GreaterOrEqual(collection.Data.Count, 5000);
                 Assert.AreEqual(expectedCount, collection.Data.DistinctBy(data => data.Time).Count());
+                Assert.IsTrue(collection.Data.All(x => x.Symbol == Symbols.AAPL));
             }
         }
 
-        private static ISubscriptionDataSourceReader Initialize(bool liveMode, Resolution resolution, out SubscriptionDataSource source)
+        private static ISubscriptionDataSourceReader Initialize(bool liveMode, Resolution resolution, bool isDataEphemeral,  out SubscriptionDataSource source)
         {
-            using var dataProvider = new DefaultDataProvider();
-            using var cache = new ZipDataCacheProvider(dataProvider);
+            using var cache = new ZipDataCacheProvider(TestGlobals.DataProvider, isDataEphemeral: isDataEphemeral);
             var config = new SubscriptionDataConfig(typeof(TestBaseDataCollection),
                 Symbols.SPY,
                 resolution,
@@ -80,6 +84,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     // single day
                     dataPoint.Time = date;
                 }
+                // universe data collections can return data with a symbol different than the one in the configuration
+                dataPoint.Symbol = Symbols.AAPL;
                 return dataPoint;
             }
 
