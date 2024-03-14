@@ -30,12 +30,12 @@ namespace QuantConnect.Data.Auxiliary
         public string Ticker { get; }
 
         /// <summary>
-        /// Ticker Start Date Time in UTC
+        /// Ticker Start Date Time in Local
         /// </summary>
         public DateTime StartDateTimeLocal { get; }
 
         /// <summary>
-        /// Ticker End Date Time in UTC
+        /// Ticker End Date Time in Local
         /// </summary>
         public DateTime EndDateTimeLocal { get; }
 
