@@ -17,14 +17,12 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Util;
 using System.Globalization;
 using Microsoft.CodeAnalysis;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Tests.Common.Data.Fundamental;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -81,7 +79,9 @@ namespace QuantConnect.Tests.Common.Util
                 }
             }
 
-            var downloaderDataParameters = _mapFileProvider.GetAllTickerFromMapFiles(symbol, resolution, startDateTimeUtc, endDateTimeUtc, tickType).OrderBy(d => d.StartUtc).ToList();
+            var getParams = new DataDownloaderGetParameters(symbol, resolution, startDateTimeUtc, endDateTimeUtc, tickType);
+
+            var downloaderDataParameters = getParams.GetDataDownloaderParameterForAllMappedSymbols(_mapFileProvider).OrderBy(d => d.StartUtc).ToList();
 
             Assert.That(downloaderDataParameters.Count, Is.EqualTo(expectedDownloadDataAmount));
 

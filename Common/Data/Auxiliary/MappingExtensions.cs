@@ -136,33 +136,17 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
-        /// Retrieves all ticker data download parameters from map files for a specific symbol and ticker.
+        /// Retrieves all Symbol from map files based on specific Symbol.
         /// </summary>
         /// <param name="mapFileProvider">The provider for map files containing ticker data.</param>
         /// <param name="symbol">The symbol to get <see cref="MapFileResolver"/> and generate new Symbol.</param>
-        /// <param name="resolution">The resolution of the data to be downloaded.</param>
-        /// <param name="startDateTime">The start date and time for the data download.</param>
-        /// <param name="endDateTime">The end date and time for the data download.</param>
-        /// <param name="tickType">The tick type of the data to be downloaded.</param>
-        /// <returns>An enumerable collection of DataDownloaderGetParameters objects representing the parameters for downloading ticker data.</returns>
+        /// <returns>An enumerable collection of <see cref="SymbolDateRange"/></returns>
         /// <exception cref="ArgumentException">Throw if <paramref name="mapFileProvider"/> is null.</exception>
-        public static IEnumerable<DataDownloaderGetParameters> GetAllTickerFromMapFiles(
-            this IMapFileProvider mapFileProvider,
-            Symbol symbol,
-            Resolution resolution,
-            DateTime startDateTime,
-            DateTime endDateTime,
-            TickType tickType)
+        public static IEnumerable<SymbolDateRange> RetrieveAllMappedSymbolInDateRange(this IMapFileProvider mapFileProvider, Symbol symbol)
         {
             if (mapFileProvider == null)
             {
                 throw new ArgumentException("The map file provider cannot be null.", nameof(mapFileProvider));
-            }
-
-            if (symbol?.SecurityType == SecurityType.Future || !symbol.RequiresMapping() || resolution < Resolution.Hour)
-            {
-                yield return new DataDownloaderGetParameters(symbol, resolution, startDateTime, endDateTime, tickType);
-                yield break;
             }
 
             var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
@@ -174,7 +158,7 @@ namespace QuantConnect.Data.Auxiliary
                 tickerUpperCase = tickerUpperCase[1..];
             }
 
-            var yieldMappedSymbol = default(bool);
+            var isOptionSymbol = symbol.SecurityType == SecurityType.Option;
             foreach (var mapFile in mapFileResolver)
             {
                 // Check if 'mapFile' contains the desired ticker symbol.
@@ -183,28 +167,19 @@ namespace QuantConnect.Data.Auxiliary
                     continue;
                 }
 
-                var newEndDateTimeUtc = endDateTime;
                 foreach (var tickerDateRange in mapFile.GetTickerDateRanges(tickerUpperCase))
                 {
                     var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, symbol?.ID.Market);
 
                     var newSymbol = new Symbol(sid, tickerUpperCase);
-                    if (symbol.SecurityType == SecurityType.Option)
+
+                    if (isOptionSymbol)
                     {
                         newSymbol = Symbol.CreateCanonicalOption(newSymbol);
                     }
 
-                    startDateTime = tickerDateRange.StartDate;
-                    newEndDateTimeUtc = tickerDateRange.EndDate > endDateTime ? endDateTime : tickerDateRange.EndDate;
-
-                    yield return new DataDownloaderGetParameters(newSymbol, resolution, startDateTime, newEndDateTimeUtc, tickType);
-                    yieldMappedSymbol = true;
+                    yield return new(newSymbol, tickerDateRange.StartDate, tickerDateRange.EndDate);
                 }
-            }
-
-            if (!yieldMappedSymbol)
-            {
-                yield return new DataDownloaderGetParameters(symbol, resolution, startDateTime, endDateTime, tickType);
             }
         }
 

@@ -165,8 +165,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     try
                     {
                         LeanDataWriter writer = null;
+                        var getParams = new DataDownloaderGetParameters(symbol, resolution, startTimeUtc, endTimeUtc, tickType);
 
-                        var downloaderDataParameters = _mapFileProvider.GetAllTickerFromMapFiles(symbol, resolution, startTimeUtc, endTimeUtc, tickType);
+                        var downloaderDataParameters = getParams.GetDataDownloaderParameterForAllMappedSymbols(_mapFileProvider);
 
                         var downloadedData = GetDownloadedData(downloaderDataParameters, symbol, exchangeTimeZone, dataTimeZone, dataType);
 
