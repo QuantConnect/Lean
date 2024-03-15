@@ -44,14 +44,38 @@ namespace QuantConnect.Tests.API
             var password = Config.Get("ib-password");
             var account = Config.Get("ib-account");
             var environment = account.Substring(0, 2) == "DU" ? "paper" : "live";
+            var ib_weekly_restart_utc_time = Config.Get("ib-weekly-restart-utc-time");
 
             // Create default algorithm settings
-            var settings = new Dictionary<string, string>() {
+            var settings = new Dictionary<string, object>() {
                 { "id", "InteractiveBrokersBrokerage" },
                 { "environment", environment },
-                { "user", user },
-                { "password", password },
-                { "account", account }
+                { "ib-user-name", user },
+                { "ib-password", password },
+                { "ib-account", account },
+                { "ib-weekly-restart-utc-time", ib_weekly_restart_utc_time},
+                { "holdings", new List<Holding>() },
+                { "cash", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "currency" , "USD"},
+                            { "amount", 100000}
+                        }
+                    }
+                    }
+                },
+            };
+
+            var quantConnectDataProvider = new Dictionary<string, object>
+            {
+                { "id", "QuantConnectBrokerage" },
+            };
+
+            var dataProviders = new Dictionary<string, Dictionary<string, object>>
+            {
+                { "QuantConnectBrokerage", quantConnectDataProvider },
+                { "InteractiveBrokersBrokerage", settings }
             };
 
             var file = new ProjectFile
@@ -60,7 +84,7 @@ namespace QuantConnect.Tests.API
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
             };
 
-            RunLiveAlgorithm(settings, file, StopLiveAlgos);
+            RunLiveAlgorithm(settings, file, StopLiveAlgos, dataProviders);
         }
 
         /// <summary>
@@ -74,7 +98,7 @@ namespace QuantConnect.Tests.API
             var account = Config.Get("fxcm-account-id");
 
             // Create default algorithm settings
-            var settings = new Dictionary<string, string>() {
+            var settings = new Dictionary<string, object>() {
                 { "id", "FxcmBrokerage" },
                 { "environment", "paper" },
                 { "user", user },
@@ -101,7 +125,7 @@ namespace QuantConnect.Tests.API
             var account = Config.Get("oanda-account-id");
 
             // Create default algorithm settings
-            var settings = new Dictionary<string, string>()
+            var settings = new Dictionary<string, object>()
             {
                 { "id", "OandaBrokerage" },
                 { "environment", "paper" },
@@ -131,7 +155,7 @@ namespace QuantConnect.Tests.API
             var dateIssued = Config.Get("tradier-issued-at");
 
             // Create default algorithm settings
-            var settings = new Dictionary<string, string>()
+            var settings = new Dictionary<string, object>()
             {
                 { "id", "TradierBrokerage" },
                 { "environment", "live" },
@@ -161,7 +185,7 @@ namespace QuantConnect.Tests.API
             var secretKey = Config.Get("bitfinex-api-secret");
 
             // Create default algorithm settings
-            var settings = new Dictionary<string, string>()
+            var settings = new Dictionary<string, object>()
             {
                 { "id", "BitfinexBrokerage" },
                 { "environment", "live" },
@@ -190,7 +214,7 @@ namespace QuantConnect.Tests.API
             var wsUrl = Config.Get("coinbase-url");
 
             // Create default algorithm settings
-            var settings = new Dictionary<string, string>()
+            var settings = new Dictionary<string, object>()
             {
                 { "id", "CoinbaseBrokerage" },
                 { "environment", "live" },
@@ -431,8 +455,9 @@ namespace QuantConnect.Tests.API
         /// <param name="file">File to run</param>
         /// <param name="stopLiveAlgos">If true the algorithm will be stopped at the end of the method.
         /// Otherwise, it will keep running</param>
+        /// <param name="dataProviders">Dictionary with the data providers and their corresponding credentials</param>
         /// <returns>The id of the project created with the algorithm in</returns>
-        private int RunLiveAlgorithm(Dictionary<string, string> settings, ProjectFile file, bool stopLiveAlgos)
+        private int RunLiveAlgorithm(Dictionary<string, object> settings, ProjectFile file, bool stopLiveAlgos, Dictionary<string, Dictionary<string, object>> dataProviders = null)
         {
             // Create a new project
             var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
@@ -458,7 +483,7 @@ namespace QuantConnect.Tests.API
             Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
 
             // Create live default algorithm
-            var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings);
+            var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings, dataProviders: dataProviders);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
             if (stopLiveAlgos)
@@ -479,7 +504,7 @@ namespace QuantConnect.Tests.API
         public void ReadLiveOrders()
         {
             // Create default algorithm settings
-            var settings = new Dictionary<string, string>()
+            var settings = new Dictionary<string, object>()
             {
                 { "id", "Default" },
                 { "environment", "paper" },

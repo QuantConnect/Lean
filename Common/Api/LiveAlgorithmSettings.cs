@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Brokerages;
 
@@ -31,15 +32,30 @@ namespace QuantConnect.Api
         /// <param name="projectId">Id of project from QuantConnect</param>
         /// <param name="compileId">Id of compilation of project from QuantConnect</param>
         /// <param name="nodeId">Server type to run live Algorithm</param>
-        /// <param name="settings">Dictionary with Live Algorithm Settings</see> for a specific brokerage</param>
+        /// <param name="settings">Dictionary with Live Algorithm Settings for a specific brokerage</param>
         /// <param name="version">The version identifier</param>
-        public LiveAlgorithmApiSettingsWrapper(int projectId, string compileId, string nodeId, Dictionary<string, string> settings, string version = "-1")
+        /// <param name="dataProvider">Dictionary with data providers and their corresponding credentials</param>
+        /// <param name="parameters">Dictionary to specify the parameters for the live algorithm</param>
+        /// <param name="notification">Dictionary with the lists of events and targets</param>
+        public LiveAlgorithmApiSettingsWrapper(
+            int projectId,
+            string compileId,
+            string nodeId, Dictionary<string, object> settings,
+            string version = "-1",
+            Dictionary<string, Dictionary<string, object>> dataProvider = null,
+            Dictionary<string, string> parameters = null,
+            Dictionary<string, List<string>> notification = null)
         {
             VersionId = version;
             ProjectId = projectId;
             CompileId = compileId;
             NodeId = nodeId;
             Brokerage = settings;
+            DataProvider = dataProvider;
+            Signature = CompileId.Split("-").LastOrDefault();
+            Parameters = parameters ?? new Dictionary<string, string>();
+            Notification = notification ?? new Dictionary<string, List<string>>();
+            AutomaticRedeploy = false;
         }
 
         /// <summary>
@@ -67,9 +83,40 @@ namespace QuantConnect.Api
         public string NodeId { get; private set; }
 
         /// <summary>
+        /// Signature of the live algorithm
+        /// </summary>
+        [JsonProperty(PropertyName = "signature")]
+        public string Signature { get; private set; }
+
+        /// <summary>
+        /// True to enable Automatic Re-Deploy of the live algorithm,
+        /// false otherwise
+        /// </summary>
+        [JsonProperty(PropertyName = "automaticRedeploy")]
+        public bool AutomaticRedeploy { get; private set; }
+
+        /// <summary>
         /// The API expects the settings as part of a brokerage object
         /// </summary>
         [JsonProperty(PropertyName = "brokerage")]
-        public Dictionary<string, string> Brokerage { get; private set; }
+        public Dictionary<string, object> Brokerage { get; private set; }
+
+        /// <summary>
+        /// Dictionary with the data providers and their corresponding credentials
+        /// </summary>
+        [JsonProperty(PropertyName = "dataProviders")]
+        public Dictionary<string, Dictionary<string, object>> DataProvider { get; private set; }
+
+        /// <summary>
+        /// Dictionary with the parameters to be used in the live algorithm
+        /// </summary>
+        [JsonProperty(PropertyName = "parameters")]
+        public Dictionary<string, string> Parameters { get; private set; }
+
+        /// <summary>
+        /// Dictionary with the lists of events and targets
+        /// </summary>
+        [JsonProperty(PropertyName = "notification")]
+        public Dictionary<string, List<string>> Notification { get; private set; }
     }
 }
