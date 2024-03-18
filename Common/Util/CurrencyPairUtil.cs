@@ -98,6 +98,16 @@ namespace QuantConnect.Util
         /// </summary>
         /// <param name="currencyPair">The pair to check for</param>
         /// <returns>True if the pair can be decomposed into base and quote currencies, false if not</returns>
+        public static bool IsForexDecomposable(string currencyPair)
+        {
+            return !string.IsNullOrEmpty(currencyPair) && currencyPair.Length == 6;
+        }
+
+        /// <summary>
+        /// Checks whether a symbol is decomposable into a base and a quote currency
+        /// </summary>
+        /// <param name="currencyPair">The pair to check for</param>
+        /// <returns>True if the pair can be decomposed into base and quote currencies, false if not</returns>
         public static bool IsDecomposable(Symbol currencyPair)
         {
             if (currencyPair == null)
