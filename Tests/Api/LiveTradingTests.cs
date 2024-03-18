@@ -23,6 +23,7 @@ using QuantConnect.Orders;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using System.Collections.Generic;
+using Python.Runtime;
 
 namespace QuantConnect.Tests.API
 {
@@ -72,7 +73,7 @@ namespace QuantConnect.Tests.API
                 { "id", "QuantConnectBrokerage" },
             };
 
-            var dataProviders = new Dictionary<string, Dictionary<string, object>>
+            var dataProviders = new Dictionary<string, object>
             {
                 { "QuantConnectBrokerage", quantConnectDataProvider },
                 { "InteractiveBrokersBrokerage", settings }
@@ -457,7 +458,7 @@ namespace QuantConnect.Tests.API
         /// Otherwise, it will keep running</param>
         /// <param name="dataProviders">Dictionary with the data providers and their corresponding credentials</param>
         /// <returns>The id of the project created with the algorithm in</returns>
-        private int RunLiveAlgorithm(Dictionary<string, object> settings, ProjectFile file, bool stopLiveAlgos, Dictionary<string, Dictionary<string, object>> dataProviders = null)
+        private int RunLiveAlgorithm(Dictionary<string, object> settings, ProjectFile file, bool stopLiveAlgos, Dictionary<string, object> dataProviders = null)
         {
             // Create a new project
             var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
@@ -534,6 +535,70 @@ namespace QuantConnect.Tests.API
             // Delete the project
             var deleteProject = ApiClient.DeleteProject(projectId);
             Assert.IsTrue(deleteProject.Success);
+        }
+
+        [Test]
+        public void RunLiveAlgorithmsFromPython()
+        {
+            var file = new ProjectFile
+            {
+                Name = "Main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+            };
+            // Create a new project
+            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            var projectId = project.Projects.First().ProjectId;
+
+            // Update Project Files
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
+            Assert.IsTrue(updateProjectFileContent.Success);
+
+            // Create compile
+            var compile = ApiClient.CreateCompile(projectId);
+            Assert.IsTrue(compile.Success);
+
+            // Wait at max 30 seconds for project to compile
+            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId, 30);
+            Assert.IsTrue(compileCheck.Success);
+            Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
+
+            // Get a live node to launch the algorithm on
+            var nodesResponse = ApiClient.ReadProjectNodes(projectId);
+            Assert.IsTrue(nodesResponse.Success);
+            var freeNode = nodesResponse.Nodes.LiveNodes.Where(x => x.Busy == false);
+            Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
+
+            using (Py.GIL())
+            {
+
+                dynamic pythonCall = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
+    user = Config.Get('ib-user-name')
+    password = Config.Get('ib-password')
+    account = Config.Get('ib-account')
+    environment = 'paper'
+    if account[:2] == 'DU':
+        environment = 'live'
+    ib_weekly_restart_utc_time = '22:00:00'
+    settings = {'id':'InteractiveBrokersBrokerage', 'environment': environment, 'ib-user-name': user, 'ib-password': password, 'ib-account': account, 'ib-weekly-restart-utc-time': ib_weekly_restart_utc_time, 'holdings':[], 'cash': [{'currency' : 'USD', 'amount' : 100000}]}
+    dataProviders = {'QuantConnectBrokerage':{'id':'QuantConnectBrokerage'}}
+    apiClient.CreateLiveAlgorithm(projectId, compileId, nodeId, settings, dataProviders = dataProviders)
+");
+                var createLiveAlgorithmModule = pythonCall.GetAttr("CreateLiveAlgorithmFromPython");
+                var createLiveAlgorithm = createLiveAlgorithmModule(ApiClient, projectId, compile.CompileId, freeNode.FirstOrDefault().Id);
+                Assert.IsTrue(createLiveAlgorithm.Success);
+
+                // Liquidate live algorithm; will also stop algorithm
+                var liquidateLive = ApiClient.LiquidateLiveAlgorithm(projectId);
+                Assert.IsTrue(liquidateLive.Success);
+
+                // Delete the project
+                var deleteProject = ApiClient.DeleteProject(projectId);
+                Assert.IsTrue(deleteProject.Success);
+            }
         }
 
         /// <summary>

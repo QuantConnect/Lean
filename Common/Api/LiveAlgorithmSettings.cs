@@ -32,17 +32,27 @@ namespace QuantConnect.Api
         /// <param name="projectId">Id of project from QuantConnect</param>
         /// <param name="compileId">Id of compilation of project from QuantConnect</param>
         /// <param name="nodeId">Server type to run live Algorithm</param>
-        /// <param name="settings">Dictionary with Live Algorithm Settings for a specific brokerage</param>
+        /// <param name="settings">Dictionary with brokerage specific settings. Each brokerage requires certain specific credentials
+        ///                         in order to process the given orders. Each key in this dictionary represents a required field/credential
+        ///                         to provide to the brokerage API and its value represents the value of that field. For example: "brokerageSettings: {
+        ///                         "id": "Binance", "binance-api-secret": "123ABC", "binance-api-key": "ABC123"}. It is worth saying,
+        ///                         that this dictionary must always contain an entry whose key is "id" and its value is the name of the brokerage
+        ///                         (see <see cref="Brokerages.BrokerageName"/>)</param>
         /// <param name="version">The version identifier</param>
-        /// <param name="dataProvider">Dictionary with data providers and their corresponding credentials</param>
+        /// <param name="dataProviders">Dictionary with data providers credentials. Each data provider requires certain credentials
+        ///                         in order to retrieve data from their API. Each key in this dictionary describes a data provider name
+        ///                         and its corresponding value is another dictionary with the required key-value pairs of credential
+        ///                         names and values. For example: "dataProviders: {InteractiveBrokersBrokerage : { "id": 12345, "environement" : "paper",
+        ///                         "username": "testUsername", "password": "testPassword"}}"</param>
         /// <param name="parameters">Dictionary to specify the parameters for the live algorithm</param>
         /// <param name="notification">Dictionary with the lists of events and targets</param>
         public LiveAlgorithmApiSettingsWrapper(
             int projectId,
             string compileId,
-            string nodeId, Dictionary<string, object> settings,
+            string nodeId,
+            Dictionary<string, object> settings,
             string version = "-1",
-            Dictionary<string, Dictionary<string, object>> dataProvider = null,
+            Dictionary<string, object> dataProviders = null,
             Dictionary<string, string> parameters = null,
             Dictionary<string, List<string>> notification = null)
         {
@@ -51,7 +61,16 @@ namespace QuantConnect.Api
             CompileId = compileId;
             NodeId = nodeId;
             Brokerage = settings;
-            DataProvider = dataProvider;
+
+            var quantConnectDataProvider = new Dictionary<string, string>
+            {
+                { "id", "QuantConnectBrokerage" },
+            };
+
+            DataProviders = dataProviders ?? new Dictionary<string, object>()
+            {
+                { "QuantConnectBrokerage", quantConnectDataProvider },
+            };
             Signature = CompileId.Split("-").LastOrDefault();
             Parameters = parameters ?? new Dictionary<string, string>();
             Notification = notification ?? new Dictionary<string, List<string>>();
@@ -105,7 +124,7 @@ namespace QuantConnect.Api
         /// Dictionary with the data providers and their corresponding credentials
         /// </summary>
         [JsonProperty(PropertyName = "dataProviders")]
-        public Dictionary<string, Dictionary<string, object>> DataProvider { get; private set; }
+        public Dictionary<string, object> DataProviders { get; private set; }
 
         /// <summary>
         /// Dictionary with the parameters to be used in the live algorithm
