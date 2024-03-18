@@ -134,5 +134,68 @@ namespace QuantConnect.Data.Auxiliary
                 }
             }
         }
+
+        /// <summary>
+        /// Retrieves all Symbol from map files based on specific Symbol.
+        /// </summary>
+        /// <param name="mapFileProvider">The provider for map files containing ticker data.</param>
+        /// <param name="symbol">The symbol to get <see cref="MapFileResolver"/> and generate new Symbol.</param>
+        /// <returns>An enumerable collection of <see cref="SymbolDateRange"/></returns>
+        /// <exception cref="ArgumentException">Throw if <paramref name="mapFileProvider"/> is null.</exception>
+        public static IEnumerable<SymbolDateRange> RetrieveAllMappedSymbolInDateRange(this IMapFileProvider mapFileProvider, Symbol symbol)
+        {
+            if (mapFileProvider == null || symbol == null)
+            {
+                throw new ArgumentException($"The map file provider and symbol cannot be null. {(mapFileProvider == null ? nameof(mapFileProvider) : nameof(symbol))}");
+            }
+
+            var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
+
+            var tickerUpperCase = symbol.HasUnderlying ? symbol.Underlying.Value.ToUpperInvariant() : symbol.Value.ToUpperInvariant();
+
+            var isOptionSymbol = symbol.SecurityType == SecurityType.Option;
+            foreach (var mapFile in mapFileResolver)
+            {
+                // Check if 'mapFile' contains the desired ticker symbol.
+                if (!mapFile.Any(mapFileRow => mapFileRow.MappedSymbol == tickerUpperCase))
+                {
+                    continue;
+                }
+
+                foreach (var tickerDateRange in mapFile.GetTickerDateRanges(tickerUpperCase))
+                {
+                    var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, symbol?.ID.Market);
+
+                    var newSymbol = new Symbol(sid, tickerUpperCase);
+
+                    if (isOptionSymbol)
+                    {
+                        newSymbol = Symbol.CreateCanonicalOption(newSymbol);
+                    }
+
+                    yield return new(newSymbol, tickerDateRange.StartDate, tickerDateRange.EndDate);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the date ranges associated with a specific ticker symbol from the provided map file.
+        /// </summary>
+        /// <param name="mapFile">The map file containing the data ranges for various ticker.</param>
+        /// <param name="ticker">The ticker for which to retrieve the date ranges.</param>
+        /// <returns>An enumerable collection of tuples representing the start and end dates for each date range associated with the specified ticker symbol.</returns>
+        private static IEnumerable<(DateTime StartDate, DateTime EndDate)> GetTickerDateRanges(this MapFile mapFile, string ticker)
+        {
+            var previousRowDate = mapFile.FirstOrDefault().Date;
+            foreach (var currentRow in mapFile.Skip(1))
+            {
+                if (ticker == currentRow.MappedSymbol)
+                {
+                    yield return (previousRowDate, currentRow.Date.AddDays(1));
+                }
+                // MapFile maintains the latest date associated with each ticker name, except first Row
+                previousRowDate = currentRow.Date.AddDays(1);
+            }
+        }
     }
 }

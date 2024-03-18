@@ -384,6 +384,17 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(date.Date, Parse.DateTime("2016-10-07").Date);
         }
 
+        [TestCase("equity/usa/minute/goog/20130102_quote.zip", "GOOG", "2004/08/19")]
+        [TestCase("equity/usa/minute/goog/20100102_quote.zip", "GOOG", "2004/08/19")]
+        public void TryParseMapsShouldReturnCorrectSymbol(string path, string expectedTicker, DateTime expectedDate)
+        {
+            Assert.IsTrue(LeanData.TryParsePath(path, out var parsedSymbol, out _, out _));
+
+            Assert.That(parsedSymbol.Value, Is.EqualTo(expectedTicker));
+            Assert.Throws<AssertionException>(() => Assert.That(parsedSymbol.ID.Date, Is.EqualTo(expectedDate)));
+            Assert.Throws<AssertionException>(() => Assert.That(parsedSymbol.ID.Symbol, Is.EqualTo(expectedTicker)));
+        }
+
         [TestCase(SecurityType.Base, "alteRNative")]
         [TestCase(SecurityType.Equity, "Equity")]
         [TestCase(SecurityType.Cfd, "Cfd")]

@@ -15,19 +15,18 @@
 
 using System;
 
-
 namespace QuantConnect.Data.Auxiliary
 {
     /// <summary>
-    /// Represents stock data for a specific ticker within a date range.
+    /// Represents security identifier within a date range.
     /// </summary>
 #pragma warning disable CA1815 // Override equals and operator equals on value types
-    public readonly struct TickerDateRange
+    public readonly struct SymbolDateRange
     {
         /// <summary>
-        /// Ticker simple name of stock
+        /// Represents a unique security identifier.
         /// </summary>
-        public string Ticker { get; }
+        public Symbol Symbol { get; }
 
         /// <summary>
         /// Ticker Start Date Time in Local
@@ -40,14 +39,14 @@ namespace QuantConnect.Data.Auxiliary
         public DateTime EndDateTimeLocal { get; }
 
         /// <summary>
-        /// Create the instance of <see cref="TickerDateRange"/> struct.
+        /// Create the instance of <see cref="SymbolDateRange"/> struct.
         /// </summary>
-        /// <param name="ticker">Name of ticker</param>
+        /// <param name="symbol">The unique security identifier</param>
         /// <param name="startDateTimeLocal">Start Date Time Local</param>
         /// <param name="endDateTimeLocal">End Date Time Local</param>
-        public TickerDateRange(string ticker, DateTime startDateTimeLocal, DateTime endDateTimeLocal)
+        public SymbolDateRange(Symbol symbol, DateTime startDateTimeLocal, DateTime endDateTimeLocal)
         {
-            Ticker = ticker;
+            Symbol = symbol;
             StartDateTimeLocal = startDateTimeLocal;
             EndDateTimeLocal = endDateTimeLocal;
         }
