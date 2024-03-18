@@ -28,5 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         public override Language[] Languages { get; } = { Language.CSharp };
+
+        public override int AlgorithmHistoryDataPoints => 0;
     }
 }

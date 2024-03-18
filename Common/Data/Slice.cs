@@ -21,6 +21,7 @@ using System.Reflection;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Python;
 
 namespace QuantConnect.Data
@@ -363,8 +364,13 @@ namespace QuantConnect.Data
         {
             if (type == typeof(Fundamentals))
             {
-                // backwards compatibility for users doing a get of fundamentals type
+                // backwards compatibility for users doing a get of Fundamentals type
                 type = typeof(FundamentalUniverse);
+            }
+            else if (type == typeof(ETFConstituentData))
+            {
+                // backwards compatibility for users doing a get of ETFConstituentData type
+                type = typeof(ETFConstituentUniverse);
             }
 
             if (instance._dataByType == null)

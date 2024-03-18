@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class ETFConstituentUniverseFrameworkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private List<ETFConstituentData> ConstituentData = new List<ETFConstituentData>();
+        private List<ETFConstituentUniverse> ConstituentData = new List<ETFConstituentUniverse>();
         
         /// <summary>
         /// Initializes the algorithm, setting up the framework classes and ETF constituent universe settings
@@ -53,7 +53,20 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected virtual void AddUniverseWrapper(Symbol symbol)
         {
-            AddUniverse(Universe.ETF(symbol, UniverseSettings, FilterETFConstituents));
+            var universe = AddUniverse(Universe.ETF(symbol, UniverseSettings, FilterETFConstituents));
+
+            var historicalData = History(universe, 1).ToList();
+            if (historicalData.Count != 1)
+            {
+                throw new Exception($"Unexpected history count {historicalData.Count}! Expected 1");
+            }
+            foreach (var universeDataCollection in historicalData)
+            {
+                if (universeDataCollection.Data.Count < 200)
+                {
+                    throw new Exception($"Unexpected universe DataCollection count {universeDataCollection.Data.Count}! Expected > 200");
+                }
+            }
         }
 
         /// <summary>
@@ -61,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         /// <param name="constituents">ETF constituents</param>
         /// <returns>ETF constituent Symbols that we want to include in the algorithm</returns>
-        public IEnumerable<Symbol> FilterETFConstituents(IEnumerable<ETFConstituentData> constituents)
+        public IEnumerable<Symbol> FilterETFConstituents(IEnumerable<ETFConstituentUniverse> constituents)
         {
             var constituentData = constituents
                 .Where(x => (x.Weight ?? 0m) >= 0.001m)
@@ -210,7 +223,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public virtual int AlgorithmHistoryDataPoints => 1;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

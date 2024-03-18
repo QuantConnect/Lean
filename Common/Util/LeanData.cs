@@ -1207,7 +1207,7 @@ namespace QuantConnect.Util
                     Type dataType = null;
                     if (isUniverses && info[startIndex + 3].Equals("etf", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        dataType = typeof(ETFConstituentData);
+                        dataType = typeof(ETFConstituentUniverse);
                     }
                     symbol = Symbol.Create(ticker, securityType, market, baseDataType: dataType);
                 }

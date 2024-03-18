@@ -167,11 +167,11 @@ def filterIndexes(constituents: List[ETFConstituentData]) -> List[Symbol]:
         private static void AssertETFConstituentsUniverses(List<Universe> universes)
         {
             CollectionAssert.AllItemsAreNotNull(universes, "Universes should not be null");
-            CollectionAssert.AllItemsAreInstancesOfType(universes, typeof(ETFConstituentsUniverse),
+            CollectionAssert.AllItemsAreInstancesOfType(universes, typeof(ETFConstituentsUniverseFactory),
                 "Universes should be of type ETFConstituentsUniverse");
         }
 
-        private static IEnumerable<Symbol> Filter(IEnumerable<ETFConstituentData> constituents)
+        private static IEnumerable<Symbol> Filter(IEnumerable<ETFConstituentUniverse> constituents)
         {
             return constituents.Select(x => x.Symbol);
         }

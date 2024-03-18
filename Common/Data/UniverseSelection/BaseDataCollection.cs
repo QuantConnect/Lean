@@ -140,7 +140,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>Whether this contains data that should be stored in the security cache</returns>
         public override bool ShouldCacheToSecurity()
         {
-            return Data.Count > 0 && Data[0].ShouldCacheToSecurity();
+            if (Data.Count == 0)
+            {
+                return true;
+            }
+            // if we hold the same data type we are, else we ask underlying type
+            return Data[0].GetType() == GetType() || Data[0].ShouldCacheToSecurity();
         }
 
         /// <summary>

@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse(Universe.ETF(_gdvd, universeFilterFunc: FilterETFs));
         }
 
-        private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentData> constituents)
+        private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentUniverse> constituents)
         {
             _universeSelectionDone = true;
 

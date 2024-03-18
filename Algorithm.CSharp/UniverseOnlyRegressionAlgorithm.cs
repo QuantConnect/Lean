@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private IEnumerable<Symbol> FilterUniverse(IEnumerable<ETFConstituentData> constituents)
+        private IEnumerable<Symbol> FilterUniverse(IEnumerable<ETFConstituentUniverse> constituents)
         {
             _selectionDone = true;
             return constituents.Select(x => x.Symbol);

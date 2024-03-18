@@ -22,10 +22,13 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {
+    [Obsolete("'ETFConstituentData' was renamed to 'ETFConstituentUniverse'")]
+    public class ETFConstituentData : ETFConstituentUniverse { }
+
     /// <summary>
     /// ETF constituent data
     /// </summary>
-    public class ETFConstituentData : BaseData
+    public class ETFConstituentUniverse : BaseDataCollection
     {
         /// <summary>
         /// Time of the previous ETF constituent data update
@@ -80,7 +83,7 @@ namespace QuantConnect.Data.UniverseSelection
                     config.Symbol.Underlying.Value.ToLowerInvariant(),
                     $"{date:yyyyMMdd}.csv"),
                 SubscriptionTransportMedium.LocalFile,
-                FileFormat.Csv);
+                FileFormat.FoldingCollection);
         }
 
         /// <summary>
@@ -115,7 +118,7 @@ namespace QuantConnect.Data.UniverseSelection
                 ? (decimal?)null
                 : Parse.Decimal(split[5], NumberStyles.Any);
 
-            return new ETFConstituentData
+            return new ETFConstituentUniverse
             {
                 LastUpdate = lastUpdateDate,
                 Weight = weighting,
@@ -142,7 +145,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>Clone of the instance</returns>
         public override BaseData Clone()
         {
-            return new ETFConstituentData
+            return new ETFConstituentUniverse
             {
                 LastUpdate = LastUpdate,
                 Weight = Weight,
@@ -150,7 +153,8 @@ namespace QuantConnect.Data.UniverseSelection
                 MarketValue = MarketValue,
 
                 Symbol = Symbol,
-                Time = Time
+                Time = Time,
+                Data = Data
             };
         }
 

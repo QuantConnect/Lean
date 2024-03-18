@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         /// <param name="constituents">ETF constituents, i.e. the components of the ETF and their weighting</param>
         /// <returns>Symbols to add to universe</returns>
-        public IEnumerable<Symbol> FilterETFConstituents(IEnumerable<ETFConstituentData> constituents)
+        public IEnumerable<Symbol> FilterETFConstituents(IEnumerable<ETFConstituentUniverse> constituents)
         {
             return constituents
                 .Where(x => x.Weight != null && x.Weight >= 0.001m)
@@ -85,8 +85,8 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // Cast first, and then access the constituents collection defined in our algorithm.
                 var algoConstituents = data.Bars.Keys
-                    .Where(x => algorithm.Securities[x].Cache.HasData(typeof(ETFConstituentData)))
-                    .Select(x => algorithm.Securities[x].Cache.GetData<ETFConstituentData>())
+                    .Where(x => algorithm.Securities[x].Cache.HasData(typeof(ETFConstituentUniverse)))
+                    .Select(x => algorithm.Securities[x].Cache.GetData<ETFConstituentUniverse>())
                     .ToList();
                 
                 if (algoConstituents.Count == 0 || data.Bars.Count == 0)
@@ -167,7 +167,7 @@ namespace QuantConnect.Algorithm.CSharp
             /// <summary>
             /// Symbol's constituent data for the ETF it belongs to
             /// </summary>
-            public ETFConstituentData Constituent { get; }
+            public ETFConstituentUniverse Constituent { get; }
             
             /// <summary>
             /// RSI indicator for the Symbol's price data
@@ -180,7 +180,7 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="symbol">The symbol to add data for</param>
             /// <param name="constituent">ETF constituent data</param>
             /// <param name="period">RSI period</param>
-            public SymbolData(Symbol symbol, QCAlgorithm algorithm, ETFConstituentData constituent, int period)
+            public SymbolData(Symbol symbol, QCAlgorithm algorithm, ETFConstituentUniverse constituent, int period)
             {
                 Symbol = symbol;
                 Constituent = constituent;

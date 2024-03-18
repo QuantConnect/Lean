@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class ETFConstituentUniverseFilterFunctionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Dictionary<Symbol, ETFConstituentData> _etfConstituentData = new Dictionary<Symbol, ETFConstituentData>();
+        private Dictionary<Symbol, ETFConstituentUniverse> _etfConstituentData = new Dictionary<Symbol, ETFConstituentUniverse>();
         
         private Symbol _aapl;
         private Symbol _spy;
@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="constituents">Constituents of the ETF universe added above</param>
         /// <returns>Constituent Symbols to add to algorithm</returns>
         /// <exception cref="ArgumentException">Constituents collection was not structured as expected</exception>
-        private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentData> constituents)
+        private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentUniverse> constituents)
         {
             var constituentsData = constituents.ToList();
             _etfConstituentData = constituentsData.ToDictionary(x => x.Symbol, x => x);

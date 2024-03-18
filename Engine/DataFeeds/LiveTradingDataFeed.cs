@@ -327,7 +327,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
                 enumerator = enqueueable;
             }
-            else if (config.Type == typeof(ETFConstituentData) || config.Type == typeof(FundamentalUniverse))
+            else if (config.Type.IsAssignableTo(typeof(ETFConstituentUniverse)) || config.Type.IsAssignableTo(typeof(FundamentalUniverse)))
             {
                 Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating {config.Type.Name} universe: {config.Symbol.ID}");
 
