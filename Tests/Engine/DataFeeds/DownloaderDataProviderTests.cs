@@ -184,10 +184,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.AreEqual(expectedSymbol, arguments.Symbol);
             Assert.AreEqual(resolution, arguments.Resolution);
+            var timezone = MarketHoursDatabase.FromDataFolder().GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
             if (resolution < Resolution.Hour)
             {
-                var mhdb = MarketHoursDatabase.FromDataFolder();
-                var timezone = mhdb.GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
                 // 1 day
                 Assert.AreEqual(date.ConvertToUtc(timezone), arguments.StartUtc);
                 Assert.AreEqual(date.AddDays(1).ConvertToUtc(timezone), arguments.EndUtc);
@@ -195,7 +194,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             else
             {
                 // the whole history
-                Assert.AreEqual(expectedLowResolutionStart, arguments.StartUtc);
+                Assert.AreEqual(expectedLowResolutionStart.ConvertToUtc(timezone), arguments.StartUtc);
                 Assert.AreEqual(DateTime.UtcNow.Date.AddDays(-1), arguments.EndUtc);
             }
         }
