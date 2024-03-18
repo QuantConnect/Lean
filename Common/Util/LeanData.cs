@@ -1242,7 +1242,7 @@ namespace QuantConnect.Util
         /// </example>
         private static Symbol CreateSymbol(string ticker, SecurityType securityType, string market, Type dataType, DateTime mappingResolveDate = default)
         {
-            if (securityType == SecurityType.Equity || securityType == SecurityType.Option)
+            if (mappingResolveDate != default && (securityType == SecurityType.Equity || securityType == SecurityType.Option))
             {
                 var symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker, market, mappingResolveDate: mappingResolveDate), ticker);
                 return securityType == SecurityType.Option ? Symbol.CreateCanonicalOption(symbol) : symbol;
