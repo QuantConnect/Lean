@@ -20,7 +20,8 @@ namespace QuantConnect.Data.Auxiliary
     /// <summary>
     /// Represents security identifier within a date range.
     /// </summary>
-    public class SymbolDateRange
+#pragma warning disable CA1815 // Override equals and operator equals on value types
+    public readonly struct SymbolDateRange
     {
         /// <summary>
         /// Represents a unique security identifier.
@@ -28,26 +29,27 @@ namespace QuantConnect.Data.Auxiliary
         public Symbol Symbol { get; }
 
         /// <summary>
-        /// Ticker Start Date Time in UTC
+        /// Ticker Start Date Time in Local
         /// </summary>
-        public DateTime StartDateTimeUtc { get; }
+        public DateTime StartDateTimeLocal { get; }
 
         /// <summary>
-        /// Ticker End Date Time in UTC
+        /// Ticker End Date Time in Local
         /// </summary>
-        public DateTime EndDateTimeUtc { get; }
+        public DateTime EndDateTimeLocal { get; }
 
         /// <summary>
         /// Create the instance of <see cref="SymbolDateRange"/> struct.
         /// </summary>
         /// <param name="symbol">The unique security identifier</param>
-        /// <param name="startDateTimeUtc">Start Date Time UTC</param>
-        /// <param name="endDateTimeUtc">End Date Time UTC</param>
-        public SymbolDateRange(Symbol symbol, DateTime startDateTimeUtc, DateTime endDateTimeUtc)
+        /// <param name="startDateTimeLocal">Start Date Time Local</param>
+        /// <param name="endDateTimeLocal">End Date Time Local</param>
+        public SymbolDateRange(Symbol symbol, DateTime startDateTimeLocal, DateTime endDateTimeLocal)
         {
             Symbol = symbol;
-            StartDateTimeUtc = startDateTimeUtc;
-            EndDateTimeUtc = endDateTimeUtc;
+            StartDateTimeLocal = startDateTimeLocal;
+            EndDateTimeLocal = endDateTimeLocal;
         }
     }
+#pragma warning restore CA1815
 }

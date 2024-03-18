@@ -17,6 +17,7 @@ using System;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
+using NodaTime;
 
 namespace QuantConnect.Data
 {
@@ -30,6 +31,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="dataDownloaderParameter">Generated class in "Lean.Engine.DataFeeds.DownloaderDataProvider"</param>
         /// <param name="mapFileProvider">Provides instances of <see cref="MapFileResolver"/> at run time</param>
+        /// <param name="exchangeTimeZone">Provides the time zone this exchange</param>
         /// <returns>
         /// Return DataDownloaderGetParameters with different 
         /// <see cref="DataDownloaderGetParameters.StartUtc"/> - <seealso cref="DataDownloaderGetParameters.EndUtc"/> range
@@ -38,7 +40,8 @@ namespace QuantConnect.Data
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="dataDownloaderParameter"/> is null.</exception>
         public static IEnumerable<DataDownloaderGetParameters> GetDataDownloaderParameterForAllMappedSymbols(
             this DataDownloaderGetParameters dataDownloaderParameter,
-            IMapFileProvider mapFileProvider)
+            IMapFileProvider mapFileProvider,
+            DateTimeZone exchangeTimeZone)
         {
             if (dataDownloaderParameter == null)
             {
@@ -52,8 +55,12 @@ namespace QuantConnect.Data
                 var yieldMappedSymbol = default(bool);
                 foreach (var symbolDateRange in mapFileProvider.RetrieveAllMappedSymbolInDateRange(dataDownloaderParameter.Symbol))
                 {
-                    var startDateTime = symbolDateRange.StartDateTimeUtc;
-                    var endDateTime = symbolDateRange.EndDateTimeUtc > dataDownloaderParameter.EndUtc ? dataDownloaderParameter.EndUtc : symbolDateRange.EndDateTimeUtc;
+                    var endDateTimeUtc = symbolDateRange.EndDateTimeLocal.ConvertToUtc(exchangeTimeZone);
+
+                    // The first start date returns from mapFile like IPO (DateTime) and can not be greater then request StartTime
+                    // The Downloader doesn't know start DateTime exactly, it always download all data
+                    var startDateTime = symbolDateRange.StartDateTimeLocal.ConvertToUtc(exchangeTimeZone);
+                    var endDateTime = endDateTimeUtc > dataDownloaderParameter.EndUtc ? dataDownloaderParameter.EndUtc : endDateTimeUtc;
 
                     yield return new DataDownloaderGetParameters(
                         symbolDateRange.Symbol, dataDownloaderParameter.Resolution, startDateTime, endDateTime, dataDownloaderParameter.TickType);

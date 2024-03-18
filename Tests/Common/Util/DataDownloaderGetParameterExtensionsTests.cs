@@ -29,12 +29,14 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class DataDownloaderGetParameterExtensionsTests
     {
+        private MarketHoursDatabase _marketHoursDatabase;
         private IMapFileProvider _mapFileProvider;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
             _mapFileProvider = TestGlobals.MapFileProvider;
+            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         }
 
         [TestCase("../../../Data/equity/usa/hour/spwr.zip", 2, "SPWR", "2005/11/17-2008/09/29,2011/11/17-2024/03/07")]
@@ -51,7 +53,7 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("../../../Data/cfd/oanda/daily/xauusd.zip", 1, "XAUUSD", null)]
         [TestCase("../../../Data/option/usa/daily/goog_2015_quote_american.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/03-2024/03/07")]
         [TestCase("../../../Data/crypto/binance/hour/btcusdt_trade.zip", 1, "BTCUSDT", null)]
-        [TestCase("../../../Data/future/binance/hour/btcusdt_trade.zip", 1, "/BTCUSDT", null)]
+        [TestCase("../../../Data/cryptofuture/binance/hour/btcusdt_trade.zip", 1, "BTCUSDT", null)]
         [TestCase("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", 1, "GC28J20", "2020/01/05-2020/01/06")]
         [TestCase("../../../Data/option/usa/minute/goog/20151223_trade_american", 1, "GOOG", "2015/12/23-2015/12/24")]
         [TestCase("../../../Data/future/cme/minute/es/20131008_quote.zip", 1, "/ES", "2013/10/08-2013/10/09")]
@@ -79,9 +81,11 @@ namespace QuantConnect.Tests.Common.Util
                 }
             }
 
+            MarketHoursDatabase.Entry entry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
+
             var getParams = new DataDownloaderGetParameters(symbol, resolution, startDateTimeUtc, endDateTimeUtc, tickType);
 
-            var downloaderDataParameters = getParams.GetDataDownloaderParameterForAllMappedSymbols(_mapFileProvider).OrderBy(d => d.StartUtc).ToList();
+            var downloaderDataParameters = getParams.GetDataDownloaderParameterForAllMappedSymbols(_mapFileProvider, entry.ExchangeHours.TimeZone).OrderBy(d => d.StartUtc).ToList();
 
             Assert.That(downloaderDataParameters.Count, Is.EqualTo(expectedDownloadDataAmount));
 
@@ -99,8 +103,8 @@ namespace QuantConnect.Tests.Common.Util
 
                 if (dateRanges != null)
                 {
-                    Assert.That(downloaderParameter.StartUtc, Is.EqualTo(dateRanges[i].StartDateTime));
-                    Assert.That(downloaderParameter.EndUtc, Is.GreaterThanOrEqualTo(dateRanges[i].EndDateTime));
+                    Assert.That(downloaderParameter.StartUtc.Date, Is.EqualTo(dateRanges[i].StartDateTime.Date));
+                    Assert.That(downloaderParameter.EndUtc.Date, Is.GreaterThanOrEqualTo(dateRanges[i].EndDateTime.Date));
                 }
             }
         }
