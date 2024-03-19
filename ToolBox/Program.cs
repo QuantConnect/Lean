@@ -24,7 +24,6 @@ using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.KrakenDownloader;
 using QuantConnect.ToolBox.NseMarketDataConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
-using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
 using System;
 using System.IO;
@@ -72,7 +71,6 @@ namespace QuantConnect.ToolBox
                 var toDate = optionsObject.ContainsKey("to-date")
                     ? Parse.DateTimeExact(optionsObject["to-date"].ToString(), "yyyyMMdd-HH:mm:ss")
                     : DateTime.UtcNow;
-                var apiKey = optionsObject.ContainsKey("api-key") ? optionsObject["api-key"].ToString() : "";
                 switch (targetApp)
                 {
                     case "cdl":
@@ -87,12 +85,6 @@ namespace QuantConnect.ToolBox
                     case "krakendownloader":
                         KrakenDownloaderProgram.KrakenDownloader(tickers, resolution, fromDate, toDate);
                         break;
-                    case "qbdl":
-                    case "ydl":
-                    case "yahoodownloader":
-                        YahooDownloaderProgram.YahooDownloader(tickers, resolution, fromDate, toDate);
-                        break;
-
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
                         break;
