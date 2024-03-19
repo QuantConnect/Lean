@@ -29,7 +29,7 @@ namespace QuantConnect.Configuration
         private const string ApplicationName = "QuantConnect.ToolBox.exe";
         private const string ApplicationDescription = "Lean Engine ToolBox";
         private const string ApplicationHelpText = "\nThe ToolBox is a wrapper of >15 tools. "
-                                                   + "Each require a different set of parameters. Example: --app=YahooDownloader --tickers="
+                                                   + "Each require a different set of parameters. Example: --app=DukascopyDownloader --tickers="
                                                    + "SPY,AAPL --resolution=Daily --from-date=yyyyMMdd-HH:mm:ss --to-date=yyyyMMdd-HH:mm:ss";
         private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
             {
@@ -38,7 +38,7 @@ namespace QuantConnect.Configuration
                                                      + "/DukascopyDownloader"
                                                      + "/FxcmDownloader or FDL/FxcmVolumeDownload or FVDL/GoogleDownloader or GDL/IBDownloader or IBDL"
                                                      + "/KrakenDownloader or KDL/OandaDownloader or ODL"
-                                                     + "/YahooDownloader or YDL/AlgoSeekFuturesConverter or ASFC"
+                                                     + "/AlgoSeekFuturesConverter or ASFC"
                                                      + "/IVolatilityEquityConverter or IVEC/KaikoDataConverter or KDC/NseMarketDataConverter or NMDC"
                                                      + "/CoarseUniverseGenerator or CUG/\n"
                                                      + "RandomDataGenerator or RDG\n"

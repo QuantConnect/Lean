@@ -24,7 +24,6 @@ using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.KrakenDownloader;
 using QuantConnect.ToolBox.NseMarketDataConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
-using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
 using System;
 using System.IO;
@@ -86,11 +85,6 @@ namespace QuantConnect.ToolBox
                     case "krakendownloader":
                         KrakenDownloaderProgram.KrakenDownloader(tickers, resolution, fromDate, toDate);
                         break;
-                    case "ydl":
-                    case "yahoodownloader":
-                        YahooDownloaderProgram.YahooDownloader(tickers, resolution, fromDate, toDate);
-                        break;
-
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
                         break;
