@@ -28,7 +28,6 @@ Example: --app=DukascopyDownloader --tickers=SPY,AAPL --resolution=Daily --from-
 	- FxcmDownloader or FDL
 	- FxcmVolumeDownload or FVDL
 	- IBDownloader or IBDL
-	- KrakenDownloader or KDL
 	- OandaDownloader or ODL
 	- BitfinexDownloader or BFXDL
 - **'--from-date=yyyyMMdd-HH:mm:ss'** required
