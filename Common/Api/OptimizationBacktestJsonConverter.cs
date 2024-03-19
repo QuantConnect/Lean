@@ -104,6 +104,8 @@ namespace QuantConnect.Api
                     {
                         case PerformanceMetrics.PortfolioTurnover:
                         case PerformanceMetrics.SortinoRatio:
+                        case PerformanceMetrics.StartEquity:
+                        case PerformanceMetrics.EndEquity:
                             continue;
                     }
                     var statistic = keyValuePair.Value.Replace("%", string.Empty);

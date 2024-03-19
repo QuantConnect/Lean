@@ -70,16 +70,16 @@ namespace QuantConnect.Statistics
         public decimal Expectancy { get; set; }
 
         /// <summary>
-        /// Starting Equity Total Value
+        /// Initial Equity Total Value
         /// </summary>
         [JsonConverter(typeof(JsonRoundingConverter))]
-        public decimal StartingEquity { get; set; }
+        public decimal StartEquity { get; set; }
 
         /// <summary>
-        /// Ending Equity Total Value
+        /// Final Equity Total Value
         /// </summary>
         [JsonConverter(typeof(JsonRoundingConverter))]
-        public decimal EndingEquity { get; set; }
+        public decimal EndEquity { get; set; }
 
         /// <summary>
         /// Annual compounded returns statistic based on the final-starting capital and years.
@@ -214,8 +214,8 @@ namespace QuantConnect.Statistics
             int? winCount = null,
             int? lossCount = null)
         {
-            StartingEquity = startingCapital;
-            EndingEquity = equity.LastOrDefault().Value;
+            StartEquity = startingCapital;
+            EndEquity = equity.LastOrDefault().Value;
 
             if (portfolioTurnover.Count > 0)
             {
