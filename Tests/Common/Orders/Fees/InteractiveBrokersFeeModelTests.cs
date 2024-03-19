@@ -100,15 +100,19 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(1000 * expectedFee, fee.Value.Amount);
         }
 
-        [TestCase(10000, 1)] // The calculated fee will be under 1, but the minimum fee is 1
-        [TestCase(70000, 0.00002 * 70000)]
-        [TestCase(100000, 0.00002 * 100000)]
-        public void CalculatesCFDFee(decimal price, decimal expectedFee)
+        [TestCase("USD", 70000, 0.00002 * 70000)]
+        [TestCase("USD", 100000, 0.00002 * 100000)]
+        [TestCase("USD", 10000, 1)] // The calculated fee will be under 1, but the minimum fee is 1 USD
+        [TestCase("JPY", 3000000, 0.00002 * 3000000)]
+        [TestCase("JPY", 1000000, 40)]// The calculated fee will be under 40, but the minimum fee is 40 JPY
+        [TestCase("HKD", 600000, 0.00002 * 600000)]
+        [TestCase("HKD", 200000, 10)]// The calculated fee will be under 10, but the minimum fee is 10 HKD
+        public void CalculatesCFDFee(string quoteCurrency, decimal price, decimal expectedFee)
         {
             var security = new Cfd(Symbols.DE10YBEUR,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new Cash("USD", 0, 0),
-                SymbolProperties.GetDefault("USD"),
+                new Cash(quoteCurrency, 0, 0),
+                SymbolProperties.GetDefault(quoteCurrency),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache());
@@ -120,7 +124,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var order = new MarketOrder(security.Symbol, 1, DateTime.UtcNow);
             var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
 
-            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(quoteCurrency, fee.Value.Currency);
             Assert.AreEqual(expectedFee, fee.Value.Amount);
         }
 

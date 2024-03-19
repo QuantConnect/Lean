@@ -169,8 +169,16 @@ namespace QuantConnect.Orders.Fees
 
                 case SecurityType.Cfd:
                     var value = Math.Abs(order.GetValue(security));
-                    feeResult = Math.Max(0.00002m * value, 1); // 0.002% or 1USD minimum
+                    feeResult = 0.00002m * value; // 0.002%
                     feeCurrency = security.QuoteCurrency.Symbol;
+
+                    var minimumFee = security.QuoteCurrency.Symbol switch
+                    {
+                        "JPY" => 40.0m,
+                        "HKD" => 10.0m,
+                        _ => 1.0m
+                    };
+                    feeResult = Math.Max(feeResult, minimumFee);
                     break;
 
                 default:
