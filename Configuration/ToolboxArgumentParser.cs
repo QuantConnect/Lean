@@ -37,7 +37,7 @@ namespace QuantConnect.Configuration
                                                      "[REQUIRED] Target tool, CASE INSENSITIVE: GDAXDownloader or GDAXDL/CryptoiqDownloader or CDL"
                                                      + "/DukascopyDownloader"
                                                      + "/FxcmDownloader or FDL/FxcmVolumeDownload or FVDL/GoogleDownloader or GDL/IBDownloader or IBDL"
-                                                     + "/KrakenDownloader or KDL/OandaDownloader or ODL/QuandlBitfinexDownloader or QBDL"
+                                                     + "/KrakenDownloader or KDL/OandaDownloader or ODL"
                                                      + "/YahooDownloader or YDL/AlgoSeekFuturesConverter or ASFC"
                                                      + "/IVolatilityEquityConverter or IVEC/KaikoDataConverter or KDC/NseMarketDataConverter or NMDC"
                                                      + "/CoarseUniverseGenerator or CUG/\n"
@@ -45,9 +45,9 @@ namespace QuantConnect.Configuration
                                                      + "Example 1: --app=DDL\n"
                                                      + "Example 2: --app=NseMarketDataConverter\n"
                                                      + "Example 3: --app=RDG"),
-                new CommandLineOption("tickers", CommandOptionType.MultipleValue, "[REQUIRED ALL downloaders (except QBDL)] "
+                new CommandLineOption("tickers", CommandOptionType.MultipleValue, "[REQUIRED ALL downloaders] "
                                                                                   + "--tickers=SPY,AAPL,etc"),
-                new CommandLineOption("resolution", CommandOptionType.SingleValue, "[REQUIRED ALL downloaders (except QBDL, CDL) and IVolatilityEquityConverter]"
+                new CommandLineOption("resolution", CommandOptionType.SingleValue, "[REQUIRED ALL downloaders (except CDL) and IVolatilityEquityConverter]"
                                                                                    + " *Not all downloaders support all resolutions. Send empty for more information.*"
                                                                                    + " CASE SENSITIVE: --resolution=Tick/Second/Minute/Hour/Daily/All" +Environment.NewLine+
                                                                                    "[OPTIONAL for RandomDataGenerator - same format as downloaders, Options only support Minute"),
@@ -55,7 +55,6 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("to-date", CommandOptionType.SingleValue, "[OPTIONAL for downloaders] If not provided 'DateTime.UtcNow' will "
                                                                                 + "be used. --to-date=yyyyMMdd-HH:mm:ss"),
                 new CommandLineOption("exchange", CommandOptionType.SingleValue, "[REQUIRED for CryptoiqDownloader] [Optional for KaikoDataConverter] The exchange to process, if not defined, all exchanges will be processed."),
-                new CommandLineOption("api-key", CommandOptionType.SingleValue, "[REQUIRED for QuandlBitfinexDownloader]"),
                 new CommandLineOption("date", CommandOptionType.SingleValue, "[REQUIRED for AlgoSeekFuturesConverter, AlgoSeekOptionsConverter, KaikoDataConverter]"
                                                                              + "Date for the option bz files: --date=yyyyMMdd"),
                 new CommandLineOption("source-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter, KaikoDataConverter,"
