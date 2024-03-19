@@ -63,10 +63,10 @@ class ConstituentWeightedRsiAlphaModel(AlphaModel):
     def Update(self, algorithm: QCAlgorithm, data: Slice):
         algoConstituents = []
         for barSymbol in data.Bars.Keys:
-            if not algorithm.Securities[barSymbol].Cache.HasData(ETFConstituentData):
+            if not algorithm.Securities[barSymbol].Cache.HasData(ETFConstituentUniverse):
                 continue
 
-            constituentData = algorithm.Securities[barSymbol].Cache.GetData[ETFConstituentData]()
+            constituentData = algorithm.Securities[barSymbol].Cache.GetData[ETFConstituentUniverse]()
             algoConstituents.append(constituentData)
 
         if len(algoConstituents) == 0 or len(data.Bars) == 0:

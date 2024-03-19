@@ -144,7 +144,7 @@ namespace QuantConnect.Tests.Algorithm
             return algo;
         }
 
-        private Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> CreateReturnAllFunc()
+        private Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> CreateReturnAllFunc()
         {
             return x => x.Select(y => y.Symbol);
         }

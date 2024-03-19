@@ -225,10 +225,10 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(SecurityType.Base, symbol.SecurityType);
             Assert.AreEqual(Market.USA, symbol.ID.Market);
             Assert.AreEqual(Resolution.Daily, resolution);
-            Assert.AreEqual("SPY.ETFConstituentData", symbol.ID.Symbol);
+            Assert.AreEqual("SPY.ETFConstituentUniverse", symbol.ID.Symbol);
             Assert.AreEqual(new DateTime(2020, 1, 2), date);
             Assert.IsTrue(SecurityIdentifier.TryGetCustomDataType(symbol.ID.Symbol, out var dataType));
-            Assert.AreEqual(typeof(ETFConstituentData).Name, dataType);
+            Assert.AreEqual(typeof(ETFConstituentUniverse).Name, dataType);
         }
 
         [Test]

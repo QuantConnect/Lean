@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse(Universe.ETF(_qqq, universeFilterFunc: FilterETFs));
         }
 
-        private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentData> constituents)
+        private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentUniverse> constituents)
         {
             var constituentSymbols = constituents.Select(x => x.Symbol).ToHashSet();
             if (!constituentSymbols.Contains(_aapl))

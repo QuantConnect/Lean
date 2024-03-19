@@ -1765,7 +1765,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [TestCase("20140325", typeof(CoarseFundamental))]
-        [TestCase("20201202", typeof(ETFConstituentData))]
+        [TestCase("20201202", typeof(ETFConstituentUniverse))]
         public void UniverseDataIsHoldUntilTimeIsRight(string dateTime, Type universeData)
         {
             _startDate = Time.ParseDate(dateTime);

@@ -172,7 +172,7 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
             } while (++numberOfOperation <= 9) ;
         }
 
-        private IEnumerable<Symbol> ETFConstituentsFilter(IEnumerable<ETFConstituentData> constituents)
+        private IEnumerable<Symbol> ETFConstituentsFilter(IEnumerable<ETFConstituentUniverse> constituents)
         {
             return constituents.Select(c => c.Symbol);
         }

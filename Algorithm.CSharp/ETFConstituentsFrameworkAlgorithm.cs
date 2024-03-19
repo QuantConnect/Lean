@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
         }
 
-        private protected IEnumerable<Symbol> ETFConstituentsFilter(IEnumerable<ETFConstituentData> constituents)
+        private protected IEnumerable<Symbol> ETFConstituentsFilter(IEnumerable<ETFConstituentUniverse> constituents)
         {
             // Get the 10 securities with the largest weight in the index
             return constituents.OrderByDescending(c => c.Weight).Take(8).Select(c => c.Symbol);
