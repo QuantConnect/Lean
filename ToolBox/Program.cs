@@ -17,7 +17,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
-using QuantConnect.ToolBox.IVolatilityEquityConverter;
 using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using QuantConnect.Util;
@@ -81,13 +80,6 @@ namespace QuantConnect.ToolBox
                     case "asfc":
                     case "algoseekfuturesconverter":
                         AlgoSeekFuturesProgram.AlgoSeekFuturesConverter(GetParameterOrExit(optionsObject, "date"));
-                        break;
-                    case "ivec":
-                    case "ivolatilityequityconverter":
-                        IVolatilityEquityConverterProgram.IVolatilityEquityConverter(GetParameterOrExit(optionsObject, "source-dir"),
-                                                                                     GetParameterOrExit(optionsObject, "source-meta-dir"),
-                                                                                     GetParameterOrExit(optionsObject, "destination-dir"),
-                                                                                     GetParameterOrExit(optionsObject, "resolution"));
                         break;
                     case "kdc":
                     case "kaikodataconverter":
