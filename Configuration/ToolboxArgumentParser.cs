@@ -38,7 +38,6 @@ namespace QuantConnect.Configuration
                                                      + "/DukascopyDownloader"
                                                      + "/FxcmDownloader or FDL/FxcmVolumeDownload or FVDL/GoogleDownloader or GDL/IBDownloader or IBDL"
                                                      + "/OandaDownloader or ODL"
-                                                     + "/AlgoSeekFuturesConverter or ASFC"
                                                      + "/IVolatilityEquityConverter or IVEC/KaikoDataConverter or KDC/NseMarketDataConverter or NMDC"
                                                      + "/CoarseUniverseGenerator or CUG/\n"
                                                      + "RandomDataGenerator or RDG\n"
@@ -55,7 +54,7 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("to-date", CommandOptionType.SingleValue, "[OPTIONAL for downloaders] If not provided 'DateTime.UtcNow' will "
                                                                                 + "be used. --to-date=yyyyMMdd-HH:mm:ss"),
                 new CommandLineOption("exchange", CommandOptionType.SingleValue, "[REQUIRED for CryptoiqDownloader] [Optional for KaikoDataConverter] The exchange to process, if not defined, all exchanges will be processed."),
-                new CommandLineOption("date", CommandOptionType.SingleValue, "[REQUIRED for AlgoSeekFuturesConverter, AlgoSeekOptionsConverter, KaikoDataConverter]"
+                new CommandLineOption("date", CommandOptionType.SingleValue, "[REQUIRED for KaikoDataConverter]"
                                                                              + "Date for the option bz files: --date=yyyyMMdd"),
                 new CommandLineOption("source-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter, KaikoDataConverter,"
                                                                                    + " NseMarketDataConverter]"),

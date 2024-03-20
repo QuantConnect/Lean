@@ -38,10 +38,6 @@ Example: --app=DukascopyDownloader --tickers=SPY,AAPL --resolution=Daily --from-
 #### Available Converters
 
 - **'--app='**
-	- AlgoSeekFuturesConverter or ASFC
-		- **'--date=yyyyMMdd'** reference date.
-	- AlgoSeekOptionsConverter or ASOC
-		- **'--date=yyyyMMdd'** reference date.
 	- IVolatilityEquityConverter or IVEC
 		- **'--source-dir='** source archived IVolatility data.
 		- **'--source-meta-dir='** source archived IVolatility meta data.
