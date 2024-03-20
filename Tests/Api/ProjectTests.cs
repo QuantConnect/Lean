@@ -385,6 +385,97 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(0, backtestsResult.Backtests[0].Tags.Count);
         }
 
+        [Test]
+        public void CreatesLiveAlgorithm()
+        {
+            // Create default algorithm settings
+            var settings = new Dictionary<string, object>()
+            {
+                { "id", "QuantConnectBrokerage" },
+                { "environment", "paper" },
+                { "cash", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "currency" , "USD"},
+                            { "amount", 300000}
+                        }
+                    }
+                    }
+                },
+                { "holdings", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "symbolId" , "SPY R735QTJ8XC9X"},
+                            { "symbol", "SPY"},
+                            { "underlying", null },
+                            { "quantity", 1 },
+                            { "averagePrice", 10}
+                        }
+                    }
+                    }
+                },
+            };
+
+            var quantConnectDataProvider = new Dictionary<string, object>
+            {
+                { "id", "QuantConnectBrokerage" },
+            };
+
+            var dataProviders = new Dictionary<string, object>
+            {
+                { "QuantConnectBrokerage", quantConnectDataProvider }
+            };
+
+            var file = new ProjectFile
+            {
+                Name = "Main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+            };
+
+            // Create a new project
+            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            var projectId = project.Projects.First().ProjectId;
+
+            // Update Project Files
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
+            Assert.IsTrue(updateProjectFileContent.Success);
+
+            // Create compile
+            var compile = ApiClient.CreateCompile(projectId);
+            Assert.IsTrue(compile.Success);
+
+            // Wait at max 30 seconds for project to compile
+            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId);
+            Assert.IsTrue(compileCheck.Success);
+            Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
+
+            // Get a live node to launch the algorithm on
+            var nodesResponse = ApiClient.ReadProjectNodes(projectId);
+            Assert.IsTrue(nodesResponse.Success);
+            var freeNode = nodesResponse.Nodes.LiveNodes.Where(x => x.Busy == false);
+            Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
+
+            // Create live default algorithm
+            var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings, dataProviders: dataProviders);
+            var createLiveAlgorithmWorkedCorrectly = createLiveAlgorithm.Success;
+
+            // Liquidate live algorithm; will also stop algorithm
+            var liquidateLive = ApiClient.LiquidateLiveAlgorithm(projectId);
+            var liquidateLiveWorkedCorrectly = liquidateLive.Success;
+
+            // Delete the project
+            var deleteProject = ApiClient.DeleteProject(projectId);
+            Assert.IsTrue(deleteProject.Success);
+
+            // We assert the algorithm was created and deleted correctly at the end because
+            // even if it fails, we want the project to be deleted and not leave any garbage
+            // around
+            Assert.IsTrue(createLiveAlgorithmWorkedCorrectly);
+            Assert.IsTrue(liquidateLiveWorkedCorrectly);
+        }
+
         private static string GetTimestamp()
         {
             return DateTime.UtcNow.ToStringInvariant("yyyyMMddHHmmssfffff");

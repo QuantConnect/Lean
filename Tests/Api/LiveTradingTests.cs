@@ -190,8 +190,8 @@ namespace QuantConnect.Tests.API
             {
                 { "id", "BitfinexBrokerage" },
                 { "environment", "live" },
-                { "bitfinex-api-secret", key },
-                { "bitfinex-api-key", secretKey }
+                { "bitfinex-api-secret", secretKey },
+                { "bitfinex-api-key", key }
             };
 
             var file = new ProjectFile
