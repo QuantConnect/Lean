@@ -17,13 +17,12 @@ Each tool requires a different set of parameters, the only **required argument i
 
 Help information is available using the '--help' parameter.
 
-Example: --app=DukascopyDownloader --tickers=SPY,AAPL --resolution=Daily --from-date=yyyyMMdd-HH:mm:ss --to-date=yyyyMMdd-HH:mm:ss
+Example: --app=RandomDataGenerator --tickers=SPY,AAPL --resolution=Daily --from-date=yyyyMMdd-HH:mm:ss --to-date=yyyyMMdd-HH:mm:ss
 
 #### Available downloaders
 
 - **'--app='**
 	- GDAXDownloader or GDAXDL
-	- DukascopyDownloader or DDL
 	- FxcmDownloader or FDL
 	- FxcmVolumeDownload or FVDL
 	- IBDownloader or IBDL
