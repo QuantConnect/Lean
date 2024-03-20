@@ -23,7 +23,6 @@ Example: --app=DukascopyDownloader --tickers=SPY,AAPL --resolution=Daily --from-
 
 - **'--app='**
 	- GDAXDownloader or GDAXDL
-	- CryptoiqDownloader or CDL
 	- DukascopyDownloader or DDL
 	- FxcmDownloader or FDL
 	- FxcmVolumeDownload or FVDL
@@ -32,7 +31,7 @@ Example: --app=DukascopyDownloader --tickers=SPY,AAPL --resolution=Daily --from-
 	- BitfinexDownloader or BFXDL
 - **'--from-date=yyyyMMdd-HH:mm:ss'** required
 - **'--tickers=SPY,AAPL,etc'** required
-- **'--resolution=Tick/Second/Minute/Hour/Daily/All'** required, CryptoiqDownloader (CDL). **Case sensitive. Not all downloaders support all resolutions**, send empty for more information.
+- **'--resolution=Tick/Second/Minute/Hour/Daily/All'** required. **Case sensitive. Not all downloaders support all resolutions**, send empty for more information.
 - **'--to-date=yyyyMMdd-HH:mm:ss'** optional. If not provided 'DateTime.UtcNow' will be used
 
 #### Available Converters
