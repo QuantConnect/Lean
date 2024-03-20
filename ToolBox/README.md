@@ -51,9 +51,6 @@ Example: --app=DukascopyDownloader --tickers=SPY,AAPL --resolution=Daily --from-
 		- **'--market='** the exchange the data represents.
 		- **'--tick-type=Quote/Trade'** the tick type being processed. Case insensitive.
 		- **'--source-dir='** path to the raw Kaiko data.
-	- NseMarketDataConverter or NMDC
-		- **'--source-dir='** source directory of unzipped NSE data.
-		- **'--destination-dir='** directory where Lean Data is located "Lean/Data".
 	- QuantQuoteConverter or QQC
 		- **'--source-dir='** directory where your QuantQuote order is extracted.
 		- **'--destination-dir='** directory where Lean Data is located "Lean/Data".
