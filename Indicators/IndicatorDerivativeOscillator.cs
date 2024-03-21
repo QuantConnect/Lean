@@ -39,6 +39,7 @@ namespace QuantConnect.Indicators
         /// <param name="a2"></param>
         /// <param name="a3"></param>
         public IndicatorDerivativeOscillator(string name, int r1, int a1, int a2, int a3)
+            : base(name)
         {
             _r1 = r1;
             _a1 = a1;
@@ -49,5 +50,13 @@ namespace QuantConnect.Indicators
             _doubleSmoothedRsi = new ExponentialMovingAverage($"{name}_DoubleSmoothedRSI", a2);
             _signalLine = new SimpleMovingAverage($"{name}_SignalLine", a3);
         }
+
+        public override bool IsReady { get; }
+        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int WarmUpPeriod { get; }
     }
 }
