@@ -12,7 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
+
 namespace QuantConnect.Indicators
 {
     /// <summary>\
@@ -29,16 +31,22 @@ namespace QuantConnect.Indicators
         private readonly int _a1;
         private readonly int _a2;
         private readonly int _a3;
-        
+
         /// <summary>
-        /// 
+        /// Initializes a new instance of the IndicatorDerivativeOscillator class with the specified name and periods.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="r1"></param>
-        /// <param name="a1"></param>
-        /// <param name="a2"></param>
-        /// <param name="a3"></param>
-        public IndicatorDerivativeOscillator(string name, int r1, int a1, int a2, int a3)
+        /// <param name="name">The name of the indicator</param>
+        /// <param name="r1">The period for the RSI calculation</param>
+        /// <param name="a1">The period for the smoothing RSI</param>
+        /// <param name="a2">The period for the double smoothing RSI</param>
+        /// <param name="a3">The period for the signal line</param>
+        public IndicatorDerivativeOscillator(
+            string name,
+            int r1,
+            int a1,
+            int a2,
+            int a3
+            )
             : base(name)
         {
             _r1 = r1;
@@ -52,11 +60,43 @@ namespace QuantConnect.Indicators
         }
 
         public override bool IsReady { get; }
+
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            throw new NotImplementedException();
+            _rsi.Update(input);
+
+            if (!_rsi.IsReady)
+            {
+                return 0;
+            }
+
+            _smoothedRsi.Update(_rsi.Current);
+
+            if (!_smoothedRsi.IsReady)
+            {
+                return 0;
+            }
+
+            _doubleSmoothedRsi.Update(_smoothedRsi.Current);
+
+            if (!_doubleSmoothedRsi.IsReady)
+            {
+                return 0;
+            }
+
+            _signalLine.Update(_doubleSmoothedRsi.Current);
+
+            if (!_signalLine.IsReady)
+            {
+                return 0;
+            }
+
+            return _doubleSmoothedRsi.Current.Value - _signalLine.Current.Value;
         }
 
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
         public int WarmUpPeriod { get; }
     }
 }
