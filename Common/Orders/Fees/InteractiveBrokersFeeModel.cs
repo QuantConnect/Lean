@@ -167,6 +167,20 @@ namespace QuantConnect.Orders.Fees
                     feeResult = Math.Abs(tradeFee);
                     break;
 
+                case SecurityType.Cfd:
+                    var value = Math.Abs(order.GetValue(security));
+                    feeResult = 0.00002m * value; // 0.002%
+                    feeCurrency = security.QuoteCurrency.Symbol;
+
+                    var minimumFee = security.QuoteCurrency.Symbol switch
+                    {
+                        "JPY" => 40.0m,
+                        "HKD" => 10.0m,
+                        _ => 1.0m
+                    };
+                    feeResult = Math.Max(feeResult, minimumFee);
+                    break;
+
                 default:
                     // unsupported security type
                     throw new ArgumentException(Messages.FeeModel.UnsupportedSecurityType(security));
