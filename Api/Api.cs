@@ -31,6 +31,7 @@ using QuantConnect.Orders;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using QuantConnect.Notifications;
+using Python.Runtime;
 
 namespace QuantConnect.Api
 {
@@ -664,17 +665,27 @@ namespace QuantConnect.Api
         /// <param name="projectId">Id of the project on QuantConnect</param>
         /// <param name="compileId">Id of the compilation on QuantConnect</param>
         /// <param name="nodeId">Id of the node that will run the algorithm</param>
-        /// <param name="baseLiveAlgorithmSettings">Brokerage specific <see cref="BaseLiveAlgorithmSettings">BaseLiveAlgorithmSettings</see>.</param>
+        /// <param name="brokerageSettings">Dictionary with brokerage specific settings. Each brokerage requires certain specific credentials
+        ///                         in order to process the given orders. Each key in this dictionary represents a required field/credential
+        ///                         to provide to the brokerage API and its value represents the value of that field. For example: "brokerageSettings: {
+        ///                         "id": "Binance", "binance-api-secret": "123ABC", "binance-api-key": "ABC123"}. It is worth saying,
+        ///                         that this dictionary must always contain an entry whose key is "id" and its value is the name of the brokerage
+        ///                         (see <see cref="Brokerages.BrokerageName"/>)</param>
         /// <param name="versionId">The version of the Lean used to run the algorithm.
         ///                         -1 is master, however, sometimes this can create problems with live deployments.
         ///                         If you experience problems using, try specifying the version of Lean you would like to use.</param>
+        /// <param name="dataProviders">Dictionary with data providers credentials. Each data provider requires certain credentials
+        ///                         in order to retrieve data from their API. Each key in this dictionary describes a data provider name
+        ///                         and its corresponding value is another dictionary with the required key-value pairs of credential
+        ///                         names and values. For example: "dataProviders: { "InteractiveBrokersBrokerage" : { "id": 12345, "environment" : "paper",
+        ///                         "username": "testUsername", "password": "testPassword"}}"</param>
         /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
-
         public LiveAlgorithm CreateLiveAlgorithm(int projectId,
                                                  string compileId,
                                                  string nodeId,
-                                                 BaseLiveAlgorithmSettings baseLiveAlgorithmSettings,
-                                                 string versionId = "-1")
+                                                 Dictionary<string, object> brokerageSettings,
+                                                 string versionId = "-1",
+                                                 Dictionary<string, object> dataProviders = null)
         {
             var request = new RestRequest("live/create", Method.POST)
             {
@@ -686,13 +697,55 @@ namespace QuantConnect.Api
                 (projectId,
                 compileId,
                 nodeId,
-                baseLiveAlgorithmSettings,
-                versionId)
+                brokerageSettings,
+                versionId,
+                dataProviders
+                )
                 ), ParameterType.RequestBody);
 
             LiveAlgorithm result;
             ApiConnection.TryRequest(request, out result);
             return result;
+        }
+
+        /// <summary>
+        /// Create a live algorithm.
+        /// </summary>
+        /// <param name="projectId">Id of the project on QuantConnect</param>
+        /// <param name="compileId">Id of the compilation on QuantConnect</param>
+        /// <param name="nodeId">Id of the node that will run the algorithm</param>
+        /// <param name="brokerageSettings">Python Dictionary with brokerage specific settings. Each brokerage requires certain specific credentials
+        ///                         in order to process the given orders. Each key in this dictionary represents a required field/credential
+        ///                         to provide to the brokerage API and its value represents the value of that field. For example: "brokerageSettings: {
+        ///                         "id": "Binance", "binance-api-secret": "123ABC", "binance-api-key": "ABC123"}. It is worth saying,
+        ///                         that this dictionary must always contain an entry whose key is "id" and its value is the name of the brokerage
+        ///                         (see <see cref="Brokerages.BrokerageName"/>)</param>
+        /// <param name="versionId">The version of the Lean used to run the algorithm.
+        ///                         -1 is master, however, sometimes this can create problems with live deployments.
+        ///                         If you experience problems using, try specifying the version of Lean you would like to use.</param>
+        /// <param name="dataProviders">Python Dictionary with data providers credentials. Each data provider requires certain credentials
+        ///                         in order to retrieve data from their API. Each key in this dictionary describes a data provider name
+        ///                         and its corresponding value is another dictionary with the required key-value pairs of credential
+        ///                         names and values. For example: "dataProviders: { "InteractiveBrokersBrokerage" : { "id": 12345, "environment" : "paper",
+        ///                         "username": "testUsername", "password": "testPassword"}}"</param>
+        /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
+
+        public LiveAlgorithm CreateLiveAlgorithm(int projectId, string compileId, string nodeId, PyObject brokerageSettings, string versionId = "-1", PyObject dataProviders = null)
+        {
+            return CreateLiveAlgorithm(projectId, compileId, nodeId, ConvertToDictionary(brokerageSettings), versionId, dataProviders != null ? ConvertToDictionary(dataProviders) : null);
+        }
+
+        /// <summary>
+        /// Converts a given Python dictionary into a C# <see cref="Dictionary{string, object}"/>
+        /// </summary>
+        /// <param name="brokerageSettings">Python dictionary to be converted</param>
+        private static Dictionary<string, object> ConvertToDictionary(PyObject brokerageSettings)
+        {
+            using (Py.GIL())
+            {
+                var stringBrokerageSettings = brokerageSettings.ToString();
+                return JsonConvert.DeserializeObject<Dictionary<string, object>>(stringBrokerageSettings);
+            }
         }
 
         /// <summary>
