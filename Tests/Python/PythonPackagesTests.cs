@@ -56,10 +56,10 @@ def RunTest():
         public void PyCaret()
         {
             AssertCode(@"
-def RunTest():
-    from pycaret.datasets import get_data
-    from pycaret.classification import *
+from pycaret.datasets import get_data
+from pycaret.classification import setup
 
+def RunTest():
     data = get_data('diabetes')
     s = setup(data, target = 'Class variable', session_id = 123)");
         }
@@ -535,7 +535,7 @@ def RunTest():
     lp.print_stats()");
         }
 
-        [Test, Explicit("Requires an older version of pydantic, not in default env")]
+        [Test]
         public void FuzzyCMeansTest()
         {
             AssertCode(
@@ -1014,6 +1014,21 @@ def RunTest():
     model = sm.OLS(y, X)
     results = model.fit()
     return results.summary()"
+            );
+        }
+
+        [Test]
+        public void PykalmanTest()
+        {
+            AssertCode(
+                @"
+import numpy
+from pykalman import KalmanFilter
+def RunTest():
+    kf = KalmanFilter(transition_matrices = [[1, 1], [0, 1]], observation_matrices = [[0.1, 0.5], [-0.3, 0.0]])
+    measurements = numpy.asarray([[1,0], [0,0], [0,1]])  # 3 observations
+    kf = kf.em(measurements, n_iter=5)
+    return kf.filter(measurements)"
             );
         }
 

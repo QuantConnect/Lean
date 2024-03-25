@@ -90,6 +90,7 @@ RUN pip install --no-cache-dir      \
     gym==0.26.2                     \
     ipywidgets==8.1.2               \
     deap==1.4.1                     \
+    pykalman==0.9.7                 \
     cvxpy==1.4.2                    \
     pyportfolioopt==1.5.5           \
     pmdarima==2.0.4                 \
@@ -119,7 +120,7 @@ RUN pip install --no-cache-dir      \
     seaborn==0.13.2                 \
     optuna==3.5.0                   \
     findiff==0.10.0                 \
-    sktime==0.27.0                  \
+    sktime==0.27.1                  \
     hyperopt==0.2.7                 \
     bayesian-optimization==1.4.3    \
     pingouin==0.5.4                 \
@@ -159,7 +160,7 @@ RUN pip install --no-cache-dir      \
     tensortrade==1.0.3              \
     polars==0.20.15                 \
     stockstats==0.6.2               \
-    autokeras==1.1.0                \
+    autokeras==2.0.0                \
     QuantStats==0.0.62              \
     hurst==0.0.5                    \
     numerapi==2.18.0                \
@@ -192,7 +193,7 @@ RUN pip install --no-cache-dir      \
     DoubleML==0.7.1                 \
     jupyter-bokeh==4.0.0            \
     imbalanced-learn==0.12.0        \
-    openai==1.14.0                  \
+    openai==1.14.3                  \
     lazypredict-nightly==0.3.0      \
     darts==0.28.0                   \
     fastparquet==2024.2.0           \
@@ -231,7 +232,10 @@ RUN pip install --no-cache-dir      \
     jupyter-ai==2.12.0              \
     keras-tcn==3.5.0                \
     neuralprophet[live]==0.8.0      \
-    Riskfolio-Lib==6.0.0
+    Riskfolio-Lib==6.0.0            \
+    fuzzy-c-means==1.7.2            \
+    EMD-signal==1.6.0               \
+    dask[complete]==2024.3.1
 
 RUN conda install -c conda-forge -y cudatoolkit=11.8.0 && conda install -c nvidia -y cuda-compiler=12.2.2 && conda clean -y --all
 ENV XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/miniconda3/
@@ -283,16 +287,6 @@ RUN wget -q https://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     ./configure --prefix=/usr && make && make install && \
     cd .. && rm -rf ta-lib && rm ta-lib-0.4.0-src.tar.gz && \
     pip install --no-cache-dir TA-Lib==0.4.28
-
-# Install PyEMD
-RUN wget -q https://cdn.quantconnect.com/pyemd/PyEMD-master-9f42c57.zip && \
-    unzip -q PyEMD-master-9f42c57.zip && cd PyEMD-master && \
-    pip install . && cd .. && rm -rf PyEMD-master && rm PyEMD-master-9f42c57.zip
-
-# Install fuzzy-c-means
-RUN wget -q https://cdn.quantconnect.com/fuzzy-c-means/fuzzy-c-means-master-0c4b407.zip && \
-    unzip -q fuzzy-c-means-master-0c4b407.zip && cd fuzzy-c-means-master && \
-    pip install . && cd .. && rm -rf fuzzy-c-means-master && rm fuzzy-c-means-master-0c4b407.zip
 
 RUN echo "{\"argv\":[\"python\",\"-m\",\"ipykernel_launcher\",\"-f\",\"{connection_file}\"],\"display_name\":\"Foundation-Py-Default\",\"language\":\"python\",\"metadata\":{\"debugger\":true}}" > /opt/miniconda3/share/jupyter/kernels/python3/kernel.json
 
