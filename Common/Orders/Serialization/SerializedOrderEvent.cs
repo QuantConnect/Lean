@@ -24,11 +24,17 @@ namespace QuantConnect.Orders.Serialization
     /// </summary>
     public class SerializedOrderEvent
     {
+        [JsonProperty(PropertyName = "symbol-value")]
+        public string SymbolValue { get; set; }
+
+        [JsonProperty(PropertyName = "symbol-permtick")]
+        public string SymbolPermtick { get; set; }
+
         /// <summary>
         /// The unique order event id
         /// </summary>
         [JsonProperty("id")]
-        public virtual string Id => $"{AlgorithmId}-{OrderId}-{OrderEventId}";
+        public virtual string Id { get; set; }
 
         /// <summary>
         /// Algorithm Id, BacktestId or DeployId

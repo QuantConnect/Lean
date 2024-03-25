@@ -25,6 +25,12 @@ namespace QuantConnect.Orders
     public class OrdersResponseWrapper : RestResponse
     {
         /// <summary>
+        /// Total number of returned orders
+        /// </summary>
+        [JsonProperty(PropertyName = "length")]
+        public int Length { get; set; }
+
+        /// <summary>
         /// Collection of summarized Orders objects
         /// </summary>
         [JsonProperty(PropertyName = "orders")]

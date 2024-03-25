@@ -58,8 +58,8 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">The project to which the file should be added</param>
         /// <param name="name">The name of the new file</param>
         /// <param name="content">The content of the new file</param>
-        /// <returns><see cref="ProjectFilesResponse"/> that includes information about the newly created file</returns>
-        ProjectFilesResponse AddProjectFile(int projectId, string name, string content);
+        /// <returns><see cref="ProjectFileCreateResponse"/> that includes information about the newly created file</returns>
+        ProjectFileCreateResponse AddProjectFile(int projectId, string name, string content);
 
         /// <summary>
         /// Update the name of a file
@@ -68,7 +68,7 @@ namespace QuantConnect.Interfaces
         /// <param name="oldFileName">The current name of the file</param>
         /// <param name="newFileName">The new name for the file</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
-        RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName);
+        ProjectFileUpdateFileNameResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName);
 
         /// <summary>
         /// Update the contents of a file
@@ -77,22 +77,22 @@ namespace QuantConnect.Interfaces
         /// <param name="fileName">The name of the file that should be updated</param>
         /// <param name="newFileContents">The new contents of the file</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
-        RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents);
+        ProjectFileCreateResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents);
 
         /// <summary>
         /// Read a file in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file</param>
-        /// <returns><see cref="ProjectFilesResponse"/> that includes the file information</returns>
-        ProjectFilesResponse ReadProjectFile(int projectId, string fileName);
+        /// <returns><see cref="ProjectFileReadResponse"/> that includes the file information</returns>
+        ProjectFileReadResponse ReadProjectFile(int projectId, string fileName);
 
         /// <summary>
         /// Read all files in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
-        /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
-        ProjectFilesResponse ReadProjectFiles(int projectId);
+        /// <returns><see cref="ProjectFilesReadResponse"/> that includes the information about all files in the project</returns>
+        ProjectFilesReadResponse ReadProjectFiles(int projectId);
 
         /// <summary>
         /// Read all nodes in a project.

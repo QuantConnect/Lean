@@ -44,14 +44,111 @@ namespace QuantConnect.Api
     }
 
     /// <summary>
-    /// Response received when reading all files of a project
+    /// Class for CreateProject API response
     /// </summary>
-    public class ProjectFilesResponse : RestResponse
+    public class ProjectFileCreate : ProjectFile
+    {
+        /// <summary>
+        /// Project id
+        /// </summary>
+        [JsonProperty(PropertyName = "id")]
+        public string Id { get; set; }
+    }
+
+    /// <summary>
+    /// Base class for ReadProject API response
+    /// </summary>
+    public class BaseProjectFileRead : ProjectFile
+    {
+        [JsonProperty(PropertyName = "open")]
+        public int Open { get; set; }
+
+        [JsonProperty(PropertyName = "projectId")]
+        public int ProjectId { get; set; }
+
+        [JsonProperty(PropertyName = "id")]
+        public int Id { get; set; }
+
+        [JsonProperty(PropertyName = "collaborationId")]
+        public string CollaborationId {  get; set; }
+
+        [JsonProperty(PropertyName = "readOnly")]
+        public bool ReadOnly { get; set; }
+    }
+
+    /// <summary>
+    /// Class for read project file API response
+    /// </summary>
+    public class ProjectFileRead : BaseProjectFileRead
+    {
+        [JsonProperty(PropertyName = "binary")]
+        public bool Binary { get; set; }
+    }
+
+    /// <summary>
+    /// Class for read project files API response
+    /// </summary>
+    public class ProjectFilesRead : BaseProjectFileRead
+    {
+        [JsonProperty(PropertyName = "isLibrary")]
+        public bool IsLibrary { get; set; }
+
+        [JsonProperty(PropertyName = "userHasAccess")]
+        public bool UserHasAccess { get; set; }
+    }
+
+    /// <summary>
+    /// Class for update project filenames API response
+    /// </summary>
+    public class ProjectFileUpdateFileName : ProjectFile
+    {
+        [JsonProperty(PropertyName = "open")]
+        public bool Open { get; set; }
+    }
+
+    // Response received when reading one file in a project
+    public class ProjectFileReadResponse : RestResponse
     {
         /// <summary>
         /// List of project file information
         /// </summary>
         [JsonProperty(PropertyName = "files")]
-        public List<ProjectFile> Files { get; set; }
+        public List<ProjectFileRead> Files { get; set; }
+    }
+
+    /// <summary>
+    /// Response received when reading all files in a project
+    /// </summary>
+    public class ProjectFilesReadResponse : RestResponse
+    {
+        /// <summary>
+        /// List of project file information
+        /// </summary>
+        [JsonProperty(PropertyName = "files")]
+        public List<ProjectFilesRead> Files { get; set; }
+    }
+
+    /// <summary>
+    /// Response received when creating or updating the content a file
+    /// </summary>
+    public class ProjectFileCreateResponse : RestResponse
+    {
+        /// <summary>
+        /// List of project file information
+        /// </summary>
+        [JsonProperty(PropertyName = "files")]
+        public List<ProjectFileCreate> Files { get; set; }
+    }
+
+    /// <summary>
+    /// Response received when updating the name of a file
+    /// </summary>
+    public class ProjectFileUpdateFileNameResponse : RestResponse
+    {
+        /// <summary>
+        /// List of project file information
+        /// </summary>
+        [JsonProperty(PropertyName = "files")]
+        public List<ProjectFileUpdateFileName> Files { get; set; }
     }
 }

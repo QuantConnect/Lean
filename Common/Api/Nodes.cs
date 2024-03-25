@@ -44,6 +44,9 @@ namespace QuantConnect.Api
         [JsonProperty(PropertyName = "cpu")]
         public int CpuCount { get; set; }
 
+        [JsonProperty(PropertyName = "hasGpu")]
+        public int HasGPU { get; set; }
+
         /// <summary>
         /// Size of RAM in Gigabytes.
         /// </summary>
@@ -73,6 +76,9 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "usedBy")]
         public string UsedBy { get; set; }
+
+        [JsonProperty(PropertyName = "userProfile")]
+        public string UserProfile { get; set; }
 
         /// <summary>
         /// Project the node is being used for.

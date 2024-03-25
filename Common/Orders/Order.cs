@@ -36,6 +36,8 @@ namespace QuantConnect.Orders
         private decimal _quantity;
         private decimal _price;
 
+        public List<OrderEvent> Events { get; set; }
+
         /// <summary>
         /// Order ID.
         /// </summary>
@@ -217,6 +219,7 @@ namespace QuantConnect.Orders
             Status = OrderStatus.None;
             Tag = string.Empty;
             BrokerId = new List<string>();
+            Events = new List<OrderEvent>();
             Properties = new OrderProperties();
             GroupOrderManager = null;
         }
@@ -240,6 +243,7 @@ namespace QuantConnect.Orders
             Status = OrderStatus.None;
             Tag = tag;
             BrokerId = new List<string>();
+            Events = new List<OrderEvent>();
             Properties = properties ?? new OrderProperties();
             GroupOrderManager = groupOrderManager;
         }
@@ -363,6 +367,7 @@ namespace QuantConnect.Orders
             order.LastUpdateTime = LastUpdateTime;
             order.CanceledTime = CanceledTime;
             order.BrokerId = BrokerId.ToList();
+            order.Events = Events.ToList();
             order.ContingentId = ContingentId;
             order.Price = Price;
             order.PriceCurrency = PriceCurrency;
@@ -414,6 +419,7 @@ namespace QuantConnect.Orders
                 serializedOrder.SubmissionLastPrice);
 
             order.BrokerId = serializedOrder.BrokerId;
+            order.Events = serializedOrder.Events;
             order.ContingentId = serializedOrder.ContingentId;
             order.Price = serializedOrder.Price;
             order.PriceCurrency = serializedOrder.PriceCurrency;
