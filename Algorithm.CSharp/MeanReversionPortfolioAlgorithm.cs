@@ -76,6 +76,8 @@ namespace QuantConnect.DataLibrary.Tests
             {"Compounding Annual Return", "20.043%"},
             {"Drawdown", "12.300%"},
             {"Expectancy", "1.841"},
+            {"Start Equity", "100000"},
+            {"End Equity", "109374.62"},
             {"Net Profit", "9.375%"},
             {"Sharpe Ratio", "0.636"},
             {"Sortino Ratio", "0.722"},
