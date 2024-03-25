@@ -21,7 +21,6 @@ using QuantConnect.ToolBox.CryptoiqDownloader;
 using QuantConnect.ToolBox.DukascopyDownloader;
 using QuantConnect.ToolBox.IVolatilityEquityConverter;
 using QuantConnect.ToolBox.KaikoDataConverter;
-using QuantConnect.ToolBox.NseMarketDataConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using QuantConnect.Util;
 using System;
@@ -105,11 +104,6 @@ namespace QuantConnect.ToolBox
                         KaikoDataConverterProgram.KaikoDataConverter(GetParameterOrExit(optionsObject, "source-dir"),
                                                                      GetParameterOrExit(optionsObject, "date"),
                                                                      GetParameterOrDefault(optionsObject, "exchange", string.Empty));
-                        break;
-                    case "nmdc":
-                    case "nsemarketdataconverter":
-                        NseMarketDataConverterProgram.NseMarketDataConverter(GetParameterOrExit(optionsObject, "source-dir"),
-                                                                             GetParameterOrExit(optionsObject, "destination-dir"));
                         break;
                     case "cug":
                     case "coarseuniversegenerator":
