@@ -248,6 +248,7 @@
     <None Include="WarmupAlgorithm.py" />
     <None Include="WarmupHistoryAlgorithm.py" />
     <None Include="WeeklyUniverseSelectionRegressionAlgorithm.py" />
+    <None Include="ManuallySetMarketHoursDatabaseEntryAlgorithm.py" />
     <None Include="Benchmarks\BasicTemplateBenchmark.py" />
     <None Include="Benchmarks\EmptyMinute400EquityBenchmark.py" />
     <None Include="Benchmarks\EmptySingleSecuritySecondEquityBenchmark.py" />
