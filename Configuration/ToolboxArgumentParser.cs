@@ -29,21 +29,19 @@ namespace QuantConnect.Configuration
         private const string ApplicationName = "QuantConnect.ToolBox.exe";
         private const string ApplicationDescription = "Lean Engine ToolBox";
         private const string ApplicationHelpText = "\nThe ToolBox is a wrapper of >15 tools. "
-                                                   + "Each require a different set of parameters. Example: --app=DukascopyDownloader --tickers="
+                                                   + "Each require a different set of parameters. Example: --app=RandomDataGenerator --tickers="
                                                    + "SPY,AAPL --resolution=Daily --from-date=yyyyMMdd-HH:mm:ss --to-date=yyyyMMdd-HH:mm:ss";
         private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
             {
                 new CommandLineOption("app", CommandOptionType.SingleValue,
                                                      "[REQUIRED] Target tool, CASE INSENSITIVE: GDAXDownloader or GDAXDL"
-                                                     + "/DukascopyDownloader"
                                                      + "/FxcmDownloader or FDL/FxcmVolumeDownload or FVDL/GoogleDownloader or GDL/IBDownloader or IBDL"
                                                      + "/OandaDownloader or ODL"
                                                      + "/AlgoSeekFuturesConverter or ASFC"
                                                      + "/IVolatilityEquityConverter or IVEC/KaikoDataConverter or KDC"
                                                      + "/CoarseUniverseGenerator or CUG/\n"
                                                      + "RandomDataGenerator or RDG\n"
-                                                     + "Example 1: --app=DDL\n"
-                                                     + "Example 2: --app=RDG"),
+                                                     + "Example 1: --app=RDG"),
                 new CommandLineOption("tickers", CommandOptionType.MultipleValue, "[REQUIRED ALL downloaders] "
                                                                                   + "--tickers=SPY,AAPL,etc"),
                 new CommandLineOption("resolution", CommandOptionType.SingleValue, "[REQUIRED ALL downloaders and IVolatilityEquityConverter]"
