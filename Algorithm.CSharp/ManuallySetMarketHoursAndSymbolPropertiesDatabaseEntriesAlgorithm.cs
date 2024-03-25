@@ -15,17 +15,16 @@
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Algorithm illustrating how to manually set a market hours database entry to be picked up by the algorithm's securities.
-    /// This specific case illustrates how to set the market hours for CFDs to match InteractiveBrokers's, which are different
+    /// Algorithm illustrating how to manually set market hours and symbol properties database entries to be picked up by the algorithm's securities.
+    /// This specific case illustrates how to do it for CFDs to match InteractiveBrokers brokerage, which has different market hours
     /// depending on the CFD underlying asset.
     /// </summary>
-    public class ManuallySetMarketHoursDatabaseEntryAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ManuallySetMarketHoursAndSymbolPropertiesDatabaseEntriesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -40,27 +39,44 @@ namespace QuantConnect.Algorithm.CSharp
             // we can set the MarketHoursDatabase entry for the CFDs.
 
             // Equity CFDs are usually traded the same hours as the equity market.
-            var equityMarketHoursEntry = MarketHoursDatabase.GetEntry(Market.USA, "", SecurityType.Equity);
-            MarketHoursDatabase.SetEntry(Market.InteractiveBrokers, "", SecurityType.Cfd,
+            var equityMarketHoursEntry = MarketHoursDatabase.GetEntry(Market.USA, (string)null, SecurityType.Equity);
+            MarketHoursDatabase.SetEntry(Market.InteractiveBrokers, null, SecurityType.Cfd,
                 equityMarketHoursEntry.ExchangeHours, equityMarketHoursEntry.DataTimeZone);
 
+            // The same can be done for the symbol properties, in case they are different depending on the underlying
+            var equitySymbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(Market.USA, null, SecurityType.Equity, Currencies.USD);
+            SymbolPropertiesDatabase.SetEntry(Market.InteractiveBrokers, null, SecurityType.Cfd, equitySymbolProperties);
+
             var spyCfd = AddCfd("SPY", market: Market.InteractiveBrokers);
-            var cfdMarketHoursEntry = spyCfd.Exchange.Hours;
-            if (JsonConvert.SerializeObject(equityMarketHoursEntry.ExchangeHours) != JsonConvert.SerializeObject(cfdMarketHoursEntry))
+
+            if (!ReferenceEquals(spyCfd.Exchange.Hours, equityMarketHoursEntry.ExchangeHours))
             {
                 throw new Exception("Expected the SPY CFD market hours to be the same as the underlying equity market hours.");
             }
 
-            // We can also set the market hours for a specific ticker
-            var audUsdForexMarketHoursEntry = MarketHoursDatabase.GetEntry(Market.Oanda, "", SecurityType.Forex);
+            if (!ReferenceEquals(spyCfd.SymbolProperties, equitySymbolProperties))
+            {
+                throw new Exception("Expected the SPY CFD symbol properties to be the same as the underlying equity symbol properties.");
+            }
+
+            // We can also do it for a specific ticker:
+            var audUsdForexMarketHoursEntry = MarketHoursDatabase.GetEntry(Market.Oanda, (string)null, SecurityType.Forex);
             MarketHoursDatabase.SetEntry(Market.InteractiveBrokers, "AUDUSD", SecurityType.Cfd,
                 audUsdForexMarketHoursEntry.ExchangeHours, audUsdForexMarketHoursEntry.DataTimeZone);
 
+            var audUsdForexSymbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(Market.Oanda, "AUDUSD", SecurityType.Forex, Currencies.USD);
+            SymbolPropertiesDatabase.SetEntry(Market.InteractiveBrokers, "AUDUSD", SecurityType.Cfd, audUsdForexSymbolProperties);
+
             var audUsdCfd = AddCfd("AUDUSD", market: Market.InteractiveBrokers);
-            var audUsdCfdMarketHoursEntry = audUsdCfd.Exchange.Hours;
-            if (JsonConvert.SerializeObject(audUsdForexMarketHoursEntry.ExchangeHours) != JsonConvert.SerializeObject(audUsdCfdMarketHoursEntry))
+
+            if (!ReferenceEquals(audUsdCfd.Exchange.Hours, audUsdForexMarketHoursEntry.ExchangeHours))
             {
                 throw new Exception("Expected the AUDUSD CFD market hours to be the same as the underlying forex market hours.");
+            }
+
+            if (!ReferenceEquals(audUsdCfd.SymbolProperties, audUsdForexSymbolProperties))
+            {
+                throw new Exception("Expected the AUDUSD CFD symbol properties to be the same as the underlying forex symbol properties.");
             }
         }
 
