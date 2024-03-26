@@ -61621,7 +61621,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-SPX500USD": {
+    "Cfd-interactivebrokers-IBUS500": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [
@@ -62014,7 +62014,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-US30USD": {
+    "Cfd-interactivebrokers-IBUS30": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [
@@ -62407,7 +62407,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-NAS100USD": {
+    "Cfd-interactivebrokers-IBUST100": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [
@@ -62800,7 +62800,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-UK100GBP": {
+    "Cfd-interactivebrokers-IBGB100": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [],
@@ -63167,7 +63167,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-EU50EUR": {
+    "Cfd-interactivebrokers-IBEU50": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [],
@@ -63534,7 +63534,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-DE40EUR": {
+    "Cfd-interactivebrokers-IBDE40": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [],
@@ -63901,7 +63901,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-FR40EUR": {
+    "Cfd-interactivebrokers-IBFR40": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [],
@@ -64268,7 +64268,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-ES35EUR": {
+    "Cfd-interactivebrokers-IBES35": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [],
@@ -64635,7 +64635,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-NL25EUR": {
+    "Cfd-interactivebrokers-IBNL25": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [],
@@ -65002,7 +65002,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-CH20CHF": {
+    "Cfd-interactivebrokers-IBCH20": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [],
@@ -65369,7 +65369,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-JP225USD": {
+    "Cfd-interactivebrokers-IBJP225": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [
@@ -65762,7 +65762,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-HK50HKD": {
+    "Cfd-interactivebrokers-IBHK50": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [],
@@ -66179,7 +66179,7 @@
         "12/24/2025": "13:00:00"
       }
     },
-    "Cfd-interactivebrokers-AU200AUD": {
+    "Cfd-interactivebrokers-IBAU200": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [
