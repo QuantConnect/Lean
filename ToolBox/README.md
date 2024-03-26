@@ -23,10 +23,7 @@ Example: --app=RandomDataGenerator --tickers=SPY,AAPL --resolution=Daily --from-
 
 - **'--app='**
 	- GDAXDownloader or GDAXDL
-	- FxcmDownloader or FDL
-	- FxcmVolumeDownload or FVDL
 	- IBDownloader or IBDL
-	- OandaDownloader or ODL
 	- BitfinexDownloader or BFXDL
 - **'--from-date=yyyyMMdd-HH:mm:ss'** required
 - **'--tickers=SPY,AAPL,etc'** required
