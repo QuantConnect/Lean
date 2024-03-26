@@ -35,7 +35,7 @@ namespace QuantConnect.Configuration
             {
                 new CommandLineOption("app", CommandOptionType.SingleValue,
                                                      "[REQUIRED] Target tool, CASE INSENSITIVE: GDAXDownloader or GDAXDL"
-                                                     + "/FxcmDownloader or FDL/FxcmVolumeDownload or FVDL/GoogleDownloader or GDL/IBDownloader or IBDL"
+                                                     + "/GoogleDownloader or GDL/IBDownloader or IBDL"
                                                      + "/AlgoSeekFuturesConverter or ASFC"
                                                      + "/KaikoDataConverter or KDC"
                                                      + "/CoarseUniverseGenerator or CUG/\n"
