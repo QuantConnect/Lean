@@ -25,11 +25,11 @@ jobs:
             # Build
             dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
             # Python Virtual Environment System Packages
-            python -m venv /lean-testenv --system-site-packages && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.99 && deactivate
+            python -m venv /lean-testenv --system-site-packages && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.185 && deactivate
             # Run Virtual Environment Test System Packages
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
             # Python Virtual Environment
-            rm -rf /lean-testenv && python -m venv /lean-testenv && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.99 && deactivate
+            rm -rf /lean-testenv && python -m venv /lean-testenv && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.185 && deactivate
             # Run Virtual Environment Test
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
             # Run Python Package Tests
