@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Free space
-        run: df -h && rm -rf /opt/hostedtoolcache* && df -h
+        run: df -h && rm -rf /usr/share/dotnet && sudo rm -rf /usr/local/lib/android && sudo rm -rf /opt/ghc && rm -rf /opt/hostedtoolcache* && df -h
       - name: Run API Tests
         uses: addnab/docker-run-action@v3
         with:
