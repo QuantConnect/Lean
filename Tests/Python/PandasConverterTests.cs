@@ -1081,7 +1081,7 @@ def Test(dataFrame, symbol):
 import pandas as pd
 def Test(df, other, symbol):
     df = pd.concat([df, other])
-    df = df.groupby(level=0).mean()
+    df = df.groupby(level=0).mean(numeric_only=True)
     data = df.lastprice.loc[{index}]
     if data is 0:
         raise Exception('Data is zero')").GetAttr("Test");
@@ -1153,9 +1153,6 @@ def Test(dataFrame, symbol):
         [TestCase("items", "'SPY'", true)]
         [TestCase("items", "symbol")]
         [TestCase("items", "str(symbol.ID)")]
-        [TestCase("iteritems", "'SPY'", true)]
-        [TestCase("iteritems", "symbol")]
-        [TestCase("iteritems", "str(symbol.ID)")]
         public void BackwardsCompatibilityDataFrame_items(string method, string index, bool cache = false)
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
@@ -1457,7 +1454,7 @@ def Test(dataFrame, symbol):
 import pandas as pd
 def Test(dataFrame, symbol):
     df = dataFrame.reset_index()
-    table = pd.pivot_table(df, index=['symbol', 'time'])
+    table = pd.pivot_table(df, index=['symbol', 'time'], aggfunc='first')
     data = table.lastprice.unstack(0)
     data = data[{index}]
     if data is 0:
@@ -1526,7 +1523,7 @@ def Test(dataFrame, symbol):
 import pandas as pd
 def Test(dataFrame, other, symbol):
     def mean_by_group(dataframe, level):
-        return dataframe.groupby(level=level).mean()
+        return dataframe.groupby(level=level).mean(numeric_only=True)
 
     df = pd.concat([dataFrame, other])
     data = df.pipe(mean_by_group, level=0)
@@ -1723,7 +1720,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    data = dataFrame.rolling(2).sum()
+    data = dataFrame.rolling(2).sum(numeric_only=True)
     data = data.lastprice.unstack(0)
     data = data[{index}]
     if data is 0:
@@ -1785,7 +1782,7 @@ def Test(dataFrame, symbol):
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
-        public void BackwardsCompatibilityDataFrame_slice_shift(string index, bool cache = false)
+        public void BackwardsCompatibilityDataFrame_shift(string index, bool cache = false)
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
@@ -1794,7 +1791,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    data = dataFrame.slice_shift().lastprice.unstack(0)
+    data = dataFrame.shift().lastprice.unstack(0)
     data = data[{index}]
     if data is 0:
         raise Exception('Data is zero')").GetAttr("Test");
@@ -1954,7 +1951,7 @@ def Test(dataFrame, symbol):
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
-        public void BackwardsCompatibilityDataFrame_tshift(string index, bool cache = false)
+        public void BackwardsCompatibilityDataFrame_series_shift(string index, bool cache = false)
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
@@ -1965,7 +1962,7 @@ def Test(dataFrame, symbol):
 from datetime import timedelta as d
 def Test(dataFrame, symbol):
     series = dataFrame.droplevel(0)
-    data = series.tshift(freq=d(1))").GetAttr("Test");
+    data = series.shift(freq=d(1))").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -2671,26 +2668,6 @@ def Test(dataFrame, other, symbol):
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
-        public void BackwardsCompatibilitySeries_pop(string index, bool cache = false)
-        {
-            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
-
-            using (Py.GIL())
-            {
-                dynamic test = PyModule.FromString("testModule",
-                    $@"
-def Test(dataFrame, symbol):
-    data = dataFrame.lastprice.pop({index})
-    if data is 0:
-        raise Exception('Data is zero')").GetAttr("Test");
-
-                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
-            }
-        }
-
-        [TestCase("'SPY'", true)]
-        [TestCase("symbol")]
-        [TestCase("str(symbol.ID)")]
         public void BackwardsCompatibilitySeries_reindex_like(string index, bool cache = false)
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
@@ -2873,7 +2850,7 @@ def Test(dataFrame, symbol):
         [TestCase("'SPY'", true)]
         [TestCase("symbol")]
         [TestCase("str(symbol.ID)")]
-        public void BackwardsCompatibilitySeries_slice_shift(string index, bool cache = false)
+        public void BackwardsCompatibilitySeries_shift(string index, bool cache = false)
         {
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
@@ -2883,7 +2860,7 @@ def Test(dataFrame, symbol):
                     $@"
 def Test(dataFrame, symbol):
     series = dataFrame.lastprice
-    data = series.slice_shift()
+    data = series.shift()
     data = data.loc[{index}]
     if data is 0:
         raise Exception('Data is zero')").GetAttr("Test");
@@ -3021,26 +2998,6 @@ def Test(dataFrame, symbol):
     data = data[{index}]
     if data is 0:
         raise Exception('Data is zero')").GetAttr("Test");
-
-                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
-            }
-        }
-
-        [TestCase("'SPY'", true)]
-        [TestCase("symbol")]
-        [TestCase("str(symbol.ID)")]
-        public void BackwardsCompatibilitySeries_tshift(string index, bool cache = false)
-        {
-            if (cache) SymbolCache.Set("SPY", Symbols.SPY);
-
-            using (Py.GIL())
-            {
-                dynamic test = PyModule.FromString("testModule",
-                    $@"
-from datetime import timedelta as d
-def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0)
-    data = series.tshift(freq=d(1))").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
