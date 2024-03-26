@@ -239,7 +239,7 @@ RUN pip install --no-cache-dir      \
 
 RUN conda install -c conda-forge -y cudatoolkit=11.8.0 && conda install -c nvidia -y cuda-compiler=12.2.2 && conda clean -y --all
 ENV XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/miniconda3/
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/miniconda3/pkgs/cudatoolkit-11.8.0-h6a678d5_0/lib/:/opt/miniconda3/lib/python3.8/site-packages/nvidia/cudnn/lib/:/opt/miniconda3/lib/python3.8/site-packages/tensorrt_libs/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cublas/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_cupti/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_runtime/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cudnn/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cufft/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/curand/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cusolver/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cusparse/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/nccl/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/nvjitlink/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/nvtx/lib/:/opt/miniconda3/pkgs/cudatoolkit-11.8.0-h6a678d5_0/lib/
 ENV CUDA_MODULE_LOADING=LAZY
 
 # mamba-ssm & causal requires nvidia capabilities to be installed. iisignature requires numpy to be already installed
