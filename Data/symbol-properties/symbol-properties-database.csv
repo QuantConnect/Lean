@@ -81,19 +81,19 @@ oanda,XPDUSD,cfd,Palladium,USD,1,0.001,1
 oanda,XPTUSD,cfd,Platinum,USD,1,0.001,1
 
 interactivebrokers,[*],cfd,,USD,1,0.01,1
-interactivebrokers,IBUS500,cfd,US 500,USD,1,0.01,0.1
-interactivebrokers,IBUS30,cfd,US 30,USD,1,0.01,0.1
-interactivebrokers,IBUST100,cfd,US Tech 100,USD,1,0.01,0.1
-interactivebrokers,IBGB100,cfd,UK 100,GBP,1,0.01,0.1
-interactivebrokers,IBEU50,cfd,Europe 50,EUR,1,0.01,0.1
-interactivebrokers,IBDE40,cfd,Germany 40,EUR,1,0.01,0.1
-interactivebrokers,IBFR40,cfd,France 40,EUR,1,0.01,0.1
-interactivebrokers,IBES35,cfd,Spain 35,EUR,1,0.01,0.1
-interactivebrokers,IBNL25,cfd,Netherlands 25,EUR,1,0.01,0.1
-interactivebrokers,IBCH20,cfd,Switzerland 20,CHF,1,0.01,0.1
-interactivebrokers,IBJP225,cfd,Japan 225,JPY,1,0.01,0.1
-interactivebrokers,IBHK50,cfd,Hong Kong 50,HKD,1,0.01,0.1
-interactivebrokers,IBAU200,cfd,Australia 200,AUD,1,0.01,0.1
+interactivebrokers,IBUS500,cfd,US 500,USD,1,0.01,1
+interactivebrokers,IBUS30,cfd,US 30,USD,1,0.01,1
+interactivebrokers,IBUST100,cfd,US Tech 100,USD,1,0.01,1
+interactivebrokers,IBGB100,cfd,UK 100,GBP,1,0.01,1
+interactivebrokers,IBEU50,cfd,Europe 50,EUR,1,0.01,1
+interactivebrokers,IBDE40,cfd,Germany 40,EUR,1,0.01,1
+interactivebrokers,IBFR40,cfd,France 40,EUR,1,0.01,1
+interactivebrokers,IBES35,cfd,Spain 35,EUR,1,0.01,1
+interactivebrokers,IBNL25,cfd,Netherlands 25,EUR,1,0.01,1
+interactivebrokers,IBCH20,cfd,Switzerland 20,CHF,1,0.01,1
+interactivebrokers,IBJP225,cfd,Japan 225,JPY,1,0.01,1
+interactivebrokers,IBHK50,cfd,Hong Kong 50,HKD,1,0.01,1
+interactivebrokers,IBAU200,cfd,Australia 200,AUD,1,0.01,1
 interactivebrokers,XAUUSD,cfd,London Gold,USD,1,0.01,1
 interactivebrokers,XAGUSD,cfd,London Silver,USD,1,0.0001,1
 
