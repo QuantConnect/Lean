@@ -20,8 +20,6 @@ using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders.Serialization;
-using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Positions;
 
@@ -373,70 +371,6 @@ namespace QuantConnect.Orders
             order.Properties = Properties.Clone();
             order.OrderSubmissionData = OrderSubmissionData?.Clone();
             order.PriceAdjustmentMode = PriceAdjustmentMode;
-        }
-
-        /// <summary>
-        /// Creates a new Order instance from a SerializedOrder instance
-        /// </summary>
-        /// <remarks>Used by the <see cref="SerializedOrderJsonConverter"/></remarks>
-        public static Order FromSerialized(SerializedOrder serializedOrder)
-        {
-            var sid = SecurityIdentifier.Parse(serializedOrder.Symbol);
-            var symbol = new Symbol(sid, sid.Symbol);
-
-            TimeInForce timeInForce = null;
-            var type = System.Type.GetType($"QuantConnect.Orders.TimeInForces.{serializedOrder.TimeInForceType}", throwOnError: false, ignoreCase: true);
-            if (type != null)
-            {
-                timeInForce = (TimeInForce) Activator.CreateInstance(type, true);
-                if (timeInForce is GoodTilDateTimeInForce)
-                {
-                    var expiry = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.TimeInForceExpiry.Value);
-                    timeInForce = new GoodTilDateTimeInForce(expiry);
-                }
-            }
-
-            var createdTime = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.CreatedTime);
-
-            var order = CreateOrder(serializedOrder.OrderId, serializedOrder.Type, symbol, serializedOrder.Quantity,
-                DateTime.SpecifyKind(createdTime, DateTimeKind.Utc),
-                serializedOrder.Tag,
-                new OrderProperties { TimeInForce = timeInForce },
-                serializedOrder.LimitPrice ?? 0,
-                serializedOrder.StopPrice ?? 0,
-                serializedOrder.TriggerPrice ?? 0,
-                serializedOrder.TrailingAmount ?? 0,
-                serializedOrder.TrailingAsPercentage ?? false,
-                serializedOrder.GroupOrderManager);
-
-            order.OrderSubmissionData = new OrderSubmissionData(serializedOrder.SubmissionBidPrice,
-                serializedOrder.SubmissionAskPrice,
-                serializedOrder.SubmissionLastPrice);
-
-            order.BrokerId = serializedOrder.BrokerId;
-            order.ContingentId = serializedOrder.ContingentId;
-            order.Price = serializedOrder.Price;
-            order.PriceCurrency = serializedOrder.PriceCurrency;
-            order.Status = serializedOrder.Status;
-            order.PriceAdjustmentMode = serializedOrder.PriceAdjustmentMode;
-
-            if (serializedOrder.LastFillTime.HasValue)
-            {
-                var time = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.LastFillTime.Value);
-                order.LastFillTime = DateTime.SpecifyKind(time, DateTimeKind.Utc);
-            }
-            if (serializedOrder.LastUpdateTime.HasValue)
-            {
-                var time = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.LastUpdateTime.Value);
-                order.LastUpdateTime = DateTime.SpecifyKind(time, DateTimeKind.Utc);
-            }
-            if (serializedOrder.CanceledTime.HasValue)
-            {
-                var time = QuantConnect.Time.UnixTimeStampToDateTime(serializedOrder.CanceledTime.Value);
-                order.CanceledTime = DateTime.SpecifyKind(time, DateTimeKind.Utc);
-            }
-
-            return order;
         }
 
         /// <summary>

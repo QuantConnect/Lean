@@ -542,7 +542,7 @@ namespace QuantConnect.Api
         /// <remarks>Will throw an <see cref="WebException"/> if there are any API errors</remarks>
         /// <returns>The list of <see cref="Order"/></returns>
 
-        public List<Order> ReadBacktestOrders(int projectId, string backtestId, int start = 0, int end = 100)
+        public List<ApiOrderResponse> ReadBacktestOrders(int projectId, string backtestId, int start = 0, int end = 100)
         {
             var request = new RestRequest("backtests/read/orders", Method.POST)
             {
@@ -829,7 +829,7 @@ namespace QuantConnect.Api
         /// <remarks>Will throw an <see cref="WebException"/> if there are any API errors</remarks>
         /// <returns>The list of <see cref="Order"/></returns>
 
-        public List<Order> ReadLiveOrders(int projectId, int start = 0, int end = 100)
+        public List<ApiOrderResponse> ReadLiveOrders(int projectId, int start = 0, int end = 100)
         {
             var request = new RestRequest("live/read/orders", Method.POST)
             {
