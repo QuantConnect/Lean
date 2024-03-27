@@ -42,12 +42,6 @@ namespace QuantConnect.Api
         public bool LiveControl { get; set; }
 
         /// <summary>
-        /// 
-        /// </summary>
-        [JsonProperty(PropertyName = "bliveControl")]
-        public bool BLiveControl { get; set; }
-
-        /// <summary>
         /// The permission this user is given. Can be "read"
         /// or "write"
         /// </summary>
@@ -55,22 +49,10 @@ namespace QuantConnect.Api
         public string Permission { get; set; }
 
         /// <summary>
-        /// 
-        /// </summary>
-        [JsonProperty(PropertyName = "epermission")]
-        public string EPermission { get; set; }
-
-        /// <summary>
         /// The url of the user profile image
         /// </summary>
         [JsonProperty(PropertyName = "profileImage")]
         public string ProfileImage { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        [JsonProperty(PropertyName = "profileimage")]
-        public string Profileimage { get; set; }
 
         /// <summary>
         /// The registered email of the user
