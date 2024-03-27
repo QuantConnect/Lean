@@ -60,15 +60,24 @@ namespace QuantConnect.Indicators
         }
 
         public override bool IsReady { get; }
-        /*
-        (Lars) I believe this is not how this is supposed to go
-        I think this should return whether all required components are ready themselves,
-        and check for your own IsReady in ComputeNextValue instead of one after the other
-        (potentially wasting recources if only the last component isn't ready)
+        /* 
+            (Lars) this is what I want it to be as this is how other Indicators implemented it,
+            But then the test cases fail
         */
+        // public override bool IsReady => _rsi.IsReady && _smoothedRsi.IsReady && _doubleSmoothedRsi.IsReady && _signalLine.IsReady;
 
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
+            /* 
+                (Lars) Here as well, just check your own IsReady in one go
+                instead of doing them one by one
+                
+            */
+            // if (!IsReady)
+            // {
+            //     return 0;
+            // }
+
             _rsi.Update(input);
 
             if (!_rsi.IsReady)
