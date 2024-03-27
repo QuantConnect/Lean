@@ -60,6 +60,12 @@ namespace QuantConnect.Indicators
         }
 
         public override bool IsReady { get; }
+        /*
+        (Lars) I believe this is not how this is supposed to go
+        I think this should return whether all required components are ready themselves,
+        and check for your own IsReady in ComputeNextValue instead of one after the other
+        (potentially wasting recources if only the last component isn't ready)
+        */
 
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
