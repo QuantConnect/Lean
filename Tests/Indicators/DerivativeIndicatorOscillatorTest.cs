@@ -1,5 +1,7 @@
 ﻿using NUnit.Framework;
 using QuantConnect.Indicators;
+using System;
+using System.Linq;
 
 namespace QuantConnect.Tests.Indicators;
 
@@ -17,7 +19,24 @@ public class DerivativeIndicatorOscillatorTest : CommonIndicatorTests<IndicatorD
     [Test]
     public void DoComputesCorrectly()
     {
-        
+        var derivativeOscillator = new IndicatorDerivativeOscillator(TestColumnName, 14, 5, 3, 9);
+
+        // List of random prices for testing
+        decimal[] prices = { 100m, 105m, 110m, 115m, 120m, 125m, 130m, 135m, 140m, 145m, 150m, 155m, 160m, 165m, 170m };
+
+        // Expected derivative oscillator value
+        decimal expectedValue = 0;
+
+        foreach (decimal price in prices)
+        {
+            derivativeOscillator.Update(new IndicatorDataPoint(DateTime.UtcNow, price));
+        }
+
+        // Get the computed value
+        decimal computedValue = derivativeOscillator.Current.Value;
+
+        // Assert
+        Assert.AreEqual(expectedValue, computedValue, "Derivative oscillator value does not match expected value");
     }
 
     public override void ResetsProperly()
