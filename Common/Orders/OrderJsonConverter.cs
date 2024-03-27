@@ -18,7 +18,6 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Brokerages;
-using QuantConnect.Orders.Serialization;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
@@ -175,34 +174,6 @@ namespace QuantConnect.Orders
                 order.PriceCurrency = priceCurrency.Value<string>();
             }
             order.BrokerId = jObject["BrokerId"].Select(x => x.Value<string>()).ToList();
-            order.Events = jObject["Events"].Select(x =>
-            {
-                return OrderEvent.FromSerialized(new SerializedOrderEvent()
-                {
-                    SymbolValue = x["symbol-value"].Value<string>(),
-                    SymbolPermtick = x["symbol-permtick"].Value<string>(),
-                    Id = x["id"].Value<string>(),
-                    AlgorithmId = x["algorithm-id"].Value<string>(),
-                    OrderId = x["order-id"].Value<int>(),
-                    OrderEventId = x["order-event-id"].Value<int>(),
-                    Symbol = new Symbol(SecurityIdentifier.Parse(x["symbol"].Value<string>()), x["symbol-value"].Value<string>()),
-                    Time = x["time"].Value<double>(),
-                    Status = CreateOrderStatus(x["status"]),
-                    OrderFeeAmount = x["order-fee-amount"]?.Value<decimal>(),
-                    OrderFeeCurrency = x["order-fee-currency"]?.Value<string>(),
-                    FillPrice = x["fill-price"].Value<decimal>(),
-                    FillPriceCurrency = x["fill-price-currency"].Value<string>(),
-                    FillQuantity = x["fill-quantity"].Value<decimal>(),
-                    Direction = CreateOrderDirection(x["direction"]),
-                    Message = x["message"].Value<string>(),
-                    IsAssignment = x["is-assignment"].Value<bool>(),
-                    Quantity = x["quantity"].Value<decimal>(),
-                    LimitPrice = x["limit-price"]?.Value<decimal>(),
-                    StopPrice = x["stop-price"]?.Value<decimal>(),
-                    IsInTheMoney = x["is-in-the-money"]?.Value<bool>() ?? false,
-                });
-            }).ToList();
-
             var jsonContingentId = jObject["ContingentId"];
             if (jsonContingentId != null && jsonContingentId.Type != JTokenType.Null)
             {
@@ -370,58 +341,6 @@ namespace QuantConnect.Orders
 
             // convert with TimeInForceJsonConverter
             return timeInForce.ToObject<TimeInForce>();
-        }
-
-        /// <summary>
-        /// Creates a order status of the correct type
-        /// </summary>
-        private static OrderStatus CreateOrderStatus(JToken orderStatus)
-        {
-            var value = orderStatus.Value<string>();
-
-            switch (value)
-            {
-                case "new":
-                    return OrderStatus.New;
-                case "submitted":
-                    return OrderStatus.Submitted;
-                case "partiallyFilled":
-                    return OrderStatus.PartiallyFilled;
-                case "filled":
-                    return OrderStatus.Filled;
-                case "canceled":
-                    return OrderStatus.Canceled;
-                case "none":
-                    return OrderStatus.None;
-                case "invalid":
-                    return OrderStatus.Invalid;
-                case "cancelPending":
-                    return OrderStatus.CancelPending;
-                case "updateSubmitted":
-                    return OrderStatus.UpdateSubmitted;
-                default:
-                    throw new Exception($"Unknown order status: {value}");
-            }
-        }
-
-        /// <summary>
-        /// Creates an order direction of the correct type
-        /// </summary>
-        private static OrderDirection CreateOrderDirection(JToken orderStatus)
-        {
-            var value = orderStatus.Value<string>();
-
-            switch (value)
-            {
-                case "buy":
-                    return OrderDirection.Buy;
-                case "sell":
-                    return OrderDirection.Sell;
-                case "hold":
-                    return OrderDirection.Hold;
-                default:
-                    throw new Exception($"Unknown order direction: {value}");
-            }
         }
 
         /// <summary>

@@ -41,25 +41,13 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "modified")]
         public DateTime DateModified{ get; set; }
-    }
 
-    /// <summary>
-    /// Class for CreateProject API response
-    /// </summary>
-    public class ProjectFileCreate : ProjectFile
-    {
-        /// <summary>
-        /// Project id
-        /// </summary>
-        [JsonProperty(PropertyName = "id")]
-        public string Id { get; set; }
-    }
+        [JsonProperty(PropertyName = "isLibrary")]
+        public bool IsLibrary { get; set; }
 
-    /// <summary>
-    /// Base class for ReadProject API response
-    /// </summary>
-    public class BaseProjectFileRead : ProjectFile
-    {
+        [JsonProperty(PropertyName = "userHasAccess")]
+        public bool UserHasAccess { get; set; }
+
         [JsonProperty(PropertyName = "open")]
         public int Open { get; set; }
 
@@ -70,31 +58,13 @@ namespace QuantConnect.Api
         public int Id { get; set; }
 
         [JsonProperty(PropertyName = "collaborationId")]
-        public string CollaborationId {  get; set; }
+        public string CollaborationId { get; set; }
 
         [JsonProperty(PropertyName = "readOnly")]
         public bool ReadOnly { get; set; }
-    }
 
-    /// <summary>
-    /// Class for read project file API response
-    /// </summary>
-    public class ProjectFileRead : BaseProjectFileRead
-    {
         [JsonProperty(PropertyName = "binary")]
         public bool Binary { get; set; }
-    }
-
-    /// <summary>
-    /// Class for read project files API response
-    /// </summary>
-    public class ProjectFilesRead : BaseProjectFileRead
-    {
-        [JsonProperty(PropertyName = "isLibrary")]
-        public bool IsLibrary { get; set; }
-
-        [JsonProperty(PropertyName = "userHasAccess")]
-        public bool UserHasAccess { get; set; }
     }
 
     /// <summary>
@@ -107,37 +77,13 @@ namespace QuantConnect.Api
     }
 
     // Response received when reading one file in a project
-    public class ProjectFileReadResponse : RestResponse
+    public class ProjectFileResponse : RestResponse
     {
         /// <summary>
         /// List of project file information
         /// </summary>
         [JsonProperty(PropertyName = "files")]
-        public List<ProjectFileRead> Files { get; set; }
-    }
-
-    /// <summary>
-    /// Response received when reading all files in a project
-    /// </summary>
-    public class ProjectFilesReadResponse : RestResponse
-    {
-        /// <summary>
-        /// List of project file information
-        /// </summary>
-        [JsonProperty(PropertyName = "files")]
-        public List<ProjectFilesRead> Files { get; set; }
-    }
-
-    /// <summary>
-    /// Response received when creating or updating the content a file
-    /// </summary>
-    public class ProjectFileCreateResponse : RestResponse
-    {
-        /// <summary>
-        /// List of project file information
-        /// </summary>
-        [JsonProperty(PropertyName = "files")]
-        public List<ProjectFileCreate> Files { get; set; }
+        public List<ProjectFile> Files { get; set; }
     }
 
     /// <summary>

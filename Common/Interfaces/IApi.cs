@@ -59,7 +59,7 @@ namespace QuantConnect.Interfaces
         /// <param name="name">The name of the new file</param>
         /// <param name="content">The content of the new file</param>
         /// <returns><see cref="ProjectFileCreateResponse"/> that includes information about the newly created file</returns>
-        ProjectFileCreateResponse AddProjectFile(int projectId, string name, string content);
+        ProjectFileResponse AddProjectFile(int projectId, string name, string content);
 
         /// <summary>
         /// Update the name of a file
@@ -77,22 +77,22 @@ namespace QuantConnect.Interfaces
         /// <param name="fileName">The name of the file that should be updated</param>
         /// <param name="newFileContents">The new contents of the file</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
-        ProjectFileCreateResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents);
+        ProjectFileResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents);
 
         /// <summary>
         /// Read a file in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file</param>
-        /// <returns><see cref="ProjectFileReadResponse"/> that includes the file information</returns>
-        ProjectFileReadResponse ReadProjectFile(int projectId, string fileName);
+        /// <returns><see cref="ProjectFileResponse"/> that includes the file information</returns>
+        ProjectFileResponse ReadProjectFile(int projectId, string fileName);
 
         /// <summary>
         /// Read all files in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
-        /// <returns><see cref="ProjectFilesReadResponse"/> that includes the information about all files in the project</returns>
-        ProjectFilesReadResponse ReadProjectFiles(int projectId);
+        /// <returns><see cref="ProjectFileResponse"/> that includes the information about all files in the project</returns>
+        ProjectFileResponse ReadProjectFiles(int projectId);
 
         /// <summary>
         /// Read all nodes in a project.

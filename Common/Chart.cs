@@ -51,9 +51,6 @@ namespace QuantConnect
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool LegendDisabled { get; set; }
 
-        [JsonProperty(PropertyName = "LastValue")]
-        public decimal? LastValue { get; set; }
-
         /// <summary>
         /// Default constructor for chart:
         /// </summary>

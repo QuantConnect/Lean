@@ -36,8 +36,6 @@ namespace QuantConnect.Orders
         private decimal _quantity;
         private decimal _price;
 
-        public List<OrderEvent> Events { get; set; }
-
         /// <summary>
         /// Order ID.
         /// </summary>
@@ -219,7 +217,6 @@ namespace QuantConnect.Orders
             Status = OrderStatus.None;
             Tag = string.Empty;
             BrokerId = new List<string>();
-            Events = new List<OrderEvent>();
             Properties = new OrderProperties();
             GroupOrderManager = null;
         }
@@ -243,7 +240,6 @@ namespace QuantConnect.Orders
             Status = OrderStatus.None;
             Tag = tag;
             BrokerId = new List<string>();
-            Events = new List<OrderEvent>();
             Properties = properties ?? new OrderProperties();
             GroupOrderManager = groupOrderManager;
         }
@@ -367,7 +363,6 @@ namespace QuantConnect.Orders
             order.LastUpdateTime = LastUpdateTime;
             order.CanceledTime = CanceledTime;
             order.BrokerId = BrokerId.ToList();
-            order.Events = Events.ToList();
             order.ContingentId = ContingentId;
             order.Price = Price;
             order.PriceCurrency = PriceCurrency;
@@ -419,7 +414,6 @@ namespace QuantConnect.Orders
                 serializedOrder.SubmissionLastPrice);
 
             order.BrokerId = serializedOrder.BrokerId;
-            order.Events = serializedOrder.Events;
             order.ContingentId = serializedOrder.ContingentId;
             order.Price = serializedOrder.Price;
             order.PriceCurrency = serializedOrder.PriceCurrency;
@@ -525,6 +519,36 @@ namespace QuantConnect.Orders
                 }
             }
             return order;
+        }
+
+        /// <summary>
+        /// Converts a given order into an OrderAPIResponse type
+        /// </summary>
+        public static OrderAPIResponse ToOrderAPIResponse(Order order)
+        {
+            return new OrderAPIResponse()
+            {
+                Id = order.Id,
+                ContingentId = order.ContingentId,
+                BrokerId = order.BrokerId,
+                Symbol = order.Symbol,
+                Price = order.Price,
+                PriceCurrency = order.PriceCurrency,
+                Time = order.Time,
+                LastFillTime = order.LastFillTime,
+                LastUpdateTime = order.LastUpdateTime,
+                CanceledTime = order.CanceledTime,
+                Quantity = order.Quantity,
+                Status = order.Status,
+                Tag = order.Tag,
+                Direction = order.Direction,
+                OrderSubmissionData = order.OrderSubmissionData,
+                IsMarketable = order.IsMarketable,
+                Value = order.Value,
+                Properties = order.Properties,
+                SecurityType = order.SecurityType,
+                PriceAdjustmentMode = order.PriceAdjustmentMode,
+            };
         }
     }
 }

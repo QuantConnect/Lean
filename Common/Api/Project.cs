@@ -331,6 +331,9 @@ namespace QuantConnect.Api
         [JsonProperty(PropertyName = "liveResults")]
         public List<Project> LiveResults { get; set; }
 
+        /// <summary>
+        /// The library projects
+        /// </summary>
         [JsonProperty(PropertyName = "libraries")]
         public List<Library> Libraries { get; set; }
 
@@ -405,6 +408,9 @@ namespace QuantConnect.Api
         [JsonProperty(PropertyName = "codeRunning")]
         public bool CodeRunning {  get; set; }
 
+        /// <summary>
+        /// LEAN environment of the project running on
+        /// </summary>
         [JsonProperty(PropertyName = "leanEnvironment")]
         public int LeanEnvironment { get; set; }
 

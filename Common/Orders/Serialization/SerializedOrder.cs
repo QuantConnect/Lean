@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Newtonsoft.Json;
@@ -213,9 +212,6 @@ namespace QuantConnect.Orders.Serialization
         [JsonProperty("price-adjustment-mode")]
         public DataNormalizationMode PriceAdjustmentMode { get; set; }
 
-        [JsonProperty("Events")]
-        public List<OrderEvent> Events { get; set; }
-
         /// <summary>
         /// Empty constructor required for JSON converter.
         /// </summary>
@@ -233,7 +229,6 @@ namespace QuantConnect.Orders.Serialization
             OrderId = order.Id;
             ContingentId = order.ContingentId;
             BrokerId = order.BrokerId;
-            Events = order.Events;
             Symbol = order.Symbol.ID.ToString();
             Price = order.Price;
             PriceCurrency = order.PriceCurrency;
