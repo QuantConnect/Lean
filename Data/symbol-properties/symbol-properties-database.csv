@@ -156,10 +156,10 @@ interactivebrokers,GBPMXN,cfd,GBP/MXN,MXN,1,0.0001,1
 interactivebrokers,GBPNOK,cfd,GBP/NOK,NOK,1,0.00005,0.01
 interactivebrokers,GBPNZD,cfd,GBP/NZD,NZD,1,0.00005,1
 interactivebrokers,GBPPLN,cfd,GBP/PLN,PLN,1,0.00005,1
-interactivebrokers,GBPSGD,cfd,GBP/SGD,SEK,1,0.00005,0.01
-interactivebrokers,GBPSEK,cfd,GBP/SEK,SGD,1,0.00005,0.01
+interactivebrokers,GBPSEK,cfd,GBP/SEK,SEK,1,0.00005,0.01
+interactivebrokers,GBPSGD,cfd,GBP/SGD,SGD,1,0.00005,0.01
 interactivebrokers,GBPUSD,cfd,GBP/USD,USD,1,0.00005,0.01
-interactivebrokers,GBPSEK,cfd,GBP/SEK,ZAR,1,0.00005,1
+interactivebrokers,GBPZAR,cfd,GBP/ZAR,ZAR,1,0.00005,1
 interactivebrokers,HKDJPY,cfd,HKD/JPY,JPY,1,0.005,1
 interactivebrokers,MXNJPY,cfd,MXN/JPY,JPY,1,0.00005,1
 interactivebrokers,NOKJPY,cfd,NOK/JPY,JPY,1,0.00005,1
