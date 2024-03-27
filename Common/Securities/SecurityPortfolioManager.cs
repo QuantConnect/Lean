@@ -387,7 +387,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Alias for HoldStock. Check if we have and holdings.
+        /// Alias for HoldStock. Check if we have any holdings.
         /// </summary>
         /// <seealso cref="HoldStock"/>
         public bool Invested => HoldStock;
