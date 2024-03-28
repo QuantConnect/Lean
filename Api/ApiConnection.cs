@@ -28,7 +28,7 @@ namespace QuantConnect.Api
     /// </summary>
     public class ApiConnection
     {
-        private readonly static JsonSerializerSettings _jsonSettings = new() { Converters = { new LiveAlgorithmResultsJsonConverter(), new OrderAPIResponseJsonConverter() } };
+        private readonly static JsonSerializerSettings _jsonSettings = new() { Converters = { new LiveAlgorithmResultsJsonConverter(), new OrderJsonConverter() } };
 
         /// <summary>
         /// Authorized client to use for requests.

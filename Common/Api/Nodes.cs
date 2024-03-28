@@ -44,6 +44,9 @@ namespace QuantConnect.Api
         [JsonProperty(PropertyName = "cpu")]
         public int CpuCount { get; set; }
 
+        /// <summary>
+        /// Indicate if the node has GPU (1) or not (0)
+        /// </summary>
         [JsonProperty(PropertyName = "hasGpu")]
         public int HasGPU { get; set; }
 
@@ -77,6 +80,9 @@ namespace QuantConnect.Api
         [JsonProperty(PropertyName = "usedBy")]
         public string UsedBy { get; set; }
 
+        /// <summary>
+        /// URL of the user using the node
+        /// </summary>
         [JsonProperty(PropertyName = "userProfile")]
         public string UserProfile { get; set; }
 

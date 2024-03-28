@@ -26,12 +26,6 @@ namespace QuantConnect.Api
         /// <summary>
         /// User id
         /// </summary>
-        [JsonProperty(PropertyName = "id")]
-        public int Id { get; set; }
-
-        /// <summary>
-        /// User id
-        /// </summary>
         [JsonProperty(PropertyName = "uid")]
         public int Uid { get; set; }
 
@@ -158,31 +152,31 @@ namespace QuantConnect.Api
     public class Grid
     {
         /// <summary>
-        /// List of chart in the xs position
+        /// List of chart in the xs (Extra small) position
         /// </summary>
         [JsonProperty(PropertyName = "xs")]
         public List<GridChart> Xs { get; set; }
 
         /// <summary>
-        /// List of chart in the sm position
+        /// List of chart in the sm (Small) position
         /// </summary>
         [JsonProperty(PropertyName = "sm")]
         public List<GridChart> Sm { get; set; }
 
         /// <summary>
-        /// List of chart in the md position
+        /// List of chart in the md (Medium) position
         /// </summary>
         [JsonProperty(PropertyName = "md")]
         public List<GridChart> Md { get; set; }
 
         /// <summary>
-        /// List of chart in the lg position
+        /// List of chart in the lg (Large) position
         /// </summary>
         [JsonProperty(PropertyName = "lg")]
         public List<GridChart> Lg { get; set; }
 
         /// <summary>
-        /// List of chart in the xl position
+        /// List of chart in the xl (Extra large) position
         /// </summary>
         [JsonProperty(PropertyName = "xl")]
         public List<GridChart> Xl { get; set; }
@@ -229,8 +223,8 @@ namespace QuantConnect.Api
     /// </summary>
     public class Project : RestResponse
     {
-        private List<GridChart> _gridObject;
-        private List<GridChart> _liveGridObject;
+        private Grid _gridObject;
+        private Grid _liveGridObject;
 
         /// <summary>
         /// Project id
@@ -310,6 +304,9 @@ namespace QuantConnect.Api
         [JsonProperty(PropertyName = "parameters")]
         public List<Parameter> Parameters { get; set; }
 
+        /// <summary>
+        /// Results from running the project on live
+        /// </summary>
         [JsonProperty(PropertyName = "liveResults")]
         public List<Project> LiveResults { get; set; }
 
@@ -325,46 +322,49 @@ namespace QuantConnect.Api
         [JsonProperty(PropertyName = "isAlphaStreamDeployment")]
         public int IsAlphaStreamDeployment { get; set; }
 
+        /// <summary>
+        /// Contains information about the charts present in the project
+        /// </summary>
         [JsonProperty(PropertyName = "grid" )]
         public string Grid { get; set; }
 
         /// <summary>
         /// Grid property de-serialized into a list of <see cref="GridChart"/>
         /// </summary>
-        public List<GridChart> GridObject
+        public Grid GridObject
         {
             get
             {
                 if (_gridObject == null && !string.IsNullOrEmpty(Grid))
                 {
-                    _gridObject = JsonConvert.DeserializeObject<List<GridChart>>(Grid);
+                    _gridObject = JsonConvert.DeserializeObject<Grid>(Grid);
                 }
 
                 return _gridObject;
             }
         }
 
+        /// <summary>
+        /// Contains information about the charts present in the live project
+        /// </summary>
         [JsonProperty(PropertyName = "liveGrid")]
         public string LiveGrid { get; set; }
 
         /// <summary>
         /// LiveGrid property de-serialized into a list of <see cref="GridChart"/>
         /// </summary>
-        public List<GridChart> LiveGridObject
+        public Grid LiveGridObject
         {
             get
             {
                 if (_liveGridObject == null && !string.IsNullOrEmpty(LiveGrid))
                 {
-                    _liveGridObject = JsonConvert.DeserializeObject<List<GridChart>>(LiveGrid);
+                    _liveGridObject = JsonConvert.DeserializeObject<Grid>(LiveGrid);
                 }
 
                 return _liveGridObject;
             }
         }
-
-        [JsonProperty(PropertyName = "builder")]
-        public int Builder { get; set; }
 
         /// <summary>
         /// The equity value of the last paper trading instance
@@ -378,6 +378,9 @@ namespace QuantConnect.Api
         [JsonProperty(PropertyName = "lastLiveDeployment")]
         public DateTime? LastLiveDeployment { get; set; }
 
+        /// <summary>
+        /// The last live wizard content used
+        /// </summary>
         [JsonProperty(PropertyName = "liveForm")]
         public object LiveForm { get; set; }
 
@@ -387,6 +390,9 @@ namespace QuantConnect.Api
         [JsonProperty(PropertyName = "encrypted")]
         public bool? Encrypted { get; set; }
 
+        /// <summary>
+        /// Indicates if the project is running or not
+        /// </summary>
         [JsonProperty(PropertyName = "codeRunning")]
         public bool CodeRunning {  get; set; }
 
@@ -396,6 +402,9 @@ namespace QuantConnect.Api
         [JsonProperty(PropertyName = "leanEnvironment")]
         public int LeanEnvironment { get; set; }
 
+        /// <summary>
+        /// Text file with at least 32 characters to be used to encrypt the project
+        /// </summary>
         [JsonProperty(PropertyName = "encryptionKey")]
         public EncryptionKey EncryptionKey { get; set; }
     }

@@ -520,35 +520,5 @@ namespace QuantConnect.Orders
             }
             return order;
         }
-
-        /// <summary>
-        /// Converts a given order into an OrderAPIResponse type
-        /// </summary>
-        public static OrderAPIResponse ToOrderAPIResponse(Order order)
-        {
-            return new OrderAPIResponse()
-            {
-                Id = order.Id,
-                ContingentId = order.ContingentId,
-                BrokerId = order.BrokerId,
-                Symbol = order.Symbol,
-                Price = order.Price,
-                PriceCurrency = order.PriceCurrency,
-                Time = order.Time,
-                LastFillTime = order.LastFillTime,
-                LastUpdateTime = order.LastUpdateTime,
-                CanceledTime = order.CanceledTime,
-                Quantity = order.Quantity,
-                Status = order.Status,
-                Tag = order.Tag,
-                Direction = order.Direction,
-                OrderSubmissionData = order.OrderSubmissionData,
-                IsMarketable = order.IsMarketable,
-                Value = order.Value,
-                Properties = order.Properties,
-                SecurityType = order.SecurityType,
-                PriceAdjustmentMode = order.PriceAdjustmentMode,
-            };
-        }
     }
 }

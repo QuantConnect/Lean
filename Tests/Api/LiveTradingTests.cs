@@ -627,9 +627,9 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
         /// <param name="projectId">Id of the project</param>
         /// <param name="seconds">Seconds to allow for receive an order</param>
         /// <returns></returns>
-        private List<OrderAPIResponse> WaitForReadLiveOrdersResponse(int projectId, int seconds)
+        private List<Order> WaitForReadLiveOrdersResponse(int projectId, int seconds)
         {
-            var readLiveOrders = new List<OrderAPIResponse>();
+            var readLiveOrders = new List<Order>();
             var finish = DateTime.UtcNow.AddSeconds(seconds);
             while (DateTime.UtcNow < finish && !readLiveOrders.Any())
             {

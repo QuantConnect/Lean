@@ -90,10 +90,8 @@ namespace QuantConnect.Tests.API
             // Add random file
             var randomAdd = ApiClient.AddProjectFile(TestProject.ProjectId, fakeFile.Name, fakeFile.Code);
             Assert.IsTrue(randomAdd.Success);
-            Assert.IsTrue(randomAdd.Files.First().Code == fakeFile.Code);
-            Assert.IsTrue(randomAdd.Files.First().Name == fakeFile.Name);
             // Update names of file
-            var updatedName = ApiClient.UpdateProjectFileName(TestProject.ProjectId, randomAdd.Files.First().Name, realFile.Name);
+            var updatedName = ApiClient.UpdateProjectFileName(TestProject.ProjectId, fakeFile.Name, realFile.Name);
             Assert.IsTrue(updatedName.Success);
 
             // Replace content of file
@@ -109,8 +107,6 @@ namespace QuantConnect.Tests.API
             // Add a second file
             var secondFile = ApiClient.AddProjectFile(TestProject.ProjectId, secondRealFile.Name, secondRealFile.Code);
             Assert.IsTrue(secondFile.Success);
-            Assert.IsTrue(secondFile.Files.First().Code == secondRealFile.Code);
-            Assert.IsTrue(secondFile.Files.First().Name == secondRealFile.Name);
 
             // Read multiple files
             var readFiles = ApiClient.ReadProjectFiles(TestProject.ProjectId);

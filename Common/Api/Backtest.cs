@@ -22,7 +22,7 @@ using QuantConnect.Optimizer.Parameters;
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// The API method call could not be completed as requested
+    /// A power gauge for backtests, time and parameters to estimate the overfitting risk
     /// </summary>
     public class ResearchGuide
     {
@@ -165,6 +165,9 @@ namespace QuantConnect.Api
         [JsonProperty(PropertyName = "tradeableDates")]
         public int TradeableDates { get; set; }
 
+        /// <summary>
+        /// A power gauge for backtests, time and parameters to estimate the overfitting risk
+        /// </summary>
         [JsonProperty(PropertyName = "researchGuide")]
         public ResearchGuide ResearchGuide { get; set; }
 
@@ -193,22 +196,10 @@ namespace QuantConnect.Api
         public string Status { get; set; }
 
         /// <summary>
-        /// time-PnL pairs of profit/loss at a timestamp
-        /// </summary>
-        [JsonProperty(PropertyName = "profitLoss")]
-        public List<IDictionary<DateTime, decimal>> ProfilLoss { get; set; }
-
-        /// <summary>
         /// Indicates if the backtest has error during initialization
         /// </summary>
         [JsonProperty(PropertyName = "hasInitializeError")]
         public bool HasInitializeError { get; set; }
-
-        [JsonProperty(PropertyName = "signals")]
-        public string Signals { get; set; }
-
-        [JsonProperty(PropertyName = "insights")]
-        public string Insights { get; set; }
 
         /// <summary>
         /// The backtest node name

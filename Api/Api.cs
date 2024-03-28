@@ -59,7 +59,7 @@ namespace QuantConnect.Api
             //Allow proper decoding of orders from the API.
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
             {
-                Converters = { new OrderAPIResponseJsonConverter() }
+                Converters = { new OrderJsonConverter() }
             };
         }
 
@@ -155,9 +155,9 @@ namespace QuantConnect.Api
         /// <param name="projectId">The project to which the file should be added</param>
         /// <param name="name">The name of the new file</param>
         /// <param name="content">The content of the new file</param>
-        /// <returns><see cref="ProjectFileResponse"/> that includes information about the newly created file</returns>
+        /// <returns><see cref="ProjectFilesResponse"/> that includes information about the newly created file</returns>
 
-        public ProjectFileResponse AddProjectFile(int projectId, string name, string content)
+        public RestResponse AddProjectFile(int projectId, string name, string content)
         {
             var request = new RestRequest("files/create", Method.POST)
             {
@@ -171,7 +171,7 @@ namespace QuantConnect.Api
                     content
                 }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out ProjectFileResponse result);
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -182,9 +182,9 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="oldFileName">The current name of the file</param>
         /// <param name="newFileName">The new name for the file</param>
-        /// <returns><see cref="ProjectFileUpdateFileNameResponse"/> indicating success</returns>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
 
-        public ProjectFileUpdateFileNameResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName)
+        public RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName)
         {
             var request = new RestRequest("files/update", Method.POST)
             {
@@ -198,7 +198,7 @@ namespace QuantConnect.Api
                     newName = newFileName
                 }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out ProjectFileUpdateFileNameResponse result);
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -209,9 +209,9 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file that should be updated</param>
         /// <param name="newFileContents">The new contents of the file</param>
-        /// <returns><see cref="ProjectFileResponse"/> indicating success</returns>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
 
-        public ProjectFileResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents)
+        public RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents)
         {
             var request = new RestRequest("files/update", Method.POST)
             {
@@ -225,7 +225,7 @@ namespace QuantConnect.Api
                     content = newFileContents
                 }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out ProjectFileResponse result);
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -234,9 +234,9 @@ namespace QuantConnect.Api
         /// Read all files in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
-        /// <returns><see cref="ProjectFileResponse"/> that includes the information about all files in the project</returns>
+        /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
 
-        public ProjectFileResponse ReadProjectFiles(int projectId)
+        public ProjectFilesResponse ReadProjectFiles(int projectId)
         {
             var request = new RestRequest("files/read", Method.POST)
             {
@@ -248,7 +248,7 @@ namespace QuantConnect.Api
                     projectId
                 }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out ProjectFileResponse result);
+            ApiConnection.TryRequest(request, out ProjectFilesResponse result);
             return result;
         }
 
@@ -302,9 +302,9 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file</param>
-        /// <returns><see cref="ProjectFileResponse"/> that includes the file information</returns>
+        /// <returns><see cref="ProjectFilesResponse"/> that includes the file information</returns>
 
-        public ProjectFileResponse ReadProjectFile(int projectId, string fileName)
+        public ProjectFilesResponse ReadProjectFile(int projectId, string fileName)
         {
             var request = new RestRequest("files/read", Method.POST)
             {
@@ -317,7 +317,21 @@ namespace QuantConnect.Api
                     name = fileName
                 }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out ProjectFileResponse result);
+            ApiConnection.TryRequest(request, out ProjectFilesResponse result);
+            return result;
+        }
+
+        /// <summary>
+        /// Gets a list of LEAN versions with their corresponding basic descriptions
+        /// </summary>
+        public RestResponse ReadLeanVersions()
+        {
+            var request = new RestRequest("lean/versions/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -542,7 +556,7 @@ namespace QuantConnect.Api
         /// <remarks>Will throw an <see cref="WebException"/> if there are any API errors</remarks>
         /// <returns>The list of <see cref="Order"/></returns>
 
-        public List<OrderAPIResponse> ReadBacktestOrders(int projectId, string backtestId, int start = 0, int end = 100)
+        public List<Order> ReadBacktestOrders(int projectId, string backtestId, int start = 0, int end = 100)
         {
             var request = new RestRequest("backtests/read/orders", Method.POST)
             {
@@ -829,7 +843,7 @@ namespace QuantConnect.Api
         /// <remarks>Will throw an <see cref="WebException"/> if there are any API errors</remarks>
         /// <returns>The list of <see cref="Order"/></returns>
 
-        public List<OrderAPIResponse> ReadLiveOrders(int projectId, int start = 0, int end = 100)
+        public List<Order> ReadLiveOrders(int projectId, int start = 0, int end = 100)
         {
             var request = new RestRequest("live/read/orders", Method.POST)
             {
