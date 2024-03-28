@@ -20,7 +20,6 @@ using Python.Runtime;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using System.Text.RegularExpressions;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Util
 {

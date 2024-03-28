@@ -15,7 +15,6 @@
 */
 
 using System;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Fundamental
 {

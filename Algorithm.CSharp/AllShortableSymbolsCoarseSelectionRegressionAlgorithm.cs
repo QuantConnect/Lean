@@ -23,6 +23,7 @@ using QuantConnect.Data.Shortable;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using System.IO;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Algorithm.CSharp
 {

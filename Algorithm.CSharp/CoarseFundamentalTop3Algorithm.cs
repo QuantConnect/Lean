@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Algorithm.CSharp
 {

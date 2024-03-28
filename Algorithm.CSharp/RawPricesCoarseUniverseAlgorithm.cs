@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;

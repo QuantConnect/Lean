@@ -17,7 +17,7 @@ using System;
 using System.Linq;
 using System.Globalization;
 
-namespace QuantConnect.Data.UniverseSelection
+namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
     /// Defines summary information about a single symbol for a given date
@@ -72,11 +72,11 @@ namespace QuantConnect.Data.UniverseSelection
             get { return Time + QuantConnect.Time.OneDay; }
             set { Time = value - QuantConnect.Time.OneDay; }
         }
-        
+
         /// <summary>
         /// Gets the raw price
         /// </summary>
-        public override decimal Price => Value; 
+        public override decimal Price => Value;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CoarseFundamental"/> class

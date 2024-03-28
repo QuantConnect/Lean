@@ -15,6 +15,7 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Common.Data.UniverseSelection
