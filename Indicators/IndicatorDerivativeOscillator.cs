@@ -15,14 +15,12 @@
 
 using System;
 
-namespace QuantConnect.Indicators
-{
+namespace QuantConnect.Indicators {
     /// <summary>\
     /// Represents the Derivative Oscillator Indicator, utilizing
-    /// a moving average convergence-divergence (MACD) histogram to a double-smoothed relative strength index (RSI).
+    /// a moving average convergence-divergence (MACD) histogram to a double-smoothed relative strength index (RSI)
     /// </summary>
-    public class IndicatorDerivativeOscillator : Indicator, IIndicatorWarmUpPeriodProvider
-    {
+    public class IndicatorDerivativeOscillator: Indicator, IIndicatorWarmUpPeriodProvider {
         private readonly RelativeStrengthIndex _rsi;
         private readonly ExponentialMovingAverage _smoothedRsi;
         private readonly ExponentialMovingAverage _doubleSmoothedRsi;
@@ -33,22 +31,14 @@ namespace QuantConnect.Indicators
         private readonly int _a3;
 
         /// <summary>
-        /// Initializes a new instance of the IndicatorDerivativeOscillator class with the specified name and periods.
+        /// Initializes a new instance of the IndicatorDerivativeOscillator class with the specified name and periods
         /// </summary>
         /// <param name="name">The name of the indicator</param>
         /// <param name="r1">The period for the RSI calculation</param>
         /// <param name="a1">The period for the smoothing RSI</param>
         /// <param name="a2">The period for the double smoothing RSI</param>
         /// <param name="a3">The period for the signal line</param>
-        public IndicatorDerivativeOscillator(
-            string name,
-            int r1,
-            int a1,
-            int a2,
-            int a3
-            )
-            : base(name)
-        {
+        public IndicatorDerivativeOscillator(string name, int r1, int a1, int a2, int a3): base(name) {
             _r1 = r1;
             _a1 = a1;
             _a2 = a2;
@@ -59,35 +49,38 @@ namespace QuantConnect.Indicators
             _signalLine = new SimpleMovingAverage($"{name}_SignalLine", a3);
         }
 
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
         public override bool IsReady { get; }
 
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
-        {
+        /// <summary>
+        /// Computes the next value for the derivative oscillator indicator from the given state
+        /// </summary>
+        /// <param name="input">The input value to this indicator on this time step</param>
+        /// <returns>A new value for this indicator</returns>
+        protected override decimal ComputeNextValue(IndicatorDataPoint input) {
             _rsi.Update(input);
 
-            if (!_rsi.IsReady)
-            {
+            if (!_rsi.IsReady) {
                 return 0;
             }
 
             _smoothedRsi.Update(_rsi.Current);
 
-            if (!_smoothedRsi.IsReady)
-            {
+            if (!_smoothedRsi.IsReady) {
                 return 0;
             }
 
             _doubleSmoothedRsi.Update(_smoothedRsi.Current);
 
-            if (!_doubleSmoothedRsi.IsReady)
-            {
+            if (!_doubleSmoothedRsi.IsReady) {
                 return 0;
             }
 
             _signalLine.Update(_doubleSmoothedRsi.Current);
 
-            if (!_signalLine.IsReady)
-            {
+            if (!_signalLine.IsReady) {
                 return 0;
             }
 

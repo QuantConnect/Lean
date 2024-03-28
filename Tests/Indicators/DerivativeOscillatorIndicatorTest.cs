@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace QuantConnect.Tests.Indicators;
 
-public class DerivativeIndicatorOscillatorTest : CommonIndicatorTests<IndicatorDataPoint>
+public class DerivativeOscillatorIndicatorTest : CommonIndicatorTests<IndicatorDataPoint>
 {
     protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
     {
