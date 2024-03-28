@@ -19,6 +19,8 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Securities
 {
@@ -380,7 +382,17 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool TryGetValue(Type type, out IReadOnlyList<BaseData> data)
         {
-            if (type == typeof(Tick))
+            if (type == typeof(Fundamentals))
+            {
+                // for backwards compatibility
+                type = typeof(FundamentalUniverse);
+            }
+            else if (type == typeof(ETFConstituentData))
+            {
+                // for backwards compatibility
+                type = typeof(ETFConstituentUniverse);
+            }
+            else if (type == typeof(Tick))
             {
                 var quote = _lastTickQuotes.LastOrDefault();
                 var trade = _lastTickTrades.LastOrDefault();

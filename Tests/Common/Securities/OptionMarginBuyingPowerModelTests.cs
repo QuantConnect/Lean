@@ -14,6 +14,7 @@
 */
 
 using System;
+using Castle.Core.Internal;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
@@ -21,6 +22,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -380,6 +382,32 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(16720m, buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(optionCall, -2)).Value);
         }
 
+        // OTM
+        [TestCase(1, 3500, 140)] // IB: 0 (GetInitialMarginRequirement() returns the value with the premium)
+        [TestCase(-1, 3500, -52340)] // IB: 40781
+        // ITM
+        [TestCase(1, 3450, 140)] // IB: 0 (GetInitialMarginRequirement() returns the value with the premium)
+        [TestCase(-1, 3450, -37340)] // IB: 36081
+        public void GetInitialMarginRequiredForOrderWithIndexOption(decimal quantity, decimal strikePrice, decimal expectedInitialMargin)
+        {
+            var price = 1.40m;
+            var underlyingPrice = 17400m;
+
+            var indexSymbol = Symbol.Create("NDX", SecurityType.Index, Market.USA);
+            var index = CreateIndex(indexSymbol);
+            index.SetMarketPrice(new Tick { Value = underlyingPrice });
+
+            var optionPut = CreateOption(index, OptionRight.Put, strikePrice, "NQX");
+            optionPut.SetMarketPrice(new Tick { Value = price });
+            var buyingPowerModel = new OptionMarginModel();
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var initialMargin = buyingPowerModel.GetInitialMarginRequirement(optionPut, quantity);
+
+            Assert.AreEqual((double)expectedInitialMargin, (double)initialMargin, delta: 0.01);
+        }
+
         private static void UpdatePrice(Security security, decimal close)
         {
             security.SetMarketPrice(new TradeBar
@@ -406,16 +434,17 @@ namespace QuantConnect.Tests.Common.Securities
             );
         }
 
-        private static Option CreateOption(Security underlying, OptionRight optionRight, decimal strikePrice)
+        private static Option CreateOption(Security underlying, OptionRight optionRight, decimal strikePrice, string targetOption = null)
         {
             var tz = TimeZones.NewYork;
-            var optionSymbol = Symbol.CreateOption(underlying.Symbol, Market.USA, OptionStyle.American, optionRight, strikePrice,
+            var optionSymbol = targetOption.IsNullOrEmpty() ? Symbol.CreateOption(underlying.Symbol, Market.USA, OptionStyle.American, optionRight, strikePrice,
+                new DateTime(2015, 02, 27)) : Symbol.CreateOption(underlying.Symbol, targetOption, Market.USA, OptionStyle.American, optionRight, strikePrice,
                 new DateTime(2015, 02, 27));
             var option = new Option(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(typeof(TradeBar), optionSymbol, Resolution.Minute, tz, tz, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
+                new OptionSymbolProperties(SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(Market.USA, optionSymbol, optionSymbol.SecurityType, "USD")),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
             );
@@ -439,13 +468,13 @@ namespace QuantConnect.Tests.Common.Securities
             return option;
         }
 
-        private static QuantConnect.Securities.Index.Index CreateIndex()
+        private static QuantConnect.Securities.Index.Index CreateIndex(Symbol symbol = null)
         {
             var tz = TimeZones.NewYork;
             return new QuantConnect.Securities.Index.Index(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash(Currencies.USD, 0, 1m),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPX, Resolution.Minute, tz, tz, true, false, false),
+                new SubscriptionDataConfig(typeof(TradeBar), symbol ?? Symbols.SPX, Resolution.Minute, tz, tz, true, false, false),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null

@@ -221,6 +221,8 @@ namespace QuantConnect.Statistics
                 { PerformanceMetrics.CompoundingAnnualReturn, Math.Round(totalPerformance.PortfolioStatistics.CompoundingAnnualReturn.SafeMultiply100(), 3).ToStringInvariant() + "%" },
                 { PerformanceMetrics.Drawdown, Math.Round(totalPerformance.PortfolioStatistics.Drawdown.SafeMultiply100(), 3).ToStringInvariant() + "%" },
                 { PerformanceMetrics.Expectancy, Math.Round(totalPerformance.PortfolioStatistics.Expectancy, 3).ToStringInvariant() },
+                { PerformanceMetrics.StartEquity, Math.Round(totalPerformance.PortfolioStatistics.StartEquity, 2).ToStringInvariant() },
+                { PerformanceMetrics.EndEquity, Math.Round(totalPerformance.PortfolioStatistics.EndEquity, 2).ToStringInvariant() },
                 { PerformanceMetrics.NetProfit, Math.Round(totalPerformance.PortfolioStatistics.TotalNetProfit.SafeMultiply100(), 3).ToStringInvariant() + "%"},
                 { PerformanceMetrics.SharpeRatio, Math.Round((double)totalPerformance.PortfolioStatistics.SharpeRatio, 3).ToStringInvariant() },
                 { PerformanceMetrics.SortinoRatio, Math.Round((double)totalPerformance.PortfolioStatistics.SortinoRatio, 3).ToStringInvariant() },

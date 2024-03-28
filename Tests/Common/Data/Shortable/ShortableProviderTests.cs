@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Shortable;
@@ -24,11 +25,50 @@ namespace QuantConnect.Tests.Common.Data.Shortable
     [TestFixture]
     public class ShortableProviderTests
     {
+        private readonly Dictionary<string, Dictionary<Symbol, ShortableData>[]> _resultsByBrokerage = new();
+        private Symbol[] _symbols;
+        
         [SetUp]
         public void SetupConfig()
         {
             Config.Set("data-folder", "TestData");
             Globals.Reset();
+
+            _symbols = new[] { "AAPL", "GOOG", "BAC" }
+               .Select(x => new Symbol(SecurityIdentifier.GenerateEquity(x, QuantConnect.Market.USA, mappingResolveDate: new DateTime(2021, 1, 4)), x))
+               .ToArray();
+
+            _resultsByBrokerage["testinteractivebrokers"] = new[]
+            {
+                new Dictionary<Symbol, ShortableData>
+                {
+                    { _symbols[0], new(2000, 0.0507m, 0.0025m) },
+                    { _symbols[1], new(5000, 0.0517m, 0.0035m) },
+                    { _symbols[2], new(null, 0, 0) } // we have no data for this symbol
+                },
+                new Dictionary<Symbol, ShortableData>
+                {
+                    { _symbols[0], new(4000, 0.0509m, 0.003m) },
+                    { _symbols[1], new(10000, 0.0519m, 0.004m) },
+                    { _symbols[2], new(null, 0, 0) } // we have no data for this symbol
+                }
+            };
+
+            _resultsByBrokerage["testbrokerage"] = new[]
+{
+                new Dictionary<Symbol, ShortableData>
+                {
+                    { _symbols[0], new(2000, 0, 0) },
+                    { _symbols[1], new(5000, 0, 0) },
+                    { _symbols[2], new(null, 0, 0) } // we have no data for this symbol
+                },
+                new Dictionary<Symbol, ShortableData>
+                {
+                    { _symbols[0], new(4000, 0, 0) },
+                    { _symbols[1], new(10000, 0, 0) },
+                    { _symbols[2], new(null, 0, 0) } // we have no data for this symbol
+                }
+            };
         }
 
         [TearDown]
@@ -37,32 +77,13 @@ namespace QuantConnect.Tests.Common.Data.Shortable
             Config.Reset();
             Globals.Reset();
         }
-
-        [Test]
-        public void LocalDiskShortableProviderGetsDataBySymbol()
+        
+        [TestCase("testbrokerage")]
+        [TestCase("testinteractivebrokers")]
+        public void LocalDiskShortableProviderGetsDataBySymbol(string brokerage)
         {
-            var shortableProvider = new LocalDiskShortableProvider("testbrokerage");
-            var symbols = new[]
-            {
-                new Symbol(SecurityIdentifier.GenerateEquity("AAPL", QuantConnect.Market.USA, mappingResolveDate: new DateTime(2021, 1, 4)), "AAPL"),
-                new Symbol(SecurityIdentifier.GenerateEquity("GOOG", QuantConnect.Market.USA, mappingResolveDate: new DateTime(2021, 1, 4)), "GOOG"),
-                new Symbol(SecurityIdentifier.GenerateEquity("BAC", QuantConnect.Market.USA, mappingResolveDate: new DateTime(2021, 1, 4)), "BAC")
-            };
-            var results = new[]
-            {
-                new Dictionary<Symbol, long?>
-                {
-                    { symbols[0], 2000 },
-                    { symbols[1], 5000 },
-                    { symbols[2], null } // we have no data for this symbol
-                },
-                new Dictionary<Symbol, long?>
-                {
-                    { symbols[0], 4000 },
-                    { symbols[1], 10000 },
-                    { symbols[2], null } // we have no data for this symbol
-                }
-            };
+            var shortableProvider = new LocalDiskShortableProvider(brokerage);
+            var results = _resultsByBrokerage[brokerage];
 
             var dates = new[]
             {
@@ -70,14 +91,18 @@ namespace QuantConnect.Tests.Common.Data.Shortable
                 new DateTime(2020, 12, 22)
             };
 
-            foreach (var symbol in symbols)
+            foreach (var symbol in _symbols)
             {
                 for (var i = 0; i < dates.Length; i++)
                 {
                     var date = dates[i];
                     var shortableQuantity = shortableProvider.ShortableQuantity(symbol, date);
+                    var rebateRate = shortableProvider.RebateRate(symbol, date);
+                    var feeRate = shortableProvider.FeeRate(symbol, date);
 
-                    Assert.AreEqual(results[i][symbol], shortableQuantity);
+                    Assert.AreEqual(results[i][symbol].ShortableQuantity, shortableQuantity);
+                    Assert.AreEqual(results[i][symbol].RebateRate, rebateRate);
+                    Assert.AreEqual(results[i][symbol].FeeRate, feeRate);
                 }
             }
         }
@@ -91,6 +116,10 @@ namespace QuantConnect.Tests.Common.Data.Shortable
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker, QuantConnect.Market.USA, mappingResolveDate: date), ticker);
 
             Assert.IsFalse(provider.ShortableQuantity(symbol, date).HasValue);
+            Assert.AreEqual(0, provider.RebateRate(symbol, date));
+            Assert.AreEqual(0, provider.FeeRate(symbol, date));
         }
+
+        private record ShortableData(long? ShortableQuantity, decimal RebateRate, decimal FeeRate);
     }
 }

@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse<StockDataSource>("my-stock-data-source", stockDataSource =>
             {
                 _selected = true;
-                return stockDataSource.SelectMany(x => x.Symbols);
+                return stockDataSource.OfType<StockDataSource>().SelectMany(x => x.Symbols);
             });
         }
 
@@ -174,6 +174,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
+            {"Start Equity", "100000"},
+            {"End Equity", "100000"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},

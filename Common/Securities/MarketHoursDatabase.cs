@@ -122,10 +122,13 @@ namespace QuantConnect.Securities
         /// </summary>
         public void ReloadEntries()
         {
-            Reset();
-            var fileEntries = FromDataFolder()._entries.Where(x => !_customEntries.ContainsKey(x.Key));
-            var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
-            _entries = newEntries;
+            lock (DataFolderMarketHoursDatabaseLock)
+            {
+                Reset();
+                var fileEntries = FromDataFolder()._entries.Where(x => !_customEntries.ContainsKey(x.Key));
+                var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
+                _entries = newEntries;
+            }
         }
 
         /// <summary>

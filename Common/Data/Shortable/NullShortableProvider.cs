@@ -30,6 +30,29 @@ namespace QuantConnect.Data.Shortable
         public static NullShortableProvider Instance { get; } = new ();
 
         /// <summary>
+        /// Gets interest rate charged on borrowed shares for a given asset.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup fee rate</param>
+        /// <param name="localTime">Time of the algorithm</param>
+        /// <returns>zero indicating that it is does have borrowing costs</returns>
+        public decimal FeeRate(Symbol symbol, DateTime localTime)
+        {
+            return 0m;       
+        }
+
+        /// <summary>
+        /// Gets the Fed funds or other currency-relevant benchmark rate minus the interest rate charged on borrowed shares for a given asset.
+        /// E.g.: Interest rate - borrow fee rate = borrow rebate rate: 5.32% - 0.25% = 5.07%.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup rebate rate</param>
+        /// <param name="localTime">Time of the algorithm</param>
+        /// <returns>zero indicating that it is does have borrowing costs</returns>
+        public decimal RebateRate(Symbol symbol, DateTime localTime)
+        {
+            return 0m;
+        }
+
+        /// <summary>
         /// Gets the quantity shortable for the Symbol at the given time.
         /// </summary>
         /// <param name="symbol">Symbol to check</param>

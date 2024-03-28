@@ -65,7 +65,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _date = date;
             Config = config;
             _shouldCacheDataPoints = !Config.IsCustomData && Config.Resolution >= Resolution.Hour
-                && Config.Type != typeof(FineFundamental) && Config.Type != typeof(CoarseFundamental) && Config.Type != typeof(Fundamental) && Config.Type != typeof(Fundamentals)
+                && Config.Type != typeof(FineFundamental) && Config.Type != typeof(CoarseFundamental) && Config.Type != typeof(Fundamental)
+                // don't cache universe data, doesn't make much sense and we don't want to change the symbol of the clone
+                && !Config.Type.IsAssignableTo(typeof(BaseDataCollection))
                 && !DataCacheProvider.IsDataEphemeral;
 
             _implementsStreamReader = Config.Type.ImplementsStreamReader();

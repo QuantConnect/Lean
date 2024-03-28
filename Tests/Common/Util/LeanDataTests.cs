@@ -225,10 +225,10 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(SecurityType.Base, symbol.SecurityType);
             Assert.AreEqual(Market.USA, symbol.ID.Market);
             Assert.AreEqual(Resolution.Daily, resolution);
-            Assert.AreEqual("SPY.ETFConstituentData", symbol.ID.Symbol);
+            Assert.AreEqual("SPY.ETFConstituentUniverse", symbol.ID.Symbol);
             Assert.AreEqual(new DateTime(2020, 1, 2), date);
             Assert.IsTrue(SecurityIdentifier.TryGetCustomDataType(symbol.ID.Symbol, out var dataType));
-            Assert.AreEqual(typeof(ETFConstituentData).Name, dataType);
+            Assert.AreEqual(typeof(ETFConstituentUniverse).Name, dataType);
         }
 
         [Test]
@@ -382,6 +382,23 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(resolution, Resolution.Minute);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
             Assert.AreEqual(date.Date, Parse.DateTime("2016-10-07").Date);
+        }
+
+        [TestCase("equity/usa/minute/goog/20130102_quote.zip", "GOOG", null, "2004/08/19")]
+        [TestCase("equity/usa/minute/goog/20100102_quote.zip", "GOOG", null, "2004/08/19")]
+        [TestCase("equity/usa/minute/goog/20150102_quote.zip", "GOOG", "GOOCV", "2014/03/27")]
+        [TestCase("equity/usa/minute/spwr/20071223_trade.zip", "SPWR", null, "2005/11/17")]
+        [TestCase("equity/usa/minute/spwra/20101223_trade.zip", "SPWRA", "SPWR", "2005/11/17")]
+        [TestCase("equity/usa/minute/spwr/20141223_trade.zip", "SPWR", "SPWR", "2005/11/17")]
+        [TestCase("option/usa/minute/goog/20151223_openinterest_american.zip", "GOOG", "GOOCV", "2014/03/27")]
+        public void TryParseMapsShouldReturnCorrectSymbol(string path, string expectedTicker, string expectedUnderlyingTicker, DateTime expectedDate)
+        {
+            Assert.IsTrue(LeanData.TryParsePath(path, out var parsedSymbol, out _, out _));
+
+            var symbol = parsedSymbol.HasUnderlying ? parsedSymbol.Underlying : parsedSymbol;
+            Assert.That(symbol.Value, Is.EqualTo(expectedTicker));
+            Assert.That(symbol.ID.Date, Is.EqualTo(expectedDate));
+            Assert.That(symbol.ID.Symbol, Is.EqualTo(expectedUnderlyingTicker ?? expectedTicker));
         }
 
         [TestCase(SecurityType.Base, "alteRNative")]

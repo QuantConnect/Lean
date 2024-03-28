@@ -14,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Free space
-        run: df -h && rm -rf /opt/hostedtoolcache* && df -h
+        run: df -h && rm -rf /usr/share/dotnet && sudo rm -rf /usr/local/lib/android && sudo rm -rf /opt/ghc && rm -rf /opt/hostedtoolcache* && df -h
 
       - uses: addnab/docker-run-action@v3
         with:
@@ -25,11 +25,11 @@ jobs:
             # Build
             dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
             # Python Virtual Environment System Packages
-            python -m venv /lean-testenv --system-site-packages && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.99 && deactivate
+            python -m venv /lean-testenv --system-site-packages && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.185 && deactivate
             # Run Virtual Environment Test System Packages
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
             # Python Virtual Environment
-            rm -rf /lean-testenv && python -m venv /lean-testenv && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.99 && deactivate
+            rm -rf /lean-testenv && python -m venv /lean-testenv && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.185 && deactivate
             # Run Virtual Environment Test
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
             # Run Python Package Tests
@@ -48,11 +48,10 @@ jobs:
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorflowProbabilityTest" --blame-hang-timeout 120seconds --blame-crash
             # Run Hvplot Python Package Test
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.HvplotTest" --blame-hang-timeout 120seconds --blame-crash
-            # Run Stellargraph Python Package Test
-            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.StellargraphTest" --blame-hang-timeout 120seconds --blame-crash
             # Run Keras Python Package Test
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.KerasTest" --blame-hang-timeout 120seconds --blame-crash
-            # Run Scikeras Python Package Test
-            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.ScikerasTest" --blame-hang-timeout 120seconds --blame-crash
             # Run Transformers
-            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Transformers|XTransformers" --blame-hang-timeout 120seconds --blame-crash
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Transformers" --blame-hang-timeout 120seconds --blame-crash
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.XTransformers" --blame-hang-timeout 120seconds --blame-crash
+            # Run Shap
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.ShapTest" --blame-hang-timeout 120seconds --blame-crash

@@ -64,6 +64,8 @@ namespace QuantConnect.Tests.API
                 { "Compounding Annual Return", "52.602%" },
                 { "Drawdown", "17.800%" },
                 { "Expectancy", "0.196" },
+                { "Start Equity", "100000" },
+                { "End Equity", "200000" },
                 { "Net Profit", "123.888%" },
                 { "Sharpe Ratio", "1.707" },
                 { "Probabilistic Sharpe Ratio", "77.188%" },

@@ -70,6 +70,18 @@ namespace QuantConnect.Statistics
         public decimal Expectancy { get; set; }
 
         /// <summary>
+        /// Initial Equity Total Value
+        /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public decimal StartEquity { get; set; }
+
+        /// <summary>
+        /// Final Equity Total Value
+        /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public decimal EndEquity { get; set; }
+
+        /// <summary>
         /// Annual compounded returns statistic based on the final-starting capital and years.
         /// </summary>
         /// <remarks>Also known as Compound Annual Growth Rate (CAGR)</remarks>
@@ -202,6 +214,9 @@ namespace QuantConnect.Statistics
             int? winCount = null,
             int? lossCount = null)
         {
+            StartEquity = startingCapital;
+            EndEquity = equity.LastOrDefault().Value;
+
             if (portfolioTurnover.Count > 0)
             {
                 PortfolioTurnover = portfolioTurnover.Select(kvp => kvp.Value).Average();

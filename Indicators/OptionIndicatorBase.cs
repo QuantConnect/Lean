@@ -110,10 +110,11 @@ namespace QuantConnect.Indicators
         /// <param name="option">The option to be tracked</param>
         /// <param name="riskFreeRateModel">Risk-free rate model</param>
         /// <param name="dividendYieldModel">Dividend yield model</param>
+        /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="period">The lookback period of volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek/IV</param>
         protected OptionIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, 
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 2)
+            Symbol mirrorOption = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 2)
             : base(name)
         {
             var sid = option.ID;
@@ -132,17 +133,13 @@ namespace QuantConnect.Indicators
             Price = new Identity(name + "_Close");
             UnderlyingPrice = new Identity(name + "_UnderlyingClose");
 
-            WarmUpPeriod = period;
-        }
+            if (mirrorOption != null)
+            {
+                _oppositeOptionSymbol = mirrorOption;
+                OppositePrice = new Identity(Name + "_OppositeClose");
+            }
 
-        /// <summary>
-        /// To set the mirror option contract for parity type calculation
-        /// </summary>
-        /// <param name="mirrorOption">the mirror option contract symbol</param>
-        protected void SetMirrorOptionContract(Symbol mirrorOption)
-        {
-            _oppositeOptionSymbol = mirrorOption;
-            OppositePrice = new Identity(Name + "_OppositeClose");
+            WarmUpPeriod = period;
         }
 
         /// <summary>

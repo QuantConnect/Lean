@@ -54,17 +54,19 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         if self.Time.date() == self.lastTradeDate:
             return
 
-        for symbol in sorted(self.ActiveSecurities.Keys, key = lambda x:x.Value):
-            if (not self.Portfolio.ContainsKey(symbol)) or (not self.Portfolio[symbol].Invested):
-                if not self.Shortable(symbol):
-                    raise Exception(f"Expected {symbol} to be shortable on {self.Time.strftime('%Y%m%d')}")
+        for (symbol, security) in {x.Key: x.Value for x in sorted(self.ActiveSecurities, key = lambda kvp:kvp.Key)}.items():
+            if security.Invested:
+                continue
+            shortable_quantity = security.ShortableProvider.ShortableQuantity(symbol, self.Time)
+            if not shortable_quantity:
+                raise Exception(f"Expected {symbol} to be shortable on {self.Time.strftime('%Y%m%d')}")
 
-                """
-                Buy at least once into all Symbols. Since daily data will always use
-                MOO orders, it makes the testing of liquidating buying into Symbols difficult.
-                """
-                self.MarketOrder(symbol, -self.ShortableQuantity(symbol))
-                self.lastTradeDate = self.Time.date()
+            """
+            Buy at least once into all Symbols. Since daily data will always use
+            MOO orders, it makes the testing of liquidating buying into Symbols difficult.
+            """
+            self.MarketOrder(symbol, -shortable_quantity)
+            self.lastTradeDate = self.Time.date()
 
     def CoarseSelection(self, coarse):
         shortableSymbols = self.shortableProvider.AllShortableSymbols(self.Time)

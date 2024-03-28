@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Research.RegressionTemplates
             "time\": \"2022-03-02T20:45:04.581853\",     \"status\": \"completed\"    },    \"tags\": []   },   \"outputs\": [],   \"source\": [    \"# Example wit" +
             "h BB, it is a datapoint indicator\",    \"# Define the indicator\",    \"bb = BollingerBands(30, 2)\",    \"\",    \"# Gets historical data of indicat" +
             "or\",    \"bbdf = qb.Indicator(bb, \\\"SPY\\\", startDate, endDate, Resolution.Daily)\",    \"\",    \"# drop undesired fields\",    \"bbdf = bbdf.dro" +
-            "p('standarddeviation', 1)\",    \"\",    \"if bbdf.shape[0] < 1:\",    \"    raise Exception(\\\"Bollinger Bands resulted in no data\\\")\"   ]  },  {" +
+            "p('standarddeviation', axis=1)\",    \"\",    \"if bbdf.shape[0] < 1:\",    \"    raise Exception(\\\"Bollinger Bands resulted in no data\\\")\"   ]  },  {" +
             "   \"cell_type\": \"code\",   \"execution_count\": null,   \"id\": \"6a7127bf\",   \"metadata\": {    \"papermill\": {     \"duration\": 0.003998,    " +
             " \"end_time\": \"2022-03-02T20:45:04.655082\",     \"exception\": false,     \"start_time\": \"2022-03-02T20:45:04.651084\",     \"status\": \"complet" +
             "ed\"    },    \"tags\": []   },   \"outputs\": [],   \"source\": []  } ], \"metadata\": {  \"kernelspec\": {   \"display_name\": \"Python 3 (ipykernel" +

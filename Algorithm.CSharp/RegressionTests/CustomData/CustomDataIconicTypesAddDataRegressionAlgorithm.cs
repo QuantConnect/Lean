@@ -126,6 +126,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "32.142%"},
             {"Drawdown", "0.700%"},
             {"Expectancy", "0"},
+            {"Start Equity", "100000"},
+            {"End Equity", "100382.52"},
             {"Net Profit", "0.383%"},
             {"Sharpe Ratio", "2.947"},
             {"Sortino Ratio", "0"},

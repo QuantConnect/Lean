@@ -30,6 +30,8 @@ namespace QuantConnect.Statistics
         public const string Drawdown = "Drawdown";
         public const string EstimatedStrategyCapacity = "Estimated Strategy Capacity";
         public const string Expectancy = "Expectancy";
+        public const string StartEquity = "Start Equity";
+        public const string EndEquity = "End Equity";
         public const string InformationRatio = "Information Ratio";
         public const string LossRate = "Loss Rate";
         public const string NetProfit = "Net Profit";

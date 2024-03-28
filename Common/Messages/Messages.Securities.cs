@@ -686,6 +686,8 @@ namespace QuantConnect
 
             public static string InvalidPriceMagnifier = "SymbolProprties PriceMagnifier can not be less than or equal to 0";
 
+            public static string InvalidStrikeMultiplier = "SymbolProperties StrikeMultiplier can not be less than or equal to 0";
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Securities.SymbolProperties instance)
             {

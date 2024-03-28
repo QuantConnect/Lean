@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
         }
 
-        private protected IEnumerable<Symbol> ETFConstituentsFilter(IEnumerable<ETFConstituentData> constituents)
+        private protected IEnumerable<Symbol> ETFConstituentsFilter(IEnumerable<ETFConstituentUniverse> constituents)
         {
             // Get the 10 securities with the largest weight in the index
             return constituents.OrderByDescending(c => c.Weight).Take(8).Select(c => c.Symbol);
@@ -81,6 +81,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "250.805%"},
             {"Drawdown", "0.900%"},
             {"Expectancy", "0"},
+            {"Start Equity", "100000"},
+            {"End Equity", "102436.17"},
             {"Net Profit", "2.436%"},
             {"Sharpe Ratio", "3.837"},
             {"Sortino Ratio", "10.614"},

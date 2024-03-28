@@ -108,7 +108,7 @@ namespace QuantConnect.Data
         /// Initializes a new instance of the <see cref="HistoryRequest"/> class from the specified parameters
         /// </summary>
         /// <param name="startTimeUtc">The start time for this request,</param>
-        /// <param name="endTimeUtc">The start time for this request</param>
+        /// <param name="endTimeUtc">The end time for this request</param>
         /// <param name="dataType">The data type of the output data</param>
         /// <param name="symbol">The symbol to request data for</param>
         /// <param name="resolution">The requested data resolution</param>
@@ -157,12 +157,23 @@ namespace QuantConnect.Data
         /// <param name="config">The subscription data config used to initialize this request</param>
         /// <param name="hours">The exchange hours used for fill forward processing</param>
         /// <param name="startTimeUtc">The start time for this request,</param>
-        /// <param name="endTimeUtc">The start time for this request</param>
+        /// <param name="endTimeUtc">The end time for this request</param>
         public HistoryRequest(SubscriptionDataConfig config, SecurityExchangeHours hours, DateTime startTimeUtc, DateTime endTimeUtc)
             : this(startTimeUtc, endTimeUtc, config.Type, config.Symbol, config.Resolution,
                 hours, config.DataTimeZone, config.FillDataForward ? config.Resolution : (Resolution?)null,
                 config.ExtendedMarketHours, config.IsCustomData, config.DataNormalizationMode, config.TickType, config.DataMappingMode, config.ContractDepthOffset)
         {
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HistoryRequest"/> class with new Symbol, StartTimeUtc, EndTimeUtc
+        /// </summary>
+        /// <param name="request">Represents a request for historical data</param>
+        /// <param name="newStartTimeUtc">The start time for this request</param>
+        /// <param name="newEndTimeUtc">The end time for this request</param>
+        public HistoryRequest(HistoryRequest request, Symbol newSymbol, DateTime newStartTimeUtc, DateTime newEndTimeUtc)
+            : this (newStartTimeUtc, newEndTimeUtc, request.DataType, newSymbol, request.Resolution, request.ExchangeHours, request.DataTimeZone, request.FillForwardResolution,
+                  request.IncludeExtendedMarketHours, request.IsCustomData, request.DataNormalizationMode, request.TickType, request.DataMappingMode, request.ContractDepthOffset)
+        { }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -38,6 +38,13 @@ namespace QuantConnect.Data.UniverseSelection
                 using (Py.GIL())
                 {
                     return _universe.UniverseSettings;
+                }
+            }
+            set
+            {
+                using (Py.GIL())
+                {
+                    _universe.UniverseSettings = value;
                 }
             }
         }

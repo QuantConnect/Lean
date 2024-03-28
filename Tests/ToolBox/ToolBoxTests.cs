@@ -38,9 +38,9 @@ namespace QuantConnect.Tests.ToolBox
             Assert.Zero(types.Count);       
         }
 
-        [TestCase("--app=ydl --tickers=AAPL --resolution=Daily --from-date=20200820-00:00:00 --to-date=20200830-00:00:00", 1)]
-        [TestCase("--app=ydl --resolution=Daily --from-date=20200820-00:00:00 --to-date=20200830-00:00:00", 0)]
-        [TestCase("--app=ydl --tickers=AAPL,SPY,TSLA --resolution=Daily --from-date=20200820-00:00:00 --to-date=20200830-00:00:00", 3)]
+        [TestCase("--app=RDG --tickers=AAPL --resolution=Daily --from-date=20200820-00:00:00 --to-date=20200830-00:00:00", 1)]
+        [TestCase("--app=RDG --resolution=Daily --from-date=20200820-00:00:00 --to-date=20200830-00:00:00", 0)]
+        [TestCase("--app=RDG --tickers=AAPL,SPY,TSLA --resolution=Daily --from-date=20200820-00:00:00 --to-date=20200830-00:00:00", 3)]
         public void CanParseTickersCorrectly(string args, int expectedCount)
         {
             var options = ToolboxArgumentParser.ParseArguments(args.Split(' '));

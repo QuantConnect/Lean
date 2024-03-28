@@ -15,6 +15,7 @@
 */
 
 using System;
+using NodaTime;
 using System.IO;
 using System.Linq;
 using QuantConnect.Util;
@@ -22,7 +23,9 @@ using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 using System.Collections.Concurrent;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -42,6 +45,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         private readonly IDataDownloader _dataDownloader;
         private readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(DiskSynchronizer);
+        private readonly IMapFileProvider _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
 
         /// <summary>
         /// Creates a new instance
@@ -118,7 +122,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         startTimeUtc = date.ConvertToUtc(dataTimeZone);
                         // let's get the whole day
                         endTimeUtc = date.AddDays(1).ConvertToUtc(dataTimeZone);
-                        if(endTimeUtc > endTimeUtcLimit)
+                        if (endTimeUtc > endTimeUtcLimit)
                         {
                             // we are at the limit, avoid getting partial data
                             return;
@@ -163,36 +167,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         LeanDataWriter writer = null;
                         var getParams = new DataDownloaderGetParameters(symbol, resolution, startTimeUtc, endTimeUtc, tickType);
 
-                        var downloadData = _dataDownloader.Get(getParams);
+                        var downloaderDataParameters = getParams.GetDataDownloaderParameterForAllMappedSymbols(_mapFileProvider, exchangeTimeZone);
 
-                        if (downloadData == null)
-                        {
-                            // doesn't support this download request, that's okay
-                            return;
-                        }
+                        var downloadedData = GetDownloadedData(downloaderDataParameters, symbol, exchangeTimeZone, dataTimeZone, dataType);
 
-                        var data = downloadData
-                            .Where(baseData =>
-                            {
-                                if(symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
-                                {
-                                    // we need to store the data in data time zone
-                                    baseData.Time = baseData.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
-                                    baseData.EndTime = baseData.EndTime.ConvertTo(exchangeTimeZone, dataTimeZone);
-                                    return true;
-                                }
-                                return false;
-                            })
-                            // for canonical symbols, downloader will return data for all of the chain
-                            .GroupBy(baseData => baseData.Symbol);
-
-                        foreach (var dataPerSymbol in data)
+                        foreach (var dataPerSymbol in downloadedData)
                         {
                             if (writer == null)
                             {
                                 writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
                             }
-
                             // Save the data
                             writer.Write(dataPerSymbol);
                         }
@@ -206,11 +190,73 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Retrieves downloaded data grouped by symbol based on <see cref="IDownloadProvider"/>.
+        /// </summary>
+        /// <param name="downloaderDataParameters">Parameters specifying the data to be retrieved.</param>
+        /// <param name="symbol">Represents a unique security identifier, generate by ticker name.</param>
+        /// <param name="exchangeTimeZone">The time zone of the exchange where the symbol is traded.</param>
+        /// <param name="dataTimeZone">The time zone in which the data is represented.</param>
+        /// <param name="dataType">The type of data to be retrieved. (e.g. <see cref="Data.Market.TradeBar"/>)</param>
+        /// <returns>An IEnumerable containing groups of data grouped by symbol. Each group contains data related to a specific symbol.</returns>
+        /// <exception cref="ArgumentException"> Thrown when the downloaderDataParameters collection is null or empty.</exception>
+        public IEnumerable<IGrouping<Symbol, BaseData>> GetDownloadedData(
+            IEnumerable<DataDownloaderGetParameters> downloaderDataParameters,
+            Symbol symbol,
+            DateTimeZone exchangeTimeZone,
+            DateTimeZone dataTimeZone,
+            Type dataType)
+        {
+            if (downloaderDataParameters.IsNullOrEmpty())
+            {
+                throw new ArgumentException($"{nameof(DownloaderDataProvider)}.{nameof(GetDownloadedData)}: DataDownloaderGetParameters are empty or equal to null.");
+            }
+
+            foreach (var downloaderDataParameter in downloaderDataParameters)
+            {
+                var downloadedData = _dataDownloader.Get(downloaderDataParameter);
+
+                if (downloadedData == null)
+                {
+                    // doesn't support this download request, that's okay
+                    continue;
+                }
+                var startDateTimeInExchangeTimeZone = downloaderDataParameter.StartUtc.ConvertFromUtc(exchangeTimeZone);
+                var endDateTimeInExchangeTimeZone = downloaderDataParameter.EndUtc.ConvertFromUtc(exchangeTimeZone);
+
+                var groupedData = downloadedData
+                    .Where(baseData =>
+                    {
+                        // Sometimes, external Downloader provider returns excess data
+                        if (baseData.Time < startDateTimeInExchangeTimeZone || baseData.Time > endDateTimeInExchangeTimeZone)
+                        {
+                            return false;
+                        }
+
+                        if (symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
+                        {
+                            // we need to store the data in data time zone
+                            baseData.Time = baseData.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
+                            baseData.EndTime = baseData.EndTime.ConvertTo(exchangeTimeZone, dataTimeZone);
+                            return true;
+                        }
+                        return false;
+                    })
+                    // for canonical symbols, downloader will return data for all of the chain
+                    .GroupBy(baseData => baseData.Symbol);
+
+                foreach (var data in groupedData)
+                {
+                    yield return data;
+                }
+            }
+        }
+
+        /// <summary>
         /// Get's the stream for a given file path
         /// </summary>
         protected override Stream GetStream(string key)
         {
-            if(LeanData.TryParsePath(key, out var symbol, out var date, out var resolution) && resolution > Resolution.Minute && symbol.RequiresMapping())
+            if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution) && resolution > Resolution.Minute && symbol.RequiresMapping())
             {
                 // because the file could be updated even after it's created because of symbol mapping we can't stream from disk
                 return DiskSynchronizer.Execute(key, () =>

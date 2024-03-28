@@ -18,32 +18,27 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2014, 6, 5)
         self.SetEndDate(2014, 6, 7)
-        self.SetCash(1000000)
+        self.SetCash(100000)
 
-        self.aapl = self.AddEquity("AAPL", Resolution.Daily).Symbol
-        self.option = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505, datetime(2014, 6, 27))
-        self.AddOptionContract(self.option)
+        self.AddEquity("AAPL", Resolution.Minute)
+        option = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505, datetime(2014, 6, 27))
+        self.AddOptionContract(option, Resolution.Minute)
 
-        interestRateProvider = InterestRateProvider()
-        dividendYieldProvider = DividendYieldProvider(self.aapl)
-
-        self.impliedVolatility = ImpliedVolatility(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BlackScholes, 2)
-        self.delta = Delta(self.option, interestRateProvider, dividendYieldProvider, OptionPricingModelType.BinomialCoxRossRubinstein, OptionPricingModelType.BlackScholes)
-
-    def OnData(self, slice):
-        if slice.Bars.ContainsKey(self.aapl) and slice.QuoteBars.ContainsKey(self.option):
-            underlyingDataPoint = IndicatorDataPoint(self.aapl, slice.Time, slice.Bars[self.aapl].Close)
-            optionDataPoint = IndicatorDataPoint(self.option, slice.Time, slice.QuoteBars[self.option].Close)
-
-            self.impliedVolatility.Update(underlyingDataPoint)
-            self.impliedVolatility.Update(optionDataPoint)
-
-            self.delta.Update(underlyingDataPoint)
-            self.delta.Update(optionDataPoint)
+        self.impliedVolatility = self.IV(option, optionModel = OptionPricingModelType.BlackScholes, period = 2)
+        self.delta = self.D(option, optionModel = OptionPricingModelType.BinomialCoxRossRubinstein, ivModel = OptionPricingModelType.BlackScholes)
+        self.gamma = self.G(option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
+        self.vega = self.V(option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
+        self.theta = self.T(option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
+        self.rho = self.R(option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
 
     def OnEndOfAlgorithm(self):
-        if self.impliedVolatility.Current.Value == 0 or self.delta.Current.Value == 0:
+        if self.impliedVolatility.Current.Value == 0 or self.delta.Current.Value == 0 or self.gamma.Current.Value == 0 \
+        or self.vega.Current.Value == 0 or self.theta.Current.Value == 0 or self.rho.Current.Value == 0:
             raise Exception("Expected IV/greeks calculated")
 
         self.Debug(f"""Implied Volatility: {self.impliedVolatility.Current.Value},
-Delta: {self.delta.Current.Value}""")
+Delta: {self.delta.Current.Value},
+Gamma: {self.gamma.Current.Value},
+Vega: {self.vega.Current.Value},
+Theta: {self.theta.Current.Value},
+Rho: {self.rho.Current.Value}""")

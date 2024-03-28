@@ -782,7 +782,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             // Only throws if there is an error in its implementation body
             catch (PythonException exception)
             {
-                if (!exception.Message.StartsWith("OnEndOfDay()"))
+                if (!exception.Message.Contains("OnEndOfDay() missing 1 required positional argument"))
                 {
                     _baseAlgorithm.SetRunTimeError(exception);
                 }
@@ -810,7 +810,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             // Only throws if there is an error in its implementation body
             catch (PythonException exception)
             {
-                if (!exception.Message.StartsWith("OnEndOfDay()"))
+                if (!exception.Message.Contains("OnEndOfDay() takes 1 positional argument but 2 were given"))
                 {
                     _baseAlgorithm.SetRunTimeError(exception);
                 }

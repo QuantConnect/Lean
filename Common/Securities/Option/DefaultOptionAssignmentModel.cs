@@ -76,10 +76,14 @@ namespace QuantConnect.Securities.Option
             var symbol = option.Symbol;
             var underlyingPrice = option.Underlying.Close;
 
+            // For some options, the price is based on a fraction of the underlying, such as for NQX.
+            // Therefore, for those options we need to scale the price when comparing it with the
+            // underlying. For that reason we use option.ScaledStrikePrice instead of
+            // option.StrikePrice
             var result =
                 symbol.ID.OptionRight == OptionRight.Call
-                    ? (underlyingPrice - symbol.ID.StrikePrice) / underlyingPrice > _requiredInTheMoneyPercent
-                    : (symbol.ID.StrikePrice - underlyingPrice) / underlyingPrice > _requiredInTheMoneyPercent;
+                    ? (underlyingPrice - option.ScaledStrikePrice) / underlyingPrice > _requiredInTheMoneyPercent
+                    : (option.ScaledStrikePrice - underlyingPrice) / underlyingPrice > _requiredInTheMoneyPercent;
 
             return result;
         }
@@ -133,7 +137,7 @@ namespace QuantConnect.Securities.Option
             }
 
             // calculating P/L of the two transactions (exercise option and then close underlying position)
-            var altPnL = (underlyingPrice - option.StrikePrice) * underlyingQuantity * underlying.QuoteCurrency.ConversionRate * option.ContractUnitOfTrade
+            var altPnL = (underlyingPrice - option.ScaledStrikePrice) * underlyingQuantity * underlying.QuoteCurrency.ConversionRate * option.ContractUnitOfTrade
                         - underlyingOrderFee2Amount
                         - holding.AveragePrice * holding.AbsoluteQuantity * option.SymbolProperties.ContractMultiplier * option.QuoteCurrency.ConversionRate
                         - optionOrderFee2;

@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="constituents">Constituents of the ETF universe added above</param>
         /// <returns>Constituent Symbols to add to algorithm</returns>
         /// <exception cref="ArgumentException">Constituents collection was not structured as expected</exception>
-        private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentData> constituents)
+        private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentUniverse> constituents)
         {
             _filtered = true;
             _constituents = constituents.Select(x => x.Symbol).Distinct().ToList();
@@ -162,6 +162,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
+            {"Start Equity", "100000"},
+            {"End Equity", "100000"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},

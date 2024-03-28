@@ -38,6 +38,35 @@ namespace QuantConnect.Data.Shortable
         }
 
         /// <summary>
+        /// Gets the fee rate for the Symbol at the given date.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup fee rate</param>
+        /// <param name="localTime">Time of the algorithm</param>
+        /// <returns>zero indicating that it is does have borrowing costs</returns>
+        public decimal FeeRate(Symbol symbol, DateTime localTime)
+        {
+            using (Py.GIL())
+            {
+                return (_shortableProvider.FeeRate(symbol, localTime) as PyObject).GetAndDispose<decimal>();
+            }
+        }
+
+        /// <summary>
+        /// Gets the Fed funds or other currency-relevant benchmark rate minus the interest rate charged on borrowed shares for a given asset.
+        /// E.g.: Interest rate - borrow fee rate = borrow rebate rate: 5.32% - 0.25% = 5.07%.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup rebate rate</param>
+        /// <param name="localTime">Time of the algorithm</param>
+        /// <returns>zero indicating that it is does have borrowing costs</returns>
+        public decimal RebateRate(Symbol symbol, DateTime localTime)
+        {
+            using (Py.GIL())
+            {
+                return (_shortableProvider.RebateRate(symbol, localTime) as PyObject).GetAndDispose<decimal>();
+            }
+        }
+
+        /// <summary>
         /// Gets the quantity shortable for a <see cref="Symbol"/>, from python custom shortable provider
         /// </summary>
         /// <param name="symbol">Symbol to check shortable quantity</param>

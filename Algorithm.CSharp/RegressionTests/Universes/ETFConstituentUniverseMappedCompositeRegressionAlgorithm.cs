@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse(Universe.ETF(_qqq, universeFilterFunc: FilterETFs));
         }
 
-        private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentData> constituents)
+        private IEnumerable<Symbol> FilterETFs(IEnumerable<ETFConstituentUniverse> constituents)
         {
             var constituentSymbols = constituents.Select(x => x.Symbol).ToHashSet();
             if (!constituentSymbols.Contains(_aapl))
@@ -175,6 +175,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "-9.690%"},
             {"Drawdown", "4.200%"},
             {"Expectancy", "0"},
+            {"Start Equity", "100000"},
+            {"End Equity", "98257.31"},
             {"Net Profit", "-1.743%"},
             {"Sharpe Ratio", "-0.95"},
             {"Sortino Ratio", "-0.832"},

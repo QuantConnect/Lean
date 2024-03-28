@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Python
             _baseCode = File.ReadAllText(Path.Combine("./RegressionAlgorithms", "Test_AlgorithmPythonWrapper.py"));
         }
 
-        [Test]
+        [TestCase("")]
         [TestCase("def OnEndOfDay(self): pass")]
         [TestCase("def OnEndOfDay(self, symbol): pass")]
         public void CallOnEndOfDayDoesNotThrow(string code)

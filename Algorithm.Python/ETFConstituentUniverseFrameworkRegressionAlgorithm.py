@@ -123,7 +123,14 @@ class ETFConstituentUniverseFrameworkRegressionAlgorithm(QCAlgorithm):
         spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
 
         self.UniverseSettings.Resolution = Resolution.Hour
-        self.AddUniverse(self.Universe.ETF(spy, self.UniverseSettings, self.FilterETFConstituents))
+        universe = self.AddUniverse(self.Universe.ETF(spy, self.UniverseSettings, self.FilterETFConstituents))
+
+        historicalData = self.History(universe, 1)
+        if len(historicalData) != 1:
+            raise ValueError(f"Unexpected history count {len(historicalData)}! Expected 1");
+        for universeDataCollection in historicalData:
+            if len(universeDataCollection) < 200:
+               raise ValueError(f"Unexpected universe DataCollection count {len(universeDataCollection)}! Expected > 200");
 
     ### <summary>
     ### Filters ETF constituents

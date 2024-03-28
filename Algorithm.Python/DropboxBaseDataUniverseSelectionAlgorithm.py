@@ -32,10 +32,18 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
         # Commented so regression algorithm is more sensitive
         #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
 
-        self.SetStartDate(2017, 7, 4)
+        self.SetStartDate(2017, 7, 6)
         self.SetEndDate(2018, 7, 4)
 
-        self.AddUniverse(StockDataSource, "my-stock-data-source", self.stockDataSource)
+        universe = self.AddUniverse(StockDataSource, self.stockDataSource)
+
+        historicalSelectionData = self.History(universe, 3)
+        if len(historicalSelectionData) != 3:
+            raise ValueError(f"Unexpected universe data count {len(historicalSelectionData)}")
+
+        for universeData in historicalSelectionData["symbols"]:
+            if len(universeData) != 5:
+                raise ValueError(f"Unexpected universe data receieved")
 
     def stockDataSource(self, data):
         list = []

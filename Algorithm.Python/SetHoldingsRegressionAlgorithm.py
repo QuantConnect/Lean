@@ -34,6 +34,6 @@ class SetHoldingsRegressionAlgorithm(QCAlgorithm):
         '''
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 0.1)
-            self.SetHoldings("SPY", np.float(0.20))
+            self.SetHoldings("SPY", float(0.20))
             self.SetHoldings("SPY", np.float64(0.30))
             self.SetHoldings("SPY", 1)

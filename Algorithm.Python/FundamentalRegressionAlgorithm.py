@@ -23,13 +23,15 @@ from AlgorithmImports import *
 class FundamentalRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2014, 3, 25)
+        self.SetStartDate(2014, 3, 26)
         self.SetEndDate(2014, 4, 7)
 
         self.UniverseSettings.Resolution = Resolution.Daily
 
+        self.universe = self.AddUniverse(self.SelectionFunction)
+
         # before we add any symbol
-        self.AssertFundamentalUniverseData();
+        self.AssertFundamentalUniverseData()
 
         self.AddEquity("SPY")
         self.AddEquity("AAPL")
@@ -38,9 +40,9 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
         ibm = Symbol.Create("IBM", SecurityType.Equity, Market.USA)
         ibmFundamental = self.Fundamentals(ibm)
         if self.Time != self.StartDate or self.Time != ibmFundamental.EndTime:
-            raise ValueError(f"Unexpected Fundamental time {ibmFundamental.EndTime}");
+            raise ValueError(f"Unexpected Fundamental time {ibmFundamental.EndTime}")
         if ibmFundamental.Price == 0:
-            raise ValueError(f"Unexpected Fundamental IBM price!");
+            raise ValueError(f"Unexpected Fundamental IBM price!")
         nb = Symbol.Create("NB", SecurityType.Equity, Market.USA)
         fundamentals = self.Fundamentals([ nb, ibm ])
         if len(fundamentals) != 2:
@@ -56,24 +58,41 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
             if data["value"][0] == 0:
                 raise ValueError(f"Unexpected {data} fundamental data")
 
-        self.AssertFundamentalUniverseData();
-
-        self.AddUniverse(self.SelectionFunction)
+        self.AssertFundamentalUniverseData()
 
         self.changes = None
         self.numberOfSymbolsFundamental = 2
 
     def AssertFundamentalUniverseData(self):
-        # Request historical fundamental data for all symbols
-        history2 = self.History(Fundamentals, TimeSpan(1, 0, 0, 0))
-        if len(history2) != 1:
-            raise ValueError(f"Unexpected Fundamentals history count {len(history2)}! Expected 1")
-        data = history2["data"][0]
-        if len(data) < 7000:
-            raise ValueError(f"Unexpected Fundamentals data count {len(data)}! Expected > 7000")
-        for fundamental in data:
+        # Case A
+        universeDataPerTime = self.History(self.universe.DataType, [self.universe.Symbol], TimeSpan(2, 0, 0, 0))
+        if len(universeDataPerTime) != 2:
+            raise ValueError(f"Unexpected Fundamentals history count {len(universeDataPerTime)}! Expected 2")
+
+        for universeDataCollection in universeDataPerTime:
+            self.AssertFundamentalEnumerator(universeDataCollection, "A")
+
+        # Case B (sugar on A)
+        universeDataPerTime = self.History(self.universe, TimeSpan(2, 0, 0, 0))
+        if len(universeDataPerTime) != 2:
+            raise ValueError(f"Unexpected Fundamentals history count {len(universeDataPerTime)}! Expected 2")
+
+        for universeDataCollection in universeDataPerTime:
+            self.AssertFundamentalEnumerator(universeDataCollection, "B")
+
+        # Case C: Passing through the unvierse type and symbol
+        enumerableOfDataDictionary = self.History[self.universe.DataType]([self.universe.Symbol], 100)
+        for selectionCollectionForADay in enumerableOfDataDictionary:
+            self.AssertFundamentalEnumerator(selectionCollectionForADay[self.universe.Symbol], "C")
+
+    def AssertFundamentalEnumerator(self, enumerable, caseName):
+        dataPointCount = 0
+        for fundamental in enumerable:
+            dataPointCount += 1
             if type(fundamental) is not Fundamental:
-                raise ValueError(f"Unexpected Fundamentals data type! {fundamental}")
+                raise ValueError(f"Unexpected Fundamentals data type {type(fundamental)} case {caseName}! {str(fundamental)}")
+        if dataPointCount < 7000:
+            raise ValueError(f"Unexpected historical Fundamentals data count {dataPointCount} case {caseName}! Expected > 7000")
 
     # return a list of three fixed symbol objects
     def SelectionFunction(self, fundamental):
