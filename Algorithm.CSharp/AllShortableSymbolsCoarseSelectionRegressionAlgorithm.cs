@@ -20,7 +20,6 @@ using QuantConnect.Brokerages;
 using QuantConnect.Securities;
 using QuantConnect.Data;
 using QuantConnect.Data.Shortable;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using System.IO;
 using QuantConnect.Data.Fundamental;
