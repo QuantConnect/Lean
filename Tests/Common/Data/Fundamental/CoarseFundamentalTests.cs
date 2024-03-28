@@ -15,9 +15,10 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 
-namespace QuantConnect.Tests.Common.Data.UniverseSelection
+namespace QuantConnect.Tests.Common.Data.Fundamental
 {
     [TestFixture]
     public class CoarseFundamentalTests

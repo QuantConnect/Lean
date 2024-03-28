@@ -18,6 +18,7 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Linq;

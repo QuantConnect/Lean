@@ -16,6 +16,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Data.UniverseSelection
 {

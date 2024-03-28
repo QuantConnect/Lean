@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using Python.Runtime;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 

@@ -15,6 +15,7 @@
 
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;

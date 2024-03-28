@@ -21,8 +21,8 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Interfaces;
 using System.Linq;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Algorithm.CSharp
 {

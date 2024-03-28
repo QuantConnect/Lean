@@ -19,7 +19,6 @@ using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {

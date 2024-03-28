@@ -18,7 +18,6 @@ using System.Linq;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp

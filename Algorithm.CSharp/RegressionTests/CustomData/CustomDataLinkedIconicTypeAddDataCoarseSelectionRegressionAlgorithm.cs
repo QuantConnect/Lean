@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.IconicTypes;
-using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
