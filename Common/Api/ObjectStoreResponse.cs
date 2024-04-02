@@ -1,0 +1,110 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using Newtonsoft.Json;
+using System.Collections.Generic;
+
+namespace QuantConnect.Api
+{
+    /// <summary>
+    /// Response received when fetching Object Store
+    /// </summary>
+    public class GetObjectStoreResponse : RestResponse
+    {
+        /// <summary>
+        /// Job ID which can be used for querying state or packaging
+        /// </summary>
+        [JsonProperty("jobId")]
+        public string JobId { get; set; }
+
+        /// <summary>
+        /// The URL to download the object. This can also be null
+        /// </summary>
+        [JsonProperty("url")]
+        public string Url { get; set; }
+    }
+
+    /// <summary>
+    /// Summary information of the Object Store
+    /// </summary>
+    public class Object
+    {
+        /// <summary>
+        /// Object store key
+        /// </summary>
+        [JsonProperty(PropertyName = "key")]
+        public string Key {  get; set; }
+
+        /// <summary>
+        /// File or folder name
+        /// </summary>
+        [JsonProperty(PropertyName = "name")]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Last time it was modified
+        /// </summary>
+        [JsonProperty(PropertyName = "modified")]
+        public string Modified { get; set; }
+
+        /// <summary>
+        /// MIME type
+        /// </summary>
+        [JsonProperty(PropertyName = "mime")]
+        public string Mime { get; set; }
+
+        /// <summary>
+        /// True if it is a folder, false otherwise
+        /// </summary>
+        [JsonProperty(PropertyName = "isFolder")]
+        public bool IsFolder {  get; set; }
+
+        /// <summary>
+        /// File size
+        /// </summary>
+        [JsonProperty(PropertyName = "size")]
+        public decimal? Size { get; set; }
+    }
+
+    /// <summary>
+    /// Response received when listing Object of a project
+    /// </summary>
+    public class ListObjectStoreResponse : RestResponse
+    {
+        /// <summary>
+        /// Path to the files in the Object Store
+        /// </summary>
+        [JsonProperty(PropertyName = "path")]
+        public string Path { get; set; }
+
+        /// <summary>
+        /// List of objects stored
+        /// </summary>
+        [JsonProperty(PropertyName = "objects")]
+        public List<Object> Objects { get; set; }
+
+        /// <summary>
+        /// Size of all objects stored
+        /// </summary>
+        [JsonProperty(PropertyName = "objectStorageUsed")]
+        public int ObjectStorageUsed { get; set; }
+
+        /// <summary>
+        /// Size of all the objects stored in human-readable format 
+        /// </summary>
+        [JsonProperty(PropertyName = "objectStorageUsedHuman")]
+        public string ObjectStorageUsedHuman { get; set; }
+    }
+}
