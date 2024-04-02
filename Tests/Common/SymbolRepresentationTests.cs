@@ -31,13 +31,17 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(expected, result);
         }
 
-        [Test]
-        public void ParseOptionTickerOSI()
+        [TestCase("SPXW  230111C02400000", SecurityType.IndexOption, OptionStyle.European, "SPXW", "SPX")]
+        [TestCase("SPY   230111C02400000", SecurityType.Option, OptionStyle.American, "SPY", "SPY")]
+        public void ParseOptionTickerOSI(string optionStr, SecurityType securityType, OptionStyle optionStyle,
+            string expectedTargetOptionTicker, string expectedUnderlyingTicker)
         {
-            var result = SymbolRepresentation.ParseOptionTickerOSI("SPXW  230111C02400000", SecurityType.IndexOption);
+            var result = SymbolRepresentation.ParseOptionTickerOSI(optionStr, securityType, optionStyle: optionStyle);
 
-            Assert.AreEqual("SPXW", result.ID.Symbol);
-            Assert.AreEqual("SPX", result.Underlying.ID.Symbol);
+            Assert.AreEqual(expectedTargetOptionTicker, result.ID.Symbol);
+            Assert.AreEqual(expectedUnderlyingTicker, result.Underlying.ID.Symbol);
+            Assert.AreEqual(securityType, result.ID.SecurityType);
+            Assert.AreEqual(optionStyle, result.ID.OptionStyle);
         }
 
         [Test]
