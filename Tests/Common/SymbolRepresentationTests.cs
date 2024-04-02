@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common
         public void ParseOptionTickerOSI(string optionStr, SecurityType securityType, OptionStyle optionStyle,
             string expectedTargetOptionTicker, string expectedUnderlyingTicker)
         {
-            var result = SymbolRepresentation.ParseOptionTickerOSI(optionStr, securityType, optionStyle: optionStyle);
+            var result = SymbolRepresentation.ParseOptionTickerOSI(optionStr, securityType, optionStyle, Market.USA);
 
             Assert.AreEqual(expectedTargetOptionTicker, result.ID.Symbol);
             Assert.AreEqual(expectedUnderlyingTicker, result.Underlying.ID.Symbol);

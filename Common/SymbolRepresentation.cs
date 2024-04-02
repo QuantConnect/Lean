@@ -327,7 +327,7 @@ namespace QuantConnect
         /// <returns>Symbol object for the specified OSI option ticker string</returns>
         public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType = SecurityType.Option, string market = Market.USA)
         {
-            return ParseOptionTickerOSI(ticker, securityType, market);
+            return ParseOptionTickerOSI(ticker, securityType, OptionStyle.American, market);
         }
 
         /// <summary>
@@ -338,8 +338,7 @@ namespace QuantConnect
         /// <param name="market">The associated market</param>
         /// <param name="optionStyle">The option style</param>
         /// <returns>Symbol object for the specified OSI option ticker string</returns>
-        public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType = SecurityType.Option, string market = Market.USA,
-            OptionStyle optionStyle = OptionStyle.American)
+        public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType, OptionStyle optionStyle, string market)
         {
             var optionTicker = ticker.Substring(0, 6).Trim();
             var expiration = DateTime.ParseExact(ticker.Substring(6, 6), DateFormat.SixCharacter, null);
