@@ -324,14 +324,14 @@ namespace QuantConnect.Api
         /// <summary>
         /// Gets a list of LEAN versions with their corresponding basic descriptions
         /// </summary>
-        public RestResponse ReadLeanVersions()
+        public VersionsResponse ReadLeanVersions()
         {
             var request = new RestRequest("lean/versions/read", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
 
-            ApiConnection.TryRequest(request, out RestResponse result);
+            ApiConnection.TryRequest(request, out VersionsResponse result);
             return result;
         }
 
@@ -1480,6 +1480,104 @@ namespace QuantConnect.Api
             }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+
+        /// <summary>
+        /// Get one or more Object Store items of a specific organization and key
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to get the Object Store from</param>
+        /// <param name="keys">Keys for the Object Store files</param>
+        /// <returns><see cref="GetObjectStoreResponse"/></returns>
+        public GetObjectStoreResponse GetObjectStore(string organizationId, List<string> keys)
+        {
+            var request = new RestRequest("object/get", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            var obj = new Dictionary<string, object>
+            {
+                { "organizationId", organizationId },
+                { "keys", keys }
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out GetObjectStoreResponse result);
+            return result;
+        }
+
+        /// <summary>
+        /// Upload files to the Object Store
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to upload the file to</param>
+        /// <param name="key">Key to the Object Store file</param>
+        /// <param name="objectData">File to be uploaded</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse SetObjectStore(string organizationId, string key, byte[] objectData)
+        {
+            var request = new RestRequest("object/set", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("organizationId", organizationId);
+            request.AddParameter("key", key);
+            request.AddFileBytes("objectData", objectData, "objectData");
+            request.AlwaysMultipartFormData = true;
+
+            ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+
+        /// <summary>
+        /// Request to delete Object Store metadata of a specific organization and key
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to delete the Object Store file from</param>
+        /// <param name="key">Key to the Object Store file</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse DeleteObjectStore(string organizationId, string key)
+        {
+            var request = new RestRequest("object/delete", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            var obj = new Dictionary<string, object>
+            {
+                { "organizationId", organizationId },
+                { "key", key }
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+
+        /// <summary>
+        /// Request to list Object Store files of a specific organization and path
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to list the Object Store files from</param>
+        /// <param name="path">Path to the Object Store files</param>
+        /// <returns><see cref="ListObjectStoreResponse"/></returns>
+        public ListObjectStoreResponse ListObjectStore(string organizationId, string path)
+        {
+            var request = new RestRequest("object/list", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            var obj = new Dictionary<string, object>
+            {
+                { "organizationId", organizationId },
+                { "path", path }
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out ListObjectStoreResponse result);
             return result;
         }
 

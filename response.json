@@ -1,0 +1,79 @@
+{
+	"length": 1,
+	"orders": [
+		{
+			"Type": 0,
+			"Id": 1,
+			"ContingentId": 0,
+			"BrokerId": [
+				"1"
+			],
+			"Symbol": {
+				"Value": "SPY",
+				"ID": "SPY R735QTJ8XC9X",
+				"Permtick": "SPY"
+			},
+			"Price": 138.513986945,
+			"PriceCurrency": "USD",
+			"Time": "2013-10-07T13:31:00Z",
+			"CreatedTime": "2013-10-07T13:31:00Z",
+			"LastFillTime": "2013-10-07T13:31:00Z",
+			"Quantity": 720.0,
+			"Status": 3,
+			"Properties": {
+				"TimeInForce": {}
+			},
+			"SecurityType": 1,
+			"Direction": 0,
+			"Value": 99730.0706004,
+			"OrderSubmissionData": {
+				"BidPrice": 138.505714984,
+				"AskPrice": 138.513986945,
+				"LastPrice": 138.505714984
+			},
+			"IsMarketable": true,
+			"PriceAdjustmentMode": 1,
+			"Events": [
+				{
+					"symbol-value": "SPY",
+					"symbol-permtick": "SPY",
+					"id": "c8760ee32f7aa8212b6ccf04571c817f-1-1",
+					"algorithm-id": "c8760ee32f7aa8212b6ccf04571c817f",
+					"order-id": 1,
+					"order-event-id": 1,
+					"symbol": "SPY R735QTJ8XC9X",
+					"time": 1381152660.0,
+					"status": "submitted",
+					"fill-price": 0.0,
+					"fill-price-currency": "USD",
+					"fill-quantity": 0.0,
+					"direction": "buy",
+					"message": null,
+					"is-assignment": false,
+					"quantity": 720.0
+				},
+				{
+					"symbol-value": "SPY",
+					"symbol-permtick": "SPY",
+					"id": "c8760ee32f7aa8212b6ccf04571c817f-1-2",
+					"algorithm-id": "c8760ee32f7aa8212b6ccf04571c817f",
+					"order-id": 1,
+					"order-event-id": 2,
+					"symbol": "SPY R735QTJ8XC9X",
+					"time": 1381152660.0,
+					"status": "filled",
+					"order-fee-amount": 3.6,
+					"order-fee-currency": "USD",
+					"fill-price": 138.513986945,
+					"fill-price-currency": "USD",
+					"fill-quantity": 720.0,
+					"direction": "buy",
+					"message": null,
+					"is-assignment": false,
+					"quantity": 720.0
+				}
+			]
+		}
+	],
+	"success": true
+}

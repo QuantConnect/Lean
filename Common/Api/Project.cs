@@ -43,6 +43,12 @@ namespace QuantConnect.Api
         public string Permission { get; set; }
 
         /// <summary>
+        /// The public ID
+        /// </summary>
+        [JsonProperty(PropertyName = "publicId")]
+        public string PublicId {  get; set; }
+
+        /// <summary>
         /// The url of the user profile image
         /// </summary>
         [JsonProperty(PropertyName = "profileImage")]
@@ -223,9 +229,6 @@ namespace QuantConnect.Api
     /// </summary>
     public class Project : RestResponse
     {
-        private Grid _gridObject;
-        private Grid _liveGridObject;
-
         /// <summary>
         /// Project id
         /// </summary>
@@ -261,6 +264,12 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "ownerId")]
         public int OwnerId { get; set; }
+
+        /// <summary>
+        /// The organization ID
+        /// </summary>
+        [JsonProperty(PropertyName = "organizationId")]
+        public string OrganizationId { get; set; }
 
         /// <summary>
         /// List of collaborators
@@ -305,12 +314,6 @@ namespace QuantConnect.Api
         public List<Parameter> Parameters { get; set; }
 
         /// <summary>
-        /// Results from running the project on live
-        /// </summary>
-        [JsonProperty(PropertyName = "liveResults")]
-        public List<Project> LiveResults { get; set; }
-
-        /// <summary>
         /// The library projects
         /// </summary>
         [JsonProperty(PropertyName = "libraries")]
@@ -326,45 +329,13 @@ namespace QuantConnect.Api
         /// Contains information about the charts present in the project
         /// </summary>
         [JsonProperty(PropertyName = "grid" )]
-        public string Grid { get; set; }
-
-        /// <summary>
-        /// Grid property de-serialized into a list of <see cref="GridChart"/>
-        /// </summary>
-        public Grid GridObject
-        {
-            get
-            {
-                if (_gridObject == null && !string.IsNullOrEmpty(Grid))
-                {
-                    _gridObject = JsonConvert.DeserializeObject<Grid>(Grid);
-                }
-
-                return _gridObject;
-            }
-        }
+        public Grid Grid { get; set; }
 
         /// <summary>
         /// Contains information about the charts present in the live project
         /// </summary>
         [JsonProperty(PropertyName = "liveGrid")]
-        public string LiveGrid { get; set; }
-
-        /// <summary>
-        /// LiveGrid property de-serialized into a list of <see cref="GridChart"/>
-        /// </summary>
-        public Grid LiveGridObject
-        {
-            get
-            {
-                if (_liveGridObject == null && !string.IsNullOrEmpty(LiveGrid))
-                {
-                    _liveGridObject = JsonConvert.DeserializeObject<Grid>(LiveGrid);
-                }
-
-                return _liveGridObject;
-            }
-        }
+        public Grid LiveGrid { get; set; }
 
         /// <summary>
         /// The equity value of the last paper trading instance
@@ -410,9 +381,75 @@ namespace QuantConnect.Api
     }
 
     /// <summary>
+    /// API response for version
+    /// </summary>
+    public class Version
+    {
+        /// <summary>
+        /// ID of the LEAN version
+        /// </summary>
+        [JsonProperty(PropertyName = "id")]
+        public int Id { get; set; }
+
+        /// <summary>
+        /// Date when this version was created
+        /// </summary>
+        [JsonProperty(PropertyName = "created")]
+        public string Created { get; set; }
+
+        /// <summary>
+        /// Description of the LEAN version
+        /// </summary>
+        [JsonProperty(PropertyName = "description")]
+        public string Description { get; set; }
+
+        /// <summary>
+        /// Commit Hash in the LEAN repository
+        /// </summary>
+        [JsonProperty(PropertyName = "leanHash")]
+        public string LeanHash { get; set; }
+
+        /// <summary>
+        /// Commit Hash in the LEAN Cloud repository
+        /// </summary>
+        [JsonProperty(PropertyName = "leanCloudHash")]
+        public string LeanCloudHash { get; set; }
+
+        /// <summary>
+        /// Name of the branch where the commit is
+        /// </summary>
+        [JsonProperty(PropertyName = "name")]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Reference to the branch where the commit is
+        /// </summary>
+        [JsonProperty(PropertyName = "ref")]
+        public string Ref { get; set; }
+
+        /// <summary>
+        /// Indicates if the version is available for the public (1) or not (0)
+        /// </summary>
+        [JsonProperty(PropertyName = "public")]
+        public bool Public { get; set; }
+    }
+
+    /// <summary>
+    /// Read versions response
+    /// </summary>
+    public class VersionsResponse : RestResponse
+    {
+        /// <summary>
+        /// List of LEAN versions
+        /// </summary>
+        [JsonProperty(PropertyName = "versions")]
+        public List<Version> Versions { get; set; }
+    }
+
+    /// <summary>
     /// Project list response
     /// </summary>
-    public class ProjectResponse : RestResponse
+    public class ProjectResponse : VersionsResponse
     {
         /// <summary>
         /// List of projects for the authenticated user

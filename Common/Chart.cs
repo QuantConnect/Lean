@@ -40,12 +40,6 @@ namespace QuantConnect
         public Dictionary<string, BaseSeries> Series = new Dictionary<string, BaseSeries>();
 
         /// <summary>
-        /// Associated symbol if any, making this an asset plot
-        /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Symbol Symbol { get; set; }
-
-        /// <summary>
         /// True to hide this series legend from the chart
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -85,7 +79,6 @@ namespace QuantConnect
         public Chart(string name, Symbol symbol)
         {
             Name = name;
-            Symbol = symbol;
             Series = new Dictionary<string, BaseSeries>();
         }
 
@@ -193,7 +186,7 @@ namespace QuantConnect
         /// </summary>
         public virtual Chart CloneEmpty()
         {
-            return new Chart(Name) { LegendDisabled = LegendDisabled, Symbol = Symbol };
+            return new Chart(Name) { LegendDisabled = LegendDisabled};
         }
     }
 

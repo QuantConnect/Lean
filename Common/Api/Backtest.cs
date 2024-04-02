@@ -231,6 +231,12 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "backtest")]
         public Backtest Backtest { get; set; }
+
+        /// <summary>
+        /// Indicates if the backtest is run under debugging mode
+        /// </summary>
+        [JsonProperty(PropertyName = "debugging")]
+        public bool Debugging { get; set; }
     }
 
     /// <summary>

@@ -195,5 +195,12 @@ namespace QuantConnect.Tests.API
             // resets the version among other things
             Globals.Reset();
         }
+
+        [Test]
+        public void ReadVersionsWorksAsExpected()
+        {
+            var result = ApiClient.ReadLeanVersions();
+            Assert.IsTrue(result.Success);
+        }
     }
 }

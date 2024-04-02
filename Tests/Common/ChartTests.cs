@@ -35,7 +35,6 @@ namespace QuantConnect.Tests.Common
             var result = JsonConvert.DeserializeObject<Chart>(serialized);
 
             Assert.AreEqual(result.Name, chart.Name);
-            Assert.AreEqual(result.Symbol, chart.Symbol);
             Assert.AreEqual(result.LegendDisabled, chart.LegendDisabled);
             Assert.AreEqual(result.Series.Count, chart.Series.Count);
             Assert.AreEqual(result.Series["Test1"].Tooltip, chart.Series["Test1"].Tooltip);
@@ -61,7 +60,7 @@ namespace QuantConnect.Tests.Common
         [TestCase(true, true, 1, null)]
         public void SerializeDeserializeReturnsSameSeriesValue(bool setSymbol, bool legendDisabled, int index, string toolTip)
         {
-            var chart = new Chart("ChartName") { LegendDisabled = legendDisabled, Symbol = setSymbol ? Symbols.IBM : null };
+            var chart = new Chart("ChartName") { LegendDisabled = legendDisabled };
             var series1 = new Series("Test1") { Index = index, Tooltip = toolTip };
             series1.AddPoint(new DateTime(2023, 03, 03), 100);
             series1.AddPoint(new DateTime(2023, 04, 03), 200);
@@ -75,7 +74,6 @@ namespace QuantConnect.Tests.Common
             var result = JsonConvert.DeserializeObject<Chart>(serialized);
 
             Assert.AreEqual(result.Name, chart.Name);
-            Assert.AreEqual(result.Symbol, chart.Symbol);
             Assert.AreEqual(result.LegendDisabled, chart.LegendDisabled);
             Assert.AreEqual(result.Series.Count, chart.Series.Count);
             Assert.AreEqual(result.Series["Test1"].Tooltip, chart.Series["Test1"].Tooltip);
@@ -89,11 +87,10 @@ namespace QuantConnect.Tests.Common
         [TestCase(true, true)]
         public void Clone(bool setSymbol, bool legendDisabled)
         {
-            var chart = new Chart("ChartName") { LegendDisabled = legendDisabled, Symbol = setSymbol ? Symbols.IBM : null };
+            var chart = new Chart("ChartName") { LegendDisabled = legendDisabled };
             var result = chart.Clone();
 
             Assert.AreEqual(result.Name, chart.Name);
-            Assert.AreEqual(result.Symbol, chart.Symbol);
             Assert.AreEqual(result.LegendDisabled, chart.LegendDisabled);
         }
     }

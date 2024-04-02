@@ -440,5 +440,35 @@ namespace QuantConnect.Interfaces
         /// <param name="password">Password for basic authentication</param>
         /// <returns></returns>
         string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
+
+        /// <summary>
+        /// Get one or more Object Store metadata of a specific organization and key
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to get the Object Store from</param>
+        /// <param name="keys">Keys for the Object Store files</param>
+        /// <returns><see cref="GetObjectStoreResponse"/></returns>
+        GetObjectStoreResponse GetObjectStore(string organizationId, List<string> keys);
+
+        /// <summary>
+        /// Upload files to the Object Store
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to upload the file to</param>
+        /// <param name="key">Key to the Object Store file</param>
+        /// <param name="objectData">File to be uploaded</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse SetObjectStore(string organizationId, string key, byte[] objectData);
+
+        /// <summary>
+        /// Request to delete Object Store metadata of a specific organization and key
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to delete the Object Store file from</param>
+        /// <param name="key">Key to the Object Store file</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse DeleteObjectStore(string organizationId, string key);
+
+        /// <summary>
+        /// Gets a list of LEAN versions with their corresponding basic descriptions
+        /// </summary>
+        public VersionsResponse ReadLeanVersions();
     }
 }
