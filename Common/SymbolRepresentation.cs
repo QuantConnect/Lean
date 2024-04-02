@@ -324,6 +324,18 @@ namespace QuantConnect
         /// <param name="ticker">The OSI compliant option ticker string</param>
         /// <param name="securityType">The security type</param>
         /// <param name="market">The associated market</param>
+        /// <returns>Symbol object for the specified OSI option ticker string</returns>
+        public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType = SecurityType.Option, string market = Market.USA)
+        {
+            return ParseOptionTickerOSI(ticker, securityType, market);
+        }
+
+        /// <summary>
+        /// Parses the specified OSI options ticker into a Symbol object
+        /// </summary>
+        /// <param name="ticker">The OSI compliant option ticker string</param>
+        /// <param name="securityType">The security type</param>
+        /// <param name="market">The associated market</param>
         /// <param name="optionStyle">The option style</param>
         /// <returns>Symbol object for the specified OSI option ticker string</returns>
         public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType = SecurityType.Option, string market = Market.USA,
