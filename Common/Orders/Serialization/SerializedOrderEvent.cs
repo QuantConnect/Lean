@@ -24,12 +24,6 @@ namespace QuantConnect.Orders.Serialization
     /// </summary>
     public class SerializedOrderEvent
     {
-        [JsonProperty(PropertyName = "symbol-value")]
-        public string SymbolValue { get; set; }
-
-        [JsonProperty(PropertyName = "symbol-permtick")]
-        public string SymbolPermtick { get; set; }
-
         /// <summary>
         /// The unique order event id
         /// </summary>
