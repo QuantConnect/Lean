@@ -31,7 +31,7 @@ namespace QuantConnect.Orders
     public class OrdersResponseWrapper : RestResponse
     {
         /// <summary>
-        /// Total number of returned orders
+        /// Returns the total order collection length, not only the amount we are sending here
         /// </summary>
         [JsonProperty(PropertyName = "length")]
         public int Length { get; set; }
@@ -40,6 +40,39 @@ namespace QuantConnect.Orders
         /// Collection of summarized Orders objects
         /// </summary>
         [JsonProperty(PropertyName = "orders")]
-        public List<Order> Orders { get; set; } = new();
+        public List<ApiOrderResponse> Orders { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Api order and order events reponse
+    /// </summary>
+    [JsonConverter(typeof(ReadOrdersResponseJsonConverter))]
+    public class ApiOrderResponse
+    {
+        /// <summary>
+        /// The symbol associated with this order
+        /// </summary>
+        public Symbol Symbol { get; set; }
+
+        /// <summary>
+        /// The order
+        /// </summary>
+        public Order Order { get; set; }
+
+        /// <summary>
+        /// The order events
+        /// </summary>
+        public List<SerializedOrderEvent> Events { get; set; }
+
+        public ApiOrderResponse()
+        {
+        }
+
+        public ApiOrderResponse(Order order, List<SerializedOrderEvent> events, Symbol symbol)
+        {
+            Order = order;
+            Events = events;
+            Symbol = symbol;
+        }
     }
 }

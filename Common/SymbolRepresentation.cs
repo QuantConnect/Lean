@@ -327,6 +327,19 @@ namespace QuantConnect
         /// <returns>Symbol object for the specified OSI option ticker string</returns>
         public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType = SecurityType.Option, string market = Market.USA)
         {
+            return ParseOptionTickerOSI(ticker, securityType, OptionStyle.American, market);
+        }
+
+        /// <summary>
+        /// Parses the specified OSI options ticker into a Symbol object
+        /// </summary>
+        /// <param name="ticker">The OSI compliant option ticker string</param>
+        /// <param name="securityType">The security type</param>
+        /// <param name="market">The associated market</param>
+        /// <param name="optionStyle">The option style</param>
+        /// <returns>Symbol object for the specified OSI option ticker string</returns>
+        public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType, OptionStyle optionStyle, string market)
+        {
             var optionTicker = ticker.Substring(0, 6).Trim();
             var expiration = DateTime.ParseExact(ticker.Substring(6, 6), DateFormat.SixCharacter, null);
             OptionRight right;
@@ -358,7 +371,7 @@ namespace QuantConnect
             {
                 throw new NotImplementedException($"ParseOptionTickerOSI(): {Messages.SymbolRepresentation.SecurityTypeNotImplemented(securityType)}");
             }
-            var sid = SecurityIdentifier.GenerateOption(expiration, underlyingSid, optionTicker, market, strike, right, OptionStyle.American);
+            var sid = SecurityIdentifier.GenerateOption(expiration, underlyingSid, optionTicker, market, strike, right, optionStyle);
             return new Symbol(sid, ticker, new Symbol(underlyingSid, underlyingSid.Symbol));
         }
 
@@ -470,7 +483,7 @@ namespace QuantConnect
 
         /// <summary>
         /// Get the expiration year from short year (two-digit integer).
-        /// Examples: NQZ23 and NQZ3 for Dec 2023  
+        /// Examples: NQZ23 and NQZ3 for Dec 2023
         /// </summary>
         /// <param name="futureYear">Clarifies the year for the current future</param>
         /// <param name="shortYear">Year in 2 digits format (23 represents 2023)</param>
