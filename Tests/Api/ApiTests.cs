@@ -91,5 +91,13 @@ namespace QuantConnect.Tests.API
             var result = Api.Api.FormatPathForDataRequest(path, dataFolder);
             Assert.AreEqual(dataToDownload.Replace("\\", "/", StringComparison.InvariantCulture), result);
         }
+
+        [Test]
+        public void ReadVersionsWorksAsExpected()
+        {
+            var result = ApiClient.ReadLeanVersions();
+            Assert.IsTrue(result.Success);
+            Assert.IsNotEmpty(result.Versions);
+        }
     }
 }

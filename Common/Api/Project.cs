@@ -24,7 +24,7 @@ namespace QuantConnect.Api
     public class Collaborator
     {
         /// <summary>
-        /// User id
+        /// User ID
         /// </summary>
         [JsonProperty(PropertyName = "uid")]
         public int Uid { get; set; }
@@ -43,7 +43,7 @@ namespace QuantConnect.Api
         public string Permission { get; set; }
 
         /// <summary>
-        /// The public ID
+        /// The user public ID
         /// </summary>
         [JsonProperty(PropertyName = "publicId")]
         public string PublicId {  get; set; }
@@ -320,19 +320,13 @@ namespace QuantConnect.Api
         public List<Library> Libraries { get; set; }
 
         /// <summary>
-        /// Indicate if the project is an alpha stream deployment
-        /// </summary>
-        [JsonProperty(PropertyName = "isAlphaStreamDeployment")]
-        public int IsAlphaStreamDeployment { get; set; }
-
-        /// <summary>
-        /// Contains information about the charts present in the project
+        /// Configuration of the backtest view grid
         /// </summary>
         [JsonProperty(PropertyName = "grid" )]
         public Grid Grid { get; set; }
 
         /// <summary>
-        /// Contains information about the charts present in the live project
+        /// Configuration of the live view grid
         /// </summary>
         [JsonProperty(PropertyName = "liveGrid")]
         public Grid LiveGrid { get; set; }
@@ -395,7 +389,7 @@ namespace QuantConnect.Api
         /// Date when this version was created
         /// </summary>
         [JsonProperty(PropertyName = "created")]
-        public string Created { get; set; }
+        public DateTime? Created { get; set; }
 
         /// <summary>
         /// Description of the LEAN version

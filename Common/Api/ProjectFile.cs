@@ -67,7 +67,9 @@ namespace QuantConnect.Api
         public int Id { get; set; }
     }
 
-    // Response received when creating a file or reading one file or more in a project
+    /// <summary>
+    /// Response received when creating a file or reading one file or more in a project
+    /// </summary>
     public class ProjectFilesResponse : RestResponse
     {
         /// <summary>

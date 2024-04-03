@@ -69,7 +69,7 @@ namespace QuantConnect.Api
         public string SKU { get; set; }
 
         /// <summary>
-        /// String description of the node.
+        /// Description of the node.
         /// </summary>
         [JsonProperty(PropertyName = "description")]
         public string Description { get; set; }
@@ -99,7 +99,7 @@ namespace QuantConnect.Api
         public int? ProjectId { get; set; }
 
         /// <summary>
-        /// Boolean if the node is currently busy.
+        /// Indicates if the node is currently busy.
         /// </summary>
         [JsonProperty(PropertyName = "busy")]
         public bool Busy { get; set; }

@@ -30,30 +30,6 @@ namespace QuantConnect.Optimizer.Parameters
         public string Name { get; set; }
 
         /// <summary>
-        /// Minimum value of optimization parameter, applicable for boundary conditions
-        /// </summary>
-        [JsonProperty("min")]
-        public decimal MinValue { get; set; }
-
-        /// <summary>
-        /// Maximum value of optimization parameter, applicable for boundary conditions
-        /// </summary>
-        [JsonProperty("max")]
-        public decimal MaxValue { get; set; }
-
-        /// <summary>
-        /// Movement, should be positive
-        /// </summary>
-        [JsonProperty("step")]
-        public decimal? Step { get; set; }
-
-        /// <summary>
-        /// Minimal possible movement for current parameter, should be positive. Used by <code>Strategies.EulerSearchOptimizationStrategy</code> to determine when this parameter can no longer be optimized
-        /// </summary>
-        [JsonProperty("min-step")]
-        public decimal? MinStep { get; set; }
-
-        /// <summary>
         /// Create an instance of <see cref="OptimizationParameter"/> based on configuration
         /// </summary>
         /// <param name="name">parameter name</param>

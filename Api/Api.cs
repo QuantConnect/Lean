@@ -1513,7 +1513,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="organizationId">Organization ID we would like to upload the file to</param>
         /// <param name="key">Key to the Object Store file</param>
-        /// <param name="objectData">File to be uploaded</param>
+        /// <param name="objectData">File (as an array of bytes) to be uploaded</param>
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse SetObjectStore(string organizationId, string key, byte[] objectData)
         {

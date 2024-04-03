@@ -14,14 +14,9 @@
 */
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using QuantConnect.Api;
-using QuantConnect.Interfaces;
-using QuantConnect.Orders.Serialization;
-using QuantConnect.Securities;
-using System;
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Orders.Serialization;
 
 namespace QuantConnect.Orders
 {

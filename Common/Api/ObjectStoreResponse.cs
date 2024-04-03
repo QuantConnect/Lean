@@ -15,6 +15,7 @@
 
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System;
 
 namespace QuantConnect.Api
 {
@@ -39,7 +40,7 @@ namespace QuantConnect.Api
     /// <summary>
     /// Summary information of the Object Store
     /// </summary>
-    public class Object
+    public class ObjectStore
     {
         /// <summary>
         /// Object store key
@@ -57,7 +58,7 @@ namespace QuantConnect.Api
         /// Last time it was modified
         /// </summary>
         [JsonProperty(PropertyName = "modified")]
-        public string Modified { get; set; }
+        public DateTime? Modified { get; set; }
 
         /// <summary>
         /// MIME type
@@ -79,7 +80,7 @@ namespace QuantConnect.Api
     }
 
     /// <summary>
-    /// Response received when listing Object of a project
+    /// Response received containing a list of stored objects metadata, as well as the total size of all of them.
     /// </summary>
     public class ListObjectStoreResponse : RestResponse
     {
@@ -93,16 +94,16 @@ namespace QuantConnect.Api
         /// List of objects stored
         /// </summary>
         [JsonProperty(PropertyName = "objects")]
-        public List<Object> Objects { get; set; }
+        public List<ObjectStore> Objects { get; set; }
 
         /// <summary>
-        /// Size of all objects stored
+        /// Size of all objects stored in bytes
         /// </summary>
         [JsonProperty(PropertyName = "objectStorageUsed")]
         public int ObjectStorageUsed { get; set; }
 
         /// <summary>
-        /// Size of all the objects stored in human-readable format 
+        /// Size of all the objects stored (in Mebibytes) in human-readable format 
         /// </summary>
         [JsonProperty(PropertyName = "objectStorageUsedHuman")]
         public string ObjectStorageUsedHuman { get; set; }

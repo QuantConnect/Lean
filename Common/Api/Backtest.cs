@@ -33,7 +33,7 @@ namespace QuantConnect.Api
         public int Minutes { get; set; }
 
         /// <summary>
-        /// Backtest count of the current backtest in the project
+        /// The quantity of backtests run in the project
         /// </summary>
         [JsonProperty(PropertyName = "backtestCount")]
         public int BacktestCount { get; set; }
@@ -175,13 +175,13 @@ namespace QuantConnect.Api
         /// The starting time of the backtest
         /// </summary>
         [JsonProperty(PropertyName = "backtestStart")]
-        public string BacktestStart { get; set; }
+        public DateTime? BacktestStart { get; set; }
 
         /// <summary>
         /// The ending time of the backtest
         /// </summary>
         [JsonProperty(PropertyName = "backtestEnd")]
-        public string BacktestEnd { get; set; }
+        public DateTime? BacktestEnd { get; set; }
 
         /// <summary>
         /// Snapshot id of this backtest result
@@ -211,7 +211,7 @@ namespace QuantConnect.Api
         /// End date of out of sample data
         /// </summary>
         [JsonProperty(PropertyName = "outOfSampleMaxEndDate")]
-        public string OutOfSampleMaxEndDate { get; set; }
+        public DateTime? OutOfSampleMaxEndDate { get; set; }
 
         /// <summary>
         /// Number of days of out of sample days

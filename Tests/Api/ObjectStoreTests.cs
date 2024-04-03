@@ -24,6 +24,7 @@ namespace QuantConnect.Tests.API
     public class ObjectStoreTests: ApiTestBase
     {
         private const string _key = "/Ricardo";
+        private readonly byte[] _data = new byte[3] { 1, 2, 3 };
 
         [Test]
         public void GetObjectStoreWorksAsExpected()
@@ -36,25 +37,31 @@ namespace QuantConnect.Tests.API
 
             var result = ApiClient.GetObjectStore(TestOrganization, keys);
             Assert.IsTrue(result.Success);
+            Assert.IsNotEmpty(result.JobId);
+            Assert.IsNotEmpty(result.Url);
         }
 
         [Test]
         public void SetObjectStoreWorksAsExpected()
         {
-            var data = new byte[3] { 1, 2, 3 };
+            var result = ApiClient.DeleteObjectStore(TestOrganization, _key);
+            Assert.IsFalse(result.Success);
 
+            result = ApiClient.SetObjectStore(TestOrganization, _key, _data);
+            Assert.IsTrue(result.Success);
 
-            var result = ApiClient.SetObjectStore(TestOrganization, _key, data);
+            result = ApiClient.DeleteObjectStore(TestOrganization, _key);
             Assert.IsTrue(result.Success);
         }
 
         [Test]
         public void DeleteObjectStoreWorksAsExpected()
         {
-            SetObjectStoreWorksAsExpected();
+            var result = ApiClient.SetObjectStore(TestOrganization, _key, _data);
+            Assert.IsTrue(result.Success);
             var objectsBefore = ApiClient.ListObjectStore(TestOrganization, _key);
 
-            var result = ApiClient.DeleteObjectStore(TestOrganization, _key);
+            result = ApiClient.DeleteObjectStore(TestOrganization, _key);
             Assert.IsTrue(result.Success);
 
             var objectsAfter = ApiClient.ListObjectStore(TestOrganization, _key);
@@ -71,6 +78,8 @@ namespace QuantConnect.Tests.API
 
             var result = ApiClient.ListObjectStore(TestOrganization, path);
             Assert.IsTrue(result.Success);
+            Assert.IsNotEmpty(result.Objects);
+            Assert.AreEqual(path, result.Path);
         }
     }
 }

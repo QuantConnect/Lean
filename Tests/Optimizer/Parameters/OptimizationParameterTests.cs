@@ -124,7 +124,7 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             [Test]
             public void StaticParameterRoundTripSerialization()
             {
-                var expected = "{\"value\":\"50.0\",\"name\":\"ema-fast\",\"min\":0.0,\"max\":0.0}";
+                var expected = "{\"value\":\"50.0\",\"name\":\"ema-fast\"}";
 
                 var staticParameter = JsonConvert.DeserializeObject<StaticOptimizationParameter>(expected);
 

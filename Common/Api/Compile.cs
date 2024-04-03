@@ -45,12 +45,6 @@ namespace QuantConnect.Api
         public List<string> Logs { get; set; }
 
         /// <summary>
-        /// Optimization parameters
-        /// </summary>
-        [JsonProperty(PropertyName = "parameters")]
-        public List<OptimizationParameter> Parameters { get; set; }
-
-        /// <summary>
         /// Project Id we sent for compile
         /// </summary>
         [JsonProperty(PropertyName = "projectId")]

@@ -18,13 +18,6 @@ using Newtonsoft.Json;
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// Collection of <see cref="Node"/> objects for each target environment.
-    /// </summary>
-    public class ProjectNodes : NodeList
-    {
-    }
-
-    /// <summary>
     /// Response received when reading or updating some nodes of a project
     /// </summary>
     public class ProjectNodesResponse : RestResponse
@@ -33,7 +26,7 @@ namespace QuantConnect.Api
         /// List of project nodes.
         /// </summary>
         [JsonProperty(PropertyName = "nodes")]
-        public ProjectNodes Nodes { get; set; }
+        public NodeList Nodes { get; set; }
 
         /// <summary>
         /// Indicate if the node is automatically selected
