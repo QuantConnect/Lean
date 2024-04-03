@@ -27,29 +27,29 @@ namespace QuantConnect.Indicators
         private readonly ExponentialMovingAverage _smoothedRsi;
         private readonly ExponentialMovingAverage _doubleSmoothedRsi;
         private readonly SimpleMovingAverage _signalLine;
-        private readonly int _r1;
-        private readonly int _a1;
-        private readonly int _a2;
-        private readonly int _a3;
+        private readonly int _rsiPeriod;
+        private readonly int _smoothingRsiPeriod;
+        private readonly int _doubleSmoothingRsiPeriod;
+        private readonly int _signalLinePeriod;
 
         /// <summary>
         /// Initializes a new instance of the IndicatorDerivativeOscillator class with the specified name and periods.
         /// </summary>
         /// <param name="name">The name of the indicator</param>
-        /// <param name="r1">The period for the RSI calculation</param>
-        /// <param name="a1">The period for the smoothing RSI</param>
-        /// <param name="a2">The period for the double smoothing RSI</param>
-        /// <param name="a3">The period for the signal line</param>
-        public IndicatorDerivativeOscillator(string name, int r1, int a1, int a2, int a3) : base(name)
+        /// <param name="rsiPeriod">The period for the RSI calculation</param>
+        /// <param name="smoothingRsiPeriod">The period for the smoothing RSI</param>
+        /// <param name="doubleSmoothingRsiPeriod">The period for the double smoothing RSI</param>
+        /// <param name="signalLinePeriod">The period for the signal line</param>
+        public IndicatorDerivativeOscillator(string name, int rsiPeriod, int smoothingRsiPeriod, int doubleSmoothingRsiPeriod, int signalLinePeriod) : base(name)
         {
-            _r1 = r1;
-            _a1 = a1;
-            _a2 = a2;
-            _a3 = a3;
-            _rsi = new RelativeStrengthIndex($"{name}_RSI", r1);
-            _smoothedRsi = new ExponentialMovingAverage($"{name}_SmoothedRSI", a1);
-            _doubleSmoothedRsi = new ExponentialMovingAverage($"{name}_DoubleSmoothedRSI", a2);
-            _signalLine = new SimpleMovingAverage($"{name}_SignalLine", a3);
+            _rsiPeriod = rsiPeriod;
+            _smoothingRsiPeriod = smoothingRsiPeriod;
+            _doubleSmoothingRsiPeriod = doubleSmoothingRsiPeriod;
+            _signalLinePeriod = signalLinePeriod;
+            _rsi = new RelativeStrengthIndex($"{name}_RSI", rsiPeriod);
+            _smoothedRsi = new ExponentialMovingAverage($"{name}_SmoothedRSI", smoothingRsiPeriod);
+            _doubleSmoothedRsi = new ExponentialMovingAverage($"{name}_DoubleSmoothedRSI", doubleSmoothingRsiPeriod);
+            _signalLine = new SimpleMovingAverage($"{name}_SignalLine", signalLinePeriod);
         }
 
         /// <summary>
