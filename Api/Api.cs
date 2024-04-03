@@ -598,7 +598,7 @@ namespace QuantConnect.Api
                 note
             }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out Backtest result);
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 

@@ -105,7 +105,7 @@ namespace QuantConnect.Api
         public Dictionary<string, AlgorithmPerformance> RollingWindow { get; set; }
 
         /// <summary>
-        /// Rolling window detailed statistics.
+        /// Total algorithm performance statistics.
         /// </summary>
         [JsonProperty(PropertyName = "totalPerformance", NullValueHandling = NullValueHandling.Ignore)]
         public AlgorithmPerformance TotalPerformance { get; set; }
