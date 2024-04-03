@@ -27,7 +27,7 @@ namespace QuantConnect.Optimizer.Parameters
         /// Name of optimization parameter
         /// </summary>
         [JsonProperty("name")]
-        public string Name { get; set; }
+        public string Name { get; }
 
         /// <summary>
         /// Create an instance of <see cref="OptimizationParameter"/> based on configuration

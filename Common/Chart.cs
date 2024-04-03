@@ -193,7 +193,7 @@ namespace QuantConnect
         /// </summary>
         public virtual Chart CloneEmpty()
         {
-            return new Chart(Name) { LegendDisabled = LegendDisabled, Symbol = Symbol};
+            return new Chart(Name) { LegendDisabled = LegendDisabled, Symbol = Symbol };
         }
     }
 

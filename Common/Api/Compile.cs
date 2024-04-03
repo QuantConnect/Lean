@@ -16,7 +16,6 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Api
 {

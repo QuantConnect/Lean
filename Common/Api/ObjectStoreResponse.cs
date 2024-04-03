@@ -103,7 +103,7 @@ namespace QuantConnect.Api
         public int ObjectStorageUsed { get; set; }
 
         /// <summary>
-        /// Size of all the objects stored (in Mebibytes) in human-readable format 
+        /// Size of all the objects stored (in Mebibytes) in human-readable format
         /// </summary>
         [JsonProperty(PropertyName = "objectStorageUsedHuman")]
         public string ObjectStorageUsedHuman { get; set; }

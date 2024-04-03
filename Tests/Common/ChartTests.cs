@@ -35,8 +35,8 @@ namespace QuantConnect.Tests.Common
             var result = JsonConvert.DeserializeObject<Chart>(serialized);
 
             Assert.AreEqual(result.Name, chart.Name);
-            Assert.AreEqual(result.LegendDisabled, chart.LegendDisabled);
             Assert.AreEqual(result.Symbol, chart.Symbol);
+            Assert.AreEqual(result.LegendDisabled, chart.LegendDisabled);
             Assert.AreEqual(result.Series.Count, chart.Series.Count);
             Assert.AreEqual(result.Series["Test1"].Tooltip, chart.Series["Test1"].Tooltip);
             CollectionAssert.AreEqual(result.Series.Select(x => $"{x.Key}:{string.Join(',', x.Value.Values)}"),
