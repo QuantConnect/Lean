@@ -22,6 +22,8 @@ using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Statistics;
+using QuantConnect.Data.Market;
 using QuantConnect.Notifications;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -30,7 +32,6 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
-using QuantConnect.Statistics;
 
 namespace QuantConnect.Interfaces
 {
@@ -510,6 +511,25 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="slice">The current data slice</param>
         void OnFrameworkData(Slice slice);
+
+        /// <summary>
+        /// Event handler to be called when there's been a price discontinuity due to a split or dividend
+        /// </summary>
+        /// <param name="splits">The current time slice splits</param>
+        /// <param name="dividends">The current time slice dividends</param>
+        void OnPriceDiscontinuity(Splits splits, Dividends dividends);
+
+        // <summary>
+        // Event handler to be called when there's been a delistings event
+        // </summary>
+        /// <param name="delistings">The current time slice delistings</param>
+        void OnDelistings(Delistings delistings);
+
+        // <summary>
+        // Event handler to be called when there's been a symbol changed event
+        // </summary>
+        /// <param name="symbolsChanged">The current time slice symbol changed events</param>
+        void OnSymbolChangedEvents(SymbolChangedEvents symbolsChanged);
 
         /// <summary>
         /// Event fired each time that we add/remove securities from the data feed

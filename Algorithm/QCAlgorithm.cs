@@ -36,6 +36,8 @@ using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using QuantConnect.Data.Market;
+using QuantConnect.Data.Fundamental;
 using System.Collections.Concurrent;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Crypto;
@@ -50,7 +52,6 @@ using Index = QuantConnect.Securities.Index.Index;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
-using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Algorithm
 {
@@ -1044,6 +1045,34 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Event handler to be called when there's been a price discontinuity due to a split or dividend
+        /// </summary>
+        /// <param name="splits">The current time slice splits</param>
+        /// <param name="dividends">The current time slice dividends</param>
+        [DocumentationAttribute(HandlingData)]
+        public virtual void OnPriceDiscontinuity(Splits splits, Dividends dividends)
+        {
+        }
+
+        // <summary>
+        // Event handler to be called when there's been a delistings event
+        // </summary>
+        /// <param name="delistings">The current time slice delistings</param>
+        [DocumentationAttribute(HandlingData)]
+        public virtual void OnDelistings(Delistings delistings)
+        {
+        }
+
+        // <summary>
+        // Event handler to be called when there's been a symbol changed event
+        // </summary>
+        /// <param name="symbolsChanged">The current time slice symbol changed events</param>
+        [DocumentationAttribute(HandlingData)]
+        public virtual void OnSymbolChangedEvents(SymbolChangedEvents symbolsChanged)
+        {
+        }
+
+        /// <summary>
         /// Event fired each time the we add/remove securities from the data feed
         /// </summary>
         /// <param name="changes">Security additions/removals for this time step</param>
@@ -1052,72 +1081,6 @@ namespace QuantConnect.Algorithm
         public virtual void OnSecuritiesChanged(SecurityChanges changes)
         {
         }
-
-        // <summary>
-        // Event - v2.0 TRADEBAR EVENT HANDLER: (Pattern) Basic template for user to override when requesting tradebar data.
-        // </summary>
-        // <param name="data"></param>
-        //public void OnData(TradeBars data)
-        //{
-        //
-        //}
-
-        // <summary>
-        // Event - v2.0 QUOTEBAR EVENT HANDLER: (Pattern) Basic template for user to override when requesting quotebar data.
-        // </summary>
-        // <param name="data"></param>
-        //public void OnData(QuoteBars data)
-        //{
-        //
-        //}
-
-        // <summary>
-        // Event - v2.0 TICK EVENT HANDLER: (Pattern) Basic template for user to override when requesting tick data.
-        // </summary>
-        // <param name="data">List of Tick Data</param>
-        //public void OnData(Ticks data)
-        //{
-        //
-        //}
-
-        // <summary>
-        // Event - v2.0 OPTIONCHAIN EVENT HANDLER: (Pattern) Basic template for user to override when requesting option data.
-        // </summary>
-        // <param name="data">List of Tick Data</param>
-        //public void OnData(OptionChains data)
-        //{
-        //
-        //}
-
-        // <summary>
-        // Event - v2.0 SPLIT EVENT HANDLER: (Pattern) Basic template for user to override when inspecting split data.
-        // </summary>
-        // <param name="data">IDictionary of Split Data Keyed by Symbol String</param>
-        //public void OnData(Splits data)
-        //{
-        //
-        //}
-
-        // <summary>
-        // Event - v2.0 DIVIDEND EVENT HANDLER: (Pattern) Basic template for user to override when inspecting dividend data
-        // </summary>
-        // <param name="data">IDictionary of Dividend Data Keyed by Symbol String</param>
-        //public void OnData(Dividends data)
-        //{
-        //
-        //}
-
-        // <summary>
-        // Event - v2.0 DELISTING EVENT HANDLER: (Pattern) Basic template for user to override when inspecting delisting data
-        // </summary>
-        // <param name="data">IDictionary of Delisting Data Keyed by Symbol String</param>
-        //public void OnData(Delistings data)
-
-        // <summary>
-        // Event - v2.0 SYMBOL CHANGED EVENT HANDLER: (Pattern) Basic template for user to override when inspecting symbol changed data
-        // </summary>
-        // <param name="data">IDictionary of SymbolChangedEvent Data Keyed by Symbol String</param>
-        //public void OnData(SymbolChangedEvents data)
 
         /// <summary>
         /// Margin call event handler. This method is called right before the margin call orders are placed in the market.

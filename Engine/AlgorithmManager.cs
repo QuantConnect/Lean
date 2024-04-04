@@ -140,12 +140,6 @@ namespace QuantConnect.Lean.Engine
             var hasOnDataOptionChains = AddMethodInvoker<OptionChains>(algorithm, methodInvokers);
             var hasOnDataTicks = AddMethodInvoker<Ticks>(algorithm, methodInvokers);
 
-            // dividend and split events
-            var hasOnDataDividends = AddMethodInvoker<Dividends>(algorithm, methodInvokers);
-            var hasOnDataSplits = AddMethodInvoker<Splits>(algorithm, methodInvokers);
-            var hasOnDataDelistings = AddMethodInvoker<Delistings>(algorithm, methodInvokers);
-            var hasOnDataSymbolChangedEvents = AddMethodInvoker<SymbolChangedEvents>(algorithm, methodInvokers);
-
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
             foreach (var config in algorithm.SubscriptionManager.Subscriptions)
             {
@@ -229,10 +223,16 @@ namespace QuantConnect.Lean.Engine
 
                 if (timeSlice.Slice.SymbolChangedEvents.Count != 0)
                 {
-                    if (hasOnDataSymbolChangedEvents)
+                    try
                     {
-                        methodInvokers[typeof(SymbolChangedEvents)](algorithm, timeSlice.Slice.SymbolChangedEvents);
+                        algorithm.OnSymbolChangedEvents(timeSlice.Slice.SymbolChangedEvents);
                     }
+                    catch (Exception err)
+                    {
+                        algorithm.SetRuntimeError(err, "OnSymbolChangedEvents");
+                        return;
+                    }
+
                     foreach (var symbol in timeSlice.Slice.SymbolChangedEvents.Keys)
                     {
                         // cancel all orders for the old symbol
@@ -461,23 +461,27 @@ namespace QuantConnect.Lean.Engine
 
                 try
                 {
-                    // fire off the dividend and split events before pricing events
-                    if (hasOnDataDividends && timeSlice.Slice.Dividends.Count != 0)
+                    if (timeSlice.Slice.Splits.Count != 0 || timeSlice.Slice.Dividends.Count != 0)
                     {
-                        methodInvokers[typeof(Dividends)](algorithm, timeSlice.Slice.Dividends);
-                    }
-                    if (hasOnDataSplits && timeSlice.Slice.Splits.Count != 0)
-                    {
-                        methodInvokers[typeof(Splits)](algorithm, timeSlice.Slice.Splits);
-                    }
-                    if (hasOnDataDelistings && timeSlice.Slice.Delistings.Count != 0)
-                    {
-                        methodInvokers[typeof(Delistings)](algorithm, timeSlice.Slice.Delistings);
+                        algorithm.OnPriceDiscontinuity(timeSlice.Slice.Splits, timeSlice.Slice.Dividends);
                     }
                 }
                 catch (Exception err)
                 {
-                    algorithm.SetRuntimeError(err, "Dividends/Splits/Delistings");
+                    algorithm.SetRuntimeError(err, "OnPriceDiscontinuity");
+                    return;
+                }
+
+                try
+                {
+                    if (timeSlice.Slice.Delistings.Count != 0)
+                    {
+                        algorithm.OnDelistings(timeSlice.Slice.Delistings);
+                    }
+                }
+                catch (Exception err)
+                {
+                    algorithm.SetRuntimeError(err, "OnDelistings");
                     return;
                 }
 
