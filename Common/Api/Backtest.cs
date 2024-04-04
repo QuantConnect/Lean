@@ -43,18 +43,79 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "parameters")]
         public int Parameters { get; set; }
+
+        /// <summary>
+        /// Project ID
+        /// </summary>
+        [JsonProperty(PropertyName = "projectId")]
+        public int ProjectId { get; set; }
     }
 
     /// <summary>
-    /// Results object class. Results are exhaust from backtest or live algorithms running in LEAN
+    /// Base class for backtest result object response
     /// </summary>
-    public class Backtest : RestResponse
+    public class BasicBacktest : RestResponse
     {
+        /// <summary>
+        /// Assigned backtest Id
+        /// </summary>
+        [JsonProperty(PropertyName = "backtestId")]
+        public string BacktestId { get; set; }
+
+        /// <summary>
+        /// Status of the backtest
+        /// </summary>
+        [JsonProperty(PropertyName = "status")]
+        public string Status { get; set; }
+
         /// <summary>
         /// Name of the backtest
         /// </summary>
         [JsonProperty(PropertyName = "name")]
         public string Name { get; set; }
+
+        /// <summary>
+        /// Backtest creation date and time
+        /// </summary>
+        [JsonProperty(PropertyName = "created")]
+        public DateTime Created { get; set; }
+
+        /// <summary>
+        /// Progress of the backtest in percent 0-1.
+        /// </summary>
+        [JsonProperty(PropertyName = "progress")]
+        public decimal Progress { get; set; }
+
+        /// <summary>
+        /// Optimization task ID, if the backtest is part of an optimization
+        /// </summary>
+        [JsonProperty(PropertyName = "optimizationId")]
+        public string OptimizationId { get; set; }
+
+        /// <summary>
+        /// Number of tradeable days
+        /// </summary>
+        [JsonProperty(PropertyName = "tradeableDates")]
+        public int TradeableDates { get; set; }
+
+        /// <summary>
+        /// Optimization parameters
+        /// </summary>
+        [JsonProperty(PropertyName = "parameterSet")]
+        public ParameterSet ParameterSet { get; set; }
+
+        /// <summary>
+        /// Snapshot id of this backtest result
+        /// </summary>
+        [JsonProperty(PropertyName = "snapshotId")]
+        public int SnapShotId { get; set; }
+    }
+
+    /// <summary>
+    /// Results object class. Results are exhaust from backtest or live algorithms running in LEAN
+    /// </summary>
+    public class Backtest : BasicBacktest
+    {
 
         /// <summary>
         /// Note on the backtest attached by the user
@@ -63,22 +124,10 @@ namespace QuantConnect.Api
         public string Note { get; set; }
 
         /// <summary>
-        /// Assigned backtest Id
-        /// </summary>
-        [JsonProperty(PropertyName = "backtestId")]
-        public string BacktestId { get; set; }
-
-        /// <summary>
         /// Boolean true when the backtest is completed.
         /// </summary>
         [JsonProperty(PropertyName = "completed")]
         public bool Completed { get; set; }
-
-        /// <summary>
-        /// Progress of the backtest in percent 0-1.
-        /// </summary>
-        [JsonProperty(PropertyName = "progress")]
-        public decimal Progress { get; set; }
 
         /// <summary>
         /// Backtest error message
@@ -93,10 +142,10 @@ namespace QuantConnect.Api
         public string StackTrace { get; set; }
 
         /// <summary>
-        /// Backtest creation date and time
+        /// Organization ID
         /// </summary>
-        [JsonProperty(PropertyName = "created")]
-        public DateTime Created { get; set; }
+        [JsonProperty(PropertyName = "organizationId")]
+        public int OrganizationId { get; set; }
 
         /// <summary>
         /// Rolling window detailed statistics.
@@ -130,40 +179,10 @@ namespace QuantConnect.Api
         public IDictionary<string, string> RuntimeStatistics { get; set; }
 
         /// <summary>
-        /// Optimization parameters
-        /// </summary>
-        [JsonProperty(PropertyName = "parameterSet")]
-        public ParameterSet ParameterSet { get; set; }
-
-        /// <summary>
         /// Collection of tags for the backtest
         /// </summary>
         [JsonProperty(PropertyName = "tags")]
         public List<string> Tags { get; set; }
-
-        /// <summary>
-        /// Organization ID
-        /// </summary>
-        [JsonProperty(PropertyName = "organizationId")]
-        public int OrganizationId { get; set; }
-
-        /// <summary>
-        /// Project ID
-        /// </summary>
-        [JsonProperty(PropertyName = "projectId")]
-        public int ProjectId { get; set; }
-
-        /// <summary>
-        /// Optimization task ID, if the backtest is part of an optimization
-        /// </summary>
-        [JsonProperty(PropertyName = "optimizationId")]
-        public string OptimizationId { get; set; }
-
-        /// <summary>
-        /// Number of tradeable days
-        /// </summary>
-        [JsonProperty(PropertyName = "tradeableDates")]
-        public int TradeableDates { get; set; }
 
         /// <summary>
         /// A power gauge for backtests, time and parameters to estimate the overfitting risk
@@ -182,18 +201,6 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "backtestEnd")]
         public DateTime? BacktestEnd { get; set; }
-
-        /// <summary>
-        /// Snapshot id of this backtest result
-        /// </summary>
-        [JsonProperty(PropertyName = "snapshotId")]
-        public int SnapShotId { get; set; }
-
-        /// <summary>
-        /// Status of the backtest
-        /// </summary>
-        [JsonProperty(PropertyName = "status")]
-        public string Status { get; set; }
 
         /// <summary>
         /// Indicates if the backtest has error during initialization
@@ -218,6 +225,24 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "outOfSampleDays")]
         public int? OutOfSampleDays { get; set; }
+    }
+
+    /// <summary>
+    /// Result object class for the List Backtest response from the API
+    /// </summary>
+    public class BacktestSummary : BasicBacktest
+    {
+        /// <summary>
+        /// Special chart for the backtest
+        /// </summary>
+        [JsonProperty(PropertyName = "sparkLine")]
+        public string SparkLine { get; set; }
+
+        /// <summary>
+        /// Collection of tags for the backtest
+        /// </summary>
+        [JsonProperty(PropertyName = "tags")]
+        public List<string> Tags { get; set; }
     }
 
     /// <summary>
@@ -249,6 +274,24 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "backtests")]
         public List<Backtest> Backtests { get; set; }
+    }
+
+    /// <summary>
+    /// Collection container for a list of backtest summaries for a project
+    /// </summary>
+    public class BacktestSummaryList : RestResponse
+    {
+        /// <summary>
+        /// Collection of summarized backtest summary objects
+        /// </summary>
+        [JsonProperty(PropertyName = "backtests")]
+        public List<BacktestSummary> Backtests { get; set; }
+
+        /// <summary>
+        /// Number of backtest summaries retrieved in the response
+        /// </summary>
+        [JsonProperty(PropertyName = "count")]
+        public int Count { get; set; }
     }
 
     /// <summary>

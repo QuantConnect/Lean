@@ -183,11 +183,11 @@ namespace QuantConnect.Interfaces
         RestResponse DeleteBacktest(int projectId, string backtestId);
 
         /// <summary>
-        /// Get a list of backtests for a specific project id
+        /// Get a list of backtest summaries for a specific project id
         /// </summary>
         /// <param name="projectId">Project id to search</param>
         /// <returns>BacktestList container for list of backtests</returns>
-        BacktestList ListBacktests(int projectId);
+        BacktestSummaryList ListBacktests(int projectId);
 
         /// <summary>
         /// Estimate optimization with the specified parameters via QuantConnect.com API

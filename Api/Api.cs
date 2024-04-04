@@ -603,12 +603,12 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// List all the backtests for a project
+        /// List all the backtest summaries for a project
         /// </summary>
         /// <param name="projectId">Project id we'd like to get a list of backtest for</param>
         /// <returns><see cref="BacktestList"/></returns>
 
-        public BacktestList ListBacktests(int projectId)
+        public BacktestSummaryList ListBacktests(int projectId)
         {
             var request = new RestRequest("backtests/read", Method.POST)
             {
@@ -620,7 +620,7 @@ namespace QuantConnect.Api
                 projectId,
             }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out BacktestList result);
+            ApiConnection.TryRequest(request, out BacktestSummaryList result);
             return result;
         }
 
