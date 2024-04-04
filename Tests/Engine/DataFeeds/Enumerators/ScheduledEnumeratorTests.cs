@@ -31,6 +31,60 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
     {
         private readonly DateTime _referenceTime = new DateTime(2019, 1, 1);
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void RespectsPredicateTimeProvider(bool newDataArrivedInTime)
+        {
+            var scheduledDate = _referenceTime.AddDays(1);
+            using var underlyingEnumerator = new TestEnumerator
+            {
+                MoveNextReturn = true,
+                MoveNextNewValues = new Queue<BaseData>(new List<BaseData>
+                {
+                    new Tick(scheduledDate.AddDays(-1), Symbols.SPY, 1, 1)
+                })
+            };
+            var timeProvider = new ManualTimeProvider(_referenceTime);
+
+            using var enumerator = new ScheduledEnumerator(
+                underlyingEnumerator,
+                new List<DateTime> { scheduledDate },
+                new PredicateTimeProvider(timeProvider, (currentDateTime) => {
+                    // will only let time advance after it's passed the 7/8 hour frontier
+                    return currentDateTime.TimeOfDay > TimeSpan.FromMinutes(7 * 60 + DateTime.UtcNow.Second);
+                }),
+                TimeZones.Utc,
+                DateTime.MinValue);
+
+            // still null since frontier is still behind schedule
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+
+            timeProvider.SetCurrentTimeUtc(scheduledDate);
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+
+            timeProvider.SetCurrentTimeUtc(scheduledDate.AddHours(2));
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+
+            if (newDataArrivedInTime)
+            {
+                // New data comes in!
+                underlyingEnumerator.MoveNextNewValues.Enqueue(new Tick(scheduledDate, Symbols.SPY, 10, 10));
+            }
+
+            timeProvider.SetCurrentTimeUtc(scheduledDate.AddHours(8));
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual(scheduledDate, enumerator.Current.Time);
+            Assert.AreEqual(newDataArrivedInTime ? 10 : 1, (enumerator.Current as Tick).BidPrice);
+
+            // schedule ended so enumerator will end too
+            Assert.IsFalse(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+        }
+
         [Test]
         public void ScheduleSkipsOldDates()
         {
