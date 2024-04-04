@@ -179,12 +179,6 @@ namespace QuantConnect.Api
         public IDictionary<string, string> RuntimeStatistics { get; set; }
 
         /// <summary>
-        /// Collection of tags for the backtest
-        /// </summary>
-        [JsonProperty(PropertyName = "tags")]
-        public List<string> Tags { get; set; }
-
-        /// <summary>
         /// A power gauge for backtests, time and parameters to estimate the overfitting risk
         /// </summary>
         [JsonProperty(PropertyName = "researchGuide")]
