@@ -21,6 +21,7 @@ using QuantConnect.Algorithm.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -422,7 +423,7 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// Creates a new universe and adds it to the algorithm. This is for coarse fundamental US Equity data and
-        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
+        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>)
         /// </summary>
         /// <param name="selector">Defines an initial coarse selection</param>
         [DocumentationAttribute(Universes)]
@@ -432,8 +433,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This is for coarse fundamental US Equity data and
+        /// will be executed based on the provided <see cref="IDateRule"/> in the NewYork time zone (<see cref="TimeZones.NewYork"/>)
+        /// </summary>
+        /// <param name="dateRule">Date rule that will be used to set the <see cref="Data.UniverseSelection.UniverseSettings.Schedule"/></param>
+        /// <param name="selector">Defines an initial coarse selection</param>
+        [DocumentationAttribute(Universes)]
+        public Universe AddUniverse(IDateRule dateRule, Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector)
+        {
+            var otherSettings = new UniverseSettings(UniverseSettings);
+            otherSettings.Schedule.On(dateRule);
+            return AddUniverse(FundamentalUniverse.USA(selector, otherSettings));
+        }
+
+        /// <summary>
         /// Creates a new universe and adds it to the algorithm. This is for coarse and fine fundamental US Equity data and
-        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
+        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>)
         /// </summary>
         /// <param name="coarseSelector">Defines an initial coarse selection</param>
         /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
@@ -447,7 +462,7 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// Creates a new universe and adds it to the algorithm. This is for fine fundamental US Equity data and
-        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
+        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>)
         /// </summary>
         /// <param name="universe">The universe to be filtered with fine fundamental selection</param>
         /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>

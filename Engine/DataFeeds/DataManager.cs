@@ -34,11 +34,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DataManager : IAlgorithmSubscriptionManager, IDataFeedSubscriptionManager, IDataManager
     {
-        private readonly IAlgorithmSettings _algorithmSettings;
         private readonly IDataFeed _dataFeed;
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly ITimeKeeper _timeKeeper;
         private readonly bool _liveMode;
+        private bool _sentUniverseScheduleWarning;
         private readonly IRegisteredSecurityDataTypesProvider _registeredTypesProvider;
         private readonly IDataPermissionManager _dataPermissionManager;
         private List<SubscriptionDataConfig> _subscriptionDataConfigsEnumerator;
@@ -73,7 +73,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
             UniverseSelection.SetDataManager(this);
-            _algorithmSettings = algorithm.Settings;
             AvailableDataTypes = SubscriptionManager.DefaultDataTypes();
             _timeKeeper = timeKeeper;
             _marketHoursDatabase = marketHoursDatabase;
@@ -129,9 +128,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 // making the selection to be triggered at the first algorithm time, which would be the exact StartDate.
                                 universeType != typeof(ScheduledUniverse))
                             {
-                                start = Time.GetStartTimeForTradeBars(security.Exchange.Hours, start.ConvertFromUtc(security.Exchange.TimeZone),
+                                const int maximumLookback = 60;
+                                var loopCount = 0;
+                                var startLocalTime = start.ConvertFromUtc(security.Exchange.TimeZone);
+                                if (universe.UniverseSettings.Schedule.Initialized)
+                                {
+                                    do
+                                    {
+                                        // determine if there's a scheduled selection time at the current start local time date, note that next
+                                        // we get the previous day of the first scheduled date we find, so we are sure the data is available to trigger selection
+                                        if (universe.UniverseSettings.Schedule.Get(startLocalTime.Date, startLocalTime.Date).Any())
+                                        {
+                                            break;
+                                        }
+                                        startLocalTime = startLocalTime.AddDays(-1);
+                                        if (++loopCount >= maximumLookback)
+                                        {
+                                            // fallback to the original, we found none
+                                            startLocalTime = algorithm.UtcTime.ConvertFromUtc(security.Exchange.TimeZone);
+                                            if (!_sentUniverseScheduleWarning)
+                                            {
+                                                // just in case
+                                                _sentUniverseScheduleWarning = true;
+                                                algorithm.Debug($"Warning: Found no valid start time for scheduled universe, will use default");
+                                            }
+                                        }
+                                    } while (loopCount < maximumLookback);
+                                }
+
+                                startLocalTime = Time.GetStartTimeForTradeBars(security.Exchange.Hours, startLocalTime,
                                     Time.OneDay, 1, true, config.DataTimeZone);
-                                start = start.ConvertToUtc(security.Exchange.TimeZone);
+                                start = startLocalTime.ConvertToUtc(security.Exchange.TimeZone);
                             }
 
                             AddSubscription(

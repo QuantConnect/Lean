@@ -62,7 +62,7 @@ namespace QuantConnect.Scheduling
         {
             // make sure they're date objects
             var dates = new[] {new DateTime(year, month, day)};
-            return new FuncDateRule(string.Join(",", dates.Select(x => x.ToShortDateString())), (start, end) => dates);
+            return new FuncDateRule(string.Join(",", dates.Select(x => x.ToShortDateString())), (start, end) => dates.Where(x => x >= start && x <= end));
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace QuantConnect.Scheduling
         {
             // make sure they're date objects
             dates = dates.Select(x => x.Date).ToArray();
-            return new FuncDateRule(string.Join(",", dates.Select(x => x.ToShortDateString())), (start, end) => dates);
+            return new FuncDateRule(string.Join(",", dates.Select(x => x.ToShortDateString())), (start, end) => dates.Where(x => x >= start && x <= end));
         }
 
         /// <summary>
