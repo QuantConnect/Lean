@@ -128,6 +128,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(Resolution.Minute, SecurityType.Option)]
         [TestCase(Resolution.Second, SecurityType.Option)]
         [TestCase(Resolution.Tick, SecurityType.Option)]
+        [TestCase(Resolution.Daily, SecurityType.IndexOption)]
+        [TestCase(Resolution.Hour, SecurityType.IndexOption)]
+        [TestCase(Resolution.Minute, SecurityType.IndexOption)]
+        [TestCase(Resolution.Second, SecurityType.IndexOption)]
+        [TestCase(Resolution.Tick, SecurityType.IndexOption)]
         [TestCase(Resolution.Daily, SecurityType.Crypto)]
         [TestCase(Resolution.Hour, SecurityType.Crypto)]
         [TestCase(Resolution.Minute, SecurityType.Crypto)]
@@ -151,6 +156,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Symbol symbol = null;
             Symbol expectedSymbol = null;
             var expectedLowResolutionStart = new DateTime(1998, 1, 2);
+            var expectedLowResolutionEndUtc = DateTime.UtcNow.Date.AddDays(-1);
             if (securityType == SecurityType.Equity)
             {
                 symbol = expectedSymbol = Symbols.AAPL;
@@ -158,6 +164,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             else if (securityType == SecurityType.Option)
             {
                 symbol = Symbols.SPY_C_192_Feb19_2016;
+                expectedSymbol = symbol.Canonical;
+            }
+            else if (securityType == SecurityType.IndexOption)
+            {
+                symbol = Symbol.CreateOption(Symbols.SPX, Symbols.SPX.ID.Market, OptionStyle.European, OptionRight.Call, 38000m, new DateTime(2021, 01, 15));
                 expectedSymbol = symbol.Canonical;
             }
             else if (securityType == SecurityType.Crypto)
@@ -177,6 +188,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             var date = new DateTime(2023, 3, 17);
+            var timezone = MarketHoursDatabase.FromDataFolder().GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
+
+            // For options and index option in hour or daily resolution, the whole year is downloaded
+            if (resolution > Resolution.Minute && (securityType == SecurityType.Option || securityType == SecurityType.IndexOption))
+            {
+                var expectedStartUtc = new DateTime(date.Year, 1, 1);
+                expectedLowResolutionStart = expectedStartUtc.ConvertFromUtc(timezone);
+                expectedLowResolutionEndUtc = expectedStartUtc.AddYears(1);
+            }
+
             var path = LeanData.GenerateZipFilePath(Globals.DataFolder + "fake", symbol, date, resolution, TickType.Trade);
             Assert.IsNull(dataProvider.Fetch(path));
 
@@ -184,7 +205,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.AreEqual(expectedSymbol, arguments.Symbol);
             Assert.AreEqual(resolution, arguments.Resolution);
-            var timezone = MarketHoursDatabase.FromDataFolder().GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
             if (resolution < Resolution.Hour)
             {
                 // 1 day
@@ -195,7 +215,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 // the whole history
                 Assert.AreEqual(expectedLowResolutionStart.ConvertToUtc(timezone), arguments.StartUtc);
-                Assert.AreEqual(DateTime.UtcNow.Date.AddDays(-1), arguments.EndUtc);
+                Assert.AreEqual(expectedLowResolutionEndUtc, arguments.EndUtc);
             }
         }
 

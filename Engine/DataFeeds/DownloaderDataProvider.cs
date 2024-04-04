@@ -25,7 +25,6 @@ using QuantConnect.Securities;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
-using QuantConnect.Data.Auxiliary;
 using System.Collections.Concurrent;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -131,6 +130,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     else
                     {
                         // since hourly & daily are a single file we fetch the whole file
+                        endTimeUtc = endTimeUtcLimit;
                         try
                         {
                             // we don't really know when Futures, FutureOptions, Cryptos, etc, start date so let's give it a good guess
@@ -139,10 +139,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 // bitcoin start
                                 startTimeUtc = new DateTime(2009, 1, 1);
                             }
-                            else if (symbol.SecurityType.IsOption() && symbol.Underlying != null && symbol.SecurityType == SecurityType.Option)
+                            else if (symbol.SecurityType.IsOption() && symbol.SecurityType != SecurityType.FutureOption)
                             {
-                                // the underlying equity start date
-                                startTimeUtc = symbol.Underlying.ID.Date;
+                                // For options, an hourly or daily file contains a year of data, so we need to get the year of the date
+                                startTimeUtc = new DateTime(date.Year, 1, 1);
+                                endTimeUtc = startTimeUtc.AddYears(1);
                             }
                             else
                             {
@@ -159,7 +160,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             startTimeUtc = Time.Start;
                         }
 
-                        endTimeUtc = endTimeUtcLimit;
+                        if (endTimeUtc > endTimeUtcLimit)
+                        {
+                            endTimeUtc = endTimeUtcLimit;
+                        }
                     }
 
                     try
