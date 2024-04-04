@@ -12,9 +12,9 @@ public class DerivativeOscillatorIndicatorTest : CommonIndicatorTests<IndicatorD
         return new IndicatorDerivativeOscillator("Derivative Oscillator", 14, 5, 3, 9);
     }
 
-    protected override string TestFileName => "spy_derivative_oscillator_daily_14_5_3_9.txt";
+    protected override string TestFileName => "spy_do.csv";
 
-    protected override string TestColumnName => "Derivative Oscillator 14 5 3 9";
+    protected override string TestColumnName => "DO 14 5 3 9";
 
     [Test]
     public void DoComputesCorrectly()
@@ -22,18 +22,18 @@ public class DerivativeOscillatorIndicatorTest : CommonIndicatorTests<IndicatorD
         var derivativeOscillator = new IndicatorDerivativeOscillator(TestColumnName, 14, 5, 3, 9);
 
         // List of random prices for testing
-        decimal[] prices = { 100m, 105m, 110m, 115m, 120m, 125m, 130m, 135m, 140m, 145m, 150m, 155m, 160m, 165m, 170m };
+        var prices = new [] { 100m, 105m, 110m, 115m, 120m, 125m, 130m, 135m, 140m, 145m, 150m, 155m, 160m, 165m, 170m };
 
         // Expected derivative oscillator value
-        decimal expectedValue = 0;
+        var expectedValue = 0;
 
-        foreach (decimal price in prices)
+        foreach (var price in prices)
         {
             derivativeOscillator.Update(new IndicatorDataPoint(DateTime.UtcNow, price));
         }
 
         // Get the computed value
-        decimal computedValue = derivativeOscillator.Current.Value;
+        var computedValue = derivativeOscillator.Current.Value;
 
         // Assert
         Assert.AreEqual(expectedValue, computedValue, "Derivative oscillator value does not match expected value");
