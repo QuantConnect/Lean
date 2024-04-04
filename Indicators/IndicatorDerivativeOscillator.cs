@@ -31,6 +31,16 @@ namespace QuantConnect.Indicators
         private readonly int _smoothingRsiPeriod;
         private readonly int _doubleSmoothingRsiPeriod;
         private readonly int _signalLinePeriod;
+        
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => _signalLine.IsReady;
+        
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Initializes a new instance of the IndicatorDerivativeOscillator class with the specified name and periods.
@@ -47,16 +57,11 @@ namespace QuantConnect.Indicators
             _doubleSmoothingRsiPeriod = doubleSmoothingRsiPeriod;
             _signalLinePeriod = signalLinePeriod;
             _rsi = new RelativeStrengthIndex($"{name}_RSI", rsiPeriod);
-            _smoothedRsi = new ExponentialMovingAverage($"{name}_SmoothedRSI", smoothingRsiPeriod);
-            _doubleSmoothedRsi = new ExponentialMovingAverage($"{name}_DoubleSmoothedRSI", doubleSmoothingRsiPeriod);
-            _signalLine = new SimpleMovingAverage($"{name}_SignalLine", signalLinePeriod);
+            _smoothedRsi = new ExponentialMovingAverage($"{name}_SmoothedRSI", smoothingRsiPeriod).Of(_rsi);
+            _doubleSmoothedRsi = new ExponentialMovingAverage($"{name}_DoubleSmoothedRSI", doubleSmoothingRsiPeriod).Of(_smoothedRsi);
+            _signalLine = new SimpleMovingAverage($"{name}_SignalLine", signalLinePeriod).Of(_doubleSmoothedRsi);
+            WarmUpPeriod = Math.Max(rsiPeriod, Math.Max(smoothingRsiPeriod, Math.Max(doubleSmoothingRsiPeriod, signalLinePeriod)));
         }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady =>
-            _rsi.IsReady && _smoothedRsi.IsReady && _doubleSmoothedRsi.IsReady && _signalLine.IsReady;
 
         /// <summary>
         /// Computes the next value for the derivative oscillator indicator from the given state
@@ -80,10 +85,5 @@ namespace QuantConnect.Indicators
 
             return _doubleSmoothedRsi.Current.Value - _signalLine.Current.Value;
         }
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod { get; }
     }
 }
