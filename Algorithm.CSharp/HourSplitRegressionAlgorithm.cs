@@ -44,10 +44,12 @@ namespace QuantConnect.Algorithm.CSharp
             _symbol = AddEquity("AAPL", Resolution.Hour).Symbol;
         }
 
-        public void OnData(TradeBars tradeBars)
+        public override void OnData(Slice slice)
         {
+            _dataCount += slice.Bars.Count;
+
             TradeBar bar;
-            if (!tradeBars.TryGetValue(_symbol, out bar)) return;
+            if (!slice.Bars.TryGetValue(_symbol, out bar)) return;
 
             if (!Portfolio.Invested && Time.Date == EndDate.Date)
             {
@@ -55,28 +57,23 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnData(Slice slice)
+        public override void OnSplits(Splits splits)
         {
-            _dataCount += slice.Bars.Count;
-            if (slice.Splits.Any())
+            if (splits.Single().Value.Type == SplitType.Warning)
             {
-                if (slice.Splits.Single().Value.Type == SplitType.Warning)
+                _receivedWarningEvent = true;
+                Debug($"{splits.Single().Value}");
+            }
+            else if (splits.Single().Value.Type == SplitType.SplitOccurred)
+            {
+                _receivedOccurredEvent = true;
+                if (splits.Single().Value.Price != 645.5700m || splits.Single().Value.ReferencePrice != 645.5700m)
                 {
-                    _receivedWarningEvent = true;
-                    Debug($"{slice.Splits.Single().Value}");
+                    throw new Exception("Did not receive expected price values");
                 }
-                else if (slice.Splits.Single().Value.Type == SplitType.SplitOccurred)
-                {
-                    _receivedOccurredEvent = true;
-                    if (slice.Splits.Single().Value.Price != 645.5700m || slice.Splits.Single().Value.ReferencePrice != 645.5700m)
-                    {
-                        throw new Exception("Did not receive expected price values");
-                    }
-                    Debug($"{slice.Splits.Single().Value}");
-                }
+                Debug($"{splits.Single().Value}");
             }
         }
-
         public override void OnEndOfAlgorithm()
         {
             if (!_receivedOccurredEvent)

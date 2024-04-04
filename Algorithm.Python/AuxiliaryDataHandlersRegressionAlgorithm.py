@@ -21,16 +21,18 @@ class AuxiliaryDataHandlersRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
         self.SetStartDate(2007, 5, 16)
-        self.SetEndDate(2008, 10, 1)
+        self.SetEndDate(2015, 1, 1)
+
+        self.UniverseSettings.Resolution = Resolution.Daily
 
         # will get delisted
-        self.AddEquity("AAA.1", Resolution.Daily)
+        self.AddEquity("AAA.1")
 
         # get's remapped
-        self.AddEquity("SPWR", Resolution.Daily)
+        self.AddEquity("SPWR")
 
-        # emits dividends
-        self.AddEquity("SPY", Resolution.Daily)
+        # has a split & dividends
+        self.AddEquity("AAPL")
 
     def OnDelistings(self, delistings: Delistings):
         self._onDelistingsCalled = True
@@ -38,13 +40,18 @@ class AuxiliaryDataHandlersRegressionAlgorithm(QCAlgorithm):
     def OnSymbolChangedEvents(self, symbolsChanged: SymbolChangedEvents):
         self._onSymbolChangedEvents = True
 
-    def OnPriceDiscontinuity(self, splits: Splits, dividends: Dividends):
-        self._onPriceDiscontinuity = True
+    def OnSplits(self, splits: Splits):
+        self._onSplits = True
+
+    def OnDividends(self, dividends: Dividends):
+        self._onDividends = True
 
     def OnEndOfAlgorithm(self):
         if not self._onDelistingsCalled:
             raise ValueError("OnDelistings was not called!")
         if not self._onSymbolChangedEvents:
             raise ValueError("OnSymbolChangedEvents was not called!")
-        if not self._onPriceDiscontinuity:
-            raise ValueError("OnPriceDiscontinuity was not called!")
+        if not self._onSplits:
+            raise ValueError("OnSplits was not called!")
+        if not self._onDividends:
+            raise ValueError("OnDividends was not called!")

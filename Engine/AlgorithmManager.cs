@@ -132,14 +132,6 @@ namespace QuantConnect.Lean.Engine
             //Initialize Properties:
             AlgorithmId = job.AlgorithmId;
 
-            //Create the method accessors to push generic types into algorithm: Find all OnData events:
-
-            // Algorithm 2.0 data accessors
-            var hasOnDataTradeBars = AddMethodInvoker<TradeBars>(algorithm, methodInvokers);
-            var hasOnDataQuoteBars = AddMethodInvoker<QuoteBars>(algorithm, methodInvokers);
-            var hasOnDataOptionChains = AddMethodInvoker<OptionChains>(algorithm, methodInvokers);
-            var hasOnDataTicks = AddMethodInvoker<Ticks>(algorithm, methodInvokers);
-
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
             foreach (var config in algorithm.SubscriptionManager.Subscriptions)
             {
@@ -461,14 +453,27 @@ namespace QuantConnect.Lean.Engine
 
                 try
                 {
-                    if (timeSlice.Slice.Splits.Count != 0 || timeSlice.Slice.Dividends.Count != 0)
+                    if (timeSlice.Slice.Splits.Count != 0)
                     {
-                        algorithm.OnPriceDiscontinuity(timeSlice.Slice.Splits, timeSlice.Slice.Dividends);
+                        algorithm.OnSplits(timeSlice.Slice.Splits);
                     }
                 }
                 catch (Exception err)
                 {
-                    algorithm.SetRuntimeError(err, "OnPriceDiscontinuity");
+                    algorithm.SetRuntimeError(err, "OnSplits");
+                    return;
+                }
+
+                try
+                {
+                    if (timeSlice.Slice.Dividends.Count != 0)
+                    {
+                        algorithm.OnDividends(timeSlice.Slice.Dividends);
+                    }
+                }
+                catch (Exception err)
+                {
+                    algorithm.SetRuntimeError(err, "OnDividends");
                     return;
                 }
 
@@ -510,20 +515,6 @@ namespace QuantConnect.Lean.Engine
 
                 // run split logic after firing split events
                 HandleSplitSymbols(timeSlice.Slice.Splits, splitWarnings);
-
-                //After we've fired all other events in this second, fire the pricing events:
-                try
-                {
-                    if (hasOnDataTradeBars && timeSlice.Slice.Bars.Count > 0) methodInvokers[typeof(TradeBars)](algorithm, timeSlice.Slice.Bars);
-                    if (hasOnDataQuoteBars && timeSlice.Slice.QuoteBars.Count > 0) methodInvokers[typeof(QuoteBars)](algorithm, timeSlice.Slice.QuoteBars);
-                    if (hasOnDataOptionChains && timeSlice.Slice.OptionChains.Count > 0) methodInvokers[typeof(OptionChains)](algorithm, timeSlice.Slice.OptionChains);
-                    if (hasOnDataTicks && timeSlice.Slice.Ticks.Count > 0) methodInvokers[typeof(Ticks)](algorithm, timeSlice.Slice.Ticks);
-                }
-                catch (Exception err)
-                {
-                    algorithm.SetRuntimeError(err, "methodInvokers");
-                    return;
-                }
 
                 try
                 {
@@ -816,25 +807,6 @@ namespace QuantConnect.Lean.Engine
                         $"{algorithm.Portfolio.CashBook[algorithm.AccountCurrency].Amount}");
                 }
             }
-        }
-
-        /// <summary>
-        /// Adds a method invoker if the method exists to the method invokers dictionary
-        /// </summary>
-        /// <typeparam name="T">The data type to check for 'OnData(T data)</typeparam>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="methodInvokers">The dictionary of method invokers</param>
-        /// <param name="methodName">The name of the method to search for</param>
-        /// <returns>True if the method existed and was added to the collection</returns>
-        private bool AddMethodInvoker<T>(IAlgorithm algorithm, Dictionary<Type, MethodInvoker> methodInvokers, string methodName = "OnData")
-        {
-            var newSplitMethodInfo = algorithm.GetType().GetMethod(methodName, new[] { typeof(T) });
-            if (newSplitMethodInfo != null)
-            {
-                methodInvokers.Add(typeof(T), newSplitMethodInfo.DelegateForCallMethod());
-                return true;
-            }
-            return false;
         }
 
         /// <summary>

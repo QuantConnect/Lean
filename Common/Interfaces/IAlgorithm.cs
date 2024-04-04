@@ -513,21 +513,26 @@ namespace QuantConnect.Interfaces
         void OnFrameworkData(Slice slice);
 
         /// <summary>
-        /// Event handler to be called when there's been a price discontinuity due to a split or dividend
+        /// Event handler to be called when there's been a split event
         /// </summary>
         /// <param name="splits">The current time slice splits</param>
-        /// <param name="dividends">The current time slice dividends</param>
-        void OnPriceDiscontinuity(Splits splits, Dividends dividends);
+        void OnSplits(Splits splits);
 
-        // <summary>
-        // Event handler to be called when there's been a delistings event
-        // </summary>
+        /// <summary>
+        /// Event handler to be called when there's been a dividend event
+        /// </summary>
+        /// <param name="dividends">The current time slice dividends</param>
+        void OnDividends(Dividends dividends);
+
+        /// <summary>
+        /// Event handler to be called when there's been a delistings event
+        /// </summary>
         /// <param name="delistings">The current time slice delistings</param>
         void OnDelistings(Delistings delistings);
 
-        // <summary>
-        // Event handler to be called when there's been a symbol changed event
-        // </summary>
+        /// <summary>
+        /// Event handler to be called when there's been a symbol changed event
+        /// </summary>
         /// <param name="symbolsChanged">The current time slice symbol changed events</param>
         void OnSymbolChangedEvents(SymbolChangedEvents symbolsChanged);
 

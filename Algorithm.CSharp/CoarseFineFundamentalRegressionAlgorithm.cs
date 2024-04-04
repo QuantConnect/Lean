@@ -87,9 +87,24 @@ namespace QuantConnect.Algorithm.CSharp
             return topFine.Select(x => x.Symbol);
         }
 
-        //Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol.
-        public void OnData(TradeBars data)
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice data)
         {
+            // verify we don't receive data for inactive securities
+            var inactiveSymbols = data.Keys
+                .Where(sym => !UniverseManager.ActiveSecurities.ContainsKey(sym))
+                // on daily data we'll get the last data point and the delisting at the same time
+                .Where(sym => !data.Delistings.ContainsKey(sym) || data.Delistings[sym].Type != DelistingType.Delisted)
+                .ToList();
+            if (inactiveSymbols.Any())
+            {
+                var symbols = string.Join(", ", inactiveSymbols);
+                throw new Exception($"Received data for non-active security: {symbols}.");
+            }
+
             // if we have no changes, do nothing
             if (_changes == SecurityChanges.None) return;
 
@@ -114,21 +129,6 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             _changes = SecurityChanges.None;
-        }
-
-        public override void OnData(Slice data)
-        {
-            // verify we don't receive data for inactive securities
-            var inactiveSymbols = data.Keys
-                .Where(sym => !UniverseManager.ActiveSecurities.ContainsKey(sym))
-                // on daily data we'll get the last data point and the delisting at the same time
-                .Where(sym => !data.Delistings.ContainsKey(sym) || data.Delistings[sym].Type != DelistingType.Delisted)
-                .ToList();
-            if (inactiveSymbols.Any())
-            {
-                var symbols = string.Join(", ", inactiveSymbols);
-                throw new Exception($"Received data for non-active security: {symbols}.");
-            }
         }
 
         // this event fires whenever we have changes to our universe

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -77,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
-        public void OnData(TradeBars data)
+        public override void OnData(Slice data)
         {
             // wait for our entire ribbon to be ready
             if (!_ribbon.All(x => x.IsReady)) return;

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using System;
@@ -49,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
-        public void OnData(TradeBars data)
+        public override void OnData(Slice data)
         {
             if (Portfolio.Invested) return;
             SetHoldings(_symbol, .5);
@@ -59,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// Raises the data event.
         /// </summary>
         /// <param name="data">Data.</param>
-        public void OnData(Dividends data) // update this to Dividends dictionary
+        public override void OnDividends(Dividends data) // update this to Dividends dictionary
         {
             var dividend = data[_symbol];
             var holdings = Portfolio[_symbol];

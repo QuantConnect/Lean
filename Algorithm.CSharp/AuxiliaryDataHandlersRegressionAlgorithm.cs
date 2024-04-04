@@ -25,9 +25,10 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class AuxiliaryDataHandlersRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private bool _onSplits;
+        private bool _onDividends;
         private bool _onDelistingsCalled;
         private bool _onSymbolChangedEvents;
-        private bool _onPriceDiscontinuity;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -35,16 +36,18 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2007, 05, 16);
-            SetEndDate(2008, 10, 1);
+            SetEndDate(2015, 1, 1);
+
+            UniverseSettings.Resolution = Resolution.Daily;
 
             // will get delisted
-            AddEquity("AAA.1", Resolution.Daily);
+            AddEquity("AAA.1");
 
             // get's remapped
-            AddEquity("SPWR", Resolution.Daily);
+            AddEquity("SPWR");
 
-            // emits dividends
-            AddEquity("SPY", Resolution.Daily);
+            // has a split & dividends
+            AddEquity("AAPL");
         }
 
         public override void OnDelistings(Delistings delistings)
@@ -65,13 +68,22 @@ namespace QuantConnect.Algorithm.CSharp
             _onSymbolChangedEvents = true;
         }
 
-        public override void OnPriceDiscontinuity(Splits splits, Dividends dividends)
+        public override void OnSplits(Splits splits)
         {
-            if (!dividends.ContainsKey("SPY"))
+            if (!splits.ContainsKey("AAPL"))
             {
-                throw new Exception("Unexpected OnPriceDiscontinuity call");
+                throw new Exception("Unexpected OnSplits call");
             }
-            _onPriceDiscontinuity = true;
+            _onSplits = true;
+        }
+
+        public override void OnDividends(Dividends dividends)
+        {
+            if (!dividends.ContainsKey("AAPL"))
+            {
+                throw new Exception("Unexpected OnDividends call");
+            }
+            _onDividends = true;
         }
 
         public override void OnEndOfAlgorithm()
@@ -84,9 +96,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("OnSymbolChangedEvents was not called!");
             }
-            if (!_onPriceDiscontinuity)
+            if (!_onSplits)
             {
-                throw new Exception("OnPriceDiscontinuity was not called!");
+                throw new Exception("OnSplits was not called!");
+            }
+            if (!_onDividends)
+            {
+                throw new Exception("OnDividends was not called!");
             }
         }
 
@@ -103,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 2802;
+        public long DataPoints => 126221;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -134,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0.531"},
+            {"Information Ratio", "-0.332"},
             {"Tracking Error", "0.183"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},

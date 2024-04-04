@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// Raises the data event.
         /// </summary>
         /// <param name="data">Data.</param>
-        public void OnData(Dividends data)
+        public override void OnDividends(Dividends data)
         {
             if (data.ContainsKey(_splitAndDividendSymbol))
             {
@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// Raises the data event.
         /// </summary>
         /// <param name="data">Data.</param>
-        public void OnData(Splits data)
+        public override void OnSplits(Splits data)
         {
             if (data.ContainsKey(_splitAndDividendSymbol))
             {
@@ -96,11 +96,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Checks the symbol change event
         /// </summary>
-        public override void OnData(Slice slice)
+        public override void OnSymbolChangedEvents(SymbolChangedEvents symbolChanged)
         {
-            if (slice.SymbolChangedEvents.ContainsKey(_mappingSymbol))
+            if (symbolChanged.ContainsKey(_mappingSymbol))
             {
-                var mappingEvent = slice.SymbolChangedEvents.Single(x => x.Key.SecurityType == SecurityType.Equity).Value;
+                var mappingEvent = symbolChanged.Single(x => x.Key.SecurityType == SecurityType.Equity).Value;
                 Log($"{Time} - Ticker changed from: {mappingEvent.OldSymbol} to {mappingEvent.NewSymbol}");
                 if (Time.Date == new DateTime(1999, 01, 01))
                 {

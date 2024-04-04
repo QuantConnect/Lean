@@ -1045,27 +1045,35 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Event handler to be called when there's been a price discontinuity due to a split or dividend
+        /// Event handler to be called when there's been a split event
         /// </summary>
         /// <param name="splits">The current time slice splits</param>
-        /// <param name="dividends">The current time slice dividends</param>
         [DocumentationAttribute(HandlingData)]
-        public virtual void OnPriceDiscontinuity(Splits splits, Dividends dividends)
+        public virtual void OnSplits(Splits splits)
         {
         }
 
-        // <summary>
-        // Event handler to be called when there's been a delistings event
-        // </summary>
+        /// <summary>
+        /// Event handler to be called when there's been a dividend event
+        /// </summary>
+        /// <param name="dividends">The current time slice dividends</param>
+        [DocumentationAttribute(HandlingData)]
+        public virtual void OnDividends(Dividends dividends)
+        {
+        }
+
+        /// <summary>
+        /// Event handler to be called when there's been a delistings event
+        /// </summary>
         /// <param name="delistings">The current time slice delistings</param>
         [DocumentationAttribute(HandlingData)]
         public virtual void OnDelistings(Delistings delistings)
         {
         }
 
-        // <summary>
-        // Event handler to be called when there's been a symbol changed event
-        // </summary>
+        /// <summary>
+        /// Event handler to be called when there's been a symbol changed event
+        /// </summary>
         /// <param name="symbolsChanged">The current time slice symbol changed events</param>
         [DocumentationAttribute(HandlingData)]
         public virtual void OnSymbolChangedEvents(SymbolChangedEvents symbolsChanged)
