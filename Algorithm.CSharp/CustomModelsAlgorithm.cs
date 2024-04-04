@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -22,7 +23,6 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
-using static QLNet.Callability;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
             _security.SetBuyingPowerModel(new CustomBuyingPowerModel(this));
         }
 
-        public void OnData(TradeBars data)
+        public override void OnData(Slice data)
         {
             var openOrders = Transactions.GetOpenOrders(_spy);
             if (openOrders.Count != 0) return;

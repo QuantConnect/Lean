@@ -129,18 +129,10 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Custom data event handler:
-        /// </summary>
-        /// <param name="data">CustomData - dictionary Bars of custom data</param>
-        public void OnData(CustomData data)
-        {
-        }
-
-        /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
-        public void OnData(TradeBars data)
+        public override void OnData(Slice data)
         {
             if (!_indicators.BB.IsReady || !_indicators.RSI.IsReady) return;
 

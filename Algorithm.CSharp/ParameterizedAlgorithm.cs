@@ -18,6 +18,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Parameters;
 using QuantConnect.Interfaces;
+using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -52,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
             Slow = EMA("SPY", SlowPeriod);
         }
 
-        public void OnData(TradeBars data)
+        public override void OnData(Slice data)
         {
             // wait for our indicators to ready
             if (!Fast.IsReady || !Slow.IsReady) return;

@@ -99,7 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public void OnData(TradeBars data)
+        public override void OnData(Slice data)
         {
             if (!Portfolio.Invested)
             {

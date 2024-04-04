@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 
@@ -38,10 +39,10 @@ namespace QuantConnect.Algorithm.CSharp
             _symbol = AddEquity("VXX.1", Resolution.Hour).Symbol;
         }
 
-        public void OnData(TradeBars tradeBars)
+        public override void OnData(Slice data)
         {
             TradeBar bar;
-            if (!tradeBars.TryGetValue(_symbol, out bar)) return;
+            if (!data.Bars.TryGetValue(_symbol, out bar)) return;
 
             if (!Portfolio.Invested && Time.Date == EndDate.Date)
             {
