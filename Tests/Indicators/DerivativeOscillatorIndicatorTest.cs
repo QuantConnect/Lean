@@ -14,7 +14,7 @@ public class DerivativeOscillatorIndicatorTest : CommonIndicatorTests<IndicatorD
 
     protected override string TestFileName => "spy_do.csv";
 
-    protected override string TestColumnName => "DO 14 5 3 9";
+    protected override string TestColumnName => "DO";
 
     [Test]
     public void DoComputesCorrectly()
@@ -56,5 +56,16 @@ public class DerivativeOscillatorIndicatorTest : CommonIndicatorTests<IndicatorD
         derivativeOscillator.Reset();
 
         TestHelper.AssertIndicatorIsInDefaultState(derivativeOscillator);
+    }
+
+    [Test]
+    public void ComparesWithExternalData()
+    {
+        TestHelper.TestIndicator(
+            CreateIndicator(),
+            TestFileName,
+            TestColumnName,
+            (ind, expected) => Assert.AreEqual(expected, (double)((IndicatorDerivativeOscillator)ind).Current.Value)
+        );
     }
 }
