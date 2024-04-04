@@ -304,3 +304,8 @@ RUN mkdir -p /root/ibgateway && \
     chmod 777 ibgateway-stable-standalone-linux-x64.v10.19.2a.sh && \
     ./ibgateway-stable-standalone-linux-x64.v10.19.2a.sh -q -dir /root/ibgateway && \
     rm ibgateway-stable-standalone-linux-x64.v10.19.2a.sh
+
+# label definitions
+LABEL strict_python_version=3.11.7
+LABEL python_version=3.11
+LABEL target_framework=net6.0
