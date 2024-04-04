@@ -60,21 +60,28 @@ namespace QuantConnect.Data
 
                     // The first start date returns from mapFile like IPO (DateTime) and can not be greater then request StartTime
                     // The Downloader doesn't know start DateTime exactly, it always download all data, except for options and index options
-                    var startDateTime = startDateTimeUtc;
                     if (dataDownloaderParameter.Symbol.SecurityType == SecurityType.Option ||
                         dataDownloaderParameter.Symbol.SecurityType == SecurityType.IndexOption)
                     {
+                        // The symbol was delisted before the request start time
                         if (endDateTimeUtc < dataDownloaderParameter.StartUtc)
                         {
                             continue;
                         }
 
-                        startDateTime = startDateTimeUtc < dataDownloaderParameter.StartUtc ? dataDownloaderParameter.StartUtc : startDateTimeUtc;
+                        if (startDateTimeUtc < dataDownloaderParameter.StartUtc)
+                        {
+                            startDateTimeUtc = dataDownloaderParameter.StartUtc;
+                        }
                     }
-                    var endDateTime = endDateTimeUtc > dataDownloaderParameter.EndUtc ? dataDownloaderParameter.EndUtc : endDateTimeUtc;
+
+                    if (endDateTimeUtc > dataDownloaderParameter.EndUtc)
+                    {
+                        endDateTimeUtc = dataDownloaderParameter.EndUtc;
+                    }
 
                     yield return new DataDownloaderGetParameters(
-                        symbolDateRange.Symbol, dataDownloaderParameter.Resolution, startDateTime, endDateTime, dataDownloaderParameter.TickType);
+                        symbolDateRange.Symbol, dataDownloaderParameter.Resolution, startDateTimeUtc, endDateTimeUtc, dataDownloaderParameter.TickType);
                     yieldMappedSymbol = true;
                 }
 
