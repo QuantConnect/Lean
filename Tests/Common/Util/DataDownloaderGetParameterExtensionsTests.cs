@@ -51,7 +51,10 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("../../../Data/equity/usa/minute/fb/20200401_trade.zip", 1, "FB", "2020/04/01-2000/04/02")]
         [TestCase("../../../Data/equity/usa/minute/xyz/20000401_trade.zip", 1, "XYZ", null)]
         [TestCase("../../../Data/cfd/oanda/daily/xauusd.zip", 1, "XAUUSD", null)]
-        [TestCase("../../../Data/option/usa/daily/goog_2015_quote_american.zip", 2, "GOOG", "2004/08/19-2014/04/02,2014/04/03-2024/03/07")]
+        [TestCase("../../../Data/option/usa/hour/goog_2014_quote_american.zip", 2, "GOOG", "2014/01/01-2014/04/02,2014/04/03-2015/01/01")]
+        [TestCase("../../../Data/option/usa/daily/goog_2014_quote_american.zip", 2, "GOOG", "2014/01/01-2014/04/02,2014/04/03-2015/01/01")]
+        [TestCase("../../../Data/indexoption/usa/hour/spx_2014_quote_american.zip", 1, "SPX", "2014/01/01-2015/01/01")]
+        [TestCase("../../../Data/indexoption/usa/daily/spx_2014_quote_american.zip", 1, "SPX", "2014/01/01-2015/01/01")]
         [TestCase("../../../Data/crypto/binance/hour/btcusdt_trade.zip", 1, "BTCUSDT", null)]
         [TestCase("../../../Data/cryptofuture/binance/hour/btcusdt_trade.zip", 1, "BTCUSDT", null)]
         [TestCase("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", 1, "GC28J20", "2020/01/05-2020/01/06")]
@@ -67,7 +70,16 @@ namespace QuantConnect.Tests.Common.Util
             if (parsedDate != default)
             {
                 startDateTimeUtc = parsedDate;
-                endDateTimeUtc = parsedDate.AddDays(1);
+
+                if (resolution > Resolution.Minute &&
+                    (symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.IndexOption))
+                {
+                    endDateTimeUtc = startDateTimeUtc.AddYears(1);
+                }
+                else
+                {
+                    endDateTimeUtc = parsedDate.AddDays(1);
+                }
             }
             else
             {
