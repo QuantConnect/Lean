@@ -472,6 +472,14 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(liquidateLiveWorkedCorrectly);
         }
 
+        [Test]
+        public void ReadVersionsWorksAsExpected()
+        {
+            var result = ApiClient.ReadLeanVersions();
+            Assert.IsTrue(result.Success);
+            Assert.IsNotEmpty(result.Versions);
+        }
+
         private static string GetTimestamp()
         {
             return DateTime.UtcNow.ToStringInvariant("yyyyMMddHHmmssfffff");
