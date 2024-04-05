@@ -31,12 +31,19 @@ namespace QuantConnect.Algorithm.CSharp
         private int _selectionCount;
         private Universe _universe;
 
+        private readonly Queue<List<Symbol>> _expectedSymbols = new(new[]
+        {
+            new List<Symbol> { GetSymbol("SPY") },
+            new List<Symbol> { GetSymbol("AAPL"), GetSymbol("IWM") },
+            new List<Symbol> { GetSymbol("FB"), GetSymbol("AAPL"), GetSymbol("QQQ") },
+        });
+
         public override void Initialize()
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2014, 03, 24);
-            SetEndDate(2014, 03, 28);
+            SetStartDate(2014, 03, 25);
+            SetEndDate(2014, 03, 27);
 
             _universe = AddUniverse(SelectionFunction);
         }
@@ -45,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             var sortedByDollarVolume = fundamentals.OrderByDescending(x => x.DollarVolume);
 
-            var top = sortedByDollarVolume.Skip(_selectionCount++).Take(1).ToList();
+            var top = sortedByDollarVolume.Skip(_selectionCount++).Take(_selectionCount).ToList();
 
             return top.Select(x => x.Symbol);
         }
@@ -54,22 +61,35 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_universe.Selected.Contains(QuantConnect.Symbol.Create("TSLA", SecurityType.Equity, Market.USA)))
             {
-                throw new Exception($"Unexpected selected symbol");
+                throw new Exception($"TSLA shouldn't of been selected");
             }
-            Buy(_universe.Selected.Single(), 1);
+
+            if (Time.Date < new DateTime(2014, 03, 28))
+            {
+                var expectedSymbols = _expectedSymbols.Dequeue();
+
+                if (!Enumerable.SequenceEqual(expectedSymbols, _universe.Selected))
+                {
+                    throw new Exception($"Unexpected selected symbols");
+                }
+            }
+
+            Buy(_universe.Selected.First(), 1);
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_selectionCount != 5)
+            if (_selectionCount != 3)
             {
                 throw new Exception($"Unexpected selection count {_selectionCount}");
             }
-            if (_universe.Selected.Count != 1 || _universe.Selected.Count == _universe.Members.Count)
+            if (_universe.Selected.Count != 3 || _universe.Selected.Count == _universe.Members.Count)
             {
                 throw new Exception($"Unexpected universe selected count {_universe.Selected.Count}");
             }
         }
+
+        private static Symbol GetSymbol(string ticker) => QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA);
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
@@ -84,7 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 35405;
+        public long DataPoints => 28323;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -96,33 +116,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "3"},
+            {"Total Orders", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.665%"},
+            {"Compounding Annual Return", "-0.536%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "99990.86"},
-            {"Net Profit", "-0.009%"},
-            {"Sharpe Ratio", "-34.742"},
-            {"Sortino Ratio", "-34.742"},
-            {"Probabilistic Sharpe Ratio", "0.000%"},
+            {"End Equity", "99995.58"},
+            {"Net Profit", "-0.004%"},
+            {"Sharpe Ratio", "-70.905"},
+            {"Sortino Ratio", "-70.905"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.013"},
-            {"Beta", "0.004"},
+            {"Alpha", "-0.01"},
+            {"Beta", "0.003"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.467"},
-            {"Tracking Error", "0.094"},
-            {"Treynor Ratio", "-3.739"},
+            {"Information Ratio", "12.072"},
+            {"Tracking Error", "0.057"},
+            {"Treynor Ratio", "-4.046"},
             {"Total Fees", "$3.00"},
-            {"Estimated Strategy Capacity", "$880000000000.00"},
+            {"Estimated Strategy Capacity", "$680000000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.05%"},
-            {"OrderListHash", "8718aa59db1c32917e24e902ca43cb64"}
+            {"Portfolio Turnover", "0.08%"},
+            {"OrderListHash", "9a827c3704c973458f3f8bd30ce8c4ad"}
         };
     }
 }
