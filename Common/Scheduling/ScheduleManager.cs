@@ -49,11 +49,12 @@ namespace QuantConnect.Scheduling
         /// </summary>
         /// <param name="securities">Securities manager containing the algorithm's securities</param>
         /// <param name="timeZone">The algorithm's time zone</param>
-        public ScheduleManager(SecurityManager securities, DateTimeZone timeZone)
+        /// <param name="marketHoursDatabase">The market hours database instance to use</param>
+        public ScheduleManager(SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
         {
             _securities = securities;
-            DateRules = new DateRules(securities, timeZone);
-            TimeRules = new TimeRules(securities, timeZone);
+            DateRules = new DateRules(securities, timeZone, marketHoursDatabase);
+            TimeRules = new TimeRules(securities, timeZone, marketHoursDatabase);
 
             // used for storing any events before the event schedule is set
             _preInitializedEvents = new List<ScheduledEvent>();

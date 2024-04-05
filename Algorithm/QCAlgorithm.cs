@@ -206,7 +206,7 @@ namespace QuantConnect.Algorithm
             UniverseSettings = new UniverseSettings(Resolution.Minute, Security.NullLeverage, true, false, TimeSpan.FromDays(1));
 
             // initialize our scheduler, this acts as a liason to the real time handler
-            Schedule = new ScheduleManager(Securities, TimeZone);
+            Schedule = new ScheduleManager(Securities, TimeZone, MarketHoursDatabase);
 
             // initialize the trade builder
             SetTradeBuilder(new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO));

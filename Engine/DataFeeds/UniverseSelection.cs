@@ -180,13 +180,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 selectSymbolsResult = universe.PerformSelection(dateTimeUtc, universeData);
             }
 
-            // materialize the enumerable into a set for processing
-            var selections = selectSymbolsResult.ToHashSet();
+            if (!ReferenceEquals(selectSymbolsResult, Universe.Unchanged))
+            {
+                // materialize the enumerable into a set for processing
+                universe.Selected = selectSymbolsResult.ToHashSet();
+            }
 
             // first check for no pending removals, even if the universe selection
             // didn't change we might need to remove a security because a position was closed
             RemoveSecurityFromUniverse(
-                _pendingRemovalsManager.CheckPendingRemovals(selections, universe),
+                _pendingRemovalsManager.CheckPendingRemovals(universe.Selected, universe),
                 dateTimeUtc,
                 algorithmEndDateUtc);
 
@@ -201,7 +204,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var security = member.Security;
                 // if we've selected this subscription again, keep it
-                if (selections.Contains(security.Symbol)) continue;
+                if (universe.Selected.Contains(security.Symbol)) continue;
 
                 // don't remove if the universe wants to keep him in
                 if (!universe.CanRemoveMember(dateTimeUtc, security)) continue;
@@ -229,7 +232,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // find new selections and add them to the algorithm
-            foreach (var symbol in selections)
+            foreach (var symbol in universe.Selected)
             {
                 if (universe.Securities.ContainsKey(symbol))
                 {

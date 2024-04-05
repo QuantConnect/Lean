@@ -1518,8 +1518,9 @@ actualDictionary.update({'IBM': 5})
         [Test]
         public void DateRulesToFunc()
         {
+            var mhdb = MarketHoursDatabase.FromDataFolder();
             var dateRules = new DateRules(new SecurityManager(
-                new TimeKeeper(new DateTime(2015, 1, 1), DateTimeZone.Utc)), DateTimeZone.Utc);
+                new TimeKeeper(new DateTime(2015, 1, 1), DateTimeZone.Utc)), DateTimeZone.Utc, mhdb);
             var first = new DateTime(2015, 1, 10);
             var second = new DateTime(2015, 1, 30);
             var dateRule = dateRules.On(first, second);

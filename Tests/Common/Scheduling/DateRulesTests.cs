@@ -604,11 +604,12 @@ namespace QuantConnect.Tests.Common.Scheduling
 
         private static DateRules GetDateRules()
         {
+            var mhdb = MarketHoursDatabase.FromDataFolder();
             var timeKeeper = new TimeKeeper(_utcNow, new List<DateTimeZone>());
             var manager = new SecurityManager(timeKeeper);
 
             // Add SPY for Equity testing
-            var securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
+            var securityExchangeHours = mhdb.GetExchangeHours(Market.USA, null, SecurityType.Equity);
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
             manager.Add(
                 Symbols.SPY,
@@ -624,7 +625,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             );
 
             // Add BTC for Crypto testing
-            securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Bitfinex, Symbols.BTCUSD, SecurityType.Crypto);
+            securityExchangeHours = mhdb.GetExchangeHours(Market.Bitfinex, Symbols.BTCUSD, SecurityType.Crypto);
             config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
             manager.Add(
                 Symbols.BTCUSD,
@@ -640,7 +641,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             );
 
             // Add EURUSD for Forex testing
-            securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.FXCM, Symbols.EURUSD, SecurityType.Forex);
+            securityExchangeHours = mhdb.GetExchangeHours(Market.FXCM, Symbols.EURUSD, SecurityType.Forex);
             config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURUSD, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
             manager.Add(
                 Symbols.EURUSD,
@@ -656,7 +657,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             );
 
             // Add Fut_SPY_Feb19_2016 for testing
-            securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.CME, Symbols.Fut_SPY_Feb19_2016, SecurityType.Future);
+            securityExchangeHours = mhdb.GetExchangeHours(Market.CME, Symbols.Fut_SPY_Feb19_2016, SecurityType.Future);
             config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.Fut_SPY_Feb19_2016, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
             manager.Add(
                 Symbols.Fut_SPY_Feb19_2016,
@@ -671,7 +672,7 @@ namespace QuantConnect.Tests.Common.Scheduling
                 )
             );
 
-            var rules = new DateRules(manager, TimeZones.NewYork);
+            var rules = new DateRules(manager, TimeZones.NewYork, mhdb);
             return rules;
         }
     }
