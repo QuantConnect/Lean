@@ -26,21 +26,17 @@ namespace QuantConnect.Scheduling
     /// <summary>
     /// Helper class used to provide better syntax when defining time rules
     /// </summary>
-    public class TimeRules
+    public class TimeRules : BaseScheduleRules
     {
-        private DateTimeZone _timeZone;
-
-        private readonly SecurityManager _securities;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeRules"/> helper class
         /// </summary>
         /// <param name="securities">The security manager</param>
         /// <param name="timeZone">The algorithm's default time zone</param>
-        public TimeRules(SecurityManager securities, DateTimeZone timeZone)
+        /// <param name="marketHoursDatabase">The market hours database instance to use</param>
+        public TimeRules(SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
+            : base(securities, timeZone, marketHoursDatabase)
         {
-            _securities = securities;
-            _timeZone = timeZone;
         }
 
         /// <summary>
@@ -49,7 +45,7 @@ namespace QuantConnect.Scheduling
         /// <param name="timeZone">The time zone to use for helper methods that can't resolve a time zone</param>
         public void SetDefaultTimeZone(DateTimeZone timeZone)
         {
-            _timeZone = timeZone;
+            TimeZone = timeZone;
         }
 
         /// <summary>
@@ -62,19 +58,19 @@ namespace QuantConnect.Scheduling
                 // we get the algorithms first 'Date', which during warmup might not be a complete date, depending on the warmup period
                 // and since Today returns dates we might get a time in the past which get's ignored. See 'WarmupTrainRegressionAlgorithm'
                 // which reproduces GH issue #6410
-                return _securities.UtcTime;
+                return Securities.UtcTime;
             });
         });
 
         /// <summary>
         /// Convenience property for running a scheduled event at midnight in the algorithm time zone
         /// </summary>
-        public ITimeRule Midnight => new FuncTimeRule("Midnight", dates => dates.Select(date => date.ConvertToUtc(_timeZone)));
+        public ITimeRule Midnight => new FuncTimeRule("Midnight", dates => dates.Select(date => date.ConvertToUtc(TimeZone)));
 
         /// <summary>
         /// Convenience property for running a scheduled event at noon in the algorithm time zone
         /// </summary>
-        public ITimeRule Noon => new FuncTimeRule("Noon", dates => dates.Select(date => date.ConvertToUtc(_timeZone).AddHours(12)));
+        public ITimeRule Noon => new FuncTimeRule("Noon", dates => dates.Select(date => date.ConvertToUtc(TimeZone).AddHours(12)));
 
         /// <summary>
         /// Specifies an event should fire at the specified time of day in the algorithm's time zone
@@ -83,7 +79,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A time rule that fires at the specified time in the algorithm's time zone</returns>
         public ITimeRule At(TimeSpan timeOfDay)
         {
-            return At(timeOfDay, _timeZone);
+            return At(timeOfDay, TimeZone);
         }
 
         /// <summary>
@@ -95,7 +91,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A time rule that fires at the specified time in the algorithm's time zone</returns>
         public ITimeRule At(int hour, int minute, int second = 0)
         {
-            return At(new TimeSpan(hour, minute, second), _timeZone);
+            return At(new TimeSpan(hour, minute, second), TimeZone);
         }
 
         /// <summary>
@@ -153,7 +149,7 @@ namespace QuantConnect.Scheduling
                 throw new ArgumentException("TimeRules.Every(): time span interval can not be zero or less");
             }
             var name = Invariant($"Every {interval.TotalMinutes:0.##} min");
-            Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates => EveryIntervalIterator(dates, interval, _timeZone);
+            Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates => EveryIntervalIterator(dates, interval, TimeZone);
             return new FuncTimeRule(name, applicator);
         }
 
@@ -166,19 +162,18 @@ namespace QuantConnect.Scheduling
         /// <returns>A time rule that fires the specified number of minutes after the symbol's market open</returns>
         public ITimeRule AfterMarketOpen(Symbol symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false)
         {
-            var security = GetSecurity(symbol);
-
             var type = extendedMarketOpen ? "ExtendedMarketOpen" : "MarketOpen";
             var name = Invariant($"{symbol}: {minutesAfterOpen:0.##} min after {type}");
+            var exchangeHours = GetSecurityExchangeHours(symbol);
 
             var timeAfterOpen = TimeSpan.FromMinutes(minutesAfterOpen);
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
                 from date in dates
-                let marketOpen = security.Exchange.Hours.GetNextMarketOpen(date, extendedMarketOpen)
+                let marketOpen = exchangeHours.GetNextMarketOpen(date, extendedMarketOpen)
                 // make sure the market open is of this date
-                where security.Exchange.DateIsOpen(date) && marketOpen.Date == date.Date
+                where exchangeHours.IsDateOpen(date) && marketOpen.Date == date.Date
                 let localEventTime = marketOpen + timeAfterOpen
-                let utcEventTime = localEventTime.ConvertToUtc(security.Exchange.TimeZone)
+                let utcEventTime = localEventTime.ConvertToUtc(exchangeHours.TimeZone)
                 select utcEventTime;
 
             return new FuncTimeRule(name, applicator);
@@ -193,32 +188,21 @@ namespace QuantConnect.Scheduling
         /// <returns>A time rule that fires the specified number of minutes before the symbol's market close</returns>
         public ITimeRule BeforeMarketClose(Symbol symbol, double minutesBeforeClose = 0, bool extendedMarketClose = false)
         {
-            var security = GetSecurity(symbol);
-
             var type = extendedMarketClose ? "ExtendedMarketClose" : "MarketClose";
-            var name = Invariant($"{security.Symbol}: {minutesBeforeClose:0.##} min before {type}");
+            var name = Invariant($"{symbol}: {minutesBeforeClose:0.##} min before {type}");
+            var exchangeHours = GetSecurityExchangeHours(symbol);
 
             var timeBeforeClose = TimeSpan.FromMinutes(minutesBeforeClose);
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
                 from date in dates
-                let marketClose = security.Exchange.Hours.GetNextMarketClose(date, extendedMarketClose)
+                let marketClose = exchangeHours.GetNextMarketClose(date, extendedMarketClose)
                 // make sure the market open is of this date
-                where security.Exchange.DateIsOpen(date) && marketClose.Date == date.Date
+                where exchangeHours.IsDateOpen(date) && marketClose.Date == date.Date
                 let localEventTime = marketClose - timeBeforeClose
-                let utcEventTime = localEventTime.ConvertToUtc(security.Exchange.TimeZone)
+                let utcEventTime = localEventTime.ConvertToUtc(exchangeHours.TimeZone)
                 select utcEventTime;
 
             return new FuncTimeRule(name, applicator);
-        }
-
-        private Security GetSecurity(Symbol symbol)
-        {
-            Security security;
-            if (!_securities.TryGetValue(symbol, out security))
-            {
-                throw new KeyNotFoundException($"{symbol} not found in portfolio. Request this data when initializing the algorithm.");
-            }
-            return security;
         }
 
         /// <summary>

@@ -52,6 +52,16 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// The currently selected symbol set
+        /// </summary>
+        /// <remarks>This set might be different than <see cref="Securities"/> which might hold members that are no longer selected
+        /// but have not been removed yet, this can be because they have some open position, orders, haven't completed the minimum time in universe</remarks>
+        public HashSet<Symbol> Selected
+        {
+            get; set;
+        }
+
+        /// <summary>
         /// True if this universe filter can run async in the data stack
         /// </summary>
         public virtual bool Asynchronous

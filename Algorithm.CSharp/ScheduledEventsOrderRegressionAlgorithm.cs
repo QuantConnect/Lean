@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,6 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class ScheduledEventsOrderRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private int _scheduledEventCount;
+        private int _afterMarketOpenEventCount;
         private Symbol _spy;
         private DateTime _lastTime = DateTime.MinValue;
 
@@ -46,6 +48,9 @@ namespace QuantConnect.Algorithm.CSharp
             var aEventCount = 0;
             var bEventCount = 0;
             var cEventCount = 0;
+
+            var symbol = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            Schedule.On(DateRules.WeekStart(symbol), TimeRules.AfterMarketOpen(symbol), AfterMarketOpen);
 
             // we add each twice and assert the order in which they are added is also respected for events at the same time
             for (var i = 0; i < 2; i++)
@@ -103,11 +108,24 @@ namespace QuantConnect.Algorithm.CSharp
             _scheduledEventCount++;
         }
 
+        private void AfterMarketOpen()
+        {
+            _afterMarketOpenEventCount++;
+            if (Time.TimeOfDay != TimeSpan.FromHours(9.5))
+            {
+                throw new Exception($"AfterMarketOpen unexpected event time: {Time}");
+            }
+        }
+
         public override void OnEndOfAlgorithm()
         {
             if (_scheduledEventCount != 28)
             {
                 throw new Exception($"OnEndOfAlgorithm expected scheduled events but was {_scheduledEventCount}");
+            }
+            if (_afterMarketOpenEventCount != 1)
+            {
+                throw new Exception($"OnEndOfAlgorithm expected after MarketOpenEvent count {_afterMarketOpenEventCount}");
             }
         }
 
