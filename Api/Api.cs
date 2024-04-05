@@ -1489,12 +1489,13 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Get one or more Object Store items of a specific organization and key
+        /// Download the object store associated with the given organization ID and key
         /// </summary>
         /// <param name="organizationId">Organization ID we would like to get the Object Store from</param>
         /// <param name="keys">Keys for the Object Store files</param>
-        /// <returns><see cref="GetObjectStoreResponse"/></returns>
-        public GetObjectStoreResponse GetObjectStore(string organizationId, List<string> keys)
+        /// <param name="destinationFolder">Folder in which the object will be stored</param>
+        /// <returns>True if the object was retrieved correctly, false otherwise</returns>
+        public bool GetObjectStore(string organizationId, List<string> keys, string destinationFolder = null)
         {
             var request = new RestRequest("object/get", Method.POST)
             {
@@ -1523,14 +1524,39 @@ namespace QuantConnect.Api
             };
             getUrlRequest.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
 
-            Thread.Sleep(3000);
             var startTime = DateTime.Now;
             while(result.Url == null && (DateTime.Now.Subtract(startTime) < TimeSpan.FromMinutes(5)))
             {
+                Thread.Sleep(3000);
                 ApiConnection.TryRequest(getUrlRequest, out result);
             }
 
-            return result;
+            string directory = Directory.GetCurrentDirectory();
+            if (!string.IsNullOrEmpty(destinationFolder))
+            {
+                // Make sure the directory exist before writing
+                directory = Path.GetDirectoryName(destinationFolder);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+            }
+
+            try
+            {
+                // Download the file
+                var uri = new Uri(result.Url);
+                using var byteArray = _client.Value.GetByteArrayAsync(uri);
+
+                Compression.UnzipToFolder(byteArray.Result, directory);
+            }
+            catch
+            {
+                Log.Error($"Api.GetObjectStore(): Failed to download zip for path ({directory})");
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>

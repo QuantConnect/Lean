@@ -443,12 +443,13 @@ namespace QuantConnect.Interfaces
         string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
 
         /// <summary>
-        /// Get one or more Object Store metadata of a specific organization and key
+        /// Download the object store associated with the given organization ID and key
         /// </summary>
         /// <param name="organizationId">Organization ID we would like to get the Object Store from</param>
         /// <param name="keys">Keys for the Object Store files</param>
-        /// <returns><see cref="GetObjectStoreResponse"/></returns>
-        GetObjectStoreResponse GetObjectStore(string organizationId, List<string> keys);
+        /// <param name="destinationFolder">Folder in which the object will be stored</param>
+        /// <returns>True if the object was retrieved correctly, false otherwise</returns>
+        bool GetObjectStore(string organizationId, List<string> keys, string destinationFolder = null);
 
         /// <summary>
         /// Upload files to the Object Store

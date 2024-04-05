@@ -17,6 +17,7 @@ using NUnit.Framework;
 using QuantConnect.Configuration;
 using System.Collections.Generic;
 using System;
+using System.IO;
 
 namespace QuantConnect.Tests.API
 {
@@ -35,9 +36,12 @@ namespace QuantConnect.Tests.API
                 "/orats_2024-02-29.json"
             };
 
-            var result = ApiClient.GetObjectStore(TestOrganization, keys);
-            Assert.IsTrue(result.Success);
-            Assert.IsNotNull(result.Url);
+            var path = Directory.GetCurrentDirectory() + "/StoreObjectFolder/";
+            var result = ApiClient.GetObjectStore(TestOrganization, keys, path);
+            Assert.IsTrue(result);
+            DirectoryAssert.Exists(path);
+            FileAssert.Exists(new FileInfo(path + "/orats_2024-02-17.json"));
+            FileAssert.Exists(new FileInfo(path + "/orats_2024-02-29.json"));
         }
 
         [Test]
