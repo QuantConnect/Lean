@@ -227,10 +227,88 @@ namespace QuantConnect.Api
     public class BacktestSummary : BasicBacktest
     {
         /// <summary>
-        /// Special chart for the backtest
+        /// Sharpe ratio with respect to risk free rate: measures excess of return per unit of risk
         /// </summary>
-        [JsonProperty(PropertyName = "sparkLine")]
-        public string SparkLine { get; set; }
+        [JsonProperty(PropertyName = "sharpeRatio")]
+        public decimal? SharpeRatio { get; set; }
+
+        /// <summary>
+        /// Algorithm "Alpha" statistic - abnormal returns over the risk free rate and the relationshio (beta) with the benchmark returns
+        /// </summary>
+        [JsonProperty(PropertyName = "alpha")]
+        public decimal? Alpha { get; set; }
+
+        /// <summary>
+        /// Algorithm "beta" statistic - the covariance between the algorithm and benchmark performance, divided by benchmark's variance
+        /// </summary>
+        [JsonProperty(PropertyName = "beta")]
+        public decimal? Beta { get; set; }
+
+        /// <summary>
+        /// Annual compounded returns statistic based on the final-starting capital and years
+        /// </summary>
+        [JsonProperty(PropertyName = "compoundingAnnualReturn")]
+        public decimal? CompoundingAnnualReturn { get; set; }
+
+        /// <summary>
+        /// Drawdown maximum percentage
+        /// </summary>
+        [JsonProperty(PropertyName = "drawdown")]
+        public decimal? Drawdown { get; set; }
+
+        /// <summary>
+        /// The ratio of the number of losing trades to the total number of trades
+        /// </summary>
+        [JsonProperty(PropertyName = "lossRate")]
+        public decimal? LossRate { get; set; }
+
+        /// <summary>
+        /// Net profit percentage
+        /// </summary>
+        [JsonProperty(PropertyName = "netProfit")]
+        public decimal? NetProfit { get; set; }
+
+        /// <summary>
+        /// Number of parameters in the backtest
+        /// </summary>
+        [JsonProperty(PropertyName = "parameters")]
+        public int? Parameters { get; set; }
+
+        /// <summary>
+        /// Price-to-sales ratio
+        /// </summary>
+        [JsonProperty(PropertyName = "psr")]
+        public decimal? Psr { get; set; }
+
+        /// <summary>
+        /// SecurityTypes present in the backtest
+        /// </summary>
+        [JsonProperty(PropertyName = "securityTypes")]
+        public string? SecurityTypes { get; set; }
+
+        /// <summary>
+        /// Sortino ratio with respect to risk free rate: measures excess of return per unit of downside risk
+        /// </summary>
+        [JsonProperty(PropertyName = "sortinoRatio")]
+        public decimal? SortinoRatio { get; set; }
+
+        /// <summary>
+        /// Number of trades in the backtest
+        /// </summary>
+        [JsonProperty(PropertyName = "trades")]
+        public int? Trades { get; set; }
+
+        /// <summary>
+        /// Treynor ratio statistic is a measurement of the returns earned in excess of that which could have been earned on an investment that has no diversifiable risk
+        /// </summary>
+        [JsonProperty(PropertyName = "treynorRatio")]
+        public decimal? TreynorRatio { get; set; }
+
+        /// <summary>
+        /// The ratio of the number of winning trades to the total number of trades
+        /// </summary>
+        [JsonProperty(PropertyName = "winRate")]
+        public decimal? WinRate { get; set; }
 
         /// <summary>
         /// Collection of tags for the backtest

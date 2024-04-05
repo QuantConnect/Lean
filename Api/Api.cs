@@ -606,19 +606,23 @@ namespace QuantConnect.Api
         /// List all the backtest summaries for a project
         /// </summary>
         /// <param name="projectId">Project id we'd like to get a list of backtest for</param>
+        /// <param name="includeStatistics">True for include statistics in the response, false otherwise</param>
         /// <returns><see cref="BacktestList"/></returns>
 
-        public BacktestSummaryList ListBacktests(int projectId)
+        public BacktestSummaryList ListBacktests(int projectId, bool includeStatistics = true)
         {
-            var request = new RestRequest("backtests/read", Method.POST)
+            var request = new RestRequest("backtests/list", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
 
-            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            var obj = new Dictionary<string, object>()
             {
-                projectId,
-            }), ParameterType.RequestBody);
+                { "projectId", projectId },
+                { "includeStatistics", includeStatistics }
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out BacktestSummaryList result);
             return result;

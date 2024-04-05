@@ -186,8 +186,9 @@ namespace QuantConnect.Interfaces
         /// Get a list of backtest summaries for a specific project id
         /// </summary>
         /// <param name="projectId">Project id to search</param>
+        /// <param name="includeStatistics">True for include statistics in the response, false otherwise</param>
         /// <returns>BacktestList container for list of backtests</returns>
-        BacktestSummaryList ListBacktests(int projectId);
+        BacktestSummaryList ListBacktests(int projectId, bool includeStatistics = false);
 
         /// <summary>
         /// Estimate optimization with the specified parameters via QuantConnect.com API
