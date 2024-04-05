@@ -32,6 +32,7 @@ using QuantConnect.Statistics;
 using QuantConnect.Util;
 using QuantConnect.Notifications;
 using Python.Runtime;
+using System.Threading;
 
 namespace QuantConnect.Api
 {
@@ -1509,6 +1510,26 @@ namespace QuantConnect.Api
             request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out GetObjectStoreResponse result);
+
+            obj = new Dictionary<string, object>
+            {
+                { "organizationId", organizationId},
+                { "jobId", result.JobId }
+            };
+
+            var getUrlRequest = new RestRequest("object/get", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+            getUrlRequest.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
+
+            Thread.Sleep(3000);
+            var startTime = DateTime.Now;
+            while(result.Url == null && (DateTime.Now.Subtract(startTime) < TimeSpan.FromMinutes(5)))
+            {
+                ApiConnection.TryRequest(getUrlRequest, out result);
+            }
+
             return result;
         }
 

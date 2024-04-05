@@ -31,14 +31,13 @@ namespace QuantConnect.Tests.API
         {
             var keys = new List<string>()
             {
-                "/Ronit2",
-                "/Ronit3"
+                "/orats_2024-02-17.json",
+                "/orats_2024-02-29.json"
             };
 
             var result = ApiClient.GetObjectStore(TestOrganization, keys);
             Assert.IsTrue(result.Success);
-            Assert.IsNotEmpty(result.JobId);
-            Assert.IsNotEmpty(result.Url);
+            Assert.IsNotNull(result.Url);
         }
 
         [Test]
