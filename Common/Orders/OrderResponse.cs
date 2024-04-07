@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using static QuantConnect.StringExtensions;
-
 namespace QuantConnect.Orders
 {
     /// <summary>

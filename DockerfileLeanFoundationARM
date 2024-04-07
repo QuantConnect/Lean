@@ -249,3 +249,8 @@ RUN apt-get update && apt install -y xvfb wkhtmltopdf && \
 # Install fonts for matplotlib
 RUN wget -q https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q foundation.zip && rm foundation.zip \
     && mv "lean fonts/"* /usr/share/fonts/truetype/ && rm -rf "lean fonts/" "__MACOSX/"
+
+# label definitions
+LABEL strict_python_version=3.11.7
+LABEL python_version=3.11
+LABEL target_framework=net6.0
