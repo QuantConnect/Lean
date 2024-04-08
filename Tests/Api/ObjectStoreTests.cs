@@ -45,6 +45,13 @@ namespace QuantConnect.Tests.API
         }
 
         [Test]
+        public void GetObjectStorePropertiesWorksAsExpected()
+        {
+            var result = ApiClient.GetObjectStoreProperties(TestOrganization, "//orats_2024-02-29.json");
+            Assert.IsTrue(result.Success);
+        }
+
+        [Test]
         public void SetObjectStoreWorksAsExpected()
         {
             var result = ApiClient.DeleteObjectStore(TestOrganization, _key);

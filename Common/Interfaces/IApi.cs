@@ -449,7 +449,15 @@ namespace QuantConnect.Interfaces
         /// <param name="keys">Keys for the Object Store files</param>
         /// <param name="destinationFolder">Folder in which the object will be stored</param>
         /// <returns>True if the object was retrieved correctly, false otherwise</returns>
-        bool GetObjectStore(string organizationId, List<string> keys, string destinationFolder = null);
+        public bool GetObjectStore(string organizationId, List<string> keys, string destinationFolder = null);
+
+        /// <summary>
+        /// Get Object Store properties given the organization ID and the Object Store key
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to get the Object Store from</param>
+        /// <param name="key">Key for the Object Store file</param>
+        /// <returns><see cref="PropertiesObjectStoreResponse"/></returns>
+        public PropertiesObjectStoreResponse GetObjectStoreProperties(string organizationId, string key);
 
         /// <summary>
         /// Upload files to the Object Store

@@ -37,22 +37,13 @@ namespace QuantConnect.Api
         public string Url { get; set; }
     }
 
-    /// <summary>
-    /// Summary information of the Object Store
-    /// </summary>
-    public class ObjectStore
+    public class BasicObjectStore
     {
         /// <summary>
         /// Object store key
         /// </summary>
         [JsonProperty(PropertyName = "key")]
         public string Key {  get; set; }
-
-        /// <summary>
-        /// File or folder name
-        /// </summary>
-        [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
 
         /// <summary>
         /// Last time it was modified
@@ -67,16 +58,52 @@ namespace QuantConnect.Api
         public string Mime { get; set; }
 
         /// <summary>
-        /// True if it is a folder, false otherwise
-        /// </summary>
-        [JsonProperty(PropertyName = "isFolder")]
-        public bool IsFolder {  get; set; }
-
-        /// <summary>
         /// File size
         /// </summary>
         [JsonProperty(PropertyName = "size")]
         public decimal? Size { get; set; }
+    }
+
+    /// <summary>
+    /// Summary information of the Object Store
+    /// </summary>
+    public class SummaryObjectStore: BasicObjectStore
+    {
+        /// <summary>
+        /// File or folder name
+        /// </summary>
+        [JsonProperty(PropertyName = "name")]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// True if it is a folder, false otherwise
+        /// </summary>
+        [JsonProperty(PropertyName = "isFolder")]
+        public bool IsFolder { get; set; }
+    }
+
+    /// <summary>
+    /// Object Store file properties
+    /// </summary>
+    public class PropertiesObjectStore: BasicObjectStore
+    {
+        /// <summary>
+        /// Date this object was created
+        /// </summary>
+        [JsonProperty(PropertyName = "created")]
+        public DateTime Created { get; set; }
+
+        /// <summary>
+        /// MD5 (hashing algorithm) hash authentication code
+        /// </summary>
+        [JsonProperty(PropertyName = "md5")]
+        public string Md5 { get; set; }
+
+        /// <summary>
+        /// Preview of the Object Store file content
+        /// </summary>
+        [JsonProperty(PropertyName = "preview")]
+        public string Preview { get; set; }
     }
 
     /// <summary>
@@ -94,7 +121,7 @@ namespace QuantConnect.Api
         /// List of objects stored
         /// </summary>
         [JsonProperty(PropertyName = "objects")]
-        public List<ObjectStore> Objects { get; set; }
+        public List<SummaryObjectStore> Objects { get; set; }
 
         /// <summary>
         /// Size of all objects stored in bytes
@@ -107,5 +134,17 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "objectStorageUsedHuman")]
         public string ObjectStorageUsedHuman { get; set; }
+    }
+
+    /// <summary>
+    /// Response received containing the properties of the requested Object Store
+    /// </summary>
+    public class PropertiesObjectStoreResponse : RestResponse
+    {
+        /// <summary>
+        /// Object Store properties
+        /// </summary>
+        [JsonProperty(PropertyName = "metadata")]
+        public PropertiesObjectStore Properties { get; set; }
     }
 }

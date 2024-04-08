@@ -1512,10 +1512,18 @@ namespace QuantConnect.Api
 
             ApiConnection.TryRequest(request, out GetObjectStoreResponse result);
 
+            if (result == null || !result.Success)
+            {
+                Log.Error($"Api.GetObjectStore(): Failed to get the jobId to request the download URL for the object store."
+                    + result != null ? $" Errors: {result.Errors}" : "");
+                return false;
+            }
+
+            var jobId = result.JobId;
             obj = new Dictionary<string, object>
             {
                 { "organizationId", organizationId},
-                { "jobId", result.JobId }
+                { "jobId", jobId }
             };
 
             var getUrlRequest = new RestRequest("object/get", Method.POST)
@@ -1524,11 +1532,20 @@ namespace QuantConnect.Api
             };
             getUrlRequest.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
 
-            var startTime = DateTime.Now;
-            while(result.Url == null && (DateTime.Now.Subtract(startTime) < TimeSpan.FromMinutes(5)))
+            var frontier = DateTime.Now + TimeSpan.FromMinutes(5);
+            while (string.IsNullOrEmpty(result.Url) && (DateTime.Now < frontier))
             {
                 Thread.Sleep(3000);
                 ApiConnection.TryRequest(getUrlRequest, out result);
+            }
+
+            if (result == null
+                || !result.Success
+                || string.IsNullOrEmpty(result.Url))
+            {
+                Log.Error($"Api.GetObjectStore(): Failed to get the download URL from the jobId {jobId}."
+                    + result != null ? $" Errors: {result.Errors}" : "");
+                return false;
             }
 
             string directory = Directory.GetCurrentDirectory();
@@ -1557,6 +1574,27 @@ namespace QuantConnect.Api
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Get Object Store properties given the organization ID and the Object Store key
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to get the Object Store from</param>
+        /// <param name="key">Key for the Object Store file</param>
+        /// <returns><see cref="PropertiesObjectStoreResponse"/></returns>
+        public PropertiesObjectStoreResponse GetObjectStoreProperties(string organizationId, string key)
+        {
+            var request = new RestRequest("object/properties", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("organizationId", organizationId);
+            request.AddParameter("key", key);
+            request.AlwaysMultipartFormData = true;
+
+            ApiConnection.TryRequest(request, out PropertiesObjectStoreResponse result);
+            return result;
         }
 
         /// <summary>
