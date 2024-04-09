@@ -46,7 +46,7 @@ namespace QuantConnect.Python
             {
                 foreach (var member in members)
                 {
-                    if (!model.HasAttr(member.Name))
+                    if (!model.HasAttr(member.Name) && !model.HasAttr(member.Name.ToSnakeCase()))
                     {
                         missingMembers.Add(member.Name);
                     }
@@ -60,6 +60,33 @@ namespace QuantConnect.Python
             }
 
             return model;
+        }
+
+        /// <summary>
+        /// Invokes the specified method on the provided <see cref="PyObject"/> instance with the specified arguments
+        /// </summary>
+        /// <param name="model">The <see cref="PyObject"/> instance</param>
+        /// <param name="methodName">The name of the method to invoke</param>
+        /// <param name="args">The arguments to call the method with</param>
+        /// <returns>The return value of the called method converted into the <typeparamref name="T"/> type</returns>
+        public static T Invoke<T>(this PyObject model, string methodName, params object[] args)
+        {
+            using var _ = Py.GIL();
+            var method = model.GetMethod(methodName);
+            return method.Invoke(args.Select(arg => arg.ToPython()).ToArray());
+        }
+
+        /// <summary>
+        /// Invokes the specified method on the provided <see cref="PyObject"/> instance with the specified arguments
+        /// </summary>
+        /// <param name="model">The <see cref="PyObject"/> instance</param>
+        /// <param name="methodName">The name of the method to invoke</param>
+        /// <param name="args">The arguments to call the method with</param>
+        public static void Invoke(this PyObject model, string methodName, params object[] args)
+        {
+            using var _ = Py.GIL();
+            var method = model.GetMethod(methodName);
+            method.Invoke(args.Select(arg => arg.ToPython()).ToArray());
         }
     }
 }

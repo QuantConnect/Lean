@@ -609,10 +609,54 @@ namespace QuantConnect
             {
                 var method = instance.GetAttr(name);
                 var pythonType = method.GetPythonType();
-                var isPythonDefined = pythonType.Repr().Equals("<class \'method\'>");
+                var isPythonDefined = pythonType.Repr().Equals("<class \'method\'>", StringComparison.Ordinal);
 
-                return isPythonDefined ? method : null;
+                if (isPythonDefined)
+                {
+                    return method;
+                }
+
+                var snakeCasedNamed = name.ToSnakeCase();
+                if (snakeCasedNamed != name)
+                {
+                    return instance.GetPythonMethod(snakeCasedNamed);
+                }
+
+                return null;
             }
+        }
+
+        /// <summary>
+        /// Gets a python method by name
+        /// </summary>
+        /// <param name="instance">The object instance to search the method in</param>
+        /// <param name="name">The name of the method</param>
+        /// <returns>The python method or null if not defined or CSharp implemented</returns>
+        public static dynamic GetPythonMethodWithChecks(this PyObject instance, string name)
+        {
+            using (Py.GIL())
+            {
+                if (!instance.HasAttr(name))
+                {
+                    return null;
+                }
+
+                return instance.GetPythonMethod(name);
+            }
+        }
+
+        /// <summary>
+        /// Gets a method from a <see cref="PyObject"/> instance by name.
+        /// First, it tries to get the snake-case version of the method name, in case the user is using that style.
+        /// Else, it tries to get the method with the original name, regardless of whether the class has a Python overload or not.
+        /// </summary>
+        /// <param name="instance">The object instance to search the method in</param>
+        /// <param name="name">The name of the method</param>
+        /// <returns>The method matching the name</returns>
+        public static dynamic GetMethod(this PyObject instance, string name)
+        {
+            using var _ = Py.GIL();
+            return instance.GetPythonMethodWithChecks(name.ToSnakeCase()) ?? instance.GetAttr(name);
         }
 
         /// <summary>
