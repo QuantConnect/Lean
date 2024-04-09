@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Definition of the SecurityReference class
     /// </summary>
-    public class SecurityReference : ReusuableCLRObject
+    public class SecurityReference : FundamentalTimeDependentProperty
     {
         /// <summary>
         /// An arrangement of characters (often letters) representing a particular security listed on an exchange or otherwise traded publicly. Note: Morningstar's multi-share class symbols will often contain a "period" within the symbol; e.g. BRK.B for Berkshire Hathaway Class B.
@@ -244,16 +244,20 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("1029")]
         public string MarketDataID => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.SecurityReference_MarketDataID);
 
-        private readonly ITimeProvider _timeProvider;
-        private readonly SecurityIdentifier _securityIdentifier;
-
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public SecurityReference(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
+            : base(timeProvider, securityIdentifier)
         {
-            _timeProvider = timeProvider;
-            _securityIdentifier = securityIdentifier;
+        }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        public override FundamentalTimeDependentProperty Clone(ITimeProvider timeProvider)
+        {
+            return new SecurityReference(timeProvider, _securityIdentifier);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Definition of the ValuationRatios class
     /// </summary>
-    public class ValuationRatios : ReusuableCLRObject
+    public class ValuationRatios : FundamentalTimeDependentProperty
     {
         /// <summary>
         /// Dividend per share / Diluted earnings per share
@@ -1144,16 +1144,20 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("14123")]
         public double NormalizedPEGatio => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedPEGatio);
 
-        private readonly ITimeProvider _timeProvider;
-        private readonly SecurityIdentifier _securityIdentifier;
-
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public ValuationRatios(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
+            : base(timeProvider, securityIdentifier)
         {
-            _timeProvider = timeProvider;
-            _securityIdentifier = securityIdentifier;
+        }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        public override FundamentalTimeDependentProperty Clone(ITimeProvider timeProvider)
+        {
+            return new ValuationRatios(timeProvider, _securityIdentifier);
         }
     }
 }

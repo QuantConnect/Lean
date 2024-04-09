@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Definition of the FinancialStatements class
     /// </summary>
-    public class FinancialStatements : ReusuableCLRObject
+    public class FinancialStatements : FundamentalTimeDependentProperty
     {
         /// <summary>
         /// The exact date that is given in the financial statements for each quarter's end.
@@ -149,16 +149,20 @@ namespace QuantConnect.Data.Fundamental
         public CashFlowStatement CashFlowStatement => _cashFlowStatement ??= new(_timeProvider, _securityIdentifier);
         private CashFlowStatement _cashFlowStatement;
 
-        private readonly ITimeProvider _timeProvider;
-        private readonly SecurityIdentifier _securityIdentifier;
-
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public FinancialStatements(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
+            : base(timeProvider, securityIdentifier)
         {
-            _timeProvider = timeProvider;
-            _securityIdentifier = securityIdentifier;
+        }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        public override FundamentalTimeDependentProperty Clone(ITimeProvider timeProvider)
+        {
+            return new FinancialStatements(timeProvider, _securityIdentifier);
         }
     }
 }
