@@ -273,7 +273,7 @@ class ModelMissingMethodOne:
                 {
                     var module = PyModule.FromString(nameof(InvokeTests), InvokeModule);
                     var model = module.GetAttr("PythonInvokeTestsModel").Invoke();
-                    Assert.That(model.Invoke<int>("AddThreeNumbers", 1, 2, 3), Is.EqualTo(6));
+                    Assert.That(model.InvokeMethod<int>("AddThreeNumbers", 1, 2, 3), Is.EqualTo(6));
                 }
             }
 
@@ -284,7 +284,7 @@ class ModelMissingMethodOne:
                 {
                     var module = PyModule.FromString(nameof(InvokeTests), InvokeModule);
                     var model = module.GetAttr("PythonInvokeTestsModel").Invoke();
-                    Assert.That(model.Invoke<int>("AddTwoNumbers", 1, 2), Is.EqualTo(3));
+                    Assert.That(model.InvokeMethod<int>("AddTwoNumbers", 1, 2), Is.EqualTo(3));
                 }
             }
 

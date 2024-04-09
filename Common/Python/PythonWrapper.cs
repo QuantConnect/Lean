@@ -69,11 +69,10 @@ namespace QuantConnect.Python
         /// <param name="methodName">The name of the method to invoke</param>
         /// <param name="args">The arguments to call the method with</param>
         /// <returns>The return value of the called method converted into the <typeparamref name="T"/> type</returns>
-        public static T Invoke<T>(this PyObject model, string methodName, params object[] args)
+        public static T InvokeMethod<T>(this PyObject model, string methodName, params object[] args)
         {
             using var _ = Py.GIL();
-            var method = model.GetMethod(methodName);
-            return method.Invoke(args.Select(arg => arg.ToPython()).ToArray()).As<T>();
+            return InvokeMethodImpl(model, methodName, args).As<T>();
         }
 
         /// <summary>
@@ -82,11 +81,44 @@ namespace QuantConnect.Python
         /// <param name="model">The <see cref="PyObject"/> instance</param>
         /// <param name="methodName">The name of the method to invoke</param>
         /// <param name="args">The arguments to call the method with</param>
-        public static void Invoke(this PyObject model, string methodName, params object[] args)
+        public static void InvokeMethod(this PyObject model, string methodName, params object[] args)
+        {
+            InvokeMethodImpl(model, methodName, args);
+        }
+
+        /// <summary>
+        /// Invokes the given <see cref="PyObject"/> method with the specified arguments
+        /// </summary>
+        /// <param name="method">The method to invoke</param>
+        /// <param name="args">The arguments to call the method with</param>
+        /// <returns>The return value of the called method converted into the <typeparamref name="T"/> type</returns>
+        public static T Invoke<T>(this PyObject method, params object[] args)
         {
             using var _ = Py.GIL();
-            var method = model.GetMethod(methodName);
-            method.Invoke(args.Select(arg => arg.ToPython()).ToArray());
+            return InvokeMethodImpl(method, args).As<T>();
+        }
+
+        /// <summary>
+        /// Invokes the given <see cref="PyObject"/> method with the specified arguments
+        /// </summary>
+        /// <param name="method">The method to invoke</param>
+        /// <param name="args">The arguments to call the method with</param>
+        public static void Invoke(this PyObject method, params object[] args)
+        {
+            InvokeMethodImpl(method, args);
+        }
+
+        private static PyObject InvokeMethodImpl(PyObject model, string methodName, params object[] args)
+        {
+            using var _ = Py.GIL();
+            PyObject method = model.GetMethod(methodName);
+            return InvokeMethodImpl(method, args);
+        }
+
+        private static PyObject InvokeMethodImpl(PyObject method, params object[] args)
+        {
+            using var _ = Py.GIL();
+            return method.Invoke(args.Select(arg => arg.ToPython()).ToArray());
         }
     }
 }
