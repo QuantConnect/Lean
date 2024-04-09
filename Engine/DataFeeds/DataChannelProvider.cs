@@ -50,8 +50,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected static bool IsStreamingType(SubscriptionDataConfig configuration)
         {
             var dataTypeInstance = configuration.Type.GetBaseDataInstance();
-            return dataTypeInstance.GetSource(configuration, DateTime.UtcNow, true)
-                       .TransportMedium == SubscriptionTransportMedium.Streaming;
+            var source = dataTypeInstance.GetSource(configuration, DateTime.UtcNow, true);
+            return source != null && source.TransportMedium == SubscriptionTransportMedium.Streaming;
         }
     }
 }

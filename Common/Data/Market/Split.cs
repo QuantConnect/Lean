@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -110,7 +110,7 @@ namespace QuantConnect.Data.Market
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             // this data is derived from map files and factor files in backtesting
-            throw new NotImplementedException("This method is not supposed to be called on the Split type.");
+            return null;
         }
 
         /// <summary>

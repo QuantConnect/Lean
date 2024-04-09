@@ -171,7 +171,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             // allow all ticks
             if (config.Resolution != Resolution.Tick)
             {
-                var timeBasedFilter = new TimeBasedFilter { EndTimeLocal = request.EndTimeLocal, StartTimeLocal = request.StartTimeLocal };
+                var timeBasedFilter = new TimeBasedFilter(request);
                 reader = new FilterEnumerator<BaseData>(reader, timeBasedFilter.Filter);
             }
 
@@ -196,12 +196,19 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// </summary>
         private class TimeBasedFilter
         {
+            public Type RequestedType { get; set; }
             public DateTime EndTimeLocal { get; set; }
             public DateTime StartTimeLocal { get; set; }
+            public TimeBasedFilter(HistoryRequest request)
+            {
+                RequestedType = request.DataType;
+                EndTimeLocal = request.EndTimeLocal;
+                StartTimeLocal = request.StartTimeLocal;
+            }
             public bool Filter(BaseData data)
             {
-                // filter out all aux data. TODO: what if we are asking for aux data?
-                if (data.DataType == MarketDataType.Auxiliary) return false;
+                // filter out all aux data, unless if we are asking for aux data
+                if (data.DataType == MarketDataType.Auxiliary && data.GetType() != RequestedType) return false;
                 // filter out future data
                 if (data.EndTime > EndTimeLocal) return false;
                 // filter out data before the start

@@ -142,7 +142,7 @@ namespace QuantConnect.Python
 
             IEnumerable<string> columns = _standardColumns;
 
-            if (IsCustomData)
+            if (IsCustomData || ((IBaseData)data).DataType == MarketDataType.Auxiliary)
             {
                 var keys = (data as DynamicData)?.GetStorageDictionary()
                     // if this is a PythonData instance we add in '__typename' which we don't want into the data frame

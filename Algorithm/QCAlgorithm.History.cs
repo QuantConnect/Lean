@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Algorithm
 {
@@ -1063,6 +1064,12 @@ namespace QuantConnect.Algorithm
                     // filter out any existing subscriptions that could be of Quote type
                     // This could happen if they were Resolution.Minute/Second/Tick
                     return configs.Where(s => s.TickType != TickType.Quote);
+                }
+
+                if (symbol.IsCanonical() && configs.Count > 1)
+                {
+                    // option/future (canonicals) might add in a ZipEntryName auxiliary data type used for selection, we filter it out from history requests by default
+                    return configs.Where(s => s.Type != typeof(ZipEntryName));
                 }
 
                 return configs;
