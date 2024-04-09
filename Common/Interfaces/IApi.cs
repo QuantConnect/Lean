@@ -457,6 +457,7 @@ namespace QuantConnect.Interfaces
         /// <param name="organizationId">Organization ID we would like to get the Object Store from</param>
         /// <param name="key">Key for the Object Store file</param>
         /// <returns><see cref="PropertiesObjectStoreResponse"/></returns>
+        /// <remarks>It does not work when the object store is a directory</remarks>
         public PropertiesObjectStoreResponse GetObjectStoreProperties(string organizationId, string key);
 
         /// <summary>
