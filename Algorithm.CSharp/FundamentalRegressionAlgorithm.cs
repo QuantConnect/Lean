@@ -69,10 +69,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Request historical fundamental data for symbols
-            var history = History<Fundamental>(Securities.Keys, new TimeSpan(1, 0, 0, 0)).ToList();
-            if(history.Count != 1)
+            var history = History<Fundamental>(Securities.Keys, new TimeSpan(2, 0, 0, 0)).ToList();
+            if(history.Count != 2)
             {
-                throw new Exception($"Unexpected {nameof(Fundamental)} history count {history.Count}! Expected 1");
+                throw new Exception($"Unexpected {nameof(Fundamental)} history count {history.Count}! Expected 2");
             }
 
             if (history[0].Values.Count != 2)
@@ -195,7 +195,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 14;
+        public virtual int AlgorithmHistoryDataPoints => 16;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

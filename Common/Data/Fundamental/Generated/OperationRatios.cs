@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Definition of the OperationRatios class
     /// </summary>
-    public class OperationRatios : ReusuableCLRObject
+    public class OperationRatios : FundamentalTimeDependentProperty
     {
         /// <summary>
         /// The growth in the company's revenue on a percentage basis. Morningstar calculates the growth percentage based on the underlying revenue data reported in the Income Statement within the company filings or reports.
@@ -728,16 +728,20 @@ namespace QuantConnect.Data.Fundamental
         public LossRatio LossRatio => _lossRatio ??= new(_timeProvider, _securityIdentifier);
         private LossRatio _lossRatio;
 
-        private readonly ITimeProvider _timeProvider;
-        private readonly SecurityIdentifier _securityIdentifier;
-
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public OperationRatios(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
+            : base(timeProvider, securityIdentifier)
         {
-            _timeProvider = timeProvider;
-            _securityIdentifier = securityIdentifier;
+        }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        public override FundamentalTimeDependentProperty Clone(ITimeProvider timeProvider)
+        {
+            return new OperationRatios(timeProvider, _securityIdentifier);
         }
     }
 }

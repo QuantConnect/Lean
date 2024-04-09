@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Definition of the EarningRatios class
     /// </summary>
-    public class EarningRatios : ReusuableCLRObject
+    public class EarningRatios : FundamentalTimeDependentProperty
     {
         /// <summary>
         /// The growth in the company's diluted earnings per share (EPS) on a percentage basis. Morningstar calculates the annualized growth percentage based on the underlying diluted EPS reported in the Income Statement within the company filings or reports.
@@ -118,16 +118,20 @@ namespace QuantConnect.Data.Fundamental
         public NormalizedBasicEPSGrowth NormalizedBasicEPSGrowth => _normalizedBasicEPSGrowth ??= new(_timeProvider, _securityIdentifier);
         private NormalizedBasicEPSGrowth _normalizedBasicEPSGrowth;
 
-        private readonly ITimeProvider _timeProvider;
-        private readonly SecurityIdentifier _securityIdentifier;
-
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public EarningRatios(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
+            : base(timeProvider, securityIdentifier)
         {
-            _timeProvider = timeProvider;
-            _securityIdentifier = securityIdentifier;
+        }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        public override FundamentalTimeDependentProperty Clone(ITimeProvider timeProvider)
+        {
+            return new EarningRatios(timeProvider, _securityIdentifier);
         }
     }
 }

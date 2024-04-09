@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Definition of the AssetClassification class
     /// </summary>
-    public class AssetClassification : ReusuableCLRObject
+    public class AssetClassification : FundamentalTimeDependentProperty
     {
         /// <summary>
         /// The purpose of the Stock Types is to group companies according to the underlying fundamentals of their business. They answer the question: If I buy this stock, what kind of company am I buying? Unlike the style box, the emphasis with the Stock Types is on income statement, balance sheet, and cash-flow data-not price data or valuation multiples. We focus on the company, not the stock. Morningstar calculates this figure in-house on a monthly basis.
@@ -181,16 +181,20 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("3016")]
         public int CANNAICS => FundamentalService.Get<int>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.AssetClassification_CANNAICS);
 
-        private readonly ITimeProvider _timeProvider;
-        private readonly SecurityIdentifier _securityIdentifier;
-
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public AssetClassification(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
+            : base(timeProvider, securityIdentifier)
         {
-            _timeProvider = timeProvider;
-            _securityIdentifier = securityIdentifier;
+        }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        public override FundamentalTimeDependentProperty Clone(ITimeProvider timeProvider)
+        {
+            return new AssetClassification(timeProvider, _securityIdentifier);
         }
     }
 }

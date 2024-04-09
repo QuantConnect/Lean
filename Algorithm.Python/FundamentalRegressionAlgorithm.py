@@ -49,14 +49,18 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
             raise ValueError(f"Unexpected Fundamental count {len(fundamentals)}! Expected 2")
 
         # Request historical fundamental data for symbols
-        history = self.History(Fundamental, TimeSpan(1, 0, 0, 0))
-        if len(history) != 2:
-            raise ValueError(f"Unexpected Fundamental history count {len(history)}! Expected 2")
+        history = self.History(Fundamental, TimeSpan(2, 0, 0, 0))
+        if len(history) != 4:
+            raise ValueError(f"Unexpected Fundamental history count {len(history)}! Expected 4")
 
         for ticker in [ "AAPL", "SPY" ]:
             data = history.loc[ticker]
             if data["value"][0] == 0:
                 raise ValueError(f"Unexpected {data} fundamental data")
+        if Object.ReferenceEquals(data.earningreports.iloc[0], data.earningreports.iloc[1]):
+            raise ValueError(f"Unexpected fundamental data instance duplication")
+        if data.earningreports.iloc[0]._timeProvider.GetUtcNow() == data.earningreports.iloc[1]._timeProvider.GetUtcNow():
+            raise ValueError(f"Unexpected fundamental data instance duplication")
 
         self.AssertFundamentalUniverseData()
 

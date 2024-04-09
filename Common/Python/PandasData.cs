@@ -15,6 +15,7 @@
 
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
 using System;
@@ -79,6 +80,7 @@ namespace QuantConnect.Python
         };
 
         private readonly Symbol _symbol;
+        private readonly bool _isFundamentalType;
         private readonly Dictionary<string, Serie> _series;
 
         private readonly IEnumerable<MemberInfo> _members = Enumerable.Empty<MemberInfo>();
@@ -131,6 +133,7 @@ namespace QuantConnect.Python
             }
 
             var type = data.GetType();
+            _isFundamentalType = type == typeof(Fundamental);
             IsCustomData = type.Namespace != typeof(Bar).Namespace;
             _symbol = ((IBaseData)data).Symbol;
 
@@ -191,28 +194,35 @@ namespace QuantConnect.Python
         /// <param name="baseData"><see cref="IBaseData"/> object that contains security data</param>
         public void Add(object baseData)
         {
+            var endTime = ((IBaseData)baseData).EndTime;
             foreach (var member in _members)
             {
                 // TODO field/property.GetValue is expensive
                 var key = member.Name.ToLowerInvariant();
-                var endTime = ((IBaseData)baseData).EndTime;
                 var propertyMember = member as PropertyInfo;
                 if (propertyMember != null)
                 {
-                    AddToSeries(key, endTime, propertyMember.GetValue(baseData));
+                    var propertyValue = propertyMember.GetValue(baseData);
+                    if (_isFundamentalType && propertyMember.PropertyType.IsAssignableTo(typeof(FundamentalTimeDependentProperty)))
+                    {
+                        propertyValue = ((FundamentalTimeDependentProperty)propertyValue).Clone(new FixedTimeProvider(endTime));
+                    }
+                    AddToSeries(key, endTime, propertyValue);
                     continue;
                 }
-                var fieldMember = member as FieldInfo;
-                if (fieldMember != null)
+                else
                 {
-                    AddToSeries(key, endTime, fieldMember.GetValue(baseData));
+                    var fieldMember = member as FieldInfo;
+                    if (fieldMember != null)
+                    {
+                        AddToSeries(key, endTime, fieldMember.GetValue(baseData));
+                    }
                 }
             }
 
             var storage = (baseData as DynamicData)?.GetStorageDictionary();
             if (storage != null)
             {
-                var endTime = ((IBaseData) baseData).EndTime;
                 var value = ((IBaseData) baseData).Value;
                 AddToSeries("value", endTime, value);
 
@@ -528,6 +538,16 @@ namespace QuantConnect.Python
 
                 Values.Add(value);
                 Times.Add(time);
+            }
+        }
+
+        private class FixedTimeProvider : ITimeProvider
+        {
+            private readonly DateTime _time;
+            public DateTime GetUtcNow() => _time;
+            public FixedTimeProvider(DateTime time)
+            {
+                _time = time;
             }
         }
     }
