@@ -607,7 +607,20 @@ namespace QuantConnect
         {
             using (Py.GIL())
             {
-                var method = instance.GetAttr(name);
+                PyObject method;
+
+                // Let's try first with snake-case style in case the user is using it
+                var snakeCasedNamed = name.ToSnakeCase();
+                if (snakeCasedNamed != name)
+                {
+                    method = instance.GetPythonMethodWithChecks(snakeCasedNamed);
+                    if (method != null)
+                    {
+                        return method;
+                    }
+                }
+
+                method = instance.GetAttr(name);
                 var pythonType = method.GetPythonType();
                 var isPythonDefined = pythonType.Repr().Equals("<class \'method\'>", StringComparison.Ordinal);
 
@@ -616,11 +629,7 @@ namespace QuantConnect
                     return method;
                 }
 
-                var snakeCasedNamed = name.ToSnakeCase();
-                if (snakeCasedNamed != name)
-                {
-                    return instance.GetPythonMethod(snakeCasedNamed);
-                }
+
 
                 return null;
             }

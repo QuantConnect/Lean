@@ -73,7 +73,7 @@ namespace QuantConnect.Python
         {
             using var _ = Py.GIL();
             var method = model.GetMethod(methodName);
-            return method.Invoke(args.Select(arg => arg.ToPython()).ToArray());
+            return method.Invoke(args.Select(arg => arg.ToPython()).ToArray()).As<T>();
         }
 
         /// <summary>
