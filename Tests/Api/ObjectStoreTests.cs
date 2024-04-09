@@ -18,6 +18,7 @@ using QuantConnect.Configuration;
 using System.Collections.Generic;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace QuantConnect.Tests.API
 {
@@ -27,28 +28,41 @@ namespace QuantConnect.Tests.API
         private const string _key = "/Ricardo";
         private readonly byte[] _data = new byte[3] { 1, 2, 3 };
 
-        [Test]
-        public void GetObjectStoreWorksAsExpected()
+        [TestCaseSource(nameof(GetObjectStoreWorksAsExpectedTestCases))]
+        public void GetObjectStoreWorksAsExpected(List<string> keys, bool isSuccessExpected)
         {
-            var keys = new List<string>()
-            {
-                "/orats_2024-02-17.json",
-                "/orats_2024-02-29.json"
-            };
-
             var path = Directory.GetCurrentDirectory() + "/StoreObjectFolder/";
             var result = ApiClient.GetObjectStore(TestOrganization, keys, path);
-            Assert.IsTrue(result);
-            DirectoryAssert.Exists(path);
-            FileAssert.Exists(new FileInfo(path + "/orats_2024-02-17.json"));
-            FileAssert.Exists(new FileInfo(path + "/orats_2024-02-29.json"));
+            if (isSuccessExpected)
+            {
+                Assert.IsTrue(result);
+                DirectoryAssert.Exists(path);
+                Assert.IsTrue(keys.Where(x => File.Exists(path + x) || Directory.Exists(path + x)).Any()); // For some test cases, just one of the keys is present in the Object Store.
+            }
+            else
+            {
+                Assert.IsFalse(result);
+            }
         }
 
-        [Test]
-        public void GetObjectStorePropertiesWorksAsExpected()
+        [TestCase("/orats_2024-02-29.json", true)]
+        [TestCase("/cli-projects.zip", true)]
+        [TestCase("/orats_2024-02-32.json", false)]
+        [TestCase("/mrm8488", false)]
+        [TestCase("/ETF_constrain_Alex.csv", true)]
+        [TestCase("/model", true)]
+        [TestCase("/dividend_20240312.json", true)]
+        public void GetObjectStorePropertiesWorksAsExpected(string key, bool isSuccessExpected)
         {
-            var result = ApiClient.GetObjectStoreProperties(TestOrganization, "//orats_2024-02-29.json");
-            Assert.IsTrue(result.Success);
+            var result = ApiClient.GetObjectStoreProperties(TestOrganization, key);
+            if (isSuccessExpected)
+            {
+                Assert.IsTrue(result.Success);
+            }
+            else
+            {
+                Assert.IsFalse(result.Success);
+            }
         }
 
         [Test]
@@ -91,5 +105,23 @@ namespace QuantConnect.Tests.API
             Assert.IsNotEmpty(result.Objects);
             Assert.AreEqual(path, result.Path);
         }
+
+        private static object[] GetObjectStoreWorksAsExpectedTestCases =
+        {
+            new object[] { new List<string> { "/orats_2024-02-17.json", "/orats_2024-02-29.json" }, true}, // Two keys present
+            new object[] { new List<string> {}, false}, // No key is given
+            new object[] { new List<string> { "/orats_2024-02-17.json", "/orats_2024-02-32.json" }, true}, // One key is present and the other one not
+            new object[] { new List<string> { "/orats_2024-02-32.json" }, false}, // The key is not present
+            new object[] { new List<string> { "/mrm8488" }, true}, // The type of the object store file is directory
+            new object[] { new List<string> { "/ETF_constrain_Alex.csv" }, true}, // The type of the object store file is text/plain
+            new object[] { new List<string> { "/model" }, true}, // The type of the object store file is application/octet-stream
+            new object[] { new List<string> { "/dividend_20240312.json" }, true}, // The type of the object store file is application/x-empty
+            new object[] { new List<string> {
+                "/cli-projects.zip",
+                "/500MB_big_file.txt",
+                "/orats_2024-01-31.json",
+                "/orats_2024-03-06.json"
+            }, true} // Heavy object store files
+        };
     }
 }

@@ -1489,12 +1489,12 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Download the object store associated with the given organization ID and key
+        /// Download the object store files associated with the given organization ID and key
         /// </summary>
-        /// <param name="organizationId">Organization ID we would like to get the Object Store from</param>
+        /// <param name="organizationId">Organization ID we would like to get the Object Store files from</param>
         /// <param name="keys">Keys for the Object Store files</param>
-        /// <param name="destinationFolder">Folder in which the object will be stored</param>
-        /// <returns>True if the object was retrieved correctly, false otherwise</returns>
+        /// <param name="destinationFolder">Folder in which the object store files will be stored</param>
+        /// <returns>True if the object store files were retrieved correctly, false otherwise</returns>
         public bool GetObjectStore(string organizationId, List<string> keys, string destinationFolder = null)
         {
             var request = new RestRequest("object/get", Method.POST)
@@ -1502,74 +1502,64 @@ namespace QuantConnect.Api
                 RequestFormat = DataFormat.Json
             };
 
-            var obj = new Dictionary<string, object>
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
             {
-                { "organizationId", organizationId },
-                { "keys", keys }
-            };
-
-            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
+                organizationId,
+                keys
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out GetObjectStoreResponse result);
 
             if (result == null || !result.Success)
             {
-                Log.Error($"Api.GetObjectStore(): Failed to get the jobId to request the download URL for the object store."
-                    + result != null ? $" Errors: {result.Errors}" : "");
+                Log.Error($"Api.GetObjectStore(): Failed to get the jobId to request the download URL for the object store files."
+                    + (result != null ? $" Errors: {string.Join(",", result.Errors)}" : ""));
                 return false;
             }
 
             var jobId = result.JobId;
-            obj = new Dictionary<string, object>
-            {
-                { "organizationId", organizationId},
-                { "jobId", jobId }
-            };
-
             var getUrlRequest = new RestRequest("object/get", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
-            getUrlRequest.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
+            getUrlRequest.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                organizationId,
+                jobId
+            }), ParameterType.RequestBody);
 
             var frontier = DateTime.Now + TimeSpan.FromMinutes(5);
-            while (string.IsNullOrEmpty(result.Url) && (DateTime.Now < frontier))
+            while (string.IsNullOrEmpty(result?.Url) && (DateTime.Now < frontier))
             {
                 Thread.Sleep(3000);
                 ApiConnection.TryRequest(getUrlRequest, out result);
             }
 
-            if (result == null
-                || !result.Success
-                || string.IsNullOrEmpty(result.Url))
+            if (result == null || string.IsNullOrEmpty(result.Url))
             {
                 Log.Error($"Api.GetObjectStore(): Failed to get the download URL from the jobId {jobId}."
-                    + result != null ? $" Errors: {result.Errors}" : "");
+                    + (result != null ? $" Errors: {string.Join(",", result.Errors)}" : ""));
                 return false;
             }
 
-            string directory = Directory.GetCurrentDirectory();
-            if (!string.IsNullOrEmpty(destinationFolder))
-            {
-                // Make sure the directory exist before writing
-                directory = Path.GetDirectoryName(destinationFolder);
-                if (!Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-            }
+            string directory = destinationFolder ?? Directory.GetCurrentDirectory();
 
             try
             {
+                if (_client.Value.Timeout != TimeSpan.FromMinutes(20))
+                {
+                    _client.Value.Timeout = TimeSpan.FromMinutes(20);
+                }
+
                 // Download the file
                 var uri = new Uri(result.Url);
                 using var byteArray = _client.Value.GetByteArrayAsync(uri);
 
                 Compression.UnzipToFolder(byteArray.Result, directory);
             }
-            catch
+            catch (Exception e)
             {
-                Log.Error($"Api.GetObjectStore(): Failed to download zip for path ({directory})");
+                Log.Error($"Api.GetObjectStore(): Failed to download zip for path ({directory}). Error: {e.Message}");
                 return false;
             }
 
@@ -1582,6 +1572,7 @@ namespace QuantConnect.Api
         /// <param name="organizationId">Organization ID we would like to get the Object Store from</param>
         /// <param name="key">Key for the Object Store file</param>
         /// <returns><see cref="PropertiesObjectStoreResponse"/></returns>
+        /// <remarks>It does not work when the object store is a directory</remarks>
         public PropertiesObjectStoreResponse GetObjectStoreProperties(string organizationId, string key)
         {
             var request = new RestRequest("object/properties", Method.POST)
@@ -1591,9 +1582,13 @@ namespace QuantConnect.Api
 
             request.AddParameter("organizationId", organizationId);
             request.AddParameter("key", key);
-            request.AlwaysMultipartFormData = true;
 
             ApiConnection.TryRequest(request, out PropertiesObjectStoreResponse result);
+
+            if (result == null || !result.Success)
+            {
+                Log.Error($"Api.ObjectStore(): Failed to get the properties for the object store key {key}." + (result != null ? $" Errors: {string.Join(",", result.Errors)}" : ""));
+            }
             return result;
         }
 
