@@ -72,7 +72,7 @@ namespace QuantConnect.Python
         public static T InvokeMethod<T>(this PyObject model, string methodName, params object[] args)
         {
             using var _ = Py.GIL();
-            return InvokeMethodImpl(model, methodName, args).As<T>();
+            return InvokeMethodImpl(model, methodName, args).GetAndDispose<T>();
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace QuantConnect.Python
         public static T Invoke<T>(this PyObject method, params object[] args)
         {
             using var _ = Py.GIL();
-            return InvokeMethodImpl(method, args).As<T>();
+            return InvokeMethodImpl(method, args).GetAndDispose<T>();
         }
 
         /// <summary>
@@ -103,9 +103,9 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="method">The method to invoke</param>
         /// <param name="args">The arguments to call the method with</param>
-        public static void Invoke(this PyObject method, params object[] args)
+        public static PyObject Invoke(this PyObject method, params object[] args)
         {
-            InvokeMethodImpl(method, args);
+            return InvokeMethodImpl(method, args);
         }
 
         private static PyObject InvokeMethodImpl(PyObject model, string methodName, params object[] args)

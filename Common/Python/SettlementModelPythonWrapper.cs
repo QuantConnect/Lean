@@ -22,16 +22,14 @@ namespace QuantConnect.Python
     /// <summary>
     /// Provides an implementation of <see cref="ISettlementModel"/> that wraps a <see cref="PyObject"/> object
     /// </summary>
-    public class SettlementModelPythonWrapper : ISettlementModel
+    public class SettlementModelPythonWrapper : BasePythonWrapper<ISettlementModel>, ISettlementModel
     {
-        private readonly dynamic _model;
-
         /// Constructor for initialising the <see cref="SettlementModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Settlement Python Model</param>
         public SettlementModelPythonWrapper(PyObject model)
+            : base(model)
         {
-            _model = model.ValidateImplementationOf<ISettlementModel>();
         }
 
         /// <summary>
@@ -40,10 +38,7 @@ namespace QuantConnect.Python
         /// <param name="applyFundsParameters">The funds application parameters</param>
         public void ApplyFunds(ApplyFundsSettlementModelParameters applyFundsParameters)
         {
-            using (Py.GIL())
-            {
-                _model.ApplyFunds(applyFundsParameters);
-            }
+            InvokeMethod(nameof(ApplyFunds), applyFundsParameters);
         }
 
         /// <summary>
@@ -52,10 +47,7 @@ namespace QuantConnect.Python
         /// <param name="settlementParameters">The settlement parameters</param>
         public void Scan(ScanSettlementModelParameters settlementParameters)
         {
-            using (Py.GIL())
-            {
-                _model.Scan(settlementParameters);
-            }
+            InvokeMethod(nameof(Scan), settlementParameters);
         }
 
         /// <summary>
@@ -65,13 +57,13 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var result = _model.GetUnsettledCash();
+                var result = InvokeMethod<CashAmount?>(nameof(GetUnsettledCash));
                 if (result == null)
                 {
                     return default;
                 }
 
-                return result;
+                return result.Value;
             }
         }
     }

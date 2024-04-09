@@ -25,6 +25,12 @@ namespace QuantConnect.Python
     {
         private PyObject _instance;
         private readonly ConcurrentDictionary<string, PyObject> _pythonMethods;
+        private readonly ConcurrentDictionary<string, string> _pythonPropertyNames;
+
+        /// <summary>
+        /// Gets the underlying python instance
+        /// </summary>
+        protected PyObject Instance => _instance;
 
         /// <summary>
         /// Creates a new instance of the <see cref="BasePythonWrapper"/> class
@@ -39,7 +45,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="instance">The underlying python instance</param>
         public BasePythonWrapper(PyObject instance)
-            : base()
+            : this()
         {
             _instance = instance;
         }
@@ -48,10 +54,54 @@ namespace QuantConnect.Python
         /// Sets the python instance
         /// </summary>
         /// <param name="instance">The underlying python instance</param>
-        protected void SetPythonInstance(PyObject instance)
+        public virtual void SetPythonInstance(PyObject instance)
         {
             _instance = instance;
             _pythonMethods.Clear();
+        }
+
+        /// <summary>
+        /// Gets the Python instance property with the specified name
+        /// </summary>
+        /// <param name="propertyName">The name of the property</param>
+        public T GetProperty<T>(string propertyName)
+        {
+            using var _ = Py.GIL();
+
+
+            return _instance.GetAttr(GetPropertyName(propertyName)).GetAndDispose<T>();
+        }
+
+        /// <summary>
+        /// Sets the Python instance property with the specified name
+        /// </summary>
+        /// <param name="propertyName">The name of the property</param>
+        /// <param name="value">The property value</param>
+        public void SetProperty(string propertyName, object value)
+        {
+            using var _ = Py.GIL();
+            _instance.SetAttr(GetPropertyName(propertyName), value.ToPython());
+        }
+
+        /// <summary>
+        /// Gets the Python instance property with the specified name
+        /// </summary>
+        /// <param name="propertyName">The name of the property</param>
+        public PyObject GetProperty(string propertyName)
+        {
+            using var _ = Py.GIL();
+            return _instance.GetAttr(GetPropertyName(propertyName));
+        }
+
+        /// <summary>
+        /// Determines whether the Python instance has the specified attribute
+        /// </summary>
+        /// <param name="name">The attribute name</param>
+        /// <returns>Whether the Python instance has the specified attribute</returns>
+        public bool HasAttr(string name)
+        {
+            using var _ = Py.GIL();
+            return _instance.HasAttr(name) || _instance.HasAttr(name.ToSnakeCase());
         }
 
         /// <summary>
@@ -59,7 +109,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="methodName">The name of the method</param>
         /// <returns>The matched method</returns>
-        protected PyObject GetMethod(string methodName)
+        public PyObject GetMethod(string methodName)
         {
             if (!_pythonMethods.TryGetValue(methodName, out var method))
             {
@@ -75,7 +125,7 @@ namespace QuantConnect.Python
         /// <param name="methodName">The name of the method</param>
         /// <param name="args">The arguments to call the method with</param>
         /// <returns>The returned valued converted to the given type</returns>
-        protected T InvokeMethod<T>(string methodName, params object[] args)
+        public T InvokeMethod<T>(string methodName, params object[] args)
         {
             using var _ = Py.GIL();
             var method = GetMethod(methodName);
@@ -87,11 +137,50 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="methodName">The name of the method</param>
         /// <param name="args">The arguments to call the method with</param>
-        protected void InvokeMethod(string methodName, params object[] args)
+        protected PyObject InvokeMethod(string methodName, params object[] args)
         {
             using var _ = Py.GIL();
             var method = GetMethod(methodName);
-            method.Invoke(args);
+            return method.Invoke(args);
+        }
+
+        private string GetPropertyName(string propertyName)
+        {
+            if (!_pythonPropertyNames.TryGetValue(propertyName, out var pythonPropertyName))
+            {
+                pythonPropertyName = propertyName.ToSnakeCase();
+                if (!_instance.HasAttr(pythonPropertyName))
+                {
+                    pythonPropertyName = propertyName;
+                }
+                _pythonPropertyNames[propertyName] = pythonPropertyName;
+            }
+            return pythonPropertyName;
+        }
+    }
+
+    /// <summary>
+    /// Base class for Python wrapper classes that implement a specific interface
+    /// </summary>
+    public class BasePythonWrapper<TInterface> : BasePythonWrapper
+    {
+        /// <inheritdoc/>
+        public BasePythonWrapper()
+            : base()
+        {
+        }
+
+        /// <inheritdoc/>
+        public BasePythonWrapper(PyObject instance)
+            : base()
+        {
+            SetPythonInstance(instance);
+        }
+
+        /// <inheritdoc/>
+        public override void SetPythonInstance(PyObject instance)
+        {
+            base.SetPythonInstance(instance.ValidateImplementationOf<TInterface>());
         }
     }
 }

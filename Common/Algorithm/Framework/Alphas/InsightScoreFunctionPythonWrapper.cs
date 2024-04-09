@@ -16,23 +16,22 @@
 using System;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
     /// A python implementation insight evaluator wrapper
     /// </summary>
-    public class InsightScoreFunctionPythonWrapper : IInsightScoreFunction
+    public class InsightScoreFunctionPythonWrapper : BasePythonWrapper<IInsightScoreFunction>, IInsightScoreFunction
     {
-        private readonly dynamic _model;
-
         /// <summary>
         /// Creates a new python wrapper instance
         /// </summary>
         /// <param name="insightEvaluator">The python instance to wrap</param>
         public InsightScoreFunctionPythonWrapper(PyObject insightEvaluator)
+            : base(insightEvaluator)
         {
-            _model = insightEvaluator;
         }
 
         /// <summary>
@@ -40,10 +39,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         public void Score(InsightManager insightManager, DateTime utcTime)
         {
-            using (Py.GIL())
-            {
-                var insights = _model.Score(insightManager, utcTime);
-            }
+            InvokeMethod(nameof(Score), insightManager, utcTime);
         }
     }
 }
