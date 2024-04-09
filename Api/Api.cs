@@ -1528,8 +1528,8 @@ namespace QuantConnect.Api
                 jobId
             }), ParameterType.RequestBody);
 
-            var frontier = DateTime.Now + TimeSpan.FromMinutes(5);
-            while (string.IsNullOrEmpty(result?.Url) && (DateTime.Now < frontier))
+            var frontier = DateTime.UtcNow + TimeSpan.FromMinutes(5);
+            while (string.IsNullOrEmpty(result?.Url) && (DateTime.UtcNow < frontier))
             {
                 Thread.Sleep(3000);
                 ApiConnection.TryRequest(getUrlRequest, out result);
@@ -1542,7 +1542,7 @@ namespace QuantConnect.Api
                 return false;
             }
 
-            string directory = destinationFolder ?? Directory.GetCurrentDirectory();
+            var directory = destinationFolder ?? Directory.GetCurrentDirectory();
 
             try
             {
