@@ -411,6 +411,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // fetch the new source, using the data time zone for the date
                 var newSource = _dataFactory.GetSource(_config, date, false);
+                if (newSource == null)
+                {
+                    // move to the next day
+                    continue;
+                }
 
                 // check if we should create a new subscription factory
                 var sourceChanged = _source != newSource && newSource.Source != "";

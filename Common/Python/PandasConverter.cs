@@ -67,7 +67,7 @@ namespace QuantConnect.Python
 
             foreach (var slice in data)
             {
-                AddSliceDataTypeDataToDict(slice, requestedTick, requestedTradeBar, requestedQuoteBar, sliceDataDict, ref maxLevels);
+                AddSliceDataTypeDataToDict(slice, requestedTick, requestedTradeBar, requestedQuoteBar, sliceDataDict, ref maxLevels, dataType);
             }
 
             using (Py.GIL())
@@ -241,7 +241,7 @@ namespace QuantConnect.Python
         /// <summary>
         /// Adds each slice data corresponding to the requested data type to the pandas data dictionary
         /// </summary>
-        private void AddSliceDataTypeDataToDict(Slice slice, bool requestedTick, bool requestedTradeBar, bool requestedQuoteBar, IDictionary<SecurityIdentifier, PandasData> sliceDataDict, ref int maxLevels)
+        private void AddSliceDataTypeDataToDict(Slice slice, bool requestedTick, bool requestedTradeBar, bool requestedQuoteBar, IDictionary<SecurityIdentifier, PandasData> sliceDataDict, ref int maxLevels, Type dataType = null)
         {
             HashSet<SecurityIdentifier> _addedData = null;
 
@@ -259,6 +259,13 @@ namespace QuantConnect.Python
                     var tick = requestedTick ? baseData as Tick : null;
                     if(tick == null)
                     {
+                        if (!requestedTradeBar && !requestedQuoteBar && dataType != null && baseData.GetType().IsAssignableTo(dataType))
+                        {
+                            // support for auxiliary data history requests
+                            value.Add(baseData);
+                            continue;
+                        }
+
                         // we add both quote and trade bars for each symbol at the same time, because they share the row in the data frame else it will generate 2 rows per series
                         if (requestedTradeBar && requestedQuoteBar)
                         {
