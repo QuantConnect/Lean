@@ -61,10 +61,10 @@ namespace QuantConnect.Api
         public int ProjectId { get; set; }
 
         /// <summary>
-        /// ID of the project file
+        /// ID of the project file, can be null
         /// </summary>
         [JsonProperty(PropertyName = "id")]
-        public int Id { get; set; }
+        public int? Id { get; set; }
     }
 
     /// <summary>
