@@ -42,5 +42,23 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "logs")]
         public List<string> Logs { get; set; }
+
+        /// <summary>
+        /// Project Id we sent for compile
+        /// </summary>
+        [JsonProperty(PropertyName = "projectId")]
+        public int ProjectId { get; set; }
+
+        /// <summary>
+        /// Signature key of compilation
+        /// </summary>
+        [JsonProperty(PropertyName = "signature")]
+        public string Signature {  get; set; }
+
+        /// <summary>
+        /// Signature order of files to be compiled
+        /// </summary>
+        [JsonProperty(PropertyName = "signatureOrder")]
+        public List<string> SignatureOrder { get; set; }
     }
 }

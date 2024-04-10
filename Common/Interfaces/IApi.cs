@@ -59,7 +59,7 @@ namespace QuantConnect.Interfaces
         /// <param name="name">The name of the new file</param>
         /// <param name="content">The content of the new file</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes information about the newly created file</returns>
-        ProjectFilesResponse AddProjectFile(int projectId, string name, string content);
+        RestResponse AddProjectFile(int projectId, string name, string content);
 
         /// <summary>
         /// Update the name of a file
@@ -183,11 +183,12 @@ namespace QuantConnect.Interfaces
         RestResponse DeleteBacktest(int projectId, string backtestId);
 
         /// <summary>
-        /// Get a list of backtests for a specific project id
+        /// Get a list of backtest summaries for a specific project id
         /// </summary>
         /// <param name="projectId">Project id to search</param>
+        /// <param name="includeStatistics">True for include statistics in the response, false otherwise</param>
         /// <returns>BacktestList container for list of backtests</returns>
-        BacktestList ListBacktests(int projectId);
+        BacktestSummaryList ListBacktests(int projectId, bool includeStatistics = false);
 
         /// <summary>
         /// Estimate optimization with the specified parameters via QuantConnect.com API
@@ -440,5 +441,45 @@ namespace QuantConnect.Interfaces
         /// <param name="password">Password for basic authentication</param>
         /// <returns></returns>
         string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
+
+        /// <summary>
+        /// Download the object store associated with the given organization ID and key
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to get the Object Store from</param>
+        /// <param name="keys">Keys for the Object Store files</param>
+        /// <param name="destinationFolder">Folder in which the object will be stored</param>
+        /// <returns>True if the object was retrieved correctly, false otherwise</returns>
+        public bool GetObjectStore(string organizationId, List<string> keys, string destinationFolder = null);
+
+        /// <summary>
+        /// Get Object Store properties given the organization ID and the Object Store key
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to get the Object Store from</param>
+        /// <param name="key">Key for the Object Store file</param>
+        /// <returns><see cref="PropertiesObjectStoreResponse"/></returns>
+        /// <remarks>It does not work when the object store is a directory</remarks>
+        public PropertiesObjectStoreResponse GetObjectStoreProperties(string organizationId, string key);
+
+        /// <summary>
+        /// Upload files to the Object Store
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to upload the file to</param>
+        /// <param name="key">Key to the Object Store file</param>
+        /// <param name="objectData">File to be uploaded</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse SetObjectStore(string organizationId, string key, byte[] objectData);
+
+        /// <summary>
+        /// Request to delete Object Store metadata of a specific organization and key
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to delete the Object Store file from</param>
+        /// <param name="key">Key to the Object Store file</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse DeleteObjectStore(string organizationId, string key);
+
+        /// <summary>
+        /// Gets a list of LEAN versions with their corresponding basic descriptions
+        /// </summary>
+        public VersionsResponse ReadLeanVersions();
     }
 }
