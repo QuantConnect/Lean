@@ -50,6 +50,22 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         private readonly dynamic _onMarginCall;
         private readonly IAlgorithm _baseAlgorithm;
 
+        // QCAlgorithm methods that might be implemented in the python algorithm:
+        // We keep them to avoid the BasePythonWrapper caching and eventual lookup overhead since these methods are called quite frequently
+        private dynamic _onBrokerageDisconnect;
+        private dynamic _onBrokerageMessage;
+        private dynamic _onBrokerageReconnect;
+        private dynamic _onSplits;
+        private dynamic _onDividends;
+        private dynamic _onDelistings;
+        private dynamic _onSymbolChangedEvents;
+        private dynamic _onEndOfDay;
+        private dynamic _onMarginCallWarning;
+        private dynamic _onOrderEvent;
+        private dynamic _onAssignmentOrderEvent;
+        private dynamic _onSecuritiesChanged;
+        private dynamic _onFrameworkSecuritiesChanged;
+
         /// <summary>
         /// True if the underlying python algorithm implements "OnEndOfDay"
         /// </summary>
@@ -126,6 +142,21 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                                 // python will only use the last implemented, meaning only one will
                                 // be used and seen.
                             }
+
+                            // Initialize the python methods
+                            _onBrokerageDisconnect = _algorithm.GetMethod("OnBrokerageDisconnect");
+                            _onBrokerageMessage = _algorithm.GetMethod("OnBrokerageMessage");
+                            _onBrokerageReconnect = _algorithm.GetMethod("OnBrokerageReconnect");
+                            _onSplits = _algorithm.GetMethod("OnSplits");
+                            _onDividends = _algorithm.GetMethod("OnDividends");
+                            _onDelistings = _algorithm.GetMethod("OnDelistings");
+                            _onSymbolChangedEvents = _algorithm.GetMethod("OnSymbolChangedEvents");
+                            _onEndOfDay = _algorithm.GetMethod("OnEndOfDay");
+                            _onMarginCallWarning = _algorithm.GetMethod("OnMarginCallWarning");
+                            _onOrderEvent = _algorithm.GetMethod("OnOrderEvent");
+                            _onAssignmentOrderEvent = _algorithm.GetMethod("OnAssignmentOrderEvent");
+                            _onSecuritiesChanged = _algorithm.GetMethod("OnSecuritiesChanged");
+                            _onFrameworkSecuritiesChanged = _algorithm.GetMethod("OnFrameworkSecuritiesChanged");
                         }
                         attr.Dispose();
                     }
@@ -695,7 +726,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public void OnBrokerageDisconnect()
         {
-            InvokeMethod(nameof(OnBrokerageDisconnect));
+            _onBrokerageDisconnect();
         }
 
         /// <summary>
@@ -703,7 +734,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public void OnBrokerageMessage(BrokerageMessageEvent messageEvent)
         {
-            InvokeMethod(nameof(OnBrokerageMessage), messageEvent);
+            _onBrokerageMessage(messageEvent);
         }
 
         /// <summary>
@@ -711,7 +742,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public void OnBrokerageReconnect()
         {
-            InvokeMethod(nameof(OnBrokerageReconnect));
+            _onBrokerageReconnect();
         }
 
         /// <summary>
@@ -744,7 +775,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="splits">The current time slice splits</param>
         public void OnSplits(Splits splits)
         {
-            InvokeMethod(nameof(OnSplits), splits);
+            _onSplits(splits);
         }
 
         /// <summary>
@@ -753,7 +784,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="dividends">The current time slice dividends</param>
         public void OnDividends(Dividends dividends)
         {
-            InvokeMethod(nameof(OnDividends), dividends);
+            _onDividends(dividends);
         }
 
         /// <summary>
@@ -762,7 +793,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="delistings">The current time slice delistings</param>
         public void OnDelistings(Delistings delistings)
         {
-            InvokeMethod(nameof(OnDelistings), delistings);
+            _onDelistings(delistings);
         }
 
         /// <summary>
@@ -771,7 +802,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="symbolsChanged">The current time slice symbol changed events</param>
         public void OnSymbolChangedEvents(SymbolChangedEvents symbolsChanged)
         {
-            InvokeMethod(nameof(OnSymbolChangedEvents), symbolsChanged);
+            _onSymbolChangedEvents(symbolsChanged);
         }
 
         /// <summary>
@@ -793,7 +824,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         {
             try
             {
-                InvokeMethod(nameof(OnEndOfDay));
+                _onEndOfDay();
             }
             // If OnEndOfDay is not defined in the script, but OnEndOfDay(Symbol) is, a python exception occurs
             // Only throws if there is an error in its implementation body
@@ -818,7 +849,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         {
             try
             {
-                InvokeMethod(nameof(OnEndOfDay), symbol);
+                _onEndOfDay(symbol);
             }
             // If OnEndOfDay(Symbol) is not defined in the script, but OnEndOfDay is, a python exception occurs
             // Only throws if there is an error in its implementation body
@@ -876,7 +907,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public void OnMarginCallWarning()
         {
-            InvokeMethod(nameof(OnMarginCallWarning));
+            _onMarginCallWarning();
         }
 
         /// <summary>
@@ -886,7 +917,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="newEvent">Event information</param>
         public void OnOrderEvent(OrderEvent newEvent)
         {
-            InvokeMethod(nameof(OnOrderEvent), newEvent);
+            _onOrderEvent(newEvent);
         }
 
         /// <summary>
@@ -907,7 +938,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
         public void OnAssignmentOrderEvent(OrderEvent assignmentEvent)
         {
-            InvokeMethod(nameof(OnAssignmentOrderEvent), assignmentEvent);
+            _onAssignmentOrderEvent(assignmentEvent);
         }
 
         /// <summary>
@@ -916,7 +947,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="changes">Security additions/removals for this time step</param>
         public void OnSecuritiesChanged(SecurityChanges changes)
         {
-            InvokeMethod(nameof(OnSecuritiesChanged), changes);
+            _onSecuritiesChanged(changes);
         }
 
         /// <summary>
@@ -925,7 +956,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="changes">Security additions/removals for this time step</param>
         public void OnFrameworkSecuritiesChanged(SecurityChanges changes)
         {
-            InvokeMethod(nameof(OnFrameworkSecuritiesChanged), changes);
+            _onFrameworkSecuritiesChanged(changes);
         }
 
         /// <summary>

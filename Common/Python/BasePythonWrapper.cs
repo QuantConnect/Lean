@@ -38,6 +38,7 @@ namespace QuantConnect.Python
         public BasePythonWrapper()
         {
             _pythonMethods = new();
+            _pythonPropertyNames = new();
         }
 
         /// <summary>
@@ -58,6 +59,7 @@ namespace QuantConnect.Python
         {
             _instance = instance;
             _pythonMethods.Clear();
+            _pythonPropertyNames.Clear();
         }
 
         /// <summary>
