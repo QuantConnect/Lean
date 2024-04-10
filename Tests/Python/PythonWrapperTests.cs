@@ -188,6 +188,46 @@ namespace QuantConnect.Tests.Python
                 );
             }
 
+            [Test]
+            public void PEP8StyleCustomModelsWork()
+            {
+                AlgorithmRunner.RunLocalBacktest("CustomModelsPEP8Algorithm",
+                    new Dictionary<string, string>()
+                    {
+                        {"Total Orders", "63"},
+                        {"Average Win", "0.11%"},
+                        {"Average Loss", "-0.06%"},
+                        {"Compounding Annual Return", "-7.236%"},
+                        {"Drawdown", "2.400%"},
+                        {"Expectancy", "-0.187"},
+                        {"Start Equity", "100000"},
+                        {"End Equity", "99370.95"},
+                        {"Net Profit", "-0.629%"},
+                        {"Sharpe Ratio", "-1.47"},
+                        {"Sortino Ratio", "-2.086"},
+                        {"Probabilistic Sharpe Ratio", "21.874%"},
+                        {"Loss Rate", "70%"},
+                        {"Win Rate", "30%"},
+                        {"Profit-Loss Ratio", "1.73"},
+                        {"Alpha", "-0.102"},
+                        {"Beta", "0.122"},
+                        {"Annual Standard Deviation", "0.04"},
+                        {"Annual Variance", "0.002"},
+                        {"Information Ratio", "-4.126"},
+                        {"Tracking Error", "0.102"},
+                        {"Treynor Ratio", "-0.479"},
+                        {"Total Fees", "$62.25"},
+                        {"Estimated Strategy Capacity", "$52000000.00"},
+                        {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+                        {"Portfolio Turnover", "197.95%"},
+                        {"OrderListHash", "f19ae2dbd12a1a8cc4da90523a37dfdf"}
+                    },
+                    Language.Python,
+                    AlgorithmStatus.Completed,
+                    algorithmLocation: "../../../Algorithm.Python/CustomModelsPEP8Algorithm.py"
+                );
+            }
+
             private const string FullyImplemented =
                 @"
 from clr import AddReference
