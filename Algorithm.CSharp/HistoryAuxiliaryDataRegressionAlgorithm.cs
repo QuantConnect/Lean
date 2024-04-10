@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -36,6 +37,34 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2021, 1, 5);
 
             var aapl = AddEquity("AAPL", Resolution.Daily).Symbol;
+
+            // multi symbol request
+            var spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var multiSymbolRequest = History<Dividend>(new[] { aapl, spy }, 360, Resolution.Daily).ToList();
+            if (multiSymbolRequest.Count != 12)
+            {
+                throw new Exception($"Unexpected multi symbol dividend count: {multiSymbolRequest.Count}");
+            }
+
+            // continuous future mapping requests
+            var sp500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
+            var continuousFutureOpenInterestMapping = History<SymbolChangedEvent>(sp500, new DateTime(2007, 1, 1), new DateTime(2012, 1, 1),
+                dataMappingMode: DataMappingMode.OpenInterest).ToList();
+            if (continuousFutureOpenInterestMapping.Count != 9)
+            {
+                throw new Exception($"Unexpected continuous future mapping event count: {continuousFutureOpenInterestMapping.Count}");
+            }
+            var continuousFutureLastTradingDayMapping = History<SymbolChangedEvent>(sp500, new DateTime(2007, 1, 1),new DateTime(2012, 1, 1),
+                dataMappingMode: DataMappingMode.LastTradingDay).ToList();
+            if (continuousFutureLastTradingDayMapping.Count != 9)
+            {
+                throw new Exception($"Unexpected continuous future mapping event count: {continuousFutureLastTradingDayMapping.Count}");
+            }
+            // mapping dates should be different
+            if (Enumerable.SequenceEqual(continuousFutureOpenInterestMapping.Select(x => x.EndTime), continuousFutureLastTradingDayMapping.Select(x => x.EndTime)))
+            {
+                throw new Exception($"Unexpected continuous future mapping times");
+            }
 
             var dividends = History<Dividend>(aapl, 360).ToList();
             if (dividends.Count != 6)
@@ -142,7 +171,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 20;
+        public int AlgorithmHistoryDataPoints => 50;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

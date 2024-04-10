@@ -25,6 +25,21 @@ class HistoryAuxiliaryDataRegressionAlgorithm(QCAlgorithm):
 
         aapl = self.AddEquity("AAPL", Resolution.Daily).Symbol
 
+        # multi symbol request
+        spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+        multiSymbolRequest = self.History(Dividend, [ aapl, spy ], 360, Resolution.Daily)
+        if len(multiSymbolRequest) != 12:
+                raise ValueError(f"Unexpected multi symbol dividend count: {len(multiSymbolRequest)}")
+
+        # continuous future mapping requests
+        sp500 = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME)
+        continuousFutureOpenInterestMapping = self.History(SymbolChangedEvent, sp500, datetime(2007, 1, 1), datetime(2012, 1, 1), dataMappingMode = DataMappingMode.OpenInterest)
+        if len(continuousFutureOpenInterestMapping) != 9:
+                raise ValueError(f"Unexpected continuous future mapping event count: {len(continuousFutureOpenInterestMapping)}")
+        continuousFutureLastTradingDayMapping = self.History(SymbolChangedEvent, sp500, datetime(2007, 1, 1), datetime(2012, 1, 1), dataMappingMode = DataMappingMode.LastTradingDay)
+        if len(continuousFutureLastTradingDayMapping) != 9:
+                raise ValueError(f"Unexpected continuous future mapping event count: {len(continuousFutureLastTradingDayMapping)}")
+
         dividend = self.History(Dividend, aapl, 360)
         self.Debug(str(dividend))
         if len(dividend) != 6:
