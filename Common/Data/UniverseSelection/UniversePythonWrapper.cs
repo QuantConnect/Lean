@@ -27,7 +27,7 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class UniversePythonWrapper : Universe
     {
-        private readonly BasePythonWrapper _model;
+        private readonly BasePythonWrapper<Universe> _model;
 
         /// <summary>
         /// Gets the settings used for subscriptions added for this universe
@@ -86,7 +86,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public UniversePythonWrapper(PyObject universe) : base(null)
         {
-            _model = new BasePythonWrapper(universe);
+            _model = new BasePythonWrapper<Universe>(universe, false);
         }
 
         /// <summary>

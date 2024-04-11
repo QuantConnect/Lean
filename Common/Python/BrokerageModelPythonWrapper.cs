@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using Python.Runtime;
-using QLNet;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;

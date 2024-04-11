@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class PortfolioConstructionModelPythonWrapper : PortfolioConstructionModel
     {
-        private readonly BasePythonWrapper _model;
+        private readonly BasePythonWrapper<PortfolioConstructionModel> _model;
         private readonly bool _implementsDetermineTargetPercent;
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="model">Model defining how to build a portfolio from alphas</param>
         public PortfolioConstructionModelPythonWrapper(PyObject model)
         {
-            _model = new BasePythonWrapper(model);
+            _model = new BasePythonWrapper<PortfolioConstructionModel>(model, false);
             using (Py.GIL())
             {
                 foreach (var attributeName in new[] { "CreateTargets", "OnSecuritiesChanged" })

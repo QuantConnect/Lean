@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// </summary>
     public class AlphaModelPythonWrapper : AlphaModel
     {
-        private readonly BasePythonWrapper _model;
+        private readonly BasePythonWrapper<AlphaModel> _model;
 
         /// <summary>
         /// Defines a name for a framework model
@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="model">>Model that generates alpha</param>
         public AlphaModelPythonWrapper(PyObject model)
         {
-            _model = new BasePythonWrapper(model);
+            _model = new BasePythonWrapper<AlphaModel>(model, false);
             foreach (var attributeName in new[] { "Update", "OnSecuritiesChanged" })
             {
                 if (!_model.HasAttr(attributeName))

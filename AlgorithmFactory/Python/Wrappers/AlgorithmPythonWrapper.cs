@@ -43,7 +43,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
     /// <summary>
     /// Creates and wraps the algorithm written in python.
     /// </summary>
-    public class AlgorithmPythonWrapper : BasePythonWrapper, IAlgorithm
+    public class AlgorithmPythonWrapper : BasePythonWrapper<IAlgorithm>, IAlgorithm
     {
         private readonly PyObject _algorithm;
         private readonly dynamic _onData;
@@ -82,6 +82,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="moduleName">Name of the module that can be found in the PYTHONPATH</param>
         public AlgorithmPythonWrapper(string moduleName)
+            : base(false)
         {
             try
             {

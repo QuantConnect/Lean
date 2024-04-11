@@ -24,7 +24,7 @@ namespace QuantConnect.Python
     /// </summary>
     public class FeeModelPythonWrapper : FeeModel
     {
-        private readonly BasePythonWrapper _model;
+        private readonly BasePythonWrapper<FeeModel> _model;
         private bool _extendedVersion = true;
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace QuantConnect.Python
         /// <param name="model">Represents a model that simulates order fees</param>
         public FeeModelPythonWrapper(PyObject model)
         {
-            _model = new BasePythonWrapper(model);
+            _model = new BasePythonWrapper<FeeModel>(model, false);
         }
 
         /// <summary>

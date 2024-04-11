@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Concurrent;
 using Python.Runtime;
 
@@ -21,11 +22,15 @@ namespace QuantConnect.Python
     /// <summary>
     /// Base class for Python wrapper classes
     /// </summary>
-    public class BasePythonWrapper
+    public class BasePythonWrapper<TInterface>
     {
         private PyObject _instance;
+        private object _underlyingClrObject;
+        private Type _underlyingClrObjectType;
         private readonly ConcurrentDictionary<string, PyObject> _pythonMethods;
         private readonly ConcurrentDictionary<string, string> _pythonPropertyNames;
+
+        private readonly bool _validateInterface;
 
         /// <summary>
         /// Gets the underlying python instance
@@ -33,33 +38,45 @@ namespace QuantConnect.Python
         protected PyObject Instance => _instance;
 
         /// <summary>
-        /// Creates a new instance of the <see cref="BasePythonWrapper"/> class
+        /// Creates a new instance of the <see cref="BasePythonWrapper{TInterface}" /> class
         /// </summary>
-        public BasePythonWrapper()
+        /// <param name="validateInterface">Whether to perform validations for interface implementation</param>
+        public BasePythonWrapper(bool validateInterface = true)
         {
             _pythonMethods = new();
             _pythonPropertyNames = new();
+            _validateInterface = validateInterface;
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="BasePythonWrapper"/> class with the specified instance
+        /// Creates a new instance of the <see cref="BasePythonWrapper{TInterface}"/> class with the specified instance
         /// </summary>
         /// <param name="instance">The underlying python instance</param>
-        public BasePythonWrapper(PyObject instance)
-            : this()
+        /// <param name="validateInterface">Whether to perform validations for interface implementation</param>
+        public BasePythonWrapper(PyObject instance, bool validateInterface = true)
+            : this(validateInterface)
         {
-            _instance = instance;
+            SetPythonInstance(instance);
         }
 
         /// <summary>
         /// Sets the python instance
         /// </summary>
         /// <param name="instance">The underlying python instance</param>
-        public virtual void SetPythonInstance(PyObject instance)
+        public void SetPythonInstance(PyObject instance)
         {
-            _instance = instance;
-            _pythonMethods.Clear();
-            _pythonPropertyNames.Clear();
+            if (_instance != null)
+            {
+                _pythonMethods.Clear();
+                _pythonPropertyNames.Clear();
+            }
+
+            _instance = _validateInterface ? instance.ValidateImplementationOf<TInterface>() : instance;
+            _instance.TryConvert(out _underlyingClrObject);
+            if (_underlyingClrObject != null)
+            {
+                _underlyingClrObjectType = _underlyingClrObject.GetType();
+            }
         }
 
         /// <summary>
@@ -69,9 +86,17 @@ namespace QuantConnect.Python
         public T GetProperty<T>(string propertyName)
         {
             using var _ = Py.GIL();
+            return GetProperty(propertyName).GetAndDispose<T>();
+        }
 
-
-            return _instance.GetAttr(GetPropertyName(propertyName)).GetAndDispose<T>();
+        /// <summary>
+        /// Gets the Python instance property with the specified name
+        /// </summary>
+        /// <param name="propertyName">The name of the property</param>
+        public PyObject GetProperty(string propertyName)
+        {
+            using var _ = Py.GIL();
+            return _instance.GetAttr(GetPropertyName(propertyName));
         }
 
         /// <summary>
@@ -86,13 +111,13 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Gets the Python instance property with the specified name
+        /// Gets the Python instance event with the specified name
         /// </summary>
-        /// <param name="propertyName">The name of the property</param>
-        public PyObject GetProperty(string propertyName)
+        /// <param name="name">The name of the event</param>
+        public dynamic GetEvent(string name)
         {
             using var _ = Py.GIL();
-            return _instance.GetAttr(GetPropertyName(propertyName));
+            return _instance.GetAttr(GetPropertyName(name, true));
         }
 
         /// <summary>
@@ -146,43 +171,46 @@ namespace QuantConnect.Python
             return method.Invoke(args);
         }
 
-        private string GetPropertyName(string propertyName)
+        private string GetPropertyName(string propertyName, bool isEvent = false)
         {
             if (!_pythonPropertyNames.TryGetValue(propertyName, out var pythonPropertyName))
             {
-                pythonPropertyName = propertyName.ToSnakeCase();
-                if (!_instance.HasAttr(pythonPropertyName))
+                var snakeCasedPropertyName = propertyName.ToSnakeCase();
+
+                // If the object is actually a C# object (e.g. a child class of a C# class),
+                // we check which property was defined in the Python class (if any), either the snake-cased or the original name.
+                if (!isEvent && _underlyingClrObject != null)
                 {
-                    pythonPropertyName = propertyName;
+                    var property = _underlyingClrObjectType.GetProperty(propertyName);
+                    if (property != null)
+                    {
+                        var clrPropertyValue = property.GetValue(_underlyingClrObject);
+                        var pyObjectSnakeCasePropertyValue = _instance.GetAttr(snakeCasedPropertyName);
+
+                        if (!pyObjectSnakeCasePropertyValue.TryConvert(out object pyObjectSnakeCasePropertyClrValue, true) ||
+                            !ReferenceEquals(clrPropertyValue, pyObjectSnakeCasePropertyClrValue))
+                        {
+                            pythonPropertyName = snakeCasedPropertyName;
+                        }
+                        else
+                        {
+                            pythonPropertyName = propertyName;
+                        }
+                    }
                 }
+
+                if (pythonPropertyName == null)
+                {
+                    pythonPropertyName = snakeCasedPropertyName;
+                    if (!_instance.HasAttr(pythonPropertyName))
+                    {
+                        pythonPropertyName = propertyName;
+                    }
+                }
+
                 _pythonPropertyNames[propertyName] = pythonPropertyName;
             }
             return pythonPropertyName;
-        }
-    }
-
-    /// <summary>
-    /// Base class for Python wrapper classes that implement a specific interface
-    /// </summary>
-    public class BasePythonWrapper<TInterface> : BasePythonWrapper
-    {
-        /// <inheritdoc/>
-        public BasePythonWrapper()
-            : base()
-        {
-        }
-
-        /// <inheritdoc/>
-        public BasePythonWrapper(PyObject instance)
-            : base()
-        {
-            SetPythonInstance(instance);
-        }
-
-        /// <inheritdoc/>
-        public override void SetPythonInstance(PyObject instance)
-        {
-            base.SetPythonInstance(instance.ValidateImplementationOf<TInterface>());
         }
     }
 }

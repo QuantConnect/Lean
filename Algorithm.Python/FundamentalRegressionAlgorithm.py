@@ -28,7 +28,7 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
 
         self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.universe = self.AddUniverse(self.SelectionFunction)
+        self._universe = self.AddUniverse(self.SelectionFunction)
 
         # before we add any symbol
         self.AssertFundamentalUniverseData()
@@ -69,7 +69,7 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
 
     def AssertFundamentalUniverseData(self):
         # Case A
-        universeDataPerTime = self.History(self.universe.DataType, [self.universe.Symbol], TimeSpan(2, 0, 0, 0))
+        universeDataPerTime = self.History(self._universe.DataType, [self._universe.Symbol], TimeSpan(2, 0, 0, 0))
         if len(universeDataPerTime) != 2:
             raise ValueError(f"Unexpected Fundamentals history count {len(universeDataPerTime)}! Expected 2")
 
@@ -77,7 +77,7 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
             self.AssertFundamentalEnumerator(universeDataCollection, "A")
 
         # Case B (sugar on A)
-        universeDataPerTime = self.History(self.universe, TimeSpan(2, 0, 0, 0))
+        universeDataPerTime = self.History(self._universe, TimeSpan(2, 0, 0, 0))
         if len(universeDataPerTime) != 2:
             raise ValueError(f"Unexpected Fundamentals history count {len(universeDataPerTime)}! Expected 2")
 
@@ -85,9 +85,9 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
             self.AssertFundamentalEnumerator(universeDataCollection, "B")
 
         # Case C: Passing through the unvierse type and symbol
-        enumerableOfDataDictionary = self.History[self.universe.DataType]([self.universe.Symbol], 100)
+        enumerableOfDataDictionary = self.History[self._universe.DataType]([self._universe.Symbol], 100)
         for selectionCollectionForADay in enumerableOfDataDictionary:
-            self.AssertFundamentalEnumerator(selectionCollectionForADay[self.universe.Symbol], "C")
+            self.AssertFundamentalEnumerator(selectionCollectionForADay[self._universe.Symbol], "C")
 
     def AssertFundamentalEnumerator(self, enumerable, caseName):
         dataPointCount = 0

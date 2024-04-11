@@ -34,7 +34,7 @@ class CustomDataTypeHistoryAlgorithm(QCAlgorithm):
         if len(history2) != len(history):
             raise Exception("History requests returned different data")
 
-        self._assertHistoryData([y.values()[0] for y in history2])
+        self._assertHistoryData([list(y.values)[0] for y in history2])
 
     def _assertHistoryData(self, history:  List[PythonData]) -> None:
         expectedKeys = ['open', 'close', 'high', 'low', 'some_property']

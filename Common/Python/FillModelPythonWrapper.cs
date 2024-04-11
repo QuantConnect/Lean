@@ -26,7 +26,7 @@ namespace QuantConnect.Python
     /// </summary>
     public class FillModelPythonWrapper : FillModel
     {
-        private readonly BasePythonWrapper _model;
+        private readonly BasePythonWrapper<FillModel> _model;
 
         /// <summary>
         /// Constructor for initialising the <see cref="FillModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
@@ -34,7 +34,7 @@ namespace QuantConnect.Python
         /// <param name="model">Represents a model that simulates order fill events</param>
         public FillModelPythonWrapper(PyObject model)
         {
-            _model = new BasePythonWrapper(model);
+            _model = new BasePythonWrapper<FillModel>(model, false);
             using (Py.GIL())
             {
                 (model as dynamic).SetPythonWrapper(this);

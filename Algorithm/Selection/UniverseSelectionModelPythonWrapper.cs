@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class UniverseSelectionModelPythonWrapper : UniverseSelectionModel
     {
-        private readonly BasePythonWrapper _model;
+        private readonly BasePythonWrapper<UniverseSelectionModel> _model;
         private readonly bool _modelHasGetNextRefreshTime;
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="model">Model defining universes for the algorithm</param>
         public UniverseSelectionModelPythonWrapper(PyObject model)
         {
-            _model = new BasePythonWrapper(model);
+            _model = new BasePythonWrapper<UniverseSelectionModel>(model, false);
             using (Py.GIL())
             {
                 _modelHasGetNextRefreshTime = _model.HasAttr(nameof(IUniverseSelectionModel.GetNextRefreshTimeUtc));

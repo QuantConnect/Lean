@@ -42,6 +42,11 @@ namespace QuantConnect.Algorithm
         public Universe.UnchangedUniverse Unchanged => Universe.Unchanged;
 
         /// <summary>
+        /// Alias for <see cref="Unchanged"/>
+        /// </summary>
+        public Universe.UnchangedUniverse UNCHANGED => Unchanged;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="UniverseDefinitions"/> class
         /// </summary>
         /// <param name="algorithm">The algorithm instance, used for obtaining the default <see cref="UniverseSettings"/></param>

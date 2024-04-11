@@ -24,7 +24,7 @@ namespace QuantConnect.Python
     /// Provides an Data Consolidator that wraps a <see cref="PyObject"/> object that represents a custom Python consolidator
     /// </summary>
     /// TODO: Inherit from BasePythonWrapper<IDataConsolidator> instead of BasePythonWrapper. But first fix ValidateImplementationOf to exclude properties getters and setters (IsSpecialName)
-    public class DataConsolidatorPythonWrapper : BasePythonWrapper, IDataConsolidator
+    public class DataConsolidatorPythonWrapper : BasePythonWrapper<IDataConsolidator>, IDataConsolidator
     {
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
@@ -66,12 +66,12 @@ namespace QuantConnect.Python
         {
             add
             {
-                var eventHandler = GetProperty(nameof(DataConsolidated)) as dynamic;
+                var eventHandler = GetEvent(nameof(DataConsolidated));
                 eventHandler += value;
             }
             remove
             {
-                var eventHandler = GetProperty(nameof(DataConsolidated)) as dynamic;
+                var eventHandler = GetEvent(nameof(DataConsolidated));
                 eventHandler -= value;
             }
         }
@@ -81,7 +81,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="consolidator">Represents a custom python consolidator</param>
         public DataConsolidatorPythonWrapper(PyObject consolidator)
-            : base(consolidator)
+            : base(consolidator, false)
         {
             foreach (var attributeName in new[] { "InputType", "OutputType", "WorkingData", "Consolidated" })
             {

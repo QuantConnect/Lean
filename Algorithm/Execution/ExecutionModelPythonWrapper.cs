@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// </summary>
     public class ExecutionModelPythonWrapper : ExecutionModel
     {
-        private readonly BasePythonWrapper _model;
+        private readonly BasePythonWrapper<ExecutionModel> _model;
 
         /// <summary>
         /// Constructor for initialising the <see cref="IExecutionModel"/> class with wrapped <see cref="PyObject"/> object
@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="model">Model defining how to execute trades to reach a portfolio target</param>
         public ExecutionModelPythonWrapper(PyObject model)
         {
-            _model = new BasePythonWrapper(model);
+            _model = new BasePythonWrapper<ExecutionModel>(model, false);
             foreach (var attributeName in new[] { "Execute", "OnSecuritiesChanged" })
             {
                 if (!_model.HasAttr(attributeName))
