@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Definition of the CompanyProfile class
     /// </summary>
-    public class CompanyProfile : ReusuableCLRObject
+    public class CompanyProfile : FundamentalTimeDependentProperty
     {
         /// <summary>
         /// The headquarter address as given in the latest report
@@ -316,16 +316,20 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("40010")]
         public string ReasonofSharesChange => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_ReasonofSharesChange);
 
-        private readonly ITimeProvider _timeProvider;
-        private readonly SecurityIdentifier _securityIdentifier;
-
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public CompanyProfile(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
+            : base(timeProvider, securityIdentifier)
         {
-            _timeProvider = timeProvider;
-            _securityIdentifier = securityIdentifier;
+        }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        public override FundamentalTimeDependentProperty Clone(ITimeProvider timeProvider)
+        {
+            return new CompanyProfile(timeProvider, _securityIdentifier);
         }
     }
 }

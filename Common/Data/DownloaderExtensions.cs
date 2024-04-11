@@ -33,7 +33,7 @@ namespace QuantConnect.Data
         /// <param name="mapFileProvider">Provides instances of <see cref="MapFileResolver"/> at run time</param>
         /// <param name="exchangeTimeZone">Provides the time zone this exchange</param>
         /// <returns>
-        /// Return DataDownloaderGetParameters with different 
+        /// Return DataDownloaderGetParameters with different
         /// <see cref="DataDownloaderGetParameters.StartUtc"/> - <seealso cref="DataDownloaderGetParameters.EndUtc"/> range
         /// and <seealso cref="Symbol"/>
         /// </returns>
@@ -55,15 +55,33 @@ namespace QuantConnect.Data
                 var yieldMappedSymbol = default(bool);
                 foreach (var symbolDateRange in mapFileProvider.RetrieveAllMappedSymbolInDateRange(dataDownloaderParameter.Symbol))
                 {
+                    var startDateTimeUtc = symbolDateRange.StartDateTimeLocal.ConvertToUtc(exchangeTimeZone);
                     var endDateTimeUtc = symbolDateRange.EndDateTimeLocal.ConvertToUtc(exchangeTimeZone);
 
                     // The first start date returns from mapFile like IPO (DateTime) and can not be greater then request StartTime
-                    // The Downloader doesn't know start DateTime exactly, it always download all data
-                    var startDateTime = symbolDateRange.StartDateTimeLocal.ConvertToUtc(exchangeTimeZone);
-                    var endDateTime = endDateTimeUtc > dataDownloaderParameter.EndUtc ? dataDownloaderParameter.EndUtc : endDateTimeUtc;
+                    // The Downloader doesn't know start DateTime exactly, it always download all data, except for options and index options
+                    if (dataDownloaderParameter.Symbol.SecurityType == SecurityType.Option ||
+                        dataDownloaderParameter.Symbol.SecurityType == SecurityType.IndexOption)
+                    {
+                        // The symbol was delisted before the request start time
+                        if (endDateTimeUtc < dataDownloaderParameter.StartUtc)
+                        {
+                            continue;
+                        }
+
+                        if (startDateTimeUtc < dataDownloaderParameter.StartUtc)
+                        {
+                            startDateTimeUtc = dataDownloaderParameter.StartUtc;
+                        }
+                    }
+
+                    if (endDateTimeUtc > dataDownloaderParameter.EndUtc)
+                    {
+                        endDateTimeUtc = dataDownloaderParameter.EndUtc;
+                    }
 
                     yield return new DataDownloaderGetParameters(
-                        symbolDateRange.Symbol, dataDownloaderParameter.Resolution, startDateTime, endDateTime, dataDownloaderParameter.TickType);
+                        symbolDateRange.Symbol, dataDownloaderParameter.Resolution, startDateTimeUtc, endDateTimeUtc, dataDownloaderParameter.TickType);
                     yieldMappedSymbol = true;
                 }
 

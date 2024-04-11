@@ -36,23 +36,16 @@ class IndiaDataRegressionAlgorithm(QCAlgorithm):
         self._executionMapping = False
         self.Debug("numpy test >>> print numpy.pi: " + str(np.pi))
 
-    def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
-
-        # dividend
-        if data.Dividends.ContainsKey(self._splitAndDividendSymbol):
-            dividend = data.Dividends[self._splitAndDividendSymbol]
+    def OnDividends(self, dividends: Dividends):
+        if dividends.ContainsKey(self._splitAndDividendSymbol):
+            dividend = dividends[self._splitAndDividendSymbol]
             if ((self.Time.year == 2010 and self.Time.month == 6 and self.Time.day == 15) and
                     (dividend.Price != 0.5 or dividend.ReferencePrice != 88.8 or dividend.Distribution != 0.5)):
                 raise Exception("Did not receive expected dividend values")
 
-        # split
-        if data.Splits.ContainsKey(self._splitAndDividendSymbol):
-            split = data.Splits[self._splitAndDividendSymbol]
+    def OnSplits(self, splits: Splits):
+        if splits.ContainsKey(self._splitAndDividendSymbol):
+            split = splits[self._splitAndDividendSymbol]
             if split.Type == SplitType.Warning:
                 self._receivedWarningEvent = True
             elif split.Type == SplitType.SplitOccurred:
@@ -60,9 +53,9 @@ class IndiaDataRegressionAlgorithm(QCAlgorithm):
                 if split.Price != 421.0 or split.ReferencePrice != 421.0 or split.SplitFactor != 0.2:
                     raise Exception("Did not receive expected price values")
 
-        # mapping
-        if data.SymbolChangedEvents.ContainsKey(self._mappingSymbol):
-                mappingEvent = [x.Value for x in data.SymbolChangedEvents if x.Key.SecurityType == 1][0]
+    def OnSymbolChangedEvents(self, symbolsChanged: SymbolChangedEvents):
+        if symbolsChanged.ContainsKey(self._mappingSymbol):
+                mappingEvent = [x.Value for x in symbolsChanged if x.Key.SecurityType == 1][0]
                 if self.Time.year == 1999 and self.Time.month == 1 and self.Time.day == 1:
                     self._initialMapping = True
                 elif self.Time.year == 2004 and self.Time.month == 6 and self.Time.day == 15:

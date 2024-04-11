@@ -287,6 +287,73 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             CollectionAssert.AreEquivalent(constituents, _algorithm.Securities.Keys);
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void FundamentalScheduleSelection(bool warmup)
+        {
+            _startDate = new DateTime(2014, 3, 27, 9, 0, 0);
+            var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
+            _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
+            var endDate = _startDate.AddDays(10);
+            _algorithm.SetStartDate(_startDate);
+
+            _algorithm.SetBenchmark(x => 1);
+            if (warmup)
+            {
+                _algorithm.SetWarmUp(TimeSpan.FromDays(2));
+            }
+            _algorithm.UniverseSettings.Schedule.On(_algorithm.DateRules.On(new DateTime(2014, 3, 24), new DateTime(2014, 3, 25),
+                new DateTime(2014, 3, 28), new DateTime(2014, 4, 3)));
+
+            var feed = RunDataFeed(runPostInitialize: false);
+
+            var selectionTime = DateTime.MinValue;
+
+            var selectionAlgoTime = new List<DateTime>();
+            var selectionDataTime = new List<DateTime>();
+            IEnumerable<Symbol> Filter(IEnumerable<Fundamental> fundamentals)
+            {
+                selectionAlgoTime.Add(_algorithm.Time.Date);
+                var dataPoint = fundamentals.Take(1);
+                selectionDataTime.Add(dataPoint.First().EndTime);
+                return dataPoint.Select(x => x.Symbol);
+            };
+
+            _algorithm.UniverseSettings.Resolution = Resolution.Daily;
+            var universe = _algorithm.AddUniverse(Filter);
+
+            _algorithm.PostInitialize();
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+
+            ConsumeBridge(feed, TimeSpan.FromSeconds(500), true, ts =>
+            {
+                if (selectionTime != DateTime.MinValue)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60 * 60 * 12);
+
+            Assert.AreEqual(3, selectionAlgoTime.Count, string.Join(",", selectionAlgoTime));
+            var index = 0;
+            if (warmup)
+            {
+                // warmup start time
+                Assert.AreEqual(new DateTime(2014, 3, 25), selectionAlgoTime[index++]);
+            }
+            else
+            {
+                // triggers right away, outside of schedule
+                Assert.AreEqual(new DateTime(2014, 3, 27), selectionAlgoTime[index++]);
+            }
+            Assert.AreEqual(new DateTime(2014, 3, 28), selectionAlgoTime[index++]);
+            Assert.AreEqual(new DateTime(2014, 4, 3), selectionAlgoTime[index++]);
+        }
+
         [Test]
         public void CoarseFundamentalsImmediateSelection()
         {

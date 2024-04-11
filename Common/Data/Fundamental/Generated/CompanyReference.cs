@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Definition of the CompanyReference class
     /// </summary>
-    public class CompanyReference : ReusuableCLRObject
+    public class CompanyReference : FundamentalTimeDependentProperty
     {
         /// <summary>
         /// 10-digit unique and unchanging Morningstar identifier assigned to every company.
@@ -253,16 +253,20 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("27")]
         public DateTime ExpectedFiscalYearEnd => FundamentalService.Get<DateTime>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_ExpectedFiscalYearEnd);
 
-        private readonly ITimeProvider _timeProvider;
-        private readonly SecurityIdentifier _securityIdentifier;
-
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public CompanyReference(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
+            : base(timeProvider, securityIdentifier)
         {
-            _timeProvider = timeProvider;
-            _securityIdentifier = securityIdentifier;
+        }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        public override FundamentalTimeDependentProperty Clone(ITimeProvider timeProvider)
+        {
+            return new CompanyReference(timeProvider, _securityIdentifier);
         }
     }
 }

@@ -334,6 +334,21 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(new DateTime(2021, 01, 04), date);
         }
 
+        [TestCase("Data\\indexoption\\usa\\hour\\spx_2021_quote_european", "SPX", SecurityType.IndexOption, Resolution.Hour, 2021)]
+        [TestCase("Data\\indexoption\\usa\\daily\\spx_2014_quote_european", "SPX", SecurityType.IndexOption, Resolution.Daily, 2014)]
+        [TestCase("Data\\option\\usa\\hour\\aapl_2021_quote_american.zip", "AAPL", SecurityType.Option, Resolution.Hour, 2021)]
+        [TestCase("Data\\option\\usa\\daily\\aapl_2014_quote_american.zip", "AAPL", SecurityType.Option, Resolution.Daily, 2014)]
+        public void ParsesHourAndDailyOptionsPathCorrectly(string path, string expectedSymbol, SecurityType expectedSecurityType,
+            Resolution expectedResolution, int expectedYear)
+        {
+            Assert.IsTrue(LeanData.TryParsePath(path, out var symbol, out var date, out var resolution));
+
+            Assert.AreEqual(expectedSecurityType, symbol.SecurityType);
+            Assert.AreEqual(expectedResolution, resolution);
+            Assert.AreEqual(expectedSymbol, symbol.ID.Symbol);
+            Assert.AreEqual(new DateTime(expectedYear, 01, 01), date);
+        }
+
         [TestCase("Data\\alternative\\estimize\\consensus\\aapl.csv", "aapl", null)]
         [TestCase("Data\\alternative\\psychsignal\\aapl\\20161007.zip", "aapl", "2016-10-07")]
         [TestCase("Data\\alternative\\sec\\aapl\\20161007_8K.zip", "aapl", "2016-10-07")]
@@ -494,7 +509,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", optionZipFilePath);
             Assert.AreEqual($"20200105_og_minute_quote_american_{right.ToLower()}_{strike}0000_{expiry:yyyyMMdd}.csv", optionEntryFilePath);
         }
-        
+
         [Test, TestCaseSource(nameof(AggregateTradeBarsTestData))]
         public void AggregateTradeBarsTest(TimeSpan resolution, TradeBar expectedFirstTradeBar)
         {
@@ -508,7 +523,7 @@ namespace QuantConnect.Tests.Common.Util
             };
 
             var aggregated = LeanData.AggregateTradeBars(initialBars, symbol, resolution).ToList();
-            
+
             Assert.True(aggregated.All(i => i.Period == resolution));
             Assert.True(aggregated.All(i => i.Symbol == symbol));
 
@@ -560,14 +575,14 @@ namespace QuantConnect.Tests.Common.Util
                 new QuoteBar {Time = _aggregationTime.Add(TimeSpan.FromMinutes(15)), Ask = new Bar {Open = 11, High = 25, Low = 10, Close = 21}, Bid = {Open = 10, High = 22, Low = 9, Close = 20}, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
                 new QuoteBar {Time = _aggregationTime.Add(TimeSpan.FromHours(6)), Ask = new Bar {Open = 17, High = 19, Low = 12, Close = 11}, Bid = {Open = 16, High = 17, Low = 10, Close = 10}, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
             };
-        
+
             var aggregated = LeanData.AggregateQuoteBars(initialBars, symbol, resolution).ToList();
-            
+
             Assert.True(aggregated.All(i => i.Period == resolution));
             Assert.True(aggregated.All(i => i.Symbol == symbol));
 
             var firstBar = aggregated.First();
-            
+
             AssertBarsAreEqual(expectedFirstBar.Ask, firstBar.Ask);
             AssertBarsAreEqual(expectedFirstBar.Bid, firstBar.Bid);
             Assert.AreEqual(expectedFirstBar.LastBidSize, firstBar.LastBidSize);
@@ -575,7 +590,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(expectedFirstBar.Time, firstBar.Time);
             Assert.AreEqual(expectedFirstBar.EndTime, firstBar.EndTime);
         }
-        
+
         [Test, TestCaseSource(nameof(AggregateTickTestData))]
         public void AggregateTicksTest(TimeSpan resolution, QuoteBar expectedFirstBar)
         {
@@ -868,7 +883,7 @@ namespace QuantConnect.Tests.Common.Util
                 };
             }
         }
-        
+
         private static TestCaseData[] AggregateTickTestData
         {
             get

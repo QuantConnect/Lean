@@ -32,6 +32,7 @@ using QuantConnect.Statistics;
 using QuantConnect.Util;
 using QuantConnect.Notifications;
 using Python.Runtime;
+using System.Threading;
 
 namespace QuantConnect.Api
 {
@@ -157,7 +158,7 @@ namespace QuantConnect.Api
         /// <param name="content">The content of the new file</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes information about the newly created file</returns>
 
-        public ProjectFilesResponse AddProjectFile(int projectId, string name, string content)
+        public RestResponse AddProjectFile(int projectId, string name, string content)
         {
             var request = new RestRequest("files/create", Method.POST)
             {
@@ -171,7 +172,7 @@ namespace QuantConnect.Api
                     content
                 }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out ProjectFilesResponse result);
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
@@ -322,11 +323,25 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Gets a list of LEAN versions with their corresponding basic descriptions
+        /// </summary>
+        public VersionsResponse ReadLeanVersions()
+        {
+            var request = new RestRequest("lean/versions/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            ApiConnection.TryRequest(request, out VersionsResponse result);
+            return result;
+        }
+
+        /// <summary>
         /// Delete a file in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="name">The name of the file that should be deleted</param>
-        /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
+        /// <returns><see cref="RestResponse"/> that includes the information about all files in the project</returns>
 
         public RestResponse DeleteProjectFile(int projectId, string name)
         {
@@ -584,29 +599,33 @@ namespace QuantConnect.Api
                 note
             }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out Backtest result);
+            ApiConnection.TryRequest(request, out RestResponse result);
             return result;
         }
 
         /// <summary>
-        /// List all the backtests for a project
+        /// List all the backtest summaries for a project
         /// </summary>
         /// <param name="projectId">Project id we'd like to get a list of backtest for</param>
+        /// <param name="includeStatistics">True for include statistics in the response, false otherwise</param>
         /// <returns><see cref="BacktestList"/></returns>
 
-        public BacktestList ListBacktests(int projectId)
+        public BacktestSummaryList ListBacktests(int projectId, bool includeStatistics = true)
         {
-            var request = new RestRequest("backtests/read", Method.POST)
+            var request = new RestRequest("backtests/list", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
 
-            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            var obj = new Dictionary<string, object>()
             {
-                projectId,
-            }), ParameterType.RequestBody);
+                { "projectId", projectId },
+                { "includeStatistics", includeStatistics }
+            };
 
-            ApiConnection.TryRequest(request, out BacktestList result);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out BacktestSummaryList result);
             return result;
         }
 
@@ -1466,6 +1485,183 @@ namespace QuantConnect.Api
             }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+
+        /// <summary>
+        /// Download the object store files associated with the given organization ID and key
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to get the Object Store files from</param>
+        /// <param name="keys">Keys for the Object Store files</param>
+        /// <param name="destinationFolder">Folder in which the object store files will be stored</param>
+        /// <returns>True if the object store files were retrieved correctly, false otherwise</returns>
+        public bool GetObjectStore(string organizationId, List<string> keys, string destinationFolder = null)
+        {
+            var request = new RestRequest("object/get", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                organizationId,
+                keys
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out GetObjectStoreResponse result);
+
+            if (result == null || !result.Success)
+            {
+                Log.Error($"Api.GetObjectStore(): Failed to get the jobId to request the download URL for the object store files."
+                    + (result != null ? $" Errors: {string.Join(",", result.Errors)}" : ""));
+                return false;
+            }
+
+            var jobId = result.JobId;
+            var getUrlRequest = new RestRequest("object/get", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+            getUrlRequest.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                organizationId,
+                jobId
+            }), ParameterType.RequestBody);
+
+            var frontier = DateTime.UtcNow + TimeSpan.FromMinutes(5);
+            while (string.IsNullOrEmpty(result?.Url) && (DateTime.UtcNow < frontier))
+            {
+                Thread.Sleep(3000);
+                ApiConnection.TryRequest(getUrlRequest, out result);
+            }
+
+            if (result == null || string.IsNullOrEmpty(result.Url))
+            {
+                Log.Error($"Api.GetObjectStore(): Failed to get the download URL from the jobId {jobId}."
+                    + (result != null ? $" Errors: {string.Join(",", result.Errors)}" : ""));
+                return false;
+            }
+
+            var directory = destinationFolder ?? Directory.GetCurrentDirectory();
+
+            try
+            {
+                if (_client.Value.Timeout != TimeSpan.FromMinutes(20))
+                {
+                    _client.Value.Timeout = TimeSpan.FromMinutes(20);
+                }
+
+                // Download the file
+                var uri = new Uri(result.Url);
+                using var byteArray = _client.Value.GetByteArrayAsync(uri);
+
+                Compression.UnzipToFolder(byteArray.Result, directory);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Api.GetObjectStore(): Failed to download zip for path ({directory}). Error: {e.Message}");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Get Object Store properties given the organization ID and the Object Store key
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to get the Object Store from</param>
+        /// <param name="key">Key for the Object Store file</param>
+        /// <returns><see cref="PropertiesObjectStoreResponse"/></returns>
+        /// <remarks>It does not work when the object store is a directory</remarks>
+        public PropertiesObjectStoreResponse GetObjectStoreProperties(string organizationId, string key)
+        {
+            var request = new RestRequest("object/properties", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("organizationId", organizationId);
+            request.AddParameter("key", key);
+
+            ApiConnection.TryRequest(request, out PropertiesObjectStoreResponse result);
+
+            if (result == null || !result.Success)
+            {
+                Log.Error($"Api.ObjectStore(): Failed to get the properties for the object store key {key}." + (result != null ? $" Errors: {string.Join(",", result.Errors)}" : ""));
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Upload files to the Object Store
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to upload the file to</param>
+        /// <param name="key">Key to the Object Store file</param>
+        /// <param name="objectData">File (as an array of bytes) to be uploaded</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse SetObjectStore(string organizationId, string key, byte[] objectData)
+        {
+            var request = new RestRequest("object/set", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("organizationId", organizationId);
+            request.AddParameter("key", key);
+            request.AddFileBytes("objectData", objectData, "objectData");
+            request.AlwaysMultipartFormData = true;
+
+            ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+
+        /// <summary>
+        /// Request to delete Object Store metadata of a specific organization and key
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to delete the Object Store file from</param>
+        /// <param name="key">Key to the Object Store file</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse DeleteObjectStore(string organizationId, string key)
+        {
+            var request = new RestRequest("object/delete", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            var obj = new Dictionary<string, object>
+            {
+                { "organizationId", organizationId },
+                { "key", key }
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+
+        /// <summary>
+        /// Request to list Object Store files of a specific organization and path
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to list the Object Store files from</param>
+        /// <param name="path">Path to the Object Store files</param>
+        /// <returns><see cref="ListObjectStoreResponse"/></returns>
+        public ListObjectStoreResponse ListObjectStore(string organizationId, string path)
+        {
+            var request = new RestRequest("object/list", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            var obj = new Dictionary<string, object>
+            {
+                { "organizationId", organizationId },
+                { "path", path }
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out ListObjectStoreResponse result);
             return result;
         }
 

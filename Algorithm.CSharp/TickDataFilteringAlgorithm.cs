@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// Data arriving here will now be filtered.
         /// </summary>
         /// <param name="data">Ticks data array</param>
-        public void OnData(Ticks data)
+        public override void OnData(Slice data)
         {
             if (!data.ContainsKey("SPY")) return;
             var spyTickList = data["SPY"];

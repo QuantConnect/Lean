@@ -57,7 +57,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
         public ScheduledUniverse(IDateRule dateRule, ITimeRule timeRule, Func<DateTime, IEnumerable<Symbol>> selector, UniverseSettings settings = null)
-            : this(TimeZones.NewYork, dateRule, timeRule, selector, settings)
+            : this(TimeZones.Utc, dateRule, timeRule, selector, settings)
         {
         }
 
@@ -88,7 +88,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="selector">Selector function accepting the date time firing time and returning the universe selected symbols</param>
         /// <param name="settings">Universe settings for subscriptions added via this universe, null will default to algorithm's universe settings</param>
         public ScheduledUniverse(IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null)
-            : this(TimeZones.NewYork, dateRule, timeRule, selector, settings)
+            : this(TimeZones.Utc, dateRule, timeRule, selector, settings)
         {
         }
 

@@ -34,8 +34,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Storage;
-using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Statistics;
+using QuantConnect.Data.Market;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -749,6 +750,54 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void OnFrameworkData(Slice slice)
         {
             _baseAlgorithm.OnFrameworkData(slice);
+        }
+
+        /// <summary>
+        /// Event handler to be called when there's been a split event
+        /// </summary>
+        /// <param name="splits">The current time slice splits</param>
+        public void OnSplits(Splits splits)
+        {
+            using (Py.GIL())
+            {
+                _algorithm.OnSplits(splits);
+            }
+        }
+
+        /// <summary>
+        /// Event handler to be called when there's been a dividend event
+        /// </summary>
+        /// <param name="dividends">The current time slice dividends</param>
+        public void OnDividends(Dividends dividends)
+        {
+            using (Py.GIL())
+            {
+                _algorithm.OnDividends(dividends);
+            }
+        }
+
+        /// <summary>
+        /// Event handler to be called when there's been a delistings event
+        /// </summary>
+        /// <param name="delistings">The current time slice delistings</param>
+        public void OnDelistings(Delistings delistings)
+        {
+            using (Py.GIL())
+            {
+                _algorithm.OnDelistings(delistings);
+            }
+        }
+
+        /// <summary>
+        /// Event handler to be called when there's been a symbol changed event
+        /// </summary>
+        /// <param name="symbolsChanged">The current time slice symbol changed events</param>
+        public void OnSymbolChangedEvents(SymbolChangedEvents symbolsChanged)
+        {
+            using (Py.GIL())
+            {
+                _algorithm.OnSymbolChangedEvents(symbolsChanged);
+            }
         }
 
         /// <summary>

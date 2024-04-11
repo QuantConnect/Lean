@@ -332,7 +332,8 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var timeKeeper = new TimeKeeper(_utcNow, new List<DateTimeZone>());
             var manager = new SecurityManager(timeKeeper);
-            var marketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.USA, (string)null, SecurityType.Equity);
+            var mhdb = MarketHoursDatabase.FromDataFolder();
+            var marketHourDbEntry = mhdb.GetEntry(Market.USA, (string)null, SecurityType.Equity);
             var securityExchangeHours = marketHourDbEntry.ExchangeHours;
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Daily, marketHourDbEntry.DataTimeZone, securityExchangeHours.TimeZone, true, false, false);
             manager.Add(
@@ -347,7 +348,7 @@ namespace QuantConnect.Tests.Common.Scheduling
                     new SecurityCache()
                 )
             );
-            var rules = new TimeRules(manager, dateTimeZone);
+            var rules = new TimeRules(manager, dateTimeZone, mhdb);
             return rules;
         }
 
@@ -355,7 +356,8 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var timeKeeper = new TimeKeeper(_utcNow, new List<DateTimeZone>());
             var manager = new SecurityManager(timeKeeper);
-            var marketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.CME, "ES", SecurityType.Future);
+            var mhdb = MarketHoursDatabase.FromDataFolder();
+            var marketHourDbEntry = mhdb.GetEntry(Market.CME, "ES", SecurityType.Future);
             var securityExchangeHours = marketHourDbEntry.ExchangeHours;
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.ES_Future_Chain, Resolution.Daily, marketHourDbEntry.DataTimeZone,
                 securityExchangeHours.TimeZone, true, extendedMarket, false);
@@ -371,7 +373,7 @@ namespace QuantConnect.Tests.Common.Scheduling
                     new SecurityCache()
                 )
             );
-            var rules = new TimeRules(manager, dateTimeZone);
+            var rules = new TimeRules(manager, dateTimeZone, mhdb);
             return rules;
         }
     }

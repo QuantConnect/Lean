@@ -55,6 +55,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private SubscriptionCollection _subscriptions;
         private IFactorFileProvider _factorFileProvider;
         private IDataChannelProvider _channelProvider;
+        // in live trading we delay scheduled universe selection between 11 & 12 hours after midnight UTC so that we allow new selection data to be piped in
+        // NY goes from -4/-5 UTC time, so:
+        // 11 UTC - 4 => 7am NY
+        // 12 UTC - 4 => 8am NY
+        private readonly TimeSpan _scheduledUniverseUtcTimeShift = TimeSpan.FromMinutes(11 * 60 + DateTime.UtcNow.Second);
         private readonly HashSet<string> _unsupportedConfigurations = new();
 
         /// <summary>
@@ -394,6 +399,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = enqueueable;
             }
 
+            enumerator = AddScheduleWrapper(request, enumerator, new PredicateTimeProvider(_frontierTimeProvider, (currentUtcDateTime) => {
+                // will only let time advance after it's passed the live time shift frontier
+                return currentUtcDateTime.TimeOfDay > _scheduledUniverseUtcTimeShift;
+            }));
+
             enumerator = GetWarmupEnumerator(request, enumerator);
 
             // create the subscription
@@ -446,6 +456,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // if required by the original request, we will fill forward the Synced warmup data
                         request.Configuration.FillDataForward,
                         _algorithm.Settings.WarmupResolution);
+                    synchronizedWarmupEnumerator = AddScheduleWrapper(warmupRequest, synchronizedWarmupEnumerator, null);
 
                     // don't let future data past. We let null pass because that's letting the next enumerator know we've ended because we always return true in live
                     synchronizedWarmupEnumerator = new FilterEnumerator<BaseData>(synchronizedWarmupEnumerator, data => data == null || data.EndTime <= warmupRequest.EndTimeLocal);

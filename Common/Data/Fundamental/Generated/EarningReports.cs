@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Definition of the EarningReports class
     /// </summary>
-    public class EarningReports : ReusuableCLRObject
+    public class EarningReports : FundamentalTimeDependentProperty
     {
         /// <summary>
         /// The exact date that is given in the financial statements for each quarter's end.
@@ -328,16 +328,20 @@ namespace QuantConnect.Data.Fundamental
         public DividendCoverageRatio DividendCoverageRatio => _dividendCoverageRatio ??= new(_timeProvider, _securityIdentifier);
         private DividendCoverageRatio _dividendCoverageRatio;
 
-        private readonly ITimeProvider _timeProvider;
-        private readonly SecurityIdentifier _securityIdentifier;
-
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public EarningReports(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
+            : base(timeProvider, securityIdentifier)
         {
-            _timeProvider = timeProvider;
-            _securityIdentifier = securityIdentifier;
+        }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        public override FundamentalTimeDependentProperty Clone(ITimeProvider timeProvider)
+        {
+            return new EarningReports(timeProvider, _securityIdentifier);
         }
     }
 }

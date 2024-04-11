@@ -1170,17 +1170,22 @@ namespace QuantConnect.Util
                 {
                     // Gather components used to create the security
                     market = info[startIndex + 1];
-                    ticker = info[startIndex + 3];
-                    
-                    // Remove the ticktype from the ticker (Only exists in Crypto and Future data but causes no issues)
-                    ticker = ticker.Split('_').First();
+                    var components = info[startIndex + 3].Split('_');
 
-                    // If resolution is Daily or Hour, we do not need to set the date
+                    // Remove the ticktype from the ticker (Only exists in Crypto and Future data but causes no issues)
+                    ticker = components[0];
+
                     if (resolution < Resolution.Hour)
                     {
                         // Future options are special and have the following format Market/Resolution/Ticker/FutureExpiry/Date
                         var dateIndex = securityType == SecurityType.FutureOption ? startIndex + 5 : startIndex + 4;
                         date = Parse.DateTimeExact(info[dateIndex].Substring(0, 8), DateFormat.EightCharacter);
+                    }
+                    // If resolution is Daily or Hour for options and index options, we can only get the year from the path
+                    else if (securityType == SecurityType.Option || securityType == SecurityType.IndexOption)
+                    {
+                        var year = int.Parse(components[1], CultureInfo.InvariantCulture);
+                        date = new DateTime(year, 01, 01);
                     }
                 }
 
@@ -1293,7 +1298,7 @@ namespace QuantConnect.Util
         {
             return Aggregate(new QuoteBarConsolidator(resolution), bars, symbol);
         }
-        
+
          /// <summary>
          /// Aggregates a list of ticks at the requested resolution
          /// </summary>
