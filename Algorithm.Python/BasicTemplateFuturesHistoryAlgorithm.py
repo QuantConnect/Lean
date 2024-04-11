@@ -45,7 +45,7 @@ class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
         self._successCount = 0
 
     def MakeHistoryCall(self):
-        history = self.History(self.Securities.Keys, 10, Resolution.Minute)
+        history = self.History(self.Securities.keys(), 10, Resolution.Minute)
         if len(history) < 10:
             raise Exception(f'Empty history at {self.Time}')
         self._successCount += 1
