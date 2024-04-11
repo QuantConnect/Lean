@@ -165,7 +165,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="methodName">The name of the method</param>
         /// <param name="args">The arguments to call the method with</param>
-        protected PyObject InvokeMethod(string methodName, params object[] args)
+        public PyObject InvokeMethod(string methodName, params object[] args)
         {
             using var _ = Py.GIL();
             var method = GetMethod(methodName);

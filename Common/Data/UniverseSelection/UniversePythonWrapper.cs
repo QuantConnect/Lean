@@ -99,7 +99,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             using (Py.GIL())
             {
-                var symbols = _model.InvokeMethod<PyObject>(nameof(SelectSymbols), utcTime, data);
+                var symbols = _model.InvokeMethod(nameof(SelectSymbols), utcTime, data);
                 var iterator = symbols.GetIterator();
                 foreach (PyObject symbol in iterator)
                 {
@@ -123,7 +123,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             using (Py.GIL())
             {
-                var subscriptionRequests = _model.InvokeMethod<PyObject>(nameof(GetSubscriptionRequests), security, currentTimeUtc,
+                var subscriptionRequests = _model.InvokeMethod(nameof(GetSubscriptionRequests), security, currentTimeUtc,
                     maximumEndTimeUtc, subscriptionService);
                 var iterator = subscriptionRequests.GetIterator();
                 foreach (PyObject request in iterator)

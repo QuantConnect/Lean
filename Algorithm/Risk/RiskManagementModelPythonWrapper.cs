@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         {
             using (Py.GIL())
             {
-                var riskTargetOverrides = _model.InvokeMethod<PyObject>("ManageRisk", algorithm, targets);
+                var riskTargetOverrides = _model.InvokeMethod("ManageRisk", algorithm, targets);
                 var iterator = riskTargetOverrides.GetIterator();
                 foreach (PyObject target in iterator)
                 {
@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            _model.InvokeMethod<PyObject>(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
+            _model.InvokeMethod(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
         }
     }
 }

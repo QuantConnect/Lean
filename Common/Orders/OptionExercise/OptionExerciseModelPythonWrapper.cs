@@ -44,7 +44,7 @@ namespace QuantConnect.Orders.OptionExercise
         {
             using (Py.GIL())
             {
-                using var orderEventGenerator = InvokeMethod<PyObject>(nameof(OptionExercise), option, order);
+                using var orderEventGenerator = InvokeMethod(nameof(OptionExercise), option, order);
                 using var iterator = orderEventGenerator.GetIterator();
                 foreach (PyObject item in iterator)
                 {

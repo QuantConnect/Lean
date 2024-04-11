@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     }
                 }
 
-                _model.InvokeMethod<PyObject>(nameof(SetPythonWrapper), this).Dispose();
+                _model.InvokeMethod(nameof(SetPythonWrapper), this).Dispose();
 
                 _implementsDetermineTargetPercent = model.GetPythonMethod("DetermineTargetPercent") != null;
             }
@@ -101,7 +101,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            _model.InvokeMethod<PyObject>(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
+            _model.InvokeMethod(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 }
 
                 Dictionary<Insight, double> dic;
-                var result = _model.InvokeMethod<PyObject>(nameof(DetermineTargetPercent), activeInsights) as dynamic;
+                var result = _model.InvokeMethod(nameof(DetermineTargetPercent), activeInsights) as dynamic;
                 if ((result as PyObject).TryConvert(out dic))
                 {
                     // this is required if the python implementation is actually returning a C# dic, not common,

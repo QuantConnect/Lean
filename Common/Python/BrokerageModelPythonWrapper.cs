@@ -136,7 +136,7 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 message = null;
-                using var result = InvokeMethod<PyObject>(nameof(CanSubmitOrder), security, order, message);
+                using var result = InvokeMethod(nameof(CanSubmitOrder), security, order, message);
                 // Since pythonnet does not support out parameters, the methods return
                 // a tuple where the out parameter comes after the other returned values
                 if (!PyTuple.IsTupleType(result))
@@ -162,7 +162,7 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 message = null;
-                using var result = InvokeMethod<PyObject>(nameof(CanUpdateOrder), security, order, request, message);
+                using var result = InvokeMethod(nameof(CanUpdateOrder), security, order, request, message);
                 // Since pythonnet does not support out parameters, the methods return
                 // a tuple where the out parameter comes after the other returned values
                 if (!PyTuple.IsTupleType(result))
@@ -184,7 +184,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var benchmark = InvokeMethod<PyObject>(nameof(GetBenchmark), securities);
+                var benchmark = InvokeMethod(nameof(GetBenchmark), securities);
                 if (benchmark.TryConvert<IBenchmark>(out var csharpBenchmark))
                 {
                     return csharpBenchmark;
@@ -202,7 +202,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var feeModel = InvokeMethod<PyObject>(nameof(GetFeeModel), security);
+                var feeModel = InvokeMethod(nameof(GetFeeModel), security);
                 if (feeModel.TryConvert<IFeeModel>(out var csharpFeeModel))
                 {
                     return csharpFeeModel;
@@ -220,7 +220,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var fillModel = InvokeMethod<PyObject>(nameof(GetFillModel), security);
+                var fillModel = InvokeMethod(nameof(GetFillModel), security);
                 if (fillModel.TryConvert<IFillModel>(out var csharpFillModel))
                 {
                     return csharpFillModel;
@@ -248,7 +248,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var settlementModel = InvokeMethod<PyObject>(nameof(GetSettlementModel), security);
+                var settlementModel = InvokeMethod(nameof(GetSettlementModel), security);
                 if (settlementModel.TryConvert<ISettlementModel>(out var csharpSettlementModel))
                 {
                     return csharpSettlementModel;
@@ -278,7 +278,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var slippageModel = InvokeMethod<PyObject>(nameof(GetSlippageModel), security);
+                var slippageModel = InvokeMethod(nameof(GetSlippageModel), security);
                 if (slippageModel.TryConvert<ISlippageModel>(out var csharpSlippageModel))
                 {
                     return csharpSlippageModel;
@@ -309,7 +309,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var buyingPowerModel = InvokeMethod<PyObject>(nameof(GetBuyingPowerModel), security);
+                var buyingPowerModel = InvokeMethod(nameof(GetBuyingPowerModel), security);
                 if (buyingPowerModel.TryConvert<IBuyingPowerModel>(out var csharpBuyingPowerModel))
                 {
                     return csharpBuyingPowerModel;
@@ -338,7 +338,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var shortableProvider = InvokeMethod<PyObject>(nameof(GetShortableProvider), security);
+                var shortableProvider = InvokeMethod(nameof(GetShortableProvider), security);
                 if (shortableProvider.TryConvert<IShortableProvider>(out var csharpShortableProvider))
                 {
                     return csharpShortableProvider;
@@ -368,7 +368,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var marginInterestRateModel = InvokeMethod<PyObject>(nameof(GetMarginInterestRateModel), security);
+                var marginInterestRateModel = InvokeMethod(nameof(GetMarginInterestRateModel), security);
                 if (marginInterestRateModel.TryConvert<IMarginInterestRateModel>(out var csharpBuyingPowerModel))
                 {
                     return csharpBuyingPowerModel;

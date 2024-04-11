@@ -58,7 +58,7 @@ namespace QuantConnect.Python
         /// <param name="data">The new data used to update the model</param>
         public override void Update(Security security, BaseData data)
         {
-            _model.InvokeMethod<PyObject>(nameof(Update), security, data).Dispose();
+            _model.InvokeMethod(nameof(Update), security, data).Dispose();
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace QuantConnect.Python
         {
             if (_model.HasAttr(nameof(SetSubscriptionDataConfigProvider)))
             {
-                _model.InvokeMethod<PyObject>(nameof(SetSubscriptionDataConfigProvider), subscriptionDataConfigProvider).Dispose();
+                _model.InvokeMethod(nameof(SetSubscriptionDataConfigProvider), subscriptionDataConfigProvider).Dispose();
             }
         }
     }

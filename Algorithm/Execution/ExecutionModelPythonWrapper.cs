@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="targets">The portfolio targets to be ordered</param>
         public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
-            _model.InvokeMethod<PyObject>(nameof(Execute), algorithm, targets).Dispose();
+            _model.InvokeMethod(nameof(Execute), algorithm, targets).Dispose();
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            _model.InvokeMethod<PyObject>(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
+            _model.InvokeMethod(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
         }
     }
 }

@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             using (Py.GIL())
             {
-                var universes = _model.InvokeMethod<PyObject>(nameof(CreateUniverses), algorithm);
+                var universes = _model.InvokeMethod(nameof(CreateUniverses), algorithm);
                 var iterator = universes.GetIterator();
                 foreach (PyObject universe in iterator)
                 {

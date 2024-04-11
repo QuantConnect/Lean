@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             using (Py.GIL())
             {
-                var insights = _model.InvokeMethod<PyObject>(nameof(Update), algorithm, data);
+                var insights = _model.InvokeMethod(nameof(Update), algorithm, new PythonSlice(data));
                 var iterator = insights.GetIterator();
                 foreach (PyObject insight in iterator)
                 {
@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            _model.InvokeMethod<PyObject>(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
+            _model.InvokeMethod(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
         }
     }
 }
