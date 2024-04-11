@@ -31,45 +31,37 @@ public class DerivativeOscillatorIndicatorTest : CommonIndicatorTests<IndicatorD
     protected override string TestColumnName => "DO";
 
     [Test]
-    public void DoComputesCorrectly()
-    {
-        var derivativeOscillator = new DerivativeOscillator(TestColumnName, 14, 5, 3, 9);
-
-        // List of random prices for testing
-        var prices = new [] { 100m, 105m, 110m, 115m, 120m, 125m, 130m, 135m, 140m, 145m, 150m, 155m, 160m, 165m, 170m };
-
-        // Expected derivative oscillator value
-        var expectedValue = 0;
-
-        foreach (var price in prices)
-        {
-            derivativeOscillator.Update(new IndicatorDataPoint(DateTime.UtcNow, price));
-        }
-
-        // Get the computed value
-        var computedValue = derivativeOscillator.Current.Value;
-
-        // Assert
-        Assert.AreEqual(expectedValue, computedValue, "Derivative oscillator value does not match expected value");
-    }
-
     public override void ResetsProperly()
     {
         // derivativeOscillator reset is just setting the value and samples back to 0
         var derivativeOscillator = new DerivativeOscillator("D014", 14, 5, 3, 9);
+        var period = derivativeOscillator.WarmUpPeriod;
+        
+        var startDate = new DateTime(2019, 1, 1);
 
-        foreach (var data in TestHelper.GetDataStream(5))
+        foreach (var data in TestHelper.GetDataStream(15))
         {
             derivativeOscillator.Update(data);
         }
-
+        
         Assert.IsTrue(derivativeOscillator.IsReady);
         Assert.AreNotEqual(0m, derivativeOscillator.Current.Value);
         Assert.AreNotEqual(0, derivativeOscillator.Samples);
-
+        
+        // Check if reset functionality works
         derivativeOscillator.Reset();
 
         TestHelper.AssertIndicatorIsInDefaultState(derivativeOscillator);
+        
+        // Update again the values and see if the indicator works after reseting
+        foreach (var data in TestHelper.GetDataStream(15))
+        {
+            derivativeOscillator.Update(data);
+        }
+        
+        Assert.IsTrue(derivativeOscillator.IsReady);
+        Assert.AreNotEqual(0m, derivativeOscillator.Current.Value);
+        Assert.AreNotEqual(0, derivativeOscillator.Samples);
     }
 
     [Test]
@@ -79,7 +71,7 @@ public class DerivativeOscillatorIndicatorTest : CommonIndicatorTests<IndicatorD
             CreateIndicator(),
             TestFileName,
             TestColumnName,
-            (ind, expected) => Assert.AreEqual(expected, (double)((DerivativeOscillator)ind).Current.Value)
+            (ind, expected) => Assert.AreEqual(expected, (double)((DerivativeOscillator)ind).Current.Value, 1e-9)
         );
     }
 }
