@@ -38,13 +38,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets a value indicating that no change to the universe should be made
         /// </summary>
-        [StubsIgnore]
         public static readonly UnchangedUniverse Unchanged = UnchangedUniverse.Instance;
-
-        /// <summary>
-        /// Alias for <see cref="Unchanged"/>
-        /// </summary>
-        public static readonly UnchangedUniverse UNCHANGED = Unchanged;
 
         private HashSet<Symbol> _previousSelections;
 

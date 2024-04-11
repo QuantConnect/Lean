@@ -38,13 +38,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Specifies that universe selection should not make changes on this iteration
         /// </summary>
-        [StubsIgnore]
         public Universe.UnchangedUniverse Unchanged => Universe.Unchanged;
-
-        /// <summary>
-        /// Alias for <see cref="Unchanged"/>
-        /// </summary>
-        public Universe.UnchangedUniverse UNCHANGED => Unchanged;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseDefinitions"/> class

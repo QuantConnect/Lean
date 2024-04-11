@@ -24,7 +24,7 @@ class UniverseSelectedRegressionAlgorithm(QCAlgorithm):
 
         self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.universe = self.AddUniverse(self.SelectionFunction)
+        self._universe = self.AddUniverse(self.SelectionFunction)
         self.selectionCount = 0
 
     def SelectionFunction(self, fundamentals):
@@ -37,13 +37,13 @@ class UniverseSelectedRegressionAlgorithm(QCAlgorithm):
         return [ x.Symbol for x in sortedByDollarVolume[:self.selectionCount] ]
 
     def OnData(self, data):
-        if Symbol.Create("TSLA", SecurityType.Equity, Market.USA) in self.universe.Selected:
+        if Symbol.Create("TSLA", SecurityType.Equity, Market.USA) in self._universe.Selected:
             raise ValueError(f"TSLA shouldn't of been selected")
 
-        self.Buy(next(iter(self.universe.Selected)), 1)
+        self.Buy(next(iter(self._universe.Selected)), 1)
 
     def OnEndOfAlgorithm(self):
         if self.selectionCount != 3:
             raise ValueError(f"Unexpected selection count {self.selectionCount}")
-        if self.universe.Selected.Count != 3 or self.universe.Selected.Count == self.universe.Members.Count:
-            raise ValueError(f"Unexpected universe selected count {self.universe.Selected.Count}")
+        if self._universe.Selected.Count != 3 or self._universe.Selected.Count == self._universe.Members.Count:
+            raise ValueError(f"Unexpected universe selected count {self._universe.Selected.Count}")
