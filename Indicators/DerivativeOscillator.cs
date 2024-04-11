@@ -35,7 +35,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _rsi.IsReady;
+        public override bool IsReady => _signalLine.IsReady;
         
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -57,10 +57,10 @@ namespace QuantConnect.Indicators
             _doubleSmoothingRsiPeriod = doubleSmoothingRsiPeriod;
             _signalLinePeriod = signalLinePeriod;
             _rsi = new RelativeStrengthIndex($"{name}_RSI", rsiPeriod);
-            _smoothedRsi = new ExponentialMovingAverage($"{name}_SmoothedRSI", smoothingRsiPeriod).Of(_rsi, false);
-            _doubleSmoothedRsi = new ExponentialMovingAverage($"{name}_DoubleSmoothedRSI", doubleSmoothingRsiPeriod).Of(_smoothedRsi, false);
-            _signalLine = new SimpleMovingAverage($"{name}_SignalLine", signalLinePeriod).Of(_doubleSmoothedRsi, false);
-            WarmUpPeriod = Math.Max(rsiPeriod, Math.Max(smoothingRsiPeriod, Math.Max(doubleSmoothingRsiPeriod, signalLinePeriod))) + 1;
+            _smoothedRsi = new ExponentialMovingAverage($"{name}_SmoothedRSI", smoothingRsiPeriod).Of(_rsi);
+            _doubleSmoothedRsi = new ExponentialMovingAverage($"{name}_DoubleSmoothedRSI", doubleSmoothingRsiPeriod).Of(_smoothedRsi);
+            _signalLine = new SimpleMovingAverage($"{name}_SignalLine", signalLinePeriod).Of(_doubleSmoothedRsi);
+            WarmUpPeriod = (rsiPeriod + smoothingRsiPeriod + doubleSmoothingRsiPeriod + signalLinePeriod - 3) + 1;
         }
 
         /// <summary>
