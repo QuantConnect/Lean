@@ -30,10 +30,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveSynchronizer : Synchronizer
     {
+        public static readonly int BatchingDelay = Config.GetInt("consumer-batching-timeout-ms");
+
         private ITimeProvider _timeProvider;
         private LiveTimeProvider _frontierTimeProvider;
         private RealTimeScheduleEventService _realTimeScheduleEventService;
-        private readonly int _batchingDelay = Config.GetInt("consumer-batching-timeout-ms");
         private readonly ManualResetEventSlim _newLiveDataEmitted = new ManualResetEventSlim(false);
 
         /// <summary>
@@ -210,7 +211,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual int GetPulseDueTime(DateTime now)
         {
             // let's wait until the next second starts
-            return 1000 - now.Millisecond + _batchingDelay;
+            return 1000 - now.Millisecond + BatchingDelay;
         }
 
         /// <summary>
