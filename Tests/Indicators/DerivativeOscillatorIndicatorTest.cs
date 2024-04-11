@@ -12,9 +12,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
-using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
-using Microsoft.DotNet.Interactive.Events;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 using System;
@@ -37,7 +34,6 @@ public class DerivativeOscillatorIndicatorTest : CommonIndicatorTests<IndicatorD
     {
         var derivativeOscillator = new DerivativeOscillator("D014", 14, 5, 3, 9);
         var period = derivativeOscillator.WarmUpPeriod;
-
 
         // Generate a stream of random data and calculate the derivative oscillator
         var seed = 14;

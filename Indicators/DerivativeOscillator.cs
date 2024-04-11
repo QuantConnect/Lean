@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-using System;
-
 namespace QuantConnect.Indicators
 {
     /// <summary>\
