@@ -17,7 +17,6 @@
 using System;
 using System.Linq;
 using Python.Runtime;
-using QuantConnect.Data;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
@@ -39,6 +38,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Specifies that universe selection should not make changes on this iteration
         /// </summary>
+        [StubsIgnore]
         public Universe.UnchangedUniverse Unchanged => Universe.Unchanged;
 
         /// <summary>
