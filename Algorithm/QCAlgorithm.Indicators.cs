@@ -592,6 +592,27 @@ namespace QuantConnect.Algorithm
 
             return doubleExponentialMovingAverage;
         }
+        
+        /// <summary>
+        /// Creates a new DerivativeOscillator indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose DO we want</param>
+        /// <param name="rsiPeriod">The period over which to compute the RSI</param>
+        /// <param name="smoothingRsiPeriod">The period over which to compute the smoothing RSI</param>
+        /// <param name="doubleSmoothingRsiPeriod">The period over which to compute the double smoothing RSI</param>
+        /// <param name="signalLinePeriod">The period over which to compute the signal line</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x =&gt; x.Value)</param>
+        /// <returns>The DerivativeOscillator indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public DerivativeOscillator DO(Symbol symbol, int rsiPeriod, int smoothingRsiPeriod, int doubleSmoothingRsiPeriod, int signalLinePeriod, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"DO({rsiPeriod},{smoothingRsiPeriod},{doubleSmoothingRsiPeriod},{signalLinePeriod})", resolution);
+            var derivativeOscillator = new DerivativeOscillator(name, rsiPeriod, smoothingRsiPeriod, doubleSmoothingRsiPeriod, signalLinePeriod);
+            InitializeIndicator(symbol, derivativeOscillator, resolution, selector);
+
+            return derivativeOscillator;
+        }
 
         /// <summary>
         /// Creates a new <see cref="DetrendedPriceOscillator"/> indicator.
@@ -1610,27 +1631,6 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(symbol, relativeStrengthIndex, resolution, selector);
 
             return relativeStrengthIndex;
-        }
-
-        /// <summary>
-        /// Creates a new DerivativeOscillator indicator.
-        /// </summary>
-        /// <param name="symbol">The symbol whose DO we want</param>
-        /// <param name="rsiPeriod">The period over which to compute the RSI</param>
-        /// <param name="smoothingRsiPeriod">The period over which to compute the smoothing RSI</param>
-        /// <param name="doubleSmoothingRsiPeriod">The period over which to compute the double smoothing RSI</param>
-        /// <param name="signalLinePeriod">The period over which to compute the signal line</param>
-        /// <param name="resolution">The resolution</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x =&gt; x.Value)</param>
-        /// <returns>The DerivativeOscillator indicator for the requested symbol over the specified period</returns>
-        [DocumentationAttribute(Indicators)]
-        public IndicatorDerivativeOscillator DO(Symbol symbol, int rsiPeriod, int smoothingRsiPeriod, int doubleSmoothingRsiPeriod, int signalLinePeriod, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
-        {
-            var name = CreateIndicatorName(symbol, $"DO({rsiPeriod},{smoothingRsiPeriod},{doubleSmoothingRsiPeriod},{signalLinePeriod})", resolution);
-            var derivativeOscillator = new IndicatorDerivativeOscillator(name, rsiPeriod, smoothingRsiPeriod, doubleSmoothingRsiPeriod, signalLinePeriod);
-            InitializeIndicator(symbol, derivativeOscillator, resolution, selector);
-
-            return derivativeOscillator;
         }
         
         /// <summary>
