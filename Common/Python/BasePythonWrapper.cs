@@ -14,7 +14,7 @@
 */
 
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Python.Runtime;
 
 namespace QuantConnect.Python
@@ -27,8 +27,8 @@ namespace QuantConnect.Python
         private PyObject _instance;
         private object _underlyingClrObject;
         private Type _underlyingClrObjectType;
-        private readonly ConcurrentDictionary<string, PyObject> _pythonMethods;
-        private readonly ConcurrentDictionary<string, string> _pythonPropertyNames;
+        private Dictionary<string, PyObject> _pythonMethods;
+        private Dictionary<string, string> _pythonPropertyNames;
 
         private readonly bool _validateInterface;
 
@@ -140,7 +140,8 @@ namespace QuantConnect.Python
         {
             if (!_pythonMethods.TryGetValue(methodName, out var method))
             {
-                _pythonMethods[methodName] = method = _instance.GetMethod(methodName);
+                method = _instance.GetMethod(methodName);
+                _pythonMethods = AddToDictionary(_pythonMethods, methodName, method);
             }
 
             return method;
@@ -208,9 +209,22 @@ namespace QuantConnect.Python
                     }
                 }
 
-                _pythonPropertyNames[propertyName] = pythonPropertyName;
+                _pythonPropertyNames = AddToDictionary(_pythonPropertyNames, propertyName, pythonPropertyName);
             }
+
             return pythonPropertyName;
+        }
+
+        /// <summary>
+        /// Adds a key-value pair to the dictionary by copying the original one first and returning a new dictionary
+        /// containing the new key-value pair along with the original ones.
+        /// We do this in order to avoid the overhead of using locks or concurrent dictionaries and still be thread-safe.
+        /// </summary>
+        private static Dictionary<string, T> AddToDictionary<T>(Dictionary<string, T> dictionary, string key, T value)
+        {
+            var tmp = new Dictionary<string, T>(dictionary);
+            tmp[key] = value;
+            return tmp;
         }
     }
 }
