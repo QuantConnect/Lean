@@ -62,15 +62,15 @@ namespace QuantConnect.Tests.Algorithm
             var byteKey = Encoding.ASCII.GetBytes($"UserName:Password");
             var value = $"Basic ({Convert.ToBase64String(byteKey)})";
 
-            var headers = new PyDict();
             using (Py.GIL())
             {
+                var headers = new PyDict();
                 headers.SetItem("Authorization".ToPython(), value.ToPython());
-            }
 
-            var content = string.Empty;
-            Assert.DoesNotThrow(() => content = algo.Download("https://www.quantconnect.com/", headers));
-            Assert.IsNotEmpty(content);
+                var content = string.Empty;
+                Assert.DoesNotThrow(() => content = algo.Download("https://www.quantconnect.com/", headers));
+                Assert.IsNotEmpty(content);
+            }
         }
     }
 }

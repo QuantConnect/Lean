@@ -24,17 +24,15 @@ namespace QuantConnect.Orders.OptionExercise
     /// <summary>
     /// Python wrapper for custom option exercise models
     /// </summary>
-    public class OptionExerciseModelPythonWrapper: IOptionExerciseModel
+    public class OptionExerciseModelPythonWrapper: BasePythonWrapper<IOptionExerciseModel>, IOptionExerciseModel
     {
-        private readonly dynamic _model;
-
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="model">The python model to wrapp</param>
         public OptionExerciseModelPythonWrapper(PyObject model)
+            : base(model)
         {
-            _model = model.ValidateImplementationOf<IOptionExerciseModel>();
         }
 
         /// <summary>
@@ -46,7 +44,7 @@ namespace QuantConnect.Orders.OptionExercise
         {
             using (Py.GIL())
             {
-                using var orderEventGenerator = _model.OptionExercise(option, order) as PyObject;
+                using var orderEventGenerator = InvokeMethod(nameof(OptionExercise), option, order);
                 using var iterator = orderEventGenerator.GetIterator();
                 foreach (PyObject item in iterator)
                 {

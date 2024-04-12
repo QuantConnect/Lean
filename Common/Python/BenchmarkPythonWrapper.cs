@@ -22,17 +22,15 @@ namespace QuantConnect.Python
     /// <summary>
     /// Provides an implementation of <see cref="IBenchmark"/> that wraps a <see cref="PyObject"/> object
     /// </summary>
-    public class BenchmarkPythonWrapper : IBenchmark
+    public class BenchmarkPythonWrapper : BasePythonWrapper<IBenchmark>, IBenchmark
     {
-        private readonly dynamic _model;
-
         /// <summary>
         /// Constructor for initialising the <see cref="BenchmarkPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Python benchmark model</param>
         public BenchmarkPythonWrapper(PyObject model)
+            : base(model)
         {
-            _model = model;
         }
 
         /// <summary>
@@ -42,10 +40,7 @@ namespace QuantConnect.Python
         /// <returns>The value of the benchmark at the specified time</returns>
         public decimal Evaluate(DateTime time)
         {
-            using (Py.GIL())
-            {
-                return (_model.Evaluate(time) as PyObject).GetAndDispose<decimal>();
-            }
+            return InvokeMethod<decimal>(nameof(Evaluate), time);
         }
     }
 }

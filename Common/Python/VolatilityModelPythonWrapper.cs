@@ -28,7 +28,7 @@ namespace QuantConnect.Python
     /// </summary>
     public class VolatilityModelPythonWrapper : BaseVolatilityModel
     {
-        private readonly dynamic _model;
+        private readonly BasePythonWrapper<IVolatilityModel> _model;
 
         /// <summary>
         /// Constructor for initialising the <see cref="VolatilityModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
@@ -36,18 +36,7 @@ namespace QuantConnect.Python
         /// <param name="model"> Represents a model that computes the volatility of a security</param>
         public VolatilityModelPythonWrapper(PyObject model)
         {
-            using (Py.GIL())
-            {
-                foreach (var attributeName in new[] { "Volatility", "Update", "GetHistoryRequirements" })
-                {
-                    if (!model.HasAttr(attributeName))
-                    {
-                        throw new NotImplementedException(
-                            Messages.PythonCommon.AttributeNotImplemented($"IVolatilityModel.{attributeName}", model.GetPythonType()));
-                    }
-                }
-            }
-            _model = model;
+            _model = new BasePythonWrapper<IVolatilityModel>(model);
         }
 
         /// <summary>
@@ -57,10 +46,7 @@ namespace QuantConnect.Python
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return (_model.Volatility as PyObject).GetAndDispose<decimal>();
-                }
+                return _model.GetProperty<decimal>(nameof(Volatility));
             }
         }
 
@@ -72,10 +58,7 @@ namespace QuantConnect.Python
         /// <param name="data">The new data used to update the model</param>
         public override void Update(Security security, BaseData data)
         {
-            using (Py.GIL())
-            {
-                _model.Update(security, data);
-            }
+            _model.InvokeMethod(nameof(Update), security, data).Dispose();
         }
 
         /// <summary>
@@ -86,10 +69,7 @@ namespace QuantConnect.Python
         /// <returns>History request object list, or empty if no requirements</returns>
         public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
-            using (Py.GIL())
-            {
-                return (_model.GetHistoryRequirements(security, utcTime) as PyObject).GetAndDispose<IEnumerable<HistoryRequest>>();
-            }
+            return _model.InvokeMethod<IEnumerable<HistoryRequest>>(nameof(GetHistoryRequirements), security, utcTime);
         }
 
         /// <summary>
@@ -99,12 +79,9 @@ namespace QuantConnect.Python
         public override void SetSubscriptionDataConfigProvider(
             ISubscriptionDataConfigProvider subscriptionDataConfigProvider)
         {
-            using (Py.GIL())
+            if (_model.HasAttr(nameof(SetSubscriptionDataConfigProvider)))
             {
-                if (_model.HasAttr("SetSubscriptionDataConfigProvider"))
-                {
-                    _model.SetSubscriptionDataConfigProvider(subscriptionDataConfigProvider);
-                }
+                _model.InvokeMethod(nameof(SetSubscriptionDataConfigProvider), subscriptionDataConfigProvider).Dispose();
             }
         }
     }

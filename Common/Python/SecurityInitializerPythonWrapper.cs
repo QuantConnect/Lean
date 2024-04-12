@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,17 +21,15 @@ namespace QuantConnect.Python
     /// <summary>
     /// Wraps a <see cref="PyObject"/> object that represents a type capable of initializing a new security
     /// </summary>
-    public class SecurityInitializerPythonWrapper : ISecurityInitializer
+    public class SecurityInitializerPythonWrapper : BasePythonWrapper<ISecurityInitializer>, ISecurityInitializer
     {
-        private readonly dynamic _model;
-
         /// <summary>
         /// Constructor for initialising the <see cref="SecurityInitializerPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents a type capable of initializing a new security</param>
         public SecurityInitializerPythonWrapper(PyObject model)
+            : base(model)
         {
-            _model = model;
         }
 
         /// <summary>
@@ -40,10 +38,7 @@ namespace QuantConnect.Python
         /// <param name="security">The security to be initialized</param>
         public void Initialize(Security security)
         {
-            using (Py.GIL())
-            {
-                _model.Initialize(security);
-            }
+            InvokeMethod(nameof(Initialize), security);
         }
     }
 }

@@ -24,17 +24,15 @@ namespace QuantConnect.Data.Shortable
     /// <summary>
     /// Python wrapper for custom shortable providers
     /// </summary>
-    public class ShortableProviderPythonWrapper : IShortableProvider
+    public class ShortableProviderPythonWrapper : BasePythonWrapper<IShortableProvider>, IShortableProvider
     {
-        private readonly dynamic _shortableProvider;
-
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="shortableProvider">The python custom shortable provider</param>
         public ShortableProviderPythonWrapper(PyObject shortableProvider)
+            : base(shortableProvider)
         {
-            _shortableProvider = shortableProvider.ValidateImplementationOf<IShortableProvider>();
         }
 
         /// <summary>
@@ -45,10 +43,7 @@ namespace QuantConnect.Data.Shortable
         /// <returns>zero indicating that it is does have borrowing costs</returns>
         public decimal FeeRate(Symbol symbol, DateTime localTime)
         {
-            using (Py.GIL())
-            {
-                return (_shortableProvider.FeeRate(symbol, localTime) as PyObject).GetAndDispose<decimal>();
-            }
+            return InvokeMethod<decimal>(nameof(FeeRate), symbol, localTime);
         }
 
         /// <summary>
@@ -60,10 +55,7 @@ namespace QuantConnect.Data.Shortable
         /// <returns>zero indicating that it is does have borrowing costs</returns>
         public decimal RebateRate(Symbol symbol, DateTime localTime)
         {
-            using (Py.GIL())
-            {
-                return (_shortableProvider.RebateRate(symbol, localTime) as PyObject).GetAndDispose<decimal>();
-            }
+            return InvokeMethod<decimal>(nameof(RebateRate), symbol, localTime);
         }
 
         /// <summary>
@@ -74,10 +66,7 @@ namespace QuantConnect.Data.Shortable
         /// <returns>The quantity shortable for the given Symbol as a positive number. Null if the Symbol is shortable without restrictions.</returns>
         public long? ShortableQuantity(Symbol symbol, DateTime localTime)
         {
-            using (Py.GIL())
-            {
-                return (_shortableProvider.ShortableQuantity(symbol, localTime) as PyObject).GetAndDispose<long?>();
-            }
+            return InvokeMethod<long?>(nameof(ShortableQuantity), symbol, localTime);
         }
     }
 }
