@@ -75,7 +75,7 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    var markets = GetProperty<PyObject>(nameof(DefaultMarkets)) as dynamic;
+                    var markets = GetProperty(nameof(DefaultMarkets)) as dynamic;
                     if ((markets as PyObject).TryConvert(out IReadOnlyDictionary<SecurityType, string> csharpDic))
                     {
                         return csharpDic;
