@@ -125,31 +125,31 @@ namespace QuantConnect.Api
         /// Width of the chart
         /// </summary>
         [JsonProperty(PropertyName = "width")]
-        public int Width { get; set; }
+        public int? Width { get; set; }
 
         /// <summary>
         /// Height of the chart
         /// </summary>
         [JsonProperty(PropertyName = "height")]
-        public int Height { get; set; }
+        public int? Height { get; set; }
 
         /// <summary>
         /// Number of rows of the chart
         /// </summary>
         [JsonProperty(PropertyName = "row")]
-        public int Row { get; set; }
+        public int? Row { get; set; }
 
         /// <summary>
         /// Number of columns of the chart
         /// </summary>
         [JsonProperty(PropertyName = "column")]
-        public int Column { get; set; }
+        public int? Column { get; set; }
 
         /// <summary>
         /// Sort of the chart
         /// </summary>
         [JsonProperty(PropertyName = "sort")]
-        public int Sort { get; set; }
+        public int? Sort { get; set; }
     }
 
     /// <summary>
