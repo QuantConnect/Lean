@@ -35,6 +35,11 @@ namespace QuantConnect.Orders
         public string HandlingInstruction { get; set; }
 
         /// <summary>
+        /// The execution instruction field
+        /// </summary>
+        public string ExecutionInstruction { get; set; }
+
+        /// <summary>
         /// Custom user order notes 1
         /// </summary>
         public string CustomNotes1 { get; set; }
