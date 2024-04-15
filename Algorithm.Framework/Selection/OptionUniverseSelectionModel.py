@@ -25,35 +25,38 @@ class OptionUniverseSelectionModel(UniverseSelectionModel):
             refreshInterval: Time interval between universe refreshes</param>
             optionChainSymbolSelector: Selects symbols from the provided option chain
             universeSettings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed'''
-        self.nextRefreshTimeUtc = datetime.min
+        self.next_refresh_time_utc = datetime.min
 
-        self.refreshInterval = refreshInterval
-        self.optionChainSymbolSelector = optionChainSymbolSelector
-        self.universeSettings = universeSettings
+        self.refresh_interval = refreshInterval
+        self.option_chain_symbol_selector = optionChainSymbolSelector
+        self.universe_settings = universeSettings
 
-    def GetNextRefreshTimeUtc(self):
+    def get_next_refresh_time_utc(self):
         '''Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.'''
-        return self.nextRefreshTimeUtc
+        return self.next_refresh_time_utc
 
-    def CreateUniverses(self, algorithm):
+    def create_universes(self, algorithm: QCAlgorithm) -> list[Universe]:
         '''Creates a new fundamental universe using this class's selection functions
         Args:
             algorithm: The algorithm instance to create universes for
         Returns:
             The universe defined by this model'''
-        self.nextRefreshTimeUtc = (algorithm.UtcTime + self.refreshInterval).date()
+        self.next_refresh_time_utc = (algorithm.utc_time + self.refresh_interval).date()
 
         uniqueUnderlyingSymbols = set()
-        for optionSymbol in self.optionChainSymbolSelector(algorithm.UtcTime):
-            if not Extensions.IsOption(optionSymbol.SecurityType):
+        for option_symbol in self.option_chain_symbol_selector(algorithm.utc_time):
+            if not Extensions.is_option(option_symbol.security_type):
                 raise ValueError("optionChainSymbolSelector must return option, index options, or futures options symbols.")
 
             # prevent creating duplicate option chains -- one per underlying
-            if optionSymbol.Underlying not in uniqueUnderlyingSymbols:
-                uniqueUnderlyingSymbols.add(optionSymbol.Underlying)
-                yield Extensions.CreateOptionChain(algorithm, optionSymbol, self.Filter, self.universeSettings)
+            if option_symbol.underlying not in uniqueUnderlyingSymbols:
+                uniqueUnderlyingSymbols.add(option_symbol.underlying)
+                selection = self.filter
+                if hasattr(self, "Filter") and callable(self.Filter):
+                    selection = self.Filter
+                yield Extensions.create_option_chain(algorithm, option_symbol, selection, self.universe_settings)
 
-    def Filter(self, filter):
+    def filter(self, filter):
         '''Defines the option chain universe filter'''
         # NOP
         return filter

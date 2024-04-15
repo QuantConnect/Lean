@@ -26,36 +26,39 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
             refreshInterval: Time interval between universe refreshes</param>
             futureChainSymbolSelector: Selects symbols from the provided future chain
             universeSettings: Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed'''
-        self.nextRefreshTimeUtc = datetime.min
+        self.next_refresh_time_utc = datetime.min
 
-        self.refreshInterval = refreshInterval
-        self.futureChainSymbolSelector = futureChainSymbolSelector
-        self.universeSettings = universeSettings
+        self.refresh_interval = refreshInterval
+        self.future_chain_symbol_selector = futureChainSymbolSelector
+        self.universe_settings = universeSettings
 
-    def GetNextRefreshTimeUtc(self):
+    def get_next_refresh_time_utc(self):
         '''Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.'''
-        return self.nextRefreshTimeUtc
+        return self.next_refresh_time_utc
 
-    def CreateUniverses(self, algorithm):
+    def create_universes(self, algorithm: QCAlgorithm) -> list[Universe]:
         '''Creates a new fundamental universe using this class's selection functions
         Args:
             algorithm: The algorithm instance to create universes for
         Returns:
             The universe defined by this model'''
-        self.nextRefreshTimeUtc = algorithm.UtcTime + self.refreshInterval
+        self.next_refresh_time_utc = algorithm.utc_time + self.refresh_interval
 
-        uniqueSymbols = set()
-        for futureSymbol in self.futureChainSymbolSelector(algorithm.UtcTime):
-            if futureSymbol.SecurityType != SecurityType.Future:
+        unique_symbols = set()
+        for future_symbol in self.future_chain_symbol_selector(algorithm.utc_time):
+            if future_symbol.SecurityType != SecurityType.FUTURE:
                 raise ValueError("futureChainSymbolSelector must return future symbols.")
 
             # prevent creating duplicate future chains -- one per symbol
-            if futureSymbol not in uniqueSymbols:
-                uniqueSymbols.add(futureSymbol)
-                for universe in Extensions.CreateFutureChain(algorithm, futureSymbol, self.Filter, self.universeSettings):
+            if future_symbol not in unique_symbols:
+                unique_symbols.add(future_symbol)
+                selection = self.filter
+                if hasattr(self, "Filter") and callable(self.Filter):
+                    selection = self.Filter
+                for universe in Extensions.create_future_chain(algorithm, future_symbol, selection, self.universe_settings):
                     yield universe
 
-    def Filter(self, filter):
+    def filter(self, filter):
         '''Defines the future chain universe filter'''
         # NOP
         return filter
