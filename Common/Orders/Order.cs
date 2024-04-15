@@ -55,6 +55,21 @@ namespace QuantConnect.Orders
         public Symbol Symbol { get; internal set; }
 
         /// <summary>
+        /// Limit price of the order
+        /// </summary>
+        public decimal LimitPrice { get; internal set; }
+
+        /// <summary>
+        /// Stop price of the order
+        /// </summary>
+        public decimal StopPrice { get; internal set; }
+
+        /// <summary>
+        /// Indicates if the stop price has been reached, so that the limit order has been triggered
+        /// </summary>
+        public bool StopTriggered { get; internal set; }
+
+        /// <summary>
         /// Price of the Order.
         /// </summary>
         public decimal Price

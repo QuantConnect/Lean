@@ -18,10 +18,7 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Api
 {
-    /// <summary>
-    /// Live algorithm instance result from the QuantConnect Rest API.
-    /// </summary>
-    public class LiveAlgorithm : RestResponse
+    public class BaseLiveAlgorithm : RestResponse
     {
         /// <summary>
         /// Project id for the live instance
@@ -34,7 +31,40 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "deployId")]
         public string DeployId { get; set; }
+    }
 
+    public class CreateLiveAlgorithmResponse : BaseLiveAlgorithm
+    {
+        /// <summary>
+        /// The version of the Lean used to run the algorithm
+        /// </summary>
+        [JsonProperty(PropertyName = "versionId")]
+        public int VersionId { get; set; }
+
+        /// <summary>
+        /// Id of the node that will run the algorithm
+        /// </summary>
+        [JsonProperty(PropertyName = "source")]
+        public string Source { get; set; }
+
+        /// <summary>
+        /// HTTP status response code
+        /// </summary>
+        [JsonProperty(PropertyName = "responseCode")]
+        public string ResponseCode { get; set; }
+
+        /// <summary>
+        /// Queue handler
+        /// </summary>
+        [JsonProperty(PropertyName = "queueHandler")]
+        public string QueueHandler { get; set; }
+    }
+
+    /// <summary>
+    /// Response from List Live Algorithms request to QuantConnect Rest API.
+    /// </summary>
+    public class LiveAlgorithmSummary : BaseLiveAlgorithm
+    {
         /// <summary>
         /// Algorithm status: running, stopped or runtime error.
         /// </summary>
@@ -84,6 +114,6 @@ namespace QuantConnect.Api
         /// Algorithm list matching the requested status.
         /// </summary>
         [JsonProperty(PropertyName = "live")]
-        public List<LiveAlgorithm> Algorithms { get; set; }
+        public List<LiveAlgorithmSummary> Algorithms { get; set; }
     }
 }

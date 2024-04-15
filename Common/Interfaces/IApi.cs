@@ -353,7 +353,7 @@ namespace QuantConnect.Interfaces
         /// <param name="versionId">The version identifier</param>
         /// <param name="dataProviders">Dictionary with data providers and their corresponding credentials</param>
         /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
-        LiveAlgorithm CreateLiveAlgorithm(int projectId, string compileId, string serverType, Dictionary<string, object> baseLiveAlgorithmSettings, string versionId = "-1", Dictionary<string, object> dataProviders = null);
+        CreateLiveAlgorithmResponse CreateLiveAlgorithm(int projectId, string compileId, string serverType, Dictionary<string, object> baseLiveAlgorithmSettings, string versionId = "-1", Dictionary<string, object> dataProviders = null);
 
         /// <summary>
         /// Get a list of live running algorithms for a logged in user.

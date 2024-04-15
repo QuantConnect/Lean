@@ -24,6 +24,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using System.Collections.Generic;
 using Python.Runtime;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests.API
 {
@@ -34,6 +35,19 @@ namespace QuantConnect.Tests.API
     public class LiveTradingTests : ApiTestBase
     {
         private const bool StopLiveAlgos = true;
+        private readonly Dictionary<string, object> _defaultSettings = new()
+        {
+            { "id", "QuantConnectBrokerage" },
+            { "environment", "paper" },
+            { "user", "" },
+            { "password", "" },
+            { "account", "" }
+        };
+        private readonly ProjectFile _defaultFile = new ProjectFile
+        {
+            Name = "Main.cs",
+            Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+        };
 
         /// <summary>
         /// Live paper trading via Interactive Brokers
@@ -507,7 +521,7 @@ namespace QuantConnect.Tests.API
             // Create default algorithm settings
             var settings = new Dictionary<string, object>()
             {
-                { "id", "Default" },
+                { "id", "QuantConnectBrokerage" },
                 { "environment", "paper" },
                 { "user", "" },
                 { "password", "" },

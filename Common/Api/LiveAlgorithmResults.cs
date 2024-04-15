@@ -16,6 +16,8 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using QuantConnect.Packets;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Api
 {
@@ -24,10 +26,53 @@ namespace QuantConnect.Api
     /// </summary>
     public class LiveAlgorithmResults : RestResponse
     {
+        [JsonProperty(PropertyName = "message")]
+        public string Message { get; set; }
+
+        [JsonProperty(PropertyName = "status")]
+        public string Status { get; set; }
+
+        [JsonProperty(PropertyName = "deployId")]
+        public string DeployId { get; set; }
+
+        [JsonProperty(PropertyName = "cloneId")]
+        public int CloneId { get; set; }
+
+        [JsonProperty(PropertyName = "launched")]
+        public DateTime Launched { get; set; }
+
+        [JsonProperty(PropertyName = "stopped")]
+        public DateTime? Stopped { get; set; }
+
+        [JsonProperty(PropertyName = "brokerage")]
+        public string Brokerage { get; set; }
+
+        [JsonProperty(PropertyName = "securityTypes")]
+        public string SecurityTypes { get; set; }
+
+        [JsonProperty(PropertyName = "projectName")]
+        public string ProjectName { get; set; }
+
+        [JsonProperty(PropertyName = "datacenter")]
+        public string Datacenter { get; set; }
+
+        [JsonProperty(PropertyName = "isPublicStreaming")]
+        public bool IsPublicStreaming { get; set; }
+
+        [JsonProperty(PropertyName = "files")]
+        public List<ProjectFile> Files { get; set; }
+
         /// <summary>
-        /// Represents data about the live running algorithm returned from the server
+        /// Runtime banner/updating statistics in the title banner of the live algorithm GUI.
         /// </summary>
-        public LiveResultsData LiveResults { get; set; }
+        [JsonProperty(PropertyName = "runtimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, string> RuntimeStatistics { get; set; }
+
+        /// <summary>
+        /// Charts updates for the live algorithm since the last result packet
+        /// </summary>
+        [JsonProperty(PropertyName = "charts", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, Chart> Charts { get; set; }
     }
 
     /// <summary>

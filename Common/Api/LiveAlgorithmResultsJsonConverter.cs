@@ -76,49 +76,52 @@ namespace QuantConnect.Api
 
             var liveAlgoResults = new LiveAlgorithmResults
             {
+                Message = jObject["message"].Value<string>(),
+                Status = jObject["status"].Value<string>(),
+                DeployId = jObject["deployId"].Value<string>(),
+                CloneId = jObject["cloneId"].Value<int>(),
+                Launched = jObject["launched"].Value<DateTime>(),
+                Stopped = jObject["stopped"].Value<DateTime?>(),
+                Brokerage = jObject["brokerage"].Value<string>(),
+                SecurityTypes = jObject["securityTypes"].Value<string>(),
+                ProjectName = jObject["projectName"].Value<string>(),
+                Datacenter = jObject["datacenter"].Value<string>(),
+                IsPublicStreaming = jObject["isPublicStreaming"].Value<bool>(),
                 Success = jObject["success"].Value<bool>()
             };
 
-            var success = jObject["success"].Value<bool>();
-            if (!success)
+            if (!liveAlgoResults.Success)
             {
                 // Either there was an error in the running algrithm or the algorithm hasn't started
                 liveAlgoResults.Errors = jObject.Last.Children().Select(error => error.ToString()).ToList();
                 return liveAlgoResults;
             }
 
-            liveAlgoResults.Success = true;
-            liveAlgoResults.LiveResults = new LiveResultsData
-            {
-                Resolution = (Resolution)Enum.Parse(typeof(Resolution), jObject["LiveResults"]["resolution"].Value<string>(), true),
-                Version    = jObject["LiveResults"]["version"].Value<int>()
-            };
-
-            // Results json
-            var results = jObject["LiveResults"]["results"];
-
             // Deserialize charting data
             Dictionary<string, Chart> chartDictionary = new();
-            var charts = results["Charts"];
+            var charts = jObject["charts"];
             if (charts != null)
             {
-                var stringCharts = results["Charts"].ToString();
+                var stringCharts = jObject["charts"].ToString();
                 if(!string.IsNullOrEmpty(stringCharts))
                 {
                     chartDictionary = JsonConvert.DeserializeObject<Dictionary<string, Chart>>(stringCharts);
                 }
             }
 
-            // Live Results - At this time only that charting data can be returned from the api (9/30/2016)
-            liveAlgoResults.LiveResults.Results = new LiveResult(new LiveResultParameters(chartDictionary,
-                new Dictionary<int, Order>(),
-                new Dictionary<DateTime, decimal>(),
-                new Dictionary<string, Holding>(),
-                new CashBook(),
-                new Dictionary<string, string>(),
-                new SortedDictionary<string, string>(),
-                new List<OrderEvent>())
-            );
+            List<ProjectFile> projectFiles = new List<ProjectFile>();
+            var files = jObject["files"];
+            if (files != null)
+            {
+                var stringFiles = jObject["files"].ToString();
+                if (!string.IsNullOrEmpty(stringFiles))
+                {
+                    projectFiles = JsonConvert.DeserializeObject<List<ProjectFile>>(stringFiles);
+                }
+            }
+
+            liveAlgoResults.Charts = chartDictionary;
+            liveAlgoResults.Files = projectFiles;
 
             return liveAlgoResults;
         }
