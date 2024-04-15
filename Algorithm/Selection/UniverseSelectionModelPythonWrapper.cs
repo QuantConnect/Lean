@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,6 +18,7 @@ using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -26,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class UniverseSelectionModelPythonWrapper : UniverseSelectionModel
     {
-        private readonly dynamic _model;
+        private readonly BasePythonWrapper<UniverseSelectionModel> _model;
         private readonly bool _modelHasGetNextRefreshTime;
 
         /// <summary>
@@ -39,10 +40,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 return DateTime.MaxValue;
             }
 
-            using (Py.GIL())
-            {
-                return (_model.GetNextRefreshTimeUtc() as PyObject).GetAndDispose<DateTime>();
-            }
+            return _model.InvokeMethod<DateTime>(nameof(GetNextRefreshTimeUtc));
         }
 
         /// <summary>
@@ -51,19 +49,19 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="model">Model defining universes for the algorithm</param>
         public UniverseSelectionModelPythonWrapper(PyObject model)
         {
+            _model = new BasePythonWrapper<UniverseSelectionModel>(model, false);
             using (Py.GIL())
             {
-                _modelHasGetNextRefreshTime = model.HasAttr(nameof(IUniverseSelectionModel.GetNextRefreshTimeUtc));
+                _modelHasGetNextRefreshTime = _model.HasAttr(nameof(IUniverseSelectionModel.GetNextRefreshTimeUtc));
 
                 foreach (var attributeName in new[] { "CreateUniverses" })
                 {
-                    if (!model.HasAttr(attributeName))
+                    if (!_model.HasAttr(attributeName))
                     {
                         throw new NotImplementedException($"IPortfolioSelectionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
                     }
                 }
             }
-            _model = model;
         }
 
         /// <summary>
@@ -75,7 +73,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             using (Py.GIL())
             {
-                var universes = _model.CreateUniverses(algorithm) as PyObject;
+                var universes = _model.InvokeMethod(nameof(CreateUniverses), algorithm);
                 var iterator = universes.GetIterator();
                 foreach (PyObject universe in iterator)
                 {

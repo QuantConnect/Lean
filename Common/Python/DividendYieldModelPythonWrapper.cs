@@ -22,17 +22,15 @@ namespace QuantConnect.Python
     /// <summary>
     /// Wraps a <see cref="PyObject"/> object that represents a dividend yield model
     /// </summary>
-    public class DividendYieldModelPythonWrapper : IDividendYieldModel
+    public class DividendYieldModelPythonWrapper : BasePythonWrapper<IDividendYieldModel>, IDividendYieldModel
     {
-        private readonly dynamic _model;
-
         /// <summary>
         /// Constructor for initializing the <see cref="DividendYieldModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents a security's model of dividend yield</param>
         public DividendYieldModelPythonWrapper(PyObject model)
+            : base(model)
         {
-            _model = model.ValidateImplementationOf<IDividendYieldModel>();
         }
 
         /// <summary>
@@ -42,8 +40,7 @@ namespace QuantConnect.Python
         /// <returns>Dividend yield on the given date of the given symbol</returns>
         public decimal GetDividendYield(DateTime date)
         {
-            using var _ = Py.GIL();
-            return (_model.GetDividendYield(date) as PyObject).GetAndDispose<decimal>();
+            return InvokeMethod<decimal>(nameof(GetDividendYield), date);
         }
 
         /// <summary>

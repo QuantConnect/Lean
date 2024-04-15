@@ -21,17 +21,15 @@ namespace QuantConnect.Python
     /// <summary>
     /// Wraps a <see cref="PyObject"/> object that represents a security's model of buying power
     /// </summary>
-    public class BuyingPowerModelPythonWrapper : IBuyingPowerModel
+    public class BuyingPowerModelPythonWrapper : BasePythonWrapper<IBuyingPowerModel>, IBuyingPowerModel
     {
-        private readonly dynamic _model;
-
         /// <summary>
         /// Constructor for initializing the <see cref="BuyingPowerModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents a security's model of buying power</param>
         public BuyingPowerModelPythonWrapper(PyObject model)
+            : base(model)
         {
-            _model = model.ValidateImplementationOf<IBuyingPowerModel>();
         }
 
         /// <summary>
@@ -41,10 +39,7 @@ namespace QuantConnect.Python
         /// <returns>The buying power available for the trade</returns>
         public BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
         {
-            using (Py.GIL())
-            {
-                return (_model.GetBuyingPower(parameters) as PyObject).GetAndDispose<BuyingPower>();
-            }
+            return InvokeMethod<BuyingPower>(nameof(GetBuyingPower), parameters);
         }
 
         /// <summary>
@@ -54,10 +49,7 @@ namespace QuantConnect.Python
         /// <returns>The current leverage in the security</returns>
         public decimal GetLeverage(Security security)
         {
-            using (Py.GIL())
-            {
-                return (_model.GetLeverage(security) as PyObject).GetAndDispose<decimal>();
-            }
+            return InvokeMethod<decimal>(nameof(GetLeverage), security);
         }
 
         /// <summary>
@@ -68,11 +60,7 @@ namespace QuantConnect.Python
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
         public GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
         {
-            using (Py.GIL())
-            {
-                return (_model.GetMaximumOrderQuantityForTargetBuyingPower(parameters)
-                    as PyObject).GetAndDispose<GetMaximumOrderQuantityResult>();
-            }
+            return InvokeMethod<GetMaximumOrderQuantityResult>(nameof(GetMaximumOrderQuantityForTargetBuyingPower), parameters);
         }
 
         /// <summary>
@@ -84,11 +72,7 @@ namespace QuantConnect.Python
         public GetMaximumOrderQuantityResult GetMaximumOrderQuantityForDeltaBuyingPower(
             GetMaximumOrderQuantityForDeltaBuyingPowerParameters parameters)
         {
-            using (Py.GIL())
-            {
-                return (_model.GetMaximumOrderQuantityForDeltaBuyingPower(parameters)
-                    as PyObject).GetAndDispose<GetMaximumOrderQuantityResult>();
-            }
+            return InvokeMethod<GetMaximumOrderQuantityResult>(nameof(GetMaximumOrderQuantityForDeltaBuyingPower), parameters);
         }
 
         /// <summary>
@@ -98,11 +82,7 @@ namespace QuantConnect.Python
         /// <returns>The reserved buying power in account currency</returns>
         public ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionParameters parameters)
         {
-            using (Py.GIL())
-            {
-                return (_model.GetReservedBuyingPowerForPosition(parameters)
-                    as PyObject).GetAndDispose<ReservedBuyingPowerForPosition>();
-            }
+            return InvokeMethod<ReservedBuyingPowerForPosition>(nameof(GetReservedBuyingPowerForPosition), parameters);
         }
 
         /// <summary>
@@ -112,11 +92,7 @@ namespace QuantConnect.Python
         /// <returns>Returns buying power information for an order</returns>
         public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(HasSufficientBuyingPowerForOrderParameters parameters)
         {
-            using (Py.GIL())
-            {
-                return (_model.HasSufficientBuyingPowerForOrder(parameters)
-                    as PyObject).GetAndDispose<HasSufficientBuyingPowerForOrderResult>();
-            }
+            return InvokeMethod<HasSufficientBuyingPowerForOrderResult>(nameof(HasSufficientBuyingPowerForOrder), parameters);
         }
 
         /// <summary>
@@ -129,10 +105,7 @@ namespace QuantConnect.Python
         /// <param name="leverage">The new leverage</param>
         public void SetLeverage(Security security, decimal leverage)
         {
-            using (Py.GIL())
-            {
-                _model.SetLeverage(security, leverage);
-            }
+            InvokeMethod(nameof(SetLeverage), security, leverage);
         }
 
         /// <summary>
@@ -142,11 +115,7 @@ namespace QuantConnect.Python
         /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
         public MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
-            using (Py.GIL())
-            {
-                return (_model.GetMaintenanceMargin(parameters) as PyObject)
-                    .GetAndDispose<MaintenanceMargin>();
-            }
+            return InvokeMethod<MaintenanceMargin>(nameof(GetMaintenanceMargin), parameters);
         }
 
         /// <summary>
@@ -156,11 +125,7 @@ namespace QuantConnect.Python
         /// <returns>The initial margin required for the provided security and quantity</returns>
         public InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
         {
-            using (Py.GIL())
-            {
-                return (_model.GetInitialMarginRequirement(parameters) as PyObject)
-                    .GetAndDispose<InitialMargin>();
-            }
+            return InvokeMethod<InitialMargin>(nameof(GetInitialMarginRequirement), parameters);
         }
 
         /// <summary>
@@ -170,11 +135,7 @@ namespace QuantConnect.Python
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
         public InitialMargin GetInitialMarginRequiredForOrder(InitialMarginRequiredForOrderParameters parameters)
         {
-            using (Py.GIL())
-            {
-                return (_model.GetInitialMarginRequiredForOrder(parameters) as PyObject)
-                    .GetAndDispose<InitialMargin>();
-            }
+            return InvokeMethod<InitialMargin>(nameof(GetInitialMarginRequiredForOrder), parameters);
         }
     }
 }

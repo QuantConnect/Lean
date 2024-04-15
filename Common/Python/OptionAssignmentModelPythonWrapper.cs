@@ -21,17 +21,15 @@ namespace QuantConnect.Python
     /// <summary>
     /// Python wrapper for custom option assignment models
     /// </summary>
-    public class OptionAssignmentModelPythonWrapper : IOptionAssignmentModel
+    public class OptionAssignmentModelPythonWrapper : BasePythonWrapper<IOptionAssignmentModel>, IOptionAssignmentModel
     {
-        private readonly dynamic _model;
-
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="model">The python model to wrapp</param>
         public OptionAssignmentModelPythonWrapper(PyObject model)
+            : base(model)
         {
-            _model = model.ValidateImplementationOf<IOptionAssignmentModel>();
         }
 
         /// <summary>
@@ -41,10 +39,7 @@ namespace QuantConnect.Python
         /// <returns>The option assignment result</returns>
         public OptionAssignmentResult GetAssignment(OptionAssignmentParameters parameters)
         {
-            using (Py.GIL())
-            {
-                return (_model.GetAssignment(parameters) as PyObject).GetAndDispose<OptionAssignmentResult>();
-            }
+            return InvokeMethod<OptionAssignmentResult>(nameof(GetAssignment), parameters);
         }
     }
 }

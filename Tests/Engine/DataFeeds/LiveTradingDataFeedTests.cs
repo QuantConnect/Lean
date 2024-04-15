@@ -1178,8 +1178,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         Assert.IsTrue(ts.Slice.Keys.Contains(Symbols.SPY));
                     }
-                    // SPY benchmark and the UserDefinedUniverse
-                    Assert.AreEqual(2, _dataQueueHandler.Subscriptions.Count);
+                    // SPY benchmark
+                    Assert.AreEqual(1, _dataQueueHandler.Subscriptions.Count);
 
                     _algorithm.AddSecurities(forex: new List<string> { "EURUSD" });
                     emittedData = true;
@@ -1192,8 +1192,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // SPY benchmark and the UserDefinedUniverse Equity/Forex, EURUSD
-                    if (_dataQueueHandler.Subscriptions.Count == 4) // there could be some slices with no data
+                    // SPY benchmark and EURUSD
+                    if (_dataQueueHandler.Subscriptions.Count == 2) // there could be some slices with no data
                     {
                         Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                         if (ts.Data.Count > 0)
@@ -1244,8 +1244,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 securityChanges += ts.SecurityChanges.Count;
                 if (!firstTime)
                 {
-                    // benchmark SPY, EURUSD and the UserDefinedUniverse
-                    Assert.AreEqual(3, _dataQueueHandler.Subscriptions.Count);
+                    // benchmark SPY, EURUSD
+                    Assert.AreEqual(2, _dataQueueHandler.Subscriptions.Count);
                     _algorithm.AddUniverse("TestUniverse", time => new List<string> { "AAPL", "SPY" });
                     firstTime = true;
                 }
@@ -1255,7 +1255,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         Assert.AreEqual(1, _dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
                     }
-                    else if (_dataQueueHandler.Subscriptions.Count == 4)
+                    else if (_dataQueueHandler.Subscriptions.Count == 3)
                     {
                         // Coarse universe isn't added to the data queue handler
                         Assert.AreNotEqual(1, _dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
@@ -1310,8 +1310,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         Assert.IsTrue(ts.Slice.Keys.Contains(Symbols.SPY));
                     }
-                    // SPY benchmark and the UserDefinedUniverse
-                    Assert.AreEqual(2, _dataQueueHandler.Subscriptions.Count);
+                    // SPY benchmark
+                    Assert.AreEqual(1, _dataQueueHandler.Subscriptions.Count);
 
                     _algorithm.AddSecurities(equities: new List<string> { "AAPL" });
                     emittedData = true;
@@ -1322,8 +1322,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // SPY benchmark and the UserDefinedUniverse Equity, AAPL
-                    if (_dataQueueHandler.Subscriptions.Count == 3) // there could be some slices with no data
+                    // SPY benchmark and AAPL
+                    if (_dataQueueHandler.Subscriptions.Count == 2) // there could be some slices with no data
                     {
                         Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                         if (ts.Data.Count > 0)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ namespace QuantConnect.Python
     /// </summary>
     public class FeeModelPythonWrapper : FeeModel
     {
-        private readonly dynamic _model;
+        private readonly BasePythonWrapper<FeeModel> _model;
         private bool _extendedVersion = true;
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace QuantConnect.Python
         /// <param name="model">Represents a model that simulates order fees</param>
         public FeeModelPythonWrapper(PyObject model)
         {
-            _model = model;
+            _model = new BasePythonWrapper<FeeModel>(model, false);
         }
 
         /// <summary>
@@ -50,15 +50,14 @@ namespace QuantConnect.Python
                 {
                     try
                     {
-                        return (_model.GetOrderFee(parameters) as PyObject).GetAndDispose<OrderFee>();
+                        return _model.InvokeMethod<OrderFee>(nameof(GetOrderFee), parameters);
                     }
                     catch (PythonException)
                     {
                         _extendedVersion = false;
                     }
                 }
-                var fee = (_model.GetOrderFee(parameters.Security, parameters.Order)
-                    as PyObject).GetAndDispose<decimal>();
+                var fee =  _model.InvokeMethod<decimal>(nameof(GetOrderFee), parameters.Security, parameters.Order);
                 return new OrderFee(new CashAmount(fee, "USD"));
             }
         }

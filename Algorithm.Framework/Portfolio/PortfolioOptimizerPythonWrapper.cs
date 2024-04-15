@@ -22,17 +22,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <summary>
     /// Python wrapper for custom portfolio optimizer
     /// </summary>
-    public class PortfolioOptimizerPythonWrapper : IPortfolioOptimizer
+    public class PortfolioOptimizerPythonWrapper : BasePythonWrapper<IPortfolioOptimizer>, IPortfolioOptimizer
     {
-        private readonly dynamic _portfolioOptimizer;
-
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="portfolioOptimizer">The python model to wrapp</param>
         public PortfolioOptimizerPythonWrapper(PyObject portfolioOptimizer)
+            : base(portfolioOptimizer)
         {
-            _portfolioOptimizer = portfolioOptimizer.ValidateImplementationOf<IPortfolioOptimizer>();
         }
 
         /// <summary>
@@ -44,10 +42,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>
         public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null, double[,] covariance = null)
         {
-            using (Py.GIL())
-            {
-                return _portfolioOptimizer.Optimize(historicalReturns, expectedReturns, covariance);
-            }
+            return InvokeMethod<double[]>(nameof(Optimize), historicalReturns, expectedReturns, covariance);
         }
     }
 }

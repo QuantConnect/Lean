@@ -22,17 +22,15 @@ namespace QuantConnect.Python
     /// <summary>
     /// Wraps a <see cref="PyObject"/> object that represents a risk-free interest rate model
     /// </summary>
-    public class RiskFreeInterestRateModelPythonWrapper : IRiskFreeInterestRateModel
+    public class RiskFreeInterestRateModelPythonWrapper : BasePythonWrapper<IRiskFreeInterestRateModel>, IRiskFreeInterestRateModel
     {
-        private readonly dynamic _model;
-
         /// <summary>
         /// Constructor for initializing the <see cref="RiskFreeInterestRateModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents a security's model of buying power</param>
         public RiskFreeInterestRateModelPythonWrapper(PyObject model)
+            : base(model)
         {
-            _model = model.ValidateImplementationOf<IRiskFreeInterestRateModel>();
         }
 
         /// <summary>
@@ -42,8 +40,7 @@ namespace QuantConnect.Python
         /// <returns>Interest rate on the given date</returns>
         public decimal GetInterestRate(DateTime date)
         {
-            using var _ = Py.GIL();
-            return (_model.GetInterestRate(date) as PyObject).GetAndDispose<decimal>();
+            return InvokeMethod<decimal>(nameof(GetInterestRate), date);
         }
 
         /// <summary>

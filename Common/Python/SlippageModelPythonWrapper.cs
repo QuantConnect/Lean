@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,17 +23,15 @@ namespace QuantConnect.Python
     /// <summary>
     /// Wraps a <see cref="PyObject"/> object that represents a model that simulates market order slippage
     /// </summary>
-    public class SlippageModelPythonWrapper : ISlippageModel
+    public class SlippageModelPythonWrapper : BasePythonWrapper<ISlippageModel>, ISlippageModel
     {
-        private readonly dynamic _model;
-
         /// <summary>
         /// Constructor for initialising the <see cref="SlippageModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Represents a model that simulates market order slippage</param>
         public SlippageModelPythonWrapper(PyObject model)
+            : base(model)
         {
-            _model = model;
         }
 
         /// <summary>
@@ -44,10 +42,7 @@ namespace QuantConnect.Python
         /// <returns>The slippage of the order in units of the account currency</returns>
         public decimal GetSlippageApproximation(Security asset, Order order)
         {
-            using (Py.GIL())
-            {
-                return (_model.GetSlippageApproximation(asset, order) as PyObject).GetAndDispose<decimal>();
-            }
+            return InvokeMethod<decimal>(nameof(GetSlippageApproximation), asset, order);
         }
     }
 }

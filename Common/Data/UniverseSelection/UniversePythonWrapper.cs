@@ -17,6 +17,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Interfaces;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -26,7 +27,7 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class UniversePythonWrapper : Universe
     {
-        private readonly dynamic _universe;
+        private readonly BasePythonWrapper<Universe> _model;
 
         /// <summary>
         /// Gets the settings used for subscriptions added for this universe
@@ -35,17 +36,11 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _universe.UniverseSettings;
-                }
+                return _model.GetProperty<UniverseSettings>(nameof(UniverseSettings));
             }
             set
             {
-                using (Py.GIL())
-                {
-                    _universe.UniverseSettings = value;
-                }
+                _model.SetProperty(nameof(UniverseSettings), value);
             }
         }
 
@@ -56,17 +51,11 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _universe.DisposeRequested;
-                }
+                return _model.GetProperty<bool>(nameof(DisposeRequested));
             }
             protected set
             {
-                using (Py.GIL())
-                {
-                    _universe.DisposeRequested = value;
-                }
+                _model.SetProperty(nameof(DisposeRequested), value);
             }
         }
 
@@ -77,10 +66,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _universe.Configuration;
-                }
+                return _model.GetProperty<SubscriptionDataConfig>(nameof(Configuration));
             }
         }
 
@@ -91,10 +77,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _universe.Securities;
-                }
+                return _model.GetProperty<ConcurrentDictionary<Symbol, Member>>(nameof(Securities));
             }
         }
 
@@ -103,7 +86,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public UniversePythonWrapper(PyObject universe) : base(null)
         {
-            _universe = universe;
+            _model = new BasePythonWrapper<Universe>(universe, false);
         }
 
         /// <summary>
@@ -116,7 +99,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             using (Py.GIL())
             {
-                var symbols = _universe.SelectSymbols(utcTime, data) as PyObject;
+                var symbols = _model.InvokeMethod(nameof(SelectSymbols), utcTime, data);
                 var iterator = symbols.GetIterator();
                 foreach (PyObject symbol in iterator)
                 {
@@ -140,7 +123,8 @@ namespace QuantConnect.Data.UniverseSelection
         {
             using (Py.GIL())
             {
-                var subscriptionRequests = _universe.GetSubscriptionRequests(security, currentTimeUtc, maximumEndTimeUtc, subscriptionService) as PyObject;
+                var subscriptionRequests = _model.InvokeMethod(nameof(GetSubscriptionRequests), security, currentTimeUtc,
+                    maximumEndTimeUtc, subscriptionService);
                 var iterator = subscriptionRequests.GetIterator();
                 foreach (PyObject request in iterator)
                 {

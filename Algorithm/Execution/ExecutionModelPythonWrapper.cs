@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,6 +16,7 @@
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Python;
 using System;
 
 namespace QuantConnect.Algorithm.Framework.Execution
@@ -25,7 +26,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// </summary>
     public class ExecutionModelPythonWrapper : ExecutionModel
     {
-        private readonly dynamic _model;
+        private readonly BasePythonWrapper<ExecutionModel> _model;
 
         /// <summary>
         /// Constructor for initialising the <see cref="IExecutionModel"/> class with wrapped <see cref="PyObject"/> object
@@ -33,17 +34,14 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="model">Model defining how to execute trades to reach a portfolio target</param>
         public ExecutionModelPythonWrapper(PyObject model)
         {
-            using (Py.GIL())
+            _model = new BasePythonWrapper<ExecutionModel>(model, false);
+            foreach (var attributeName in new[] { "Execute", "OnSecuritiesChanged" })
             {
-                foreach (var attributeName in new[] { "Execute", "OnSecuritiesChanged" })
+                if (!_model.HasAttr(attributeName))
                 {
-                    if (!model.HasAttr(attributeName))
-                    {
-                        throw new NotImplementedException($"IExecutionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
-                    }
+                    throw new NotImplementedException($"IExecutionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
                 }
             }
-            _model = model;
         }
 
         /// <summary>
@@ -54,10 +52,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="targets">The portfolio targets to be ordered</param>
         public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
-            using (Py.GIL())
-            {
-                _model.Execute(algorithm, targets);
-            }
+            _model.InvokeMethod(nameof(Execute), algorithm, targets).Dispose();
         }
 
         /// <summary>
@@ -67,10 +62,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            using (Py.GIL())
-            {
-                _model.OnSecuritiesChanged(algorithm, changes);
-            }
+            _model.InvokeMethod(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
         }
     }
 }

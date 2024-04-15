@@ -26,7 +26,7 @@ namespace QuantConnect.Python
     /// </summary>
     public class FillModelPythonWrapper : FillModel
     {
-        private readonly dynamic _model;
+        private readonly BasePythonWrapper<FillModel> _model;
 
         /// <summary>
         /// Constructor for initialising the <see cref="FillModelPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
@@ -34,10 +34,10 @@ namespace QuantConnect.Python
         /// <param name="model">Represents a model that simulates order fill events</param>
         public FillModelPythonWrapper(PyObject model)
         {
-            _model = model;
+            _model = new BasePythonWrapper<FillModel>(model, false);
             using (Py.GIL())
             {
-                _model.SetPythonWrapper(this);
+                (model as dynamic).SetPythonWrapper(this);
             }
         }
 
@@ -49,10 +49,7 @@ namespace QuantConnect.Python
         public override Fill Fill(FillModelParameters parameters)
         {
             Parameters = parameters;
-            using (Py.GIL())
-            {
-                return (_model.Fill(parameters) as PyObject).GetAndDispose<Fill>();
-            }
+            return _model.InvokeMethod<Fill>(nameof(Fill), parameters);
         }
 
         /// <summary>
@@ -63,10 +60,7 @@ namespace QuantConnect.Python
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public override OrderEvent LimitFill(Security asset, LimitOrder order)
         {
-            using (Py.GIL())
-            {
-                return (_model.LimitFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
-            }
+            return _model.InvokeMethod<OrderEvent>(nameof(LimitFill), asset, order);
         }
 
         /// <summary>
@@ -77,10 +71,7 @@ namespace QuantConnect.Python
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public override OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
         {
-            using (Py.GIL())
-            {
-                return (_model.LimitIfTouchedFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
-            }
+            return _model.InvokeMethod<OrderEvent>(nameof(LimitIfTouchedFill), asset, order);
         }
 
         /// <summary>
@@ -91,10 +82,7 @@ namespace QuantConnect.Python
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public override OrderEvent MarketFill(Security asset, MarketOrder order)
         {
-            using (Py.GIL())
-            {
-                return (_model.MarketFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
-            }
+            return _model.InvokeMethod<OrderEvent>(nameof(MarketFill), asset, order);
         }
 
         /// <summary>
@@ -105,10 +93,7 @@ namespace QuantConnect.Python
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public override OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order)
         {
-            using (Py.GIL())
-            {
-                return (_model.MarketOnCloseFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
-            }
+            return _model.InvokeMethod<OrderEvent>(nameof(MarketOnCloseFill), asset, order);
         }
 
         /// <summary>
@@ -119,10 +104,7 @@ namespace QuantConnect.Python
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public override OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order)
         {
-            using (Py.GIL())
-            {
-                return (_model.MarketOnOpenFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
-            }
+            return _model.InvokeMethod<OrderEvent>(nameof(MarketOnOpenFill), asset, order);
         }
 
         /// <summary>
@@ -133,10 +115,7 @@ namespace QuantConnect.Python
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public override OrderEvent StopLimitFill(Security asset, StopLimitOrder order)
         {
-            using (Py.GIL())
-            {
-                return (_model.StopLimitFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
-            }
+            return _model.InvokeMethod<OrderEvent>(nameof(StopLimitFill), asset, order);
         }
 
         /// <summary>
@@ -147,10 +126,7 @@ namespace QuantConnect.Python
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public override OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
-            using (Py.GIL())
-            {
-                return (_model.StopMarketFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
-            }
+            return _model.InvokeMethod<OrderEvent>(nameof(StopMarketFill), asset, order);
         }
 
         /// <summary>
@@ -161,10 +137,7 @@ namespace QuantConnect.Python
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public override OrderEvent TrailingStopFill(Security asset, TrailingStopOrder order)
         {
-            using (Py.GIL())
-            {
-                return (_model.TrailingStopFill(asset, order) as PyObject).GetAndDispose<OrderEvent>();
-            }
+            return _model.InvokeMethod<OrderEvent>(nameof(TrailingStopFill), asset, order);
         }
 
         /// <summary>
@@ -175,10 +148,7 @@ namespace QuantConnect.Python
         /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
         public override List<OrderEvent> ComboMarketFill(Order order, FillModelParameters parameters)
         {
-            using (Py.GIL())
-            {
-                return (_model.ComboMarketFill(order, parameters) as PyObject).GetAndDispose<List<OrderEvent>>();
-            }
+            return _model.InvokeMethod<List<OrderEvent>>(nameof(ComboMarketFill), order, parameters);
         }
 
         /// <summary>
@@ -189,10 +159,7 @@ namespace QuantConnect.Python
         /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
         public override List<OrderEvent> ComboLimitFill(Order order, FillModelParameters parameters)
         {
-            using (Py.GIL())
-            {
-                return (_model.ComboLimitFill(order, parameters) as PyObject).GetAndDispose<List<OrderEvent>>();
-            }
+            return _model.InvokeMethod<List<OrderEvent>>(nameof(ComboLimitFill), order, parameters);
         }
 
         /// <summary>
@@ -203,10 +170,7 @@ namespace QuantConnect.Python
         /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
         public override List<OrderEvent> ComboLegLimitFill(Order order, FillModelParameters parameters)
         {
-            using (Py.GIL())
-            {
-                return (_model.ComboLegLimitFill(order, parameters) as PyObject).GetAndDispose<List<OrderEvent>>();
-            }
+            return _model.InvokeMethod<List<OrderEvent>>(nameof(ComboLegLimitFill), order, parameters);
         }
 
         /// <summary>
@@ -216,10 +180,7 @@ namespace QuantConnect.Python
         /// <param name="direction">The order direction, decides whether to pick bid or ask</param>
         protected override Prices GetPrices(Security asset, OrderDirection direction)
         {
-            using (Py.GIL())
-            {
-                return (_model.GetPrices(asset, direction) as PyObject).GetAndDispose<Prices>();
-            }
+            return _model.InvokeMethod<Prices>(nameof(GetPrices), asset, direction);
         }
 
         /// <summary>

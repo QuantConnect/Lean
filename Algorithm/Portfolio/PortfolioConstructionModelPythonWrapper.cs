@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,6 +16,7 @@
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Python;
 using System;
 using System.Collections.Generic;
 
@@ -26,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class PortfolioConstructionModelPythonWrapper : PortfolioConstructionModel
     {
-        private readonly dynamic _model;
+        private readonly BasePythonWrapper<PortfolioConstructionModel> _model;
         private readonly bool _implementsDetermineTargetPercent;
 
         /// <summary>
@@ -36,17 +37,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _model.RebalanceOnSecurityChanges;
-                }
+                return _model.GetProperty<bool>(nameof(RebalanceOnSecurityChanges));
             }
             set
             {
-                using (Py.GIL())
-                {
-                    _model.RebalanceOnSecurityChanges = value;
-                }
+                _model.SetProperty(nameof(RebalanceOnSecurityChanges), value);
             }
         }
 
@@ -57,17 +52,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _model.RebalanceOnInsightChanges;
-                }
+                return _model.GetProperty<bool>(nameof(RebalanceOnInsightChanges));
             }
             set
             {
-                using (Py.GIL())
-                {
-                    _model.RebalanceOnInsightChanges = value;
-                }
+                _model.SetProperty(nameof(RebalanceOnInsightChanges), value);
             }
         }
 
@@ -77,18 +66,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="model">Model defining how to build a portfolio from alphas</param>
         public PortfolioConstructionModelPythonWrapper(PyObject model)
         {
+            _model = new BasePythonWrapper<PortfolioConstructionModel>(model, false);
             using (Py.GIL())
             {
                 foreach (var attributeName in new[] { "CreateTargets", "OnSecuritiesChanged" })
                 {
-                    if (!model.HasAttr(attributeName))
+                    if (!_model.HasAttr(attributeName))
                     {
                         throw new NotImplementedException($"IPortfolioConstructionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
                     }
                 }
 
-                _model = model;
-                _model.SetPythonWrapper(this);
+                _model.InvokeMethod(nameof(SetPythonWrapper), this).Dispose();
 
                 _implementsDetermineTargetPercent = model.GetPythonMethod("DetermineTargetPercent") != null;
             }
@@ -102,13 +91,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
         public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
         {
-            using (Py.GIL())
-            {
-                foreach (var target in _model.CreateTargets(algorithm, insights))
-                {
-                    yield return target;
-                }
-            }
+            return _model.InvokeMethod<IEnumerable<IPortfolioTarget>>(nameof(CreateTargets), algorithm, insights);
         }
 
         /// <summary>
@@ -118,10 +101,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            using (Py.GIL())
-            {
-                _model.OnSecuritiesChanged(algorithm, changes);
-            }
+            _model.InvokeMethod(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
         }
 
         /// <summary>
@@ -132,10 +112,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>True if the portfolio should create a target for the insight</returns>
         protected override bool ShouldCreateTargetForInsight(Insight insight)
         {
-            using (Py.GIL())
-            {
-                return _model.ShouldCreateTargetForInsight(insight);
-            }
+            return _model.InvokeMethod<bool>(nameof(ShouldCreateTargetForInsight), insight);
         }
 
         /// <summary>
@@ -148,10 +125,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>True if should rebalance</returns>
         protected override bool IsRebalanceDue(Insight[] insights, DateTime algorithmUtc)
         {
-            using (Py.GIL())
-            {
-                return _model.IsRebalanceDue(insights, algorithmUtc);
-            }
+            return _model.InvokeMethod<bool>(nameof(IsRebalanceDue), insights, algorithmUtc);
         }
 
         /// <summary>
@@ -160,10 +134,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of the target insights</returns>
         protected override List<Insight> GetTargetInsights()
         {
-            using (Py.GIL())
-            {
-                return _model.GetTargetInsights();
-            }
+            return _model.InvokeMethod<List<Insight>>(nameof(GetTargetInsights));
         }
 
         /// <summary>
@@ -178,11 +149,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 if (!_implementsDetermineTargetPercent)
                 {
                     // the implementation is in C#
-                    return _model.DetermineTargetPercent(activeInsights);
+                    return _model.InvokeMethod<Dictionary<Insight, double>>(nameof(DetermineTargetPercent), activeInsights);
                 }
 
                 Dictionary<Insight, double> dic;
-                var result = _model.DetermineTargetPercent(activeInsights);
+                var result = _model.InvokeMethod(nameof(DetermineTargetPercent), activeInsights) as dynamic;
                 if ((result as PyObject).TryConvert(out dic))
                 {
                     // this is required if the python implementation is actually returning a C# dic, not common,

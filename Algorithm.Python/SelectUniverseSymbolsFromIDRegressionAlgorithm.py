@@ -26,7 +26,7 @@ class SelectUniverseSymbolsFromIDRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2014, 3, 26)
         self.SetCash(100000)
 
-        self.securities = []
+        self._securities = []
         self.UniverseSettings.Resolution = Resolution.Daily
         self.AddUniverse(self.select_symbol)
 
@@ -49,8 +49,8 @@ class SelectUniverseSymbolsFromIDRegressionAlgorithm(QCAlgorithm):
         return security_ids
 
     def OnSecuritiesChanged(self, changes):
-        self.securities.extend(changes.AddedSecurities)
+        self._securities.extend(changes.AddedSecurities)
 
     def OnEndOfAlgorithm(self):
-        if not self.securities:
+        if not self._securities:
             raise Exception("No securities were selected")

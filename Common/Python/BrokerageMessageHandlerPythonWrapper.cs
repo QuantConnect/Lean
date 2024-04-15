@@ -21,17 +21,15 @@ namespace QuantConnect.Python
     /// <summary>
     /// Provides a wrapper for <see cref="IBrokerageMessageHandler"/> implementations written in python
     /// </summary>
-    public class BrokerageMessageHandlerPythonWrapper : IBrokerageMessageHandler
+    public class BrokerageMessageHandlerPythonWrapper : BasePythonWrapper<IBrokerageMessageHandler>, IBrokerageMessageHandler
     {
-        private readonly dynamic _model;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="BrokerageMessageHandlerPythonWrapper"/> class
         /// </summary>
         /// <param name="model">The python implementation of <see cref="IBrokerageMessageHandler"/></param>
         public BrokerageMessageHandlerPythonWrapper(PyObject model)
+            : base(model)
         {
-            _model = model.ValidateImplementationOf<IBrokerageMessageHandler>();
         }
 
         /// <summary>
@@ -40,10 +38,7 @@ namespace QuantConnect.Python
         /// <param name="message">The message to be handled</param>
         public void HandleMessage(BrokerageMessageEvent message)
         {
-            using (Py.GIL())
-            {
-                _model.HandleMessage(message);
-            }
+            InvokeMethod(nameof(HandleMessage), message);
         }
 
         /// <summary>
@@ -53,10 +48,7 @@ namespace QuantConnect.Python
         /// <returns>Whether the order should be added to the transaction handler</returns>
         public bool HandleOrder(NewBrokerageOrderNotificationEventArgs eventArgs)
         {
-            using (Py.GIL())
-            {
-                return _model.HandleOrder(eventArgs);
-            }
+            return InvokeMethod<bool>(nameof(HandleOrder), eventArgs);
         }
     }
 }

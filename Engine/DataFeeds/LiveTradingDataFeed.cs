@@ -410,12 +410,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, tzOffsetProvider, enumerator, request.IsUniverseSubscription);
             subscription = new Subscription(request, subscriptionDataEnumerator, tzOffsetProvider);
 
-            // send the subscription for the new symbol through to the data queuehandler
-            if (_channelProvider.ShouldStreamSubscription(subscription.Configuration))
-            {
-                Subscribe(request.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), (_) => false);
-            }
-
             return subscription;
         }
 

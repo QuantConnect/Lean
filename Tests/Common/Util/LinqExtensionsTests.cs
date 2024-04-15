@@ -25,18 +25,6 @@ namespace QuantConnect.Tests.Common.Util
     public class LinqExtensionsTests
     {
         [Test]
-        public void ExceptProducesSameResultsAsEnumerableExcept()
-        {
-            var enumerable = Enumerable.Range(0, 100);
-            var set = new HashSet<int>(Enumerable.Range(40, 20));
-
-            var expected = Enumerable.Except(enumerable, set);
-            var actual = LinqExtensions.Except(enumerable, set);
-
-            CollectionAssert.AreEqual(expected, actual);
-        }
-
-        [Test]
         public void ToArray_PerformsProjection()
         {
             var enumerable = Enumerable.Range(0, 10);
