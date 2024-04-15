@@ -18,8 +18,8 @@ class ETFConstituentsUniverseSelectionModel(UniverseSelectionModel):
     '''Universe selection model that selects the constituents of an ETF.'''
 
     def __init__(self,
-                 etfSymbol, 
-                 universeSettings = None, 
+                 etfSymbol,
+                 universeSettings = None,
                  universeFilterFunc = None):
         '''Initializes a new instance of the ETFConstituentsUniverseSelectionModel class
         Args:
@@ -27,11 +27,11 @@ class ETFConstituentsUniverseSelectionModel(UniverseSelectionModel):
             universeSettings: Universe settings
             universeFilterFunc: Function to filter universe results'''
         if type(etfSymbol) is str:
-            symbol = SymbolCache.TryGetSymbol(etfSymbol, None)
-            if symbol[0] and symbol[1].SecurityType == SecurityType.Equity:
+            symbol = SymbolCache.try_get_symbol(etfSymbol, None)
+            if symbol[0] and symbol[1].security_type == SecurityType.EQUITY:
                 self.etf_symbol = symbol[1]
             else:
-                self.etf_symbol = Symbol.Create(etfSymbol, SecurityType.Equity, Market.USA)
+                self.etf_symbol = Symbol.create(etfSymbol, SecurityType.EQUITY, Market.USA)
         else:
             self.etf_symbol = etfSymbol
         self.universe_settings = universeSettings
@@ -39,12 +39,12 @@ class ETFConstituentsUniverseSelectionModel(UniverseSelectionModel):
 
         self.universe = None
 
-    def CreateUniverses(self, algorithm: QCAlgorithm) -> List[Universe]:
+    def create_universes(self, algorithm: QCAlgorithm) -> list[Universe]:
         '''Creates a new ETF constituents universe using this class's selection function
         Args:
             algorithm: The algorithm instance to create universes for
         Returns:
             The universe defined by this model'''
         if self.universe is None:
-            self.universe = algorithm.Universe.ETF(self.etf_symbol, self.universe_settings, self.universe_filter_function)           
+            self.universe = algorithm.universe.etf(self.etf_symbol, self.universe_settings, self.universe_filter_function)
         return [self.universe]

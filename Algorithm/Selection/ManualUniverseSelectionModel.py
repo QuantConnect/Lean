@@ -20,48 +20,48 @@ from itertools import groupby
 class ManualUniverseSelectionModel(UniverseSelectionModel):
     '''Provides an implementation of IUniverseSelectionModel that simply subscribes to the specified set of symbols'''
 
-    def __init__(self, symbols = list(), universeSettings = None):
-        self.MarketHours = MarketHoursDatabase.FromDataFolder()
+    def __init__(self, symbols = list(), universe_settings = None):
+        self.marketHours = MarketHoursDatabase.from_data_folder()
         self.symbols = symbols
-        self.universeSettings = universeSettings
+        self.universe_settings = universe_settings
 
         for symbol in symbols:
-            SymbolCache.Set(symbol.Value, symbol)
+            SymbolCache.set(symbol.Value, symbol)
 
-    def CreateUniverses(self, algorithm):
+    def create_universes(self, algorithm: QCAlgorithm) -> list[Universe]:
         '''Creates the universes for this algorithm. Called once after IAlgorithm.Initialize
         Args:
             algorithm: The algorithm instance to create universes for</param>
         Returns:
             The universes to be used by the algorithm'''
-        universeSettings = self.universeSettings \
-            if self.universeSettings is not None else algorithm.UniverseSettings
+        universe_settings = self.universe_settings \
+            if self.universe_settings is not None else algorithm.universe_settings
 
-        resolution = universeSettings.Resolution
-        type = typeof(Tick) if resolution == Resolution.Tick else typeof(TradeBar)
+        resolution = universe_settings.resolution
+        type = typeof(Tick) if resolution == Resolution.TICK else typeof(TradeBar)
 
         universes = list()
 
         # universe per security type/market
-        self.symbols = sorted(self.symbols, key=lambda s: (s.ID.Market, s.SecurityType))
-        for key, grp in groupby(self.symbols, lambda s: (s.ID.Market, s.SecurityType)):
+        self.symbols = sorted(self.symbols, key=lambda s: (s.id.market, s.security_type))
+        for key, grp in groupby(self.symbols, lambda s: (s.id.market, s.security_type)):
 
             market = key[0]
-            securityType = key[1]
-            securityTypeString = Extensions.GetEnumString(securityType, SecurityType)
-            universeSymbol = Symbol.Create(f"manual-universe-selection-model-{securityTypeString}-{market}", securityType, market)
+            security_type = key[1]
+            security_type_str = Extensions.get_enum_string(security_type, SecurityType)
+            universe_symbol = Symbol.create(f"manual-universe-selection-model-{security_type_str}-{market}", security_type, market)
 
-            if securityType == SecurityType.Base:
+            if security_type == SecurityType.BASE:
                 # add an entry for this custom universe symbol -- we don't really know the time zone for sure,
                 # but we set it to TimeZones.NewYork in AddData, also, since this is a manual universe, the time
                 # zone doesn't actually matter since this universe specifically doesn't do anything with data.
-                symbolString = MarketHoursDatabase.GetDatabaseSymbolKey(universeSymbol)
-                alwaysOpen = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork)
-                entry = self.MarketHours.SetEntry(market, symbolString, securityType, alwaysOpen, TimeZones.NewYork)
+                symbol_string = MarketHoursDatabase.get_database_symbol_key(universe_symbol)
+                always_open = SecurityExchangeHours.always_open(TimeZones.NEW_YORK)
+                entry = self.marketHours.set_entry(market, symbol_string, security_type, always_open, TimeZones.NEW_YORK)
             else:
-                entry = self.MarketHours.GetEntry(market, None, securityType)
+                entry = self.marketHours.get_entry(market, None, security_type)
 
-            config = SubscriptionDataConfig(type, universeSymbol, resolution, entry.DataTimeZone, entry.ExchangeHours.TimeZone, False, False, True)
-            universes.append( ManualUniverse(config, universeSettings, list(grp)))
+            config = SubscriptionDataConfig(type, universe_symbol, resolution, entry.data_time_zone, entry.exchange_hours.time_zone, False, False, True)
+            universes.append( ManualUniverse(config, universe_settings, list(grp)))
 
         return universes

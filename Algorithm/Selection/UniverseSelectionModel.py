@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,14 +16,18 @@ from AlgorithmImports import *
 class UniverseSelectionModel:
     '''Provides a base class for universe selection models.'''
 
-    def GetNextRefreshTimeUtc(self):
+    def get_next_refresh_time_utc(self) -> datetime:
         '''Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.'''
+        if hasattr(self, "GetNextRefreshTimeUtc") and callable(self.GetNextRefreshTimeUtc):
+            return self.GetNextRefreshTimeUtc()
         return datetime.max
 
-    def CreateUniverses(self, algorithm):
+    def create_universes(self, algorithm: QCAlgorithm) -> list[Universe]:
         '''Creates the universes for this algorithm. Called once after <see cref="IAlgorithm.Initialize"/>
         Args:
             algorithm: The algorithm instance to create universes for</param>
         Returns:
             The universes to be used by the algorithm'''
+        if hasattr(self, "CreateUniverses") and callable(self.CreateUniverses):
+            return self.CreateUniverses(algorithm)
         raise NotImplementedError("Types deriving from 'UniverseSelectionModel' must implement the 'def CreateUniverses(QCAlgorithm) method.")

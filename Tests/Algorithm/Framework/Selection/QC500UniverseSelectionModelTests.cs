@@ -200,8 +200,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             {
                 var name = "QC500UniverseSelectionModel";
                 dynamic model = Py.Import(name).GetAttr(name).Invoke();
-                SelectCoarse = ConvertToUniverseSelectionSymbolDelegate<IEnumerable<CoarseFundamental>>(model.SelectCoarse);
-                SelectFine = ConvertToUniverseSelectionSymbolDelegate<IEnumerable<FineFundamental>>(model.SelectFine);
+                SelectCoarse = ConvertToUniverseSelectionSymbolDelegate<IEnumerable<CoarseFundamental>>(model.select_coarse);
+                SelectFine = ConvertToUniverseSelectionSymbolDelegate<IEnumerable<FineFundamental>>(model.select_fine);
             }
         }
 
