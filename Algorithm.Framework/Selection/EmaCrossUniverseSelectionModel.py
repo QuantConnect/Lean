@@ -41,48 +41,48 @@ class EmaCrossUniverseSelectionModel(FundamentalUniverseSelectionModel):
         '''Defines the coarse fundamental selection function.
         Args:
             algorithm: The algorithm instance
-            coarse: The coarse fundamental data used to perform filtering</param>
+            fundamental: The coarse fundamental data used to perform filtering</param>
         Returns:
             An enumerable of symbols passing the filter'''
         filtered = []
 
         for cf in fundamental:
             if cf.symbol not in self.averages:
-                self.averages[cf.Symbol] = self.SelectionData(cf.symbol, self.fast_period, self.slow_period)
+                self.averages[cf.symbol] = self.SelectionData(cf.symbol, self.fast_period, self.slow_period)
 
             # grab th SelectionData instance for this symbol
             avg = self.averages.get(cf.symbol)
 
             # Update returns true when the indicators are ready, so don't accept until they are
             # and only pick symbols who have their fastPeriod-day ema over their slowPeriod-day ema
-            if avg.Update(cf.EndTime, cf.AdjustedPrice) and avg.Fast > avg.Slow * (1 + self.tolerance):
+            if avg.Update(cf.end_time, cf.adjusted_price) and avg.fast > avg.slow * (1 + self.tolerance):
                 filtered.append(avg)
 
         # prefer symbols with a larger delta by percentage between the two averages
-        filtered = sorted(filtered, key=lambda avg: avg.ScaledDelta, reverse = True)
+        filtered = sorted(filtered, key=lambda avg: avg.scaled_delta, reverse = True)
 
         # we only need to return the symbol and return 'universeCount' symbols
         return [x.Symbol for x in filtered[:self.universe_count]]
 
     # class used to improve readability of the coarse selection function
     class SelectionData:
-        def __init__(self, symbol, fastPeriod, slowPeriod):
+        def __init__(self, symbol, fast_period, slow_period):
             self.symbol = symbol
-            self.fast_ema = ExponentialMovingAverage(fastPeriod)
-            self.slow_ema = ExponentialMovingAverage(slowPeriod)
+            self.fast_ema = ExponentialMovingAverage(fast_period)
+            self.slow_ema = ExponentialMovingAverage(slow_period)
 
         @property
-        def Fast(self):
+        def fast(self):
             return float(self.fast_ema.current.value)
 
         @property
-        def Slow(self):
+        def slow(self):
             return float(self.slow_ema.current.value)
 
         # computes an object score of how much large the fast is than the slow
         @property
-        def ScaledDelta(self):
-            return (self.Fast - self.Slow) / ((self.Fast + self.Slow) / 2)
+        def scaled_delta(self):
+            return (self.fast - self.slow) / ((self.fast + self.slow) / 2)
 
         # updates the EMAFast and EMASlow indicators, returning true when they're both ready
         def Update(self, time, value):
