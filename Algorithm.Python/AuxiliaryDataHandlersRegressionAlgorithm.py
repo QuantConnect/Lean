@@ -18,40 +18,40 @@ from AlgorithmImports import *
 ### </summary>
 class AuxiliaryDataHandlersRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.SetStartDate(2007, 5, 16)
-        self.SetEndDate(2015, 1, 1)
+        self.set_start_date(2007, 5, 16)
+        self.set_end_date(2015, 1, 1)
 
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
         # will get delisted
-        self.AddEquity("AAA.1")
+        self.add_equity("AAA.1")
 
         # get's remapped
-        self.AddEquity("SPWR")
+        self.add_equity("SPWR")
 
         # has a split & dividends
-        self.AddEquity("AAPL")
+        self.add_equity("AAPL")
 
-    def OnDelistings(self, delistings: Delistings):
-        self._onDelistingsCalled = True
+    def on_delistings(self, delistings: Delistings):
+        self._on_delistings_called = True
 
-    def OnSymbolChangedEvents(self, symbolsChanged: SymbolChangedEvents):
-        self._onSymbolChangedEvents = True
+    def on_symbol_changed_events(self, symbolsChanged: SymbolChangedEvents):
+        self._on_symbol_changed_events = True
 
-    def OnSplits(self, splits: Splits):
-        self._onSplits = True
+    def on_splits(self, splits: Splits):
+        self._on_splits = True
 
-    def OnDividends(self, dividends: Dividends):
-        self._onDividends = True
+    def on_dividends(self, dividends: Dividends):
+        self._on_dividends = True
 
-    def OnEndOfAlgorithm(self):
-        if not self._onDelistingsCalled:
+    def on_end_of_algorithm(self):
+        if not self._on_delistings_called:
             raise ValueError("OnDelistings was not called!")
-        if not self._onSymbolChangedEvents:
+        if not self._on_symbol_changed_events:
             raise ValueError("OnSymbolChangedEvents was not called!")
-        if not self._onSplits:
+        if not self._on_splits:
             raise ValueError("OnSplits was not called!")
-        if not self._onDividends:
+        if not self._on_dividends:
             raise ValueError("OnDividends was not called!")

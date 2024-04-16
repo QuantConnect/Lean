@@ -18,6 +18,6 @@ from BasicSetAccountCurrencyAlgorithm import BasicSetAccountCurrencyAlgorithm
 ### Basic algorithm using SetAccountCurrency with an amount
 ### </summary>
 class BasicSetAccountCurrencyWithAmountAlgortihm(BasicSetAccountCurrencyAlgorithm):
-    def SetAccountCurrencyAndAmount(self):
+    def set_account_currency_and_amount(self):
         # Before setting any cash or adding a Security call SetAccountCurrency
-        self.SetAccountCurrency("EUR", 200000)
+        self.set_account_currency("EUR", 200000)

@@ -14,106 +14,80 @@
 from AlgorithmImports import *
 
 ### <summary>
-### This regression algorithm tests that we only receive the option chain for a single future contract
-### in the option universe filter.
+### This regression algorithm tests that we receive the expected data when
+### we add future option contracts individually using <see cref="AddFutureOptionContract"/>
 ### </summary>
-class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
+class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
+    def initialize(self):
+        self.on_data_reached = False
         self.invested = False
-        self.onDataReached = False
-        self.optionFilterRan = False
-        self.symbolsReceived = []
-        self.expectedSymbolsReceived = []
-        self.dataReceived = {}
+        self.symbols_received = []
+        self.expected_symbols_received = []
+        self.data_received = {}
 
-        self.SetStartDate(2020, 1, 4)
-        self.SetEndDate(2020, 1, 8)
+        self.set_start_date(2020, 1, 4)
+        self.set_end_date(2020, 1, 8)
 
-        self.es = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, Market.CME)
-        self.es.SetFilter(lambda futureFilter: futureFilter.Expiration(0, 365).ExpirationCycle([3, 6]))
+        self.es20h20 = self.add_future_contract(
+            Symbol.create_future(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 3, 20)),
+            Resolution.MINUTE).symbol
 
-        self.AddFutureOption(self.es.Symbol, self.OptionContractUniverseFilterFunction)
+        self.es19m20 = self.add_future_contract(
+            Symbol.create_future(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 6, 19)),
+            Resolution.MINUTE).symbol
 
-    def OptionContractUniverseFilterFunction(self, optionContracts: OptionFilterUniverse) -> OptionFilterUniverse:
-        self.optionFilterRan = True
+        # Get option contract lists for 2020/01/05 (timedelta(days=1)) because Lean has local data for that date
+        optionChains = self.option_chain_provider.get_option_contract_list(self.es20h20, self.time + timedelta(days=1))
+        optionChains += self.option_chain_provider.get_option_contract_list(self.es19m20, self.time + timedelta(days=1))
 
-        expiry = list(set([x.Underlying.ID.Date for x in optionContracts]))
-        expiry = None if not any(expiry) else expiry[0]
+        for optionContract in optionChains:
+            self.expected_symbols_received.append(self.add_future_option_contract(optionContract, Resolution.MINUTE).symbol)
 
-        symbol = [x.Underlying for x in optionContracts]
-        symbol = None if not any(symbol) else symbol[0]
-
-        if expiry is None or symbol is None:
-            raise AssertionError("Expected a single Option contract in the chain, found 0 contracts")
-
-        enumerator = optionContracts.GetEnumerator()
-        while enumerator.MoveNext():
-            self.expectedSymbolsReceived.append(enumerator.Current)
-
-        return optionContracts
-
-    def OnData(self, data: Slice):
-        if not data.HasData:
+    def on_data(self, data: Slice):
+        if not data.has_data:
             return
 
-        self.onDataReached = True
+        self.on_data_reached = True
         hasOptionQuoteBars = False
 
-        for qb in data.QuoteBars.Values:
-            if qb.Symbol.SecurityType != SecurityType.FutureOption:
+        for qb in data.quote_bars.values():
+            if qb.symbol.security_type != SecurityType.FUTURE_OPTION:
                 continue
 
             hasOptionQuoteBars = True
 
-            self.symbolsReceived.append(qb.Symbol)
-            if qb.Symbol not in self.dataReceived:
-                self.dataReceived[qb.Symbol] = []
+            self.symbols_received.append(qb.symbol)
+            if qb.symbol not in self.data_received:
+                self.data_received[qb.symbol] = []
 
-            self.dataReceived[qb.Symbol].append(qb)
+            self.data_received[qb.symbol].append(qb)
 
         if self.invested or not hasOptionQuoteBars:
             return
 
-        for chain in data.OptionChains.Values:
-            futureInvested = False
-            optionInvested = False
+        if data.contains_key(self.es20h20) and data.contains_key(self.es19m20):
+            self.set_holdings(self.es20h20, 0.2)
+            self.set_holdings(self.es19m20, 0.2)
 
-            for option in chain.Contracts.Keys:
-                if futureInvested and optionInvested:
-                    return
+            self.invested = True
 
-                future = option.Underlying
+    def on_end_of_algorithm(self):
+        self.symbols_received = list(set(self.symbols_received))
+        self.expected_symbols_received = list(set(self.expected_symbols_received))
 
-                if not optionInvested and data.ContainsKey(option):
-                    self.MarketOrder(option, 1)
-                    self.invested = True
-                    optionInvested = True
-
-                if not futureInvested and data.ContainsKey(future):
-                    self.MarketOrder(future, 1)
-                    self.invested = True
-                    futureInvested = True
-
-    def OnEndOfAlgorithm(self):
-        super().OnEndOfAlgorithm()
-        self.symbolsReceived = list(set(self.symbolsReceived))
-        self.expectedSymbolsReceived = list(set(self.expectedSymbolsReceived))
-
-        if not self.optionFilterRan:
-            raise AssertionError("Option chain filter was never ran")
-        if not self.onDataReached:
+        if not self.on_data_reached:
             raise AssertionError("OnData() was never called.")
-        if len(self.symbolsReceived) != len(self.expectedSymbolsReceived):
-            raise AssertionError(f"Expected {len(self.expectedSymbolsReceived)} option contracts Symbols, found {len(self.symbolsReceived)}")
+        if len(self.symbols_received) != len(self.expected_symbols_received):
+            raise AssertionError(f"Expected {len(self.expected_symbols_received)} option contracts Symbols, found {len(self.symbols_received)}")
 
-        missingSymbols = [expectedSymbol for expectedSymbol in self.expectedSymbolsReceived if expectedSymbol not in self.symbolsReceived]
+        missingSymbols = [expectedSymbol for expectedSymbol in self.expected_symbols_received if expectedSymbol not in self.symbols_received]
         if any(missingSymbols):
             raise AssertionError(f'Symbols: "{", ".join(missingSymbols)}" were not found in OnData')
 
-        for expectedSymbol in self.expectedSymbolsReceived:
-            data = self.dataReceived[expectedSymbol]
+        for expectedSymbol in self.expected_symbols_received:
+            data = self.data_received[expectedSymbol]
             for dataPoint in data:
-                dataPoint.EndTime = datetime(1970, 1, 1)
+                dataPoint.end_time = datetime(1970, 1, 1)
 
             nonDupeDataCount = len(set(data))
             if nonDupeDataCount < 1000:

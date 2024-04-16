@@ -19,6 +19,6 @@ from FundamentalRegressionAlgorithm import FundamentalRegressionAlgorithm
 ### </summary>
 class AsynchronousUniverseRegressionAlgorithm(FundamentalRegressionAlgorithm):
 
-    def Initialize(self):
-        super().Initialize()
-        self.UniverseSettings.Asynchronous = True
+    def initialize(self):
+        super().initialize()
+        self.universe_settings.asynchronous = True
