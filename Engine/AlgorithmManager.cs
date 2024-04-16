@@ -521,7 +521,7 @@ namespace QuantConnect.Lean.Engine
                     if (timeSlice.Slice.HasData)
                     {
                         // EVENT HANDLER v3.0 -- all data in a single event
-                        algorithm.OnData(timeSlice.Slice);
+                        algorithm.OnData(algorithm.CurrentSlice);
                     }
 
                     // always turn the crank on this method to ensure universe selection models function properly on day changes w/out data
