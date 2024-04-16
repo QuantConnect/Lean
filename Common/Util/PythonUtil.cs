@@ -183,6 +183,11 @@ namespace QuantConnect.Util
                     message = Regex.Replace(message, lineCapture.ToString(), $"line {newLineNumber}");
                 }
             }
+            else if (message.Contains(" value cannot be converted to ", StringComparison.InvariantCulture))
+            {
+                message += ": This error is often encountered when trying to assign to a instance member that is already defined in the base C# class (e.g. using self.universe when QCAlgorithm.Universe already exists; self._universe would be a better name for your private member.)";
+            }
+
             return message;
         }
 

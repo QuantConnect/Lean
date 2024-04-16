@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,7 +21,10 @@ namespace QuantConnect.Tests.Common.Exceptions
     /// <summary>
     /// Provids a fake implementation that can be utilized in tests
     /// </summary>
-    public class FakeExceptionInterpreter : IExceptionInterpreter
+    /// <remarks>
+    /// Keep it internal so it doesn't get picked up when loading all exception interpreters from assemblies
+    /// </remarks>
+    internal class FakeExceptionInterpreter : IExceptionInterpreter
     {
         private readonly int _order = 0;
         private readonly Func<Exception, bool> _canInterpret;
