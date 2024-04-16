@@ -48,9 +48,21 @@ class CustomDataMultiFileObjectStoreRegressionAlgorithm(QCAlgorithm):
 
     def OnData(self, slice: Slice):
         if slice.ContainsKey(self.customSymbol):
+            # passing symbol
             customData = slice.Get(ExampleCustomData, self.customSymbol)
             if customData.Price == 0:
                 raise Exception("Custom data price was not expected to be zero")
+            customData2 = self.current_slice.Get(ExampleCustomData, self.customSymbol)
+            if customData2.Price == 0:
+                raise Exception("Custom data2 price was not expected to be zero")
+
+            # accessing by symbol
+            customData = slice.Get(ExampleCustomData)[self.customSymbol]
+            if customData.Price == 0:
+                raise Exception("Custom data price was not expected to be zero, index access")
+            customData2 = self.current_slice.Get(ExampleCustomData)[self.customSymbol]
+            if customData2.Price == 0:
+                raise Exception("Custom data2 price was not expected to be zero, index access")
 
             self.receivedData.append(customData)
 

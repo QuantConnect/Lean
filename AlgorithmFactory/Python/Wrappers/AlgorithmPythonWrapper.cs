@@ -756,7 +756,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             {
                 using (Py.GIL())
                 {
-                    _onData(new PythonSlice(slice));
+                    _onData(slice);
                 }
             }
         }
@@ -1157,7 +1157,10 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Sets the current slice
         /// </summary>
         /// <param name="slice">The Slice object</param>
-        public void SetCurrentSlice(Slice slice) => _baseAlgorithm.SetCurrentSlice(slice);
+        public void SetCurrentSlice(Slice slice)
+        {
+            _baseAlgorithm.SetCurrentSlice(new PythonSlice(slice));
+        }
 
         /// <summary>
         /// Provide the API for the algorithm.
