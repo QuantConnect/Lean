@@ -56,14 +56,14 @@ namespace QuantConnect.Orders
             serializer.Converters.Add(new OrderJsonConverter());
             var order = jObject.ToObject<Order>(serializer);
 
-            var events = jObject["Events"];
+            var events = jObject["Events"] ?? jObject["events"];
             List<SerializedOrderEvent> deserializedEvents = null;
             if (events != null)
             {
                 deserializedEvents = events.ToObject<List<SerializedOrderEvent>>();
             }
 
-            var symbol = jObject["Symbol"];
+            var symbol = jObject["Symbol"] ?? jObject["symbol"];
             Symbol deserializedSymbol = null;
             if (symbol != null)
             {
