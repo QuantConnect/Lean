@@ -70,7 +70,11 @@ class AddOptionContractFromUniverseRegressionAlgorithm(QCAlgorithm):
             options = self.option_chain_provider.get_option_contract_list(addedSecurity.symbol, self.time)
             options = sorted(options, key=lambda x: x.id.symbol)
 
-            option = next((option for option in options if option.id.date == self._expiration and option.id.option_right == OptionRight.CALL and option.id.option_style == OptionStyle.AMERICAN), None)
+            option = next((option
+                           for option in options
+                           if option.id.date == self._expiration and
+                           option.id.option_right == OptionRight.CALL and
+                           option.id.option_style == OptionStyle.AMERICAN), None)
 
             self.add_option_contract(option)
 

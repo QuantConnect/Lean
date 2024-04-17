@@ -19,7 +19,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="trading and orders" />
-class BasicTemplateAtreyuAlgorithm(QCAlgorithm):
+class BasicTemplateAxosAlgorithm(QCAlgorithm):
     '''Basic template algorithm simply initializes the date range and cash'''
 
     def initialize(self):

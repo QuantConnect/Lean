@@ -40,8 +40,8 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
         option_chains = self.option_chain_provider.get_option_contract_list(self.es20h20, self.time + timedelta(days=1))
         option_chains += self.option_chain_provider.get_option_contract_list(self.es19m20, self.time + timedelta(days=1))
 
-        for optionContract in option_chains:
-            self.expected_symbols_received.append(self.add_future_option_contract(optionContract, Resolution.MINUTE).symbol)
+        for option_contract in option_chains:
+            self.expected_symbols_received.append(self.add_future_option_contract(option_contract, Resolution.MINUTE).symbol)
 
     def on_data(self, data: Slice):
         if not data.has_data:
@@ -86,8 +86,8 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
 
         for expected_symbol in self.expected_symbols_received:
             data = self.data_received[expected_symbol]
-            for dataPoint in data:
-                dataPoint.end_time = datetime(1970, 1, 1)
+            for data_point in data:
+                data_point.end_time = datetime(1970, 1, 1)
 
             non_dupe_data_count = len(set(data))
             if non_dupe_data_count < 1000:

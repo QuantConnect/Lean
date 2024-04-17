@@ -14,13 +14,14 @@
 from AlgorithmImports import *
 
 ### <summary>
-### This regression algorithm tests that we receive the expected data when
-### we add future option contracts individually using <see cref="AddFutureOptionContract"/>
+### This regression algorithm tests that we only receive the option chain for a single future contract
+### in the option universe filter.
 ### </summary>
-class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
+class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm(QCAlgorithm):
     def initialize(self):
-        self.on_data_reached = False
         self.invested = False
+        self.on_data_reached = False
+        self.option_filter_ran = False
         self.symbols_received = []
         self.expected_symbols_received = []
         self.data_received = {}
@@ -28,20 +29,28 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
         self.set_start_date(2020, 1, 4)
         self.set_end_date(2020, 1, 8)
 
-        self.es20h20 = self.add_future_contract(
-            Symbol.create_future(Futures.Indices.SP_500_E_MINI, Market.CME, datetime(2020, 3, 20)),
-            Resolution.MINUTE).symbol
+        self.es = self.add_future(Futures.Indices.SP_500_E_MINI, Resolution.MINUTE, Market.CME)
+        self.es.set_filter(lambda future_filter: future_filter.expiration(0, 365).expiration_cycle([3, 6]))
 
-        self.es19m20 = self.add_future_contract(
-            Symbol.create_future(Futures.Indices.SP_500_E_MINI, Market.CME, datetime(2020, 6, 19)),
-            Resolution.MINUTE).symbol
+        self.add_future_option(self.es.symbol, self.option_contract_universe_filter_function)
 
-        # Get option contract lists for 2020/01/05 (timedelta(days=1)) because Lean has local data for that date
-        option_chains = self.option_chain_provider.get_option_contract_list(self.es20h20, self.time + timedelta(days=1))
-        option_chains += self.option_chain_provider.get_option_contract_list(self.es19m20, self.time + timedelta(days=1))
+    def option_contract_universe_filter_function(self, option_contracts: OptionFilterUniverse) -> OptionFilterUniverse:
+        self.option_filter_ran = True
 
-        for option_contract in option_chains:
-            self.expected_symbols_received.append(self.add_future_option_contract(option_contract, Resolution.MINUTE).symbol)
+        expiry = list(set([x.underlying.id.date for x in option_contracts]))
+        expiry = None if not any(expiry) else expiry[0]
+
+        symbol = [x.underlying for x in option_contracts]
+        symbol = None if not any(symbol) else symbol[0]
+
+        if expiry is None or symbol is None:
+            raise AssertionError("Expected a single Option contract in the chain, found 0 contracts")
+
+        enumerator = option_contracts.get_enumerator()
+        while enumerator.move_next():
+            self.expected_symbols_received.append(enumerator.current)
+
+        return option_contracts
 
     def on_data(self, data: Slice):
         if not data.has_data:
@@ -65,16 +74,33 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
         if self.invested or not has_option_quote_bars:
             return
 
-        if data.contains_key(self.es20h20) and data.contains_key(self.es19m20):
-            self.set_holdings(self.es20h20, 0.2)
-            self.set_holdings(self.es19m20, 0.2)
+        for chain in data.option_chains.values():
+            future_invested = False
+            option_invested = False
 
-            self.invested = True
+            for option in chain.contracts.keys():
+                if future_invested and option_invested:
+                    return
+
+                future = option.underlying
+
+                if not option_invested and data.contains_key(option):
+                    self.market_order(option, 1)
+                    self.invested = True
+                    option_invested = True
+
+                if not future_invested and data.contains_key(future):
+                    self.market_order(future, 1)
+                    self.invested = True
+                    future_invested = True
 
     def on_end_of_algorithm(self):
+        super().on_end_of_algorithm()
         self.symbols_received = list(set(self.symbols_received))
         self.expected_symbols_received = list(set(self.expected_symbols_received))
 
+        if not self.option_filter_ran:
+            raise AssertionError("Option chain filter was never ran")
         if not self.on_data_reached:
             raise AssertionError("OnData() was never called.")
         if len(self.symbols_received) != len(self.expected_symbols_received):

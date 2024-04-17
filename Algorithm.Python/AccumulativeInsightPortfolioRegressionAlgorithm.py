@@ -15,7 +15,7 @@ from AlgorithmImports import *
 
 ### <summary>
 ### Test algorithm using 'AccumulativeInsightPortfolioConstructionModel.py' and 'ConstantAlphaModel'
-### generating a constant 'Insight' 
+### generating a constant 'Insight'
 ### </summary>
 class AccumulativeInsightPortfolioRegressionAlgorithm(QCAlgorithm):
     def initialize(self):
