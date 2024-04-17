@@ -24,13 +24,13 @@ from AlgorithmImports import *
 ### <meta name="tag" content="fine universes" />
 class ConstituentsQC500GeneratorAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
-        self.SetStartDate(2018, 1, 1)   # Set Start Date
-        self.SetEndDate(2019, 1, 1)     # Set End Date
-        self.SetCash(100000)            # Set Strategy Cash
+        self.set_start_date(2018, 1, 1)   # Set Start Date
+        self.set_end_date(2019, 1, 1)     # Set End Date
+        self.set_cash(100000)            # Set Strategy Cash
 
         # Add QC500 Universe
-        self.AddUniverse(self.Universe.QC500)
+        self.add_universe(self.universe.qc_500)

@@ -23,59 +23,59 @@ from OptionStrategyFactoryMethodsBaseAlgorithm import *
 ### </summary>
 class LongAndShortButterflyCallStrategiesAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
 
-    def ExpectedOrdersCount(self) -> int:
+    def expected_orders_count(self) -> int:
         return 6
 
-    def TradeStrategy(self, chain: OptionChain, option_symbol: Symbol):
-        callContracts = (contract for contract in chain if contract.Right == OptionRight.Call)
+    def trade_strategy(self, chain: OptionChain, option_symbol: Symbol):
+        call_contracts = (contract for contract in chain if contract.right == OptionRight.CALL)
 
-        for expiry, group in itertools.groupby(callContracts, lambda x: x.Expiry):
+        for expiry, group in itertools.groupby(call_contracts, lambda x: x.expiry):
             contracts = list(group)
             if len(contracts) < 3:
                 continue
 
-            strikes = sorted([contract.Strike for contract in contracts])
-            atmStrike = min(strikes, key=lambda strike: abs(strike - chain.Underlying.Price))
-            spread = min(atmStrike - strikes[0], strikes[-1] - atmStrike)
-            itmStrike = atmStrike - spread
-            otmStrike = atmStrike + spread
+            strikes = sorted([contract.strike for contract in contracts])
+            atm_strike = min(strikes, key=lambda strike: abs(strike - chain.underlying.price))
+            spread = min(atm_strike - strikes[0], strikes[-1] - atm_strike)
+            itm_strike = atm_strike - spread
+            otm_strike = atm_strike + spread
 
-            if otmStrike in strikes and itmStrike in strikes:
+            if otm_strike in strikes and itm_strike in strikes:
                 # Ready to trade
-                self._butterfly_call = OptionStrategies.ButterflyCall(option_symbol, otmStrike, atmStrike, itmStrike, expiry)
-                self._short_butterfly_call = OptionStrategies.ShortButterflyCall(option_symbol, otmStrike, atmStrike, itmStrike, expiry)
-                self.Buy(self._butterfly_call, 2)
+                self._butterfly_call = OptionStrategies.butterfly_call(option_symbol, otm_strike, atm_strike, itm_strike, expiry)
+                self._short_butterfly_call = OptionStrategies.short_butterfly_call(option_symbol, otm_strike, atm_strike, itm_strike, expiry)
+                self.buy(self._butterfly_call, 2)
                 return
 
-    def AssertStrategyPositionGroup(self, positionGroup: IPositionGroup, option_symbol: Symbol):
-        positions = list(positionGroup.Positions)
+    def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
+        positions = list(position_group.positions)
         if len(positions) != 3:
             raise Exception(f"Expected position group to have 3 positions. Actual: {len(positions)}")
 
-        higherStrike = max(leg.Strike for leg in self._butterfly_call.OptionLegs)
-        higherStrikePosition = next((position for position in positions
-                                      if position.Symbol.ID.OptionRight == OptionRight.Call and position.Symbol.ID.StrikePrice == higherStrike),
+        higher_strike = max(leg.strike for leg in self._butterfly_call.option_legs)
+        higher_strike_position = next((position for position in positions
+                                      if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.strike_price == higher_strike),
                                      None)
 
-        if higherStrikePosition.Quantity != 2:
-            raise Exception(f"Expected higher strike position quantity to be 2. Actual: {higherStrikePosition.Quantity}")
+        if higher_strike_position.quantity != 2:
+            raise Exception(f"Expected higher strike position quantity to be 2. Actual: {higher_strike_position.quantity}")
 
-        lowerStrike = min(leg.Strike for leg in self._butterfly_call.OptionLegs)
-        lowerStrikePosition = next((position for position in positions
-                                    if position.Symbol.ID.OptionRight == OptionRight.Call and position.Symbol.ID.StrikePrice == lowerStrike),
+        lower_strike = min(leg.strike for leg in self._butterfly_call.option_legs)
+        lower_strike_position = next((position for position in positions
+                                    if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.strike_price == lower_strike),
                                    None)
 
-        if lowerStrikePosition.Quantity != 2:
-            raise Exception(f"Expected lower strike position quantity to be 2. Actual: {lowerStrikePosition.Quantity}")
+        if lower_strike_position.quantity != 2:
+            raise Exception(f"Expected lower strike position quantity to be 2. Actual: {lower_strike_position.quantity}")
 
-        middleStrike = [leg.Strike for leg in self._butterfly_call.OptionLegs if leg.Strike < higherStrike and leg.Strike > lowerStrike][0]
-        middleStrikePosition = next((position for position in positions
-                                     if position.Symbol.ID.OptionRight == OptionRight.Call and position.Symbol.ID.StrikePrice == middleStrike),
+        middle_strike = [leg.strike for leg in self._butterfly_call.option_legs if leg.strike < higher_strike and leg.strike > lower_strike][0]
+        middle_strike_position = next((position for position in positions
+                                     if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.strike_price == middle_strike),
                                     None)
 
-        if middleStrikePosition.Quantity != -4:
-            raise Exception(f"Expected middle strike position quantity to be -4. Actual: {middleStrikePosition.Quantity}")
+        if middle_strike_position.quantity != -4:
+            raise Exception(f"Expected middle strike position quantity to be -4. Actual: {middle_strike_position.quantity}")
 
-    def LiquidateStrategy(self):
+    def liquidate_strategy(self):
         # We should be able to close the position using the inverse strategy (a short butterfly call)
-        self.Buy(self._short_butterfly_call, 2)
+        self.buy(self._short_butterfly_call, 2)

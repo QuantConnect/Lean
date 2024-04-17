@@ -20,99 +20,99 @@ from AlgorithmImports import *
 class ComboOrdersFillModelAlgorithm(QCAlgorithm):
     '''Basic template algorithm that implements a fill model with combo orders'''
 
-    def Initialize(self):
-        self.SetStartDate(2019, 1, 1)
-        self.SetEndDate(2019, 1, 20)
+    def initialize(self):
+        self.set_start_date(2019, 1, 1)
+        self.set_end_date(2019, 1, 20)
 
-        self.spy = self.AddEquity("SPY", Resolution.Hour)
-        self.ibm = self.AddEquity("IBM", Resolution.Hour)
+        self.spy = self.add_equity("SPY", Resolution.HOUR)
+        self.ibm = self.add_equity("IBM", Resolution.HOUR)
 
         # Set the fill model
-        self.spy.SetFillModel(CustomPartialFillModel())
-        self.ibm.SetFillModel(CustomPartialFillModel())
+        self.spy.set_fill_model(CustomPartialFillModel())
+        self.ibm.set_fill_model(CustomPartialFillModel())
 
-        self.orderTypes = {}
+        self.order_types = {}
 
-    def OnData(self, data):
-        if not self.Portfolio.Invested:
-            legs = [Leg.Create(self.spy.Symbol, 1), Leg.Create(self.ibm.Symbol, -1)]
-            self.ComboMarketOrder(legs, 100)
-            self.ComboLimitOrder(legs, 100, round(self.spy.BidPrice))
+    def on_data(self, data):
+        if not self.portfolio.invested:
+            legs = [Leg.create(self.spy.symbol, 1), Leg.create(self.ibm.symbol, -1)]
+            self.combo_market_order(legs, 100)
+            self.combo_limit_order(legs, 100, round(self.spy.bid_price))
 
-            legs = [Leg.Create(self.spy.Symbol, 1, round(self.spy.BidPrice) + 1), Leg.Create(self.ibm.Symbol, -1, round(self.ibm.BidPrice) + 1)]
-            self.ComboLegLimitOrder(legs, 100)
+            legs = [Leg.create(self.spy.symbol, 1, round(self.spy.bid_price) + 1), Leg.create(self.ibm.symbol, -1, round(self.ibm.bid_price) + 1)]
+            self.combo_leg_limit_order(legs, 100)
 
-    def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            orderType = self.Transactions.GetOrderById(orderEvent.OrderId).Type
-            if orderType == OrderType.ComboMarket and orderEvent.AbsoluteFillQuantity != 50:
-                raise Exception(f"The absolute quantity filled for all combo market orders should be 50, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}")
-            elif orderType == OrderType.ComboLimit and orderEvent.AbsoluteFillQuantity != 20:
-                raise Exception(f"The absolute quantity filled for all combo limit orders should be 20, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}")
-            elif orderType == OrderType.ComboLegLimit and orderEvent.AbsoluteFillQuantity != 10:
-                raise Exception(f"The absolute quantity filled for all combo leg limit orders should be 10, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}")
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.FILLED:
+            order_type = self.transactions.get_order_by_id(order_event.order_id).type
+            if order_type == OrderType.COMBO_MARKET and order_event.absolute_fill_quantity != 50:
+                raise Exception(f"The absolute quantity filled for all combo market orders should be 50, but for order {order_event.order_id} was {order_event.absolute_fill_quantity}")
+            elif order_type == OrderType.COMBO_LIMIT and order_event.absolute_fill_quantity != 20:
+                raise Exception(f"The absolute quantity filled for all combo limit orders should be 20, but for order {order_event.order_id} was {order_event.absolute_fill_quantity}")
+            elif order_type == OrderType.COMBO_LEG_LIMIT and order_event.absolute_fill_quantity != 10:
+                raise Exception(f"The absolute quantity filled for all combo leg limit orders should be 10, but for order {order_event.order_id} was {order_event.absolute_fill_quantity}")
 
-            self.orderTypes[orderType] = 1
+            self.order_types[order_type] = 1
 
-    def OnEndOfAlgorithm(self):
-        if len(self.orderTypes) != 3:
-            raise Exception(f"Just 3 different types of order were submitted in this algorithm, but the amount of order types was {len(self.orderTypes)}")
+    def on_end_of_algorithm(self):
+        if len(self.order_types) != 3:
+            raise Exception(f"Just 3 different types of order were submitted in this algorithm, but the amount of order types was {len(self.order_types)}")
 
-        if OrderType.ComboMarket not in self.orderTypes.keys():
+        if OrderType.COMBO_MARKET not in self.order_types.keys():
             raise Exception(f"One Combo Market Order should have been submitted but it was not")
 
-        if OrderType.ComboLimit not in self.orderTypes.keys():
+        if OrderType.COMBO_LIMIT not in self.order_types.keys():
             raise Exception(f"One Combo Limit Order should have been submitted but it was not")
 
-        if OrderType.ComboLegLimit not in self.orderTypes.keys():
+        if OrderType.COMBO_LEG_LIMIT not in self.order_types.keys():
             raise Exception(f"One Combo Leg Limit Order should have been submitted but it was not")
 
 
 class CustomPartialFillModel(FillModel):
-    '''Implements a custom fill model that inherit from FillModel. Overrides ComboMarketFill, ComboLimitOrder and ComboLegLimitOrder
+    '''Implements a custom fill model that inherit from FillModel. Overrides combo_market_fill, combo_limit_fill and combo_leg_limit_fill
        methods to test FillModelPythonWrapper works as expected'''
 
     def __init__(self):
-        self.absoluteRemainingByOrderId = {}
+        self.absolute_remaining_by_order_id = {}
 
-    def FillOrdersPartially(self, parameters, fills, quantity):
-        partialFills = []
+    def fill_orders_partially(self, parameters, fills, quantity):
+        partial_fills = []
         if len(fills) == 0:
-            return partialFills
+            return partial_fills
 
-        for kvp, fill in zip(sorted(parameters.SecuritiesForOrders, key=lambda x: x.Key.Id), fills):
-            order = kvp.Key;
+        for kvp, fill in zip(sorted(parameters.securities_for_orders, key=lambda x: x.key.id), fills):
+            order = kvp.key;
 
-            absoluteRemaining = self.absoluteRemainingByOrderId.get(order.Id, order.AbsoluteQuantity)
+            absolute_remaining = self.absolute_remaining_by_order_id.get(order.id, order.absolute_quantity)
 
             # Set the fill amount
-            fill.FillQuantity = np.sign(order.Quantity) * quantity
+            fill.fill_quantity = np.sign(order.quantity) * quantity
 
-            if (min(abs(fill.FillQuantity), absoluteRemaining) == absoluteRemaining):
-                fill.FillQuantity = np.sign(order.Quantity) * absoluteRemaining
-                fill.Status = OrderStatus.Filled
-                self.absoluteRemainingByOrderId.pop(order.Id, None)
+            if (min(abs(fill.fill_quantity), absolute_remaining) == absolute_remaining):
+                fill.fill_quantity = np.sign(order.quantity) * absolute_remaining
+                fill.status = OrderStatus.FILLED
+                self.absolute_remaining_by_order_id.pop(order.id, None)
             else:
-                fill.Status = OrderStatus.PartiallyFilled
-                self.absoluteRemainingByOrderId[order.Id] = absoluteRemaining - abs(fill.FillQuantity)
-                price = fill.FillPrice
-                # self.algorithm.Debug(f"{self.algorithm.Time} - Partial Fill - Remaining {self.absoluteRemainingByOrderId[order.Id]} Price - {price}")
+                fill.status = OrderStatus.PARTIALLY_FILLED
+                self.absolute_remaining_by_order_id[order.id] = absolute_remaining - abs(fill.fill_quantity)
+                price = fill.fill_price
+                # self.algorithm.debug(f"{self.algorithm.time} - Partial Fill - Remaining {self.absolute_remaining_by_order_id[order.id]} Price - {price}")
 
-            partialFills.append(fill)
+            partial_fills.append(fill)
 
-        return partialFills
+        return partial_fills
 
-    def ComboMarketFill(self, order, parameters):
-        fills = super().ComboMarketFill(order, parameters)
-        partialFills = self.FillOrdersPartially(parameters, fills, 50)
-        return partialFills
+    def combo_market_fill(self, order, parameters):
+        fills = super().combo_market_fill(order, parameters)
+        partial_fills = self.fill_orders_partially(parameters, fills, 50)
+        return partial_fills
 
-    def ComboLimitFill(self, order, parameters):
-        fills = super().ComboLimitFill(order, parameters);
-        partialFills = self.FillOrdersPartially(parameters, fills, 20)
-        return partialFills
+    def combo_limit_fill(self, order, parameters):
+        fills = super().combo_limit_fill(order, parameters);
+        partial_fills = self.fill_orders_partially(parameters, fills, 20)
+        return partial_fills
 
-    def ComboLegLimitFill(self, order, parameters):
-        fills = super().ComboLegLimitFill(order, parameters);
-        partialFills = self.FillOrdersPartially(parameters, fills, 10)
-        return partialFills
+    def combo_leg_limit_fill(self, order, parameters):
+        fills = super().combo_leg_limit_fill(order, parameters);
+        partial_fills = self.fill_orders_partially(parameters, fills, 10)
+        return partial_fills

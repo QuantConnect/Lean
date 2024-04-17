@@ -23,27 +23,26 @@ from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPor
 class CompositeAlphaModelFrameworkAlgorithm(QCAlgorithm):
     '''Show cases how to use the CompositeAlphaModel to define.'''
 
-    def Initialize(self):
-
-        self.SetStartDate(2013,10,7)   #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
+    def initialize(self):
+        self.set_start_date(2013,10,7)   #Set Start Date
+        self.set_end_date(2013,10,11)    #Set End Date
+        self.set_cash(100000)           #Set Strategy Cash
 
         # even though we're using a framework algorithm, we can still add our securities
         # using the AddEquity/Forex/Crypto/ect methods and then pass them into a manual
-        # universe selection model using Securities.Keys
-        self.AddEquity("SPY")
-        self.AddEquity("IBM")
-        self.AddEquity("BAC")
-        self.AddEquity("AIG")
+        # universe selection model using securities.keys()
+        self.add_equity("SPY")
+        self.add_equity("IBM")
+        self.add_equity("BAC")
+        self.add_equity("AIG")
 
         # define a manual universe of all the securities we manually registered
-        self.SetUniverseSelection(ManualUniverseSelectionModel())
+        self.set_universe_selection(ManualUniverseSelectionModel())
 
         # define alpha model as a composite of the rsi and ema cross models
-        self.SetAlpha(CompositeAlphaModel(RsiAlphaModel(), EmaCrossAlphaModel()))
+        self.set_alpha(CompositeAlphaModel(RsiAlphaModel(), EmaCrossAlphaModel()))
 
         # default models for the rest
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        self.SetExecution(ImmediateExecutionModel())
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
+        self.set_execution(ImmediateExecutionModel())
+        self.set_risk_management(NullRiskManagementModel())

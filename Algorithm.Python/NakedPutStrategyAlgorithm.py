@@ -21,33 +21,33 @@ from OptionStrategyFactoryMethodsBaseAlgorithm import *
 ### </summary>
 class NakedPutStrategyAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
 
-    def ExpectedOrdersCount(self) -> int:
+    def expected_orders_count(self) -> int:
         return 2
 
-    def TradeStrategy(self, chain: OptionChain, option_symbol: Symbol):
-        contracts = sorted(sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.Strike)),
-                           key = lambda x: x.Expiry, reverse=True)
+    def trade_strategy(self, chain: OptionChain, option_symbol: Symbol):
+        contracts = sorted(sorted(chain, key = lambda x: abs(chain.underlying.price - x.strike)),
+                           key = lambda x: x.expiry, reverse=True)
 
         if len(contracts) == 0: return
         contract = contracts[0]
         if contract != None:
-            self._naked_put = OptionStrategies.NakedPut(option_symbol, contract.Strike, contract.Expiry)
-            self.Buy(self._naked_put, 2)
+            self._naked_put = OptionStrategies.naked_put(option_symbol, contract.strike, contract.expiry)
+            self.buy(self._naked_put, 2)
 
-    def AssertStrategyPositionGroup(self, positionGroup: IPositionGroup, option_symbol: Symbol):
-        positions = list(positionGroup.Positions)
+    def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
+        positions = list(position_group.positions)
         if len(positions) != 1:
             raise Exception(f"Expected position group to have 1 positions. Actual: {len(positions)}")
 
-        optionPosition = [position for position in positions if position.Symbol.SecurityType == SecurityType.Option][0]
-        if optionPosition.Symbol.ID.OptionRight != OptionRight.Put:
-            raise Exception(f"Expected option position to be a put. Actual: {optionPosition.Symbol.ID.OptionRight}")
+        option_position = [position for position in positions if position.symbol.security_type == SecurityType.OPTION][0]
+        if option_position.symbol.id.option_right != OptionRight.PUT:
+            raise Exception(f"Expected option position to be a put. Actual: {option_position.symbol.id.option_right}")
 
-        expectedOptionPositionQuantity = -2
+        expected_option_position_quantity = -2
 
-        if optionPosition.Quantity != expectedOptionPositionQuantity:
-            raise Exception(f"Expected option position quantity to be {expectedOptionPositionQuantity}. Actual: {optionPosition.Quantity}")
+        if option_position.quantity != expected_option_position_quantity:
+            raise Exception(f"Expected option position quantity to be {expected_option_position_quantity}. Actual: {option_position.quantity}")
 
-    def LiquidateStrategy(self):
+    def liquidate_strategy(self):
         # Now we can liquidate by selling the strategy
-        self.Sell(self._naked_put, 2)
+        self.sell(self._naked_put, 2)
