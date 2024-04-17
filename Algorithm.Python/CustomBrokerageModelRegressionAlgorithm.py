@@ -53,7 +53,7 @@ class CustomBrokerageModelRegressionAlgorithm(QCAlgorithm):
             raise Exception(f"Order with ID: {self.spy_ticket.order_id} should have been updated")
 
 class CustomBrokerageModel(DefaultBrokerageModel):
-    DefaultMarkets = { SecurityType.EQUITY: Market.USA, SecurityType.CRYPTO : Market.BINANCE  }
+    default_markets = { SecurityType.EQUITY: Market.USA, SecurityType.CRYPTO : Market.BINANCE  }
 
     def can_submit_order(self, security: SecurityType, order: Order, message: BrokerageMessageEvent):
         if security.symbol.value == "AIG":

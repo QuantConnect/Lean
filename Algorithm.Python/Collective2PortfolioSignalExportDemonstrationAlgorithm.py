@@ -31,7 +31,12 @@ class Collective2PortfolioSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
         # Symbols accepted by Collective2. Collective2 accepts stock, future, forex and US stock option symbols
         self.add_equity("GOOG")
-        self._symbols = [Symbol.create("SPY", SecurityType.EQUITY, Market.USA, None, None), Symbol.create("EURUSD", SecurityType.FOREX, Market.OANDA, None, None), Symbol.create_future("ES", Market.CME, datetime(2023, 12, 15), None), Symbol.create_option("GOOG", Market.USA, OptionStyle.AMERICAN, OptionRight.CALL, 130, datetime(2023, 9, 1))]
+        self._symbols = [
+            Symbol.create("SPY", SecurityType.EQUITY, Market.USA, None, None),
+            Symbol.create("EURUSD", SecurityType.FOREX, Market.OANDA, None, None),
+            Symbol.create_future("ES", Market.CME, datetime(2023, 12, 15), None),
+            Symbol.create_option("GOOG", Market.USA, OptionStyle.AMERICAN, OptionRight.CALL, 130, datetime(2023, 9, 1))
+        ]
         for item in self._symbols:
             self.add_security(item)
 
@@ -50,16 +55,16 @@ class Collective2PortfolioSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.collective2_system_id = 0
 
         self.signal_export.add_signal_export_providers(Collective2SignalExport(self.collective2_apikey, self.collective2_system_id))
-        
+
         self.first_call = True
-        
+
         self.set_warm_up(100)
 
     def on_data(self, data):
         ''' Reduce the quantity of holdings for one security and increase the holdings to the another
         one when the EMA's indicators crosses between themselves, then send a signal to Collective2 API '''
         if self.is_warming_up: return
-        
+
         # Place an order as soon as possible to send a signal.
         if self.first_call:
             self.set_holdings("SPY", 0.1)

@@ -23,33 +23,33 @@ from QuantConnect.Logging import *
 ### </summary>
 class OptionModelsConsistencyRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self) -> None:
-        security = self.InitializeAlgorithm()
-        self.SetModels(security)
+    def initialize(self) -> None:
+        security = self.initialize_algorithm()
+        self.set_models(security)
 
         # Using a custom security initializer derived from BrokerageModelSecurityInitializer
         # to check that the models are correctly set in the security even when the
         # security initializer is derived from said class in Python
-        self.SetSecurityInitializer(CustomSecurityInitializer(self.BrokerageModel, SecuritySeeder.Null))
+        self.set_security_initializer(CustomSecurityInitializer(self.brokerage_model, SecuritySeeder.NULL))
 
-        self.SetBenchmark(lambda x: 0)
+        self.set_benchmark(lambda x: 0)
 
-    def InitializeAlgorithm(self) -> Security:
-        self.SetStartDate(2015, 12, 24)
-        self.SetEndDate(2015, 12, 24)
+    def initialize_algorithm(self) -> Security:
+        self.set_start_date(2015, 12, 24)
+        self.set_end_date(2015, 12, 24)
 
-        equity = self.AddEquity("GOOG", leverage=4)
-        option = self.AddOption(equity.Symbol)
-        option.SetFilter(lambda u: u.Strikes(-2, +2).Expiration(0, 180))
+        equity = self.add_equity("GOOG", leverage=4)
+        option = self.add_option(equity.Symbol)
+        option.set_filter(lambda u: u.strikes(-2, +2).expiration(0, 180))
 
         return option
 
-    def SetModels(self, security: Security) -> None:
-        security.SetFillModel(CustomFillModel())
-        security.SetFeeModel(CustomFeeModel())
-        security.SetBuyingPowerModel(CustomBuyingPowerModel())
-        security.SetSlippageModel(CustomSlippageModel())
-        security.SetVolatilityModel(CustomVolatilityModel())
+    def set_models(self, security: Security) -> None:
+        security.set_fill_model(CustomFillModel())
+        security.set_fee_model(CustomFeeModel())
+        security.set_buying_power_model(CustomBuyingPowerModel())
+        security.set_slippage_model(CustomSlippageModel())
+        security.set_volatility_model(CustomVolatilityModel())
 
 class CustomSecurityInitializer(BrokerageModelSecurityInitializer):
     def __init__(self, brokerage_model: BrokerageModel, security_seeder: SecuritySeeder):

@@ -21,12 +21,12 @@ from OptionModelsConsistencyRegressionAlgorithm import OptionModelsConsistencyRe
 ### </summary>
 class IndexOptionModelsConsistencyRegressionAlgorithm(OptionModelsConsistencyRegressionAlgorithm):
 
-    def InitializeAlgorithm(self) -> Security:
-        self.SetStartDate(2021, 1, 4)
-        self.SetEndDate(2021, 1, 5)
+    def initialize_algorithm(self) -> Security:
+        self.set_start_date(2021, 1, 4)
+        self.set_end_date(2021, 1, 5)
 
-        index = self.AddIndex("SPX", Resolution.Minute)
-        option = self.AddIndexOption(index.Symbol, "SPX", Resolution.Minute)
-        option.SetFilter(lambda u: u.Strikes(-5, +5).Expiration(0, 360))
+        index = self.add_index("SPX", Resolution.MINUTE)
+        option = self.add_index_option(index.symbol, "SPX", Resolution.MINUTE)
+        option.set_filter(lambda u: u.strikes(-5, +5).expiration(0, 360))
 
         return option

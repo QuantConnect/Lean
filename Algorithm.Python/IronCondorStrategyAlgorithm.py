@@ -23,63 +23,63 @@ from OptionStrategyFactoryMethodsBaseAlgorithm import *
 ### </summary>
 class IronCondorStrategyAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
 
-    def ExpectedOrdersCount(self) -> int:
+    def expected_orders_count(self) -> int:
         return 8
 
-    def TradeStrategy(self, chain: OptionChain, option_symbol: Symbol):
-        for expiry, group in itertools.groupby(chain, lambda x: x.Expiry):
-            contracts = sorted(group, key=lambda x: x.Strike)
+    def trade_strategy(self, chain: OptionChain, option_symbol: Symbol):
+        for expiry, group in itertools.groupby(chain, lambda x: x.expiry):
+            contracts = sorted(group, key=lambda x: x.strike)
             if len(contracts) < 4:continue
 
-            putContracts = [x for x in contracts if x.Right == OptionRight.Put]
-            if len(putContracts) < 2: continue
-            longPutStrike = putContracts[0].Strike
-            shortPutStrike = putContracts[1].Strike
+            put_contracts = [x for x in contracts if x.right == OptionRight.PUT]
+            if len(put_contracts) < 2: continue
+            long_put_strike = put_contracts[0].strike
+            short_put_strike = put_contracts[1].strike
 
-            callContracts = [x for x in contracts if x.Right == OptionRight.Call and x.Strike > shortPutStrike]
-            if len(callContracts) < 2: continue
-            shortCallStrike = callContracts[0].Strike
-            longCallStrike = callContracts[1].Strike
+            call_contracts = [x for x in contracts if x.right == OptionRight.CALL and x.strike > short_put_strike]
+            if len(call_contracts) < 2: continue
+            short_call_strike = call_contracts[0].strike
+            long_call_strike = call_contracts[1].strike
 
-            self._iron_condor = OptionStrategies.IronCondor(option_symbol, longPutStrike, shortPutStrike, shortCallStrike, longCallStrike, expiry)
-            self.Buy(self._iron_condor, 2)
+            self._iron_condor = OptionStrategies.iron_condor(option_symbol, long_put_strike, short_put_strike, short_call_strike, long_call_strike, expiry)
+            self.buy(self._iron_condor, 2)
             return
 
-    def AssertStrategyPositionGroup(self, positionGroup: IPositionGroup, option_symbol: Symbol):
-        positions = list(positionGroup.Positions)
+    def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
+        positions = list(position_group.positions)
         if len(positions) != 4:
             raise Exception(f"Expected position group to have 4 positions. Actual: {len(positions)}")
 
-        orderedStrikes = sorted((leg.Strike for leg in self._iron_condor.OptionLegs))
+        ordered_strikes = sorted((leg.strike for leg in self._iron_condor.option_legs))
 
-        longPutStrike = orderedStrikes[0]
-        longPutPosition = next((x for x in positionGroup.Positions
-                                if x.Symbol.ID.OptionRight == OptionRight.Put and x.Symbol.ID.StrikePrice == longPutStrike),
+        long_put_strike = ordered_strikes[0]
+        long_put_position = next((x for x in position_group.positions
+                                if x.symbol.id.option_right == OptionRight.PUT and x.symbol.id.strike_price == long_put_strike),
                                None)
-        if longPutPosition is None or longPutPosition.Quantity != 2:
-            raise Exception(f"Expected long put position quantity to be 2. Actual: {longPutPosition.Quantity}")
+        if long_put_position is None or long_put_position.quantity != 2:
+            raise Exception(f"Expected long put position quantity to be 2. Actual: {long_put_position.quantity}")
 
-        shortPutStrike = orderedStrikes[1]
-        shortPutPosition = next((x for x in positionGroup.Positions
-                                 if x.Symbol.ID.OptionRight == OptionRight.Put and x.Symbol.ID.StrikePrice == shortPutStrike),
+        short_put_strike = ordered_strikes[1]
+        short_put_position = next((x for x in position_group.positions
+                                 if x.symbol.id.option_right == OptionRight.PUT and x.symbol.id.strike_price == short_put_strike),
                                 None)
-        if shortPutPosition is None or shortPutPosition.Quantity != -2:
-            raise Exception(f"Expected short put position quantity to be -2. Actual: {shortPutPosition.Quantity}")
+        if short_put_position is None or short_put_position.quantity != -2:
+            raise Exception(f"Expected short put position quantity to be -2. Actual: {short_put_position.quantity}")
 
-        shortCallStrike = orderedStrikes[2]
-        shortCallPosition = next((x for x in positionGroup.Positions
-                                  if x.Symbol.ID.OptionRight == OptionRight.Call and x.Symbol.ID.StrikePrice == shortCallStrike),
+        short_call_strike = ordered_strikes[2]
+        short_call_position = next((x for x in position_group.positions
+                                  if x.symbol.id.option_right == OptionRight.CALL and x.symbol.id.strike_price == short_call_strike),
                                  None)
-        if shortCallPosition is None or shortCallPosition.Quantity != -2:
-            raise Exception(f"Expected short call position quantity to be -2. Actual: {shortCallPosition.Quantity}")
+        if short_call_position is None or short_call_position.quantity != -2:
+            raise Exception(f"Expected short call position quantity to be -2. Actual: {short_call_position.quantity}")
 
-        longCallStrike = orderedStrikes[3]
-        longCallPosition = next((x for x in positionGroup.Positions
-                                 if x.Symbol.ID.OptionRight == OptionRight.Call and x.Symbol.ID.StrikePrice == longCallStrike),
+        long_call_strike = ordered_strikes[3]
+        long_call_position = next((x for x in position_group.positions
+                                 if x.symbol.id.option_right == OptionRight.CALL and x.symbol.id.strike_price == long_call_strike),
                                 None)
-        if longCallPosition is None or longCallPosition.Quantity != 2:
-            raise Exception(f"Expected long call position quantity to be 2. Actual: {longCallPosition.Quantity}")
+        if long_call_position is None or long_call_position.quantity != 2:
+            raise Exception(f"Expected long call position quantity to be 2. Actual: {long_call_position.quantity}")
 
-    def LiquidateStrategy(self):
+    def liquidate_strategy(self):
         # We should be able to close the position by selling the strategy
-        self.Sell(self._iron_condor, 2)
+        self.sell(self._iron_condor, 2)

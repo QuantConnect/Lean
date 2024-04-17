@@ -38,7 +38,7 @@ class ConvertToFrameworkAlgorithm(QCAlgorithm):
         self._symbol = self.add_security(SecurityType.EQUITY, 'SPY', Resolution.DAILY).symbol
 
         # define our daily macd(12,26) with a 9 day signal
-        self.macd = self.macd(self._symbol, self.fast_ema_period, self.slow_ema_period, 9, MovingAverageType.EXPONENTIAL, Resolution.DAILY)
+        self._macd = self.macd(self._symbol, self.fast_ema_period, self.slow_ema_period, 9, MovingAverageType.EXPONENTIAL, Resolution.DAILY)
 
 
     def on_data(self, data):
@@ -46,11 +46,11 @@ class ConvertToFrameworkAlgorithm(QCAlgorithm):
         Args:
             data: Slice object with your stock data'''
         # wait for our indicator to be ready
-        if not self.macd.is_ready or not data.contains_key(self._symbol) or data[self._symbol] is None: return
+        if not self._macd.is_ready or not data.contains_key(self._symbol) or data[self._symbol] is None: return
 
         holding = self.portfolio[self._symbol]
 
-        signal_delta_percent = float(self.macd.current.value - self.macd.signal.current.value) / float(self.macd.fast.current.value)
+        signal_delta_percent = float(self._macd.current.value - self._macd.signal.current.value) / float(self._macd.fast.current.value)
         tolerance = 0.0025
 
         # if our macd is greater than our signal, then let's go long
@@ -78,15 +78,15 @@ class ConvertToFrameworkAlgorithm(QCAlgorithm):
 
         # if we wanted to liquidate our positions
         ## 1. Call emit_insights with insights create in the correct direction -- Flat
-        
+
         #self.emit_insights(
             # Creates an insight for our symbol, predicting that it will move down or up within the fast ema period number of days, depending on our current position
             # Insight.price(self._symbol, timedelta(self.fast_ema_period), InsightDirection.FLAT)
         #)
-        
+
         # self.liquidate()
 
         # plot both lines
-        self.plot("MACD", self.macd, self.macd.signal)
-        self.plot(self._symbol.value, self.macd.fast, self.macd.slow)
+        self.plot("MACD", self._macd, self._macd.signal)
+        self.plot(self._symbol.value, self._macd.fast, self._macd.slow)
         self.plot(self._symbol.value, "Open", data[self._symbol].open)

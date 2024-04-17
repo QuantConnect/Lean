@@ -33,4 +33,4 @@ class ConstituentsQC500GeneratorAlgorithm(QCAlgorithm):
         self.set_cash(100000)            # Set Strategy Cash
 
         # Add QC500 Universe
-        self.add_universe(self.universe.QC_500)
+        self.add_universe(self.universe.qc_500)

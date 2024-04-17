@@ -22,55 +22,55 @@ from OptionStrategyFactoryMethodsBaseAlgorithm import *
 ### </summary>
 class LongAndShortStrangleStrategiesAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
 
-    def ExpectedOrdersCount(self) -> int:
+    def expected_orders_count(self) -> int:
         return 4
 
-    def TradeStrategy(self, chain: OptionChain, option_symbol: Symbol):
-        contracts = sorted(sorted(chain, key=lambda x: abs(chain.Underlying.Price - x.Strike)),
-                           key=lambda x: x.Expiry, reverse=True)
-        groupedContracts = (list(group) for _, group in itertools.groupby(contracts, lambda x: x.Expiry))
+    def trade_strategy(self, chain: OptionChain, option_symbol: Symbol):
+        contracts = sorted(sorted(chain, key=lambda x: abs(chain.underlying.price - x.strike)),
+                           key=lambda x: x.expiry, reverse=True)
+        grouped_contracts = (list(group) for _, group in itertools.groupby(contracts, lambda x: x.expiry))
 
-        callContract = None
-        putContract = None
-        for group in groupedContracts:
-            callContracts = sorted((contract for contract in group if contract.Right == OptionRight.Call),
-                                   key=lambda x: x.Strike, reverse=True)
-            putContracts = sorted((contract for contract in group if contract.Right == OptionRight.Put),
-                                  key=lambda x: x.Strike)
+        call_contract = None
+        put_contract = None
+        for group in grouped_contracts:
+            call_contracts = sorted((contract for contract in group if contract.right == OptionRight.CALL),
+                                   key=lambda x: x.strike, reverse=True)
+            put_contracts = sorted((contract for contract in group if contract.right == OptionRight.PUT),
+                                  key=lambda x: x.strike)
 
-            if len(callContracts) > 0 and len(putContracts) > 0 and callContracts[0].Strike > putContracts[0].Strike:
-                callContract = callContracts[0]
-                putContract = putContracts[0]
+            if len(call_contracts) > 0 and len(put_contracts) > 0 and call_contracts[0].strike > put_contracts[0].strike:
+                call_contract = call_contracts[0]
+                put_contract = put_contracts[0]
                 break
 
-        if callContract is not None and putContract is not None:
-            self._strangle = OptionStrategies.Strangle(option_symbol, callContract.Strike, putContract.Strike, callContract.Expiry)
-            self._short_strangle = OptionStrategies.ShortStrangle(option_symbol, callContract.Strike, putContract.Strike,
-                                                                  callContract.Expiry)
-            self.Buy(self._strangle, 2)
+        if call_contract is not None and put_contract is not None:
+            self._strangle = OptionStrategies.strangle(option_symbol, call_contract.strike, put_contract.strike, call_contract.expiry)
+            self._short_strangle = OptionStrategies.short_strangle(option_symbol, call_contract.strike, put_contract.strike,
+                                                                  call_contract.expiry)
+            self.buy(self._strangle, 2)
 
-    def AssertStrategyPositionGroup(self, positionGroup: IPositionGroup, option_symbol: Symbol):
-        positions = list(positionGroup.Positions)
+    def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
+        positions = list(position_group.positions)
         if len(positions) != 2:
             raise Exception(f"Expected position group to have 2 positions. Actual: {len(positions)}")
 
-        callPosition = next((position for position in positions if position.Symbol.ID.OptionRight == OptionRight.Call), None)
-        if callPosition is None:
+        call_position = next((position for position in positions if position.symbol.id.option_right == OptionRight.CALL), None)
+        if call_position is None:
             raise Exception("Expected position group to have a call position")
 
-        putPosition = next((position for position in positions if position.Symbol.ID.OptionRight == OptionRight.Put), None)
-        if putPosition is None:
+        put_position = next((position for position in positions if position.symbol.id.option_right == OptionRight.PUT), None)
+        if put_position is None:
             raise Exception("Expected position group to have a put position")
 
-        expectedCallPositionQuantity = 2
-        expectedPutPositionQuantity = 2
+        expected_call_position_quantity = 2
+        expected_put_position_quantity = 2
 
-        if callPosition.Quantity != expectedCallPositionQuantity:
-            raise Exception(f"Expected call position quantity to be {expectedCallPositionQuantity}. Actual: {callPosition.Quantity}")
+        if call_position.quantity != expected_call_position_quantity:
+            raise Exception(f"Expected call position quantity to be {expected_call_position_quantity}. Actual: {call_position.quantity}")
 
-        if putPosition.Quantity != expectedPutPositionQuantity:
-            raise Exception(f"Expected put position quantity to be {expectedPutPositionQuantity}. Actual: {putPosition.Quantity}")
+        if put_position.quantity != expected_put_position_quantity:
+            raise Exception(f"Expected put position quantity to be {expected_put_position_quantity}. Actual: {put_position.quantity}")
 
-    def LiquidateStrategy(self):
+    def liquidate_strategy(self):
         # We should be able to close the position using the inverse strategy (a short strangle)
-        self.Buy(self._short_strangle, 2)
+        self.buy(self._short_strangle, 2)
