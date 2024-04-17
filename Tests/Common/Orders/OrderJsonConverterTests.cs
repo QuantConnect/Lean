@@ -574,6 +574,283 @@ namespace QuantConnect.Tests.Common.Orders
         }
 
         [Test]
+        public void DeserializesCamelCaseMarketOrder()
+        {
+            const string json = @"{
+			""Type"": 0,
+			""Id"": 1,
+			""ContingentId"": 0,
+			""BrokerId"": [
+				""1""
+			],
+			""Symbol"": {
+				""Value"": ""SPY"",
+				""ID"": ""SPY R735QTJ8XC9X"",
+				""Permtick"": ""SPY""
+			},
+			""Price"": 515.0,
+			""PriceCurrency"": ""USD"",
+			""Time"": ""2024-04-12T13:34:51.1781757Z"",
+			""CreatedTime"": ""2024-04-12T13:34:51.1781757Z"",
+			""LastFillTime"": ""2024-04-12T13:34:51.1781757Z"",
+			""Quantity"": 1.0,
+			""Status"": 3,
+			""Properties"": {
+				""TimeInForce"": {}
+			},
+			""SecurityType"": 1,
+			""Direction"": 0,
+			""Value"": 515.0,
+			""OrderSubmissionData"": {
+				""BidPrice"": 514.99,
+				""AskPrice"": 515.0,
+				""LastPrice"": 514.99
+			},
+			""IsMarketable"": true,
+			""PriceAdjustmentMode"": 0,
+			""Events"": [
+				{
+					""id"": ""L-8327e4043ac2b520b41c507e88ac42e5-1-1"",
+					""algorithmId"": ""L-8327e4043ac2b520b41c507e88ac42e5"",
+					""orderId"": 1,
+					""orderEventId"": 1,
+					""symbol"": ""SPY R735QTJ8XC9X"",
+					""symbolValue"": ""SPY"",
+					""symbolPermtick"": ""SPY"",
+					""time"": 1712928891.1781758,
+					""status"": ""submitted"",
+					""fillPrice"": 0.0,
+					""fillPriceCurrency"": ""USD"",
+					""fillQuantity"": 0.0,
+					""direction"": ""buy"",
+					""message"": null,
+					""isAssignment"": false,
+					""quantity"": 1.0
+				},
+				{
+					""id"": ""L-8327e4043ac2b520b41c507e88ac42e5-1-2"",
+					""algorithmId"": ""L-8327e4043ac2b520b41c507e88ac42e5"",
+					""orderId"": 1,
+					""orderEventId"": 2,
+					""symbol"": ""SPY R735QTJ8XC9X"",
+					""symbolValue"": ""SPY"",
+					""symbolPermtick"": ""SPY"",
+					""time"": 1712928891.1781758,
+					""status"": ""filled"",
+					""orderFeeAmount"": 1.0,
+					""orderFeeCurrency"": ""USD"",
+					""fillPrice"": 515.0,
+					""fillPriceCurrency"": ""USD"",
+					""fillQuantity"": 1.0,
+					""direction"": ""buy"",
+					""message"": null,
+					""isAssignment"": false,
+					""quantity"": 1.0
+				}
+			]
+		    }";
+
+            var order = DeserializeOrder<MarketOrder>(json);
+
+            Assert.AreEqual(OrderType.Market, order.Type);
+            Assert.AreEqual(1, order.Id);
+            Assert.AreEqual(0, order.ContingentId);
+            Assert.AreEqual(new List<string>() { "1" }, order.BrokerId);
+            Assert.AreEqual(Symbols.SPY, order.Symbol);
+            Assert.AreEqual("SPY", order.Symbol.Value);
+            Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
+            Assert.AreEqual(515.0m, order.Price);
+            Assert.AreEqual("USD", order.PriceCurrency);
+            Assert.AreEqual(new DateTime(2024, 4, 12, 13, 34, 51), order.Time.RoundDown(TimeSpan.FromSeconds(1)));
+            Assert.AreEqual(new DateTime(2024, 4, 12, 13, 34, 51), order.Time.RoundDown(TimeSpan.FromSeconds(1)));
+            Assert.AreEqual(1, order.Quantity);
+            Assert.AreEqual(OrderStatus.Filled, order.Status);
+            Assert.AreEqual(TimeInForce.GoodTilCanceled.ToString(), order.Properties.TimeInForce.ToString());
+            Assert.AreEqual(SecurityType.Equity, order.SecurityType);
+            Assert.AreEqual(OrderDirection.Buy, order.Direction);
+            Assert.AreEqual(515.0m, order.Value);
+            Assert.AreEqual(514.99m, order.OrderSubmissionData.BidPrice);
+            Assert.AreEqual(515.0m, order.OrderSubmissionData.AskPrice);
+            Assert.AreEqual(514.99m, order.OrderSubmissionData.LastPrice);
+            Assert.IsTrue(order.IsMarketable);
+            Assert.AreEqual(DataNormalizationMode.Raw, order.PriceAdjustmentMode);
+        }
+
+        [Test]
+        public void DeserializesCamelCaseLimitOrder()
+        {
+            const string json = @"{
+			""LimitPrice"": 409.29,
+			""Type"": 1,
+			""Id"": 98,
+			""ContingentId"": 0,
+			""BrokerId"": [
+				""98""
+			],
+			""Symbol"": {
+				""Value"": ""SPY"",
+				""ID"": ""SPY R735QTJ8XC9X"",
+				""Permtick"": ""SPY""
+			},
+			""Price"": 0.0,
+			""PriceCurrency"": ""USD"",
+			""Time"": ""2024-04-12T16:32:11.0230966Z"",
+			""CreatedTime"": ""2024-04-12T16:32:11.0230966Z"",
+			""Quantity"": 1.0,
+			""Status"": 1,
+			""Properties"": {
+				""TimeInForce"": {}
+			},
+			""SecurityType"": 1,
+			""Direction"": 0,
+			""Value"": 0.0,
+			""OrderSubmissionData"": {
+				""BidPrice"": 511.59,
+				""AskPrice"": 511.61,
+				""LastPrice"": 511.6
+			},
+			""IsMarketable"": false,
+			""PriceAdjustmentMode"": 0,
+			""Events"": [
+				{
+					""id"": ""L-eefa176e9f60f128102ef5788ba68dcd-98-1"",
+					""algorithmId"": ""L-eefa176e9f60f128102ef5788ba68dcd"",
+					""orderId"": 98,
+					""orderEventId"": 1,
+					""symbol"": ""SPY R735QTJ8XC9X"",
+					""symbolValue"": ""SPY"",
+					""symbolPermtick"": ""SPY"",
+					""time"": 1712939531.0230966,
+					""status"": ""submitted"",
+					""fillPrice"": 0.0,
+					""fillPriceCurrency"": ""USD"",
+					""fillQuantity"": 0.0,
+					""direction"": ""buy"",
+					""message"": null,
+					""isAssignment"": false,
+					""quantity"": 1.0,
+					""limitPrice"": 409.29
+				}
+			]
+		    }";
+
+            var order = DeserializeOrder<LimitOrder>(json);
+
+            Assert.AreEqual(409.29, (order as LimitOrder).LimitPrice);
+            Assert.AreEqual(OrderType.Limit, order.Type);
+            Assert.AreEqual(98, order.Id);
+            Assert.AreEqual(0, order.ContingentId);
+            Assert.AreEqual(new List<string>() { "98" }, order.BrokerId);
+            Assert.AreEqual(Symbols.SPY, order.Symbol);
+            Assert.AreEqual("SPY", order.Symbol.Value);
+            Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
+            Assert.AreEqual(0m, order.Price);
+            Assert.AreEqual("USD", order.PriceCurrency);
+            Assert.AreEqual(new DateTime(2024, 4, 12, 16, 32, 11), order.Time.RoundDown(TimeSpan.FromSeconds(1)));
+            Assert.AreEqual(new DateTime(2024, 4, 12, 16, 32, 11), order.Time.RoundDown(TimeSpan.FromSeconds(1)));
+            Assert.AreEqual(1, order.Quantity);
+            Assert.AreEqual(OrderStatus.Submitted, order.Status);
+            Assert.AreEqual(TimeInForce.GoodTilCanceled.ToString(), order.Properties.TimeInForce.ToString());
+            Assert.AreEqual(SecurityType.Equity, order.SecurityType);
+            Assert.AreEqual(OrderDirection.Buy, order.Direction);
+            Assert.AreEqual(0.0m, order.Value);
+            Assert.AreEqual(511.59m, order.OrderSubmissionData.BidPrice);
+            Assert.AreEqual(511.61m, order.OrderSubmissionData.AskPrice);
+            Assert.AreEqual(511.6m, order.OrderSubmissionData.LastPrice);
+            Assert.IsFalse(order.IsMarketable);
+            Assert.AreEqual(DataNormalizationMode.Raw, order.PriceAdjustmentMode);
+        }
+
+        [Test]
+        public void DeserializesCamelCaseStopLimitOrder()
+        {
+            const string json = @"{""stopPrice"": 494.49,
+            ""stopTriggered"": false,
+            ""limitPrice"": 504.49,
+            ""type"": 3,
+            ""id"": 1,
+            ""contingentId"": 0,
+            ""brokerId"": [
+                ""1""
+            ],
+            ""symbol"": {
+                ""Value"": ""SPY"",
+                ""ID"": ""SPY R735QTJ8XC9X"",
+                ""Permtick"": ""SPY""
+            },
+            ""price"": 0.0,
+            ""priceCurrency"": ""USD"",
+            ""time"": ""2024-04-16T14:13:44.0305659Z"",
+            ""createdTime"": ""2024-04-16T14:13:44.0305659Z"",
+            ""quantity"": 1.0,
+            ""status"": 1,
+            ""properties"": {
+                ""TimeInForce"": {}
+            },
+            ""securityType"": 1,
+            ""direction"": 0,
+            ""value"": 0.0,
+            ""orderSubmissionData"": {
+                ""bidPrice"": 504.48,
+                ""askPrice"": 504.49,
+                ""lastPrice"": 504.46
+            },
+            ""isMarketable"": false,
+            ""priceAdjustmentMode"": 0,
+            ""events"": [
+                {
+                    ""id"": ""L-598ef7b4c3f12f705c5808c1a43d651b-1-1"",
+                    ""algorithmId"": ""L-598ef7b4c3f12f705c5808c1a43d651b"",
+                    ""orderId"": 1,
+                    ""orderEventId"": 1,
+                    ""symbol"": ""SPY R735QTJ8XC9X"",
+                    ""symbolValue"": ""SPY"",
+                    ""symbolPermtick"": ""SPY"",
+                    ""time"": 1713276824.030566,
+                    ""status"": ""submitted"",
+                    ""fillPrice"": 0.0,
+                    ""fillPriceCurrency"": ""USD"",
+                    ""fillQuantity"": 0.0,
+                    ""direction"": ""buy"",
+                    ""message"": null,
+                    ""isAssignment"": false,
+                    ""quantity"": 1.0,
+                    ""stopPrice"": 494.49,
+                    ""limitPrice"": 504.49
+                }
+            ]}";
+
+
+            var order = DeserializeOrder<StopLimitOrder>(json);
+
+            Assert.AreEqual(494.49m, (order as StopLimitOrder).StopPrice);
+            Assert.IsFalse((order as StopLimitOrder).StopTriggered);
+            Assert.AreEqual(504.49, (order as StopLimitOrder).LimitPrice);
+            Assert.AreEqual(OrderType.StopLimit, order.Type);
+            Assert.AreEqual(1, order.Id);
+            Assert.AreEqual(0, order.ContingentId);
+            Assert.AreEqual(new List<string>() { "1" }, order.BrokerId);
+            Assert.AreEqual(Symbols.SPY, order.Symbol);
+            Assert.AreEqual("SPY", order.Symbol.Value);
+            Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
+            Assert.AreEqual(0m, order.Price);
+            Assert.AreEqual("USD", order.PriceCurrency);
+            Assert.AreEqual(new DateTime(2024, 4, 16, 14, 13, 44), order.Time.RoundDown(TimeSpan.FromSeconds(1)));
+            Assert.AreEqual(new DateTime(2024, 4, 16, 14, 13, 44), order.Time.RoundDown(TimeSpan.FromSeconds(1)));
+            Assert.AreEqual(1, order.Quantity);
+            Assert.AreEqual(OrderStatus.Submitted, order.Status);
+            Assert.AreEqual(TimeInForce.GoodTilCanceled.ToString(), order.Properties.TimeInForce.ToString());
+            Assert.AreEqual(SecurityType.Equity, order.SecurityType);
+            Assert.AreEqual(OrderDirection.Buy, order.Direction);
+            Assert.AreEqual(0.0m, order.Value);
+            Assert.AreEqual(504.48m, order.OrderSubmissionData.BidPrice);
+            Assert.AreEqual(504.49m, order.OrderSubmissionData.AskPrice);
+            Assert.AreEqual(504.46m, order.OrderSubmissionData.LastPrice);
+            Assert.IsFalse(order.IsMarketable);
+            Assert.AreEqual(DataNormalizationMode.Raw, order.PriceAdjustmentMode);
+        }
+
+        [Test]
         public void WorksWithJsonConvert()
         {
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings

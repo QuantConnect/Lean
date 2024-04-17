@@ -93,13 +93,126 @@ namespace QuantConnect.Tests.API
                 { "InteractiveBrokersBrokerage", settings }
             };
 
-            var file = new ProjectFile
+            RunLiveAlgorithm(settings, _defaultFile, StopLiveAlgos, dataProviders);
+        }
+
+        [Test]
+        public void PolygonTest()
+        {
+            var apiKey = Config.Get("polygon-api-key");
+            var polygonDataProvider = new Dictionary<string, object>()
             {
-                Name = "Main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+                { "id", "Polygon" },
+                { "polygon-api-key", apiKey },
             };
 
-            RunLiveAlgorithm(settings, file, StopLiveAlgos, dataProviders);
+            var dataProviders = new Dictionary<string, object>
+            {
+                { "Polygon", polygonDataProvider },
+            };
+
+            RunLiveAlgorithm(_defaultSettings, _defaultFile, StopLiveAlgos, dataProviders);
+        }
+
+        [Test]
+        public void BinanceTest()
+        {
+            var apiSecret = Config.Get("binance-api-secret");
+            var apiKey = Config.Get("binance-api-key");
+            var apiUrl = Config.Get("binance-api-url");
+            var websocketUrl = Config.Get("binance-websocket-url");
+            var binanceSettings = new Dictionary<string, object>()
+            {
+                { "id", "BinanceBrokerage" },
+                { "binance-use-testnet", "paper" },
+                { "binance-exchange-name", "Binance" },
+                { "binance-api-secret", apiSecret },
+                { "binance-api-key", apiKey },
+                { "binance-api-url", apiUrl },
+                { "binance-websocket-url", websocketUrl }
+            };
+
+            var dataProviders = new Dictionary<string, object>
+            {
+                { "BinanceBrokerage", binanceSettings },
+            };
+
+            RunLiveAlgorithm(binanceSettings, _defaultFile, StopLiveAlgos, dataProviders);
+        }
+
+        [Test]
+        public void BinanceUSTest()
+        {
+            var apiSecret = Config.Get("binanceus-api-secret");
+            var apiKey = Config.Get("binanceus-api-key");
+            var apiUrl = Config.Get("binanceus-api-url");
+            var websocketUrl = Config.Get("binanceus-websocket-url");
+            var binanceUSSettings = new Dictionary<string, object>()
+            {
+                { "id", "BinanceBrokerage" },
+                { "binance-exchange-name", "BinanceUS" },
+                { "binanceus-api-secret", apiSecret },
+                { "binanceus-api-key", apiKey },
+                { "binanceus-api-url", apiUrl },
+                { "binanceus-websocket-url", websocketUrl }
+            };
+
+            var dataProviders = new Dictionary<string, object>
+            {
+                { "BinanceBrokerage", binanceUSSettings },
+            };
+
+            RunLiveAlgorithm(binanceUSSettings, _defaultFile, StopLiveAlgos, dataProviders);
+        }
+
+        [Test]
+        public void BinanceFuturesUSDMTest()
+        {
+            var apiSecret = Config.Get("binance-api-secret");
+            var apiKey = Config.Get("binance-api-key");
+            var apiUrl = Config.Get("binance-fapi-url");
+            var websocketUrl = Config.Get("binance-fwebsocket-url");
+            var binanceSettings = new Dictionary<string, object>()
+            {
+                { "id", "BinanceBrokerage" },
+                { "binance-exchange-name", "Binance-USDM-Futures" },
+                { "binance-api-secret", apiSecret },
+                { "binance-api-key", apiKey },
+                { "binance-fapi-url", apiUrl },
+                { "binance-fwebsocket-url", websocketUrl }
+            };
+
+            var dataProviders = new Dictionary<string, object>
+            {
+                { "BinanceBrokerage", binanceSettings },
+            };
+
+            RunLiveAlgorithm(binanceSettings, _defaultFile, StopLiveAlgos, dataProviders);
+        }
+
+        [Test]
+        public void BinanceFuturesCOINTest()
+        {
+            var apiSecret = Config.Get("binance-api-secret");
+            var apiKey = Config.Get("binance-api-key");
+            var apiUrl = Config.Get("binance-dapi-url");
+            var websocketUrl = Config.Get("binance-dwebsocket-url");
+            var binanceSettings = new Dictionary<string, object>()
+            {
+                { "id", "BinanceBrokerage" },
+                { "binance-exchange-name", "Binance-COIN-Futures" },
+                { "binance-api-secret", apiSecret },
+                { "binance-api-key", apiKey },
+                { "binance-dapi-url", apiUrl },
+                { "binance-dwebsocket-url", websocketUrl }
+            };
+
+            var dataProviders = new Dictionary<string, object>
+            {
+                { "BinanceBrokerage", binanceSettings },
+            };
+
+            RunLiveAlgorithm(binanceSettings, _defaultFile, StopLiveAlgos, dataProviders);
         }
 
         /// <summary>
@@ -138,24 +251,23 @@ namespace QuantConnect.Tests.API
         {
             var token = Config.Get("oanda-access-token");
             var account = Config.Get("oanda-account-id");
+            var environment = Config.Get("oanda-environment");
 
             // Create default algorithm settings
-            var settings = new Dictionary<string, object>()
+            var oandaSettings = new Dictionary<string, object>()
             {
                 { "id", "OandaBrokerage" },
-                { "environment", "paper" },
-                { "account", account },
-                { "dateIssued", "1" },
-                { "accessToken", token }
+                { "oanda-access-token", token },
+                { "oanda-account-id", account },
+                { "oanda-environment", environment }
             };
 
-            var file = new ProjectFile
+            var dataProvider = new Dictionary<string, object>
             {
-                Name = "Main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs")
+                { "OandaBrokerage", oandaSettings }
             };
 
-            RunLiveAlgorithm(settings, file, StopLiveAlgos);
+            RunLiveAlgorithm(_defaultSettings, _defaultFile, StopLiveAlgos, dataProvider);
         }
 
         /// <summary>
@@ -170,24 +282,20 @@ namespace QuantConnect.Tests.API
             var dateIssued = Config.Get("tradier-issued-at");
 
             // Create default algorithm settings
-            var settings = new Dictionary<string, object>()
+            var tradierSettings = new Dictionary<string, object>()
             {
                 { "id", "TradierBrokerage" },
-                { "environment", "live" },
-                { "accessToken", accessToken },
-                { "dateIssued", dateIssued },
-                { "refreshToken", refreshToken },
-                { "lifetime", "86399"},
-                { "account", account}
+                { "tradier-account-id", account },
+                { "tradier-access-token", accessToken },
+                { "tradier-environment", "paper" }
             };
 
-            var file = new ProjectFile
+            var dataProvider = new Dictionary<string, object>()
             {
-                Name = "Main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+                { "TradierBrokerage",  tradierSettings}
             };
 
-            RunLiveAlgorithm(settings, file, StopLiveAlgos);
+            RunLiveAlgorithm(tradierSettings, _defaultFile, StopLiveAlgos, dataProvider);
         }
 
         /// <summary>
@@ -200,21 +308,19 @@ namespace QuantConnect.Tests.API
             var secretKey = Config.Get("bitfinex-api-secret");
 
             // Create default algorithm settings
-            var settings = new Dictionary<string, object>()
+            var bitfinexSettings = new Dictionary<string, object>()
             {
                 { "id", "BitfinexBrokerage" },
-                { "environment", "live" },
                 { "bitfinex-api-secret", secretKey },
                 { "bitfinex-api-key", key }
             };
 
-            var file = new ProjectFile
+            var dataProvider = new Dictionary<string, object>()
             {
-                Name = "Main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+                { "BitfinexBrokerage", bitfinexSettings }
             };
 
-            RunLiveAlgorithm(settings, file, StopLiveAlgos);
+            RunLiveAlgorithm(bitfinexSettings, _defaultFile, StopLiveAlgos, dataProvider);
         }
 
         /// <summary>
@@ -229,23 +335,62 @@ namespace QuantConnect.Tests.API
             var wsUrl = Config.Get("coinbase-url");
 
             // Create default algorithm settings
-            var settings = new Dictionary<string, object>()
+            var coinbaseSettings = new Dictionary<string, object>()
             {
                 { "id", "CoinbaseBrokerage" },
-                { "environment", "live" },
-                { "key", key },
-                { "secret", secretKey },
-                { "apiUrl", apiUrl },
-                { "wsUrl", wsUrl },
+                { "coinbase-api-key", key },
+                { "coinbase-api-secret", secretKey },
+                { "coinbase-rest-api", apiUrl },
+                { "coinbase-url", wsUrl },
             };
 
-            var file = new ProjectFile
+            var dataProvider = new Dictionary<string, object>
             {
-                Name = "Main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+                { "CoinbaseBrokerage", coinbaseSettings }
             };
 
-            RunLiveAlgorithm(settings, file, StopLiveAlgos);
+            RunLiveAlgorithm(coinbaseSettings, _defaultFile, StopLiveAlgos, dataProvider);
+        }
+
+        [Test]
+        public void KrakenTest()
+        {
+            var krakenSettings = new Dictionary<string, object>()
+            {
+                { "id", "KrakenBrokerage" },
+                { "kraken-api-key", Config.Get("kraken-api-key") },
+                { "kraken-api-secret", Config.Get("kraken-api-secret") },
+                { "kraken-verification-tier", Config.Get("kraken-verification-tier") }
+            };
+
+            var dataProvider = new Dictionary<string, object>
+            {
+                { "KrakenBrokerage", krakenSettings }
+            };
+
+            RunLiveAlgorithm(krakenSettings, _defaultFile, StopLiveAlgos, dataProvider);
+        }
+
+        [Test]
+        public void BybitTest()
+        {
+            var bybitSettings = new Dictionary<string, object>()
+            {
+                { "id", "BybitBrokerage" },
+                { "bybit-api-key", Config.Get("bybit-api-key") },
+                { "bybit-api-secret", Config.Get("bybit-api-secret") },
+                { "bybit-api-url", Config.Get("bybit-api-url") },
+                { "bybit-websocket-url", Config.Get("bybit-websocket-url") },
+                { "bybit-use-testnet", "paper" },
+                { "bybit-vip-level", "VIP0" }
+            };
+
+            var dataProvider = new Dictionary<string, object>
+            {
+                { "BybitBrokerage", bybitSettings }
+            };
+
+            RunLiveAlgorithm(bybitSettings, _defaultFile, StopLiveAlgos, dataProvider);
         }
 
         /// <summary>
