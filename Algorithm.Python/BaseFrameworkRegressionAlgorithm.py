@@ -44,6 +44,6 @@ class BaseFrameworkRegressionAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         # The base implementation checks for active insights
-        insightsCount = len(self.insights.get_insights(lambda insight: insight.is_active(self.utc_time)))
-        if insightsCount != 0:
-            raise Exception(f"The number of active insights should be 0. Actual: {insightsCount}")
+        insights_count = len(self.insights.get_insights(lambda insight: insight.is_active(self.utc_time)))
+        if insights_count != 0:
+            raise Exception(f"The number of active insights should be 0. Actual: {insights_count}")

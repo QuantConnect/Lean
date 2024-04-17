@@ -58,8 +58,8 @@ class AddRemoveSecurityRegressionAlgorithm(QCAlgorithm):
             self.remove_security("BAC")
             self._last_action = self.time
 
-    def on_order_event(self, orderEvent):
-        if orderEvent.status == OrderStatus.SUBMITTED:
-            self.debug("{0}: Submitted: {1}".format(self.time, self.transactions.get_order_by_id(orderEvent.order_id)))
-        if orderEvent.status == OrderStatus.FILLED:
-            self.debug("{0}: Filled: {1}".format(self.time, self.transactions.get_order_by_id(orderEvent.order_id)))
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.SUBMITTED:
+            self.debug("{0}: Submitted: {1}".format(self.time, self.transactions.get_order_by_id(order_event.order_id)))
+        if order_event.status == OrderStatus.FILLED:
+            self.debug("{0}: Filled: {1}".format(self.time, self.transactions.get_order_by_id(order_event.order_id)))

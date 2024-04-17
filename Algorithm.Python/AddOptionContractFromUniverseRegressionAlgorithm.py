@@ -61,7 +61,7 @@ class AddOptionContractFromUniverseRegressionAlgorithm(QCAlgorithm):
         if self._security_changes == None:
             self._security_changes = changes
         else:
-            self._security_changes.op_Addition(self._security_changes, changes)
+            self._security_changes += changes
 
         if any(security.symbol.security_type == SecurityType.OPTION for security in changes.added_securities):
             return

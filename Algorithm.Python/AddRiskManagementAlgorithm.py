@@ -36,8 +36,8 @@ class AddRiskManagementAlgorithm(QCAlgorithm):
         self.set_execution(ImmediateExecutionModel())
 
         # Both setting methods should work
-        riskModel = CompositeRiskManagementModel(MaximumDrawdownPercentPortfolio(0.02))
-        riskModel.add_risk_management(MaximumUnrealizedProfitPercentPerSecurity(0.01))
+        risk_model = CompositeRiskManagementModel(MaximumDrawdownPercentPortfolio(0.02))
+        risk_model.add_risk_management(MaximumUnrealizedProfitPercentPerSecurity(0.01))
 
         self.set_risk_management(MaximumDrawdownPercentPortfolio(0.02))
         self.add_risk_management(MaximumUnrealizedProfitPercentPerSecurity(0.01))

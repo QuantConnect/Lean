@@ -25,8 +25,8 @@ class AutoRegressiveIntegratedMovingAverageRegressionAlgorithm(QCAlgorithm):
         self.set_end_date(2013, 12, 11)
         self.enable_automatic_indicator_warm_up = True
         self.add_equity("SPY", Resolution.DAILY)
-        self.arima = self.ARIMA("SPY", 1, 1, 1, 50)
-        self.ar = self.ARIMA("SPY", 1, 1, 0, 50)
+        self._arima = self.arima("SPY", 1, 1, 1, 50)
+        self._ar = self.arima("SPY", 1, 1, 0, 50)
 
     def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -34,10 +34,10 @@ class AutoRegressiveIntegratedMovingAverageRegressionAlgorithm(QCAlgorithm):
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if self.arima.is_ready:
-            if abs(self.arima.current.value - self.ar.current.value) > 1:
-                if self.arima.current.value > self.last:
+        if self._arima.is_ready:
+            if abs(self._arima.current.value - self._ar.current.value) > 1:
+                if self._arima.current.value > self.last:
                     self.market_order("SPY", 1)
                 else:
                     self.market_order("SPY", -1)
-            self.last = self.arima.current.value
+            self.last = self._arima.current.value

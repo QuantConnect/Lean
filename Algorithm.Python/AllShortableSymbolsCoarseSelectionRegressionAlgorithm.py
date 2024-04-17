@@ -69,33 +69,33 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
             self.last_trade_date = self.time.date()
 
     def coarse_selection(self, coarse):
-        shortableSymbols = self.shortable_provider.all_shortable_symbols(self.time)
-        selectedSymbols = list(sorted(filter(lambda x: (x in shortableSymbols.keys()) and (shortableSymbols[x] >= 500), map(lambda x: x.symbol, coarse)), key= lambda x: x.value))
+        shortable_symbols = self.shortable_provider.all_shortable_symbols(self.time)
+        selected_symbols = list(sorted(filter(lambda x: (x in shortable_symbols.keys()) and (shortable_symbols[x] >= 500), map(lambda x: x.symbol, coarse)), key= lambda x: x.value))
 
-        expectedMissing = 0
+        expected_missing = 0
         if self.time.date() == self._20140327.date():
             gme = Symbol.create("GME", SecurityType.EQUITY, Market.USA)
-            if gme not in shortableSymbols.keys():
+            if gme not in shortable_symbols.keys():
                 raise Exception("Expected unmapped GME in shortable symbols list on 2014-03-27")
             if "GME" not in list(map(lambda x: x.symbol.value, coarse)):
                 raise Exception("Expected mapped GME in coarse symbols on 2014-03-27")
 
-            expectedMissing = 1
+            expected_missing = 1
 
-        missing = list(filter(lambda x: x not in selectedSymbols, self.expected_symbols[self.time]))
-        if len(missing) != expectedMissing:
+        missing = list(filter(lambda x: x not in selected_symbols, self.expected_symbols[self.time]))
+        if len(missing) != expected_missing:
             raise Exception(f"Expected Symbols selected on {self.time.strftime('%Y%m%d')} to match expected Symbols, but the following Symbols were missing: {', '.join(list(map(lambda x:x.value, missing)))}")
 
         self.coarse_selected[self.time] = True;
-        return selectedSymbols
+        return selected_symbols
 
     def on_end_of_algorithm(self):
         if not all(x for x in self.coarse_selected.values()):
             raise Exception(f"Expected coarse selection on all dates, but didn't run on: {', '.join(list(map(lambda x: x.key.strftime('%Y%m%d'), filter(lambda x:not x.value, self.coarse_selected))))}")
 
 class AllShortableSymbolsRegressionAlgorithmBrokerageModel(DefaultBrokerageModel):
-    def __init__(self, shortableProvider):
-        self.shortable_provider = shortableProvider
+    def __init__(self, shortable_provider):
+        self.shortable_provider = shortable_provider
         super().__init__()
 
     def get_shortable_provider(self, security):
@@ -109,8 +109,8 @@ class RegressionTestShortableProvider(LocalDiskShortableProvider):
     Gets a list of all shortable Symbols, including the quantity shortable as a Dictionary.
     """
     def all_shortable_symbols(self, localtime):
-        shortableDataDirectory = os.path.join(Globals.DataFolder, "equity", Market.USA, "shortable", self.brokerage)
-        allSymbols = {}
+        shortable_data_directory = os.path.join(Globals.DataFolder, "equity", Market.USA, "shortable", self.brokerage)
+        all_symbols = {}
 
         """
         Check backwards up to one week to see if we can source a previous file.
@@ -118,20 +118,20 @@ class RegressionTestShortableProvider(LocalDiskShortableProvider):
         """
         i = 0
         while i <= 7:
-            shortableListFile = os.path.join(shortableDataDirectory, "dates", f"{(localtime - timedelta(days=i)).strftime('%Y%m%d')}.csv")
+            shortable_list_file = os.path.join(shortable_data_directory, "dates", f"{(localtime - timedelta(days=i)).strftime('%Y%m%d')}.csv")
 
-            for line in Extensions.read_lines(self.data_provider, shortableListFile):
+            for line in Extensions.read_lines(self.data_provider, shortable_list_file):
                 csv = line.split(',')
                 ticker = csv[0]
 
                 symbol = Symbol(SecurityIdentifier.generate_equity(ticker, Market.USA, mapping_resolve_date = localtime), ticker)
                 quantity = int(csv[1])
-                allSymbols[symbol] = quantity;
+                all_symbols[symbol] = quantity;
 
-            if len(allSymbols) > 0:
-                return allSymbols
+            if len(all_symbols) > 0:
+                return all_symbols
 
             i += 1
 
         # Return our empty dictionary if we did not find a file to extract
-        return allSymbols
+        return all_symbols

@@ -30,10 +30,10 @@ class BasicTemplateCfdAlgorithm(QCAlgorithm):
         self.set_end_date(2019, 2, 21)
         self.set_cash('EUR', 100000)
 
-        self.symbol = self.add_cfd('DE30EUR').symbol
+        self._symbol = self.add_cfd('DE30EUR').symbol
 
         # Historical Data
-        history = self.history(self.symbol, 60, Resolution.DAILY)
+        history = self.history(self._symbol, 60, Resolution.DAILY)
         self.log(f"Received {len(history)} bars from CFD historical data call.")
 
     def on_data(self, data):
@@ -42,12 +42,12 @@ class BasicTemplateCfdAlgorithm(QCAlgorithm):
             slice: Slice object keyed by symbol containing the stock data
         '''
         # Access Data
-        if data.quote_bars.contains_key(self.symbol):
-            quoteBar = data.quote_bars[self.symbol]
-            self.log(f"{quoteBar.end_time} :: {quoteBar.close}")
+        if data.quote_bars.contains_key(self._symbol):
+            quote_bar = data.quote_bars[self._symbol]
+            self.log(f"{quote_bar.end_time} :: {quote_bar.close}")
 
         if not self.portfolio.invested:
-            self.set_holdings(self.symbol, 1)
+            self.set_holdings(self._symbol, 1)
 
-    def on_order_event(self, orderEvent):
-        self.debug("{} {}".format(self.time, orderEvent.to_string()))
+    def on_order_event(self, order_event):
+        self.debug("{} {}".format(self.time, order_event.to_string()))

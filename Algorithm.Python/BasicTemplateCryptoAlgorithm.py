@@ -57,8 +57,8 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
         symbol = self.add_crypto("LTCUSD", Resolution.MINUTE).symbol
 
         # create two moving averages
-        self.fast = self.EMA(symbol, 30, Resolution.MINUTE)
-        self.slow = self.EMA(symbol, 60, Resolution.MINUTE)
+        self.fast = self.ema(symbol, 30, Resolution.MINUTE)
+        self.slow = self.ema(symbol, 60, Resolution.MINUTE)
 
     def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -73,42 +73,42 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
 
         if self.time.hour == 1 and self.time.minute == 0:
             # Sell all ETH holdings with a limit order at 1% above the current price
-            limitPrice = round(self.securities["ETHUSD"].price * 1.01, 2)
+            limit_price = round(self.securities["ETHUSD"].price * 1.01, 2)
             quantity = self.portfolio.cash_book["ETH"].amount
-            self.limit_order("ETHUSD", -quantity, limitPrice)
+            self.limit_order("ETHUSD", -quantity, limit_price)
 
         elif self.time.hour == 2 and self.time.minute == 0:
             # Submit a buy limit order for BTC at 5% below the current price
-            usdTotal = self.portfolio.cash_book["USD"].amount
-            limitPrice = round(self.securities["BTCUSD"].price * 0.95, 2)
+            usd_total = self.portfolio.cash_book["USD"].amount
+            limit_price = round(self.securities["BTCUSD"].price * 0.95, 2)
             # use only half of our total USD
-            quantity = usdTotal * 0.5 / limitPrice
-            self.limit_order("BTCUSD", quantity, limitPrice)
+            quantity = usd_total * 0.5 / limit_price
+            self.limit_order("BTCUSD", quantity, limit_price)
 
         elif self.time.hour == 2 and self.time.minute == 1:
             # Get current USD available, subtracting amount reserved for buy open orders
-            usdTotal = self.portfolio.cash_book["USD"].amount
-            usdReserved = sum(x.quantity * x.limit_price for x
+            usd_total = self.portfolio.cash_book["USD"].amount
+            usd_reserved = sum(x.quantity * x.limit_price for x
                 in [x for x in self.transactions.get_open_orders()
                     if x.direction == OrderDirection.BUY
                         and x.type == OrderType.LIMIT
                         and (x.symbol.value == "BTCUSD" or x.symbol.value == "ETHUSD")])
-            usdAvailable = usdTotal - usdReserved
-            self.debug("usdAvailable: {}".format(usdAvailable))
+            usd_available = usd_total - usd_reserved
+            self.debug("usd_available: {}".format(usd_available))
 
             # Submit a marketable buy limit order for ETH at 1% above the current price
-            limitPrice = round(self.securities["ETHUSD"].price * 1.01, 2)
+            limit_price = round(self.securities["ETHUSD"].price * 1.01, 2)
 
             # use all of our available USD
-            quantity = usdAvailable / limitPrice
+            quantity = usd_available / limit_price
 
             # this order will be rejected (for now) because of this issue:
             # https://github.com/QuantConnect/Lean/issues/1852
-            self.limit_order("ETHUSD", quantity, limitPrice)
+            self.limit_order("ETHUSD", quantity, limit_price)
 
             # use only half of our available USD
-            quantity = usdAvailable * 0.5 / limitPrice
-            self.limit_order("ETHUSD", quantity, limitPrice)
+            quantity = usd_available * 0.5 / limit_price
+            self.limit_order("ETHUSD", quantity, limit_price)
 
         elif self.time.hour == 11 and self.time.minute == 0:
             # Liquidate our BTC holdings (including the initial holding)
@@ -119,8 +119,8 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
             self.buy("BTCEUR", 1)
 
             # Submit a sell limit order at 10% above market price
-            limitPrice = round(self.securities["BTCEUR"].price * 1.1, 2)
-            self.limit_order("BTCEUR", -1, limitPrice)
+            limit_price = round(self.securities["BTCEUR"].price * 1.1, 2)
+            self.limit_order("BTCEUR", -1, limit_price)
 
         elif self.time.hour == 13 and self.time.minute == 0:
             # Cancel the limit order if not filled
@@ -141,8 +141,8 @@ class BasicTemplateCryptoAlgorithm(QCAlgorithm):
                     self.liquidate("LTCUSD")
                     # self.set_holdings("LTCUSD", 0)
 
-    def on_order_event(self, orderEvent):
-        self.debug("{} {}".format(self.time, orderEvent.to_string()))
+    def on_order_event(self, order_event):
+        self.debug("{} {}".format(self.time, order_event.to_string()))
 
     def on_end_of_algorithm(self):
         self.log("{} - TotalPortfolioValue: {}".format(self.time, self.portfolio.total_portfolio_value))

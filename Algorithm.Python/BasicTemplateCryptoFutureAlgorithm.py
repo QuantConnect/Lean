@@ -25,7 +25,7 @@ class BasicTemplateCryptoFutureAlgorithm(QCAlgorithm):
         self.set_start_date(2022, 12, 13)
         self.set_end_date(2022, 12, 13)
 
-        self.set_time_zone(TimeZones.Utc)
+        self.set_time_zone(TimeZones.UTC)
 
         try:
             self.set_brokerage_model(BrokerageName.BINANCE_FUTURES, AccountType.CASH)
@@ -38,8 +38,8 @@ class BasicTemplateCryptoFutureAlgorithm(QCAlgorithm):
         self.btc_usd = self.add_crypto_future("BTCUSD")
         self.ada_usdt = self.add_crypto_future("ADAUSDT")
 
-        self.fast = self.EMA(self.btc_usd.symbol, 30, Resolution.MINUTE)
-        self.slow = self.EMA(self.btc_usd.symbol, 60, Resolution.MINUTE)
+        self.fast = self.ema(self.btc_usd.symbol, 30, Resolution.MINUTE)
+        self.slow = self.ema(self.btc_usd.symbol, 60, Resolution.MINUTE)
 
         self.interest_per_symbol = {self.btc_usd.symbol: 0, self.ada_usdt.symbol: 0}
 
@@ -55,12 +55,12 @@ class BasicTemplateCryptoFutureAlgorithm(QCAlgorithm):
     # </summary>
     # <param name="data">Slice object keyed by symbol containing the stock data</param>
     def on_data(self, slice):
-        interestRates = slice.Get(MarginInterestRate)
-        for interestRate in interestRates:
-            self.interest_per_symbol[interestRate.key] += 1
-            self.cached_interest_rate = self.securities[interestRate.key].cache.get_data[MarginInterestRate]()
-            if self.cached_interest_rate != interestRate.value:
-                raise Exception(f"Unexpected cached margin interest rate for {interestRate.key}!")
+        interest_rates = slice.Get(MarginInterestRate)
+        for interest_rate in interest_rates:
+            self.interest_per_symbol[interest_rate.key] += 1
+            self.cached_interest_rate = self.securities[interest_rate.key].cache.get_data[MarginInterestRate]()
+            if self.cached_interest_rate != interest_rate.value:
+                raise Exception(f"Unexpected cached margin interest rate for {interest_rate.key}!")
             
         if self.fast > self.slow:
             if self.portfolio.invested == False and self.transactions.orders_count == 0:
@@ -119,13 +119,13 @@ class BasicTemplateCryptoFutureAlgorithm(QCAlgorithm):
                     raise Exception(f"Unexpected holdings cost {self.btc_usd_holdings.holdings_cost}")
 
                 self.sell(self.ada_usdt.symbol, 3000)
-                adaUsdtHoldings = self.ada_usdt.holdings
+                ada_usdt_holdings = self.ada_usdt.holdings
 
                 # USDT/BUSD futures value is based on it's price
-                holdingsValueUsdt = self.ada_usdt.price * self.ada_usdt.symbol_properties.contract_multiplier * 2000
+                holdings_value_usdt = self.ada_usdt.price * self.ada_usdt.symbol_properties.contract_multiplier * 2000
 
-                if abs(adaUsdtHoldings.absolute_holdings_cost - holdingsValueUsdt) > 1:
-                    raise Exception(f"Unexpected holdings cost {adaUsdtHoldings.holdings_cost}")
+                if abs(ada_usdt_holdings.absolute_holdings_cost - holdings_value_usdt) > 1:
+                    raise Exception(f"Unexpected holdings cost {ada_usdt_holdings.holdings_cost}")
 
                 # position just opened should be just spread here
                 profit = self.portfolio.total_unrealized_profit
@@ -142,5 +142,5 @@ class BasicTemplateCryptoFutureAlgorithm(QCAlgorithm):
         if self.interest_per_symbol[self.btc_usd.symbol] != 3:
                 raise Exception(f"Unexpected interest rate count {self.interest_per_symbol[self.btc_usd.symbol]}")
 
-    def on_order_event(self, orderEvent):
-        self.debug("{0} {1}".format(self.time, orderEvent))
+    def on_order_event(self, order_event):
+        self.debug("{0} {1}".format(self.time, order_event))

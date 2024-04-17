@@ -25,13 +25,13 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
         self.set_start_date(2013, 7, 1)
         self.set_end_date(2014, 1, 1)
 
-        self._continuous_contract = self.add_future(Futures.Indices.SP500EMini,
+        self._continuous_contract = self.add_future(Futures.Indices.SP_500_E_MINI,
                                                   data_normalization_mode = DataNormalizationMode.BACKWARDS_RATIO,
                                                   data_mapping_mode = DataMappingMode.LAST_TRADING_DAY,
                                                   contract_depth_offset = 0)
 
-        self._fast = self.SMA(self._continuous_contract.symbol, 4, Resolution.DAILY)
-        self._slow = self.SMA(self._continuous_contract.symbol, 10, Resolution.DAILY)
+        self._fast = self.sma(self._continuous_contract.symbol, 4, Resolution.DAILY)
+        self._slow = self.sma(self._continuous_contract.symbol, 10, Resolution.DAILY)
         self._current_contract = None
 
     def on_data(self, data):
@@ -40,9 +40,9 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        for changedEvent in data.symbol_changed_events.values():
-            if changedEvent.symbol == self._continuous_contract.symbol:
-                self.log(f"SymbolChanged event: {changedEvent}")
+        for changed_event in data.symbol_changed_events.values():
+            if changed_event.symbol == self._continuous_contract.symbol:
+                self.log(f"SymbolChanged event: {changed_event}")
 
         if not self.portfolio.invested:
             if self._fast.current.value > self._slow.current.value:
@@ -55,13 +55,13 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
         if self._current_contract is not None and self._current_contract.symbol != self._continuous_contract.mapped and self._continuous_contract.exchange.exchange_open:
             self.log(f"{self.time} - rolling position from {self._current_contract.symbol} to {self._continuous_contract.mapped}")
 
-            currentPositionSize = self._current_contract.holdings.quantity
+            current_position_size = self._current_contract.holdings.quantity
             self.liquidate(self._current_contract.symbol)
-            self.buy(self._continuous_contract.mapped, currentPositionSize)
+            self.buy(self._continuous_contract.mapped, current_position_size)
             self._current_contract = self.securities[self._continuous_contract.mapped]
 
-    def on_order_event(self, orderEvent):
-        self.debug("Purchased Stock: {0}".format(orderEvent.symbol))
+    def on_order_event(self, order_event):
+        self.debug("Purchased Stock: {0}".format(order_event.symbol))
 
     def on_securities_changed(self, changes):
         self.debug(f"{self.time}-{changes}")

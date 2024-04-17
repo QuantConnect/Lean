@@ -38,10 +38,10 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
 
         # Request fundamental data for symbols at current algorithm time
         ibm = Symbol.create("IBM", SecurityType.EQUITY, Market.USA)
-        ibmFundamental = self.fundamentals(ibm)
-        if self.time != self.start_date or self.time != ibmFundamental.end_time:
-            raise ValueError(f"Unexpected Fundamental time {ibmFundamental.end_time}")
-        if ibmFundamental.price == 0:
+        ibm_fundamental = self.fundamentals(ibm)
+        if self.time != self.start_date or self.time != ibm_fundamental.end_time:
+            raise ValueError(f"Unexpected Fundamental time {ibm_fundamental.end_time}")
+        if ibm_fundamental.price == 0:
             raise ValueError(f"Unexpected Fundamental IBM price!")
         nb = Symbol.create("NB", SecurityType.EQUITY, Market.USA)
         fundamentals = self.fundamentals([ nb, ibm ])
@@ -69,46 +69,46 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
 
     def assert_fundamental_universe_data(self):
         # Case A
-        universeDataPerTime = self.history(self._universe.data_type, [self._universe.symbol], TimeSpan(2, 0, 0, 0))
-        if len(universeDataPerTime) != 2:
-            raise ValueError(f"Unexpected Fundamentals history count {len(universeDataPerTime)}! Expected 2")
+        universe_data_per_time = self.history(self._universe.data_type, [self._universe.symbol], TimeSpan(2, 0, 0, 0))
+        if len(universe_data_per_time) != 2:
+            raise ValueError(f"Unexpected Fundamentals history count {len(universe_data_per_time)}! Expected 2")
 
-        for universeDataCollection in universeDataPerTime:
-            self.assert_fundamental_enumerator(universeDataCollection, "A")
+        for universe_data_collection in universe_data_per_time:
+            self.assert_fundamental_enumerator(universe_data_collection, "A")
 
         # Case B (sugar on A)
-        universeDataPerTime = self.history(self._universe, TimeSpan(2, 0, 0, 0))
-        if len(universeDataPerTime) != 2:
-            raise ValueError(f"Unexpected Fundamentals history count {len(universeDataPerTime)}! Expected 2")
+        universe_data_per_time = self.history(self._universe, TimeSpan(2, 0, 0, 0))
+        if len(universe_data_per_time) != 2:
+            raise ValueError(f"Unexpected Fundamentals history count {len(universe_data_per_time)}! Expected 2")
 
-        for universeDataCollection in universeDataPerTime:
-            self.assert_fundamental_enumerator(universeDataCollection, "B")
+        for universe_data_collection in universe_data_per_time:
+            self.assert_fundamental_enumerator(universe_data_collection, "B")
 
         # Case C: Passing through the unvierse type and symbol
-        enumerableOfDataDictionary = self.history[self._universe.data_type]([self._universe.symbol], 100)
-        for selectionCollectionForADay in enumerableOfDataDictionary:
-            self.assert_fundamental_enumerator(selectionCollectionForADay[self._universe.symbol], "C")
+        enumerable_of_data_dictionary = self.history[self._universe.data_type]([self._universe.symbol], 100)
+        for selection_collection_for_a_day in enumerable_of_data_dictionary:
+            self.assert_fundamental_enumerator(selection_collection_for_a_day[self._universe.symbol], "C")
 
-    def assert_fundamental_enumerator(self, enumerable, caseName):
-        dataPointCount = 0
+    def assert_fundamental_enumerator(self, enumerable, case_name):
+        data_point_count = 0
         for fundamental in enumerable:
-            dataPointCount += 1
+            data_point_count += 1
             if type(fundamental) is not Fundamental:
-                raise ValueError(f"Unexpected Fundamentals data type {type(fundamental)} case {caseName}! {str(fundamental)}")
-        if dataPointCount < 7000:
-            raise ValueError(f"Unexpected historical Fundamentals data count {dataPointCount} case {caseName}! Expected > 7000")
+                raise ValueError(f"Unexpected Fundamentals data type {type(fundamental)} case {case_name}! {str(fundamental)}")
+        if data_point_count < 7000:
+            raise ValueError(f"Unexpected historical Fundamentals data count {data_point_count} case {case_name}! Expected > 7000")
 
     # return a list of three fixed symbol objects
     def selection_function(self, fundamental):
         # sort descending by daily dollar volume
-        sortedByDollarVolume = sorted([x for x in fundamental if x.price > 1],
+        sorted_by_dollar_volume = sorted([x for x in fundamental if x.price > 1],
             key=lambda x: x.dollar_volume, reverse=True)
 
         # sort descending by P/E ratio
-        sortedByPeRatio = sorted(sortedByDollarVolume, key=lambda x: x.valuation_ratios.pe_ratio, reverse=True)
+        sorted_by_pe_ratio = sorted(sorted_by_dollar_volume, key=lambda x: x.valuation_ratios.pe_ratio, reverse=True)
 
         # take the top entries from our sorted collection
-        return [ x.symbol for x in sortedByPeRatio[:self.number_of_symbols_fundamental] ]
+        return [ x.symbol for x in sorted_by_pe_ratio[:self.number_of_symbols_fundamental] ]
 
     def on_data(self, data):
         # if we have no changes, do nothing
