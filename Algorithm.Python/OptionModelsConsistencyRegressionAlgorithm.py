@@ -39,7 +39,7 @@ class OptionModelsConsistencyRegressionAlgorithm(QCAlgorithm):
         self.set_end_date(2015, 12, 24)
 
         equity = self.add_equity("GOOG", leverage=4)
-        option = self.add_option(equity.Symbol)
+        option = self.add_option(equity.symbol)
         option.set_filter(lambda u: u.strikes(-2, +2).expiration(0, 180))
 
         return option
