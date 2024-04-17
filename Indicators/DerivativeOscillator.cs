@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,7 +15,7 @@
 
 namespace QuantConnect.Indicators
 {
-    /// <summary>\
+    /// <summary>
     /// Represents the Derivative Oscillator Indicator, utilizing
     /// a moving average convergence-divergence (MACD) histogram to a double-smoothed relative strength index (RSI).
     /// </summary>
@@ -25,10 +25,6 @@ namespace QuantConnect.Indicators
         private readonly ExponentialMovingAverage _smoothedRsi;
         private readonly ExponentialMovingAverage _doubleSmoothedRsi;
         private readonly SimpleMovingAverage _signalLine;
-        private readonly int _rsiPeriod;
-        private readonly int _smoothingRsiPeriod;
-        private readonly int _doubleSmoothingRsiPeriod;
-        private readonly int _signalLinePeriod;
         
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -50,10 +46,6 @@ namespace QuantConnect.Indicators
         /// <param name="signalLinePeriod">The period for the signal line</param>
         public DerivativeOscillator(string name, int rsiPeriod, int smoothingRsiPeriod, int doubleSmoothingRsiPeriod, int signalLinePeriod) : base(name)
         {
-            _rsiPeriod = rsiPeriod;
-            _smoothingRsiPeriod = smoothingRsiPeriod;
-            _doubleSmoothingRsiPeriod = doubleSmoothingRsiPeriod;
-            _signalLinePeriod = signalLinePeriod;
             _rsi = new RelativeStrengthIndex($"{name}_RSI", rsiPeriod);
             _smoothedRsi = new ExponentialMovingAverage($"{name}_SmoothedRSI", smoothingRsiPeriod).Of(_rsi);
             _doubleSmoothedRsi = new ExponentialMovingAverage($"{name}_DoubleSmoothedRSI", doubleSmoothingRsiPeriod).Of(_smoothedRsi);

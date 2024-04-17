@@ -18,6 +18,7 @@ using System;
 
 namespace QuantConnect.Tests.Indicators;
 
+[TestFixture]
 public class DerivativeOscillatorIndicatorTest : CommonIndicatorTests<IndicatorDataPoint>
 {
     protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
