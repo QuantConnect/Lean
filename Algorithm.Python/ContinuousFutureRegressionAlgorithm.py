@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,63 +19,63 @@ from AlgorithmImports import *
 class ContinuousFutureRegressionAlgorithm(QCAlgorithm):
     '''Basic template algorithm simply initializes the date range and cash'''
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013, 7, 1)
-        self.SetEndDate(2014, 1, 1)
+        self.set_start_date(2013, 7, 1)
+        self.set_end_date(2014, 1, 1)
 
         self._mappings = []
-        self._lastDateLog = -1
-        self._continuousContract = self.AddFuture(Futures.Indices.SP500EMini,
-                                                  dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
-                                                  dataMappingMode = DataMappingMode.LastTradingDay,
-                                                  contractDepthOffset= 0)
-        self._currentMappedSymbol = self._continuousContract.Symbol
+        self._last_date_log = -1
+        self._continuous_contract = self.add_future(Futures.Indices.SP_500_E_MINI,
+                                                  data_normalization_mode = DataNormalizationMode.BACKWARDS_RATIO,
+                                                  data_mapping_mode = DataMappingMode.LAST_TRADING_DAY,
+                                                  contract_depth_offset= 0)
+        self._current_mapped_symbol = self._continuous_contract.symbol
 
-    def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+    def on_data(self, data):
+        '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        currentlyMappedSecurity = self.Securities[self._continuousContract.Mapped]
-        if len(data.Keys) != 1:
-            raise ValueError(f"We are getting data for more than one symbols! {','.join(data.Keys)}")
+        currently_mapped_security = self.securities[self._continuous_contract.mapped]
+        if len(data.keys()) != 1:
+            raise ValueError(f"We are getting data for more than one symbols! {','.join(data.keys())}")
 
-        for changedEvent in data.SymbolChangedEvents.Values:
-            if changedEvent.Symbol == self._continuousContract.Symbol:
-                self._mappings.append(changedEvent)
-                self.Log(f"SymbolChanged event: {changedEvent}")
+        for changed_event in data.symbol_changed_events.values():
+            if changed_event.symbol == self._continuous_contract.symbol:
+                self._mappings.append(changed_event)
+                self.log(f"SymbolChanged event: {changed_event}")
 
-                if self._currentMappedSymbol == self._continuousContract.Mapped:
-                    raise ValueError(f"Continuous contract current symbol did not change! {self._continuousContract.Mapped}")
+                if self._current_mapped_symbol == self._continuous_contract.mapped:
+                    raise ValueError(f"Continuous contract current symbol did not change! {self._continuous_contract.mapped}")
 
-        if self._lastDateLog != self.Time.month and currentlyMappedSecurity.HasData:
-            self._lastDateLog = self.Time.month
+        if self._last_date_log != self.time.month and currently_mapped_security.has_data:
+            self._last_date_log = self.time.month
 
-            self.Log(f"{self.Time}- {currentlyMappedSecurity.GetLastData()}")
-            if self.Portfolio.Invested:
-                self.Liquidate()
+            self.log(f"{self.time}- {currently_mapped_security.get_last_data()}")
+            if self.portfolio.invested:
+                self.liquidate()
             else:
                 # This works because we set this contract as tradable, even if it's a canonical security
-                self.Buy(currentlyMappedSecurity.Symbol, 1)
+                self.buy(currently_mapped_security.symbol, 1)
 
-            if self.Time.month == 1 and self.Time.year == 2013:
-                response = self.History( [ self._continuousContract.Symbol ], 60 * 24 * 90)
+            if self.time.month == 1 and self.time.year == 2013:
+                response = self.history( [ self._continuous_contract.symbol ], 60 * 24 * 90)
                 if response.empty:
                     raise ValueError("Unexpected empty history response")
 
-        self._currentMappedSymbol = self._continuousContract.Mapped
+        self._current_mapped_symbol = self._continuous_contract.mapped
 
-    def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            self.Debug("Purchased Stock: {0}".format(orderEvent.Symbol))
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.FILLED:
+            self.debug("Purchased Stock: {0}".format(order_event.symbol))
 
-    def OnSecuritiesChanged(self, changes):
-        self.Debug(f"{self.Time}-{changes}")
+    def on_securities_changed(self, changes):
+        self.debug(f"{self.time}-{changes}")
 
-    def OnEndOfAlgorithm(self):
-        expectedMappingCounts = 2
-        if len(self._mappings) != expectedMappingCounts:
-            raise ValueError(f"Unexpected symbol changed events: {self._mappings.count()}, was expecting {expectedMappingCounts}")
+    def on_end_of_algorithm(self):
+        expected_mapping_counts = 2
+        if len(self._mappings) != expected_mapping_counts:
+            raise ValueError(f"Unexpected symbol changed events: {self._mappings.count()}, was expecting {expected_mapping_counts}")

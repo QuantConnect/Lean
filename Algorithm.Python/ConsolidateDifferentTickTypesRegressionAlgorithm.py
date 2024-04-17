@@ -18,32 +18,32 @@ from AlgorithmImports import *
 ### This algorithm asserts we can consolidate Tick data with different tick types
 ### </summary>
 class ConsolidateDifferentTickTypesRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 6)
-        self.SetEndDate(2013, 10, 7)
-        self.SetCash(1000000)
+    def initialize(self):
+        self.set_start_date(2013, 10, 6)
+        self.set_end_date(2013, 10, 7)
+        self.set_cash(1000000)
 
-        equity = self.AddEquity("SPY", Resolution.Tick, Market.USA)
-        quoteConsolidator = self.Consolidate(equity.Symbol, Resolution.Tick, TickType.Quote, lambda tick : self.OnQuoteTick(tick))
-        self.thereIsAtLeastOneQuoteTick = False
+        equity = self.add_equity("SPY", Resolution.TICK, Market.USA)
+        quote_consolidator = self.consolidate(equity.symbol, Resolution.TICK, TickType.QUOTE, lambda tick : self.on_quote_tick(tick))
+        self.there_is_at_least_one_quote_tick = False
 
-        tradeConsolidator = self.Consolidate(equity.Symbol, Resolution.Tick, TickType.Trade, lambda tick : self.OnTradeTick(tick))
-        self.thereIsAtLeastOneTradeTick = False
+        trade_consolidator = self.consolidate(equity.symbol, Resolution.TICK, TickType.TRADE, lambda tick : self.on_trade_tick(tick))
+        self.there_is_at_least_one_trade_tick = False
 
-    def OnQuoteTick(self, tick):
-        self.thereIsAtLeastOneQuoteTick = True
-        if tick.TickType != TickType.Quote:
-            raise Exception(f"The type of the tick should be Quote, but was {tick.TickType}")
+    def on_quote_tick(self, tick):
+        self.there_is_at_least_one_quote_tick = True
+        if tick.tick_type != TickType.QUOTE:
+            raise Exception(f"The type of the tick should be Quote, but was {tick.tick_type}")
 
-    def OnTradeTick(self, tick):
-        self.thereIsAtLeastOneTradeTick = True
-        if tick.TickType != TickType.Trade:
-            raise Exception(f"The type of the tick should be Trade, but was {tick.TickType}")
+    def on_trade_tick(self, tick):
+        self.there_is_at_least_one_trade_tick = True
+        if tick.tick_type != TickType.TRADE:
+            raise Exception(f"The type of the tick should be Trade, but was {tick.tick_type}")
 
-    def OnEndOfAlgorithm(self):
-        if not self.thereIsAtLeastOneQuoteTick:
+    def on_end_of_algorithm(self):
+        if not self.there_is_at_least_one_quote_tick:
             raise Exception(f"There should have been at least one tick in OnQuoteTick() method, but there wasn't")
 
-        if not self.thereIsAtLeastOneTradeTick:
+        if not self.there_is_at_least_one_trade_tick:
             raise Exception(f"There should have been at least one tick in OnTradeTick() method, but there wasn't")
 

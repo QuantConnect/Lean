@@ -14,26 +14,26 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Algorithm asserting that consolidated bars are of type `QuoteBar` when `QCAlgorithm.Consolidate()` is called with `tickType=TickType.Quote`
+### Algorithm asserting that consolidated bars are of type `QuoteBar` when `QCAlgorithm.consolidate()` is called with `tick_type=TickType.QUOTE`
 ### </summary>
 class CorrectConsolidatedBarTypeForTickTypesAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 7)
+    def initialize(self):
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 7)
 
-        symbol = self.AddEquity("SPY", Resolution.Tick).Symbol
+        symbol = self.add_equity("SPY", Resolution.TICK).symbol
 
-        self.Consolidate(symbol, timedelta(minutes=1), TickType.Quote, self.quote_tick_consolidation_handler)
-        self.Consolidate(symbol, timedelta(minutes=1), TickType.Trade, self.trade_tick_consolidation_handler)
+        self.consolidate(symbol, timedelta(minutes=1), TickType.QUOTE, self.quote_tick_consolidation_handler)
+        self.consolidate(symbol, timedelta(minutes=1), TickType.TRADE, self.trade_tick_consolidation_handler)
 
         self.quote_tick_consolidation_handler_called = False
         self.trade_tick_consolidation_handler_called = False
 
-    def OnData(self, slice: Slice) -> None:
-        if self.Time.hour > 9:
-            self.Quit("Early quit to save time")
+    def on_data(self, slice: Slice) -> None:
+        if self.time.hour > 9:
+            self.quit("Early quit to save time")
 
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         if not self.quote_tick_consolidation_handler_called:
             raise Exception("quote_tick_consolidation_handler was not called")
 

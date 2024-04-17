@@ -19,207 +19,207 @@ from AlgorithmImports import *
 ### </summary>
 class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2015, 12, 24)
-        self.SetEndDate(2015, 12, 24)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2015, 12, 24)
+        self.set_end_date(2015, 12, 24)
+        self.set_cash(100000)
 
-        equity = self.AddEquity("GOOG", leverage=4, fillForward=True)
-        option = self.AddOption(equity.Symbol, fillForward=True)
-        self._optionSymbol = option.Symbol
+        equity = self.add_equity("GOOG", leverage=4, fill_forward=True)
+        option = self.add_option(equity.symbol, fill_forward=True)
+        self._option_symbol = option.symbol
 
-        option.SetFilter(lambda u: u.Strikes(-2, +2).Expiration(0, 180))
+        option.set_filter(lambda u: u.strikes(-2, +2).expiration(0, 180))
 
-        self._openMarketOrders = []
-        self._openLegLimitOrders = []
-        self._openLimitOrders = []
+        self._open_market_orders = []
+        self._open_leg_limit_orders = []
+        self._open_limit_orders = []
 
-        self._orderLegs = None
+        self._order_legs = None
 
-    def OnData(self, data: Slice):
-        if self._orderLegs is None:
-            if self.IsMarketOpen(self._optionSymbol):
-                chain = data.OptionChains.GetValue(self._optionSymbol)
+    def on_data(self, data: Slice):
+        if self._order_legs is None:
+            if self.is_market_open(self._option_symbol):
+                chain = data.option_chains.get_value(self._option_symbol)
                 if chain is not None:
-                    callContracts = [contract for contract in chain if contract.Right == OptionRight.Call]
-                    callContracts = [(key, list(group)) for key, group in itertools.groupby(callContracts, key=lambda x: x.Expiry)]
-                    callContracts.sort(key=lambda x: x[0])
-                    callContracts = callContracts[0][1]
-                    callContracts.sort(key=lambda x: x.Strike)
+                    call_contracts = [contract for contract in chain if contract.right == OptionRight.CALL]
+                    call_contracts = [(key, list(group)) for key, group in itertools.groupby(call_contracts, key=lambda x: x.expiry)]
+                    call_contracts.sort(key=lambda x: x[0])
+                    call_contracts = call_contracts[0][1]
+                    call_contracts.sort(key=lambda x: x.strike)
 
-                    if len(callContracts) < 3:
+                    if len(call_contracts) < 3:
                         return
 
                     quantities = [1, -2, 1]
-                    self._orderLegs = []
-                    for i, contract in enumerate(callContracts[:3]):
-                        leg = Leg.Create(contract.Symbol, quantities[i]);
-                        self._orderLegs.append(leg)
+                    self._order_legs = []
+                    for i, contract in enumerate(call_contracts[:3]):
+                        leg = Leg.create(contract.symbol, quantities[i]);
+                        self._order_legs.append(leg)
         else:
             # COMBO MARKET ORDERS
 
-            self.ComboMarketOrders()
+            self.combo_market_orders()
 
             # COMBO LIMIT ORDERS
 
-            self.ComboLimitOrders()
+            self.combo_limit_orders()
 
             # COMBO LEG LIMIT ORDERS
 
-            self.ComboLegLimitOrders()
+            self.combo_leg_limit_orders()
 
-    def ComboMarketOrders(self):
-        if len(self._openMarketOrders) != 0 or self._orderLegs is None:
+    def combo_market_orders(self):
+        if len(self._open_market_orders) != 0 or self._order_legs is None:
             return;
 
-        self.Log("Submitting combo market orders")
+        self.log("Submitting combo market orders")
 
-        tickets = self.ComboMarketOrder(self._orderLegs, 2, asynchronous=False)
-        self._openMarketOrders.extend(tickets)
+        tickets = self.combo_market_order(self._order_legs, 2, asynchronous=False)
+        self._open_market_orders.extend(tickets)
 
-        tickets = self.ComboMarketOrder(self._orderLegs, 2, asynchronous=True)
-        self._openMarketOrders.extend(tickets)
+        tickets = self.combo_market_order(self._order_legs, 2, asynchronous=True)
+        self._open_market_orders.extend(tickets)
 
         for ticket in tickets:
-            response = ticket.Cancel("Attempt to cancel combo market order")
-            if response.IsSuccess:
-                raise Exception("Combo market orders should fill instantly, they should not be cancelable in backtest mode: " + response.OrderId)
+            response = ticket.cancel("Attempt to cancel combo market order")
+            if response.is_success:
+                raise Exception("Combo market orders should fill instantly, they should not be cancelable in backtest mode: " + response.order_id)
 
-    def ComboLimitOrders(self):
-        if len(self._openLimitOrders) == 0:
-            self.Log("Submitting ComboLimitOrder")
+    def combo_limit_orders(self):
+        if len(self._open_limit_orders) == 0:
+            self.log("Submitting ComboLimitOrder")
 
-            currentPrice = sum([leg.Quantity * self.Securities[leg.Symbol].Close for leg in self._orderLegs])
+            current_price = sum([leg.quantity * self.securities[leg.symbol].close for leg in self._order_legs])
 
-            tickets = self.ComboLimitOrder(self._orderLegs, 2, currentPrice + 1.5)
-            self._openLimitOrders.extend(tickets)
+            tickets = self.combo_limit_order(self._order_legs, 2, current_price + 1.5)
+            self._open_limit_orders.extend(tickets)
 
             # These won't fill, we will test cancel with this
-            tickets = self.ComboLimitOrder(self._orderLegs, -2, currentPrice + 3)
-            self._openLimitOrders.extend(tickets)
+            tickets = self.combo_limit_order(self._order_legs, -2, current_price + 3)
+            self._open_limit_orders.extend(tickets)
         else:
-            combo1 = self._openLimitOrders[:len(self._orderLegs)]
-            combo2 = self._openLimitOrders[-len(self._orderLegs):]
+            combo1 = self._open_limit_orders[:len(self._order_legs)]
+            combo2 = self._open_limit_orders[-len(self._order_legs):]
 
             # check if either is filled and cancel the other
-            if self.CheckGroupOrdersForFills(combo1, combo2):
+            if self.check_group_orders_for_fills(combo1, combo2):
                 return
 
             # if neither order has filled, bring in the limits by a penny
 
             ticket = combo1[0]
-            newLimit = round(ticket.Get(OrderField.LimitPrice) + 0.01, 2)
-            self.Debug(f"Updating limits - Combo 1 {ticket.OrderId}: {newLimit:.2f}")
+            new_limit = round(ticket.get(OrderField.LIMIT_PRICE) + 0.01, 2)
+            self.debug(f"Updating limits - Combo 1 {ticket.order_id}: {new_limit:.2f}")
             fields = UpdateOrderFields()
-            fields.LimitPrice = newLimit
-            fields.Tag = f"Update #{len(ticket.UpdateRequests) + 1}"
-            ticket.Update(fields)
+            fields.limit_price = new_limit
+            fields.tag = f"Update #{len(ticket.update_requests) + 1}"
+            ticket.update(fields)
 
             ticket = combo2[0]
-            newLimit = round(ticket.Get(OrderField.LimitPrice) - 0.01, 2)
-            self.Debug(f"Updating limits - Combo 2 {ticket.OrderId}: {newLimit:.2f}")
-            fields.LimitPrice = newLimit
-            fields.Tag = f"Update #{len(ticket.UpdateRequests) + 1}"
-            ticket.Update(fields)
+            new_limit = round(ticket.get(OrderField.LIMIT_PRICE) - 0.01, 2)
+            self.debug(f"Updating limits - Combo 2 {ticket.order_id}: {new_limit:.2f}")
+            fields.limit_price = new_limit
+            fields.tag = f"Update #{len(ticket.update_requests) + 1}"
+            ticket.update(fields)
 
-    def ComboLegLimitOrders(self):
-        if len(self._openLegLimitOrders) == 0:
-            self.Log("Submitting ComboLegLimitOrder")
+    def combo_leg_limit_orders(self):
+        if len(self._open_leg_limit_orders) == 0:
+            self.log("Submitting ComboLegLimitOrder")
 
             # submit a limit order to buy 2 shares at .1% below the bar's close
-            for leg in self._orderLegs:
-                close = self.Securities[leg.Symbol].Close
-                leg.OrderPrice = close * .999
+            for leg in self._order_legs:
+                close = self.securities[leg.symbol].close
+                leg.order_price = close * .999
 
-            tickets = self.ComboLegLimitOrder(self._orderLegs, quantity=2)
-            self._openLegLimitOrders.extend(tickets)
+            tickets = self.combo_leg_limit_order(self._order_legs, quantity=2)
+            self._open_leg_limit_orders.extend(tickets)
 
             # submit another limit order to sell 2 shares at .1% above the bar's close
-            for leg in self._orderLegs:
-                close = self.Securities[leg.Symbol].Close
-                leg.OrderPrice = close * 1.001
+            for leg in self._order_legs:
+                close = self.securities[leg.symbol].close
+                leg.order_price = close * 1.001
 
-            tickets = self.ComboLegLimitOrder(self._orderLegs, -2)
-            self._openLegLimitOrders.extend(tickets)
+            tickets = self.combo_leg_limit_order(self._order_legs, -2)
+            self._open_leg_limit_orders.extend(tickets)
         else:
-            combo1 = self._openLegLimitOrders[:len(self._orderLegs)]
-            combo2 = self._openLegLimitOrders[-len(self._orderLegs):]
+            combo1 = self._open_leg_limit_orders[:len(self._order_legs)]
+            combo2 = self._open_leg_limit_orders[-len(self._order_legs):]
 
             # check if either is filled and cancel the other
-            if self.CheckGroupOrdersForFills(combo1, combo2):
+            if self.check_group_orders_for_fills(combo1, combo2):
                 return
 
             # if neither order has filled, bring in the limits by a penny
 
             for ticket in combo1:
-                newLimit = round(ticket.Get(OrderField.LimitPrice) + (1 if ticket.Quantity > 0 else -1) * 0.01, 2)
-                self.Debug(f"Updating limits - Combo #1: {newLimit:.2f}")
+                new_limit = round(ticket.get(OrderField.LIMIT_PRICE) + (1 if ticket.quantity > 0 else -1) * 0.01, 2)
+                self.debug(f"Updating limits - Combo #1: {new_limit:.2f}")
                 fields = UpdateOrderFields()
-                fields.LimitPrice = newLimit
-                fields.Tag = f"Update #{len(ticket.UpdateRequests) + 1}"
-                ticket.Update(fields)
+                fields.limit_price = new_limit
+                fields.tag = f"Update #{len(ticket.update_requests) + 1}"
+                ticket.update(fields)
 
             for ticket in combo2:
-                newLimit = round(ticket.Get(OrderField.LimitPrice) + (1 if ticket.Quantity > 0 else -1) * 0.01, 2)
-                self.Debug(f"Updating limits - Combo #2: {newLimit:.2f}")
-                fields.LimitPrice = newLimit
-                fields.Tag = f"Update #{len(ticket.UpdateRequests) + 1}"
-                ticket.Update(fields)
+                new_limit = round(ticket.get(OrderField.LIMIT_PRICE) + (1 if ticket.quantity > 0 else -1) * 0.01, 2)
+                self.debug(f"Updating limits - Combo #2: {new_limit:.2f}")
+                fields.limit_price = new_limit
+                fields.tag = f"Update #{len(ticket.update_requests) + 1}"
+                ticket.update(fields)
 
-    def OnOrderEvent(self, orderEvent):
-        order = self.Transactions.GetOrderById(orderEvent.OrderId)
+    def on_order_event(self, order_event):
+        order = self.transactions.get_order_by_id(order_event.order_id)
 
-        if orderEvent.Quantity == 0:
+        if order_event.quantity == 0:
             raise Exception("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity")
 
-        if orderEvent.Quantity != order.Quantity:
+        if order_event.quantity != order.quantity:
             raise Exception("OrderEvent quantity should hold the current order Quantity. "
-                            f"Got {orderEvent.Quantity}, expected {order.Quantity}")
+                            f"Got {order_event.quantity}, expected {order.quantity}")
 
-        if order.Type == OrderType.ComboLegLimit and orderEvent.LimitPrice == 0:
-            raise Exception("OrderEvent.LimitPrice is not expected to be 0 for ComboLegLimitOrder")
+        if order.type == OrderType.COMBO_LEG_LIMIT and order_event.limit_price == 0:
+            raise Exception("OrderEvent.LIMIT_PRICE is not expected to be 0 for ComboLegLimitOrder")
 
-    def CheckGroupOrdersForFills(self, combo1, combo2):
-        if all(x.Status == OrderStatus.Filled for x in combo1):
-            self.Log(f"{combo1[0].OrderType}: Canceling combo #2, combo #1 is filled.")
-            if any(OrderExtensions.IsOpen(x.Status) for x in combo2):
+    def check_group_orders_for_fills(self, combo1, combo2):
+        if all(x.status == OrderStatus.FILLED for x in combo1):
+            self.log(f"{combo1[0].order_type}: Canceling combo #2, combo #1 is filled.")
+            if any(OrderExtensions.is_open(x.status) for x in combo2):
                 for ticket in combo2:
-                    ticket.Cancel("Combo #1 filled.")
+                    ticket.cancel("Combo #1 filled.")
             return True
 
-        if all(x.Status == OrderStatus.Filled for x in combo2):
-            self.Log(f"{combo2[0].OrderType}: Canceling combo #1, combo #2 is filled.")
-            if any(OrderExtensions.IsOpen(x.Status) for x in combo1):
+        if all(x.status == OrderStatus.FILLED for x in combo2):
+            self.log(f"{combo2[0].order_type}: Canceling combo #1, combo #2 is filled.")
+            if any(OrderExtensions.is_open(x.status) for x in combo1):
                 for ticket in combo1:
-                    ticket.Cancel("Combo #2 filled.")
+                    ticket.cancel("Combo #2 filled.")
             return True
 
         return False
 
-    def OnEndOfAlgorithm(self):
-        filledOrders = self.Transactions.GetOrders(lambda x: x.Status == OrderStatus.Filled).ToList()
-        orderTickets = self.Transactions.GetOrderTickets().ToList()
-        openOrders = self.Transactions.GetOpenOrders()
-        openOrderTickets = self.Transactions.GetOpenOrderTickets().ToList()
-        remainingOpenOrders = self.Transactions.GetOpenOrdersRemainingQuantity()
+    def on_end_of_algorithm(self):
+        filled_orders = self.transactions.get_orders(lambda x: x.status == OrderStatus.FILLED).to_list()
+        order_tickets = self.transactions.get_order_tickets().to_list()
+        open_orders = self.transactions.get_open_orders()
+        open_order_tickets = self.transactions.get_open_order_tickets().to_list()
+        remaining_open_orders = self.transactions.get_open_orders_remaining_quantity()
 
         # 6 market, 6 limit, 6 leg limit.
         # Out of the 6 limit orders, 3 are expected to be canceled.
-        expectedOrdersCount = 18
-        expectedFillsCount = 15
-        if len(filledOrders) != expectedFillsCount or len(orderTickets) != expectedOrdersCount:
-            raise Exception(f"There were expected {expectedFillsCount} filled orders and {expectedOrdersCount} order tickets, but there were {len(filledOrders)} filled orders and {len(orderTickets)} order tickets")
+        expected_orders_count = 18
+        expected_fills_count = 15
+        if len(filled_orders) != expected_fills_count or len(order_tickets) != expected_orders_count:
+            raise Exception(f"There were expected {expected_fills_count} filled orders and {expected_orders_count} order tickets, but there were {len(filled_orders)} filled orders and {len(order_tickets)} order tickets")
 
-        filledComboMarketOrders = [x for x in filledOrders if x.Type == OrderType.ComboMarket]
-        filledComboLimitOrders = [x for x in filledOrders if x.Type == OrderType.ComboLimit]
-        filledComboLegLimitOrders = [x for x in filledOrders if x.Type == OrderType.ComboLegLimit]
-        if len(filledComboMarketOrders) != 6 or len(filledComboLimitOrders) != 3 or len(filledComboLegLimitOrders) != 6:
+        filled_combo_market_orders = [x for x in filled_orders if x.type == OrderType.COMBO_MARKET]
+        filled_combo_limit_orders = [x for x in filled_orders if x.type == OrderType.COMBO_LIMIT]
+        filled_combo_leg_limit_orders = [x for x in filled_orders if x.type == OrderType.COMBO_LEG_LIMIT]
+        if len(filled_combo_market_orders) != 6 or len(filled_combo_limit_orders) != 3 or len(filled_combo_leg_limit_orders) != 6:
             raise Exception("There were expected 6 filled market orders, 3 filled combo limit orders and 6 filled combo leg limit orders, "
-                            f"but there were {len(filledComboMarketOrders)} filled market orders, {len(filledComboLimitOrders)} filled "
-                            f"combo limit orders and {len(filledComboLegLimitOrders)} filled combo leg limit orders")
+                            f"but there were {len(filled_combo_market_orders)} filled market orders, {len(filled_combo_limit_orders)} filled "
+                            f"combo limit orders and {len(filled_combo_leg_limit_orders)} filled combo leg limit orders")
 
-        if len(openOrders) != 0 or len(openOrderTickets) != 0:
+        if len(open_orders) != 0 or len(open_order_tickets) != 0:
             raise Exception("No open orders or tickets were expected")
 
-        if remainingOpenOrders != 0:
+        if remaining_open_orders != 0:
             raise Exception("No remaining quantity to be filled from open orders was expected")

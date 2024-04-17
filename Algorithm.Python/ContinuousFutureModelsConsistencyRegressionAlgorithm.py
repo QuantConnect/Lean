@@ -21,13 +21,13 @@ from OptionModelsConsistencyRegressionAlgorithm import OptionModelsConsistencyRe
 ### </summary>
 class ContinuousFutureModelsConsistencyRegressionAlgorithm(OptionModelsConsistencyRegressionAlgorithm):
 
-    def InitializeAlgorithm(self) -> Security:
-        self.SetStartDate(2013, 7, 1)
-        self.SetEndDate(2014, 1, 1)
+    def initialize_algorithm(self) -> Security:
+        self.set_start_date(2013, 7, 1)
+        self.set_end_date(2014, 1, 1)
 
-        continuous_contract = self.AddFuture(Futures.Indices.SP500EMini,
-                                             dataNormalizationMode=DataNormalizationMode.BackwardsPanamaCanal,
-                                             dataMappingMode=DataMappingMode.OpenInterest,
-                                             contractDepthOffset=1)
+        continuous_contract = self.add_future(Futures.Indices.SP_500_E_MINI,
+                                             data_normalization_mode=DataNormalizationMode.BACKWARDS_PANAMA_CANAL,
+                                             data_mapping_mode=DataMappingMode.OPEN_INTEREST,
+                                             contract_depth_offset=1)
 
         return continuous_contract

@@ -18,28 +18,28 @@ from CustomBrokerageModelRegressionAlgorithm import CustomBrokerageModel
 ### Regression algorithm to test we can specify a custom benchmark model, and override some of its methods
 ### </summary>
 class CustomBenchmarkRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2013,10,7)
-        self.SetEndDate(2013,10,11)
-        self.SetBrokerageModel(CustomBrokerageModelWithCustomBenchmark())
-        self.AddEquity("SPY", Resolution.Daily)
-        self.updateRequestSubmitted = False
+    def initialize(self):
+        self.set_start_date(2013,10,7)
+        self.set_end_date(2013,10,11)
+        self.set_brokerage_model(CustomBrokerageModelWithCustomBenchmark())
+        self.add_equity("SPY", Resolution.DAILY)
+        self.update_request_submitted = False
 
-    def OnData(self, slice):
-        benchmark = self.Benchmark.Evaluate(self.Time)
-        if (self.Time.day % 2 == 0) and (benchmark != 1):
+    def on_data(self, slice):
+        benchmark = self.benchmark.evaluate(self.time)
+        if (self.time.day % 2 == 0) and (benchmark != 1):
             raise Exception(f"Benchmark should be 1, but was {benchmark}")
 
-        if (self.Time.day % 2 == 1) and (benchmark != 2):
+        if (self.time.day % 2 == 1) and (benchmark != 2):
             raise Exception(f"Benchmark should be 2, but was {benchmark}")
 
 class CustomBenchmark:
-    def Evaluate(self, time):
+    def evaluate(self, time):
         if time.day % 2 == 0:
             return 1
         else:
             return 2
 
 class CustomBrokerageModelWithCustomBenchmark(CustomBrokerageModel):
-    def GetBenchmark(self, securities):
+    def get_benchmark(self, securities):
         return CustomBenchmark()
