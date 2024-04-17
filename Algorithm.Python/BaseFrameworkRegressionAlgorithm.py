@@ -21,7 +21,7 @@ class BaseFrameworkRegressionAlgorithm(QCAlgorithm):
     def initialize(self):
         self.set_start_date(2014, 6, 1)
         self.set_end_date(2014, 6, 30)
-        
+
         self.universe_settings.resolution = Resolution.HOUR;
         self.universe_settings.data_normalization_mode = DataNormalizationMode.RAW;
 

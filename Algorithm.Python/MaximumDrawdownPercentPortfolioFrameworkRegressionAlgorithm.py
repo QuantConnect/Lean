@@ -21,12 +21,12 @@ from Risk.MaximumDrawdownPercentPortfolio import MaximumDrawdownPercentPortfolio
 ### </summary>
 class MaximumDrawdownPercentPortfolioFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
 
-    def Initialize(self):
-        super().Initialize()
-        self.SetUniverseSelection(ManualUniverseSelectionModel(Symbol.Create("AAPL", SecurityType.Equity, Market.USA)))
+    def initialize(self):
+        super().initialize()
+        self.set_universe_selection(ManualUniverseSelectionModel(Symbol.create("AAPL", SecurityType.EQUITY, Market.USA)))
 
         # define risk management model as a composite of several risk management models
-        self.SetRiskManagement(CompositeRiskManagementModel(
+        self.set_risk_management(CompositeRiskManagementModel(
             MaximumDrawdownPercentPortfolio(0.01),         # Avoid loss of initial capital
             MaximumDrawdownPercentPortfolio(0.015, True)   # Avoid profit losses
             ))

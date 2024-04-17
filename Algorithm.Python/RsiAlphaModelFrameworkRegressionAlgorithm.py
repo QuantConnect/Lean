@@ -20,12 +20,12 @@ from Alphas.RsiAlphaModel import RsiAlphaModel
 ### </summary>
 class RsiAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
 
-    def Initialize(self):
-        super().Initialize()
-        self.SetAlpha(RsiAlphaModel())
+    def initialize(self):
+        super().initialize()
+        self.set_alpha(RsiAlphaModel())
 
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         # We have removed all securities from the universe. The Alpha Model should remove the consolidator
-        consolidator_count = sum([s.Consolidators.Count for s in self.SubscriptionManager.Subscriptions])
+        consolidator_count = sum([s.consolidators.count for s in self.subscription_manager.subscriptions])
         if consolidator_count > 0:
             raise Exception(f"The number of consolidators should be zero. Actual: {consolidator_count}")

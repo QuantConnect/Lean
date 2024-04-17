@@ -20,9 +20,9 @@ from Alphas.EmaCrossAlphaModel import EmaCrossAlphaModel
 ### </summary>
 class EmaCrossAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
 
-    def Initialize(self):
-        super().Initialize()
-        self.SetAlpha(EmaCrossAlphaModel())
+    def initialize(self):
+        super().initialize()
+        self.set_alpha(EmaCrossAlphaModel())
 
-    def OnEndOfAlgorithm(self):
+    def ond_end_of_algorithm(self):
         pass
