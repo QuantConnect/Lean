@@ -42,7 +42,7 @@ class BasicTemplateFuturesFrameworkAlgorithm(QCAlgorithm):
     def select_future_chain_symbols(self, utc_time):
         new_york_time = Extensions.convert_from_utc(utc_time, TimeZones.NEW_YORK)
         if new_york_time.date() < date(2013, 10, 9):
-            return [ Symbol.create(Futures.Indices.SP500EMINI, SecurityType.FUTURE, Market.CME) ]
+            return [ Symbol.create(Futures.Indices.SP_500_E_MINI, SecurityType.FUTURE, Market.CME) ]
         else:
             return [ Symbol.create(Futures.Metals.GOLD, SecurityType.FUTURE, Market.COMEX) ]
 
