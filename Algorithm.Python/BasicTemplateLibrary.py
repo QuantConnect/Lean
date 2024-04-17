@@ -30,10 +30,10 @@ class BasicTemplateLibrary:
 
     Then instantiate the function:
     x = BasicTemplateLibrary()
-    x.Add(1,2)
+    x.add(1,2)
     '''
-    def Add(self, a, b):
+    def add(self, a, b):
         return a + b
 
-    def Subtract(self, a, b):
+    def subtract(self, a, b):
         return a - b

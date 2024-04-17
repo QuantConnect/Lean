@@ -15,45 +15,45 @@ from AlgorithmImports import *
 
 class BasicTemplateIntrinioEconomicData(QCAlgorithm):
 
-    def Initialize(self):
-        '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
+    def initialize(self):
+        '''initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2010, 1, 1)  #Set Start Date
-        self.SetEndDate(2013, 12, 31)  #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
+        self.set_start_date(2010, 1, 1)  #Set Start Date
+        self.set_end_date(2013, 12, 31)  #Set End Date
+        self.set_cash(100000)           #Set Strategy Cash
 
         # Set your Intrinio user and password.
-        IntrinioConfig.SetUserAndPassword("intrinio-username", "intrinio-password")
+        IntrinioConfig.set_user_and_password("intrinio-username", "intrinio-password")
         # The Intrinio user and password can be also defined in the config.json file for local backtest.
 
         # Set Intrinio config to make 1 call each minute, default is 1 call each 5 seconds.
         #(1 call each minute is the free account limit for historical_data endpoint)
-        IntrinioConfig.SetTimeIntervalBetweenCalls(timedelta(minutes = 1))
+        IntrinioConfig.set_time_interval_between_calls(timedelta(minutes = 1))
 
         # United States Oil Fund LP
-        self.uso = self.AddEquity("USO", Resolution.Daily).Symbol
-        self.Securities[self.uso].SetLeverage(2)
+        self.uso = self.add_equity("USO", Resolution.DAILY).symbol
+        self.securities[self.uso].set_leverage(2)
         # United States Brent Oil Fund LP
-        self.bno = self.AddEquity("BNO", Resolution.Daily).Symbol
-        self.Securities[self.bno].SetLeverage(2)
+        self.bno = self.add_equity("BNO", Resolution.DAILY).symbol
+        self.securities[self.bno].set_leverage(2)
 
-        self.AddData(IntrinioEconomicData, "$DCOILWTICO", Resolution.Daily)
-        self.AddData(IntrinioEconomicData, "$DCOILBRENTEU", Resolution.Daily)
+        self.add_data(IntrinioEconomicData, "$DCOILWTICO", Resolution.DAILY)
+        self.add_data(IntrinioEconomicData, "$DCOILBRENTEU", Resolution.DAILY)
 
-        self.emaWti = self.EMA("$DCOILWTICO", 10)
+        self.ema_wti = self.ema("$DCOILWTICO", 10)
 
 
-    def OnData(self, slice):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+    def on_data(self, slice):
+        '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if (slice.ContainsKey("$DCOILBRENTEU") or slice.ContainsKey("$DCOILWTICO")):
-            spread = slice["$DCOILBRENTEU"].Value - slice["$DCOILWTICO"].Value
+        if (slice.contains_key("$DCOILBRENTEU") or slice.contains_key("$DCOILWTICO")):
+            spread = slice["$DCOILBRENTEU"].value - slice["$DCOILWTICO"].value
         else:
             return
 
-        if ((spread > 0 and not self.Portfolio[self.bno].IsLong) or
-            (spread < 0 and not self.Portfolio[self.uso].IsShort)):
-            self.SetHoldings(self.bno, 0.25 * sign(spread))
-            self.SetHoldings(self.uso, -0.25 * sign(spread))
+        if ((spread > 0 and not self.portfolio[self.bno].is_long) or
+            (spread < 0 and not self.portfolio[self.uso].is_short)):
+            self.set_holdings(self.bno, 0.25 * sign(spread))
+            self.set_holdings(self.uso, -0.25 * sign(spread))

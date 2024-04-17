@@ -22,60 +22,60 @@ from Selection.FutureUniverseSelectionModel import FutureUniverseSelectionModel
 ### </summary>
 class BasicTemplateFuturesFrameworkAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.UniverseSettings.Resolution = Resolution.Minute
-        self.UniverseSettings.ExtendedMarketHours = self.GetExtendedMarketHours()
+        self.universe_settings.resolution = Resolution.MINUTE
+        self.universe_settings.extended_market_hours = self.get_extended_market_hours()
 
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 11)
-        self.SetCash(100000)
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 11)
+        self.set_cash(100000)
 
         # set framework models
-        self.SetUniverseSelection(FrontMonthFutureUniverseSelectionModel(self.SelectFutureChainSymbols))
-        self.SetAlpha(ConstantFutureContractAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(1)))
-        self.SetPortfolioConstruction(SingleSharePortfolioConstructionModel())
-        self.SetExecution(ImmediateExecutionModel())
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_universe_selection(FrontMonthFutureUniverseSelectionModel(self.select_future_chain_symbols))
+        self.set_alpha(ConstantFutureContractAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(1)))
+        self.set_portfolio_construction(SingleSharePortfolioConstructionModel())
+        self.set_execution(ImmediateExecutionModel())
+        self.set_risk_management(NullRiskManagementModel())
 
 
-    def SelectFutureChainSymbols(self, utcTime):
-        newYorkTime = Extensions.ConvertFromUtc(utcTime, TimeZones.NewYork)
-        if newYorkTime.date() < date(2013, 10, 9):
-            return [ Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME) ]
+    def select_future_chain_symbols(self, utc_time):
+        new_york_time = Extensions.convert_from_utc(utc_time, TimeZones.NEW_YORK)
+        if new_york_time.date() < date(2013, 10, 9):
+            return [ Symbol.create(Futures.Indices.SP_500_E_MINI, SecurityType.FUTURE, Market.CME) ]
         else:
-            return [ Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX) ]
+            return [ Symbol.create(Futures.Metals.GOLD, SecurityType.FUTURE, Market.COMEX) ]
 
-    def GetExtendedMarketHours(self):
+    def get_extended_market_hours(self):
         return False
 
 class FrontMonthFutureUniverseSelectionModel(FutureUniverseSelectionModel):
     '''Creates futures chain universes that select the front month contract and runs a user
-    defined futureChainSymbolSelector every day to enable choosing different futures chains'''
+    defined future_chain_symbol_selector every day to enable choosing different futures chains'''
     def __init__(self, select_future_chain_symbols):
         super().__init__(timedelta(1), select_future_chain_symbols)
 
-    def Filter(self, filter):
+    def filter(self, filter):
         '''Defines the futures chain universe filter'''
-        return (filter.FrontMonth()
-                      .OnlyApplyFilterAtMarketOpen())
+        return (filter.front_month()
+                      .only_apply_filter_at_market_open())
 
 class ConstantFutureContractAlphaModel(ConstantAlphaModel):
     '''Implementation of a constant alpha model that only emits insights for future symbols'''
-    def __init__(self, type, direction, period):
-        super().__init__(type, direction, period)
+    def __init__(self, _type, direction, period):
+        super().__init__(_type, direction, period)
 
-    def ShouldEmitInsight(self, utcTime, symbol):
+    def should_emit_insight(self, utc_time, symbol):
         # only emit alpha for future symbols and not underlying equity symbols
-        if symbol.SecurityType != SecurityType.Future:
+        if symbol.security_type != SecurityType.FUTURE:
             return False
 
-        return super().ShouldEmitInsight(utcTime, symbol)
+        return super().should_emit_insight(utc_time, symbol)
 
 class SingleSharePortfolioConstructionModel(PortfolioConstructionModel):
     '''Portfolio construction model that sets target quantities to 1 for up insights and -1 for down insights'''
-    def CreateTargets(self, algorithm, insights):
+    def create_targets(self, algorithm, insights):
         targets = []
         for insight in insights:
-            targets.append(PortfolioTarget(insight.Symbol, insight.Direction))
+            targets.append(PortfolioTarget(insight.symbol, insight.direction))
         return targets

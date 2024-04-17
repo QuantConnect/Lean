@@ -22,50 +22,50 @@ from AlgorithmImports import *
 
 class BasicTemplateFutureOptionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.SetStartDate(2022, 1, 1)
-        self.SetEndDate(2022, 2, 1)
-        self.SetCash(100000)
+    def initialize(self):
+        '''initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
+        self.set_start_date(2022, 1, 1)
+        self.set_end_date(2022, 2, 1)
+        self.set_cash(100000)
 
-        gold_futures = self.AddFuture(Futures.Metals.Gold, Resolution.Minute)
-        gold_futures.SetFilter(0, 180)
-        self.symbol = gold_futures.Symbol
-        self.AddFutureOption(self.symbol, lambda universe: universe.Strikes(-5, +5)
-                                                                    .CallsOnly()
-                                                                    .BackMonth()
-                                                                    .OnlyApplyFilterAtMarketOpen())
+        gold_futures = self.add_future(Futures.Metals.GOLD, Resolution.MINUTE)
+        gold_futures.set_filter(0, 180)
+        self._symbol = gold_futures.symbol
+        self.add_future_option(self._symbol, lambda universe: universe.strikes(-5, +5)
+                                                                    .calls_only()
+                                                                    .back_month()
+                                                                    .only_apply_filter_at_market_open())
 
         # Historical Data
-        history = self.History(self.symbol, 60, Resolution.Daily)
-        self.Log(f"Received {len(history)} bars from {self.symbol} FutureOption historical data call.")
+        history = self.history(self._symbol, 60, Resolution.DAILY)
+        self.log(f"Received {len(history)} bars from {self._symbol} FutureOption historical data call.")
 
-    def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+    def on_data(self, data):
+        '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         Arguments:
             slice: Slice object keyed by symbol containing the stock data
         '''
         # Access Data
-        for kvp in data.OptionChains:
-            underlying_future_contract = kvp.Key.Underlying
-            chain = kvp.Value
+        for kvp in data.option_chains:
+            underlying_future_contract = kvp.key.underlying
+            chain = kvp.value
 
             if not chain: continue
 
             for contract in chain:
-                self.Log(f"""Canonical Symbol: {kvp.Key}; 
+                self.log(f"""Canonical Symbol: {kvp.key}; 
                     Contract: {contract}; 
-                    Right: {contract.Right}; 
-                    Expiry: {contract.Expiry}; 
-                    Bid price: {contract.BidPrice}; 
-                    Ask price: {contract.AskPrice}; 
-                    Implied Volatility: {contract.ImpliedVolatility}""")
+                    Right: {contract.right}; 
+                    Expiry: {contract.expiry}; 
+                    Bid price: {contract.bid_price}; 
+                    Ask price: {contract.ask_price}; 
+                    Implied Volatility: {contract.implied_volatility}""")
 
-            if not self.Portfolio.Invested:
-                atm_strike = sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.Strike))[0].Strike
-                selected_contract = sorted([contract for contract in chain if contract.Strike == atm_strike], \
-                           key = lambda x: x.Expiry, reverse=True)[0]
-                self.MarketOrder(selected_contract.Symbol, 1)
+            if not self.portfolio.invested:
+                atm_strike = sorted(chain, key = lambda x: abs(chain.underlying.price - x.strike))[0].strike
+                selected_contract = sorted([contract for contract in chain if contract.strike == atm_strike], \
+                           key = lambda x: x.expiry, reverse=True)[0]
+                self.market_order(selected_contract.symbol, 1)
 
-    def OnOrderEvent(self, orderEvent):
-        self.Debug("{} {}".format(self.Time, orderEvent.ToString()))
+    def on_order_event(self, order_event):
+        self.debug("{} {}".format(self.time, order_event.to_string()))

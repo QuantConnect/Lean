@@ -14,41 +14,41 @@
 from AlgorithmImports import *
 
 class BasicTemplateIndexAlgorithm(QCAlgorithm):
-    def Initialize(self) -> None:
-        self.SetStartDate(2021, 1, 4)
-        self.SetEndDate(2021, 1, 18)
-        self.SetCash(1000000)
+    def initialize(self) -> None:
+        self.set_start_date(2021, 1, 4)
+        self.set_end_date(2021, 1, 18)
+        self.set_cash(1000000)
 
         # Use indicator for signal; but it cannot be traded
-        self.spx = self.AddIndex("SPX", Resolution.Minute).Symbol
+        self.spx = self.add_index("SPX", Resolution.MINUTE).symbol
 
         # Trade on SPX ITM calls
-        self.spxOption = Symbol.CreateOption(
+        self.spx_option = Symbol.create_option(
             self.spx,
             Market.USA,
-            OptionStyle.European,
-            OptionRight.Call,
+            OptionStyle.EUROPEAN,
+            OptionRight.CALL,
             3200,
             datetime(2021, 1, 15)
         )
 
-        self.AddIndexOptionContract(self.spxOption, Resolution.Minute)
+        self.add_index_option_contract(self.spx_option, Resolution.MINUTE)
 
-        self.emaSlow = self.EMA(self.spx, 80)
-        self.emaFast = self.EMA(self.spx, 200)
+        self.ema_slow = self.ema(self.spx, 80)
+        self.ema_fast = self.ema(self.spx, 200)
 
-    def OnData(self, data: Slice):
-        if self.spx not in data.Bars or self.spxOption not in data.Bars:
+    def on_data(self, data: Slice):
+        if self.spx not in data.bars or self.spx_option not in data.bars:
             return
 
-        if not self.emaSlow.IsReady:
+        if not self.ema_slow.is_ready:
             return
 
-        if self.emaFast > self.emaSlow:
-            self.SetHoldings(self.spxOption, 1)
+        if self.ema_fast > self.ema_slow:
+            self.set_holdings(self.spx_option, 1)
         else:
-            self.Liquidate()
+            self.liquidate()
 
-    def OnEndOfAlgorithm(self) -> None:
-        if self.Portfolio[self.spx].TotalSaleVolume > 0:
+    def on_end_of_algorithm(self) -> None:
+        if self.portfolio[self.spx].total_sale_volume > 0:
             raise Exception("Index is not tradable.")

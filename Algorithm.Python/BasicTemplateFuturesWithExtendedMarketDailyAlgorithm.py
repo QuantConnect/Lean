@@ -21,5 +21,5 @@ from BasicTemplateFuturesDailyAlgorithm import BasicTemplateFuturesDailyAlgorith
 ### <meta name="tag" content="benchmarks" />
 ### <meta name="tag" content="futures" />
 class BasicTemplateFuturesWithExtendedMarketDailyAlgorithm(BasicTemplateFuturesDailyAlgorithm):
-    def GetExtendedMarketHours(self):
+    def get_extended_market_hours(self):
         return True
