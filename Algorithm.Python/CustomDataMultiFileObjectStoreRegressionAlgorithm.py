@@ -64,6 +64,31 @@ class CustomDataMultiFileObjectStoreRegressionAlgorithm(QCAlgorithm):
             if customData2.Price == 0:
                 raise Exception("Custom data2 price was not expected to be zero, index access")
 
+            # pep8 `get`
+            # passing symbol
+            customData = slice.get(ExampleCustomData, self.customSymbol)
+            if customData.Price == 0:
+                raise Exception("Pep8: Custom data price was not expected to be zero")
+            customData2 = self.current_slice.get(ExampleCustomData, self.customSymbol)
+            if customData2.Price == 0:
+                raise Exception("Pep8: Custom data2 price was not expected to be zero")
+
+            # accessing by symbol
+            customData = slice.get(ExampleCustomData)[self.customSymbol]
+            if customData.Price == 0:
+                raise Exception("Pep8: Custom data price was not expected to be zero, index access")
+            customData2 = self.current_slice.get(ExampleCustomData)[self.customSymbol]
+            if customData2.Price == 0:
+                raise Exception("Pep8: Custom data2 price was not expected to be zero, index access")
+
+            # passing only symbol
+            customData = slice.get(self.customSymbol)
+            if customData.Price == 0:
+                raise Exception("Pep8: Custom data price was not expected to be zero")
+            customData2 = self.current_slice.get(self.customSymbol)
+            if customData2.Price == 0:
+                raise Exception("Pep8: Custom data2 price was not expected to be zero")
+
             self.receivedData.append(customData)
 
     def OnEndOfAlgorithm(self):
