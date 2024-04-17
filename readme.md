@@ -16,7 +16,14 @@ The core of the LEAN Engine is written in C#, but it operates seamlessly on Linu
 
  
 ## Proudly Sponsored By ##
-![algoseek](https://github.com/QuantConnect/Lean/assets/2243225/9fa1a5a8-ee58-4bce-a5f8-69f3ad4c0168)
+<br>
+<a href="https://www.algoseek.com/](https://www.algoseek.com/lean.html">
+<picture >
+ <source media="(prefers-color-scheme: dark)" srcset="https://github.com/QuantConnect/Lean/assets/79997186/4e95a20e-f7c5-4655-8043-18601846030b">
+ <source media="(prefers-color-scheme: light)" srcset="https://github.com/QuantConnect/Lean/assets/79997186/cf05e5fe-5784-4624-8dde-72476508ba91">
+ <img alt="bitfinex" width="30%">
+</picture></a>
+<p> <br>
 Want your company logo here? [Sponsor LEAN](https://github.com/sponsors/QuantConnect) to be part of radically open algorithmic-trading innovation.
 
 
