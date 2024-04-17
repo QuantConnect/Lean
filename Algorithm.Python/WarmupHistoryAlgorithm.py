@@ -35,8 +35,8 @@ class WarmupHistoryAlgorithm(QCAlgorithm):
 
         fast_period = 60
         slow_period = 3600
-        self.fast = self.EMA("EURUSD", fast_period)
-        self.slow = self.EMA("EURUSD", slow_period)
+        self.fast = self.ema("EURUSD", fast_period)
+        self.slow = self.ema("EURUSD", slow_period)
 
         # "slow_period + 1" because rolling window waits for one to fall off the back to be considered ready
         # History method returns a dict with a pandas.data_frame
