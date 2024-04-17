@@ -18,7 +18,7 @@ class BasicTemplateTradableIndexAlgorithm(BasicTemplateIndexAlgorithm):
     ticket = None
     def initialize(self) -> None:
         super().initialize()
-        self.securities[self.spx].is_tradable = True;
+        self.securities[self.spx].is_tradable = True
         
     def on_data(self, data: Slice):
         super().on_data(data)

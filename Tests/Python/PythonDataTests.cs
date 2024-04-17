@@ -25,13 +25,46 @@ namespace QuantConnect.Tests.Python
     [TestFixture]
     public class PythonDataTests
     {
-        [Test]
-        public void TimeAndEndTimeCanBeSet()
+        [TestCase("value", "symbol")]
+        [TestCase("Value", "Symbol")]
+        public void ValueAndSymbol(string value, string symbol)
         {
             using (Py.GIL())
             {
                 dynamic testModule = PyModule.FromString("testModule",
-                    @"
+                    $@"
+from AlgorithmImports import *
+
+class CustomDataTest(PythonData):
+    def Reader(self, config, line, date, isLiveMode):
+        result = CustomDataTest()
+        result.{symbol} = config.Symbol
+        result.{value} = 10
+        result.time = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
+        result.end_time = datetime.strptime(""2022-05-15"", ""%Y-%m-%d"")
+        return result");
+
+                var data = GetDataFromModule(testModule);
+
+                Assert.AreEqual(Symbols.SPY, data.Symbol);
+                Assert.AreEqual(10, data.Value);
+                Assert.AreEqual(Symbols.SPY, data.symbol);
+                Assert.AreEqual(10, data.value);
+            }
+        }
+
+        [TestCase("EndTime", "Time")]
+        [TestCase("endtime", "Time")]
+        [TestCase("end_time", "Time")]
+        [TestCase("EndTime", "time")]
+        [TestCase("endtime", "time")]
+        [TestCase("end_time", "time")]
+        public void TimeAndEndTimeCanBeSet(string endtime, string time)
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                    $@"
 from AlgorithmImports import *
 
 class CustomDataTest(PythonData):
@@ -39,8 +72,8 @@ class CustomDataTest(PythonData):
         result = CustomDataTest()
         result.Symbol = config.Symbol
         result.Value = 10
-        result.Time = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
-        result.EndTime = datetime.strptime(""2022-05-15"", ""%Y-%m-%d"")
+        result.{time} = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
+        result.{endtime} = datetime.strptime(""2022-05-15"", ""%Y-%m-%d"")
         return result");
 
                 var data = GetDataFromModule(testModule);
@@ -50,13 +83,15 @@ class CustomDataTest(PythonData):
             }
         }
 
-        [Test]
-        public void OnlyEndTimeCanBeSet()
+        [TestCase("EndTime")]
+        [TestCase("endtime")]
+        [TestCase("end_time")]
+        public void OnlyEndTimeCanBeSet(string endtime)
         {
             using (Py.GIL())
             {
                 dynamic testModule = PyModule.FromString("testModule",
-                    @"
+                    $@"
 from AlgorithmImports import *
 
 class CustomDataTest(PythonData):
@@ -64,7 +99,7 @@ class CustomDataTest(PythonData):
         result = CustomDataTest()
         result.Symbol = config.Symbol
         result.Value = 10
-        result.EndTime = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
+        result.{endtime} = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
         return result");
 
                 var data = GetDataFromModule(testModule);
@@ -74,13 +109,14 @@ class CustomDataTest(PythonData):
             }
         }
 
-        [Test]
-        public void OnlyTimeCanBeSet()
+        [TestCase("Time")]
+        [TestCase("time")]
+        public void OnlyTimeCanBeSet(string time)
         {
             using (Py.GIL())
             {
                 dynamic testModule = PyModule.FromString("testModule",
-                    @"
+                    $@"
 from AlgorithmImports import *
 
 class CustomDataTest(PythonData):
@@ -88,7 +124,7 @@ class CustomDataTest(PythonData):
         result = CustomDataTest()
         result.Symbol = config.Symbol
         result.Value = 10
-        result.Time = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
+        result.{time} = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
         return result");
 
                 var data = GetDataFromModule(testModule);

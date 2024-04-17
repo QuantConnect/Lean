@@ -31,7 +31,7 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
         self.set_cash(50000)            #Set Strategy Cash
 
         # what resolution should the data *added* to the universe be?
-        self.universe_settings.resolution = Resolution.daily
+        self.universe_settings.resolution = Resolution.DAILY
 
         # this add universe method accepts two parameters:
         # - coarse selection function: accepts an IEnumerable<CoarseFundamental> and returns an IEnumerable<Symbol>
@@ -46,18 +46,18 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
     # sort the data by daily dollar volume and take the top 'NumberOfSymbols'
     def coarse_selection_function(self, coarse):
         # sort descending by daily dollar volume
-        sortedByDollarVolume = sorted(coarse, key=lambda x: x.dollar_volume, reverse=True)
+        sorted_by_dollar_volume = sorted(coarse, key=lambda x: x.dollar_volume, reverse=True)
 
         # return the symbol objects of the top entries from our sorted collection
-        return [ x.symbol for x in sortedByDollarVolume[:self.__number_of_symbols] ]
+        return [ x.symbol for x in sorted_by_dollar_volume[:self.__number_of_symbols] ]
 
     # sort the data by P/E ratio and take the top 'NumberOfSymbolsFine'
     def fine_selection_function(self, fine):
         # sort descending by P/E ratio
-        sortedByPeRatio = sorted(fine, key=lambda x: x.valuation_ratios.pe_ratio, reverse=True)
+        sorted_by_pe_ratio = sorted(fine, key=lambda x: x.valuation_ratios.pe_ratio, reverse=True)
 
         # take the top entries from our sorted collection
-        return [ x.symbol for x in sortedByPeRatio[:self.__number_of_symbols_fine] ]
+        return [ x.symbol for x in sorted_by_pe_ratio[:self.__number_of_symbols_fine] ]
 
     def on_data(self, data):
         # if we have no changes, do nothing

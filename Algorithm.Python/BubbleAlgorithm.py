@@ -90,7 +90,7 @@ class BubbleAlgorithm(QCAlgorithm):
                             self.sell_stock(stock)
                         # Utilize RSI and MACD to understand oversold territories
                         elif self.securities[stock].holdings.quantity == 0 and self._rsi_dic[stock].current.value < 30 \
-                        and Securities[stock].price != 0 and self.portfolio.cash > self.securities[stock].price * 100 \
+                        and self.securities[stock].price != 0 and self.portfolio.cash > self.securities[stock].price * 100 \
                         and self.time.hour == 9 and self.time.minute == 31:
                             self.buy_stock(stock)
                 

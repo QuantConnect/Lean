@@ -28,7 +28,7 @@ class BasicTemplateSPXWeeklyIndexOptionsAlgorithm(QCAlgorithm):
         self.spx = self.add_index("SPX").symbol
 
         # regular option SPX contracts
-        self.spx_options = self.add_index_option(self.spx);
+        self.spx_options = self.add_index_option(self.spx)
         self.spx_options.set_filter(lambda u: (u.strikes(0, 1).expiration(0, 30)))
 
         # weekly option SPX contracts

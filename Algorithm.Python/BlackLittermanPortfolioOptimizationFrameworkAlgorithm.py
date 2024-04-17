@@ -13,6 +13,11 @@
 
 from AlgorithmImports import *
 
+from Alphas.HistoricalReturnsAlphaModel import HistoricalReturnsAlphaModel
+from Portfolio.BlackLittermanOptimizationPortfolioConstructionModel import *
+from Portfolio.UnconstrainedMeanVariancePortfolioOptimizer import UnconstrainedMeanVariancePortfolioOptimizer
+from Risk.NullRiskManagementModel import NullRiskManagementModel
+
 ### <summary>
 ### Black-Litterman framework algorithm
 ### Uses the HistoricalReturnsAlphaModel and the BlackLittermanPortfolioConstructionModel

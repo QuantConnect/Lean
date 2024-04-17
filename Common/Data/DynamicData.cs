@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq.Expressions;
 using System.Reflection;
+using Python.Runtime;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -49,21 +50,42 @@ namespace QuantConnect.Data
         /// <returns>Returns the input value back to the caller</returns>
         public object SetProperty(string name, object value)
         {
-            name = name.ToLowerInvariant();
+            name = name.LazyToLower();
 
             if (name == "time")
             {
-                Time = (DateTime)value;
+                if (value is PyObject pyobject)
+                {
+                    Time = pyobject.As<DateTime>();
+                }
+                else
+                {
+                    Time = (DateTime)value;
+                }
             }
-            if (name == "endtime")
+            else if (name == "endtime" || name == "end_time")
             {
-                EndTime = (DateTime)value;
+                if (value is PyObject pyobject)
+                {
+                    EndTime = pyobject.As<DateTime>();
+                }
+                else
+                {
+                    EndTime = (DateTime)value;
+                }
             }
-            if (name == "value")
+            else if (name == "value")
             {
-                Value = (decimal)value;
+                if (value is PyObject pyobject)
+                {
+                    Value = pyobject.As<decimal>();
+                }
+                else
+                {
+                    Value = (decimal)value;
+                }
             }
-            if (name == "symbol")
+            else if (name == "symbol")
             {
                 if (value is string)
                 {
@@ -71,14 +93,17 @@ namespace QuantConnect.Data
                 }
                 else
                 {
-                    Symbol = (Symbol) value;
+                    if (value is PyObject pyobject)
+                    {
+                        Symbol = pyobject.As<Symbol>();
+                    }
+                    else
+                    {
+                        Symbol = (Symbol)value;
+                    }
                 }
             }
-            // reaodnly
-            //if (name == "Price")
-            //{
-            //    return Price = (decimal) value;
-            //}
+
             _storage[name] = value;
             return value;
         }

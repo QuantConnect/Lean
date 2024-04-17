@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+import datetime
 
 ### <summary>
 ### Algorithm demonstrating and ensuring that Bybit crypto brokerage model works as expected with custom data types
@@ -63,7 +64,7 @@ class CustomCryptoData(PythonData):
         data = CustomCryptoData()
         data.symbol = config.symbol
 
-        data_datetime = datetime.combine(date.date(), time()) + timedelta(milliseconds=int(csv[0]))
+        data_datetime = datetime.datetime.combine(date.date(), datetime.time()) + timedelta(milliseconds=int(csv[0]))
         data.time = Extensions.convert_to(data_datetime, config.data_time_zone, config.exchange_time_zone)
         data.end_time = data.time + timedelta(minutes=1)
 
