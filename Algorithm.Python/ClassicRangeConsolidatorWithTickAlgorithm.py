@@ -6,11 +6,11 @@ from RangeConsolidatorWithTickAlgorithm import RangeConsolidatorWithTickAlgorith
 ### Example algorithm of how to use ClassicRangeConsolidator with Tick resolution
 ### </summary>
 class ClassicRangeConsolidatorWithTickAlgorithm(RangeConsolidatorWithTickAlgorithm):
-    def CreateRangeConsolidator(self):
-        return ClassicRangeConsolidator(self.GetRange())
+    def create_range_consolidator(self):
+        return ClassicRangeConsolidator(self.get_range())
     
-    def OnDataConsolidated(self, sender, rangeBar):
-        super().OnDataConsolidated(sender, rangeBar)
+    def on_data_consolidated(self, sender, range_bar):
+        super().on_data_consolidated(sender, range_bar)
 
-        if rangeBar.Volume == 0:
+        if range_bar.volume == 0:
             raise Exception("All RangeBar's should have non-zero volume, but this doesn't")

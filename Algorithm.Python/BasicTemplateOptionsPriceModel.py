@@ -23,42 +23,42 @@ from AlgorithmImports import *
 class BasicTemplateOptionsPriceModel(QCAlgorithm):
     '''Example demonstrating how to define an option price model.'''
 
-    def Initialize(self):
-        self.SetStartDate(2020, 1, 1)
-        self.SetEndDate(2020, 1, 5)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2020, 1, 1)
+        self.set_end_date(2020, 1, 5)
+        self.set_cash(100000)
 
         # Add the option
-        option = self.AddOption("AAPL")
-        self.optionSymbol = option.Symbol
+        option = self.add_option("AAPL")
+        self.option_symbol = option.symbol
 
         # Add the initial contract filter
-        option.SetFilter(-3, +3, 0, 31)
+        option.set_filter(-3, +3, 0, 31)
 
         # Define the Option Price Model
-        option.PriceModel = OptionPriceModels.CrankNicolsonFD()
-        #option.PriceModel = OptionPriceModels.BlackScholes()
-        #option.PriceModel = OptionPriceModels.AdditiveEquiprobabilities()
-        #option.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
-        #option.PriceModel = OptionPriceModels.BinomialCoxRossRubinstein()
-        #option.PriceModel = OptionPriceModels.BinomialJarrowRudd()
-        #option.PriceModel = OptionPriceModels.BinomialJoshi()
-        #option.PriceModel = OptionPriceModels.BinomialLeisenReimer()
-        #option.PriceModel = OptionPriceModels.BinomialTian()
-        #option.PriceModel = OptionPriceModels.BinomialTrigeorgis()
-        #option.PriceModel = OptionPriceModels.BjerksundStensland()
-        #option.PriceModel = OptionPriceModels.Integral()
+        option.price_model = OptionPriceModels.crank_nicolson_fd()
+        #option.price_model = OptionPriceModels.black_scholes()
+        #option.price_model = OptionPriceModels.additive_equiprobabilities()
+        #option.price_model = OptionPriceModels.barone_adesi_whaley()
+        #option.price_model = OptionPriceModels.binomial_cox_ross_rubinstein()
+        #option.price_model = OptionPriceModels.binomial_jarrow_rudd()
+        #option.price_model = OptionPriceModels.binomial_joshi()
+        #option.price_model = OptionPriceModels.binomial_leisen_reimer()
+        #option.price_model = OptionPriceModels.binomial_tian()
+        #option.price_model = OptionPriceModels.binomial_trigeorgis()
+        #option.price_model = OptionPriceModels.bjerksund_stensland()
+        #option.price_model = OptionPriceModels.integral()
 
         # Set warm up with 30 trading days to warm up the underlying volatility model
-        self.SetWarmUp(30, Resolution.Daily)
+        self.set_warm_up(30, Resolution.DAILY)
 
 
-    def OnData(self,slice):
-        '''OnData will test whether the option contracts has a non-zero Greeks.Delta'''
+    def on_data(self,slice):
+        '''OnData will test whether the option contracts has a non-zero Greeks.delta'''
 
-        if self.IsWarmingUp or not slice.OptionChains.ContainsKey(self.optionSymbol):
+        if self.is_warming_up or not slice.option_chains.contains_key(self.option_symbol):
             return
 
-        chain = slice.OptionChains[self.optionSymbol]
-        if not any([x for x in chain if x.Greeks.Delta != 0]):
-            self.Log(f'No contract with Delta != 0')
+        chain = slice.option_chains[self.option_symbol]
+        if not any([x for x in chain if x.greeks.delta != 0]):
+            self.log(f'No contract with Delta != 0')

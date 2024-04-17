@@ -22,45 +22,45 @@ from AlgorithmImports import *
 ### <meta name="tag" content="options" />
 ### <meta name="tag" content="filter selection" />
 class BasicTemplateOptionsAlgorithm(QCAlgorithm):
-    UnderlyingTicker = "GOOG"
+    underlying_ticker = "GOOG"
 
-    def Initialize(self):
-        self.SetStartDate(2015, 12, 24)
-        self.SetEndDate(2015, 12, 24)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2015, 12, 24)
+        self.set_end_date(2015, 12, 24)
+        self.set_cash(100000)
 
-        equity = self.AddEquity(self.UnderlyingTicker)
-        option = self.AddOption(self.UnderlyingTicker)
-        self.option_symbol = option.Symbol
+        equity = self.add_equity(self.underlying_ticker)
+        option = self.add_option(self.underlying_ticker)
+        self.option_symbol = option.symbol
 
         # set our strike/expiry filter for this option chain
-        option.SetFilter(lambda u: (u.Strikes(-2, +2)
+        option.set_filter(lambda u: (u.strikes(-2, +2)
                                      # Expiration method accepts TimeSpan objects or integer for days.
                                      # The following statements yield the same filtering criteria
-                                     .Expiration(0, 180)))
-                                     #.Expiration(TimeSpan.Zero, TimeSpan.FromDays(180))))
+                                     .expiration(0, 180)))
+                                     #.expiration(TimeSpan.zero, TimeSpan.from_days(180))))
 
         # use the underlying equity as the benchmark
-        self.SetBenchmark(equity.Symbol)
+        self.set_benchmark(equity.symbol)
 
-    def OnData(self,slice):
-        if self.Portfolio.Invested or not self.IsMarketOpen(self.option_symbol): return
+    def on_data(self, slice):
+        if self.portfolio.invested or not self.is_market_open(self.option_symbol): return
 
-        chain = slice.OptionChains.GetValue(self.option_symbol)
+        chain = slice.option_chains.get_value(self.option_symbol)
         if chain is None:
             return
 
         # we sort the contracts to find at the money (ATM) contract with farthest expiration
         contracts = sorted(sorted(sorted(chain, \
-            key = lambda x: abs(chain.Underlying.Price - x.Strike)), \
-            key = lambda x: x.Expiry, reverse=True), \
-            key = lambda x: x.Right, reverse=True)
+            key = lambda x: abs(chain.underlying.price - x.strike)), \
+            key = lambda x: x.expiry, reverse=True), \
+            key = lambda x: x.right, reverse=True)
 
         # if found, trade it
         if len(contracts) == 0: return
-        symbol = contracts[0].Symbol
-        self.MarketOrder(symbol, 1)
-        self.MarketOnCloseOrder(symbol, -1)
+        symbol = contracts[0].symbol
+        self.market_order(symbol, 1)
+        self.market_on_close_order(symbol, -1)
 
-    def OnOrderEvent(self, orderEvent):
-        self.Log(str(orderEvent))
+    def on_order_event(self, order_event):
+        self.log(str(order_event))

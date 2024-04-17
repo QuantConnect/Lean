@@ -20,25 +20,22 @@ from AlgorithmImports import *
 class CapmAlphaRankingFrameworkAlgorithm(QCAlgorithm):
     '''CapmAlphaRankingFrameworkAlgorithm: example of custom scheduled universe selection model'''
 
-    def Initialize(self):
+    def initialize(self):
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         # Set requested data resolution
-        self.UniverseSettings.Resolution = Resolution.Minute
+        self.universe_settings.resolution = Resolution.MINUTE
 
-        self.SetStartDate(2016, 1, 1)   #Set Start Date
-        self.SetEndDate(2017, 1, 1)     #Set End Date
-        self.SetCash(100000)            #Set Strategy Cash
+        self.set_start_date(2016, 1, 1)   #Set Start Date
+        self.set_end_date(2017, 1, 1)     #Set End Date
+        self.set_cash(100000)            #Set Strategy Cash
 
         # set algorithm framework models
-        self.SetUniverseSelection(CapmAlphaRankingUniverseSelectionModel())
-        self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(1), 0.025, None))
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        self.SetExecution(ImmediateExecutionModel())
-        self.SetRiskManagement(MaximumDrawdownPercentPerSecurity(0.01))
-
-from QuantConnect.Data.UniverseSelection import ScheduledUniverse
-from Selection.UniverseSelectionModel import UniverseSelectionModel
+        self.set_universe_selection(CapmAlphaRankingUniverseSelectionModel())
+        self.set_alpha(ConstantAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(1), 0.025, None))
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
+        self.set_execution(ImmediateExecutionModel())
+        self.set_risk_management(MaximumDrawdownPercentPerSecurity(0.01))
 
 class CapmAlphaRankingUniverseSelectionModel(UniverseSelectionModel):
     '''This universe selection model picks stocks with the highest alpha: interception of the linear regression against a benchmark.'''
@@ -47,33 +44,33 @@ class CapmAlphaRankingUniverseSelectionModel(UniverseSelectionModel):
     benchmark = "SPY"
 
     # Symbols of Dow 30 companies.
-    symbols = [Symbol.Create(x, SecurityType.Equity, Market.USA)
+    symbols = [Symbol.create(x, SecurityType.EQUITY, Market.USA)
                for x in ["AAPL", "AXP", "BA", "CAT", "CSCO", "CVX", "DD", "DIS", "GE", "GS",
                          "HD", "IBM", "INTC", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT",
                          "NKE","PFE", "PG", "TRV", "UNH", "UTX", "V", "VZ", "WMT", "XOM"]]
 
-    def CreateUniverses(self, algorithm):
+    def create_universes(self, algorithm):
 
         # Adds the benchmark to the user defined universe
-        benchmark = algorithm.AddEquity(self.benchmark, Resolution.Daily)
+        benchmark = algorithm.add_equity(self.benchmark, Resolution.DAILY)
 
         # Defines a schedule universe that fires after market open when the month starts
         return [ ScheduledUniverse(
-            benchmark.Exchange.TimeZone,
-            algorithm.DateRules.MonthStart(self.benchmark),
-            algorithm.TimeRules.AfterMarketOpen(self.benchmark),
-            lambda datetime: self.SelectPair(algorithm, datetime),
-            algorithm.UniverseSettings,
-            algorithm.SecurityInitializer)]
+            benchmark.exchange.time_zone,
+            algorithm.date_rules.month_start(self.benchmark),
+            algorithm.time_rules.after_market_open(self.benchmark),
+            lambda datetime: self.select_pair(algorithm, datetime),
+            algorithm.universe_settings,
+            algorithm.security_initializer)]
 
-    def SelectPair(self, algorithm, date):
+    def select_pair(self, algorithm, date):
         '''Selects the pair (two stocks) with the highest alpha'''
         dictionary = dict()
-        benchmark = self._getReturns(algorithm, self.benchmark)
+        benchmark = self._get_returns(algorithm, self.benchmark)
         ones = np.ones(len(benchmark))
 
-        for symbol in self.symbols:
-            prices = self._getReturns(algorithm, symbol)
+        for symbol in self._symbols:
+            prices = self._get_returns(algorithm, symbol)
             if prices is None: continue
             A = np.vstack([prices, ones]).T
 
@@ -82,25 +79,25 @@ class CapmAlphaRankingUniverseSelectionModel(UniverseSelectionModel):
             dictionary[symbol] = ols[1]
 
         # Returns the top 2 highest alphas
-        orderedDictionary = sorted(dictionary.items(), key= lambda x: x[1], reverse=True)
-        return [x[0] for x in orderedDictionary[:2]]
+        ordered_dictionary = sorted(dictionary.items(), key= lambda x: x[1], reverse=True)
+        return [x[0] for x in ordered_dictionary[:2]]
 
-    def _getReturns(self, algorithm, symbol):
+    def _get_returns(self, algorithm, symbol):
 
-        history = algorithm.History([symbol], self.period, Resolution.Daily)
+        history = algorithm.history([symbol], self.period, Resolution.DAILY)
         if history.empty: return None
 
         window = RollingWindow[float](self.period)
-        rateOfChange = RateOfChange(1)
+        rate_of_change = RateOfChange(1)
 
         def roc_updated(s, item):
-            window.Add(item.Value)
+            window.add(item.value)
 
-        rateOfChange.Updated += roc_updated
+        rate_of_change.updated += roc_updated
 
         history = history.close.reset_index(level=0, drop=True).iteritems()
 
         for time, value in history:
-            rateOfChange.Update(time, value)
+            rate_of_change.update(time, value)
 
         return [ x for x in window]

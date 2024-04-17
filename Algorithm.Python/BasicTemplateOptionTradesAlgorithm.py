@@ -23,38 +23,38 @@ from AlgorithmImports import *
 ### <meta name="tag" content="filter selection" />
 class BasicTemplateOptionTradesAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2015, 12, 24)
-        self.SetEndDate(2015, 12, 24)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2015, 12, 24)
+        self.set_end_date(2015, 12, 24)
+        self.set_cash(100000)
 
-        option = self.AddOption("GOOG")
+        option = self.add_option("GOOG")
 
         # add the initial contract filter 
         # SetFilter method accepts timedelta objects or integer for days.
         # The following statements yield the same filtering criteria
-        option.SetFilter(-2, +2, 0, 10)
-        # option.SetFilter(-2, +2, timedelta(0), timedelta(10))
+        option.set_filter(-2, +2, 0, 10)
+        # option.set_filter(-2, +2, timedelta(0), timedelta(10))
 
         # use the underlying equity as the benchmark
-        self.SetBenchmark("GOOG")
+        self.set_benchmark("GOOG")
 
-    def OnData(self,slice):
-        if not self.Portfolio.Invested:
-            for kvp in slice.OptionChains:
-                chain = kvp.Value
+    def on_data(self,slice):
+        if not self.portfolio.invested:
+            for kvp in slice.option_chains:
+                chain = kvp.value
                 # find the second call strike under market price expiring today
-                contracts = sorted(sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.Strike)),
-                                                 key = lambda x: x.Expiry, reverse=False)
+                contracts = sorted(sorted(chain, key = lambda x: abs(chain.underlying.price - x.strike)),
+                                                 key = lambda x: x.expiry, reverse=False)
 
                 if len(contracts) == 0: continue
                 if contracts[0] != None:
-                    self.MarketOrder(contracts[0].Symbol, 1)
+                    self.market_order(contracts[0].symbol, 1)
         else:
-            self.Liquidate()
+            self.liquidate()
 
-        for kpv in slice.Bars:
-            self.Log("---> OnData: {0}, {1}, {2}".format(self.Time, kpv.Key.Value, str(kpv.Value.Close)))
+        for kpv in slice.bars:
+            self.log("---> OnData: {0}, {1}, {2}".format(self.time, kpv.key.value, str(kpv.value.close)))
 
-    def OnOrderEvent(self, orderEvent):
-        self.Log(str(orderEvent))
+    def on_order_event(self, order_event):
+        self.log(str(order_event))

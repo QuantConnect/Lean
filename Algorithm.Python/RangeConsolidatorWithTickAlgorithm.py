@@ -6,12 +6,12 @@ from RangeConsolidatorAlgorithm import RangeConsolidatorAlgorithm
 ### Example algorithm of how to use RangeConsolidator with Tick resolution
 ### </summary>
 class RangeConsolidatorWithTickAlgorithm(RangeConsolidatorAlgorithm):
-    def GetRange(self):
+    def get_range(self):
         return 5
 
-    def GetResolution(self):
-        return Resolution.Tick
+    def get_resolution(self):
+        return Resolution.TICK
 
-    def SetStartAndEndDates(self):
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 7)
+    def set_start_and_end_dates(self):
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 7)
