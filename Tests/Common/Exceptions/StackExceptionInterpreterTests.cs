@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,9 +27,9 @@ namespace QuantConnect.Tests.Common.Exceptions
         [Test]
         public void CreatesFromAssemblies()
         {
-            var assembly = typeof(FakeExceptionInterpreter).Assembly;
+            var assembly = typeof(ClrBubbledExceptionInterpreter).Assembly;
             var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] {assembly});
-            Assert.AreEqual(1, interpreter.Interpreters.Count(p => p.GetType() == typeof(FakeExceptionInterpreter)));
+            Assert.AreEqual(1, interpreter.Interpreters.Count(p => p.GetType() == typeof(ClrBubbledExceptionInterpreter)));
         }
 
         [Test]
