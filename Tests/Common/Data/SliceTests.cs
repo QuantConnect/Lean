@@ -470,9 +470,11 @@ def Test(slice, symbol):
             }
         }
 
-        [TestCase("reader", "get_source")]
-        [TestCase("Reader", "GetSource")]
-        public void PythonGetPythonCustomData(string reader, string getSource)
+        [TestCase("reader", "get_source", "get")]
+        [TestCase("Reader", "GetSource", "get")]
+        [TestCase("reader", "get_source", "Get")]
+        [TestCase("Reader", "GetSource", "Get")]
+        public void PythonGetPythonCustomData(string reader, string getSource, string get)
         {
             using (Py.GIL())
             {
@@ -500,7 +502,7 @@ class CustomDataTest2(PythonData):
         return None
 
 def Test(slice):
-    data = slice.Get(CustomDataTest)
+    data = slice.{get}(CustomDataTest)
     return data");
                 var test = testModule.GetAttr("Test");
 
