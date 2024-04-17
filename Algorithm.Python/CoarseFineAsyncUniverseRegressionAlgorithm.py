@@ -18,17 +18,17 @@ from AlgorithmImports import *
 ### </summary>
 class CoarseFineAsyncUniverseRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 11)
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 11)
 
-        self.UniverseSettings.Asynchronous = True
+        self.universe_settings.asynchronous = True
 
         threw_exception = False
         try:
-            self.AddUniverse(self.CoarseSelectionFunction, self.FineSelectionFunction)
+            self.add_universe(self.coarse_selection_function, self.fine_selection_function)
         except:
             # expected
             threw_exception = True
@@ -37,10 +37,10 @@ class CoarseFineAsyncUniverseRegressionAlgorithm(QCAlgorithm):
         if not threw_exception:
             raise ValueError("Expected exception to be thrown for AddUniverse")
 
-        self.SetUniverseSelection(FineFundamentalUniverseSelectionModel(self.CoarseSelectionFunction, self.FineSelectionFunction))
+        self.set_universe_selection(FineFundamentalUniverseSelectionModel(self.coarse_selection_function, self.fine_selection_function))
 
-    def CoarseSelectionFunction(self, coarse):
+    def coarse_selection_function(self, coarse):
         return []
 
-    def FineSelectionFunction(self, fine):
+    def fine_selection_function(self, fine):
         return []

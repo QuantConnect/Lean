@@ -22,42 +22,42 @@ from AlgorithmImports import *
 ### <meta name="tag" content="options" />
 ### <meta name="tag" content="filter selection" />
 class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
-    UnderlyingTicker = "GOOG"
+    underlying_ticker = "GOOG"
 
-    def Initialize(self):
-        self.SetStartDate(2015, 12, 24)
-        self.SetEndDate(2015, 12, 28)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2015, 12, 24)
+        self.set_end_date(2015, 12, 28)
+        self.set_cash(100000)
 
-        equity = self.AddEquity(self.UnderlyingTicker)
-        option = self.AddOption(self.UnderlyingTicker)
-        self.OptionSymbol = option.Symbol
+        equity = self.add_equity(self.underlying_ticker)
+        option = self.add_option(self.underlying_ticker)
+        self.option_symbol = option.symbol
 
         # Set our custom universe filter
-        option.SetFilter(self.FilterFunction)
+        option.set_filter(self.filter_function)
 
         # use the underlying equity as the benchmark
-        self.SetBenchmark(equity.Symbol)
+        self.set_benchmark(equity.symbol)
 
-    def FilterFunction(self, universe):
+    def filter_function(self, universe):
         #Expires today, is a call, and is within 10 dollars of the current price
-        universe = universe.WeeklysOnly().Expiration(0, 1)
+        universe = universe.weeklys_only().expiration(0, 1)
         return [symbol for symbol in universe 
-                if symbol.ID.OptionRight != OptionRight.Put 
-                and -10 < universe.Underlying.Price - symbol.ID.StrikePrice < 10]
+                if symbol.id.option_right != OptionRight.PUT 
+                and -10 < universe.underlying.price - symbol.id.strike_price < 10]
 
-    def OnData(self,slice):
-        if self.Portfolio.Invested: return
+    def on_data(self, slice):
+        if self.portfolio.invested: return
 
-        for kvp in slice.OptionChains:
+        for kvp in slice.option_chains:
             
-            if kvp.Key != self.OptionSymbol: continue
+            if kvp.key != self.option_symbol: continue
 
             # Get the first call strike under market price expiring today
-            chain = kvp.Value
-            contracts = [option for option in sorted(chain, key = lambda x:x.Strike, reverse = True)
-                         if option.Expiry.date() == self.Time.date()
-                         and option.Strike < chain.Underlying.Price]
+            chain = kvp.value
+            contracts = [option for option in sorted(chain, key = lambda x:x.strike, reverse = True)
+                         if option.expiry.date() == self.time.date()
+                         and option.strike < chain.underlying.price]
             
             if contracts:
-                self.MarketOrder(contracts[0].Symbol, 1)
+                self.market_order(contracts[0].symbol, 1)

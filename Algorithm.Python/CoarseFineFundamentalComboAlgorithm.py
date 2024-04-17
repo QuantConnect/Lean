@@ -23,58 +23,58 @@ from System.Collections.Generic import List
 ### <meta name="tag" content="fine universes" />
 class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2014,1,1)  #Set Start Date
-        self.SetEndDate(2015,1,1)    #Set End Date
-        self.SetCash(50000)            #Set Strategy Cash
+        self.set_start_date(2014,1,1)  #Set Start Date
+        self.set_end_date(2015,1,1)    #Set End Date
+        self.set_cash(50000)            #Set Strategy Cash
 
         # what resolution should the data *added* to the universe be?
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
         # this add universe method accepts two parameters:
         # - coarse selection function: accepts an IEnumerable<CoarseFundamental> and returns an IEnumerable<Symbol>
         # - fine selection function: accepts an IEnumerable<FineFundamental> and returns an IEnumerable<Symbol>
-        self.AddUniverse(self.CoarseSelectionFunction, self.FineSelectionFunction)
+        self.add_universe(self.coarse_selection_function, self.fine_selection_function)
 
-        self.__numberOfSymbols = 5
-        self.__numberOfSymbolsFine = 2
+        self.__number_of_symbols = 5
+        self.__number_of_symbols_fine = 2
         self._changes = None
 
 
     # sort the data by daily dollar volume and take the top 'NumberOfSymbols'
-    def CoarseSelectionFunction(self, coarse):
+    def coarse_selection_function(self, coarse):
         # sort descending by daily dollar volume
-        sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
+        sorted_by_dollar_volume = sorted(coarse, key=lambda x: x.dollar_volume, reverse=True)
 
         # return the symbol objects of the top entries from our sorted collection
-        return [ x.Symbol for x in sortedByDollarVolume[:self.__numberOfSymbols] ]
+        return [ x.symbol for x in sorted_by_dollar_volume[:self.__number_of_symbols] ]
 
     # sort the data by P/E ratio and take the top 'NumberOfSymbolsFine'
-    def FineSelectionFunction(self, fine):
+    def fine_selection_function(self, fine):
         # sort descending by P/E ratio
-        sortedByPeRatio = sorted(fine, key=lambda x: x.ValuationRatios.PERatio, reverse=True)
+        sorted_by_pe_ratio = sorted(fine, key=lambda x: x.valuation_ratios.pe_ratio, reverse=True)
 
         # take the top entries from our sorted collection
-        return [ x.Symbol for x in sortedByPeRatio[:self.__numberOfSymbolsFine] ]
+        return [ x.symbol for x in sorted_by_pe_ratio[:self.__number_of_symbols_fine] ]
 
-    def OnData(self, data):
+    def on_data(self, data):
         # if we have no changes, do nothing
         if self._changes is None: return
 
         # liquidate removed securities
-        for security in self._changes.RemovedSecurities:
-            if security.Invested:
-                self.Liquidate(security.Symbol)
+        for security in self._changes.removed_securities:
+            if security.invested:
+                self.liquidate(security.symbol)
 
         # we want 20% allocation in each security in our universe
-        for security in self._changes.AddedSecurities:
-            self.SetHoldings(security.Symbol, 0.2)
+        for security in self._changes.added_securities:
+            self.set_holdings(security.symbol, 0.2)
 
         self._changes = None
 
 
     # this event fires whenever we have changes to our universe
-    def OnSecuritiesChanged(self, changes):
+    def on_securities_changed(self, changes):
         self._changes = changes

@@ -20,44 +20,44 @@ from AlgorithmImports import *
 ### <meta name="tag" content="options" />
 ### <meta name="tag" content="indexes" />
 class BasicTemplateSPXWeeklyIndexOptionsAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2021, 1, 4)
-        self.SetEndDate(2021, 1, 10)
-        self.SetCash(1000000)
+    def initialize(self):
+        self.set_start_date(2021, 1, 4)
+        self.set_end_date(2021, 1, 10)
+        self.set_cash(1000000)
 
-        self.spx = self.AddIndex("SPX").Symbol
+        self.spx = self.add_index("SPX").symbol
 
         # regular option SPX contracts
-        self.spxOptions = self.AddIndexOption(self.spx);
-        self.spxOptions.SetFilter(lambda u: (u.Strikes(0, 1).Expiration(0, 30)))
+        self.spx_options = self.add_index_option(self.spx)
+        self.spx_options.set_filter(lambda u: (u.strikes(0, 1).expiration(0, 30)))
 
         # weekly option SPX contracts
-        spxw = self.AddIndexOption(self.spx, "SPXW")
+        spxw = self.add_index_option(self.spx, "SPXW")
         # set our strike/expiry filter for this option chain
-        spxw.SetFilter(lambda u: (u.Strikes(0, 1)
+        spxw.set_filter(lambda u: (u.strikes(0, 1)
                                      # single week ahead since there are many SPXW contracts and we want to preserve performance
-                                     .Expiration(0, 7)
-                                     .IncludeWeeklys()))
+                                     .expiration(0, 7)
+                                     .include_weeklys()))
 
-        self.spxw_option = spxw.Symbol
+        self.spxw_option = spxw.symbol
 
-    def OnData(self,slice):
-        if self.Portfolio.Invested: return
+    def on_data(self,slice):
+        if self.portfolio.invested: return
 
-        chain = slice.OptionChains.GetValue(self.spxw_option)
+        chain = slice.option_chains.get_value(self.spxw_option)
         if chain is None:
             return
 
         # we sort the contracts to find at the money (ATM) contract with closest expiration
         contracts = sorted(sorted(sorted(chain, \
-            key = lambda x: x.Expiry), \
-            key = lambda x: abs(chain.Underlying.Price - x.Strike)), \
-            key = lambda x: x.Right, reverse=True)
+            key = lambda x: x.expiry), \
+            key = lambda x: abs(chain.underlying.price - x.strike)), \
+            key = lambda x: x.right, reverse=True)
 
         # if found, buy until it expires
         if len(contracts) == 0: return
-        symbol = contracts[0].Symbol
-        self.MarketOrder(symbol, 1)
+        symbol = contracts[0].symbol
+        self.market_order(symbol, 1)
 
-    def OnOrderEvent(self, orderEvent):
-        self.Debug(str(orderEvent))
+    def on_order_event(self, order_event):
+        self.debug(str(order_event))

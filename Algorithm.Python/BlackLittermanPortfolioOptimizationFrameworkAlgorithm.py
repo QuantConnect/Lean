@@ -29,36 +29,36 @@ from Risk.NullRiskManagementModel import NullRiskManagementModel
 class BlackLittermanPortfolioOptimizationFrameworkAlgorithm(QCAlgorithm):
     '''Black-Litterman Optimization algorithm.'''
 
-    def Initialize(self):
+    def initialize(self):
 
         # Set requested data resolution
-        self.UniverseSettings.Resolution = Resolution.Minute
+        self.universe_settings.resolution = Resolution.MINUTE
 
         # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
         # Commented so regression algorithm is more sensitive
-        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
+        #self.settings.minimum_order_margin_portfolio_percentage = 0.005
 
-        self.SetStartDate(2013,10,7)   #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
+        self.set_start_date(2013,10,7)   #Set Start Date
+        self.set_end_date(2013,10,11)    #Set End Date
+        self.set_cash(100000)           #Set Strategy Cash
 
-        self.symbols = [ Symbol.Create(x, SecurityType.Equity, Market.USA) for x in [ 'AIG', 'BAC', 'IBM', 'SPY' ] ]
+        self._symbols = [ Symbol.create(x, SecurityType.EQUITY, Market.USA) for x in [ 'AIG', 'BAC', 'IBM', 'SPY' ] ]
 
         optimizer = UnconstrainedMeanVariancePortfolioOptimizer()
 
         # set algorithm framework models
-        self.SetUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.coarseSelector))
-        self.SetAlpha(HistoricalReturnsAlphaModel(resolution = Resolution.Daily))
-        self.SetPortfolioConstruction(BlackLittermanOptimizationPortfolioConstructionModel(optimizer = optimizer))
-        self.SetExecution(ImmediateExecutionModel())
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_universe_selection(CoarseFundamentalUniverseSelectionModel(self.coarse_selector))
+        self.set_alpha(HistoricalReturnsAlphaModel(resolution = Resolution.DAILY))
+        self.set_portfolio_construction(BlackLittermanOptimizationPortfolioConstructionModel(optimizer = optimizer))
+        self.set_execution(ImmediateExecutionModel())
+        self.set_risk_management(NullRiskManagementModel())
 
-    def coarseSelector(self, coarse):
+    def coarse_selector(self, coarse):
         # Drops SPY after the 8th
-        last = 3 if self.Time.day > 8 else len(self.symbols)
+        last = 3 if self.time.day > 8 else len(self._symbols)
 
-        return self.symbols[0:last]
+        return self._symbols[0:last]
 
-    def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            self.Debug(orderEvent)
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.FILLED:
+            self.debug(order_event)

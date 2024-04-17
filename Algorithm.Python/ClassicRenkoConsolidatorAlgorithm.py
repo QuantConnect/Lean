@@ -23,49 +23,49 @@ from AlgorithmImports import *
 class ClassicRenkoConsolidatorAlgorithm(QCAlgorithm):
     '''Demonstration of how to initialize and use the RenkoConsolidator'''
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2012, 1, 1)
-        self.SetEndDate(2013, 1, 1)
+        self.set_start_date(2012, 1, 1)
+        self.set_end_date(2013, 1, 1)
 
-        self.AddEquity("SPY", Resolution.Daily)
+        self.add_equity("SPY", Resolution.DAILY)
 
         # this is the simple constructor that will perform the
         # renko logic to the Value property of the data it receives.
 
         # break SPY into $2.5 renko bricks and send that data to our 'OnRenkoBar' method
-        renkoClose = ClassicRenkoConsolidator(2.5)
-        renkoClose.DataConsolidated += self.HandleRenkoClose
-        self.SubscriptionManager.AddConsolidator("SPY", renkoClose)
+        renko_close = ClassicRenkoConsolidator(2.5)
+        renko_close.data_consolidated += self.handle_renko_close
+        self.subscription_manager.add_consolidator("SPY", renko_close)
 
         # this is the full constructor that can accept a value selector and a volume selector
         # this allows us to perform the renko logic on values other than Close, even computed values!
 
         # break SPY into (2*o + h + l + 3*c)/7
-        renko7bar = ClassicRenkoConsolidator(2.5, lambda x: (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7, lambda x: x.Volume)
-        renko7bar.DataConsolidated += self.HandleRenko7Bar
-        self.SubscriptionManager.AddConsolidator("SPY", renko7bar)
+        renko7bar = ClassicRenkoConsolidator(2.5, lambda x: (2 * x.open + x.high + x.low + 3 * x.close) / 7, lambda x: x.volume)
+        renko7bar.data_consolidated += self.handle_renko7_bar
+        self.subscription_manager.add_consolidator("SPY", renko7bar)
 
 
-    # We're doing our analysis in the OnRenkoBar method, but the framework verifies that this method exists, so we define it.
-    def OnData(self, data):
+    # We're doing our analysis in the on_renko_bar method, but the framework verifies that this method exists, so we define it.
+    def on_data(self, data):
         pass
 
 
-    def HandleRenkoClose(self, sender, data):
-        '''This function is called by our renkoClose consolidator defined in Initialize()
+    def handle_renko_close(self, sender, data):
+        '''This function is called by our renko_close consolidator defined in Initialize()
         Args:
             data: The new renko bar produced by the consolidator'''
-        if not self.Portfolio.Invested:
-            self.SetHoldings(data.Symbol, 1)
+        if not self.portfolio.invested:
+            self.set_holdings(data.symbol, 1)
 
-        self.Log(f"CLOSE - {data.Time} - {data.Open} {data.Close}")
+        self.log(f"CLOSE - {data.time} - {data.open} {data.close}")
 
 
-    def HandleRenko7Bar(self, sender, data):
+    def handle_renko7_bar(self, sender, data):
         '''This function is called by our renko7bar consolidator defined in Initialize()
         Args:
             data: The new renko bar produced by the consolidator'''
-        if self.Portfolio.Invested:
-            self.Liquidate(data.Symbol)
-        self.Log(f"7BAR - {data.Time} - {data.Open} {data.Close}")
+        if self.portfolio.invested:
+            self.liquidate(data.symbol)
+        self.log(f"7BAR - {data.time} - {data.open} {data.close}")

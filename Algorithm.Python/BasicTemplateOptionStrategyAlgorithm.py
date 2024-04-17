@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### This algorithm demonstrate how to use Option Strategies (e.g. OptionStrategies.Straddle) helper classes to batch send orders for common strategies.
+### This algorithm demonstrate how to use Option Strategies (e.g. OptionStrategies.STRADDLE) helper classes to batch send orders for common strategies.
 ### It also shows how you can prefilter contracts easily based on strikes and expirations, and how you can inspect the
 ### option chain to pick a specific option contract to trade.
 ### </summary>
@@ -24,40 +24,40 @@ from AlgorithmImports import *
 ### <meta name="tag" content="filter selection" />
 class BasicTemplateOptionStrategyAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         # Set the cash we'd like to use for our backtest
-        self.SetCash(1000000)
+        self.set_cash(1000000)
 
         # Start and end dates for the backtest.
-        self.SetStartDate(2015,12,24)
-        self.SetEndDate(2015,12,24)
+        self.set_start_date(2015,12,24)
+        self.set_end_date(2015,12,24)
 
         # Add assets you'd like to see
-        option = self.AddOption("GOOG")
-        self.option_symbol = option.Symbol
+        option = self.add_option("GOOG")
+        self.option_symbol = option.symbol
 
         # set our strike/expiry filter for this option chain
         # SetFilter method accepts timedelta objects or integer for days.
         # The following statements yield the same filtering criteria
-        option.SetFilter(-2, +2, 0, 180)
-        # option.SetFilter(-2,2, timedelta(0), timedelta(180))
+        option.set_filter(-2, +2, 0, 180)
+        # option.set_filter(-2,2, timedelta(0), timedelta(180))
 
         # use the underlying equity as the benchmark
-        self.SetBenchmark("GOOG")
+        self.set_benchmark("GOOG")
 
-    def OnData(self,slice):
-        if not self.Portfolio.Invested:
-            for kvp in slice.OptionChains:
-                chain = kvp.Value
-                contracts = sorted(sorted(chain, key = lambda x: abs(chain.Underlying.Price - x.Strike)),
-                                                 key = lambda x: x.Expiry, reverse=False)
+    def on_data(self,slice):
+        if not self.portfolio.invested:
+            for kvp in slice.option_chains:
+                chain = kvp.value
+                contracts = sorted(sorted(chain, key = lambda x: abs(chain.underlying.price - x.strike)),
+                                                 key = lambda x: x.expiry, reverse=False)
 
                 if len(contracts) == 0: continue
-                atmStraddle = contracts[0]
-                if atmStraddle != None:
-                    self.Sell(OptionStrategies.Straddle(self.option_symbol, atmStraddle.Strike, atmStraddle.Expiry), 2)
+                atm_straddle = contracts[0]
+                if atm_straddle != None:
+                    self.sell(OptionStrategies.STRADDLE(self.option_symbol, atm_straddle.strike, atm_straddle.expiry), 2)
         else:
-            self.Liquidate()
+            self.liquidate()
 
-    def OnOrderEvent(self, orderEvent):
-        self.Log(str(orderEvent))
+    def on_order_event(self, order_event):
+        self.log(str(order_event))

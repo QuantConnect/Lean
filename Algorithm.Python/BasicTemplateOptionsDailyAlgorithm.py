@@ -22,52 +22,52 @@ from AlgorithmImports import *
 ### <meta name="tag" content="options" />
 ### <meta name="tag" content="filter selection" />
 class BasicTemplateOptionsDailyAlgorithm(QCAlgorithm):
-    UnderlyingTicker = "GOOG"
+    underlying_ticker = "GOOG"
 
-    def Initialize(self):
-        self.SetStartDate(2015, 12, 23)
-        self.SetEndDate(2016, 1, 20)
-        self.SetCash(100000)
-        self.optionExpired = False
+    def initialize(self):
+        self.set_start_date(2015, 12, 23)
+        self.set_end_date(2016, 1, 20)
+        self.set_cash(100000)
+        self.option_expired = False
 
-        equity = self.AddEquity(self.UnderlyingTicker, Resolution.Daily)
-        option = self.AddOption(self.UnderlyingTicker, Resolution.Daily)
-        self.option_symbol = option.Symbol
+        equity = self.add_equity(self.underlying_ticker, Resolution.DAILY)
+        option = self.add_option(self.underlying_ticker, Resolution.DAILY)
+        self.option_symbol = option.symbol
 
         # set our strike/expiry filter for this option chain
-        option.SetFilter(lambda u: (u.CallsOnly().Strikes(0, 1).Expiration(0, 30)))
+        option.set_filter(lambda u: (u.calls_only().strikes(0, 1).expiration(0, 30)))
 
         # use the underlying equity as the benchmark
-        self.SetBenchmark(equity.Symbol)
+        self.set_benchmark(equity.symbol)
 
-    def OnData(self,slice):
-        if self.Portfolio.Invested: return
+    def on_data(self,slice):
+        if self.portfolio.invested: return
 
-        chain = slice.OptionChains.GetValue(self.option_symbol)
+        chain = slice.option_chains.get_value(self.option_symbol)
         if chain is None:
             return
 
         # Grab us the contract nearest expiry
-        contracts = sorted(chain, key = lambda x: x.Expiry)
+        contracts = sorted(chain, key = lambda x: x.expiry)
 
         # if found, trade it
         if len(contracts) == 0: return
-        symbol = contracts[0].Symbol
-        self.MarketOrder(symbol, 1)
+        symbol = contracts[0].symbol
+        self.market_order(symbol, 1)
 
-    def OnOrderEvent(self, orderEvent):
-        self.Log(str(orderEvent))
+    def on_order_event(self, order_event):
+        self.log(str(order_event))
 
         # Check for our expected OTM option expiry
-        if "OTM" in orderEvent.Message:
+        if "OTM" in order_event.message:
 
             # Assert it is at midnight 1/16 (5AM UTC)
-            if orderEvent.UtcTime.month != 1 and orderEvent.UtcTime.day != 16 and orderEvent.UtcTime.hour != 5:
-                raise AssertionError(f"Expiry event was not at the correct time, {orderEvent.UtcTime}")
+            if order_event.utc_time.month != 1 and order_event.utc_time.day != 16 and order_event.utc_time.hour != 5:
+                raise AssertionError(f"Expiry event was not at the correct time, {order_event.utc_time}")
 
-            self.optionExpired = True
+            self.option_expired = True
 
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         # Assert we had our option expire and fill a liquidation order
-        if not self.optionExpired:
+        if not self.option_expired:
             raise AssertionError("Algorithm did not process the option expiration like expected")

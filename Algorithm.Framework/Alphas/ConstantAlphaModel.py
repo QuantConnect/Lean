@@ -32,12 +32,12 @@ class ConstantAlphaModel(AlphaModel):
         self.confidence = confidence
         self.weight = weight
         self.securities = []
-        self.insightsTimeBySymbol = {}
+        self.insights_time_by_symbol = {}
 
-        typeString = Extensions.GetEnumString(type, InsightType)
-        directionString = Extensions.GetEnumString(direction, InsightDirection)
+        type_string = Extensions.GetEnumString(type, InsightType)
+        direction_string = Extensions.GetEnumString(direction, InsightDirection)
 
-        self.Name = '{}({},{},{}'.format(self.__class__.__name__, typeString, directionString, strfdelta(period))
+        self.Name = '{}({},{},{}'.format(self.__class__.__name__, type_string, direction_string, strfdelta(period))
         if magnitude is not None:
             self.Name += ',{}'.format(magnitude)
         if confidence is not None:
@@ -46,7 +46,7 @@ class ConstantAlphaModel(AlphaModel):
         self.Name += ')'
 
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
         ''' Creates a constant insight for each security as specified via the constructor
         Args:
             algorithm: The algorithm instance
@@ -58,44 +58,44 @@ class ConstantAlphaModel(AlphaModel):
         for security in self.securities:
             # security price could be zero until we get the first data point. e.g. this could happen
             # when adding both forex and equities, we will first get a forex data point
-            if security.Price != 0 and self.ShouldEmitInsight(algorithm.UtcTime, security.Symbol):
-                insights.append(Insight(security.Symbol, self.period, self.type, self.direction, self.magnitude, self.confidence, weight = self.weight))
+            if security.price != 0 and self.should_emit_insight(algorithm.utc_time, security.symbol):
+                insights.append(Insight(security.symbol, self.period, self.type, self.direction, self.magnitude, self.confidence, weight = self.weight))
 
         return insights
 
 
-    def OnSecuritiesChanged(self, algorithm, changes):
+    def on_securities_changed(self, algorithm, changes):
         ''' Event fired each time the we add/remove securities from the data feed
         Args:
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
-        for added in changes.AddedSecurities:
+        for added in changes.added_securities:
             self.securities.append(added)
 
         # this will allow the insight to be re-sent when the security re-joins the universe
-        for removed in changes.RemovedSecurities:
+        for removed in changes.removed_securities:
             if removed in self.securities:
                 self.securities.remove(removed)
-            if removed.Symbol in self.insightsTimeBySymbol:
-                self.insightsTimeBySymbol.pop(removed.Symbol)
+            if removed.symbol in self.insights_time_by_symbol:
+                self.insights_time_by_symbol.pop(removed.symbol)
 
 
-    def ShouldEmitInsight(self, utcTime, symbol):            
-        if symbol.IsCanonical():
+    def should_emit_insight(self, utc_time, symbol):
+        if symbol.is_canonical():
             # canonical futures & options are none tradable
             return False
 
-        generatedTimeUtc = self.insightsTimeBySymbol.get(symbol)
+        generated_time_utc = self.insights_time_by_symbol.get(symbol)
 
-        if generatedTimeUtc is not None:
+        if generated_time_utc is not None:
             # we previously emitted a insight for this symbol, check it's period to see
             # if we should emit another insight
-            if utcTime - generatedTimeUtc < self.period:
+            if utc_time - generated_time_utc < self.period:
                 return False
 
         # we either haven't emitted a insight for this symbol or the previous
         # insight's period has expired, so emit a new insight now for this symbol
-        self.insightsTimeBySymbol[symbol] = utcTime
+        self.insights_time_by_symbol[symbol] = utc_time
         return True
 
 def strfdelta(tdelta):
