@@ -17,7 +17,7 @@ The core of the LEAN Engine is written in C#, but it operates seamlessly on Linu
  
 ## Proudly Sponsored By ##
 <br>
-<a href="https://www.algoseek.com/](https://www.algoseek.com/lean.html">
+<a href="https://www.algoseek.com/lean.html">
 <picture >
  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/QuantConnect/Lean/assets/79997186/4e95a20e-f7c5-4655-8043-18601846030b">
  <source media="(prefers-color-scheme: light)" srcset="https://github.com/QuantConnect/Lean/assets/79997186/cf05e5fe-5784-4624-8dde-72476508ba91">
