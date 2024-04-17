@@ -19,32 +19,32 @@ from AlgorithmImports import *
 ### <meta name="tag" content="regression test" />
 class WeeklyUniverseSelectionRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetCash(100000)
-        self.SetStartDate(2013,10,1)
-        self.SetEndDate(2013,10,31)
+    def initialize(self):
+        self.set_cash(100000)
+        self.set_start_date(2013,10,1)
+        self.set_end_date(2013,10,31)
 
-        self.UniverseSettings.Resolution = Resolution.Hour
+        self.universe_settings.resolution = Resolution.HOUR
 
         # select IBM once a week, empty universe the other days
-        self.AddUniverse("my-custom-universe", lambda dt: ["IBM"] if dt.day % 7 == 0 else [])
+        self.add_universe("my-custom-universe", lambda dt: ["IBM"] if dt.day % 7 == 0 else [])
 
-    def OnData(self, slice):
+    def on_data(self, slice):
         if self.changes is None: return
 
         # liquidate removed securities
-        for security in self.changes.RemovedSecurities:
-            if security.Invested:
-                self.Log("{} Liquidate {}".format(self.Time, security.Symbol))
-                self.Liquidate(security.Symbol)
+        for security in self.changes.removed_securities:
+            if security.invested:
+                self.log("{} Liquidate {}".format(self.time, security.symbol))
+                self.liquidate(security.symbol)
 
         # we'll simply go long each security we added to the universe
-        for security in self.changes.AddedSecurities:
-            if not security.Invested:
-                self.Log("{} Buy {}".format(self.Time, security.Symbol))
-                self.SetHoldings(security.Symbol, 1)
+        for security in self.changes.added_securities:
+            if not security.invested:
+                self.log("{} Buy {}".format(self.time, security.symbol))
+                self.set_holdings(security.symbol, 1)
 
         self.changes = None
 
-    def OnSecuritiesChanged(self, changes):
+    def on_securities_changed(self, changes):
         self.changes = changes
