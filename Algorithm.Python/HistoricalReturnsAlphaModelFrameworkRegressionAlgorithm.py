@@ -20,11 +20,11 @@ from Alphas.HistoricalReturnsAlphaModel import HistoricalReturnsAlphaModel
 ### </summary>
 class HistoricalReturnsAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
 
-    def Initialize(self):
-        super().Initialize()
-        self.SetAlpha(HistoricalReturnsAlphaModel())
+    def initialize(self):
+        super().initialize()
+        self.set_alpha(HistoricalReturnsAlphaModel())
 
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         expected = 74
-        if self.Insights.TotalCount != expected:
-            raise Exception(f"The total number of insights should be {expected}. Actual: {self.Insights.TotalCount}")
+        if self.insights.total_count != expected:
+            raise Exception(f"The total number of insights should be {expected}. Actual: {self.insights.total_count}")

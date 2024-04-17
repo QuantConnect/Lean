@@ -22,44 +22,44 @@ from AlgorithmImports import *
 ### <meta name="tag" content="regression test" />
 class AddRemoveSecurityRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10,7)   #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
+        self.set_start_date(2013,10,7)   #Set Start Date
+        self.set_end_date(2013,10,11)    #Set End Date
+        self.set_cash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("SPY")
+        self.add_equity("SPY")
 
-        self._lastAction = None
+        self._last_action = None
 
 
-    def OnData(self, data):
+    def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
-        if self._lastAction is not None and self._lastAction.date() == self.Time.date():
+        if self._last_action is not None and self._last_action.date() == self.time.date():
             return
 
-        if not self.Portfolio.Invested:
-            self.SetHoldings("SPY", .5)
-            self._lastAction = self.Time
+        if not self.portfolio.invested:
+            self.set_holdings("SPY", .5)
+            self._last_action = self.time
 
-        if self.Time.weekday() == 1:
-            self.AddEquity("AIG")
-            self.AddEquity("BAC")
-            self._lastAction = self.Time
+        if self.time.weekday() == 1:
+            self.add_equity("AIG")
+            self.add_equity("BAC")
+            self._last_action = self.time
 
-        if self.Time.weekday() == 2:
-            self.SetHoldings("AIG", .25)
-            self.SetHoldings("BAC", .25)
-            self._lastAction = self.Time
+        if self.time.weekday() == 2:
+            self.set_holdings("AIG", .25)
+            self.set_holdings("BAC", .25)
+            self._last_action = self.time
 
-        if self.Time.weekday() == 3:
-            self.RemoveSecurity("AIG")
-            self.RemoveSecurity("BAC")
-            self._lastAction = self.Time
+        if self.time.weekday() == 3:
+            self.remove_security("AIG")
+            self.remove_security("BAC")
+            self._last_action = self.time
 
-    def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == OrderStatus.Submitted:
-            self.Debug("{0}: Submitted: {1}".format(self.Time, self.Transactions.GetOrderById(orderEvent.OrderId)))
-        if orderEvent.Status == OrderStatus.Filled:
-            self.Debug("{0}: Filled: {1}".format(self.Time, self.Transactions.GetOrderById(orderEvent.OrderId)))
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.SUBMITTED:
+            self.debug("{0}: Submitted: {1}".format(self.time, self.transactions.get_order_by_id(order_event.order_id)))
+        if order_event.status == OrderStatus.FILLED:
+            self.debug("{0}: Filled: {1}".format(self.time, self.transactions.get_order_by_id(order_event.order_id)))

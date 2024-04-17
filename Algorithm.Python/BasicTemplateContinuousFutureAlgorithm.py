@@ -19,49 +19,49 @@ from AlgorithmImports import *
 class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
     '''Basic template algorithm simply initializes the date range and cash'''
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013, 7, 1)
-        self.SetEndDate(2014, 1, 1)
+        self.set_start_date(2013, 7, 1)
+        self.set_end_date(2014, 1, 1)
 
-        self._continuousContract = self.AddFuture(Futures.Indices.SP500EMini,
-                                                  dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
-                                                  dataMappingMode = DataMappingMode.LastTradingDay,
-                                                  contractDepthOffset= 0)
+        self._continuous_contract = self.add_future(Futures.Indices.SP_500_E_MINI,
+                                                  data_normalization_mode = DataNormalizationMode.BACKWARDS_RATIO,
+                                                  data_mapping_mode = DataMappingMode.LAST_TRADING_DAY,
+                                                  contract_depth_offset = 0)
 
-        self._fast = self.SMA(self._continuousContract.Symbol, 4, Resolution.Daily)
-        self._slow = self.SMA(self._continuousContract.Symbol, 10, Resolution.Daily)
-        self._currentContract = None
+        self._fast = self.sma(self._continuous_contract.symbol, 4, Resolution.DAILY)
+        self._slow = self.sma(self._continuous_contract.symbol, 10, Resolution.DAILY)
+        self._current_contract = None
 
-    def OnData(self, data):
+    def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        for changedEvent in data.SymbolChangedEvents.Values:
-            if changedEvent.Symbol == self._continuousContract.Symbol:
-                self.Log(f"SymbolChanged event: {changedEvent}")
+        for changed_event in data.symbol_changed_events.values():
+            if changed_event.symbol == self._continuous_contract.symbol:
+                self.log(f"SymbolChanged event: {changed_event}")
 
-        if not self.Portfolio.Invested:
-            if self._fast.Current.Value > self._slow.Current.Value:
-                self._currentContract = self.Securities[self._continuousContract.Mapped]
-                self.Buy(self._currentContract.Symbol, 1)
-        elif self._fast.Current.Value < self._slow.Current.Value:
-            self.Liquidate()
+        if not self.portfolio.invested:
+            if self._fast.current.value > self._slow.current.value:
+                self._current_contract = self.securities[self._continuous_contract.mapped]
+                self.buy(self._current_contract.symbol, 1)
+        elif self._fast.current.value < self._slow.current.value:
+            self.liquidate()
 
         # We check exchange hours because the contract mapping can call OnData outside of regular hours.
-        if self._currentContract is not None and self._currentContract.Symbol != self._continuousContract.Mapped and self._continuousContract.Exchange.ExchangeOpen:
-            self.Log(f"{self.Time} - rolling position from {self._currentContract.Symbol} to {self._continuousContract.Mapped}")
+        if self._current_contract is not None and self._current_contract.symbol != self._continuous_contract.mapped and self._continuous_contract.exchange.exchange_open:
+            self.log(f"{self.time} - rolling position from {self._current_contract.symbol} to {self._continuous_contract.mapped}")
 
-            currentPositionSize = self._currentContract.Holdings.Quantity
-            self.Liquidate(self._currentContract.Symbol)
-            self.Buy(self._continuousContract.Mapped, currentPositionSize)
-            self._currentContract = self.Securities[self._continuousContract.Mapped]
+            current_position_size = self._current_contract.holdings.quantity
+            self.liquidate(self._current_contract.symbol)
+            self.buy(self._continuous_contract.mapped, current_position_size)
+            self._current_contract = self.securities[self._continuous_contract.mapped]
 
-    def OnOrderEvent(self, orderEvent):
-        self.Debug("Purchased Stock: {0}".format(orderEvent.Symbol))
+    def on_order_event(self, order_event):
+        self.debug("Purchased Stock: {0}".format(order_event.symbol))
 
-    def OnSecuritiesChanged(self, changes):
-        self.Debug(f"{self.Time}-{changes}")
+    def on_securities_changed(self, changes):
+        self.debug(f"{self.time}-{changes}")

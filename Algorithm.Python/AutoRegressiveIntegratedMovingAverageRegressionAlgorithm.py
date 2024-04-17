@@ -19,25 +19,25 @@ from AlgorithmImports import *
 # is sufficiently large (which would be due to the inclusion of the MA(1) term).
 # </summary>
 class AutoRegressiveIntegratedMovingAverageRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.SetStartDate(2013, 1, 7)
-        self.SetEndDate(2013, 12, 11)
-        self.EnableAutomaticIndicatorWarmUp = True
-        self.AddEquity("SPY", Resolution.Daily)
-        self.arima = self.ARIMA("SPY", 1, 1, 1, 50)
-        self.ar = self.ARIMA("SPY", 1, 1, 0, 50)
+        self.set_start_date(2013, 1, 7)
+        self.set_end_date(2013, 12, 11)
+        self.enable_automatic_indicator_warm_up = True
+        self.add_equity("SPY", Resolution.DAILY)
+        self._arima = self.arima("SPY", 1, 1, 1, 50)
+        self._ar = self.arima("SPY", 1, 1, 0, 50)
 
-    def OnData(self, data):
+    def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if self.arima.IsReady:
-            if abs(self.arima.Current.Value - self.ar.Current.Value) > 1:
-                if self.arima.Current.Value > self.last:
-                    self.MarketOrder("SPY", 1)
+        if self._arima.is_ready:
+            if abs(self._arima.current.value - self._ar.current.value) > 1:
+                if self._arima.current.value > self.last:
+                    self.market_order("SPY", 1)
                 else:
-                    self.MarketOrder("SPY", -1)
-            self.last = self.arima.Current.Value
+                    self.market_order("SPY", -1)
+            self.last = self._arima.current.value

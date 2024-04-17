@@ -14,31 +14,31 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Test algorithm using 'QCAlgorithm.AddUniverseSelection(IUniverseSelectionModel)'
+### Test algorithm using 'QCAlgorithm.add_universe_selection(IUniverseSelectionModel)'
 ### </summary>
 class AddUniverseSelectionModelAlgorithm(QCAlgorithm):
-    def Initialize(self):
+    def initialize(self):
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10,8)   #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
+        self.set_start_date(2013,10,8)   #Set Start Date
+        self.set_end_date(2013,10,11)    #Set End Date
+        self.set_cash(100000)           #Set Strategy Cash
 
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
         # set algorithm framework models
-        self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(minutes = 20), 0.025, None))
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_alpha(ConstantAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(minutes = 20), 0.025, None))
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
+        self.set_execution(ImmediateExecutionModel())
 
-        self.SetUniverseSelection(ManualUniverseSelectionModel([ Symbol.Create("SPY", SecurityType.Equity, Market.USA) ]))
-        self.AddUniverseSelection(ManualUniverseSelectionModel([ Symbol.Create("AAPL", SecurityType.Equity, Market.USA) ]))
-        self.AddUniverseSelection(ManualUniverseSelectionModel(
-                Symbol.Create("SPY", SecurityType.Equity, Market.USA), # duplicate will be ignored
-                Symbol.Create("FB", SecurityType.Equity, Market.USA)))
+        self.set_universe_selection(ManualUniverseSelectionModel([ Symbol.create("SPY", SecurityType.EQUITY, Market.USA) ]))
+        self.add_universe_selection(ManualUniverseSelectionModel([ Symbol.create("AAPL", SecurityType.EQUITY, Market.USA) ]))
+        self.add_universe_selection(ManualUniverseSelectionModel(
+                Symbol.create("SPY", SecurityType.EQUITY, Market.USA), # duplicate will be ignored
+                Symbol.create("FB", SecurityType.EQUITY, Market.USA)))
 
-    def OnEndOfAlgorithm(self):
-        if self.UniverseManager.Count != 3:
+    def on_end_of_algorithm(self):
+        if self.universe_manager.count != 3:
             raise ValueError("Unexpected universe count")
-        if self.UniverseManager.ActiveSecurities.Count != 3:
+        if self.universe_manager.active_securities.count != 3:
             raise ValueError("Unexpected active securities")

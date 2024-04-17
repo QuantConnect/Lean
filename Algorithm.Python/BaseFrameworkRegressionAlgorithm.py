@@ -18,32 +18,32 @@ from AlgorithmImports import *
 ### </summary>
 class BaseFrameworkRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2014, 6, 1)
-        self.SetEndDate(2014, 6, 30)
-        
-        self.UniverseSettings.Resolution = Resolution.Hour;
-        self.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
+    def initialize(self):
+        self.set_start_date(2014, 6, 1)
+        self.set_end_date(2014, 6, 30)
 
-        symbols = [Symbol.Create(ticker, SecurityType.Equity, Market.USA)
+        self.universe_settings.resolution = Resolution.HOUR;
+        self.universe_settings.data_normalization_mode = DataNormalizationMode.RAW;
+
+        symbols = [Symbol.create(ticker, SecurityType.EQUITY, Market.USA)
             for ticker in ["AAPL", "AIG", "BAC", "SPY"]]
 
         # Manually add AAPL and AIG when the algorithm starts
-        self.SetUniverseSelection(ManualUniverseSelectionModel(symbols[:2]))
+        self.set_universe_selection(ManualUniverseSelectionModel(symbols[:2]))
 
         # At midnight, add all securities every day except on the last data
         # With this procedure, the Alpha Model will experience multiple universe changes
-        self.AddUniverseSelection(ScheduledUniverseSelectionModel(
-            self.DateRules.EveryDay(), self.TimeRules.Midnight,
-            lambda dt: symbols if dt.replace(tzinfo=None) < self.EndDate - timedelta(1) else []))
+        self.add_universe_selection(ScheduledUniverseSelectionModel(
+            self.date_rules.every_day(), self.time_rules.midnight,
+            lambda dt: symbols if dt.replace(tzinfo=None) < self.end_date - timedelta(1) else []))
 
-        self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(31), 0.025, None))
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        self.SetExecution(ImmediateExecutionModel())
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_alpha(ConstantAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(31), 0.025, None))
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
+        self.set_execution(ImmediateExecutionModel())
+        self.set_risk_management(NullRiskManagementModel())
 
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         # The base implementation checks for active insights
-        insightsCount = len(self.Insights.GetInsights(lambda insight: insight.IsActive(self.UtcTime)))
-        if insightsCount != 0:
-            raise Exception(f"The number of active insights should be 0. Actual: {insightsCount}")
+        insights_count = len(self.insights.get_insights(lambda insight: insight.is_active(self.utc_time)))
+        if insights_count != 0:
+            raise Exception(f"The number of active insights should be 0. Actual: {insights_count}")

@@ -20,11 +20,11 @@ from Alphas.MacdAlphaModel import MacdAlphaModel
 ### </summary>
 class MacdAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
 
-    def Initialize(self):
-        super().Initialize()
-        self.SetAlpha(MacdAlphaModel())
+    def initialize(self):
+        super().initialize()
+        self.set_alpha(MacdAlphaModel())
 
-    def OnEndOfAlgorithm(self):
+    def ond_end_of_algorithm(self):
         expected = 4
-        if self.Insights.TotalCount != expected:
-           raise Exception(f"The total number of insights should be {expected}. Actual: {self.Insights.TotalCount}")
+        if self.insights.total_count != expected:
+           raise Exception(f"The total number of insights should be {expected}. Actual: {self.insights.total_count}")

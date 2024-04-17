@@ -22,32 +22,32 @@ from AlgorithmImports import *
 
 class BasicTemplateCfdAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.SetAccountCurrency('EUR')
+        self.set_account_currency('EUR')
 
-        self.SetStartDate(2019, 2, 20)
-        self.SetEndDate(2019, 2, 21)
-        self.SetCash('EUR', 100000)
+        self.set_start_date(2019, 2, 20)
+        self.set_end_date(2019, 2, 21)
+        self.set_cash('EUR', 100000)
 
-        self.symbol = self.AddCfd('DE30EUR').Symbol
+        self._symbol = self.add_cfd('DE30EUR').symbol
 
         # Historical Data
-        history = self.History(self.symbol, 60, Resolution.Daily)
-        self.Log(f"Received {len(history)} bars from CFD historical data call.")
+        history = self.history(self._symbol, 60, Resolution.DAILY)
+        self.log(f"Received {len(history)} bars from CFD historical data call.")
 
-    def OnData(self, data):
+    def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         Arguments:
             slice: Slice object keyed by symbol containing the stock data
         '''
         # Access Data
-        if data.QuoteBars.ContainsKey(self.symbol):
-            quoteBar = data.QuoteBars[self.symbol]
-            self.Log(f"{quoteBar.EndTime} :: {quoteBar.Close}")
+        if data.quote_bars.contains_key(self._symbol):
+            quote_bar = data.quote_bars[self._symbol]
+            self.log(f"{quote_bar.end_time} :: {quote_bar.close}")
 
-        if not self.Portfolio.Invested:
-            self.SetHoldings(self.symbol, 1)
+        if not self.portfolio.invested:
+            self.set_holdings(self._symbol, 1)
 
-    def OnOrderEvent(self, orderEvent):
-        self.Debug("{} {}".format(self.Time, orderEvent.ToString()))
+    def on_order_event(self, order_event):
+        self.debug("{} {}".format(self.time, order_event.to_string()))

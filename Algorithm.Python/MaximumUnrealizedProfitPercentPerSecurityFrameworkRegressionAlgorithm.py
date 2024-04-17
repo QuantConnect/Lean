@@ -20,8 +20,8 @@ from Risk.MaximumUnrealizedProfitPercentPerSecurity import MaximumUnrealizedProf
 ### </summary>
 class MaximumUnrealizedProfitPercentPerSecurityFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
 
-    def Initialize(self):
-        super().Initialize()
-        self.SetUniverseSelection(ManualUniverseSelectionModel(Symbol.Create("AAPL", SecurityType.Equity, Market.USA)))
+    def initialize(self):
+        super().initialize()
+        self.set_universe_selection(ManualUniverseSelectionModel(Symbol.create("AAPL", SecurityType.EQUITY, Market.USA)))
 
-        self.SetRiskManagement(MaximumUnrealizedProfitPercentPerSecurity(0.004))
+        self.set_risk_management(MaximumUnrealizedProfitPercentPerSecurity(0.004))

@@ -18,8 +18,8 @@ from Risk.TrailingStopRiskManagementModel import TrailingStopRiskManagementModel
 class TrailingStopRiskFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
     '''Show example of how to use the TrailingStopRiskManagementModel'''
 
-    def Initialize(self):
-        super().Initialize()
-        self.SetUniverseSelection(ManualUniverseSelectionModel([Symbol.Create("AAPL", SecurityType.Equity, Market.USA)]))
+    def initialize(self):
+        super().initialize()
+        self.set_universe_selection(ManualUniverseSelectionModel([Symbol.create("AAPL", SecurityType.EQUITY, Market.USA)]))
 
-        self.SetRiskManagement(TrailingStopRiskManagementModel(0.01))
+        self.set_risk_management(TrailingStopRiskManagementModel(0.01))

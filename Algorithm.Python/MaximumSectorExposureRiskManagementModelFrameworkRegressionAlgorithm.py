@@ -20,24 +20,24 @@ from Risk.MaximumSectorExposureRiskManagementModel import MaximumSectorExposureR
 ### </summary>
 class MaximumSectorExposureRiskManagementModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
 
-    def Initialize(self):
-        super().Initialize()
+    def initialize(self):
+        super().initialize()
         # Set requested data resolution
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
-        self.SetStartDate(2014, 2, 1)  #Set Start Date
-        self.SetEndDate(2014, 5, 1)    #Set End Date
+        self.set_start_date(2014, 2, 1)  #Set Start Date
+        self.set_end_date(2014, 5, 1)    #Set End Date
 
         # set algorithm framework models
         tickers = [ "AAPL", "MSFT", "GOOG", "AIG", "BAC" ]
-        self.SetUniverseSelection(FineFundamentalUniverseSelectionModel(
-            lambda coarse: [ x.Symbol for x in coarse if x.Symbol.Value in tickers ],
-            lambda fine: [ x.Symbol for x in fine ]
+        self.set_universe_selection(FineFundamentalUniverseSelectionModel(
+            lambda coarse: [ x.symbol for x in coarse if x.symbol.value in tickers ],
+            lambda fine: [ x.symbol for x in fine ]
         ))
 
         # define risk management model such that maximum weight of a single sector be 10%
         # Number of of trades changed from 34 to 30 when using the MaximumSectorExposureRiskManagementModel
-        self.SetRiskManagement(MaximumSectorExposureRiskManagementModel(0.1))
+        self.set_risk_management(MaximumSectorExposureRiskManagementModel(0.1))
 
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         pass
