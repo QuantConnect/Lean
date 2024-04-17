@@ -26,8 +26,8 @@ from BasicTemplateFuturesHistoryAlgorithm import BasicTemplateFuturesHistoryAlgo
 ### <meta name="tag" content="futures" />
 class BasicTemplateFuturesHistoryWithExtendedMarketHoursAlgorithm(BasicTemplateFuturesHistoryAlgorithm):
 
-    def GetExtendedMarketHours(self):
+    def get_extended_market_hours(self):
         return True
 
-    def GetExpectedHistoryCallCount(self):
+    def get_expected_history_call_count(self):
         return 49

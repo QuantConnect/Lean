@@ -24,60 +24,60 @@ from AlgorithmImports import *
 ### <meta name="tag" content="futures" />
 class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 8)
-        self.SetEndDate(2013, 10, 9)
-        self.SetCash(1000000)
+    def initialize(self):
+        self.set_start_date(2013, 10, 8)
+        self.set_end_date(2013, 10, 9)
+        self.set_cash(1000000)
 
-        extendedMarketHours = self.GetExtendedMarketHours()
+        extended_market_hours = self.get_extended_market_hours()
 
         # Subscribe and set our expiry filter for the futures chain
         # find the front contract expiring no earlier than in 90 days
-        futureES = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, extendedMarketHours=extendedMarketHours)
-        futureES.SetFilter(timedelta(0), timedelta(182))
+        future_es = self.add_future(Futures.Indices.SP_500_E_MINI, Resolution.MINUTE, extended_market_hours=extended_market_hours)
+        future_es.set_filter(timedelta(0), timedelta(182))
 
-        futureGC = self.AddFuture(Futures.Metals.Gold, Resolution.Minute, extendedMarketHours=extendedMarketHours)
-        futureGC.SetFilter(timedelta(0), timedelta(182))
+        future_gc = self.add_future(Futures.Metals.GOLD, Resolution.MINUTE, extended_market_hours=extended_market_hours)
+        future_gc.set_filter(timedelta(0), timedelta(182))
 
-        self.SetBenchmark(lambda x: 1000000)
+        self.set_benchmark(lambda x: 1000000)
 
-        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.Every(timedelta(hours=1)), self.MakeHistoryCall)
-        self._successCount = 0
+        self.schedule.on(self.date_rules.every_day(), self.time_rules.every(timedelta(hours=1)), self.make_history_call)
+        self._success_count = 0
 
-    def MakeHistoryCall(self):
-        history = self.History(self.Securities.keys(), 10, Resolution.Minute)
+    def make_history_call(self):
+        history = self.history(self.securities.keys(), 10, Resolution.MINUTE)
         if len(history) < 10:
-            raise Exception(f'Empty history at {self.Time}')
-        self._successCount += 1
+            raise Exception(f'Empty history at {self.time}')
+        self._success_count += 1
 
-    def OnEndOfAlgorithm(self):
-        if self._successCount < self.GetExpectedHistoryCallCount():
-            raise Exception(f'Scheduled Event did not assert history call as many times as expected: {self._successCount}/49')
+    def on_end_of_algorithm(self):
+        if self._success_count < self.get_expected_history_call_count():
+            raise Exception(f'Scheduled Event did not assert history call as many times as expected: {self._success_count}/49')
 
-    def OnData(self,slice):
-        if self.Portfolio.Invested: return
-        for chain in slice.FutureChains:
-            for contract in chain.Value:
-                self.Log(f'{contract.Symbol.Value},' +
-                         f'Bid={contract.BidPrice} ' +
-                         f'Ask={contract.AskPrice} ' +
-                         f'Last={contract.LastPrice} ' +
-                         f'OI={contract.OpenInterest}')
+    def on_data(self,slice):
+        if self.portfolio.invested: return
+        for chain in slice.future_chains:
+            for contract in chain.value:
+                self.log(f'{contract.symbol.value},' +
+                         f'Bid={contract.bid_price} ' +
+                         f'Ask={contract.ask_price} ' +
+                         f'Last={contract.last_price} ' +
+                         f'OI={contract.open_interest}')
 
-    def OnSecuritiesChanged(self, changes):
-        for change in changes.AddedSecurities:
-            history = self.History(change.Symbol, 10, Resolution.Minute).sort_index(level='time', ascending=False)[:3]
+    def on_securities_changed(self, changes):
+        for change in changes.added_securities:
+            history = self.history(change.symbol, 10, Resolution.MINUTE).sort_index(level='time', ascending=False)[:3]
 
             for index, row in history.iterrows():
-                self.Log(f'History: {index[1]} : {index[2]:%m/%d/%Y %I:%M:%S %p} > {row.close}')
+                self.log(f'History: {index[1]} : {index[2]:%m/%d/%Y %I:%M:%S %p} > {row.close}')
 
-    def OnOrderEvent(self, orderEvent):
+    def on_order_event(self, order_event):
         # Order fill event handler. On an order fill update the resulting information is passed to this method.
         # Order event details containing details of the events
-        self.Log(f'{orderEvent}')
+        self.log(f'{order_event}')
 
-    def GetExtendedMarketHours(self):
+    def get_extended_market_hours(self):
         return False
 
-    def GetExpectedHistoryCallCount(self):
+    def get_expected_history_call_count(self):
         return 42

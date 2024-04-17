@@ -22,29 +22,29 @@ from AlgorithmImports import *
 class BasicTemplateIndiaAlgorithm(QCAlgorithm):
     '''Basic template framework algorithm uses framework components to define the algorithm.'''
 
-    def Initialize(self):
-        '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
+    def initialize(self):
+        '''initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetAccountCurrency("INR")  #Set Account Currency 
-        self.SetStartDate(2019, 1, 23)  #Set Start Date
-        self.SetEndDate(2019, 10, 31)   #Set End Date
-        self.SetCash(100000)            #Set Strategy Cash
+        self.set_account_currency("INR")  #Set Account Currency 
+        self.set_start_date(2019, 1, 23)  #Set Start Date
+        self.set_end_date(2019, 10, 31)   #Set End Date
+        self.set_cash(100000)            #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("YESBANK", Resolution.Minute, Market.India)
-        self.Debug("numpy test >>> print numpy.pi: " + str(np.pi))
+        self.add_equity("YESBANK", Resolution.MINUTE, Market.INDIA)
+        self.debug("numpy test >>> print numpy.pi: " + str(np.pi))
 
         # Set Order Properties as per the requirements for order placement
-        self.DefaultOrderProperties = IndiaOrderProperties(Exchange.NSE)
+        self.default_order_properties = IndiaOrderProperties(Exchange.NSE)
 
-    def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+    def on_data(self, data):
+        '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if not self.Portfolio.Invested:
-            self.MarketOrder("YESBANK", 1)
+        if not self.portfolio.invested:
+            self.market_order("YESBANK", 1)
 
-    def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            self.Debug("Purchased Stock: {0}".format(orderEvent.Symbol))
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.FILLED:
+            self.debug("Purchased Stock: {0}".format(order_event.symbol))

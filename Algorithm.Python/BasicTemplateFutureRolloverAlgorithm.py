@@ -21,48 +21,48 @@ class BasicTemplateFutureRolloverAlgorithm(QCAlgorithm):
     ### <summary>
     ### Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
     ### </summary>
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 8)
-        self.SetEndDate(2013, 12, 10)
-        self.SetCash(1000000)
+    def initialize(self):
+        self.set_start_date(2013, 10, 8)
+        self.set_end_date(2013, 12, 10)
+        self.set_cash(1000000)
 
-        self.symbol_data_by_symbol = {}
+        self._symbol_data_by_symbol = {}
         
         futures = [
-            Futures.Indices.SP500EMini
+            Futures.Indices.SP_500_E_MINI
         ]
 
         for future in futures:
             # Requesting data
-            continuous_contract = self.AddFuture(future,
-                resolution = Resolution.Daily,
-                extendedMarketHours = True,
-                dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
-                dataMappingMode = DataMappingMode.OpenInterest,
-                contractDepthOffset = 0
+            continuous_contract = self.add_future(future,
+                resolution = Resolution.DAILY,
+                extended_market_hours = True,
+                data_normalization_mode = DataNormalizationMode.BACKWARDS_RATIO,
+                data_mapping_mode = DataMappingMode.OPEN_INTEREST,
+                contract_depth_offset = 0
             )
             
             symbol_data = SymbolData(self, continuous_contract)
-            self.symbol_data_by_symbol[continuous_contract.Symbol] = symbol_data
+            self._symbol_data_by_symbol[continuous_contract.symbol] = symbol_data
 
     ### <summary>
-    ### OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+    ### on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
     ### </summary>
     ### <param name="slice">Slice object keyed by symbol containing the stock data</param>
-    def OnData(self, slice):
-        for symbol, symbol_data in self.symbol_data_by_symbol.items():
-            # Call SymbolData.Update() method to handle new data slice received
-            symbol_data.Update(slice)
+    def on_data(self, slice):
+        for symbol, symbol_data in self._symbol_data_by_symbol.items():
+            # Call SymbolData.update() method to handle new data slice received
+            symbol_data.update(slice)
             
             # Check if information in SymbolData class and new slice data are ready for trading
-            if not symbol_data.IsReady or not slice.Bars.ContainsKey(symbol):
+            if not symbol_data.is_ready or not slice.bars.contains_key(symbol):
                 return
             
-            ema_current_value = symbol_data.EMA.Current.Value
-            if ema_current_value < symbol_data.Price and not symbol_data.IsLong:
-                self.MarketOrder(symbol_data.Mapped, 1)
-            elif ema_current_value > symbol_data.Price and not symbol_data.IsShort:
-                self.MarketOrder(symbol_data.Mapped, -1)
+            ema_current_value = symbol_data.EMA.current.value
+            if ema_current_value < symbol_data.price and not symbol_data.is_long:
+                self.market_order(symbol_data.mapped, 1)
+            elif ema_current_value > symbol_data.price and not symbol_data.is_short:
+                self.market_order(symbol_data.mapped, -1)
     
 ### <summary>
 ### Abstracted class object to hold information (state, indicators, methods, etc.) from a Symbol/Security in a multi-security algorithm
@@ -75,55 +75,55 @@ class SymbolData:
     def __init__(self, algorithm, future):
         self._algorithm = algorithm
         self._future = future
-        self.EMA = algorithm.EMA(future.Symbol, 20, Resolution.Daily)
-        self.Price = 0
-        self.IsLong = False
-        self.IsShort = False
+        self.EMA = algorithm.ema(future.symbol, 20, Resolution.DAILY)
+        self.price = 0
+        self.is_long = False
+        self.is_short = False
 
-        self.Reset()
+        self.reset()
     
     @property
-    def Symbol(self):
-        return self._future.Symbol
+    def symbol(self):
+        return self._future.symbol
     
     @property
-    def Mapped(self):
-        return self._future.Mapped
+    def mapped(self):
+        return self._future.mapped
     
     @property
-    def IsReady(self):
-        return self.Mapped is not None and self.EMA.IsReady
+    def is_ready(self):
+        return self.mapped is not None and self.EMA.is_ready
     
     ### <summary>
     ### Handler of new slice of data received
     ### </summary>
-    def Update(self, slice):
-        if slice.SymbolChangedEvents.ContainsKey(self.Symbol):
-            changed_event = slice.SymbolChangedEvents[self.Symbol]
-            old_symbol = changed_event.OldSymbol
-            new_symbol = changed_event.NewSymbol
-            tag = f"Rollover - Symbol changed at {self._algorithm.Time}: {old_symbol} -> {new_symbol}"
-            quantity = self._algorithm.Portfolio[old_symbol].Quantity
+    def update(self, slice):
+        if slice.symbol_changed_events.contains_key(self.symbol):
+            changed_event = slice.symbol_changed_events[self.symbol]
+            old_symbol = changed_event.old_symbol
+            new_symbol = changed_event.new_symbol
+            tag = f"Rollover - Symbol changed at {self._algorithm.time}: {old_symbol} -> {new_symbol}"
+            quantity = self._algorithm.portfolio[old_symbol].quantity
 
             # Rolling over: to liquidate any position of the old mapped contract and switch to the newly mapped contract
-            self._algorithm.Liquidate(old_symbol, tag = tag)
-            self._algorithm.MarketOrder(new_symbol, quantity, tag = tag)
+            self._algorithm.liquidate(old_symbol, tag = tag)
+            self._algorithm.market_order(new_symbol, quantity, tag = tag)
 
-            self.Reset()
+            self.reset()
         
-        self.Price = slice.Bars[self.Symbol].Price if slice.Bars.ContainsKey(self.Symbol) else self.Price
-        self.IsLong = self._algorithm.Portfolio[self.Mapped].IsLong
-        self.IsShort = self._algorithm.Portfolio[self.Mapped].IsShort
+        self.price = slice.bars[self.symbol].price if slice.bars.contains_key(self.symbol) else self.price
+        self.is_long = self._algorithm.portfolio[self.mapped].is_long
+        self.is_short = self._algorithm.portfolio[self.mapped].is_short
         
     ### <summary>
-    ### Reset RollingWindow/indicator to adapt to newly mapped contract, then warm up the RollingWindow/indicator
+    ### reset RollingWindow/indicator to adapt to newly mapped contract, then warm up the RollingWindow/indicator
     ### </summary>
-    def Reset(self):
-        self.EMA.Reset()
-        self._algorithm.WarmUpIndicator(self.Symbol, self.EMA, Resolution.Daily)
+    def reset(self):
+        self.EMA.reset()
+        self._algorithm.warm_up_indicator(self.symbol, self.EMA, Resolution.DAILY)
             
     ### <summary>
-    ### Disposal method to remove consolidator/update method handler, and reset RollingWindow/indicator to free up memory and speed
+    ### disposal method to remove consolidator/update method handler, and reset RollingWindow/indicator to free up memory and speed
     ### </summary>
-    def Dispose(self):
-        self.EMA.Reset()
+    def dispose(self):
+        self.EMA.reset()

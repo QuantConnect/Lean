@@ -22,50 +22,50 @@ from AlgorithmImports import *
 class BasicTemplateIndiaIndexAlgorithm(QCAlgorithm):
     '''Basic template framework algorithm uses framework components to define the algorithm.'''
 
-    def Initialize(self):
-        '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
+    def initialize(self):
+        '''initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetAccountCurrency("INR") #Set Account Currency
-        self.SetStartDate(2019, 1, 1)  #Set Start Date
-        self.SetEndDate(2019, 1, 5)    #Set End Date
-        self.SetCash(1000000)          #Set Strategy Cash
+        self.set_account_currency("INR") #Set Account Currency
+        self.set_start_date(2019, 1, 1)  #Set Start Date
+        self.set_end_date(2019, 1, 5)    #Set End Date
+        self.set_cash(1000000)          #Set Strategy Cash
 
         # Use indicator for signal; but it cannot be traded
-        self.Nifty = self.AddIndex("NIFTY50", Resolution.Minute, Market.India).Symbol
+        self.nifty = self.add_index("NIFTY50", Resolution.MINUTE, Market.INDIA).symbol
         # Trade Index based ETF
-        self.NiftyETF = self.AddEquity("JUNIORBEES", Resolution.Minute, Market.India).Symbol
+        self.nifty_etf = self.add_equity("JUNIORBEES", Resolution.MINUTE, Market.INDIA).symbol
    
         # Set Order Properties as per the requirements for order placement
-        self.DefaultOrderProperties = IndiaOrderProperties(Exchange.NSE)
+        self.default_order_properties = IndiaOrderProperties(Exchange.NSE)
 
         # Define indicator
-        self._emaSlow = self.EMA(self.Nifty, 80)
-        self._emaFast = self.EMA(self.Nifty, 200)
+        self._ema_slow = self.ema(self.nifty, 80)
+        self._ema_fast = self.ema(self.nifty, 200)
 
-        self.Debug("numpy test >>> print numpy.pi: " + str(np.pi))
+        self.debug("numpy test >>> print numpy.pi: " + str(np.pi))
 
 
-    def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+    def on_data(self, data):
+        '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
 
-        if not data.Bars.ContainsKey(self.Nifty) or not data.Bars.ContainsKey(self.NiftyETF):
+        if not data.bars.contains_key(self.nifty) or not data.bars.contains_key(self.nifty_etf):
             return
 
-        if not self._emaSlow.IsReady:
+        if not self._ema_slow.is_ready:
             return
 
-        if self._emaFast > self._emaSlow:
-            if not self.Portfolio.Invested:
-                self.marketTicket = self.MarketOrder(self.NiftyETF, 1)
+        if self._ema_fast > self._ema_slow:
+            if not self.portfolio.invested:
+                self.market_ticket = self.market_order(self.nifty_etf, 1)
         else:
-            self.Liquidate()
+            self.liquidate()
 
 
-    def OnEndOfAlgorithm(self):
-        if self.Portfolio[self.Nifty].TotalSaleVolume > 0:
+    def on_end_of_algorithm(self):
+        if self.portfolio[self.nifty].total_sale_volume > 0:
             raise Exception("Index is not tradable.")
 
