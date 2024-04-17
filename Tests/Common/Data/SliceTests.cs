@@ -470,32 +470,33 @@ def Test(slice, symbol):
             }
         }
 
-        [Test]
-        public void PythonGetPythonCustomData()
+        [TestCase("reader", "get_source")]
+        [TestCase("Reader", "GetSource")]
+        public void PythonGetPythonCustomData(string reader, string getSource)
         {
             using (Py.GIL())
             {
                 dynamic testModule = PyModule.FromString("testModule",
-                    @"
+                    $@"
 
 from AlgorithmImports import *
 
 class CustomDataTest(PythonData):
-    def Reader(self, config, line, date, isLiveMode):
+    def {reader}(self, config, line, date, isLiveMode):
         result = CustomDataTest()
         result.Symbol = config.Symbol
         result.Value = 10
         return result
-    def GetSource(config, date, isLiveMode):
+    def {getSource}(config, date, isLiveMode):
         return None
 
 class CustomDataTest2(PythonData):
-    def Reader(self, config, line, date, isLiveMode):
+    def {reader}(self, config, line, date, isLiveMode):
         result = CustomDataTest2()
         result.Symbol = config.Symbol
         result.Value = 11
         return result
-    def GetSource(config, date, isLiveMode):
+    def {getSource}(config, date, isLiveMode):
         return None
 
 def Test(slice):
