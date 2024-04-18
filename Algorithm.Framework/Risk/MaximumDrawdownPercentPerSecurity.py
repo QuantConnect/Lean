@@ -16,30 +16,30 @@ from AlgorithmImports import *
 class MaximumDrawdownPercentPerSecurity(RiskManagementModel):
     '''Provides an implementation of IRiskManagementModel that limits the drawdown per holding to the specified percentage'''
 
-    def __init__(self, maximumDrawdownPercent = 0.05):
+    def __init__(self, maximum_drawdown_percent = 0.05):
         '''Initializes a new instance of the MaximumDrawdownPercentPerSecurity class
         Args:
-            maximumDrawdownPercent: The maximum percentage drawdown allowed for any single security holding'''
-        self.maximumDrawdownPercent = -abs(maximumDrawdownPercent)
+            maximum_drawdown_percent: The maximum percentage drawdown allowed for any single security holding'''
+        self.maximum_drawdown_percent = -abs(maximum_drawdown_percent)
 
-    def ManageRisk(self, algorithm, targets):
+    def manage_risk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step
         Args:
             algorithm: The algorithm instance
             targets: The current portfolio targets to be assessed for risk'''
         targets = []
-        for kvp in algorithm.Securities:
-            security = kvp.Value
+        for kvp in algorithm.securities:
+            security = kvp.value
 
-            if not security.Invested:
+            if not security.invested:
                 continue
 
-            pnl = security.Holdings.UnrealizedProfitPercent
-            if pnl < self.maximumDrawdownPercent:
-                symbol = security.Symbol
+            pnl = security.holdings.unrealized_profit_percent
+            if pnl < self.maximum_drawdown_percent:
+                symbol = security.symbol
 
                 # Cancel insights
-                algorithm.Insights.Cancel([symbol])
+                algorithm.insights.cancel([symbol])
 
                 # liquidate
                 targets.append(PortfolioTarget(symbol, 0))

@@ -12,19 +12,19 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel, PortfolioBias
+from EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 
 class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that generates percent targets based on the
-    Insight.Weight. The target percent holdings of each Symbol is given by the Insight.Weight from the last
+    Insight.WEIGHT. The target percent holdings of each Symbol is given by the Insight.WEIGHT from the last
     active Insight for that symbol.
-    For insights of direction InsightDirection.Up, long targets are returned and for insights of direction
-    InsightDirection.Down, short targets are returned.
+    For insights of direction InsightDirection.UP, long targets are returned and for insights of direction
+    InsightDirection.DOWN, short targets are returned.
     If the sum of all the last active Insight per symbol is bigger than 1, it will factor down each target
     percent holdings proportionally so the sum is 1.
-    It will ignore Insight that have no Insight.Weight value.'''
+    It will ignore Insight that have no Insight.WEIGHT value.'''
 
-    def __init__(self, rebalance = Resolution.Daily, portfolioBias = PortfolioBias.LongShort):
+    def __init__(self, rebalance = Resolution.DAILY, portfolio_bias = PortfolioBias.LONG_SHORT):
         '''Initialize a new instance of InsightWeightingPortfolioConstructionModel
         Args:
             rebalance: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
@@ -32,36 +32,36 @@ class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruc
                               The function returns the next expected rebalance time for a given algorithm UTC DateTime.
                               The function returns null if unknown, in which case the function will be called again in the
                               next loop. Returning current time will trigger rebalance.
-            portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)'''
-        super().__init__(rebalance, portfolioBias)
+            portfolio_bias: Specifies the bias of the portfolio (Short, Long/Short, Long)'''
+        super().__init__(rebalance, portfolio_bias)
 
-    def ShouldCreateTargetForInsight(self, insight):
+    def should_create_target_for_insight(self, insight):
         '''Method that will determine if the portfolio construction model should create a
         target for this insight
         Args:
             insight: The insight to create a target for'''
         # Ignore insights that don't have Weight value
-        return insight.Weight is not None
+        return insight.weight is not None
 
-    def DetermineTargetPercent(self, activeInsights):
+    def determine_target_percent(self, active_insights):
         '''Will determine the target percent for each insight
         Args:
-            activeInsights: The active insights to generate a target for'''
+            active_insights: The active insights to generate a target for'''
         result = {}
 
         # We will adjust weights proportionally in case the sum is > 1 so it sums to 1.
-        weightSums = sum(self.GetValue(insight) for insight in activeInsights if self.RespectPortfolioBias(insight))
-        weightFactor = 1.0
-        if weightSums > 1:
-            weightFactor = 1 / weightSums
-        for insight in activeInsights:
-            result[insight] = (insight.Direction if self.RespectPortfolioBias(insight) else InsightDirection.Flat) * self.GetValue(insight) * weightFactor
+        weight_sums = sum(self.get_value(insight) for insight in active_insights if self.respect_portfolio_bias(insight))
+        weight_factor = 1.0
+        if weight_sums > 1:
+            weight_factor = 1 / weight_sums
+        for insight in active_insights:
+            result[insight] = (insight.direction if self.respect_portfolio_bias(insight) else InsightDirection.FLAT) * self.get_value(insight) * weight_factor
         return result
 
-    def GetValue(self, insight):
+    def get_value(self, insight):
         '''Method that will determine which member will be used to compute the weights and gets its value
         Args:
             insight: The insight to create a target for
         Returns:
             The value of the selected insight member'''
-        return abs(insight.Weight)
+        return abs(insight.weight)

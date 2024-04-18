@@ -12,9 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from Risk.CompositeRiskManagementModel import CompositeRiskManagementModel
-from Risk.MaximumUnrealizedProfitPercentPerSecurity import MaximumUnrealizedProfitPercentPerSecurity
-from Risk.MaximumDrawdownPercentPerSecurity import MaximumDrawdownPercentPerSecurity
 
 ### <summary>
 ### Show cases how to use the CompositeRiskManagementModel.

@@ -19,6 +19,8 @@ using Python.Runtime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Python;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace QuantConnect.Tests.Python
 {
@@ -131,6 +133,95 @@ class CustomDataTest(PythonData):
 
                 Assert.AreEqual(new DateTime(2022, 5, 5), data.Time);
                 Assert.AreEqual(new DateTime(2022, 5, 5), data.EndTime);
+            }
+        }
+
+        public class TestPythonData : PythonData
+        {
+            private static void Throw()
+            {
+                throw new Exception("TestPythonData.Throw()");
+            }
+
+            public override bool RequiresMapping()
+            {
+                Throw();
+                return true;
+            }
+
+            public override bool IsSparseData()
+            {
+                Throw();
+                return true;
+            }
+
+            public override Resolution DefaultResolution()
+            {
+                Throw();
+                return Resolution.Daily;
+            }
+
+            public override List<Resolution> SupportedResolutions()
+            {
+                Throw();
+                return new List<Resolution> { Resolution.Daily };
+            }
+
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            {
+                Throw();
+                return new TestPythonData();
+            }
+
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                Throw();
+                return new SubscriptionDataSource("test", SubscriptionTransportMedium.LocalFile);
+            }
+        }
+
+        [TestCase("RequiresMapping")]
+        [TestCase("IsSparseData")]
+        [TestCase("DefaultResolution")]
+        [TestCase("SupportedResolutions")]
+        [TestCase("Reader")]
+        [TestCase("GetSource")]
+        public void CallsCSharpMethodsIfNotDefinedInPython(string methodName)
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                    $@"
+from AlgorithmImports import *
+
+from QuantConnect.Tests.Python import *
+
+class CustomDataClass(PythonDataTests.TestPythonData):
+    pass");
+
+                var customDataClass = testModule.GetAttr("CustomDataClass");
+                var type = Extensions.CreateType(customDataClass);
+                var data = new PythonData(customDataClass());
+
+                var args = Array.Empty<object>();
+                var methodArgsType = Array.Empty<Type>();
+                if (methodName.Equals("Reader", StringComparison.OrdinalIgnoreCase))
+                {
+                    var config = new SubscriptionDataConfig(type, Symbols.SPY, Resolution.Daily, DateTimeZone.Utc,
+                        DateTimeZone.Utc, false, false, false, isCustom: true);
+                    args = new object[] { config, "line", DateTime.MinValue, false };
+                    methodArgsType = new[] { typeof(SubscriptionDataConfig), typeof(string), typeof(DateTime), typeof(bool) };
+                }
+                else if (methodName.Equals("GetSource", StringComparison.OrdinalIgnoreCase))
+                {
+                    var config = new SubscriptionDataConfig(type, Symbols.SPY, Resolution.Daily, DateTimeZone.Utc,
+                        DateTimeZone.Utc, false, false, false, isCustom: true);
+                    args = new object[] { config, DateTime.MinValue, false };
+                    methodArgsType = new[] { typeof(SubscriptionDataConfig), typeof(DateTime), typeof(bool) };
+                }
+
+                var exception = Assert.Throws<TargetInvocationException>(() => typeof(PythonData).GetMethod(methodName, methodArgsType).Invoke(data, args));
+                Assert.AreEqual($"TestPythonData.Throw()", exception.InnerException.Message);
             }
         }
 

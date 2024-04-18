@@ -79,12 +79,12 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 // these methods rely on the Symbol so we can call them yet but we can get them
-                _requiresMapping = pythonData.GetPythonMethod("RequiresMapping");
-                _isSparseData = pythonData.GetPythonMethod("IsSparseData");
-                _defaultResolution = pythonData.GetPythonMethod("DefaultResolution");
-                _supportedResolutions = pythonData.GetPythonMethod("SupportedResolutions");
-                _pythonReader = pythonData.GetPythonMethod("Reader");
-                _pythonGetSource = pythonData.GetPythonMethod("GetSource");
+                _requiresMapping = pythonData.GetMethod("RequiresMapping");
+                _isSparseData = pythonData.GetMethod("IsSparseData");
+                _defaultResolution = pythonData.GetMethod("DefaultResolution");
+                _supportedResolutions = pythonData.GetMethod("SupportedResolutions");
+                _pythonReader = pythonData.GetMethod("Reader");
+                _pythonGetSource = pythonData.GetMethod("GetSource");
                 _pythonTypeName = pythonData.GetPythonType().GetAssemblyName().Name;
             }
         }
