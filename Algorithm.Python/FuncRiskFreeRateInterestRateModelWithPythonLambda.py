@@ -17,15 +17,15 @@ from AlgorithmImports import *
 ### Asserts we can use a Python lambda function as a FuncRiskFreeRateInterestRateModel
 ### </summary>
 class FuncRiskFreeRateInterestRateModelWithPythonLambda(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2020, 5, 28)
-        self.SetEndDate(2020, 6, 28)
+    def initialize(self):
+        self.set_start_date(2020, 5, 28)
+        self.set_end_date(2020, 6, 28)
 
-        self.AddEquity("SPY", Resolution.Daily)
+        self.add_equity("SPY", Resolution.DAILY)
         self.model = FuncRiskFreeRateInterestRateModel(lambda dt: 1 if dt.date != datetime(2020, 5, 28) else 0)
 
-    def OnData(self, slice):
-        if self.Time.date == datetime(2020, 5, 28) and self.model.GetInterestRate(self.Time) != 0:
-            raise Exception(f"Risk free interest rate should be 0, but was {self.model.GetInterestRate(self.Time)}")
-        elif self.Time.date != datetime(2020, 5, 28) and self.model.GetInterestRate(self.Time) != 1:
-            raise Exception(f"Risk free interest rate should be 1, but was {self.model.GetInterestRate(self.Time)}")
+    def on_data(self, slice):
+        if self.time.date == datetime(2020, 5, 28) and self.model.get_interest_rate(self.time) != 0:
+            raise Exception(f"Risk free interest rate should be 0, but was {self.model.get_interest_rate(self.time)}")
+        elif self.time.date != datetime(2020, 5, 28) and self.model.get_interest_rate(self.time) != 1:
+            raise Exception(f"Risk free interest rate should be 1, but was {self.model.get_interest_rate(self.time)}")

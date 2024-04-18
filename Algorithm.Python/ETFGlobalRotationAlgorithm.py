@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from System.Collections.Generic import List
 
 ### <summary>
 ### Strategy example using a portfolio of ETF Global Rotation
@@ -29,68 +28,67 @@ from System.Collections.Generic import List
 ### <meta name="tag" content="using data" />
 class ETFGlobalRotationAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetCash(25000)
-        self.SetStartDate(2007,1,1)
-        self.LastRotationTime = datetime.min
-        self.RotationInterval = timedelta(days=30)
+    def initialize(self):
+        self.set_cash(25000)
+        self.set_start_date(2007,1,1)
+        self.last_rotation_time = datetime.min
+        self.rotation_interval = timedelta(days=30)
         self.first = True
 
         # these are the growth symbols we'll rotate through
-        GrowthSymbols =["MDY", # US S&P mid cap 400
-                        "IEV", # iShares S&P europe 350
-                        "EEM", # iShared MSCI emerging markets
-                        "ILF", # iShares S&P latin america
-                        "EPP" ] # iShared MSCI Pacific ex-Japan
+        growth_symbols =["MDY", # US S&P mid cap 400
+                        "IEV", # i_shares S&P europe 350
+                        "EEM", # i_shared MSCI emerging markets
+                        "ILF", # i_shares S&P latin america
+                        "EPP" ] # i_shared MSCI Pacific ex-Japan
 
         # these are the safety symbols we go to when things are looking bad for growth
-        SafetySymbols = ["EDV", "SHY"] # "EDV" Vangaurd TSY 25yr, "SHY" Barclays Low Duration TSY
+        safety_symbols = ["EDV", "SHY"] # "EDV" Vangaurd TSY 25yr, "SHY" Barclays Low Duration TSY
         # we'll hold some computed data in these guys
-        self.SymbolData = []
-        for symbol in list(set(GrowthSymbols) | set(SafetySymbols)):
-            self.AddSecurity(SecurityType.Equity, symbol, Resolution.Minute)
-            self.oneMonthPerformance = self.MOM(symbol, 30, Resolution.Daily)
-            self.threeMonthPerformance = self.MOM(symbol, 90, Resolution.Daily)
-            self.SymbolData.append([symbol, self.oneMonthPerformance, self.threeMonthPerformance])
+        self.symbol_data = []
+        for symbol in list(set(growth_symbols) | set(safety_symbols)):
+            self.add_security(SecurityType.EQUITY, symbol, Resolution.MINUTE)
+            self.one_month_performance = self.mom(symbol, 30, Resolution.DAILY)
+            self.three_month_performance = self.mom(symbol, 90, Resolution.DAILY)
+            self.symbol_data.append([symbol, self.one_month_performance, self.three_month_performance])
     
         
-    def OnData(self, data):
-
+    def on_data(self, data):
         # the first time we come through here we'll need to do some things such as allocation
         # and initializing our symbol data
 
         if self.first:
             self.first = False
-            self.LastRotationTime = self.Time
+            self.last_rotation_time = self.time
             return
-        delta = self.Time - self.LastRotationTime
-        if delta > self.RotationInterval:
-            self.LastRotationTime = self.Time
+        delta = self.time - self.last_rotation_time
+        if delta > self.rotation_interval:
+            self.last_rotation_time = self.time
 
-            orderedObjScores = sorted(self.SymbolData, key=lambda x: Score(x[1].Current.Value,x[2].Current.Value).ObjectiveScore(), reverse=True)
-            for x in orderedObjScores:
-                self.Log(">>SCORE>>" + x[0] + ">>" + str(Score(x[1].Current.Value,x[2].Current.Value).ObjectiveScore()))
+            ordered_obj_scores = sorted(self.symbol_data, key=lambda x: Score(x[1].current.value,x[2].current.value).objective_score(), reverse=True)
+            for x in ordered_obj_scores:
+                self.log(">>SCORE>>" + x[0] + ">>" + str(Score(x[1].current.value,x[2].current.value).objective_score()))
             # pick which one is best from growth and safety symbols
-            bestGrowth = orderedObjScores[0]
-            if Score(bestGrowth[1].Current.Value,bestGrowth[2].Current.Value).ObjectiveScore() > 0:
-                if (self.Portfolio[bestGrowth[0]].Quantity == 0):
-                    self.Log("PREBUY>>LIQUIDATE>>")
-                    self.Liquidate()
-                self.Log(">>BUY>>" + str(bestGrowth[0]) + "@" + str(100 * bestGrowth[1].Current.Value))
-                qty = self.Portfolio.MarginRemaining / self.Securities[bestGrowth[0]].Close
-                self.MarketOrder(bestGrowth[0], int(qty)) 
+            best_growth = ordered_obj_scores[0]
+            if Score(best_growth[1].current.value,best_growth[2].current.value).objective_score() > 0:
+                if (self.portfolio[best_growth[0]].quantity == 0):
+                    self.log("PREBUY>>LIQUIDATE>>")
+                    self.liquidate()
+                self.log(">>BUY>>" + str(best_growth[0]) + "@" + str(100 * best_growth[1].current.value))
+                qty = self.portfolio.margin_remaining / self.securities[best_growth[0]].close
+                self.market_order(best_growth[0], int(qty)) 
             else:
             # if no one has a good objective score then let's hold cash this month to be safe
-                self.Log(">>LIQUIDATE>>CASH")
-                self.Liquidate()
+                self.log(">>LIQUIDATE>>CASH")
+                self.liquidate()
         
 class Score(object):
     
-    def __init__(self,oneMonthPerformanceValue,threeMonthPerformanceValue):
-        self.oneMonthPerformance = oneMonthPerformanceValue
-        self.threeMonthPerformance = threeMonthPerformanceValue
+    def __init__(self,one_month_performance_value,three_month_performance_value):
+        self.one_month_performance = one_month_performance_value
+        self.three_month_performance = three_month_performance_value
     
-    def ObjectiveScore(self):
+    def objective_score(self):
         weight1 = 100
         weight2 = 75
-        return (weight1 * self.oneMonthPerformance + weight2 * self.threeMonthPerformance) / (weight1 + weight2)
+        return (weight1 * self.one_month_performance + weight2 * self.three_month_performance) / (weight1 + weight2)

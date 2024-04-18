@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
 ### <summary>
 ### Demonstration of how to define a universe using the fundamental data
@@ -23,59 +22,63 @@ from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelec
 ### <meta name="tag" content="regression test" />
 class FundamentalUniverseSelectionRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2014, 3, 26)
-        self.SetEndDate(2014, 4, 7)
+    def initialize(self):
+        self.set_start_date(2014, 3, 26)
+        self.set_end_date(2014, 4, 7)
 
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
-        self.AddEquity("SPY")
-        self.AddEquity("AAPL")
+        self.add_equity("SPY")
+        self.add_equity("AAPL")
 
-        self.SetUniverseSelection(FundamentalUniverseSelectionModelTest())
+        self.set_universe_selection(FundamentalUniverseSelectionModelTest())
 
         self.changes = None
 
     # return a list of three fixed symbol objects
-    def SelectionFunction(self, fundamental):
+    def selection_function(self, fundamental):
         # sort descending by daily dollar volume
-        sortedByDollarVolume = sorted([x for x in fundamental if x.Price > 1],
-            key=lambda x: x.DollarVolume, reverse=True)
+        sorted_by_dollar_volume = sorted([x for x in fundamental if x.price > 1],
+            key=lambda x: x.dollar_volume, reverse=True)
 
         # sort descending by P/E ratio
-        sortedByPeRatio = sorted(sortedByDollarVolume, key=lambda x: x.ValuationRatios.PERatio, reverse=True)
+        sorted_by_pe_ratio = sorted(sorted_by_dollar_volume, key=lambda x: x.valuation_ratios.pe_ratio, reverse=True)
 
         # take the top entries from our sorted collection
-        return [ x.Symbol for x in sortedByPeRatio[:self.numberOfSymbolsFundamental] ]
+        return [ x.symbol for x in sorted_by_pe_ratio[:self.number_of_symbols_fundamental] ]
 
-    def OnData(self, data):
+    def on_data(self, data):
         # if we have no changes, do nothing
         if self.changes is None: return
 
         # liquidate removed securities
-        for security in self.changes.RemovedSecurities:
-            if security.Invested:
-                self.Liquidate(security.Symbol)
-                self.Debug("Liquidated Stock: " + str(security.Symbol.Value))
+        for security in self.changes.removed_securities:
+            if security.invested:
+                self.liquidate(security.symbol)
+                self.debug("Liquidated Stock: " + str(security.symbol.value))
 
         # we want 50% allocation in each security in our universe
-        for security in self.changes.AddedSecurities:
-            self.SetHoldings(security.Symbol, 0.02)
+        for security in self.changes.added_securities:
+            self.set_holdings(security.symbol, 0.02)
 
         self.changes = None
 
     # this event fires whenever we have changes to our universe
-    def OnSecuritiesChanged(self, changes):
+    def on_securities_changed(self, changes):
         self.changes = changes
 
 class FundamentalUniverseSelectionModelTest(FundamentalUniverseSelectionModel):
-    def Select(self, algorithm, fundamental):
+
+    def __init__(self):
+        super().__init__(self.select)
+
+    def select(self, fundamental):
         # sort descending by daily dollar volume
-        sortedByDollarVolume = sorted([x for x in fundamental if x.HasFundamentalData and x.Price > 1],
-            key=lambda x: x.DollarVolume, reverse=True)
+        sorted_by_dollar_volume = sorted([x for x in fundamental if x.has_fundamental_data and x.price > 1],
+            key=lambda x: x.dollar_volume, reverse=True)
 
         # sort descending by P/E ratio
-        sortedByPeRatio = sorted(sortedByDollarVolume, key=lambda x: x.ValuationRatios.PERatio, reverse=True)
+        sorted_by_pe_ratio = sorted(sorted_by_dollar_volume, key=lambda x: x.valuation_ratios.pe_ratio, reverse=True)
 
         # take the top entries from our sorted collection
-        return [ x.Symbol for x in sortedByPeRatio[:2] ]
+        return [ x.symbol for x in sorted_by_pe_ratio[:2] ]

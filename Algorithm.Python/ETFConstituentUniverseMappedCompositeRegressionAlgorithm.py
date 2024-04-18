@@ -18,71 +18,71 @@ from AlgorithmImports import *
 ### that data is loaded after the mapping event takes place.
 ### </summary>
 class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2011, 2, 1)
-        self.SetEndDate(2011, 4, 4)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2011, 2, 1)
+        self.set_end_date(2011, 4, 4)
+        self.set_cash(100000)
 
-        self.filterDateConstituentSymbolCount = {}
-        self.constituentDataEncountered = {}
-        self.constituentSymbols = []
-        self.mappingEventOccurred = False
+        self.filter_date_constituent_symbol_count = {}
+        self.constituent_data_encountered = {}
+        self.constituent_symbols = []
+        self.mapping_event_occurred = False
 
-        self.UniverseSettings.Resolution = Resolution.Hour
+        self.universe_settings.resolution = Resolution.HOUR
 
-        self.aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
-        self.qqq = self.AddEquity("QQQ", Resolution.Daily).Symbol
+        self.aapl = Symbol.create("AAPL", SecurityType.EQUITY, Market.USA)
+        self.qqq = self.add_equity("QQQ", Resolution.DAILY).symbol
 
-        self.AddUniverse(self.Universe.ETF(self.qqq, self.UniverseSettings, self.FilterETFs))
+        self.add_universe(self.universe.etf(self.qqq, self.universe_settings, self.filter_etfs))
 
-    def FilterETFs(self, constituents):
-        constituentSymbols = [i.Symbol for i in constituents]
+    def filter_etfs(self, constituents):
+        constituent_symbols = [i.symbol for i in constituents]
 
-        if self.aapl not in constituentSymbols:
+        if self.aapl not in constituent_symbols:
             raise Exception("AAPL not found in QQQ constituents")
 
-        self.filterDateConstituentSymbolCount[self.UtcTime.date()] = len(constituentSymbols)
-        for symbol in constituentSymbols:
-            self.constituentSymbols.append(symbol)
+        self.filter_date_constituent_symbol_count[self.utc_time.date()] = len(constituent_symbols)
+        for symbol in constituent_symbols:
+            self.constituent_symbols.append(symbol)
 
-        self.constituentSymbols = list(set(self.constituentSymbols))
-        return constituentSymbols
+        self.constituent_symbols = list(set(self.constituent_symbols))
+        return constituent_symbols
 
-    def OnData(self, data):
-        if len(data.SymbolChangedEvents) != 0:
-            for symbolChanged in data.SymbolChangedEvents.Values:
-                if symbolChanged.Symbol != self.qqq:
-                    raise Exception(f"Mapped symbol is not QQQ. Instead, found: {symbolChanged.Symbol}")
-                if symbolChanged.OldSymbol != "QQQQ":
-                    raise Exception(f"Old QQQ Symbol is not QQQQ. Instead, found: {symbolChanged.OldSymbol}")
-                if symbolChanged.NewSymbol != "QQQ":
-                    raise Exception(f"New QQQ Symbol is not QQQ. Instead, found: {symbolChanged.NewSymbol}")
+    def on_data(self, data):
+        if len(data.symbol_changed_events) != 0:
+            for symbol_changed in data.symbol_changed_events.values():
+                if symbol_changed.symbol != self.qqq:
+                    raise Exception(f"Mapped symbol is not QQQ. Instead, found: {symbol_changed.symbol}")
+                if symbol_changed.old_symbol != "QQQQ":
+                    raise Exception(f"Old QQQ Symbol is not QQQQ. Instead, found: {symbol_changed.old_symbol}")
+                if symbol_changed.new_symbol != "QQQ":
+                    raise Exception(f"New QQQ Symbol is not QQQ. Instead, found: {symbol_changed.new_symbol}")
 
-                self.mappingEventOccurred = True
+                self.mapping_event_occurred = True
 
-        if self.qqq in data and len([i for i in data.Keys]) == 1:
+        if self.qqq in data and len([i for i in data.keys()]) == 1:
             return
 
-        if self.UtcTime.date() not in self.constituentDataEncountered:
-            self.constituentDataEncountered[self.UtcTime.date()] = False
+        if self.utc_time.date() not in self.constituent_data_encountered:
+            self.constituent_data_encountered[self.utc_time.date()] = False
         
-        if len([i for i in data.Keys if i in self.constituentSymbols]) != 0:
-            self.constituentDataEncountered[self.UtcTime.date()] = True
+        if len([i for i in data.keys() if i in self.constituent_symbols]) != 0:
+            self.constituent_data_encountered[self.utc_time.date()] = True
 
-        if not self.Portfolio.Invested:
-            self.SetHoldings(self.aapl, 0.5)
+        if not self.portfolio.invested:
+            self.set_holdings(self.aapl, 0.5)
 
-    def OnEndOfAlgorithm(self):
-        if len(self.filterDateConstituentSymbolCount) != 2:
-            raise Exception(f"ETF constituent filtering function was not called 2 times (actual: {len(self.filterDateConstituentSymbolCount)}")
+    def on_end_of_algorithm(self):
+        if len(self.filter_date_constituent_symbol_count) != 2:
+            raise Exception(f"ETF constituent filtering function was not called 2 times (actual: {len(self.filter_date_constituent_symbol_count)}")
 
-        if not self.mappingEventOccurred:
+        if not self.mapping_event_occurred:
             raise Exception("No mapping/SymbolChangedEvent occurred. Expected for QQQ to be mapped from QQQQ -> QQQ")
 
-        for constituentDate, constituentsCount in self.filterDateConstituentSymbolCount.items():
-            if constituentsCount < 25:
-                raise Exception(f"Expected 25 or more constituents in filter function on {constituentDate}, found {constituentsCount}")
+        for constituent_date, constituents_count in self.filter_date_constituent_symbol_count.items():
+            if constituents_count < 25:
+                raise Exception(f"Expected 25 or more constituents in filter function on {constituent_date}, found {constituents_count}")
 
-        for constituentDate, constituentEncountered in self.constituentDataEncountered.items():
-            if not constituentEncountered:
-                raise Exception(f"Received data in OnData(...) but it did not contain any constituent data on {constituentDate.strftime('%Y-%m-%d %H:%M:%S.%f')}")
+        for constituent_date, constituent_encountered in self.constituent_data_encountered.items():
+            if not constituent_encountered:
+                raise Exception(f"Received data in OnData(...) but it did not contain any constituent data on {constituent_date.strftime('%Y-%m-%d %H:%M:%S.%f')}")

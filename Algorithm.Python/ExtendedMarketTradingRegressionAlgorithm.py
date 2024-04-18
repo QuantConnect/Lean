@@ -21,34 +21,34 @@ from AlgorithmImports import *
 ### <meta name="tag" content="regression test" />
 class ExtendedMarketTradingRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.SetStartDate(2013,10,7)   #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
+        self.set_start_date(2013,10,7)   #Set Start Date
+        self.set_end_date(2013,10,11)    #Set End Date
+        self.set_cash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.spy = self.AddEquity("SPY", Resolution.Minute, Market.USA, True, 1, True)
+        self.spy = self.add_equity("SPY", Resolution.MINUTE, Market.USA, True, 1, True)
 
-        self._lastAction = None
+        self._last_action = None
 
-    def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
-        if self._lastAction is not None and self._lastAction.date() == self.Time.date():
+    def on_data(self, data):
+        '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
+        if self._last_action is not None and self._last_action.date() == self.time.date():
             return
 
-        spyBar = data.Bars['SPY']
+        spy_bar = data.bars['SPY']
 
-        if not self.InMarketHours():
-            self.LimitOrder("SPY", 10, spyBar.Low)
-            self._lastAction = self.Time
+        if not self.in_market_hours():
+            self.limit_order("SPY", 10, spy_bar.low)
+            self._last_action = self.time
 
-    def OnOrderEvent(self, orderEvent):
-        self.Log(str(orderEvent))
-        if self.InMarketHours():
+    def on_order_event(self, order_event):
+        self.log(str(order_event))
+        if self.in_market_hours():
             raise Exception("Order processed during market hours.")
 
-    def InMarketHours(self):
-        now = self.Time.time()
+    def in_market_hours(self):
+        now = self.time.time()
         open = time(9,30,0)
         close = time(16,0,0)
         return (open < now) and (close > now)

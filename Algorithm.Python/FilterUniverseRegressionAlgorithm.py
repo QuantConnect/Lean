@@ -21,37 +21,37 @@ from AlgorithmImports import *
 ### <meta name="tag" content="filter selection" />
 ### <meta name="tag" content="regression test" />
 class FilterUniverseRegressionAlgorithm(QCAlgorithm):
-    UnderlyingTicker = "GOOG"
+    underlying_ticker = "GOOG"
 
-    def Initialize(self):
-        self.SetStartDate(2015, 12, 24)
-        self.SetEndDate(2015, 12, 28)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2015, 12, 24)
+        self.set_end_date(2015, 12, 28)
+        self.set_cash(100000)
 
-        equity = self.AddEquity(self.UnderlyingTicker)
-        option = self.AddOption(self.UnderlyingTicker)
-        self.OptionSymbol = option.Symbol
+        equity = self.add_equity(self.underlying_ticker)
+        option = self.add_option(self.underlying_ticker)
+        self.option_symbol = option.symbol
 
         # Set our custom universe filter
-        option.SetFilter(self.FilterFunction)
+        option.set_filter(self.filter_function)
 
         # use the underlying equity as the benchmark
-        self.SetBenchmark(equity.Symbol)
+        self.set_benchmark(equity.symbol)
 
-    def FilterFunction(self, universe):
-        universe = universe.WeeklysOnly().Strikes(-5, +5).CallsOnly().Expiration(0, 1)
+    def filter_function(self, universe):
+        universe = universe.weeklys_only().strikes(-5, +5).calls_only().expiration(0, 1)
         return universe
 
-    def OnData(self,slice):
-        if self.Portfolio.Invested: return
+    def on_data(self,slice):
+        if self.portfolio.invested: return
 
-        for kvp in slice.OptionChains:
+        for kvp in slice.option_chains:
             
-            if kvp.Key != self.OptionSymbol: continue
+            if kvp.key != self.option_symbol: continue
 
-            chain = kvp.Value
-            contracts = [option for option in sorted(chain, key = lambda x:x.Strike, reverse = True)]
+            chain = kvp.value
+            contracts = [option for option in sorted(chain, key = lambda x:x.strike, reverse = True)]
             
             if contracts:
-                self.MarketOrder(contracts[0].Symbol, 1)
+                self.market_order(contracts[0].symbol, 1)
 

@@ -18,68 +18,68 @@ from AlgorithmImports import *
 ### </summary>
 class FundamentalCustomSelectionTimeRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self._monthStartSelection = 0
-        self._monthEndSelection = 0
-        self._specificDateSelection = 0
-        self._symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+        self._month_start_selection = 0
+        self._month_end_selection = 0
+        self._specific_date_selection = 0
+        self._symbol = Symbol.create("SPY", SecurityType.EQUITY, Market.USA)
 
-        self.SetStartDate(2014, 3, 25)
-        self.SetEndDate(2014, 5, 10)
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.set_start_date(2014, 3, 25)
+        self.set_end_date(2014, 5, 10)
+        self.universe_settings.resolution = Resolution.DAILY
 
         # Test use case A
-        self.AddUniverse(self.DateRules.MonthStart(), self.SelectionFunction_MonthStart)
+        self.add_universe(self.date_rules.month_start(), self.selection_function__month_start)
 
         # Test use case B
-        otherSettings = UniverseSettings(self.UniverseSettings)
-        otherSettings.Schedule.On(self.DateRules.MonthEnd())
+        other_settings = UniverseSettings(self.universe_settings)
+        other_settings.schedule.on(self.date_rules.month_end())
 
-        self.AddUniverse(FundamentalUniverse.USA(self.SelectionFunction_MonthEnd, otherSettings))
+        self.add_universe(FundamentalUniverse.usa(self.selection_function__month_end, other_settings))
 
         # Test use case C
-        self.UniverseSettings.Schedule.On(self.DateRules.On(datetime(2014, 5, 9)))
-        self.AddUniverse(FundamentalUniverse.USA(self.SelectionFunction_SpecificDate))
+        self.universe_settings.schedule.on(self.date_rules.on(datetime(2014, 5, 9)))
+        self.add_universe(FundamentalUniverse.usa(self.selection_function__specific_date))
 
-    def SelectionFunction_SpecificDate(self, coarse):
-        self._specificDateSelection += 1
-        if self.Time != datetime(2014, 5, 9):
-            raise ValueError("SelectionFunction_SpecificDate unexpected selection: " + str(self.Time))
+    def selection_function__specific_date(self, coarse):
+        self._specific_date_selection += 1
+        if self.time != datetime(2014, 5, 9):
+            raise ValueError("SelectionFunction_SpecificDate unexpected selection: " + str(self.time))
         return [ self._symbol ]
 
-    def SelectionFunction_MonthStart(self, coarse):
-        self._monthStartSelection += 1
-        if self._monthStartSelection == 1:
-            if self.Time != self.StartDate:
-                raise ValueError("Month Start Unexpected initial selection: " + str(self.Time))
-        elif self.Time != datetime(2014, 4, 1) and self.Time != datetime(2014, 5, 1):
-            raise ValueError("Month Start unexpected selection: " + str(self.Time))
+    def selection_function__month_start(self, coarse):
+        self._month_start_selection += 1
+        if self._month_start_selection == 1:
+            if self.time != self.start_date:
+                raise ValueError("Month Start Unexpected initial selection: " + str(self.time))
+        elif self.time != datetime(2014, 4, 1) and self.time != datetime(2014, 5, 1):
+            raise ValueError("Month Start unexpected selection: " + str(self.time))
         return [ self._symbol ]
 
-    def SelectionFunction_MonthEnd(self, coarse):
-        self._monthEndSelection += 1
-        if self._monthEndSelection == 1:
-            if self.Time != self.StartDate:
-                raise ValueError("Month End unexpected initial selection: " + str(self.Time))
-        elif self.Time != datetime(2014, 3, 31) and self.Time != datetime(2014, 4, 30):
-            raise ValueError("Month End unexpected selection: " + str(self.Time))
+    def selection_function__month_end(self, coarse):
+        self._month_end_selection += 1
+        if self._month_end_selection == 1:
+            if self.time != self.start_date:
+                raise ValueError("Month End unexpected initial selection: " + str(self.time))
+        elif self.time != datetime(2014, 3, 31) and self.time != datetime(2014, 4, 30):
+            raise ValueError("Month End unexpected selection: " + str(self.time))
         return [ self._symbol ]
 
-    def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+    def on_data(self, data):
+        '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if not self.Portfolio.Invested:
-            self.SetHoldings(self._symbol, 1)
+        if not self.portfolio.invested:
+            self.set_holdings(self._symbol, 1)
 
-    def OnEndOfAlgorithm(self):
-        if self._monthEndSelection != 3:
-            raise ValueError("Month End unexpected selection count: " + str(self._monthEndSelection))
-        if self._monthStartSelection != 3:
-            raise ValueError("Month Start unexpected selection count: " + str(self._monthStartSelection))
-        if self._specificDateSelection != 1:
-            raise ValueError("Specific date unexpected selection count: " + str(self._monthStartSelection))
+    def on_end_of_algorithm(self):
+        if self._month_end_selection != 3:
+            raise ValueError("Month End unexpected selection count: " + str(self._month_end_selection))
+        if self._month_start_selection != 3:
+            raise ValueError("Month Start unexpected selection count: " + str(self._month_start_selection))
+        if self._specific_date_selection != 1:
+            raise ValueError("Specific date unexpected selection count: " + str(self._month_start_selection))

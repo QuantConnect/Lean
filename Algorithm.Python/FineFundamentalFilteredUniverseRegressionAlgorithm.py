@@ -18,27 +18,27 @@ from AlgorithmImports import *
 ### related to GH issue 4127
 ### </summary>
 class FineFundamentalFilteredUniverseRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2014, 10, 8)
-        self.SetEndDate(2014, 10, 13)
+        self.set_start_date(2014, 10, 8)
+        self.set_end_date(2014, 10, 13)
 
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
-        symbol = Symbol(SecurityIdentifier.GenerateConstituentIdentifier("constituents-universe-qctest", SecurityType.Equity, Market.USA), "constituents-universe-qctest")
-        self.AddUniverse(ConstituentsUniverse(symbol, self.UniverseSettings), self.FineSelectionFunction)
+        symbol = Symbol(SecurityIdentifier.generate_constituent_identifier("constituents-universe-qctest", SecurityType.EQUITY, Market.USA), "constituents-universe-qctest")
+        self.add_universe(ConstituentsUniverse(symbol, self.universe_settings), self.fine_selection_function)
 
-    def FineSelectionFunction(self, fine):
-        return [ x.Symbol for x in fine if x.CompanyProfile != None and x.CompanyProfile.HeadquarterCity != None and x.CompanyProfile.HeadquarterCity.lower() == "cupertino" ]
+    def fine_selection_function(self, fine):
+        return [ x.symbol for x in fine if x.company_profile != None and x.company_profile.headquarter_city != None and x.company_profile.headquarter_city.lower() == "cupertino" ]
 
-    def OnData(self, data):
+    def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if not self.Portfolio.Invested:
-            if data.Keys[0].Value != "AAPL":
-                raise ValueError(f"Unexpected symbol was added to the universe: {data.Keys[0]}")
-            self.SetHoldings(data.Keys[0], 1)
+        if not self.portfolio.invested:
+            if data.keys()[0].value != "AAPL":
+                raise ValueError(f"Unexpected symbol was added to the universe: {data.keys()[0]}")
+            self.set_holdings(data.keys()[0], 1)
