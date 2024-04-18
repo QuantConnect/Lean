@@ -12,41 +12,40 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
 ### <summary>
 ### Regression algorithm showing how to implement a custom universe selection model and asserting it's behavior
 ### </summary>
 class CustomUniverseSelectionModelRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2014,3,24)
-        self.SetEndDate(2014,4,7)
+    def initialize(self):
+        self.set_start_date(2014,3,24)
+        self.set_end_date(2014,4,7)
 
-        self.UniverseSettings.Resolution = Resolution.Daily
-        self.SetUniverseSelection(CustomUniverseSelectionModel())
+        self.universe_settings.resolution = Resolution.DAILY
+        self.set_universe_selection(CustomUniverseSelectionModel())
 
-    def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+    def on_data(self, data):
+        '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if not self.Portfolio.Invested:
-            for kvp in self.ActiveSecurities:
-                self.SetHoldings(kvp.Key, 0.1)
+        if not self.portfolio.invested:
+            for kvp in self.active_securities:
+                self.set_holdings(kvp.key, 0.1)
 
 class CustomUniverseSelectionModel(FundamentalUniverseSelectionModel):
 
-    def __init__(self, filterFineData = True, universeSettings = None):
-        super().__init__(filterFineData, universeSettings)
+    def __init__(self, filter_fine_data = True, universe_settings = None):
+        super().__init__(self.select, universe_settings)
         self._selected = False
 
-    def SelectCoarse(self, algorithm, coarse):
-        return [Symbol.Create('AAPL', SecurityType.Equity, Market.USA)]
-
-    def SelectFine(self, algorithm, fine):
+    def select(self, fundamental):
         if not self._selected:
             self._selected = True
-            return [ x.Symbol for x in fine ]
-        return Universe.Unchanged
+            coarse_selected = [Symbol.create('AAPL', SecurityType.EQUITY, Market.USA)]
+
+            fundamental_selected = [ x for x in fundamental if x.symbol in coarse_selected ]
+            return [ x.symbol for x in fundamental_selected ]
+        return Universe.UNCHANGED

@@ -24,28 +24,28 @@ from AlgorithmImports import *
 ### <meta name="tag" content="trading and orders" />
 class CustomSecurityInitializerAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         
         # set our initializer to our custom type
-        self.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage)
+        self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS_BROKERAGE)
         
         func_security_seeder = FuncSecuritySeeder(Func[Security, BaseData](self.custom_seed_function))
-        self.SetSecurityInitializer(CustomSecurityInitializer(self.BrokerageModel, func_security_seeder, DataNormalizationMode.Raw))
+        self.set_security_initializer(CustomSecurityInitializer(self.brokerage_model, func_security_seeder, DataNormalizationMode.RAW))
         
-        self.SetStartDate(2013,10,1)
-        self.SetEndDate(2013,11,1)
+        self.set_start_date(2013,10,1)
+        self.set_end_date(2013,11,1)
 
-        self.AddEquity("SPY", Resolution.Hour)
+        self.add_equity("SPY", Resolution.HOUR)
 
-    def OnData(self, data):
-        if not self.Portfolio.Invested:
-            self.SetHoldings("SPY", 1)
+    def on_data(self, data):
+        if not self.portfolio.invested:
+            self.set_holdings("SPY", 1)
 
     def custom_seed_function(self, security):
 
-        resolution = Resolution.Hour
+        resolution = Resolution.HOUR
 
-        df = self.History(security.Symbol, 1, resolution)
+        df = self.history(security.symbol, 1, resolution)
         if df.empty:
             return None
 
@@ -56,7 +56,7 @@ class CustomSecurityInitializerAlgorithm(QCAlgorithm):
         low = last_bar.low.values[0]
         close = last_bar.close.values[0]
         volume = last_bar.volume.values[0]
-        return TradeBar(date_time, security.Symbol, open, high, low, close, volume, Extensions.ToTimeSpan(resolution))
+        return TradeBar(date_time, security.symbol, open, high, low, close, volume, Extensions.to_time_span(resolution))
 
 
 class CustomSecurityInitializer(BrokerageModelSecurityInitializer):
@@ -64,20 +64,20 @@ class CustomSecurityInitializer(BrokerageModelSecurityInitializer):
     We sub-class the BrokerageModelSecurityInitializer so we can also
     take advantage of the default model/leverage setting behaviors'''
 
-    def __init__(self, brokerageModel, securitySeeder, dataNormalizationMode):
+    def __init__(self, brokerage_model, security_seeder, data_normalization_mode):
         '''Initializes a new instance of the CustomSecurityInitializer class with the specified normalization mode
-        brokerageModel -- The brokerage model used to get fill/fee/slippage/settlement models
-        securitySeeder -- The security seeder to be used
-        dataNormalizationMode -- The desired data normalization mode'''
-        self.base = BrokerageModelSecurityInitializer(brokerageModel, securitySeeder)
-        self.dataNormalizationMode = dataNormalizationMode
+        brokerage_model -- The brokerage model used to get fill/fee/slippage/settlement models
+        security_seeder -- The security seeder to be used
+        data_normalization_mode -- The desired data normalization mode'''
+        self.base = BrokerageModelSecurityInitializer(brokerage_model, security_seeder)
+        self.data_normalization_mode = data_normalization_mode
 
-    def Initialize(self, security):
+    def initialize(self, security):
         '''Initializes the specified security by setting up the models
         security -- The security to be initialized
-        seedSecurity -- True to seed the security, false otherwise'''
+        seed_security -- True to seed the security, false otherwise'''
         # first call the default implementation
-        self.base.Initialize(security)
+        self.base.initialize(security)
 
         # now apply our data normalization mode
-        security.SetDataNormalizationMode(self.dataNormalizationMode)
+        security.set_data_normalization_mode(self.data_normalization_mode)

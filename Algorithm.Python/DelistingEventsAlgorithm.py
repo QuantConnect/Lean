@@ -22,58 +22,58 @@ from AlgorithmImports import *
 ### <meta name="tag" content="delisting event" />
 class DelistingEventsAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2007, 5, 16)  #Set Start Date
-        self.SetEndDate(2007, 5, 25)    #Set End Date
-        self.SetCash(100000)             #Set Strategy Cash
+        self.set_start_date(2007, 5, 16)  #Set Start Date
+        self.set_end_date(2007, 5, 25)    #Set End Date
+        self.set_cash(100000)             #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("AAA.1", Resolution.Daily)
-        self.AddEquity("SPY", Resolution.Daily)
+        self.add_equity("AAA.1", Resolution.DAILY)
+        self.add_equity("SPY", Resolution.DAILY)
 
 
-    def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+    def on_data(self, data):
+        '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if self.Transactions.OrdersCount == 0:
-            self.SetHoldings("AAA.1", 1)
-            self.Debug("Purchased stock")
+        if self.transactions.orders_count == 0:
+            self.set_holdings("AAA.1", 1)
+            self.debug("Purchased stock")
 
-        for kvp in data.Bars:
-            symbol = kvp.Key
-            value = kvp.Value
+        for kvp in data.bars:
+            symbol = kvp.key
+            value = kvp.value
 
-            self.Log("OnData(Slice): {0}: {1}: {2}".format(self.Time, symbol, value.Close))
+            self.log("OnData(Slice): {0}: {1}: {2}".format(self.time, symbol, value.close))
 
-        # the slice can also contain delisting data: data.Delistings in a dictionary string->Delisting
+        # the slice can also contain delisting data: data.delistings in a dictionary string->Delisting
 
-        aaa = self.Securities["AAA.1"]
-        if aaa.IsDelisted and aaa.IsTradable:
+        aaa = self.securities["AAA.1"]
+        if aaa.is_delisted and aaa.is_tradable:
             raise Exception("Delisted security must NOT be tradable")
 
-        if not aaa.IsDelisted and not aaa.IsTradable:
+        if not aaa.is_delisted and not aaa.is_tradable:
             raise Exception("Securities must be marked as tradable until they're delisted or removed from the universe")
 
-        for kvp in data.Delistings:
-            symbol = kvp.Key
-            value = kvp.Value
+        for kvp in data.delistings:
+            symbol = kvp.key
+            value = kvp.value
 
-            if value.Type == DelistingType.Warning:
-                self.Log("OnData(Delistings): {0}: {1} will be delisted at end of day today.".format(self.Time, symbol))
+            if value.type == DelistingType.WARNING:
+                self.log("OnData(Delistings): {0}: {1} will be delisted at end of day today.".format(self.time, symbol))
 
                 # liquidate on delisting warning
-                self.SetHoldings(symbol, 0)
+                self.set_holdings(symbol, 0)
 
-            if value.Type == DelistingType.Delisted:
-                self.Log("OnData(Delistings): {0}: {1} has been delisted.".format(self.Time, symbol))
+            if value.type == DelistingType.DELISTED:
+                self.log("OnData(Delistings): {0}: {1} has been delisted.".format(self.time, symbol))
 
                 # fails because the security has already been delisted and is no longer tradable
-                self.SetHoldings(symbol, 1)
+                self.set_holdings(symbol, 1)
 
 
-    def OnOrderEvent(self, orderEvent):
-        self.Log("OnOrderEvent(OrderEvent): {0}: {1}".format(self.Time, orderEvent))
+    def on_order_event(self, order_event):
+        self.log("OnOrderEvent(OrderEvent): {0}: {1}".format(self.time, order_event))

@@ -24,62 +24,62 @@ import base64
 ### <meta name="tag" content="custom universes" />
 class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2017, 7, 4)
-        self.SetEndDate(2018, 7, 4)
+    def initialize(self):
+        self.set_start_date(2017, 7, 4)
+        self.set_end_date(2018, 7, 4)
 
-        self.backtestSymbolsPerDay = {}
+        self.backtest_symbols_per_day = {}
         self.current_universe = []
 
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
         # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
         # Commented so regression algorithm is more sensitive
-        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
+        #self.settings.minimum_order_margin_portfolio_percentage = 0.005
 
-        self.AddUniverse("my-dropbox-universe", self.selector)
+        self.add_universe("my-dropbox-universe", self.selector)
 
     def selector(self, date):
         # handle live mode file format
-        if self.LiveMode:
+        if self.live_mode:
             # fetch the file from dropbox
-            str = self.Download("https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1")
+            str = self.download("https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1")
             # if we have a file for today, return symbols, else leave universe unchanged
             self.current_universe = str.split(',') if len(str) > 0 else self.current_universe
             return self.current_universe
 
         # backtest - first cache the entire file
-        if len(self.backtestSymbolsPerDay) == 0:
+        if len(self.backtest_symbols_per_day) == 0:
 
             # No need for headers for authorization with dropbox, these two lines are for example purposes 
-            byteKey = base64.b64encode("UserName:Password".encode('ASCII'))
+            byte_key = base64.b64encode("UserName:Password".encode('ASCII'))
             # The headers must be passed to the Download method as dictionary
-            headers = { 'Authorization' : f'Basic ({byteKey.decode("ASCII")})' }
+            headers = { 'Authorization' : f'Basic ({byte_key.decode("ASCII")})' }
 
-            str = self.Download("https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1", headers)
+            str = self.download("https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1", headers)
             for line in str.splitlines():
                 data = line.split(',')
-                self.backtestSymbolsPerDay[data[0]] = data[1:]
+                self.backtest_symbols_per_day[data[0]] = data[1:]
 
         index = date.strftime("%Y%m%d")
-        self.current_universe = self.backtestSymbolsPerDay.get(index, self.current_universe)
+        self.current_universe = self.backtest_symbols_per_day.get(index, self.current_universe)
 
         return self.current_universe
 
-    def OnData(self, slice):
+    def on_data(self, slice):
 
-        if slice.Bars.Count == 0: return
+        if slice.bars.count == 0: return
         if self.changes is None: return
 
         # start fresh
-        self.Liquidate()
+        self.liquidate()
 
-        percentage = 1 / slice.Bars.Count
-        for tradeBar in slice.Bars.Values:
-            self.SetHoldings(tradeBar.Symbol, percentage)
+        percentage = 1 / slice.bars.count
+        for trade_bar in slice.bars.values():
+            self.set_holdings(trade_bar.symbol, percentage)
 
         # reset changes
         self.changes = None
 
-    def OnSecuritiesChanged(self, changes):
+    def on_securities_changed(self, changes):
         self.changes = changes

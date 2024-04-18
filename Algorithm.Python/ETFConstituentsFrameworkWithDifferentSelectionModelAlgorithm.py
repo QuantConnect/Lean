@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from Selection.ETFConstituentsUniverseSelectionModel import *
 from ETFConstituentsFrameworkAlgorithm import ETFConstituentsFrameworkAlgorithm
 
 ### <summary>
@@ -20,7 +19,7 @@ from ETFConstituentsFrameworkAlgorithm import ETFConstituentsFrameworkAlgorithm
 ### </summary>
 class ETFConstituentsFrameworkWithDifferentSelectionModelAlgorithm(ETFConstituentsFrameworkAlgorithm):
 
-    def Initialize(self):
-        super().Initialize()
+    def initialize(self):
+        super().initialize()
         
-        self.SetUniverseSelection(ETFConstituentsUniverseSelectionModel("SPY", self.UniverseSettings, self.ETFConstituentsFilter))
+        self.set_universe_selection(ETFConstituentsUniverseSelectionModel("SPY", self.universe_settings, self.etf_constituents_filter))

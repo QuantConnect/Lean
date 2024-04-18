@@ -13,7 +13,6 @@
 
 from AlgorithmImports import *
 from BaseFrameworkRegressionAlgorithm import BaseFrameworkRegressionAlgorithm
-from Alphas.EmaCrossAlphaModel import EmaCrossAlphaModel
 
 ### <summary>
 ### Regression algorithm to assert the behavior of <see cref="EmaCrossAlphaModel"/>.
@@ -24,5 +23,5 @@ class EmaCrossAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgo
         super().initialize()
         self.set_alpha(EmaCrossAlphaModel())
 
-    def ond_end_of_algorithm(self):
+    def on_end_of_algorithm(self):
         pass

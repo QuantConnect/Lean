@@ -20,27 +20,27 @@ from AlgorithmImports import *
 class CustomPartialFillModelAlgorithm(QCAlgorithm):
     '''Basic template algorithm that implements a fill model with partial fills'''
 
-    def Initialize(self):
-        self.SetStartDate(2019, 1, 1)
-        self.SetEndDate(2019, 3, 1)
+    def initialize(self):
+        self.set_start_date(2019, 1, 1)
+        self.set_end_date(2019, 3, 1)
 
-        equity = self.AddEquity("SPY", Resolution.Hour)
-        self.spy = equity.Symbol
-        self.holdings = equity.Holdings
+        equity = self.add_equity("SPY", Resolution.HOUR)
+        self.spy = equity.symbol
+        self.holdings = equity.holdings
 
         # Set the fill model
-        equity.SetFillModel(CustomPartialFillModel(self))
+        equity.set_fill_model(CustomPartialFillModel(self))
 
 
-    def OnData(self, data):
-        open_orders = self.Transactions.GetOpenOrders(self.spy)
+    def on_data(self, data):
+        open_orders = self.transactions.get_open_orders(self.spy)
         if len(open_orders) != 0: return
 
-        if self.Time.day > 10 and self.holdings.Quantity <= 0:
-            self.MarketOrder(self.spy, 105, True)
+        if self.time.day > 10 and self.holdings.quantity <= 0:
+            self.market_order(self.spy, 105, True)
 
-        elif self.Time.day > 20 and self.holdings.Quantity >= 0:
-            self.MarketOrder(self.spy, -100, True)
+        elif self.time.day > 20 and self.holdings.quantity >= 0:
+            self.market_order(self.spy, -100, True)
 
 
 class CustomPartialFillModel(FillModel):
@@ -48,25 +48,25 @@ class CustomPartialFillModel(FillModel):
 
     def __init__(self, algorithm):
         self.algorithm = algorithm
-        self.absoluteRemainingByOrderId = {}
+        self.absolute_remaining_by_order_id = {}
 
-    def MarketFill(self, asset, order):
-        absoluteRemaining = self.absoluteRemainingByOrderId.get(order.Id, order. AbsoluteQuantity)
+    def market_fill(self, asset, order):
+        absolute_remaining = self.absolute_remaining_by_order_id.get(order.id, order. AbsoluteQuantity)
 
         # Create the object
-        fill = super().MarketFill(asset, order)
+        fill = super().market_fill(asset, order)
 
         # Set the fill amount
-        fill.FillQuantity = np.sign(order.Quantity) * 10
+        fill.fill_quantity = np.sign(order.quantity) * 10
 
-        if (min(abs(fill.FillQuantity), absoluteRemaining) == absoluteRemaining):
-            fill.FillQuantity = np.sign(order.Quantity) * absoluteRemaining
-            fill.Status = OrderStatus.Filled
-            self.absoluteRemainingByOrderId.pop(order.Id, None)
+        if (min(abs(fill.fill_quantity), absolute_remaining) == absolute_remaining):
+            fill.fill_quantity = np.sign(order.quantity) * absolute_remaining
+            fill.status = OrderStatus.FILLED
+            self.absolute_remaining_by_order_id.pop(order.id, None)
         else:
-            fill.Status = OrderStatus.PartiallyFilled
-            self.absoluteRemainingByOrderId[order.Id] = absoluteRemaining - abs(fill.FillQuantity)
-            price = fill.FillPrice
-            # self.algorithm.Debug(f"{self.algorithm.Time} - Partial Fill - Remaining {self.absoluteRemainingByOrderId[order.Id]} Price - {price}")
+            fill.status = OrderStatus.PARTIALLY_FILLED
+            self.absolute_remaining_by_order_id[order.id] = absolute_remaining - abs(fill.fill_quantity)
+            price = fill.fill_price
+            # self.algorithm.debug(f"{self.algorithm.time} - Partial Fill - Remaining {self.absolute_remaining_by_order_id[order.id]} Price - {price}")
 
         return fill
