@@ -40,7 +40,6 @@ class CustomModelsAlgorithm(QCAlgorithm):
         self.security.set_slippage_model(CustomSlippageModel(self))
         self.security.set_buying_power_model(CustomBuyingPowerModel(self))
 
-
     def on_data(self, data):
         open_orders = self.transactions.get_open_orders(self.spy)
         if len(open_orders) != 0: return
@@ -72,7 +71,7 @@ class CustomFillModel(ImmediateFillModel):
         fill = super().market_fill(asset, order)
         absolute_fill_quantity = int(min(absolute_remaining, self.random.next(0, 2*int(order.absolute_quantity))))
         fill.fill_quantity = np.sign(order.quantity) * absolute_fill_quantity
-        
+
         if absolute_remaining == absolute_fill_quantity:
             fill.status = OrderStatus.FILLED
             if self.absolute_remaining_by_order_id.get(order.id):
@@ -118,7 +117,7 @@ class CustomBuyingPowerModel(BuyingPowerModel):
         self.algorithm.log(f"CustomBuyingPowerModel: {has_sufficient_buying_power_for_order_result.is_sufficient}")
         return has_sufficient_buying_power_for_order_result
 
-# The simple fill model shows how to implement a simpler version of 
+# The simple fill model shows how to implement a simpler version of
 # the most popular order fills: Market, Stop Market and Limit
 class SimpleCustomFillModel(FillModel):
     def __init__(self):
@@ -126,7 +125,7 @@ class SimpleCustomFillModel(FillModel):
 
     def _create_order_event(self, asset, order):
         utc_time = Extensions.convert_to_utc(asset.local_time, asset.exchange.time_zone)
-        return OrderEvent(order, utc_time, OrderFee.zero)
+        return OrderEvent(order, utc_time, OrderFee.ZERO)
 
     def _set_order_event_to_filled(self, fill, fill_price, fill_quantity):
         fill.status = OrderStatus.FILLED
@@ -146,7 +145,7 @@ class SimpleCustomFillModel(FillModel):
         fill = self._create_order_event(asset, order)
         if order.status == OrderStatus.CANCELED: return fill
 
-        return self._set_order_event_to_filled(fill, 
+        return self._set_order_event_to_filled(fill,
             asset.cache.ask_price \
                 if order.direction == OrderDirection.BUY else asset.cache.bid_price,
             order.quantity)
@@ -154,10 +153,10 @@ class SimpleCustomFillModel(FillModel):
     def stop_market_fill(self, asset, order):
         fill = self._create_order_event(asset, order)
         if order.status == OrderStatus.CANCELED: return fill
-        
+
         stop_price = order.stop_price
         trade_bar = self._get_trade_bar(asset, order.direction)
-        
+
         if order.direction == OrderDirection.SELL and trade_bar.low < stop_price:
             return self._set_order_event_to_filled(fill, stop_price, order.quantity)
 

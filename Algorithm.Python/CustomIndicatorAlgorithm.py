@@ -27,7 +27,7 @@ class CustomIndicatorAlgorithm(QCAlgorithm):
         self.add_equity("SPY", Resolution.SECOND)
 
         # Create a QuantConnect indicator and a python custom indicator for comparison
-        self.sma = self.sma("SPY", 60, Resolution.MINUTE)
+        self._sma = self.sma("SPY", 60, Resolution.MINUTE)
         self.custom = CustomSimpleMovingAverage('custom', 60)
 
         # The python custom class must inherit from PythonIndicator to enable Updated event handler
@@ -45,11 +45,11 @@ class CustomIndicatorAlgorithm(QCAlgorithm):
             self.set_holdings("SPY", 1)
 
         if self.time.second == 0:
-            self.log(f"   sma -> IsReady: {self.sma.is_ready}. Value: {self.sma.current.value}")
+            self.log(f"   sma -> IsReady: {self._sma.is_ready}. Value: {self._sma.current.value}")
             self.log(f"custom -> IsReady: {self.custom.is_ready}. Value: {self.custom.value}")
 
         # Regression test: test fails with an early quit
-        diff = abs(self.custom.value - self.sma.current.value)
+        diff = abs(self.custom.value - self._sma.current.value)
         if diff > 1e-10:
             self.quit(f"Quit: indicators difference is {diff}")
 
