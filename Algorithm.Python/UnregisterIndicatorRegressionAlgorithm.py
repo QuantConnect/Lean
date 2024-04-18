@@ -17,35 +17,35 @@ from AlgorithmImports import *
 ### Example and regression algorithm asserting the behavior of registering and unregistering an indicator from the engine
 ### </summary>
 class UnregisterIndicatorRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.SetStartDate(2013,10, 7)
-        self.SetEndDate(2013,10,11)
+        self.set_start_date(2013,10, 7)
+        self.set_end_date(2013,10,11)
 
-        spy = self.AddEquity("SPY")
-        ibm = self.AddEquity("IBM")
+        spy = self.add_equity("SPY")
+        ibm = self.add_equity("IBM")
 
-        self._symbols = [ spy.Symbol, ibm.Symbol ]
-        self._trin = self.TRIN(self._symbols, Resolution.Minute)
+        self._symbols = [ spy.symbol, ibm.symbol ]
+        self._trin = self.trin(self._symbols, Resolution.MINUTE)
         self._trin2 = None
 
-    def OnData(self, data):
+    def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if self._trin.IsReady:
-            self._trin.Reset()
-            self.UnregisterIndicator(self._trin)
+        if self._trin.is_ready:
+            self._trin.reset()
+            self.unregister_indicator(self._trin)
 
             # let's create a new one with a differente resolution
-            self._trin2 = self.TRIN(self._symbols, Resolution.Hour)
+            self._trin2 = self.trin(self._symbols, Resolution.HOUR)
 
-        if not self._trin2 is None and self._trin2.IsReady:
-            if self._trin.IsReady:
+        if not self._trin2 is None and self._trin2.is_ready:
+            if self._trin.is_ready:
                 raise ValueError("Indicator should of stop getting updates!")
 
-            if not self.Portfolio.Invested:
-                self.SetHoldings(self._symbols[0], 0.5)
-                self.SetHoldings(self._symbols[1], 0.5)
+            if not self.portfolio.invested:
+                self.set_holdings(self._symbols[0], 0.5)
+                self.set_holdings(self._symbols[1], 0.5)
