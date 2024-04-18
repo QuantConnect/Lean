@@ -18,27 +18,32 @@ class ImmediateExecutionModel(ExecutionModel):
 
     def __init__(self):
         '''Initializes a new instance of the ImmediateExecutionModel class'''
-        self.targetsCollection = PortfolioTargetCollection()
+        self.targets_collection = PortfolioTargetCollection()
 
-    def Execute(self, algorithm, targets):
+    def execute(self, algorithm, targets):
         '''Immediately submits orders for the specified portfolio targets.
         Args:
             algorithm: The algorithm instance
             targets: The portfolio targets to be ordered'''
 
         # for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
-        self.targetsCollection.AddRange(targets)
-        if not self.targetsCollection.IsEmpty:
-            for target in self.targetsCollection.OrderByMarginImpact(algorithm):
-                security = algorithm.Securities[target.Symbol]
+        self.targets_collection.add_range(targets)
+        if not self.targets_collection.is_empty:
+            for target in self.targets_collection.order_by_margin_impact(algorithm):
+                security = algorithm.securities[target.symbol]
                 # calculate remaining quantity to be ordered
-                quantity = OrderSizing.GetUnorderedQuantity(algorithm, target, security)
+                quantity = OrderSizing.get_unordered_quantity(algorithm, target, security)
                 if quantity != 0:
-                    aboveMinimumPortfolio = BuyingPowerModelExtensions.AboveMinimumOrderMarginPortfolioPercentage(security.BuyingPowerModel, security, quantity, algorithm.Portfolio, algorithm.Settings.MinimumOrderMarginPortfolioPercentage)
-                    if aboveMinimumPortfolio:
-                        algorithm.MarketOrder(security, quantity)
-                    elif not PortfolioTarget.MinimumOrderMarginPercentageWarningSent:
+                    above_minimum_portfolio = BuyingPowerModelExtensions.above_minimum_order_margin_portfolio_percentage(
+                        security.buying_power_model,
+                        security,
+                        quantity,
+                        algorithm.portfolio,
+                        algorithm.settings.minimum_order_margin_portfolio_percentage)
+                    if above_minimum_portfolio:
+                        algorithm.market_order(security, quantity)
+                    elif not PortfolioTarget.minimum_order_margin_percentage_warning_sent:
                         # will trigger the warning if it has not already been sent
-                        PortfolioTarget.MinimumOrderMarginPercentageWarningSent = False
+                        PortfolioTarget.minimum_order_margin_percentage_warning_sent = False
 
-            self.targetsCollection.ClearFulfilled(algorithm)
+            self.targets_collection.clear_fulfilled(algorithm)

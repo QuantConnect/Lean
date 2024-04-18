@@ -20,34 +20,34 @@ from AlgorithmImports import *
 ### <meta name="tag" content="using quantconnect" />
 class ParameterizedAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013, 10, 7)   #Set Start Date
-        self.SetEndDate(2013, 10, 11)    #Set End Date
-        self.SetCash(100000)             #Set Strategy Cash
+        self.set_start_date(2013, 10, 7)   #Set Start Date
+        self.set_end_date(2013, 10, 11)    #Set End Date
+        self.set_cash(100000)             #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("SPY")
+        self.add_equity("SPY")
 
         # Receive parameters from the Job
-        fast_period = self.GetParameter("ema-fast", 100)
-        slow_period = self.GetParameter("ema-slow", 200)
+        fast_period = self.get_parameter("ema-fast", 100)
+        slow_period = self.get_parameter("ema-slow", 200)
 
-        self.fast = self.EMA("SPY", fast_period)
-        self.slow = self.EMA("SPY", slow_period)
+        self.fast = self.ema("SPY", fast_period)
+        self.slow = self.ema("SPY", slow_period)
 
 
-    def OnData(self, data):
+    def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
 
         # wait for our indicators to ready
-        if not self.fast.IsReady or not self.slow.IsReady:
+        if not self.fast.is_ready or not self.slow.is_ready:
             return
 
-        fast = self.fast.Current.Value
-        slow = self.slow.Current.Value
+        fast = self.fast.current.value
+        slow = self.slow.current.value
 
         if fast > slow * 1.001:
-            self.SetHoldings("SPY", 1)
+            self.set_holdings("SPY", 1)
         elif fast < slow * 0.999:
-            self.Liquidate("SPY")
+            self.liquidate("SPY")

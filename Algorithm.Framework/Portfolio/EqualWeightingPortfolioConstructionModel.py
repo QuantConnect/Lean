@@ -16,10 +16,10 @@ from AlgorithmImports import *
 class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that gives equal weighting to all securities.
     The target percent holdings of each security is 1/N where N is the number of securities.
-    For insights of direction InsightDirection.Up, long targets are returned and
-    for insights of direction InsightDirection.Down, short targets are returned.'''
+    For insights of direction InsightDirection.UP, long targets are returned and
+    for insights of direction InsightDirection.DOWN, short targets are returned.'''
 
-    def __init__(self, rebalance = Resolution.Daily, portfolioBias = PortfolioBias.LongShort):
+    def __init__(self, rebalance = Resolution.DAILY, portfolio_bias = PortfolioBias.LONG_SHORT):
         '''Initialize a new instance of EqualWeightingPortfolioConstructionModel
         Args:
             rebalance: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
@@ -27,36 +27,36 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
                               The function returns the next expected rebalance time for a given algorithm UTC DateTime.
                               The function returns null if unknown, in which case the function will be called again in the
                               next loop. Returning current time will trigger rebalance.
-            portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)'''
+            portfolio_bias: Specifies the bias of the portfolio (Short, Long/Short, Long)'''
         super().__init__()
-        self.portfolioBias = portfolioBias
+        self.portfolio_bias = portfolio_bias
 
         # If the argument is an instance of Resolution or Timedelta
-        # Redefine rebalancingFunc
-        rebalancingFunc = rebalance
+        # Redefine rebalancing_func
+        rebalancing_func = rebalance
         if isinstance(rebalance, int):
-            rebalance = Extensions.ToTimeSpan(rebalance)
+            rebalance = Extensions.to_time_span(rebalance)
         if isinstance(rebalance, timedelta):
-            rebalancingFunc = lambda dt: dt + rebalance
-        if rebalancingFunc:
-            self.SetRebalancingFunc(rebalancingFunc)
+            rebalancing_func = lambda dt: dt + rebalance
+        if rebalancing_func:
+            self.set_rebalancing_func(rebalancing_func)
 
-    def DetermineTargetPercent(self, activeInsights):
+    def determine_target_percent(self, active_insights):
         '''Will determine the target percent for each insight
         Args:
-            activeInsights: The active insights to generate a target for'''
+            active_insights: The active insights to generate a target for'''
         result = {}
 
         # give equal weighting to each security
-        count = sum(x.Direction != InsightDirection.Flat and self.RespectPortfolioBias(x) for x in activeInsights)
+        count = sum(x.direction != InsightDirection.FLAT and self.respect_portfolio_bias(x) for x in active_insights)
         percent = 0 if count == 0 else 1.0 / count
-        for insight in activeInsights:
-            result[insight] = (insight.Direction if self.RespectPortfolioBias(insight) else InsightDirection.Flat) * percent
+        for insight in active_insights:
+            result[insight] = (insight.direction if self.respect_portfolio_bias(insight) else InsightDirection.FLAT) * percent
         return result
 
-    def RespectPortfolioBias(self, insight):
+    def respect_portfolio_bias(self, insight):
         '''Method that will determine if a given insight respects the portfolio bias
         Args:
             insight: The insight to create a target for
         '''
-        return self.portfolioBias == PortfolioBias.LongShort or insight.Direction == self.portfolioBias
+        return self.portfolio_bias == PortfolioBias.LONG_SHORT or insight.direction == self.portfolio_bias

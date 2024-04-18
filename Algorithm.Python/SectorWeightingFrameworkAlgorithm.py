@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from Portfolio.SectorWeightingPortfolioConstructionModel import SectorWeightingPortfolioConstructionModel
 
 ### <summary>
 ### This example algorithm defines its own custom coarse/fine fundamental selection model

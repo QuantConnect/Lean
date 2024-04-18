@@ -17,47 +17,47 @@ class CompositeRiskManagementModel(RiskManagementModel):
     '''Provides an implementation of IRiskManagementModel that combines multiple risk models
     into a single risk management model and properly sets each insights 'SourceModel' property.'''
 
-    def __init__(self, *riskManagementModels):
+    def __init__(self, *risk_management_models):
         '''Initializes a new instance of the CompositeRiskManagementModel class
         Args:
-            riskManagementModels: The individual risk management models defining this composite model.'''
-        for model in riskManagementModels:
-            for attributeName in ['ManageRisk', 'OnSecuritiesChanged']:
-                if not hasattr(model, attributeName):
-                    raise Exception(f'IRiskManagementModel.{attributeName} must be implemented. Please implement this missing method on {model.__class__.__name__}')
+            risk_management_models: The individual risk management models defining this composite model.'''
+        for model in risk_management_models:
+            for attribute_names in [('ManageRisk', 'manage_risk'), ('OnSecuritiesChanged', 'on_securities_changed')]:
+                if not hasattr(model, attribute_names[0]) and not hasattr(model, attribute_names[1]):
+                    raise Exception(f'IRiskManagementModel.{attribute_names[1]} must be implemented. Please implement this missing method on {model.__class__.__name__}')
 
-        self.riskManagementModels = riskManagementModels
+        self.risk_management_models = risk_management_models
 
-    def ManageRisk(self, algorithm, targets):
+    def manage_risk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step
         Args:
             algorithm: The algorithm instance
             targets: The current portfolio targets to be assessed for risk'''
-        for model in self.riskManagementModels:
+        for model in self.risk_management_models:
             # take into account the possibility of ManageRisk returning nothing
-            riskAdjusted = model.ManageRisk(algorithm, targets)
+            risk_adjusted = model.manage_risk(algorithm, targets)
 
             # produce a distinct set of new targets giving preference to newer targets
-            symbols = [x.Symbol for x in riskAdjusted]
+            symbols = [x.symbol for x in risk_adjusted]
             for target in targets:
-                if target.Symbol not in symbols:
-                    riskAdjusted.append(target)
+                if target.symbol not in symbols:
+                    risk_adjusted.append(target)
 
-            targets = riskAdjusted
+            targets = risk_adjusted
 
         return targets
 
-    def OnSecuritiesChanged(self, algorithm, changes):
+    def on_securities_changed(self, algorithm, changes):
         '''Event fired each time the we add/remove securities from the data feed.
         This method patches this call through the each of the wrapped models.
         Args:
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
-        for model in self.riskManagementModels:
-            model.OnSecuritiesChanged(algorithm, changes)
+        for model in self.risk_management_models:
+            model.on_securities_changed(algorithm, changes)
 
-    def AddRiskManagement(riskManagementModel):
+    def add_risk_management(self, risk_management_model):
         '''Adds a new 'IRiskManagementModel' instance
         Args:
-            riskManagementModel: The risk management model to add'''
-        self.riskManagementModels.Add(riskManagementModel)
+            risk_management_model: The risk management model to add'''
+        self.risk_management_models.add(risk_management_model)
