@@ -22,54 +22,50 @@ from AlgorithmImports import *
 ### <meta name="tag" content="warm up" />
 class IndicatorWarmupAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013, 10, 8)   #Set Start Date
-        self.SetEndDate(2013, 10, 11)    #Set End Date
-        self.SetCash(1000000)            #Set Strategy Cash
+        self.set_start_date(2013, 10, 8)   #Set Start Date
+        self.set_end_date(2013, 10, 11)    #Set End Date
+        self.set_cash(1000000)            #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("SPY")
-        self.AddEquity("IBM")
-        self.AddEquity("BAC")
-        self.AddEquity("GOOG", Resolution.Daily)
-        self.AddEquity("GOOGL", Resolution.Daily)
+        self.add_equity("SPY")
+        self.add_equity("IBM")
+        self.add_equity("BAC")
+        self.add_equity("GOOG", Resolution.DAILY)
+        self.add_equity("GOOGL", Resolution.DAILY)
 
         self.__sd = { }
-        for security in self.Securities:
-            self.__sd[security.Key] = self.SymbolData(security.Key, self)
+        for security in self.securities:
+            self.__sd[security.key] = self.symbol_data(security.key, self)
 
         # we want to warm up our algorithm
-        self.SetWarmup(self.SymbolData.RequiredBarsWarmup)
+        self.set_warmup(self.symbol_data.required_bars_warmup)
 
-
-    def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+    def on_data(self, data):
+        '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
         # we are only using warmup for indicator spooling, so wait for us to be warm then continue
-        if self.IsWarmingUp: return
+        if self.is_warming_up: return
 
         for sd in self.__sd.values():
-            lastPriceTime = sd.Close.Current.Time
-            if self.RoundDown(lastPriceTime, sd.Security.SubscriptionDataConfig.Increment):
-                sd.Update()
+            last_price_time = sd.close.current.time
+            if self.round_down(last_price_time, sd.security.subscription_data_config.increment):
+                sd.update()
 
-
-    def OnOrderEvent(self, fill):
-        sd = self.__sd.get(fill.Symbol, None)
+    def on_order_event(self, fill):
+        sd = self.__sd.get(fill.symbol, None)
         if sd is not None:
-            sd.OnOrderEvent(fill)
+            sd.on_order_event(fill)
 
-
-    def RoundDown(self, time, increment):
+    def round_down(self, time, increment):
         if increment.days != 0:
             return time.hour == 0 and time.minute == 0 and time.second == 0
         else:
             return time.second == 0
-
 
     class SymbolData:
         RequiredBarsWarmup = 40
@@ -78,85 +74,81 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
         LotSize = 10
 
         def __init__(self, symbol, algorithm):
-            self.Symbol = symbol
+            self.symbol = symbol
             self.__algorithm = algorithm   # if we're receiving daily
 
-            self.__currentStopLoss = None
+            self.__current_stop_loss = None
 
-            self.Security = algorithm.Securities[symbol]
-            self.Close = algorithm.Identity(symbol)
-            self.ADX = algorithm.ADX(symbol, 14)
-            self.EMA = algorithm.EMA(symbol, 14)
-            self.MACD = algorithm.MACD(symbol, 12, 26, 9)
+            self.security = algorithm.securities[symbol]
+            self.close = algorithm.identity(symbol)
+            self._adx = algorithm.adx(symbol, 14)
+            self._ema = algorithm.ema(symbol, 14)
+            self._macd = algorithm.macd(symbol, 12, 26, 9)
 
-            self.IsReady = self.Close.IsReady and self.ADX.IsReady and self.EMA.IsReady and self.MACD.IsReady
-            self.IsUptrend = False
-            self.IsDowntrend = False
+            self.is_ready = self.close.is_ready and self._adx.is_ready and self._ema.is_ready and self._macd.is_ready
+            self.is_uptrend = False
+            self.is_downtrend = False
 
+        def update(self):
+            self.is_ready = self.close.is_ready and self._adx.is_ready and self._ema.is_ready and self._macd.is_ready
 
-        def Update(self):
-            self.IsReady = self.Close.IsReady and self.ADX.IsReady and self.EMA.IsReady and self.MACD.IsReady
+            tolerance = 1 - self.percent_tolerance
+            self.is_uptrend = self._macd.signal.current.value > self._macd.current.value * tolerance and\
+                self._ema.current.value > self.close.current.value * tolerance
 
-            tolerance = 1 - self.PercentTolerance
-            self.IsUptrend = self.MACD.Signal.Current.Value > self.MACD.Current.Value * tolerance and\
-                self.EMA.Current.Value > self.Close.Current.Value * tolerance
+            self.is_downtrend = self._macd.signal.current.value < self._macd.current.value * tolerance and\
+                self._ema.current.value < self.close.current.value * tolerance
 
-            self.IsDowntrend = self.MACD.Signal.Current.Value < self.MACD.Current.Value * tolerance and\
-                self.EMA.Current.Value < self.Close.Current.Value * tolerance
+            self.try_enter()
+            self.try_exit()
 
-            self.TryEnter()
-            self.TryExit()
-
-
-        def TryEnter(self):
+        def try_enter(self):
             # can't enter if we're already in
-            if self.Security.Invested: return False
+            if self.security.invested: return False
 
             qty = 0
             limit = 0.0
 
-            if self.IsUptrend:
+            if self.is_uptrend:
                 # 100 order lots
-                qty = self.LotSize
-                limit = self.Security.Low
-            elif self.IsDowntrend:
-                qty = -self.LotSize
-                limit = self.Security.High
+                qty = self.lot_size
+                limit = self.security.low
+            elif self.is_downtrend:
+                qty = -self.lot_size
+                limit = self.security.high
 
             if qty != 0:
-                ticket = self.__algorithm.LimitOrder(self.Symbol, qty, limit, "TryEnter at: {0}".format(limit))
+                ticket = self.__algorithm.limit_order(self.symbol, qty, limit, "TryEnter at: {0}".format(limit))
 
-
-        def TryExit(self):
+        def try_exit(self):
             # can't exit if we haven't entered
-            if not self.Security.Invested: return
+            if not self.security.invested: return
 
             limit = 0
-            qty = self.Security.Holdings.Quantity
-            exitTolerance = 1 + 2 * self.PercentTolerance
-            if self.Security.Holdings.IsLong and self.Close.Current.Value * exitTolerance < self.EMA.Current.Value:
-                limit = self.Security.High
-            elif self.Security.Holdings.IsShort and self.Close.Current.Value > self.EMA.Current.Value * exitTolerance:
-                limit = self.Security.Low
+            qty = self.security.holdings.quantity
+            exit_tolerance = 1 + 2 * self.percent_tolerance
+            if self.security.holdings.is_long and self.close.current.value * exit_tolerance < self._ema.current.value:
+                limit = self.security.high
+            elif self.security.holdings.is_short and self.close.current.value > self._ema.current.value * exit_tolerance:
+                limit = self.security.low
 
             if limit != 0:
-                ticket = self.__algorithm.LimitOrder(self.Symbol, -qty, limit, "TryExit at: {0}".format(limit))
+                ticket = self.__algorithm.limit_order(self.symbol, -qty, limit, "TryExit at: {0}".format(limit))
 
+        def on_order_event(self, fill):
+            if fill.status != OrderStatus.FILLED: return
 
-        def OnOrderEvent(self, fill):
-            if fill.Status != OrderStatus.Filled: return
-
-            qty = self.Security.Holdings.Quantity
+            qty = self.security.holdings.quantity
 
             # if we just finished entering, place a stop loss as well
-            if self.Security.Invested:
-                stop = fill.FillPrice*(1 - self.PercentGlobalStopLoss) if self.Security.Holdings.IsLong \
-                    else fill.FillPrice*(1 + self.PercentGlobalStopLoss)
+            if self.security.invested:
+                stop = fill.fill_price*(1 - self.percent_global_stop_loss) if self.security.holdings.is_long \
+                    else fill.fill_price*(1 + self.percent_global_stop_loss)
 
-                self.__currentStopLoss = self.__algorithm.StopMarketOrder(self.Symbol, -qty, stop, "StopLoss at: {0}".format(stop))
+                self.__current_stop_loss = self.__algorithm.stop_market_order(self.symbol, -qty, stop, "StopLoss at: {0}".format(stop))
 
             # check for an exit, cancel the stop loss
-            elif (self.__currentStopLoss is not None and self.__currentStopLoss.Status is not OrderStatus.Filled):
+            elif (self.__current_stop_loss is not None and self.__current_stop_loss.status is not OrderStatus.FILLED):
                 # cancel our current stop loss
-                self.__currentStopLoss.Cancel("Exited position")
-                self.__currentStopLoss = None
+                self.__current_stop_loss.cancel("Exited position")
+                self.__current_stop_loss = None

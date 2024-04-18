@@ -24,81 +24,82 @@ from QuantConnect.Algorithm.CSharp import *
 class IndicatorSuiteAlgorithm(QCAlgorithm):
     '''Demonstration algorithm of popular indicators and plotting them.'''
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.symbol = "SPY"
-        self.symbol2 = "GOOG"
-        self.customSymbol = "IBM"
+        self._symbol = "SPY"
+        self._symbol2 = "GOOG"
+        self.custom_symbol = "IBM"
         self.price = None
 
-        self.SetStartDate(2013, 1, 1)  #Set Start Date
-        self.SetEndDate(2014, 12, 31)    #Set End Date
-        self.SetCash(25000)           #Set Strategy Cash
+        self.set_start_date(2013, 1, 1)  #Set Start Date
+        self.set_end_date(2014, 12, 31)    #Set End Date
+        self.set_cash(25000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
 
-        self.AddEquity(self.symbol, Resolution.Daily)
-        self.AddEquity(self.symbol2, Resolution.Daily)
-        self.AddData(CustomData, self.customSymbol, Resolution.Daily)
+        self.add_equity(self._symbol, Resolution.DAILY)
+        self.add_equity(self._symbol2, Resolution.DAILY)
+        self.add_data(CustomData, self.custom_symbol, Resolution.DAILY)
 
         # Set up default Indicators, these indicators are defined on the Value property of incoming data (except ATR and AROON which use the full TradeBar object)
         self.indicators = {
-                            'BB' : self.BB(self.symbol, 20, 1, MovingAverageType.Simple, Resolution.Daily),
-                            'RSI' : self.RSI(self.symbol, 14, MovingAverageType.Simple, Resolution.Daily),
-                            'EMA' : self.EMA(self.symbol, 14, Resolution.Daily),
-                            'SMA' : self.SMA(self.symbol, 14, Resolution.Daily),
-                            'MACD' : self.MACD(self.symbol, 12, 26, 9, MovingAverageType.Simple, Resolution.Daily),
-                            'MOM' : self.MOM(self.symbol, 20, Resolution.Daily),
-                            'MOMP' : self.MOMP(self.symbol, 20, Resolution.Daily),
-                            'STD' : self.STD(self.symbol, 20, Resolution.Daily),
-                            # by default if the symbol is a tradebar type then it will be the min of the low property
-                            'MIN' : self.MIN(self.symbol, 14, Resolution.Daily),
-                            # by default if the symbol is a tradebar type then it will be the max of the high property
-                            'MAX' : self.MAX(self.symbol, 14, Resolution.Daily),
-                            'ATR' : self.ATR(self.symbol, 14, MovingAverageType.Simple, Resolution.Daily),
-                            'AROON' : self.AROON(self.symbol, 20, Resolution.Daily),
-                            'B' : self.B(self.symbol, self.symbol2, 14)
-                          }
+            'BB' : self.bb(self._symbol, 20, 1, MovingAverageType.SIMPLE, Resolution.DAILY),
+            'RSI' : self.rsi(self._symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY),
+            'EMA' : self.ema(self._symbol, 14, Resolution.DAILY),
+            'SMA' : self.sma(self._symbol, 14, Resolution.DAILY),
+            'MACD' : self.macd(self._symbol, 12, 26, 9, MovingAverageType.SIMPLE, Resolution.DAILY),
+            'MOM' : self.mom(self._symbol, 20, Resolution.DAILY),
+            'MOMP' : self.momp(self._symbol, 20, Resolution.DAILY),
+            'STD' : self.std(self._symbol, 20, Resolution.DAILY),
+            # by default if the symbol is a tradebar type then it will be the min of the low property
+            'MIN' : self.min(self._symbol, 14, Resolution.DAILY),
+            # by default if the symbol is a tradebar type then it will be the max of the high property
+            'MAX' : self.max(self._symbol, 14, Resolution.DAILY),
+            'ATR' : self.atr(self._symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY),
+            'AROON' : self.aroon(self._symbol, 20, Resolution.DAILY),
+            'B' : self.b(self._symbol, self._symbol2, 14)
+        }
 
         #  Here we're going to define indicators using 'selector' functions. These 'selector' functions will define what data gets sent into the indicator
-        #  These functions have a signature like the following: decimal Selector(BaseData baseData), and can be defined like: baseData => baseData.Value
+        #  These functions have a signature like the following: decimal Selector(BaseData base_data), and can be defined like: base_data => base_data.value
         #  We'll define these 'selector' functions to select the Low value
         #
         #  For more information on 'anonymous functions' see: http:#en.wikipedia.org/wiki/Anonymous_function
         #                                                     https:#msdn.microsoft.com/en-us/library/bb397687.aspx
         #
-        self.selectorIndicators = {
-                                    'BB' : self.BB(self.symbol, 20, 1, MovingAverageType.Simple, Resolution.Daily, Field.Low),
-                                    'RSI' :self.RSI(self.symbol, 14, MovingAverageType.Simple, Resolution.Daily, Field.Low),
-                                    'EMA' :self.EMA(self.symbol, 14, Resolution.Daily, Field.Low),
-                                    'SMA' :self.SMA(self.symbol, 14, Resolution.Daily, Field.Low),
-                                    'MACD' : self.MACD(self.symbol, 12, 26, 9, MovingAverageType.Simple, Resolution.Daily, Field.Low),
-                                    'MOM' : self.MOM(self.symbol, 20, Resolution.Daily, Field.Low),
-                                    'MOMP' : self.MOMP(self.symbol, 20, Resolution.Daily, Field.Low),
-                                    'STD' : self.STD(self.symbol, 20, Resolution.Daily, Field.Low),
-                                    'MIN' : self.MIN(self.symbol, 14, Resolution.Daily, Field.High),
-                                    'MAX' : self.MAX(self.symbol, 14, Resolution.Daily, Field.Low),
-                                    # ATR and AROON are special in that they accept a TradeBar instance instead of a decimal, we could easily project and/or transform the input TradeBar
-                                    # before it gets sent to the ATR/AROON indicator, here we use a function that will multiply the input trade bar by a factor of two
-                                    'ATR' : self.ATR(self.symbol, 14, MovingAverageType.Simple, Resolution.Daily, Func[IBaseData, IBaseDataBar](self.selector_double_TradeBar)),
-                                    'AROON' : self.AROON(self.symbol, 20, Resolution.Daily, Func[IBaseData, IBaseDataBar](self.selector_double_TradeBar))
-                                  }
+        self.selector_indicators = {
+            'BB' : self.bb(self._symbol, 20, 1, MovingAverageType.SIMPLE, Resolution.DAILY, Field.low),
+            'RSI' :self.rsi(self._symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY, Field.low),
+            'EMA' :self.ema(self._symbol, 14, Resolution.DAILY, Field.low),
+            'SMA' :self.sma(self._symbol, 14, Resolution.DAILY, Field.low),
+            'MACD' : self.macd(self._symbol, 12, 26, 9, MovingAverageType.SIMPLE, Resolution.DAILY, Field.low),
+            'MOM' : self.mom(self._symbol, 20, Resolution.DAILY, Field.low),
+            'MOMP' : self.momp(self._symbol, 20, Resolution.DAILY, Field.low),
+            'STD' : self.std(self._symbol, 20, Resolution.DAILY, Field.low),
+            'MIN' : self.min(self._symbol, 14, Resolution.DAILY, Field.high),
+            'MAX' : self.max(self._symbol, 14, Resolution.DAILY, Field.low),
+            # ATR and AROON are special in that they accept a TradeBar instance instead of a decimal, we could easily project and/or transform the input TradeBar
+            # before it gets sent to the ATR/AROON indicator, here we use a function that will multiply the input trade bar by a factor of two
+            'ATR' : self.atr(self._symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY, Func[IBaseData, IBaseDataBar](self.selector_double__trade_bar)),
+            'AROON' : self.aroon(self._symbol, 20, Resolution.DAILY, Func[IBaseData, IBaseDataBar](self.selector_double__trade_bar))
+        }
+
         # Custom Data Indicator:
-        self.rsiCustom = self.RSI(self.customSymbol, 14, MovingAverageType.Simple, Resolution.Daily)
-        self.minCustom = self.MIN(self.customSymbol, 14, Resolution.Daily)
-        self.maxCustom = self.MAX(self.customSymbol, 14, Resolution.Daily)
+        self.rsi_custom = self.rsi(self.custom_symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY)
+        self.min_custom = self.min(self.custom_symbol, 14, Resolution.DAILY)
+        self.max_custom = self.max(self.custom_symbol, 14, Resolution.DAILY)
 
         # in addition to defining indicators on a single security, you can all define 'composite' indicators.
         # these are indicators that require multiple inputs. the most common of which is a ratio.
         # suppose we seek the ratio of BTC to SPY, we could write the following:
-        spyClose = Identity(self.symbol)
-        ibmClose = Identity(self.customSymbol)
+        spy_close = Identity(self._symbol)
+        ibm_close = Identity(self.custom_symbol)
 
         # this will create a new indicator whose value is IBM/SPY
-        self.ratio = IndicatorExtensions.Over(ibmClose, spyClose)
+        self.ratio = IndicatorExtensions.over(ibm_close, spy_close)
 
         # we can also easily plot our indicators each time they update using th PlotIndicator function
-        self.PlotIndicator("Ratio", self.ratio)
+        self.plot_indicator("Ratio", self.ratio)
 
         # The following methods will add multiple charts to the algorithm output.
         # Those chatrs names will be used later to plot different series in a particular chart.
@@ -110,69 +111,69 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         Chart('MACD')
         Chart('Averages')
         # Here we make use of the Schelude method to update the plots once per day at market close.
-        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.BeforeMarketClose(self.symbol), self.update_plots)
+        self.schedule.on(self.date_rules.every_day(), self.time_rules.before_market_close(self._symbol), self.update_plots)
 
-    def OnData(self, data):
+    def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
 
-        if (#not data.Bars.ContainsKey(self.symbol) or
-            not self.indicators['BB'].IsReady or
-            not self.indicators['RSI'].IsReady):
+        if (#not data.bars.contains_key(self._symbol) or
+            not self.indicators['BB'].is_ready or
+            not self.indicators['RSI'].is_ready):
             return
 
-        self.price = data[self.symbol].Close
+        self.price = data[self._symbol].close
 
-        if not self.Portfolio.HoldStock:
-            quantity = int(self.Portfolio.Cash / self.price)
-            self.Order(self.symbol, quantity)
-            self.Debug('Purchased SPY on ' + self.Time.strftime('%Y-%m-%d'))
+        if not self.portfolio.hold_stock:
+            quantity = int(self.portfolio.cash / self.price)
+            self.order(self._symbol, quantity)
+            self.debug('Purchased SPY on ' + self.time.strftime('%Y-%m-%d'))
 
     def update_plots(self):
-        if not self.indicators['BB'].IsReady or not self.indicators['STD'].IsReady:
+        if not self.indicators['BB'].is_ready or not self.indicators['STD'].is_ready:
             return
 
         # Plots can also be created just with this one line command.
-        self.Plot('RSI', self.indicators['RSI'])
+        self.plot('RSI', self.indicators['RSI'])
         # Custom data indicator
-        self.Plot('RSI-FB', self.rsiCustom)
+        self.plot('RSI-FB', self.rsi_custom)
 
         # Here we make use of the chats decalred in the Initialize method, plotting multiple series
         # in each chart.
-        self.Plot('STD', 'STD', self.indicators['STD'].Current.Value)
+        self.plot('STD', 'STD', self.indicators['STD'].current.value)
 
-        self.Plot('BB', 'Price', self.price)
-        self.Plot('BB', 'BollingerUpperBand', self.indicators['BB'].UpperBand.Current.Value)
-        self.Plot('BB', 'BollingerMiddleBand', self.indicators['BB'].MiddleBand.Current.Value)
-        self.Plot('BB', 'BollingerLowerBand', self.indicators['BB'].LowerBand.Current.Value)
+        self.plot('BB', 'Price', self.price)
+        self.plot('BB', 'BollingerUpperBand', self.indicators['BB'].upper_band.current.value)
+        self.plot('BB', 'BollingerMiddleBand', self.indicators['BB'].middle_band.current.value)
+        self.plot('BB', 'BollingerLowerBand', self.indicators['BB'].lower_band.current.value)
 
 
-        self.Plot('AROON', 'Aroon', self.indicators['AROON'].Current.Value)
-        self.Plot('AROON', 'AroonUp', self.indicators['AROON'].AroonUp.Current.Value)
-        self.Plot('AROON', 'AroonDown', self.indicators['AROON'].AroonDown.Current.Value)
+        self.plot('AROON', 'Aroon', self.indicators['AROON'].current.value)
+        self.plot('AROON', 'AroonUp', self.indicators['AROON'].aroon_up.current.value)
+        self.plot('AROON', 'AroonDown', self.indicators['AROON'].aroon_down.current.value)
 
         # The following Plot method calls are commented out because of the 10 series limit for backtests
-        #self.Plot('ATR', 'ATR', self.indicators['ATR'].Current.Value)
-        #self.Plot('ATR', 'ATRDoubleBar', self.selectorIndicators['ATR'].Current.Value)
-        #self.Plot('Averages', 'SMA', self.indicators['SMA'].Current.Value)
-        #self.Plot('Averages', 'EMA', self.indicators['EMA'].Current.Value)
-        #self.Plot('MOM', self.indicators['MOM'].Current.Value)
-        #self.Plot('MOMP', self.indicators['MOMP'].Current.Value)
-        #self.Plot('MACD', 'MACD', self.indicators['MACD'].Current.Value)
-        #self.Plot('MACD', 'MACDSignal', self.indicators['MACD'].Signal.Current.Value)
+        #self.plot('ATR', 'ATR', self.indicators['ATR'].current.value)
+        #self.plot('ATR', 'ATRDoubleBar', self.selector_indicators['ATR'].current.value)
+        #self.plot('Averages', 'SMA', self.indicators['SMA'].current.value)
+        #self.plot('Averages', 'EMA', self.indicators['EMA'].current.value)
+        #self.plot('MOM', self.indicators['MOM'].current.value)
+        #self.plot('MOMP', self.indicators['MOMP'].current.value)
+        #self.plot('MACD', 'MACD', self.indicators['MACD'].current.value)
+        #self.plot('MACD', 'MACDSignal', self.indicators['MACD'].signal.current.value)
 
-    def selector_double_TradeBar(self, bar):
+    def selector_double__trade_bar(self, bar):
         trade_bar = TradeBar()
-        trade_bar.Close = 2 * bar.Close
-        trade_bar.DataType = bar.DataType
-        trade_bar.High = 2 * bar.High
-        trade_bar.Low = 2 * bar.Low
-        trade_bar.Open = 2 * bar.Open
-        trade_bar.Symbol = bar.Symbol
-        trade_bar.Time = bar.Time
-        trade_bar.Value = 2 * bar.Value
-        trade_bar.Period = bar.Period
+        trade_bar.close = 2 * bar.close
+        trade_bar.data_type = bar.data_type
+        trade_bar.high = 2 * bar.high
+        trade_bar.low = 2 * bar.low
+        trade_bar.open = 2 * bar.open
+        trade_bar.symbol = bar.symbol
+        trade_bar.time = bar.time
+        trade_bar.value = 2 * bar.value
+        trade_bar.period = bar.period
         return trade_bar

@@ -21,40 +21,41 @@ from AlgorithmImports import *
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="consolidating data" />
 class IndicatorWithRenkoBarsRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 9)
 
-        self.AddEquity("SPY")
-        self.AddEquity("AIG")
+    def initialize(self):
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 9)
 
-        spyRenkoConsolidator = RenkoConsolidator(0.1)
-        spyRenkoConsolidator.DataConsolidated += self.OnSPYDataConsolidated
+        self.add_equity("SPY")
+        self.add_equity("AIG")
 
-        aigRenkoConsolidator = RenkoConsolidator(0.05)
-        aigRenkoConsolidator.DataConsolidated += self.OnAIGDataConsolidated
+        spy_renko_consolidator = RenkoConsolidator(0.1)
+        spy_renko_consolidator.data_consolidated += self.on_s_p_y_data_consolidated
 
-        self.SubscriptionManager.AddConsolidator("SPY", spyRenkoConsolidator)
-        self.SubscriptionManager.AddConsolidator("AIG", aigRenkoConsolidator)
+        aig_renko_consolidator = RenkoConsolidator(0.05)
+        aig_renko_consolidator.data_consolidated += self.on_a_i_g_data_consolidated
 
-        self.mi = MassIndex("MassIndex", 9, 25)
-        self.wasi = WilderAccumulativeSwingIndex("WilderAccumulativeSwingIndex", 8)
-        self.wsi = WilderSwingIndex("WilderSwingIndex", 8)
-        self.b = Beta("Beta", 3, "AIG", "SPY")
-        self.indicators = [self.mi, self.wasi, self.wsi, self.b]
+        self.subscription_manager.add_consolidator("SPY", spy_renko_consolidator)
+        self.subscription_manager.add_consolidator("AIG", aig_renko_consolidator)
 
-    def OnSPYDataConsolidated(self, sender, renkoBar):
-        self.mi.Update(renkoBar)
-        self.wasi.Update(renkoBar)
-        self.wsi.Update(renkoBar)
-        self.b.Update(renkoBar)
+        self._mi = MassIndex("MassIndex", 9, 25)
+        self._wasi = WilderAccumulativeSwingIndex("WilderAccumulativeSwingIndex", 8)
+        self._wsi = WilderSwingIndex("WilderSwingIndex", 8)
+        self._b = Beta("Beta", 3, "AIG", "SPY")
+        self._indicators = [self._mi, self._wasi, self._wsi, self._b]
 
-    def OnAIGDataConsolidated(self, sender, renkoBar):
-        self.b.Update(renkoBar)
+    def on_s_p_y_data_consolidated(self, sender, renko_bar):
+        self._mi.update(renko_bar)
+        self._wasi.update(renko_bar)
+        self._wsi.update(renko_bar)
+        self._b.update(renko_bar)
 
-    def OnEndOfAlgorithm(self):
-        for indicator in self.indicators:
-            if not indicator.IsReady:
-                raise Exception(f"{indicator.Name} indicator should be ready")
-            elif indicator.Current.Value == 0:
-                raise Exception(f"The current value of the {indicator.Name} indicator should be different than zero")
+    def on_a_i_g_data_consolidated(self, sender, renko_bar):
+        self._b.update(renko_bar)
+
+    def on_end_of_algorithm(self):
+        for indicator in self._indicators:
+            if not indicator.is_ready:
+                raise Exception(f"{indicator.name} indicator should be ready")
+            elif indicator.current.value == 0:
+                raise Exception(f"The current value of the {indicator.name} indicator should be different than zero")

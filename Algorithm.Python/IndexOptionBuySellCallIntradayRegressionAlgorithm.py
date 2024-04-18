@@ -28,59 +28,59 @@ from AlgorithmImports import *
 ### * Assignments are counted as orders
 ### </summary>
 class IndexOptionBuySellCallIntradayRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2021, 1, 4)
-        self.SetEndDate(2021, 1, 31)
 
-        spx = self.AddIndex("SPX", Resolution.Minute).Symbol
+    def initialize(self):
+        self.set_start_date(2021, 1, 4)
+        self.set_end_date(2021, 1, 31)
+
+        spx = self.add_index("SPX", Resolution.MINUTE).symbol
 
         # Select a index option expiring ITM, and adds it to the algorithm.
-        spxOptions = list(sorted([
-            self.AddIndexOptionContract(i, Resolution.Minute).Symbol \
-                for i in self.OptionChainProvider.GetOptionContractList(spx, self.Time)\
-                    if (i.ID.StrikePrice == 3700 or i.ID.StrikePrice == 3800) and i.ID.OptionRight == OptionRight.Call and i.ID.Date.year == 2021 and i.ID.Date.month == 1],
-            key=lambda x: x.ID.StrikePrice
+        spx_options = list(sorted([
+            self.add_index_option_contract(i, Resolution.MINUTE).symbol \
+                for i in self.option_chain_provider.get_option_contract_list(spx, self.time)\
+                    if (i.id.strike_price == 3700 or i.id.strike_price == 3800) and i.id.option_right == OptionRight.CALL and i.id.date.year == 2021 and i.id.date.month == 1],
+            key=lambda x: x.id.strike_price
         ))
 
-        expectedContract3700 = Symbol.CreateOption(
+        expectedContract3700 = Symbol.create_option(
             spx,
             Market.USA,
-            OptionStyle.European,
-            OptionRight.Call,
+            OptionStyle.EUROPEAN,
+            OptionRight.CALL,
             3700,
             datetime(2021, 1, 15)
         )
 
-        expectedContract3800 = Symbol.CreateOption(
+        expectedContract3800 = Symbol.create_option(
             spx,
             Market.USA,
-            OptionStyle.European,
-            OptionRight.Call,
+            OptionStyle.EUROPEAN,
+            OptionRight.CALL,
             3800,
             datetime(2021, 1, 15)
         )
 
-        if len(spxOptions) != 2:
-            raise Exception(f"Expected 2 index options symbols from chain provider, found {spxOptions.Count}")
+        if len(spx_options) != 2:
+            raise Exception(f"Expected 2 index options symbols from chain provider, found {spx_options.count}")
 
-        if spxOptions[0] != expectedContract3700:
-            raise Exception(f"Contract {expectedContract3700} was not found in the chain, found instead: {spxOptions[0]}")
+        if spx_options[0] != expectedContract3700:
+            raise Exception(f"Contract {expectedContract3700} was not found in the chain, found instead: {spx_options[0]}")
         
-        if spxOptions[1] != expectedContract3800:
-            raise Exception(f"Contract {expectedContract3800} was not found in the chain, found instead: {spxOptions[1]}")
+        if spx_options[1] != expectedContract3800:
+            raise Exception(f"Contract {expectedContract3800} was not found in the chain, found instead: {spx_options[1]}")
 
-        self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.AfterMarketOpen(spx, 1), lambda: self.AfterMarketOpenTrade(spxOptions))
-        self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.Noon, lambda: self.Liquidate())
+        self.schedule.on(self.date_rules.tomorrow, self.time_rules.after_market_open(spx, 1), lambda: self.after_market_open_trade(spx_options))
+        self.schedule.on(self.date_rules.tomorrow, self.time_rules.noon, lambda: self.liquidate())
 
-    def AfterMarketOpenTrade(self, spxOptions):
-        self.MarketOrder(spxOptions[0], 1)
-        self.MarketOrder(spxOptions[1], -1)
+    def after_market_open_trade(self, spx_options):
+        self.market_order(spx_options[0], 1)
+        self.market_order(spx_options[1], -1)
 
     ### <summary>
     ### Ran at the end of the algorithm to ensure the algorithm has no holdings
     ### </summary>
     ### <exception cref="Exception">The algorithm has holdings</exception>
-    def OnEndOfAlgorithm(self):
-        if self.Portfolio.Invested:
-            raise Exception(f"Expected no holdings at end of algorithm, but are invested in: {', '.join(self.Portfolio.Keys)}")
-
+    def on_end_of_algorithm(self):
+        if self.portfolio.invested:
+            raise Exception(f"Expected no holdings at end of algorithm, but are invested in: {', '.join(self.portfolio.keys())}")

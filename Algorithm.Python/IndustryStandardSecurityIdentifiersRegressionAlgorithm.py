@@ -17,42 +17,43 @@ from AlgorithmImports import *
 ### Algorithm illustrating how to get a security's industry-standard identifier from its `Symbol`
 ### </summary>
 class IndustryStandardSecurityIdentifiersRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2014, 6, 5)
-        self.SetEndDate(2014, 6, 5)
 
-        equity = self.AddEquity("AAPL").Symbol
+    def initialize(self):
+        self.set_start_date(2014, 6, 5)
+        self.set_end_date(2014, 6, 5)
 
-        cusip = equity.CUSIP
-        compositeFigi = equity.CompositeFIGI
-        sedol = equity.SEDOL
-        isin = equity.ISIN
-        cik = equity.CIK
+        equity = self.add_equity("AAPL").symbol
 
-        self.CheckSymbolRepresentation(cusip, "CUSIP")
-        self.CheckSymbolRepresentation(compositeFigi, "Composite FIGI")
-        self.CheckSymbolRepresentation(sedol, "SEDOL")
-        self.CheckSymbolRepresentation(isin, "ISIN")
-        self.CheckSymbolRepresentation(f"{cik}", "CIK")
+        cusip = equity.cusip
+        composite_figi = equity.composite_figi
+        sedol = equity.sedol
+        isin = equity.isin
+        cik = equity.cik
+
+        self.check_symbol_representation(cusip, "CUSIP")
+        self.check_symbol_representation(composite_figi, "Composite FIGI")
+        self.check_symbol_representation(sedol, "SEDOL")
+        self.check_symbol_representation(isin, "ISIN")
+        self.check_symbol_representation(f"{cik}", "CIK")
 
         # Check Symbol API vs QCAlgorithm API
-        self.CheckAPIsSymbolRepresentations(cusip, self.CUSIP(equity), "CUSIP")
-        self.CheckAPIsSymbolRepresentations(compositeFigi, self.CompositeFIGI(equity), "Composite FIGI")
-        self.CheckAPIsSymbolRepresentations(sedol, self.SEDOL(equity), "SEDOL")
-        self.CheckAPIsSymbolRepresentations(isin, self.ISIN(equity), "ISIN")
-        self.CheckAPIsSymbolRepresentations(f"{cik}", f"{self.CIK(equity)}", "CIK")
+        self.check_ap_is_symbol_representations(cusip, self.cusip(equity), "CUSIP")
+        self.check_ap_is_symbol_representations(composite_figi, self.composite_figi(equity), "Composite FIGI")
+        self.check_ap_is_symbol_representations(sedol, self.sedol(equity), "SEDOL")
+        self.check_ap_is_symbol_representations(isin, self.isin(equity), "ISIN")
+        self.check_ap_is_symbol_representations(f"{cik}", f"{self.cik(equity)}", "CIK")
 
-        self.Log(f"\nAAPL CUSIP: {cusip}"
-                 f"\nAAPL Composite FIGI: {compositeFigi}"
-                 f"\nAAPL SEDOL: {sedol}"
-                 f"\nAAPL ISIN: {isin}"
-                 f"\nAAPL CIK: {cik}")
+        self.log(f"\n_aapl CUSIP: {cusip}"
+                 f"\n_aapl Composite FIGI: {composite_figi}"
+                 f"\n_aapl SEDOL: {sedol}"
+                 f"\n_aapl ISIN: {isin}"
+                 f"\n_aapl CIK: {cik}")
 
-    def CheckSymbolRepresentation(self, symbol: str, standard: str) -> None:
+    def check_symbol_representation(self, symbol: str, standard: str) -> None:
         if not symbol:
             raise Exception(f"{standard} symbol representation is null or empty")
 
-    def CheckAPIsSymbolRepresentations(self, symbolApiSymbol: str, algorithmApiSymbol: str, standard: str) -> None:
-        if symbolApiSymbol != algorithmApiSymbol:
-            raise Exception(f"Symbol API {standard} symbol representation ({symbolApiSymbol}) does not match "
-                            f"QCAlgorithm API {standard} symbol representation ({algorithmApiSymbol})")
+    def check_ap_is_symbol_representations(self, symbol_api_symbol: str, algorithm_api_symbol: str, standard: str) -> None:
+        if symbol_api_symbol != algorithm_api_symbol:
+            raise Exception(f"Symbol API {standard} symbol representation ({symbol_api_symbol}) does not match "
+                            f"QCAlgorithm API {standard} symbol representation ({algorithm_api_symbol})")
