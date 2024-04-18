@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 {
                     if (!_model.HasAttr(attributeName))
                     {
-                        throw new NotImplementedException($"IPortfolioSelectionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
+                        throw new NotImplementedException($"UniverseSelectionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
                     }
                 }
             }
