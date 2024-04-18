@@ -581,49 +581,61 @@ namespace QuantConnect.Tests.Common.Orders
             {
                 case OrderType.Market:
                     order = DeserializeOrder<MarketOrder>(json);
+                    Assert.IsTrue(order.IsMarketable, "Failed in Order.IsMarketable");
                     break;
                 case OrderType.Limit:
                     order = DeserializeOrder<LimitOrder>(json);
                     Assert.AreEqual(139.240078869942m, (order as LimitOrder).LimitPrice);
+                    Assert.IsTrue(order.IsMarketable, "Failed in Order.IsMarketable");
                     break;
                 case OrderType.StopMarket:
                     order = DeserializeOrder<StopMarketOrder>(json);
                     Assert.AreEqual(138.232948134345, (order as StopMarketOrder).StopPrice);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
                     break;
                 case OrderType.StopLimit:
                     order = DeserializeOrder<StopLimitOrder>(json);
                     Assert.AreEqual(139.240078869942m, (order as StopLimitOrder).LimitPrice);
                     Assert.AreEqual(138.232948134345, (order as StopLimitOrder).StopPrice);
                     Assert.AreEqual(false, (order as StopLimitOrder).StopTriggered);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
                     break;
                 case OrderType.MarketOnOpen:
                     order = DeserializeOrder<MarketOnOpenOrder>(json);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
                     break;
                 case OrderType.MarketOnClose:
                     order = DeserializeOrder<MarketOnCloseOrder>(json);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
                     break;
                 case OrderType.OptionExercise:
                     order = DeserializeOrder<OptionExerciseOrder>(json);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
                     break;
                 case OrderType.LimitIfTouched:
                     order = DeserializeOrder<LimitIfTouchedOrder>(json);
                     Assert.AreEqual(139.240078869942m, (order as LimitIfTouchedOrder).LimitPrice);
                     Assert.AreEqual(0, (order as LimitIfTouchedOrder).TriggerPrice);
                     Assert.AreEqual(false, (order as LimitIfTouchedOrder).TriggerTouched);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
                     break;
                 case OrderType.ComboMarket:
                     order = DeserializeOrder<ComboMarketOrder>(json);
+                    Assert.IsTrue(order.IsMarketable, "Failed in Order.IsMarketable");
                     break;
                 case OrderType.ComboLimit:
                     order = DeserializeOrder<ComboLimitOrder>(json);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
                     break;
                 case OrderType.ComboLegLimit:
                     order = DeserializeOrder<ComboLegLimitOrder>(json);
                     Assert.AreEqual(139.240078869942m, (order as ComboLegLimitOrder).LimitPrice);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
                     break;
                 case OrderType.TrailingStop:
                     order = DeserializeOrder<TrailingStopOrder>(json);
                     Assert.AreEqual(138.232948134345m, (order as TrailingStopOrder).StopPrice);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
                     break;
                 default:
                     throw new Exception($"Unknown order type, {type}");
@@ -639,7 +651,8 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(138.513986945m, order.Price, "Failed in Order.Price");
             Assert.AreEqual("USD", order.PriceCurrency, "Failed in Order.PriceCurrency");
             Assert.AreEqual(new DateTime(2013, 10, 7, 13, 31, 00), order.Time.RoundDown(TimeSpan.FromSeconds(1)), "Failed in Order.Time");
-            //Assert.AreEqual(new DateTime(2013, 10, 7, 13, 31, 00), order.Time.RoundDown(TimeSpan.FromSeconds(1)));
+            Assert.AreEqual(new DateTime(2013, 10, 7, 13, 31, 00), order.CreatedTime.RoundDown(TimeSpan.FromSeconds(1)));
+            Assert.AreEqual(new DateTime(2013, 10, 7, 13, 31, 00), order.LastFillTime?.RoundDown(TimeSpan.FromSeconds(1)));
             Assert.AreEqual(10, order.Quantity, "Failed in Order.Quantity");
             Assert.AreEqual(OrderStatus.Submitted, order.Status, "Failed in Order.Status");
             Assert.AreEqual(TimeInForce.GoodTilCanceled.ToString(), order.Properties.TimeInForce.ToString(), "Failed in Order.Properties.TimeInForce");
@@ -649,7 +662,6 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(138.505714984m, order.OrderSubmissionData.BidPrice, "Failed in Order.OrderSubmissionData.BidPrice");
             Assert.AreEqual(138.513986945m, order.OrderSubmissionData.AskPrice, "Failed in Order.OrderSubmissionData.AskPrice");
             Assert.AreEqual(138.505714984m, order.OrderSubmissionData.LastPrice, "Failed in Order.OrderSubmissionData.LastPrice");
-            //Assert.IsTrue(order.IsMarketable, "Failed in Order.IsMarketable");
             Assert.AreEqual(DataNormalizationMode.Adjusted, order.PriceAdjustmentMode, "Failed in Order.PriceAdjustmentMode");
         }
 
