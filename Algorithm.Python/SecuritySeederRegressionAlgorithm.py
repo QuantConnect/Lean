@@ -17,36 +17,36 @@ from AlgorithmImports import *
 ### Regression algorithm reproducing GH issue #5921. Asserting a security can be warmup correctly on initialize
 ### </summary>
 class SecuritySeederRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10, 8)
-        self.SetEndDate(2013,10,10)
+        self.set_start_date(2013,10, 8)
+        self.set_end_date(2013,10,10)
 
-        self.SetSecurityInitializer(BrokerageModelSecurityInitializer(self.BrokerageModel,
-                                                                      FuncSecuritySeeder(self.GetLastKnownPrices)))
-        self.AddEquity("SPY", Resolution.Minute)
+        self.set_security_initializer(BrokerageModelSecurityInitializer(self.brokerage_model,
+                                                                      FuncSecuritySeeder(self.get_last_known_prices)))
+        self.add_equity("SPY", Resolution.MINUTE)
 
-    def OnData(self, data):
+    def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if not self.Portfolio.Invested:
-            self.SetHoldings("SPY", 1)
+        if not self.portfolio.invested:
+            self.set_holdings("SPY", 1)
 
-    def OnSecuritiesChanged(self, changes):
-        for addedSecurity in changes.AddedSecurities:
-            if not addedSecurity.HasData \
-                or addedSecurity.AskPrice == 0 \
-                or addedSecurity.BidPrice == 0 \
-                or addedSecurity.BidSize == 0 \
-                or addedSecurity.AskSize == 0 \
-                or addedSecurity.Price == 0 \
-                or addedSecurity.Volume == 0 \
-                or addedSecurity.High == 0 \
-                or addedSecurity.Low == 0 \
-                or addedSecurity.Open == 0 \
-                or addedSecurity.Close == 0:
-                raise ValueError(f"Security {addedSecurity.Symbol} was not warmed up!")
+    def on_securities_changed(self, changes):
+        for addedSecurity in changes.added_securities:
+            if not addedSecurity.has_data \
+                or addedSecurity.ask_price == 0 \
+                or addedSecurity.bid_price == 0 \
+                or addedSecurity.bid_size == 0 \
+                or addedSecurity.ask_size == 0 \
+                or addedSecurity.price == 0 \
+                or addedSecurity.volume == 0 \
+                or addedSecurity.high == 0 \
+                or addedSecurity.low == 0 \
+                or addedSecurity.open == 0 \
+                or addedSecurity.close == 0:
+                raise ValueError(f"Security {addedSecurity.SYMBOL} was not warmed up!")

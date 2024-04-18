@@ -19,41 +19,41 @@ from collections import deque
 ### specifically when this class is a subclass of a C# class.
 ### </summary>
 class SecurityDynamicPropertyPythonClassAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 7)
+    def initialize(self):
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 7)
 
-        self.spy = self.AddEquity("SPY", Resolution.Minute)
+        self.spy = self.add_equity("SPY", Resolution.MINUTE)
 
         customSMA = CustomSimpleMovingAverage('custom', 60)
-        self.spy.CustomSMA = customSMA
-        customSMA.Security = self.spy
+        self.spy.customSMA = customSMA
+        customSMA.security = self.spy
 
-        self.RegisterIndicator(self.spy.Symbol, self.spy.CustomSMA,  Resolution.Minute)
+        self.register_indicator(self.spy.symbol, self.spy.customSMA,  Resolution.MINUTE)
 
 
-    def OnWarmupFinished(self) -> None:
-        if type(self.spy.CustomSMA) != CustomSimpleMovingAverage:
-            raise Exception("spy.CustomSMA is not an instance of CustomSimpleMovingAverage")
+    def on_warmup_finished(self) -> None:
+        if type(self.spy.customSMA) != CustomSimpleMovingAverage:
+            raise Exception("spy.customSMA is not an instance of CustomSimpleMovingAverage")
 
-        if self.spy.CustomSMA.Security is None:
-            raise Exception("spy.CustomSMA.Security is None")
+        if self.spy.customSMA.security is None:
+            raise Exception("spy.customSMA.security is None")
         else:
-            self.Debug(f"spy.CustomSMA.Security.Symbol: {self.spy.CustomSMA.Security.Symbol}")
+            self.debug(f"spy.customSMA.security.symbol: {self.spy.customSMA.security.symbol}")
 
-    def OnData(self, slice: Slice) -> None:
-        if self.spy.CustomSMA.IsReady:
-            self.Debug(f"CustomSMA: {self.spy.CustomSMA.Current.Value}")
+    def on_data(self, slice: Slice) -> None:
+        if self.spy.customSMA.is_ready:
+            self.debug(f"CustomSMA: {self.spy.customSMA.current.value}")
 
 class CustomSimpleMovingAverage(PythonIndicator):
     def __init__(self, name, period):
         super().__init__()
-        self.Name = name
-        self.Value = 0
+        self.name = name
+        self.value = 0
         self.queue = deque(maxlen=period)
 
-    def Update(self, input):
-        self.queue.appendleft(input.Value)
+    def update(self, input):
+        self.queue.appendleft(input.value)
         count = len(self.queue)
-        self.Value = np.sum(self.queue) / count
+        self.value = np.sum(self.queue) / count
         return count == self.queue.maxlen

@@ -16,24 +16,24 @@ from sklearn.linear_model import LinearRegression
 
 class ScikitLearnLinearRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 7)  # Set Start Date
-        self.SetEndDate(2013, 10, 8) # Set End Date
+    def initialize(self):
+        self.set_start_date(2013, 10, 7)  # Set Start Date
+        self.set_end_date(2013, 10, 8) # Set End Date
         
         self.lookback = 30 # number of previous days for training
         
-        self.SetCash(100000)  # Set Strategy Cash
-        spy = self.AddEquity("SPY", Resolution.Minute)
+        self.set_cash(100000)  # Set Strategy Cash
+        spy = self.add_equity("SPY", Resolution.MINUTE)
         
-        self.symbols = [ spy.Symbol ] # In the future, we can include more symbols to the list in this way
+        self.symbols = [ spy.symbol ] # In the future, we can include more symbols to the list in this way
         
-        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 28), self.Regression)
-        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 30), self.Trade)
+        self.schedule.on(self.date_rules.every_day("SPY"), self.time_rules.after_market_open("SPY", 28), self.regression)
+        self.schedule.on(self.date_rules.every_day("SPY"), self.time_rules.after_market_open("SPY", 30), self.trade)
         
     
-    def Regression(self):
+    def regression(self):
         # Daily historical data is used to train the machine learning model
-        history = self.History(self.symbols, self.lookback, Resolution.Daily)
+        history = self.history(self.symbols, self.lookback, Resolution.DAILY)
 
         # price dictionary:    key: symbol; value: historical price
         self.prices = {}
@@ -43,7 +43,7 @@ class ScikitLearnLinearRegressionAlgorithm(QCAlgorithm):
         for symbol in self.symbols:
             if not history.empty:
                 # get historical open price
-                self.prices[symbol] = list(history.loc[symbol.Value]['open'])
+                self.prices[symbol] = list(history.loc[symbol.value]['open'])
 
         # A is the design matrix
         A = range(self.lookback + 1)
@@ -72,7 +72,7 @@ class ScikitLearnLinearRegressionAlgorithm(QCAlgorithm):
                 self.slopes[symbol] = a/b
                 
     
-    def Trade(self):
+    def trade(self):
         # if there is no open price
         if not self.prices:
             return 
@@ -80,13 +80,13 @@ class ScikitLearnLinearRegressionAlgorithm(QCAlgorithm):
         thod_buy = 0.001 # threshold of slope to buy
         thod_liquidate = -0.001 # threshold of slope to liquidate
         
-        for holding in self.Portfolio.Values:
-            slope = self.slopes[holding.Symbol] 
+        for holding in self.portfolio.Values:
+            slope = self.slopes[holding.symbol] 
             # liquidate when slope smaller than thod_liquidate
-            if holding.Invested and slope < thod_liquidate:
-                self.Liquidate(holding.Symbol)
+            if holding.invested and slope < thod_liquidate:
+                self.liquidate(holding.symbol)
         
         for symbol in self.symbols:
             # buy when slope larger than thod_buy
             if self.slopes[symbol] > thod_buy:
-                self.SetHoldings(symbol, 1 / len(self.symbols))
+                self.set_holdings(symbol, 1 / len(self.symbols))

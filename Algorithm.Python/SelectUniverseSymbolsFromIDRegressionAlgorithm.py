@@ -21,26 +21,26 @@ class SelectUniverseSymbolsFromIDRegressionAlgorithm(QCAlgorithm):
     Regression algorithm asserting that universe symbols selection can be done by returning the symbol IDs in the selection function
     '''
 
-    def Initialize(self):
-        self.SetStartDate(2014, 3, 24)
-        self.SetEndDate(2014, 3, 26)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2014, 3, 24)
+        self.set_end_date(2014, 3, 26)
+        self.set_cash(100000)
 
         self._securities = []
-        self.UniverseSettings.Resolution = Resolution.Daily
-        self.AddUniverse(self.select_symbol)
+        self.universe_settings.resolution = Resolution.DAILY
+        self.add_universe(self.select_symbol)
 
     def select_symbol(self, fundamental):
-        symbols = [x.Symbol for x in fundamental]
+        symbols = [x.symbol for x in fundamental]
 
         if not symbols:
             return []
 
-        self.Log(f"Symbols: {', '.join([str(s) for s in symbols])}")
+        self.log(f"Symbols: {', '.join([str(s) for s in symbols])}")
         # Just for testing, but more filtering could be done here as shown below:
-        #symbols = [x.Symbol for x in fundamental if x.AssetClassification.MorningstarSectorCode == MorningstarSectorCode.Technology]
+        #symbols = [x.symbol for x in fundamental if x.asset_classification.morningstar_sector_code == MorningstarSectorCode.TECHNOLOGY]
 
-        history = self.History(symbols, datetime(1998, 1, 1), self.Time, Resolution.Daily)
+        history = self.history(symbols, datetime(1998, 1, 1), self.time, Resolution.DAILY)
 
         all_time_highs = history['high'].unstack(0).max()
         last_closes = history['close'].unstack(0).iloc[-1]
@@ -48,9 +48,9 @@ class SelectUniverseSymbolsFromIDRegressionAlgorithm(QCAlgorithm):
 
         return security_ids
 
-    def OnSecuritiesChanged(self, changes):
-        self._securities.extend(changes.AddedSecurities)
+    def on_securities_changed(self, changes):
+        self._securities.extend(changes.added_securities)
 
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         if not self._securities:
             raise Exception("No securities were selected")
