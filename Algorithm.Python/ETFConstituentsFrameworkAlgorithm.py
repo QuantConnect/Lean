@@ -19,23 +19,23 @@ from Selection.ETFConstituentsUniverseSelectionModel import *
 ### </summary>
 class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2020, 12, 1)
-        self.SetEndDate(2020, 12, 7)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2020, 12, 1)
+        self.set_end_date(2020, 12, 7)
+        self.set_cash(100000)
 
-        self.UniverseSettings.Resolution = Resolution.Daily
-        symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
-        self.AddUniverseSelection(ETFConstituentsUniverseSelectionModel(symbol, self.UniverseSettings, self.ETFConstituentsFilter))
+        self.universe_settings.resolution = Resolution.DAILY
+        symbol = Symbol.create("SPY", SecurityType.EQUITY, Market.USA)
+        self.add_universe_selection(ETFConstituentsUniverseSelectionModel(symbol, self.universe_settings, self.etf_constituents_filter))
 
-        self.AddAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(days=1)))
+        self.add_alpha(ConstantAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(days=1)))
 
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
 
 
-    def ETFConstituentsFilter(self, constituents: List[ETFConstituentData]) -> List[Symbol]:
+    def etf_constituents_filter(self, constituents: List[ETFConstituentData]) -> List[Symbol]:
         # Get the 10 securities with the largest weight in the index
-        selected = sorted([c for c in constituents if c.Weight],
-            key=lambda c: c.Weight, reverse=True)[:8]
-        return [c.Symbol for c in selected]
+        selected = sorted([c for c in constituents if c.weight],
+            key=lambda c: c.weight, reverse=True)[:8]
+        return [c.symbol for c in selected]
 

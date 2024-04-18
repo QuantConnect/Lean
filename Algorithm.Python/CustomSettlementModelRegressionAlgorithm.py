@@ -18,42 +18,42 @@ from CustomBrokerageModelRegressionAlgorithm import CustomBrokerageModel
 ### Regression algorithm to test we can specify a custom settlement model, and override some of its methods
 ### </summary>
 class CustomSettlementModelRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2013,10,7)
-        self.SetEndDate(2013,10,11)
-        self.SetCash(10000)
-        self.spy = self.AddEquity("SPY", Resolution.Daily)
-        self.SetSettlementModel(self.spy)
+    def initialize(self):
+        self.set_start_date(2013,10,7)
+        self.set_end_date(2013,10,11)
+        self.set_cash(10000)
+        self.spy = self.add_equity("SPY", Resolution.DAILY)
+        self.set_settlement_model(self.spy)
 
-    def SetSettlementModel(self, security):
-        self.SetBrokerageModel(CustomBrokerageModelWithCustomSettlementModel())
+    def set_settlement_model(self, security):
+        self.set_brokerage_model(CustomBrokerageModelWithCustomSettlementModel())
 
-    def OnData(self, slice):
-        if self.Portfolio.CashBook[Currencies.USD].Amount == 10000:
-            parameters = ApplyFundsSettlementModelParameters(self.Portfolio, self.spy, self.Time, CashAmount(101, Currencies.USD), None)
-            self.spy.SettlementModel.ApplyFunds(parameters)
+    def on_data(self, slice):
+        if self.portfolio.cash_book[Currencies.USD].amount == 10000:
+            parameters = ApplyFundsSettlementModelParameters(self.portfolio, self.spy, self.time, CashAmount(101, Currencies.USD), None)
+            self.spy.settlement_model.apply_funds(parameters)
 
-    def OnEndOfAlgorithm(self):
-        if self.Portfolio.CashBook[Currencies.USD].Amount != 10101:
-            raise Exception(f"It was expected to have 10101 USD in Portfolio, but was {self.Portfolio.CashBook[Currencies.USD].Amount}")
-        parameters = ScanSettlementModelParameters(self.Portfolio, self.spy, datetime(2013, 10, 6))
-        self.spy.SettlementModel.Scan(parameters)
-        if self.Portfolio.CashBook[Currencies.USD].Amount != 10000:
-            raise Exception(f"It was expected to have 10000 USD in Portfolio, but was {self.Portfolio.CashBook[Currencies.USD].Amount}")
+    def on_end_of_algorithm(self):
+        if self.portfolio.cash_book[Currencies.USD].amount != 10101:
+            raise Exception(f"It was expected to have 10101 USD in Portfolio, but was {self.portfolio.cash_book[Currencies.USD].amount}")
+        parameters = ScanSettlementModelParameters(self.portfolio, self.spy, datetime(2013, 10, 6))
+        self.spy.settlement_model.scan(parameters)
+        if self.portfolio.cash_book[Currencies.USD].amount != 10000:
+            raise Exception(f"It was expected to have 10000 USD in Portfolio, but was {self.portfolio.cash_book[Currencies.USD].amount}")
 
 class CustomSettlementModel:
-    def ApplyFunds(self, parameters):
-        self.currency = parameters.CashAmount.Currency;
-        self.amount = parameters.CashAmount.Amount
-        parameters.Portfolio.CashBook[self.currency].AddAmount(self.amount)
+    def apply_funds(self, parameters):
+        self.currency = parameters.cash_amount.currency;
+        self.amount = parameters.cash_amount.amount
+        parameters.portfolio.cash_book[self.currency].add_amount(self.amount)
 
-    def Scan(self, parameters):
-        if parameters.UtcTime == datetime(2013, 10, 6):
-            parameters.Portfolio.CashBook[self.currency].AddAmount(-self.amount)
+    def scan(self, parameters):
+        if parameters.utc_time == datetime(2013, 10, 6):
+            parameters.portfolio.cash_book[self.currency].add_amount(-self.amount)
 
-    def GetUnsettledCash(self):
+    def get_unsettled_cash(self):
         return None
 
 class CustomBrokerageModelWithCustomSettlementModel(CustomBrokerageModel):
-    def GetSettlementModel(self, security):
+    def get_settlement_model(self, security):
         return CustomSettlementModel()

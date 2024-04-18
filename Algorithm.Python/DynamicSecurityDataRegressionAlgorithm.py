@@ -16,38 +16,38 @@ from System.Collections.Generic import List
 from QuantConnect.Data.Custom.IconicTypes import *
 
 ### <summary>
-### Provides an example algorithm showcasing the Security.Data features
+### Provides an example algorithm showcasing the Security.data features
 ### </summary>
 class DynamicSecurityDataRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2015, 10, 22)
-        self.SetEndDate(2015, 10, 30)
+    def initialize(self):
+        self.set_start_date(2015, 10, 22)
+        self.set_end_date(2015, 10, 30)
 
-        self.Ticker = "GOOGL"
-        self.Equity = self.AddEquity(self.Ticker, Resolution.Daily)
+        self.ticker = "GOOGL"
+        self.equity = self.add_equity(self.ticker, Resolution.DAILY)
 
-        customLinkedEquity = self.AddData(LinkedData, self.Ticker, Resolution.Daily)
+        custom_linked_equity = self.add_data(LinkedData, self.ticker, Resolution.DAILY)
         
-        firstLinkedData = LinkedData()
-        firstLinkedData.Count = 100
-        firstLinkedData.Symbol = customLinkedEquity.Symbol
-        firstLinkedData.EndTime = self.StartDate
+        first_linked_data = LinkedData()
+        first_linked_data.count = 100
+        first_linked_data.symbol = custom_linked_equity.symbol
+        first_linked_data.end_time = self.start_date
         
-        secondLinkedData = LinkedData()
-        secondLinkedData.Count = 100
-        secondLinkedData.Symbol = customLinkedEquity.Symbol
-        secondLinkedData.EndTime = self.StartDate
+        second_linked_data = LinkedData()
+        second_linked_data.count = 100
+        second_linked_data.symbol = custom_linked_equity.symbol
+        second_linked_data.end_time = self.start_date
         
         # Adding linked data manually to cache for example purposes, since
         # LinkedData is a type used for testing and doesn't point to any real data.
-        customLinkedEquityType = list(customLinkedEquity.Subscriptions)[0].Type
-        customLinkedData = List[LinkedData]()
-        customLinkedData.Add(firstLinkedData)
-        customLinkedData.Add(secondLinkedData)
-        self.Equity.Cache.AddDataList(customLinkedData, customLinkedEquityType, False) 
+        custom_linked_equity_type = list(custom_linked_equity.subscriptions)[0].type
+        custom_linked_data = List[LinkedData]()
+        custom_linked_data.add(first_linked_data)
+        custom_linked_data.add(second_linked_data)
+        self.equity.cache.add_data_list(custom_linked_data, custom_linked_equity_type, False) 
 
-    def OnData(self, data):
+    def on_data(self, data):
         # The Security object's Data property provides convenient access
         # to the various types of data related to that security. You can
         # access not only the security's price data, but also any custom
@@ -55,13 +55,13 @@ class DynamicSecurityDataRegressionAlgorithm(QCAlgorithm):
 
         # 1. Get the most recent data point of a particular type:
         # 1.a Using the generic method, Get(T): => T
-        customLinkedData = self.Equity.Data.Get(LinkedData)
-        self.Log("{}: LinkedData: {}".format(self.Time, str(customLinkedData)))
+        custom_linked_data = self.equity.data.get(LinkedData)
+        self.log("{}: LinkedData: {}".format(self.time, str(custom_linked_data)))
 
         # 2. Get the list of data points of a particular type for the most recent time step:
         # 2.a Using the generic method, GetAll(T): => IReadOnlyList<T>
-        customLinkedDataList = self.Equity.Data.GetAll(LinkedData)
-        self.Log("{}: LinkedData: {}".format(self.Time, len(customLinkedDataList)))
+        custom_linked_data_list = self.equity.data.get_all(LinkedData)
+        self.log("{}: LinkedData: {}".format(self.time, len(custom_linked_data_list)))
 
-        if not self.Portfolio.Invested:
-            self.Buy(self.Equity.Symbol, 10)
+        if not self.portfolio.invested:
+            self.buy(self.equity.symbol, 10)

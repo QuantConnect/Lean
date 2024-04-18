@@ -21,18 +21,18 @@ from AlgorithmImports import *
 ### <meta name="tag" content="reality modelling" />
 class CustomVolatilityModelAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2013,10,7)   #Set Start Date
-        self.SetEndDate(2015,7,15)     #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
+    def initialize(self):
+        self.set_start_date(2013,10,7)   #Set Start Date
+        self.set_end_date(2015,7,15)     #Set End Date
+        self.set_cash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.equity = self.AddEquity("SPY", Resolution.Daily)
-        self.equity.SetVolatilityModel(CustomVolatilityModel(10))
+        self.equity = self.add_equity("SPY", Resolution.DAILY)
+        self.equity.set_volatility_model(CustomVolatilityModel(10))
 
 
-    def OnData(self, data):
-        if not self.Portfolio.Invested and self.equity.VolatilityModel.Volatility > 0:
-            self.SetHoldings("SPY", 1)
+    def on_data(self, data):
+        if not self.portfolio.invested and self.equity.volatility_model.volatility > 0:
+            self.set_holdings("SPY", 1)
 
 
 # Python implementation of StandardDeviationOfReturnsVolatilityModel
@@ -40,37 +40,37 @@ class CustomVolatilityModelAlgorithm(QCAlgorithm):
 # https://github.com/QuantConnect/Lean/blob/master/Common/Securities/Volatility/StandardDeviationOfReturnsVolatilityModel.cs
 class CustomVolatilityModel():
     def __init__(self, periods):
-        self.lastUpdate = datetime.min
-        self.lastPrice = 0
-        self.needsUpdate = False
-        self.periodSpan = timedelta(1)
+        self.last_update = datetime.min
+        self.last_price = 0
+        self.needs_update = False
+        self.period_span = timedelta(1)
         self.window = RollingWindow[float](periods)
 
         # Volatility is a mandatory attribute
-        self.Volatility = 0
+        self.volatility = 0
 
     # Updates this model using the new price information in the specified security instance
     # Update is a mandatory method
-    def Update(self, security, data):
-        timeSinceLastUpdate = data.EndTime - self.lastUpdate
-        if timeSinceLastUpdate >= self.periodSpan and data.Price > 0:
-            if self.lastPrice > 0:
-                self.window.Add(float(data.Price / self.lastPrice) - 1.0)
-                self.needsUpdate = self.window.IsReady
-            self.lastUpdate = data.EndTime
-            self.lastPrice = data.Price
+    def update(self, security, data):
+        time_since_last_update = data.end_time - self.last_update
+        if time_since_last_update >= self.period_span and data.price > 0:
+            if self.last_price > 0:
+                self.window.add(float(data.price / self.last_price) - 1.0)
+                self.needs_update = self.window.is_ready
+            self.last_update = data.end_time
+            self.last_price = data.price
 
-        if self.window.Count < 2:
-            self.Volatility = 0
+        if self.window.count < 2:
+            self.volatility = 0
             return
 
-        if self.needsUpdate:
-            self.needsUpdate = False
+        if self.needs_update:
+            self.needs_update = False
             std = np.std([ x for x in self.window ])
-            self.Volatility = std * np.sqrt(252.0)
+            self.volatility = std * np.sqrt(252.0)
 
     # Returns history requirements for the volatility model expressed in the form of history request
     # GetHistoryRequirements is a mandatory method
-    def GetHistoryRequirements(self, security, utcTime):
+    def get_history_requirements(self, security, utc_time):
         # For simplicity's sake, we will not set a history requirement 
         return None

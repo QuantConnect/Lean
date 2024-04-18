@@ -23,19 +23,19 @@ from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPor
 class EmaCrossUniverseSelectionFrameworkAlgorithm(QCAlgorithm):
     '''Framework algorithm that uses the EmaCrossUniverseSelectionModel to select the universe based on a moving average cross.'''
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2013,1,1)
-        self.SetEndDate(2015,1,1)
-        self.SetCash(100000)
+        self.set_start_date(2013,1,1)
+        self.set_end_date(2015,1,1)
+        self.set_cash(100000)
 
-        fastPeriod = 100
-        slowPeriod = 300
+        fast_period = 100
+        slow_period = 300
         count = 10
 
-        self.UniverseSettings.Leverage = 2.0
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.leverage = 2.0
+        self.universe_settings.resolution = Resolution.DAILY
 
-        self.SetUniverseSelection(EmaCrossUniverseSelectionModel(fastPeriod, slowPeriod, count))
-        self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(1), None, None))
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_universe_selection(EmaCrossUniverseSelectionModel(fast_period, slow_period, count))
+        self.set_alpha(ConstantAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(1), None, None))
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())

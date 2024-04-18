@@ -18,23 +18,23 @@ from QuantConnect.Algorithm.CSharp import *
 ### Regression algorithm asserting we can specify a custom option assignment
 ### </summary>
 class CustomOptionAssignmentRegressionAlgorithm(OptionAssignmentRegressionAlgorithm):
-    def Initialize(self):
-        self.SetSecurityInitializer(self.CustomSecurityInitializer)
-        super().Initialize()
+    def initialize(self):
+        self.set_security_initializer(self.custom_security_initializer)
+        super().initialize()
 
-    def CustomSecurityInitializer(self, security):
-        if Extensions.IsOption(security.Symbol.SecurityType):
+    def custom_security_initializer(self, security):
+        if Extensions.is_option(security.symbol.security_type):
             # we have to be 10% in the money to get assigned
-            security.SetOptionAssignmentModel(PyCustomOptionAssignmentModel(0.1))
+            security.set_option_assignment_model(PyCustomOptionAssignmentModel(0.1))
 
-    def OnData(self, data):
-        super().OnData(data)
+    def on_data(self, data):
+        super().on_data(data)
 
 class PyCustomOptionAssignmentModel(DefaultOptionAssignmentModel):
-    def __init__(self, requiredInTheMoneyPercent):
-        super().__init__(requiredInTheMoneyPercent)
+    def __init__(self, required_in_the_money_percent):
+        super().__init__(required_in_the_money_percent)
 
-    def GetAssignment(self, parameters):
-        result = super().GetAssignment(parameters)
-        result.Tag = "Custom Option Assignment"
+    def get_assignment(self, parameters):
+        result = super().get_assignment(parameters)
+        result.tag = "Custom Option Assignment"
         return result

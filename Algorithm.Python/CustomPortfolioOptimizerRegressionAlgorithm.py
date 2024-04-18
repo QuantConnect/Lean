@@ -22,10 +22,10 @@ from MeanVarianceOptimizationFrameworkAlgorithm import MeanVarianceOptimizationF
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="trading and orders" />
 class CustomPortfolioOptimizerRegressionAlgorithm(MeanVarianceOptimizationFrameworkAlgorithm):
-    def Initialize(self):
-        super().Initialize()
-        self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel(timedelta(days=1), PortfolioBias.LongShort, 1, 63, Resolution.Daily, 0.02, CustomPortfolioOptimizer()))
+    def initialize(self):
+        super().initialize()
+        self.set_portfolio_construction(MeanVarianceOptimizationPortfolioConstructionModel(timedelta(days=1), PortfolioBias.LONG_SHORT, 1, 63, Resolution.DAILY, 0.02, CustomPortfolioOptimizer()))
 
 class CustomPortfolioOptimizer:
-    def Optimize(self, historicalReturns, expectedReturns, covariance):
-        return [0.5]*(np.array(historicalReturns)).shape[1]
+    def optimize(self, historical_returns, expected_returns, covariance):
+        return [0.5]*(np.array(historical_returns)).shape[1]

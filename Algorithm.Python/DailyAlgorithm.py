@@ -21,37 +21,37 @@ from AlgorithmImports import *
 ### <meta name="tag" content="trading and orders" />
 class DailyAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,1,1)    #Set Start Date
-        self.SetEndDate(2014,1,1)      #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
+        self.set_start_date(2013,1,1)    #Set Start Date
+        self.set_end_date(2014,1,1)      #Set End Date
+        self.set_cash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("SPY", Resolution.Daily)
-        self.AddEquity("IBM", Resolution.Hour).SetLeverage(1.0)
-        self.macd = self.MACD("SPY", 12, 26, 9, MovingAverageType.Wilders, Resolution.Daily, Field.Close)
-        self.ema = self.EMA("IBM", 15 * 6, Resolution.Hour, Field.SevenBar)
-        self.lastAction = None
+        self.add_equity("SPY", Resolution.DAILY)
+        self.add_equity("IBM", Resolution.HOUR).set_leverage(1.0)
+        self.macd = self.macd("SPY", 12, 26, 9, MovingAverageType.WILDERS, Resolution.DAILY, Field.CLOSE)
+        self.ema = self.ema("IBM", 15 * 6, Resolution.HOUR, Field.SEVEN_BAR)
+        self.last_action = None
 
 
-    def OnData(self, data):
+    def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if not self.macd.IsReady: return
-        if not data.ContainsKey("IBM"): return
+        if not self.macd.is_ready: return
+        if not data.contains_key("IBM"): return
         if data["IBM"] is None:
-            self.Log("Price Missing Time: %s"%str(self.Time))
+            self.log("Price Missing Time: %s"%str(self.time))
             return
-        if self.lastAction is not None and self.lastAction.date() == self.Time.date(): return
+        if self.last_action is not None and self.last_action.date() == self.time.date(): return
 
-        self.lastAction = self.Time
-        quantity = self.Portfolio["SPY"].Quantity
+        self.last_action = self.time
+        quantity = self.portfolio["SPY"].quantity
 
-        if quantity <= 0 and self.macd.Current.Value > self.macd.Signal.Current.Value and data["IBM"].Price > self.ema.Current.Value:
-            self.SetHoldings("IBM", 0.25)
-        elif quantity >= 0 and self.macd.Current.Value < self.macd.Signal.Current.Value and data["IBM"].Price < self.ema.Current.Value:
-            self.SetHoldings("IBM", -0.25)
+        if quantity <= 0 and self.macd.current.value > self.macd.signal.current.value and data["IBM"].price > self.ema.current.value:
+            self.set_holdings("IBM", 0.25)
+        elif quantity >= 0 and self.macd.current.value < self.macd.signal.current.value and data["IBM"].price < self.ema.current.value:
+            self.set_holdings("IBM", -0.25)

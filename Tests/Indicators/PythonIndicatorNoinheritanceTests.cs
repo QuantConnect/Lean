@@ -24,8 +24,16 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
+    public class PythonIndicatorNoinheritanceSnakeCaseTests : PythonIndicatorNoinheritanceTests
+    {
+        protected override bool SnakeCase => true;
+    }
+
+    [TestFixture]
     public class PythonIndicatorNoinheritanceTests : PythonIndicatorTests
     {
+        protected override bool SnakeCase => false;
+
         /// <summary>
         /// In this Custom Indicator, Update returns a boolean
         /// </summary>
@@ -35,25 +43,25 @@ namespace QuantConnect.Tests.Indicators
             {
                 var module = PyModule.FromString(
                     Guid.NewGuid().ToString(),
-                    @"
+                    $@"
 from collections import deque
 from datetime import datetime, timedelta
 from numpy import sum
 
 class CustomSimpleMovingAverage():
     def __init__(self, name, period):
-        self.Name = name
-        self.Value = 0
-        self.IsReady = False
+        self.{(SnakeCase ? "name" : "Name")}= name
+        self.{(SnakeCase ? "value" : "Value")} = 0
+        self.{(SnakeCase ? "is_ready" : "IsReady")} = False
         self.queue = deque(maxlen=period)
 
     # Update method is mandatory
-    def Update(self, input):
-        self.queue.appendleft(input.Value)
+    def {(SnakeCase ? "update" : "Update")}(self, input):
+        self.queue.appendleft(input.{(SnakeCase ? "value" : "Value")})
         count = len(self.queue)
-        self.Value = sum(self.queue) / count
-        self.IsReady = count == self.queue.maxlen
-        return self.IsReady
+        self.{(SnakeCase ? "value" : "Value")} = sum(self.queue) / count
+        self.{(SnakeCase ? "is_ready" : "IsReady")} = count == self.queue.maxlen
+        return self.{(SnakeCase ? "is_ready" : "IsReady")}
 "
                 );
                 var indicator = module.GetAttr("CustomSimpleMovingAverage")

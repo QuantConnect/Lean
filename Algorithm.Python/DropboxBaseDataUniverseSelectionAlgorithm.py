@@ -24,71 +24,71 @@ from System.Collections.Generic import List
 ### <meta name="tag" content="custom universes" />
 class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
         # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
         # Commented so regression algorithm is more sensitive
-        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
+        #self.settings.minimum_order_margin_portfolio_percentage = 0.005
 
-        self.SetStartDate(2017, 7, 6)
-        self.SetEndDate(2018, 7, 4)
+        self.set_start_date(2017, 7, 6)
+        self.set_end_date(2018, 7, 4)
 
-        universe = self.AddUniverse(StockDataSource, self.stockDataSource)
+        universe = self.add_universe(StockDataSource, self.stock_data_source)
 
-        historicalSelectionData = self.History(universe, 3)
-        if len(historicalSelectionData) != 3:
-            raise ValueError(f"Unexpected universe data count {len(historicalSelectionData)}")
+        historical_selection_data = self.history(universe, 3)
+        if len(historical_selection_data) != 3:
+            raise ValueError(f"Unexpected universe data count {len(historical_selection_data)}")
 
-        for universeData in historicalSelectionData["symbols"]:
-            if len(universeData) != 5:
+        for universe_data in historical_selection_data["symbols"]:
+            if len(universe_data) != 5:
                 raise ValueError(f"Unexpected universe data receieved")
 
-    def stockDataSource(self, data):
+    def stock_data_source(self, data):
         list = []
         for item in data:
             for symbol in item["Symbols"]:
                 list.append(symbol)
         return list
 
-    def OnData(self, slice):
+    def on_data(self, slice):
 
-        if slice.Bars.Count == 0: return
+        if slice.bars.count == 0: return
         if self._changes is None: return
 
         # start fresh
-        self.Liquidate()
+        self.liquidate()
 
-        percentage = 1 / slice.Bars.Count
-        for tradeBar in slice.Bars.Values:
-            self.SetHoldings(tradeBar.Symbol, percentage)
+        percentage = 1 / slice.bars.count
+        for trade_bar in slice.bars.values():
+            self.set_holdings(trade_bar.symbol, percentage)
 
         # reset changes
         self._changes = None
 
-    def OnSecuritiesChanged(self, changes):
+    def on_securities_changed(self, changes):
         self._changes = changes
 
 class StockDataSource(PythonData):
 
-    def GetSource(self, config, date, isLiveMode):
-        url = "https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1" if isLiveMode else \
+    def get_source(self, config, date, is_live_mode):
+        url = "https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1" if is_live_mode else \
             "https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1"
 
-        return SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile)
+        return SubscriptionDataSource(url, SubscriptionTransportMedium.REMOTE_FILE)
 
-    def Reader(self, config, line, date, isLiveMode):
+    def reader(self, config, line, date, is_live_mode):
         if not (line.strip() and line[0].isdigit()): return None
 
         stocks = StockDataSource()
-        stocks.Symbol = config.Symbol
+        stocks.symbol = config.symbol
 
         csv = line.split(',')
-        if isLiveMode:
-            stocks.Time = date
+        if is_live_mode:
+            stocks.time = date
             stocks["Symbols"] = csv
         else:
-            stocks.Time = datetime.strptime(csv[0], "%Y%m%d")
+            stocks.time = datetime.strptime(csv[0], "%Y%m%d")
             stocks["Symbols"] = csv[1:]
         return stocks

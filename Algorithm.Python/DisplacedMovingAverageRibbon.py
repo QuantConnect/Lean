@@ -27,10 +27,10 @@ from AlgorithmImports import *
 class DisplacedMovingAverageRibbon(QCAlgorithm):
 
     # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-    def Initialize(self):
-        self.SetStartDate(2009, 1, 1)  #Set Start Date
-        self.SetEndDate(2015, 1, 1)    #Set End Date
-        self.spy = self.AddEquity("SPY", Resolution.Daily).Symbol
+    def initialize(self):
+        self.set_start_date(2009, 1, 1)  #Set Start Date
+        self.set_end_date(2015, 1, 1)    #Set End Date
+        self.spy = self.add_equity("SPY", Resolution.DAILY).symbol
         count = 6
         offset = 5
         period = 15
@@ -42,36 +42,36 @@ class DisplacedMovingAverageRibbon(QCAlgorithm):
             # define our offset to the zero sma, these various offsets will create our 'displaced' ribbon
             delay = Delay(offset*(x+1))
             # define an indicator that takes the output of the sma and pipes it into our delay indicator
-            delayedSma = IndicatorExtensions.Of(delay, self.sma)
-            # register our new 'delayedSma' for automatic updates on a daily resolution
-            self.RegisterIndicator(self.spy, delayedSma, Resolution.Daily)
-            self.ribbon.append(delayedSma)
+            delayed_sma = IndicatorExtensions.of(delay, self.sma)
+            # register our new 'delayed_sma' for automatic updates on a daily resolution
+            self.register_indicator(self.spy, delayed_sma, Resolution.DAILY)
+            self.ribbon.append(delayed_sma)
         self.previous = datetime.min
         # plot indicators each time they update using the PlotIndicator function
         for i in self.ribbon:
-            self.PlotIndicator("Ribbon", i) 
+            self.plot_indicator("Ribbon", i) 
 
-    # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-    def OnData(self, data):
+    # on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+    def on_data(self, data):
         
         if data[self.spy] is None: return
         # wait for our entire ribbon to be ready
-        if not all(x.IsReady for x in self.ribbon): return
+        if not all(x.is_ready for x in self.ribbon): return
         # only once per day
-        if self.previous.date() == self.Time.date(): return
-        self.Plot("Ribbon", "Price", data[self.spy].Price)
+        if self.previous.date() == self.time.date(): return
+        self.plot("Ribbon", "Price", data[self.spy].price)
 
         # check for a buy signal
-        values = [x.Current.Value for x in self.ribbon]
-        holding = self.Portfolio[self.spy]
-        if (holding.Quantity <= 0 and self.IsAscending(values)):
-            self.SetHoldings(self.spy, 1.0)
-        elif (holding.Quantity > 0 and self.IsDescending(values)):
-            self.Liquidate(self.spy)
-        self.previous = self.Time
+        values = [x.current.value for x in self.ribbon]
+        holding = self.portfolio[self.spy]
+        if (holding.quantity <= 0 and self.is_ascending(values)):
+            self.set_holdings(self.spy, 1.0)
+        elif (holding.quantity > 0 and self.is_descending(values)):
+            self.liquidate(self.spy)
+        self.previous = self.time
     
     # Returns true if the specified values are in ascending order
-    def IsAscending(self, values):
+    def is_ascending(self, values):
         last = None
         for val in values:
             if last is None:
@@ -83,7 +83,7 @@ class DisplacedMovingAverageRibbon(QCAlgorithm):
         return True
     
     # Returns true if the specified values are in Descending order
-    def IsDescending(self, values):
+    def is_descending(self, values):
         last = None
         for val in values:
             if last is None:
