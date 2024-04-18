@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
         private class CustomUniverseSelectionModel : FundamentalUniverseSelectionModel
         {
             private bool _selected;
-            public CustomUniverseSelectionModel(): base(true, null)
+            public CustomUniverseSelectionModel(): base()
             {
             }
             public override IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
