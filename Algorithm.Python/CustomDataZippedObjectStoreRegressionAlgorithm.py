@@ -19,9 +19,9 @@ from CustomDataObjectStoreRegressionAlgorithm import *
 ### </summary>
 class CustomDataZippedObjectStoreRegressionAlgorithm(CustomDataObjectStoreRegressionAlgorithm):
 
-    def GetCustomDataKey(self):
+    def get_custom_data_key(self):
         return "CustomData/ExampleCustomData.zip"
 
-    def SaveDataToObjectStore(self):
-        self.ObjectStore.SaveBytes(self.GetCustomDataKey(), Compression.ZipBytes(bytes(self.CustomData, 'utf-8'), 'data'))
+    def save_data_to_object_store(self):
+        self.object_store.save_bytes(self.get_custom_data_key(), Compression.zip_bytes(bytes(self.custom_data, 'utf-8'), 'data'))
 

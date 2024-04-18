@@ -22,67 +22,67 @@ from AlgorithmImports import *
 ### <meta name="tag" content="crypto" />
 class CustomDataBitcoinAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2011, 9, 13)
-        self.SetEndDate(datetime.now().date() - timedelta(1))
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2011, 9, 13)
+        self.set_end_date(datetime.now().date() - timedelta(1))
+        self.set_cash(100000)
 
         # Define the symbol and "type" of our generic data:
-        self.AddData(Bitcoin, "BTC")
+        self.add_data(Bitcoin, "BTC")
 
 
-    def OnData(self, data):
-        if not data.ContainsKey("BTC"): return
+    def on_data(self, data):
+        if not data.contains_key("BTC"): return
 
-        close = data["BTC"].Close
+        close = data["BTC"].close
 
         # If we don't have any weather "SHARES" -- invest"
-        if not self.Portfolio.Invested:
+        if not self.portfolio.invested:
             # Weather used as a tradable asset, like stocks, futures etc.
             # It's only OK to use SetHoldings with crypto when using custom data. When trading with built-in crypto data, 
-            # use the cashbook. Reference https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/BasicTemplateCryptoAlgorithm.py 
-            self.SetHoldings("BTC", 1) 
-            self.Debug("Buying BTC 'Shares': BTC: {0}".format(close))
+            # use the cashbook. Reference https://github.com/QuantConnect/Lean/blob/master/Algorithm.python/BasicTemplateCryptoAlgorithm.py 
+            self.set_holdings("BTC", 1) 
+            self.debug("Buying BTC 'Shares': BTC: {0}".format(close))
 
-        self.Debug("Time: {0} {1}".format(datetime.now(), close))
+        self.debug("Time: {0} {1}".format(datetime.now(), close))
 
 
 class Bitcoin(PythonData):
     '''Custom Data Type: Bitcoin data from Quandl - http://www.quandl.com/help/api-for-bitcoin-data'''
 
-    def GetSource(self, config, date, isLiveMode):
-        if isLiveMode:
-            return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.Rest)
+    def get_source(self, config, date, is_live_mode):
+        if is_live_mode:
+            return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.REST)
 
-        #return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip"
+        #return "http://my-ftp-server.com/futures-data-" + date.to_string("Ymd") + ".zip"
         # OR simply return a fixed small data file. Large files will slow down your backtest
-        return SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm", SubscriptionTransportMedium.RemoteFile)
+        return SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm", SubscriptionTransportMedium.REMOTE_FILE)
 
 
-    def Reader(self, config, line, date, isLiveMode):
+    def reader(self, config, line, date, is_live_mode):
         coin = Bitcoin()
-        coin.Symbol = config.Symbol
+        coin.symbol = config.symbol
 
-        if isLiveMode:
+        if is_live_mode:
             # Example Line Format:
             # {"high": "441.00", "last": "421.86", "timestamp": "1411606877", "bid": "421.96", "vwap": "428.58", "volume": "14120.40683975", "low": "418.83", "ask": "421.99"}
             try:
-                liveBTC = json.loads(line)
+                live_btc = json.loads(line)
 
                 # If value is zero, return None
-                value = liveBTC["last"]
+                value = live_btc["last"]
                 if value == 0: return None
 
-                coin.EndTime =  datetime.utcnow().astimezone(timezone(str(config.ExchangeTimeZone))).replace(tzinfo=None)
-                coin.Value = value
-                coin["Open"] = float(liveBTC["open"])
-                coin["High"] = float(liveBTC["high"])
-                coin["Low"] = float(liveBTC["low"])
-                coin["Close"] = float(liveBTC["last"])
-                coin["Ask"] = float(liveBTC["ask"])
-                coin["Bid"] = float(liveBTC["bid"])
-                coin["VolumeBTC"] = float(liveBTC["volume"])
-                coin["WeightedPrice"] = float(liveBTC["vwap"])
+                coin.end_time =  datetime.utcnow().astimezone(timezone(str(config.exchange_time_zone))).replace(tzinfo=None)
+                coin.value = value
+                coin["Open"] = float(live_btc["open"])
+                coin["High"] = float(live_btc["high"])
+                coin["Low"] = float(live_btc["low"])
+                coin["Close"] = float(live_btc["last"])
+                coin["Ask"] = float(live_btc["ask"])
+                coin["Bid"] = float(live_btc["bid"])
+                coin["VolumeBTC"] = float(live_btc["volume"])
+                coin["WeightedPrice"] = float(live_btc["vwap"])
                 return coin
             except ValueError:
                 # Do nothing, possible error in json decoding
@@ -100,9 +100,9 @@ class Bitcoin(PythonData):
             value = data[4]
             if value == 0: return None
 
-            coin.Time = datetime.strptime(data[0], "%Y-%m-%d")
-            coin.EndTime = coin.Time + timedelta(days=1)
-            coin.Value = value
+            coin.time = datetime.strptime(data[0], "%Y-%m-%d")
+            coin.end_time = coin.time + timedelta(days=1)
+            coin.value = value
             coin["Open"] = float(data[1])
             coin["High"] = float(data[2])
             coin["Low"] = float(data[3])

@@ -24,65 +24,65 @@ from AlgorithmImports import *
 ### <meta name="tag" content="series types" />
 ### <meta name="tag" content="plotting indicators" />
 class CustomChartingAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2016,1,1)
-        self.SetEndDate(2017,1,1)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2016,1,1)
+        self.set_end_date(2017,1,1)
+        self.set_cash(100000)
 
-        spy = self.AddEquity("SPY", Resolution.Daily).Symbol
+        spy = self.add_equity("SPY", Resolution.DAILY).symbol
 
         # In your initialize method:
         # Chart - Master Container for the Chart:
-        stockPlot = Chart("Trade Plot")
+        stock_plot = Chart("Trade Plot")
         # On the Trade Plotter Chart we want 3 series: trades and price:
-        stockPlot.AddSeries(Series("Buy", SeriesType.Scatter, 0))
-        stockPlot.AddSeries(Series("Sell", SeriesType.Scatter, 0))
-        stockPlot.AddSeries(Series("Price", SeriesType.Line, 0))
-        self.AddChart(stockPlot)
+        stock_plot.add_series(Series("Buy", SeriesType.SCATTER, 0))
+        stock_plot.add_series(Series("Sell", SeriesType.SCATTER, 0))
+        stock_plot.add_series(Series("Price", SeriesType.LINE, 0))
+        self.add_chart(stock_plot)
 
         # On the Average Cross Chart we want 2 series, slow MA and fast MA
-        avgCross = Chart("Average Cross")
-        avgCross.AddSeries(Series("FastMA", SeriesType.Line, 0))
-        avgCross.AddSeries(Series("SlowMA", SeriesType.Line, 0))
-        self.AddChart(avgCross)
+        avg_cross = Chart("Average Cross")
+        avg_cross.add_series(Series("FastMA", SeriesType.LINE, 0))
+        avg_cross.add_series(Series("SlowMA", SeriesType.LINE, 0))
+        self.add_chart(avg_cross)
 
         # There's support for candlestick charts built-in:
-        weeklySpyPlot = Chart("Weekly SPY")
-        spyCandlesticks = CandlestickSeries("SPY")
-        weeklySpyPlot.AddSeries(spyCandlesticks)
-        self.AddChart(weeklySpyPlot)
+        weekly_spy_plot = Chart("Weekly SPY")
+        spy_candlesticks = CandlestickSeries("SPY")
+        weekly_spy_plot.add_series(spy_candlesticks)
+        self.add_chart(weekly_spy_plot)
 
-        self.Consolidate(spy, Calendar.Weekly, lambda bar: self.Plot("Weekly SPY", "SPY", bar))
+        self.consolidate(spy, Calendar.WEEKLY, lambda bar: self.plot("Weekly SPY", "SPY", bar))
 
-        self.fastMA = 0
-        self.slowMA = 0
-        self.lastPrice = 0
+        self.fast_ma = 0
+        self.slow_ma = 0
+        self.last_price = 0
         self.resample = datetime.min
-        self.resamplePeriod = (self.EndDate - self.StartDate) / 2000
+        self.resample_period = (self.end_date - self.start_date) / 2000
 
-    def OnData(self, slice):
+    def on_data(self, slice):
         if slice["SPY"] is None: return
 
-        self.lastPrice = slice["SPY"].Close
-        if self.fastMA == 0: self.fastMA = self.lastPrice
-        if self.slowMA == 0: self.slowMA = self.lastPrice
-        self.fastMA = (0.01 * self.lastPrice) + (0.99 * self.fastMA)
-        self.slowMA = (0.001 * self.lastPrice) + (0.999 * self.slowMA)
+        self.last_price = slice["SPY"].close
+        if self.fast_ma == 0: self.fast_ma = self.last_price
+        if self.slow_ma == 0: self.slow_ma = self.last_price
+        self.fast_ma = (0.01 * self.last_price) + (0.99 * self.fast_ma)
+        self.slow_ma = (0.001 * self.last_price) + (0.999 * self.slow_ma)
 
 
-        if self.Time > self.resample:
-            self.resample = self.Time  + self.resamplePeriod
-            self.Plot("Average Cross", "FastMA", self.fastMA)
-            self.Plot("Average Cross", "SlowMA", self.slowMA)
+        if self.time > self.resample:
+            self.resample = self.time  + self.resample_period
+            self.plot("Average Cross", "FastMA", self.fast_ma)
+            self.plot("Average Cross", "SlowMA", self.slow_ma)
 
         # On the 5th days when not invested buy:
-        if not self.Portfolio.Invested and self.Time.day % 13 == 0:
-        	self.Order("SPY", (int)(self.Portfolio.MarginRemaining / self.lastPrice))
-        	self.Plot("Trade Plot", "Buy", self.lastPrice)
-        elif self.Time.day % 21 == 0 and self.Portfolio.Invested:
-            self.Plot("Trade Plot", "Sell", self.lastPrice)
-            self.Liquidate()
+        if not self.portfolio.invested and self.time.day % 13 == 0:
+        	self.order("SPY", (int)(self.portfolio.margin_remaining / self.last_price))
+        	self.plot("Trade Plot", "Buy", self.last_price)
+        elif self.time.day % 21 == 0 and self.portfolio.invested:
+            self.plot("Trade Plot", "Sell", self.last_price)
+            self.liquidate()
 
-    def OnEndOfDay(self, symbol):
+    def on_end_of_day(self, symbol):
        #Log the end of day prices:
-       self.Plot("Trade Plot", "Price", self.lastPrice)
+       self.plot("Trade Plot", "Price", self.last_price)

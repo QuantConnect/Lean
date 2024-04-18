@@ -22,76 +22,76 @@ from AlgorithmImports import *
 ### <meta name="tag" content="custom data" />
 class CustomDataNIFTYAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2008, 1, 8)
-        self.SetEndDate(2014, 7, 25)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2008, 1, 8)
+        self.set_end_date(2014, 7, 25)
+        self.set_cash(100000)
 
         # Define the symbol and "type" of our generic data:
-        rupee = self.AddData(DollarRupee, "USDINR", Resolution.Daily).Symbol
-        nifty = self.AddData(Nifty, "NIFTY", Resolution.Daily).Symbol
+        rupee = self.add_data(DollarRupee, "USDINR", Resolution.DAILY).symbol
+        nifty = self.add_data(Nifty, "NIFTY", Resolution.DAILY).symbol
 
-        self.EnableAutomaticIndicatorWarmUp = True
-        rupeeSma = self.SMA(rupee, 20)
-        niftySma = self.SMA(rupee, 20)
-        self.Log(f"SMA - Is ready? USDINR: {rupeeSma.IsReady} NIFTY: {niftySma.IsReady}")
+        self.enable_automatic_indicator_warm_up = True
+        rupee_sma = self.sma(rupee, 20)
+        nifty_sma = self.sma(rupee, 20)
+        self.log(f"SMA - Is ready? USDINR: {rupee_sma.is_ready} NIFTY: {nifty_sma.is_ready}")
 
-        self.minimumCorrelationHistory = 50
+        self.minimum_correlation_history = 50
         self.today = CorrelationPair()
         self.prices = []
 
 
-    def OnData(self, data):
-        if data.ContainsKey("USDINR"):
-            self.today = CorrelationPair(self.Time)
-            self.today.CurrencyPrice = data["USDINR"].Close
+    def on_data(self, data):
+        if data.contains_key("USDINR"):
+            self.today = CorrelationPair(self.time)
+            self.today.currency_price = data["USDINR"].close
 
-        if not data.ContainsKey("NIFTY"): return
+        if not data.contains_key("NIFTY"): return
 
-        self.today.NiftyPrice = data["NIFTY"].Close
+        self.today.nifty_price = data["NIFTY"].close
 
-        if self.today.date() == data["NIFTY"].Time.date():
+        if self.today.date() == data["NIFTY"].time.date():
             self.prices.append(self.today)
-            if len(self.prices) > self.minimumCorrelationHistory:
+            if len(self.prices) > self.minimum_correlation_history:
                 self.prices.pop(0)
 
         # Strategy
-        if self.Time.weekday() != 2: return
+        if self.time.weekday() != 2: return
 
-        cur_qnty = self.Portfolio["NIFTY"].Quantity
-        quantity = int(self.Portfolio.MarginRemaining * 0.9 / data["NIFTY"].Close)
-        hi_nifty = max(price.NiftyPrice for price in self.prices)
-        lo_nifty = min(price.NiftyPrice for price in self.prices)
+        cur_qnty = self.portfolio["NIFTY"].quantity
+        quantity = int(self.portfolio.margin_remaining * 0.9 / data["NIFTY"].close)
+        hi_nifty = max(price.nifty_price for price in self.prices)
+        lo_nifty = min(price.nifty_price for price in self.prices)
 
-        if data["NIFTY"].Open >= hi_nifty:
-            code = self.Order("NIFTY",  quantity - cur_qnty)
-            self.Debug("LONG  {0} Time: {1} Quantity: {2} Portfolio: {3} Nifty: {4} Buying Power: {5}".format(code, self.Time, quantity, self.Portfolio["NIFTY"].Quantity, data["NIFTY"].Close, self.Portfolio.TotalPortfolioValue))
-        elif data["NIFTY"].Open <= lo_nifty:
-            code = self.Order("NIFTY", -quantity - cur_qnty)
-            self.Debug("SHORT {0} Time: {1} Quantity: {2} Portfolio: {3} Nifty: {4} Buying Power: {5}".format(code, self.Time, quantity, self.Portfolio["NIFTY"].Quantity, data["NIFTY"].Close, self.Portfolio.TotalPortfolioValue))
+        if data["NIFTY"].open >= hi_nifty:
+            code = self.order("NIFTY",  quantity - cur_qnty)
+            self.debug("LONG  {0} Time: {1} Quantity: {2} Portfolio: {3} Nifty: {4} Buying Power: {5}".format(code, self.time, quantity, self.portfolio["NIFTY"].quantity, data["NIFTY"].close, self.portfolio.total_portfolio_value))
+        elif data["NIFTY"].open <= lo_nifty:
+            code = self.order("NIFTY", -quantity - cur_qnty)
+            self.debug("SHORT {0} Time: {1} Quantity: {2} Portfolio: {3} Nifty: {4} Buying Power: {5}".format(code, self.time, quantity, self.portfolio["NIFTY"].quantity, data["NIFTY"].close, self.portfolio.total_portfolio_value))
 
 
 class Nifty(PythonData):
     '''NIFTY Custom Data Class'''
-    def GetSource(self, config, date, isLiveMode):
-        return SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.RemoteFile)
+    def get_source(self, config, date, is_live_mode):
+        return SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.REMOTE_FILE)
 
 
-    def Reader(self, config, line, date, isLiveMode):
+    def reader(self, config, line, date, is_live_mode):
         if not (line.strip() and line[0].isdigit()): return None
 
         # New Nifty object
         index = Nifty()
-        index.Symbol = config.Symbol
+        index.symbol = config.symbol
 
         try:
             # Example File Format:
             # Date,       Open       High        Low       Close     Volume      Turnover
             # 2011-09-13  7792.9    7799.9     7722.65    7748.7    116534670    6107.78
             data = line.split(',')
-            index.Time = datetime.strptime(data[0], "%Y-%m-%d")
-            index.EndTime = index.Time + timedelta(days=1)
-            index.Value = data[4]
+            index.time = datetime.strptime(data[0], "%Y-%m-%d")
+            index.end_time = index.time + timedelta(days=1)
+            index.value = data[4]
             index["Open"] = float(data[1])
             index["High"] = float(data[2])
             index["Low"] = float(data[3])
@@ -107,21 +107,21 @@ class Nifty(PythonData):
 
 class DollarRupee(PythonData):
     '''Dollar Rupe is a custom data type we create for this algorithm'''
-    def GetSource(self, config, date, isLiveMode):
-        return SubscriptionDataSource("https://www.dropbox.com/s/m6ecmkg9aijwzy2/USDINR.csv?dl=1", SubscriptionTransportMedium.RemoteFile)
+    def get_source(self, config, date, is_live_mode):
+        return SubscriptionDataSource("https://www.dropbox.com/s/m6ecmkg9aijwzy2/USDINR.csv?dl=1", SubscriptionTransportMedium.REMOTE_FILE)
 
-    def Reader(self, config, line, date, isLiveMode):
+    def reader(self, config, line, date, is_live_mode):
         if not (line.strip() and line[0].isdigit()): return None
 
         # New USDINR object
         currency = DollarRupee()
-        currency.Symbol = config.Symbol
+        currency.symbol = config.symbol
 
         try:
             data = line.split(',')
-            currency.Time = datetime.strptime(data[0], "%Y-%m-%d")
-            currency.EndTime = currency.Time + timedelta(days=1)
-            currency.Value = data[1]
+            currency.time = datetime.strptime(data[0], "%Y-%m-%d")
+            currency.end_time = currency.time + timedelta(days=1)
+            currency.value = data[1]
             currency["Close"] = float(data[1])
 
         except ValueError:
@@ -134,8 +134,8 @@ class DollarRupee(PythonData):
 class CorrelationPair:
     '''Correlation Pair is a helper class to combine two data points which we'll use to perform the correlation.'''
     def __init__(self, *args):
-        self.NiftyPrice = 0        # Nifty price for this correlation pair
-        self.CurrencyPrice = 0     # Currency price for this correlation pair
+        self.nifty_price = 0        # Nifty price for this correlation pair
+        self.currency_price = 0     # Currency price for this correlation pair
         self._date = datetime.min    # Date of the correlation pair
         if len(args) > 0: self._date = args[0]
 
