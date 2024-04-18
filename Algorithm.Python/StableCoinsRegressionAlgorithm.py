@@ -18,13 +18,13 @@ from AlgorithmImports import *
 ### in the brokerage using the conversion between stablecoins
 ### </summary>
 class StableCoinsRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2018, 5, 1)
-        self.SetEndDate(2018, 5, 2)
-        self.SetCash("USDT", 200000000)
-        self.SetBrokerageModel(BrokerageName.Binance, AccountType.Cash)
-        self.AddCrypto("BTCUSDT", Resolution.Hour, Market.Binance)
+    def initialize(self):
+        self.set_start_date(2018, 5, 1)
+        self.set_end_date(2018, 5, 2)
+        self.set_cash("USDT", 200000000)
+        self.set_brokerage_model(BrokerageName.BINANCE, AccountType.CASH)
+        self.add_crypto("BTCUSDT", Resolution.HOUR, Market.BINANCE)
 
-    def OnData(self, data):
-        if not self.Portfolio.Invested:
-            self.SetHoldings("BTCUSDT", 1)
+    def on_data(self, data):
+        if not self.portfolio.invested:
+            self.set_holdings("BTCUSDT", 1)

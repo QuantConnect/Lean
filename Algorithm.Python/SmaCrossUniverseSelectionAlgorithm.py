@@ -19,67 +19,67 @@ class SmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
 
     count = 10
     tolerance = 0.01
-    targetPercent = 1 / count
+    target_percent = 1 / count
     averages = dict()
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.UniverseSettings.Leverage = 2
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.leverage = 2
+        self.universe_settings.resolution = Resolution.DAILY
 
-        self.SetStartDate(2018, 1, 1)
-        self.SetEndDate(2019, 1, 1)
-        self.SetCash(1000000)
+        self.set_start_date(2018, 1, 1)
+        self.set_end_date(2019, 1, 1)
+        self.set_cash(1000000)
 
-        self.EnableAutomaticIndicatorWarmUp = True
+        self.enable_automatic_indicator_warm_up = True
 
-        ibm = self.AddEquity("IBM", Resolution.Tick).Symbol
-        ibmSma = self.SMA(ibm, 40)
-        self.Log(f"{ibmSma.Name}: {ibmSma.Current.Time} - {ibmSma}. IsReady? {ibmSma.IsReady}")
+        ibm = self.add_equity("IBM", Resolution.HOUR).symbol
+        ibm_sma = self.sma(ibm, 40)
+        self.log(f"{ibm_sma.name}: {ibm_sma.current.time} - {ibm_sma}. IsReady? {ibm_sma.is_ready}")
 
-        spy = self.AddEquity("SPY", Resolution.Hour).Symbol
-        spySma = self.SMA(spy, 10)     # Data point indicator
-        spyAtr = self.ATR(spy, 10,)    # Bar indicator
-        spyVwap = self.VWAP(spy, 10)   # TradeBar indicator
-        self.Log(f"SPY    - Is ready? SMA: {spySma.IsReady}, ATR: {spyAtr.IsReady}, VWAP: {spyVwap.IsReady}")
+        spy = self.add_equity("SPY", Resolution.HOUR).symbol
+        spy_sma = self.sma(spy, 10)     # Data point indicator
+        spy_atr = self.atr(spy, 10,)    # Bar indicator
+        spy_vwap = self.vwap(spy, 10)   # TradeBar indicator
+        self.log(f"SPY    - Is ready? SMA: {spy_sma.is_ready}, ATR: {spy_atr.is_ready}, VWAP: {spy_vwap.is_ready}")
 
-        eur = self.AddForex("EURUSD", Resolution.Hour).Symbol
-        eurSma = self.SMA(eur, 20, Resolution.Daily)
-        eurAtr = self.ATR(eur, 20, MovingAverageType.Simple, Resolution.Daily)
-        self.Log(f"EURUSD - Is ready? SMA: {eurSma.IsReady}, ATR: {eurAtr.IsReady}")
+        eur = self.add_forex("EURUSD", Resolution.HOUR).symbol
+        eur_sma = self.sma(eur, 20, Resolution.DAILY)
+        eur_atr = self.atr(eur, 20, MovingAverageType.SIMPLE, Resolution.DAILY)
+        self.log(f"EURUSD - Is ready? SMA: {eur_sma.is_ready}, ATR: {eur_atr.is_ready}")
 
-        self.AddUniverse(self.CoarseSmaSelector)
+        self.add_universe(self.coarse_sma_selector)
 
         # Since the indicators are ready, we will receive error messages
         # reporting that the algorithm manager is trying to add old information
-        self.SetWarmUp(10)
+        self.set_warm_up(10)
 
-    def CoarseSmaSelector(self, coarse):
+    def coarse_sma_selector(self, coarse):
 
         score = dict()
         for cf in coarse:
-            if not cf.HasFundamentalData:
+            if not cf.has_fundamental_data:
                continue
-            symbol = cf.Symbol
-            price = cf.AdjustedPrice
+            symbol = cf.symbol
+            price = cf.adjusted_price
             # grab the SMA instance for this symbol
             avg = self.averages.setdefault(symbol, SimpleMovingAverage(100))
-            self.WarmUpIndicator(symbol, avg, Resolution.Daily)
+            self.warm_up_indicator(symbol, avg, Resolution.DAILY)
             # Update returns true when the indicators are ready, so don't accept until they are
-            if avg.Update(cf.EndTime, price):
-               value = avg.Current.Value
+            if avg.update(cf.end_time, price):
+               value = avg.current.value
                # only pick symbols who have their price over their 100 day sma
                if value > price * self.tolerance:
                     score[symbol] = (value - price) / ((value + price) / 2)
 
         # prefer symbols with a larger delta by percentage between the two averages
-        sortedScore = sorted(score.items(), key=lambda kvp: kvp[1], reverse=True)
-        return [x[0] for x in sortedScore[:self.count]]
+        sorted_score = sorted(score.items(), key=lambda kvp: kvp[1], reverse=True)
+        return [x[0] for x in sorted_score[:self.count]]
 
-    def OnSecuritiesChanged(self, changes):
-        for security in changes.RemovedSecurities:
-            if security.Invested:
-                self.Liquidate(security.Symbol)
+    def on_securities_changed(self, changes):
+        for security in changes.removed_securities:
+            if security.invested:
+                self.liquidate(security.symbol)
 
-        for security in changes.AddedSecurities:
-            self.SetHoldings(security.Symbol, self.targetPercent)
+        for security in changes.added_securities:
+            self.set_holdings(security.symbol, self.target_percent)
