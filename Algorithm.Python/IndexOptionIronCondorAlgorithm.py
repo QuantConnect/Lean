@@ -17,46 +17,46 @@ from AlgorithmImports import *
 
 class IndexOptionIronCondorAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2019, 9, 1)
-        self.SetEndDate(2019, 11, 1)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2019, 9, 1)
+        self.set_end_date(2019, 11, 1)
+        self.set_cash(100000)
 
-        index = self.AddIndex("SPX", Resolution.Minute).Symbol
-        option = self.AddIndexOption(index, "SPXW", Resolution.Minute)
-        option.SetFilter(lambda x: x.WeeklysOnly().Strikes(-5, 5).Expiration(0, 14))
-        self.spxw = option.Symbol
+        index = self.add_index("SPX", Resolution.MINUTE).symbol
+        option = self.add_index_option(index, "SPXW", Resolution.MINUTE)
+        option.set_filter(lambda x: x.weeklys_only().strikes(-5, 5).expiration(0, 14))
+        self.spxw = option.symbol
 
-        self.bb = self.BB(index, 10, 2, resolution=Resolution.Daily)
-        self.WarmUpIndicator(index, self.bb)
+        self.bb = self.bb(index, 10, 2, resolution=Resolution.DAILY)
+        self.warm_up_indicator(index, self.bb)
         
-    def OnData(self, slice: Slice) -> None:
-        if self.Portfolio.Invested: return
+    def on_data(self, slice: Slice) -> None:
+        if self.portfolio.invested: return
 
         # Get the OptionChain
-        chain = slice.OptionChains.get(self.spxw)
+        chain = slice.option_chains.get(self.spxw)
         if not chain: return
 
         # Get the closest expiry date
-        expiry = min([x.Expiry for x in chain])
-        chain = [x for x in chain if x.Expiry == expiry]
+        expiry = min([x.expiry for x in chain])
+        chain = [x for x in chain if x.expiry == expiry]
 
         # Separate the call and put contracts and sort by Strike to find OTM contracts
-        calls = sorted([x for x in chain if x.Right == OptionRight.Call], key=lambda x: x.Strike, reverse=True)
-        puts = sorted([x for x in chain if x.Right == OptionRight.Put], key=lambda x: x.Strike)
+        calls = sorted([x for x in chain if x.right == OptionRight.CALL], key=lambda x: x.strike, reverse=True)
+        puts = sorted([x for x in chain if x.right == OptionRight.PUT], key=lambda x: x.strike)
         if len(calls) < 3 or len(puts) < 3: return
 
         # Create combo order legs
-        price = self.bb.Price.Current.Value
+        price = self.bb.price.current.value
         quantity = 1
-        if price > self.bb.UpperBand.Current.Value or price < self.bb.LowerBand.Current.Value:
+        if price > self.bb.upper_band.current.value or price < self.bb.lower_band.current.value:
             quantity = -1
 
         legs = [
-            Leg.Create(calls[0].Symbol, quantity),
-            Leg.Create(puts[0].Symbol, quantity),
-            Leg.Create(calls[2].Symbol, -quantity),
-            Leg.Create(puts[2].Symbol, -quantity)
+            Leg.create(calls[0].symbol, quantity),
+            Leg.create(puts[0].symbol, quantity),
+            Leg.create(calls[2].symbol, -quantity),
+            Leg.create(puts[2].symbol, -quantity)
         ]
 
-        self.ComboMarketOrder(legs, 10, asynchronous=True)
+        self.combo_market_order(legs, 10, asynchronous=True)

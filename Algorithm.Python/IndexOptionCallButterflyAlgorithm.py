@@ -17,43 +17,43 @@ from AlgorithmImports import *
 
 class IndexOptionCallButterflyAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2020, 1, 1)
-        self.SetEndDate(2021, 1, 1)
-        self.SetCash(1000000)
+    def initialize(self):
+        self.set_start_date(2020, 1, 1)
+        self.set_end_date(2021, 1, 1)
+        self.set_cash(1000000)
 
-        self.vxz = self.AddEquity("VXZ", Resolution.Minute).Symbol
+        self.vxz = self.add_equity("VXZ", Resolution.MINUTE).symbol
 
-        index = self.AddIndex("SPX", Resolution.Minute).Symbol
-        option = self.AddIndexOption(index, "SPXW", Resolution.Minute)
-        option.SetFilter(lambda x: x.IncludeWeeklys().Strikes(-3, 3).Expiration(15, 45))
+        index = self.add_index("SPX", Resolution.MINUTE).symbol
+        option = self.add_index_option(index, "SPXW", Resolution.MINUTE)
+        option.set_filter(lambda x: x.include_weeklys().strikes(-3, 3).expiration(15, 45))
 
-        self.spxw = option.Symbol
-        self.multiplier = option.SymbolProperties.ContractMultiplier
+        self.spxw = option.symbol
+        self.multiplier = option.symbol_properties.contract_multiplier
         self.tickets = []
 
-    def OnData(self, slice: Slice) -> None:
+    def on_data(self, slice: Slice) -> None:
         # The order of magnitude per SPXW order's value is 10000 times of VXZ
-        if not self.Portfolio[self.vxz].Invested:
-            self.MarketOrder(self.vxz, 10000)
+        if not self.portfolio[self.vxz].invested:
+            self.market_order(self.vxz, 10000)
         
         # Return if any opening index option position
-        if any([self.Portfolio[x.Symbol].Invested for x in self.tickets]): return
+        if any([self.portfolio[x.symbol].invested for x in self.tickets]): return
 
         # Get the OptionChain
-        chain = slice.OptionChains.get(self.spxw)
+        chain = slice.option_chains.get(self.spxw)
         if not chain: return
 
         # Get nearest expiry date
-        expiry = min([x.Expiry for x in chain])
+        expiry = min([x.expiry for x in chain])
         
         # Select the call Option contracts with nearest expiry and sort by strike price
-        calls = [x for x in chain if x.Expiry == expiry and x.Right == OptionRight.Call]
+        calls = [x for x in chain if x.expiry == expiry and x.right == OptionRight.CALL]
         if len(calls) < 3: return
-        sorted_call_strikes = sorted([x.Strike for x in calls])
+        sorted_call_strikes = sorted([x.strike for x in calls])
 
         # Select ATM call
-        atm_strike = min([abs(x - chain.Underlying.Value) for x in sorted_call_strikes])
+        atm_strike = min([abs(x - chain.underlying.value) for x in sorted_call_strikes])
 
         # Get the strike prices for the ITM & OTM contracts, make sure they're in equidistance
         spread = min(atm_strike - sorted_call_strikes[0], sorted_call_strikes[-1] - atm_strike)
@@ -62,9 +62,9 @@ class IndexOptionCallButterflyAlgorithm(QCAlgorithm):
         if otm_strike not in sorted_call_strikes or itm_strike not in sorted_call_strikes: return
         
         # Buy the call butterfly
-        call_butterfly = OptionStrategies.CallButterfly(self.spxw, otm_strike, atm_strike, itm_strike, expiry)
-        price = sum([abs(self.Securities[x.Symbol].Price * x.Quantity) * self.multiplier for x in call_butterfly.UnderlyingLegs])
+        call_butterfly = OptionStrategies.call_butterfly(self.spxw, otm_strike, atm_strike, itm_strike, expiry)
+        price = sum([abs(self.securities[x.symbol].price * x.quantity) * self.multiplier for x in call_butterfly.underlying_legs])
         if price > 0:
-            quantity = self.Portfolio.TotalPortfolioValue // price
-            self.tickets = self.Buy(call_butterfly, quantity, asynchronous=True)
+            quantity = self.portfolio.total_portfolio_value // price
+            self.tickets = self.buy(call_butterfly, quantity, asynchronous=True)
         
