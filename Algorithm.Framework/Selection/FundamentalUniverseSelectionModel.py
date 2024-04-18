@@ -92,7 +92,7 @@ class FundamentalUniverseSelectionModel:
             fundamental: The fundamental data used to perform filtering
         Returns:
             An enumerable of symbols passing the filter'''
-        raise NotImplementedError("Please overrride the 'Select' fundamental function")
+        raise NotImplementedError("Please overrride the 'select' fundamental function")
 
 
     def select_coarse(self, algorithm: QCAlgorithm, fundamental: list[Fundamental]) -> list[Symbol]:
@@ -102,7 +102,7 @@ class FundamentalUniverseSelectionModel:
             coarse: The coarse fundamental data used to perform filtering
         Returns:
             An enumerable of symbols passing the filter'''
-        raise NotImplementedError("Please overrride the 'Select' fundamental function")
+        raise NotImplementedError("Please overrride the 'select' fundamental function")
 
 
     def select_fine(self, algorithm: QCAlgorithm, fundamental: list[Fundamental]) -> list[Symbol]:

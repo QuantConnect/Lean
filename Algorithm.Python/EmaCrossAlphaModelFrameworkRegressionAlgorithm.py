@@ -13,6 +13,7 @@
 
 from AlgorithmImports import *
 from BaseFrameworkRegressionAlgorithm import BaseFrameworkRegressionAlgorithm
+from Alphas.EmaCrossAlphaModel import EmaCrossAlphaModel
 
 ### <summary>
 ### Regression algorithm to assert the behavior of <see cref="EmaCrossAlphaModel"/>.

@@ -57,16 +57,12 @@ namespace QuantConnect.Algorithm.CSharp
             public CustomUniverseSelectionModel(): base(true, null)
             {
             }
-            public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
-            {
-                return new[] { QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA) };
-            }
-            public override IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
+            public override IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
             {
                 if (!_selected)
                 {
                     _selected = true;
-                    return fine.Select(x => x.Symbol);
+                    return new[] { QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA) };
                 }
                 return Data.UniverseSelection.Universe.Unchanged;
             }
@@ -85,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 7208;
+        public long DataPoints => 78062;
 
         /// <summary>
         /// Data Points count of the algorithm history

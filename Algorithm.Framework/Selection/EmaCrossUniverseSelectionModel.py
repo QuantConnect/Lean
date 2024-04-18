@@ -55,14 +55,14 @@ class EmaCrossUniverseSelectionModel(FundamentalUniverseSelectionModel):
 
             # Update returns true when the indicators are ready, so don't accept until they are
             # and only pick symbols who have their fastPeriod-day ema over their slowPeriod-day ema
-            if avg.Update(cf.end_time, cf.adjusted_price) and avg.fast > avg.slow * (1 + self.tolerance):
+            if avg.update(cf.end_time, cf.adjusted_price) and avg.fast > avg.slow * (1 + self.tolerance):
                 filtered.append(avg)
 
         # prefer symbols with a larger delta by percentage between the two averages
         filtered = sorted(filtered, key=lambda avg: avg.scaled_delta, reverse = True)
 
         # we only need to return the symbol and return 'universeCount' symbols
-        return [x.Symbol for x in filtered[:self.universe_count]]
+        return [x.symbol for x in filtered[:self.universe_count]]
 
     # class used to improve readability of the coarse selection function
     class SelectionData:
@@ -85,5 +85,5 @@ class EmaCrossUniverseSelectionModel(FundamentalUniverseSelectionModel):
             return (self.fast - self.slow) / ((self.fast + self.slow) / 2)
 
         # updates the EMAFast and EMASlow indicators, returning true when they're both ready
-        def Update(self, time, value):
+        def update(self, time, value):
             return self.slow_ema.update(time, value) & self.fast_ema.update(time, value)

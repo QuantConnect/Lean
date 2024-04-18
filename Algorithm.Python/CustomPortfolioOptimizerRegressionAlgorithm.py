@@ -12,7 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from QuantConnect.Algorithm.CSharp import MeanVarianceOptimizationFrameworkAlgorithm
+from MeanVarianceOptimizationFrameworkAlgorithm import MeanVarianceOptimizationFrameworkAlgorithm
 
 ### <summary>
 ### Regression algorithm asserting we can specify a custom portfolio

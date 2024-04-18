@@ -37,7 +37,7 @@ class CustomVolatilityModelAlgorithm(QCAlgorithm):
 
 # Python implementation of StandardDeviationOfReturnsVolatilityModel
 # Computes the annualized sample standard deviation of daily returns as the volatility of the security
-# https://github.com/QuantConnect/Lean/blob/master/Common/Securities/Volatility/StandardDeviationOfReturnsVolatilityModel.CS
+# https://github.com/QuantConnect/Lean/blob/master/Common/Securities/Volatility/StandardDeviationOfReturnsVolatilityModel.cs
 class CustomVolatilityModel():
     def __init__(self, periods):
         self.last_update = datetime.min

@@ -12,6 +12,9 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from Alphas.ConstantAlphaModel import ConstantAlphaModel
+from Selection.EmaCrossUniverseSelectionModel import EmaCrossUniverseSelectionModel
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 
 ### <summary>
 ### Framework algorithm that uses the EmaCrossUniverseSelectionModel to

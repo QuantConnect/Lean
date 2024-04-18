@@ -13,9 +13,8 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
 using Python.Runtime;
+using System.Collections.Generic;
 
 namespace QuantConnect.Python
 {
@@ -26,7 +25,6 @@ namespace QuantConnect.Python
     {
         private PyObject _instance;
         private object _underlyingClrObject;
-        private Type _underlyingClrObjectType;
         private Dictionary<string, PyObject> _pythonMethods;
         private Dictionary<string, string> _pythonPropertyNames;
 
@@ -73,10 +71,6 @@ namespace QuantConnect.Python
 
             _instance = _validateInterface ? instance.ValidateImplementationOf<TInterface>() : instance;
             _instance.TryConvert(out _underlyingClrObject);
-            if (_underlyingClrObject != null)
-            {
-                _underlyingClrObjectType = _underlyingClrObject.GetType();
-            }
         }
 
         /// <summary>
@@ -182,7 +176,8 @@ namespace QuantConnect.Python
                 // we check which property was defined in the Python class (if any), either the snake-cased or the original name.
                 if (!isEvent && _underlyingClrObject != null)
                 {
-                    var property = _underlyingClrObjectType.GetProperty(propertyName);
+                    var underlyingClrObjectType = _underlyingClrObject.GetType();
+                    var property = underlyingClrObjectType.GetProperty(propertyName);
                     if (property != null)
                     {
                         var clrPropertyValue = property.GetValue(_underlyingClrObject);
@@ -222,9 +217,10 @@ namespace QuantConnect.Python
         /// </summary>
         private static Dictionary<string, T> AddToDictionary<T>(Dictionary<string, T> dictionary, string key, T value)
         {
-            var tmp = new Dictionary<string, T>(dictionary);
-            tmp[key] = value;
-            return tmp;
+            return new Dictionary<string, T>(dictionary)
+            {
+                [key] = value
+            };
         }
     }
 }

@@ -30,8 +30,8 @@ class DailyAlgorithm(QCAlgorithm):
         # Find more symbols here: http://quantconnect.com/data
         self.add_equity("SPY", Resolution.DAILY)
         self.add_equity("IBM", Resolution.HOUR).set_leverage(1.0)
-        self.macd = self.macd("SPY", 12, 26, 9, MovingAverageType.WILDERS, Resolution.DAILY, Field.close)
-        self.ema = self.ema("IBM", 15 * 6, Resolution.HOUR, Field.seven_bar)
+        self.macd = self.macd("SPY", 12, 26, 9, MovingAverageType.WILDERS, Resolution.DAILY, Field.CLOSE)
+        self.ema = self.ema("IBM", 15 * 6, Resolution.HOUR, Field.SEVEN_BAR)
         self.last_action = None
 
 

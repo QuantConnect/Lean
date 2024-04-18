@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
 ### <summary>
 ### Regression algorithm showing how to implement a custom universe selection model and asserting it's behavior
@@ -37,15 +38,12 @@ class CustomUniverseSelectionModelRegressionAlgorithm(QCAlgorithm):
 
 class CustomUniverseSelectionModel(FundamentalUniverseSelectionModel):
 
-    def __init__(self, filter_fine_data = True, universe_settings = None):
-        super().__init__(self.select, universe_settings)
+    def __init__(self, universe_settings = None):
+        super().__init__(universe_settings)
         self._selected = False
 
-    def select(self, fundamental):
+    def select(self, algorithm, fundamental):
         if not self._selected:
             self._selected = True
-            coarse_selected = [Symbol.create('AAPL', SecurityType.EQUITY, Market.USA)]
-
-            fundamental_selected = [ x for x in fundamental if x.symbol in coarse_selected ]
-            return [ x.symbol for x in fundamental_selected ]
+            return [ Symbol.create('AAPL', SecurityType.EQUITY, Market.USA) ]
         return Universe.UNCHANGED

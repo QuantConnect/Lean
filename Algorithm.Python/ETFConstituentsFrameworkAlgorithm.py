@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from Selection.ETFConstituentsUniverseSelectionModel import *
 
 ### <summary>
 ### Demonstration of using the ETFConstituentsUniverseSelectionModel
