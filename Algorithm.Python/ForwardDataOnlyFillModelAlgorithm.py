@@ -18,34 +18,34 @@ from AlgorithmImports import *
 ### pessimistic fill models and eliminate the possibility to fill on old market data that may not be relevant.
 ### </summary>
 class ForwardDataOnlyFillModelAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2013,10,1)
-        self.SetEndDate(2013,10,31)
+    def initialize(self):
+        self.set_start_date(2013,10,1)
+        self.set_end_date(2013,10,31)
 
-        self.security = self.AddEquity("SPY", Resolution.Hour)
-        self.security.SetFillModel(ForwardDataOnlyFillModel())
+        self.security = self.add_equity("SPY", Resolution.HOUR)
+        self.security.set_fill_model(ForwardDataOnlyFillModel())
 
-        self.Schedule.On(self.DateRules.WeekStart(), self.TimeRules.AfterMarketOpen(self.security.Symbol), self.Trade)
+        self.schedule.on(self.date_rules.week_start(), self.time_rules.after_market_open(self.security.symbol), self.trade)
 
-    def Trade(self):
-        if not self.Portfolio.Invested:
-            if self.Time.hour != 9 or self.Time.minute != 30:
-                raise Exception(f"Unexpected event time {self.Time}")
+    def trade(self):
+        if not self.portfolio.invested:
+            if self.time.hour != 9 or self.time.minute != 30:
+                raise Exception(f"Unexpected event time {self.time}")
 
-            ticket = self.Buy("SPY", 1)
-            if ticket.Status != OrderStatus.Submitted:
-                raise Exception(f"Unexpected order status {ticket.Status}")
+            ticket = self.buy("SPY", 1)
+            if ticket.status != OrderStatus.SUBMITTED:
+                raise Exception(f"Unexpected order status {ticket.status}")
 
-    def OnOrderEvent(self, orderEvent: OrderEvent):
-        self.Debug(f"OnOrderEvent:: {orderEvent}")
-        if orderEvent.Status == OrderStatus.Filled and (self.Time.hour != 10 or self.Time.minute != 0):
-            raise Exception(f"Unexpected fill time {self.Time}")
+    def on_order_event(self, order_event: OrderEvent):
+        self.debug(f"OnOrderEvent:: {order_event}")
+        if order_event.status == OrderStatus.FILLED and (self.time.hour != 10 or self.time.minute != 0):
+            raise Exception(f"Unexpected fill time {self.time}")
 
 class ForwardDataOnlyFillModel(EquityFillModel):
-    def Fill(self, parameters: FillModelParameters):
-        orderLocalTime = Extensions.ConvertFromUtc(parameters.Order.Time, parameters.Security.Exchange.TimeZone)
-        for dataType in [ QuoteBar, TradeBar, Tick ]:
-            data = parameters.Security.Cache.GetData[dataType]()
-            if not data is None and orderLocalTime <= data.EndTime:
-                return super().Fill(parameters)
+    def fill(self, parameters: FillModelParameters):
+        order_local_time = Extensions.convert_from_utc(parameters.order.time, parameters.security.exchange.time_zone)
+        for data_type in [ QuoteBar, TradeBar, Tick ]:
+            data = parameters.security.cache.get_data[data_type]()
+            if not data is None and order_local_time <= data.end_time:
+                return super().fill(parameters)
         return Fill([])
