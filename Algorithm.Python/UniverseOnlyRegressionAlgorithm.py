@@ -19,22 +19,22 @@ from AlgorithmImports import *
 ### </summary>
 class UniverseOnlyRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2020, 12, 1)
-        self.SetEndDate(2020, 12, 12)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2020, 12, 1)
+        self.set_end_date(2020, 12, 12)
+        self.set_cash(100000)
 
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
         # Add universe without a security added
-        self.AddUniverse(self.Universe.ETF("GDVD", self.UniverseSettings, self.FilterUniverse))
+        self.add_universe(self.universe.etf("GDVD", self.universe_settings, self.filter_universe))
 
         self.selection_done = False
 
-    def FilterUniverse(self, constituents: List[ETFConstituentData]) -> List[Symbol]:
+    def filter_universe(self, constituents: List[ETFConstituentData]) -> List[Symbol]:
         self.selection_done = True
-        return [x.Symbol for x in constituents]
+        return [x.symbol for x in constituents]
 
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         if not self.selection_done:
             raise Exception("Universe selection was not performed")
