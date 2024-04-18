@@ -33,7 +33,7 @@ class ExpiryHelperAlphaModelFrameworkAlgorithm(QCAlgorithm):
 
         # set algorithm framework models
         self.set_universe_selection(ManualUniverseSelectionModel(symbols))
-        self.set_alpha(self.expiry_helper_alpha_model())
+        self.set_alpha(self.ExpiryHelperAlphaModel())
         self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
         self.set_execution(ImmediateExecutionModel())
         self.set_risk_management(MaximumDrawdownPercentPerSecurity(0.01))
