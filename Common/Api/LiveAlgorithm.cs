@@ -52,12 +52,6 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "responseCode")]
         public string ResponseCode { get; set; }
-
-        /// <summary>
-        /// Queue handler
-        /// </summary>
-        [JsonProperty(PropertyName = "queueHandler")]
-        public string QueueHandler { get; set; }
     }
 
     /// <summary>

@@ -36,15 +36,15 @@ namespace QuantConnect
             if (ReferenceEquals(symbol, null)) return;
 
             writer.WriteStartObject();
-            writer.WritePropertyName("Value");
+            writer.WritePropertyName("value");
             writer.WriteValue(symbol.Value);
-            writer.WritePropertyName("ID");
+            writer.WritePropertyName("id");
             writer.WriteValue(symbol.ID.ToString());
-            writer.WritePropertyName("Permtick");
+            writer.WritePropertyName("permtick");
             writer.WriteValue(symbol.Value);
             if (symbol.HasUnderlying)
             {
-                writer.WritePropertyName("Underlying");
+                writer.WritePropertyName("underlying");
                 WriteJson(writer, symbol.Underlying, serializer);
             }
             writer.WriteEndObject();

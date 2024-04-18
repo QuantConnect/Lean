@@ -14,6 +14,7 @@
 */
 
 using System;
+using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
@@ -27,6 +28,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Stop price for this stop market order.
         /// </summary>
+        [JsonProperty(PropertyName = "stopPrice")]
         public decimal StopPrice { get; internal set; }
 
         /// <summary>
