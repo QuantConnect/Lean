@@ -1201,6 +1201,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets the implementation used to handle messages from the brokerage.
+        /// The default implementation will forward messages to debug or error
+        /// and when a <see cref="BrokerageMessageType.Error"/> occurs, the algorithm
+        /// is stopped.
+        /// </summary>
+        /// <param name="handler">The message handler to use</param>
+        [DocumentationAttribute(Modeling)]
+        [DocumentationAttribute(Logging)]
+        public void SetBrokerageMessageHandler(PyObject handler)
+        {
+            if (!handler.TryConvert(out IBrokerageMessageHandler brokerageMessageHandler))
+            {
+                brokerageMessageHandler = new BrokerageMessageHandlerPythonWrapper(handler);
+            }
+
+            SetBrokerageMessageHandler(brokerageMessageHandler);
+        }
+
+        /// <summary>
         /// Sets the risk free interest rate model to be used in the algorithm
         /// </summary>
         /// <param name="model">The risk free interest rate model to use</param>

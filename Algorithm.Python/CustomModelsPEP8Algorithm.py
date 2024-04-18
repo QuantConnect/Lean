@@ -121,7 +121,7 @@ class SimpleCustomFillModelPEP8(FillModel):
 
     def _create_order_event(self, asset, order):
         utc_time = Extensions.convert_to_utc(asset.local_time, asset.exchange.time_zone)
-        return OrderEvent(order, utc_time, OrderFee.zero)
+        return OrderEvent(order, utc_time, OrderFee.ZERO)
 
     def _set_order_event_to_filled(self, fill, fill_price, fill_quantity):
         fill.status = OrderStatus.FILLED

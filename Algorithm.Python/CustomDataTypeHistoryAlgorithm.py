@@ -16,54 +16,54 @@ from AlgorithmImports import *
 ### <summary>
 ### </summary>
 class CustomDataTypeHistoryAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2017, 8, 20)
-        self.SetEndDate(2017, 8, 20)
+    def initialize(self):
+        self.set_start_date(2017, 8, 20)
+        self.set_end_date(2017, 8, 20)
 
-        self.symbol = self.AddData(CustomDataType, "CustomDataType", Resolution.Hour).Symbol
+        self._symbol = self.add_data(CustomDataType, "CustomDataType", Resolution.HOUR).symbol
 
-        history = list(self.History[CustomDataType](self.symbol, 48, Resolution.Hour))
+        history = list(self.history[CustomDataType](self._symbol, 48, Resolution.HOUR))
 
         if len(history) == 0:
             raise Exception("History request returned no data")
 
-        self._assertHistoryData(history)
+        self._assert_history_data(history)
 
-        history2 = list(self.History[CustomDataType]([self.symbol], 48, Resolution.Hour))
+        history2 = list(self.history[CustomDataType]([self._symbol], 48, Resolution.HOUR))
 
         if len(history2) != len(history):
             raise Exception("History requests returned different data")
 
-        self._assertHistoryData([y.values()[0] for y in history2])
+        self._assert_history_data([y.values()[0] for y in history2])
 
-    def _assertHistoryData(self, history:  List[PythonData]) -> None:
-        expectedKeys = ['open', 'close', 'high', 'low', 'some_property']
-        if any(any(not x[key] for key in expectedKeys)
+    def _assert_history_data(self, history:  List[PythonData]) -> None:
+        expected_keys = ['open', 'close', 'high', 'low', 'some_property']
+        if any(any(not x[key] for key in expected_keys)
                or x["some_property"] != "some property value"
                for x in history):
             raise Exception("History request returned data without the expected properties")
 
 class CustomDataType(PythonData):
 
-    def GetSource(self, config: SubscriptionDataConfig, date: datetime, isLive: bool) -> SubscriptionDataSource:
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live: bool) -> SubscriptionDataSource:
         source = "https://www.dl.dropboxusercontent.com/s/d83xvd7mm9fzpk0/path_to_my_csv_data.csv?dl=0"
-        return SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile)
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.REMOTE_FILE)
 
-    def Reader(self, config: SubscriptionDataConfig, line: str, date: datetime, isLive: bool) -> BaseData:
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live: bool) -> BaseData:
         if not (line.strip()):
             return None
 
         data = line.split(',')
         obj_data = CustomDataType()
-        obj_data.Symbol = config.Symbol
+        obj_data.symbol = config.symbol
 
         try:
-            obj_data.Time = datetime.strptime(data[0], '%Y-%m-%d %H:%M:%S') + timedelta(hours=20)
+            obj_data.time = datetime.strptime(data[0], '%Y-%m-%d %H:%M:%S') + timedelta(hours=20)
             obj_data["open"] = float(data[1])
             obj_data["high"] = float(data[2])
             obj_data["low"] = float(data[3])
             obj_data["close"] = float(data[4])
-            obj_data.Value = obj_data["close"]
+            obj_data.value = obj_data["close"]
 
             # property for asserting the correct data is fetched
             obj_data["some_property"] = "some property value"

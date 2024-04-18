@@ -23,80 +23,80 @@ from AlgorithmImports import *
 ### <meta name="tag" content="regression test" />
 class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2011,9,13)   # Set Start Date
-        self.SetEndDate(2015,12,1)     # Set End Date
-        self.SetCash(100000)           # Set Strategy Cash
+    def initialize(self):
+        self.set_start_date(2011,9,13)   # Set Start Date
+        self.set_end_date(2015,12,1)     # Set End Date
+        self.set_cash(100000)           # Set Strategy Cash
         
         # Define our custom data properties and exchange hours
         self.ticker = 'BTC'
         properties = SymbolProperties("Bitcoin", "USD", 1, 0.01, 0.01, self.ticker)
-        exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork)
+        exchange_hours = SecurityExchangeHours.always_open(TimeZones.NEW_YORK)
 
         # Add the custom data to our algorithm with our custom properties and exchange hours
-        self.bitcoin = self.AddData(Bitcoin, self.ticker, properties, exchangeHours)
+        self.bitcoin = self.add_data(Bitcoin, self.ticker, properties, exchange_hours)
 
         # Verify our symbol properties were changed and loaded into this security
-        if self.bitcoin.SymbolProperties != properties :
+        if self.bitcoin.symbol_properties != properties :
             raise Exception("Failed to set and retrieve custom SymbolProperties for BTC")
 
         # Verify our exchange hours were changed and loaded into this security
-        if self.bitcoin.Exchange.Hours != exchangeHours :
+        if self.bitcoin.exchange.hours != exchange_hours :
             raise Exception("Failed to set and retrieve custom ExchangeHours for BTC")
 
         # For regression purposes on AddData overloads, this call is simply to ensure Lean can accept this
         # with default params and is not routed to a breaking function.
-        self.AddData(Bitcoin, "BTCUSD")
+        self.add_data(Bitcoin, "BTCUSD")
 
 
-    def OnData(self, data):
-        if not self.Portfolio.Invested:
-            if data['BTC'].Close != 0 :
-                self.Order('BTC', self.Portfolio.MarginRemaining/abs(data['BTC'].Close + 1))
+    def on_data(self, data):
+        if not self.portfolio.invested:
+            if data['BTC'].close != 0 :
+                self.order('BTC', self.portfolio.margin_remaining/abs(data['BTC'].close + 1))
 
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         #Reset our Symbol property value, for testing purposes.
-        self.SymbolPropertiesDatabase.SetEntry(Market.USA, self.MarketHoursDatabase.GetDatabaseSymbolKey(self.bitcoin.Symbol), SecurityType.Base,
-            SymbolProperties.GetDefault("USD"))
+        self.symbol_properties_database.set_entry(Market.USA, self.market_hours_database.get_database_symbol_key(self.bitcoin.symbol), SecurityType.BASE,
+            SymbolProperties.get_default("USD"))
 
 
 
 class Bitcoin(PythonData):
     '''Custom Data Type: Bitcoin data from Quandl - http://www.quandl.com/help/api-for-bitcoin-data'''
 
-    def GetSource(self, config, date, isLiveMode):
-        if isLiveMode:
-            return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.Rest)
+    def get_source(self, config, date, is_live_mode):
+        if is_live_mode:
+            return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.REST)
 
-        #return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip"
+        #return "http://my-ftp-server.com/futures-data-" + date.to_string("Ymd") + ".zip"
         # OR simply return a fixed small data file. Large files will slow down your backtest
-        return SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm", SubscriptionTransportMedium.RemoteFile)
+        return SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm", SubscriptionTransportMedium.REMOTE_FILE)
 
 
-    def Reader(self, config, line, date, isLiveMode):
+    def reader(self, config, line, date, is_live_mode):
         coin = Bitcoin()
-        coin.Symbol = config.Symbol
+        coin.symbol = config.symbol
 
-        if isLiveMode:
+        if is_live_mode:
             # Example Line Format:
             # {"high": "441.00", "last": "421.86", "timestamp": "1411606877", "bid": "421.96", "vwap": "428.58", "volume": "14120.40683975", "low": "418.83", "ask": "421.99"}
             try:
-                liveBTC = json.loads(line)
+                live_btc = json.loads(line)
 
                 # If value is zero, return None
-                value = liveBTC["last"]
+                value = live_btc["last"]
                 if value == 0: return None
 
-                coin.Time = datetime.now()
-                coin.Value = value
-                coin["Open"] = float(liveBTC["open"])
-                coin["High"] = float(liveBTC["high"])
-                coin["Low"] = float(liveBTC["low"])
-                coin["Close"] = float(liveBTC["last"])
-                coin["Ask"] = float(liveBTC["ask"])
-                coin["Bid"] = float(liveBTC["bid"])
-                coin["VolumeBTC"] = float(liveBTC["volume"])
-                coin["WeightedPrice"] = float(liveBTC["vwap"])
+                coin.time = datetime.now()
+                coin.value = value
+                coin["Open"] = float(live_btc["open"])
+                coin["High"] = float(live_btc["high"])
+                coin["Low"] = float(live_btc["low"])
+                coin["Close"] = float(live_btc["last"])
+                coin["Ask"] = float(live_btc["ask"])
+                coin["Bid"] = float(live_btc["bid"])
+                coin["VolumeBTC"] = float(live_btc["volume"])
+                coin["WeightedPrice"] = float(live_btc["vwap"])
                 return coin
             except ValueError:
                 # Do nothing, possible error in json decoding
@@ -109,9 +109,9 @@ class Bitcoin(PythonData):
 
         try:
             data = line.split(',')
-            coin.Time = datetime.strptime(data[0], "%Y-%m-%d")
-            coin.EndTime = coin.Time + timedelta(days=1)
-            coin.Value = float(data[4])
+            coin.time = datetime.strptime(data[0], "%Y-%m-%d")
+            coin.end_time = coin.time + timedelta(days=1)
+            coin.value = float(data[4])
             coin["Open"] = float(data[1])
             coin["High"] = float(data[2])
             coin["Low"] = float(data[3])

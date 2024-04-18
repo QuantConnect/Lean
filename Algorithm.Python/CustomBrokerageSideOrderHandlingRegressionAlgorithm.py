@@ -25,24 +25,24 @@ class CustomBrokerageSideOrderHandlingRegressionAlgorithm(QCAlgorithm):
 
      All orders are sent from the brokerage, none of them will be placed by the algorithm.'''
 
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 11)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 11)
+        self.set_cash(100000)
 
-        self.SetBrokerageMessageHandler(CustomBrokerageMessageHandler(self))
+        self.set_brokerage_message_handler(CustomBrokerageMessageHandler(self))
 
-        self._spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+        self._spy = Symbol.create("SPY", SecurityType.EQUITY, Market.USA)
 
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         # The security should have been added
-        if not self.Securities.ContainsKey(self._spy):
+        if not self.securities.contains_key(self._spy):
             raise Exception("Expected security to have been added")
 
-        if self.Transactions.OrdersCount == 0:
+        if self.transactions.orders_count == 0:
             raise Exception("Expected orders to be added from brokerage side")
 
-        if len(list(self.Portfolio.Positions.Groups)) != 1:
+        if len(list(self.portfolio.positions.groups)) != 1:
             raise Exception("Expected only one position")
 
 class CustomBrokerageMessageHandler(IBrokerageMessageHandler):
@@ -51,13 +51,13 @@ class CustomBrokerageMessageHandler(IBrokerageMessageHandler):
     def __init__(self, algorithm):
         self._algorithm = algorithm
 
-    def HandleMessage(self, message):
-        self._algorithm.Debug(f"{self._algorithm.Time} Event: {message.Message}")
+    def handle_message(self, message):
+        self._algorithm.debug(f"{self._algorithm.time} Event: {message.message}")
 
-    def HandleOrder(self, eventArgs):
-        order = eventArgs.Order
-        if order.Tag is None or not order.Tag.isdigit():
+    def handle_order(self, event_args):
+        order = event_args.order
+        if order.tag is None or not order.tag.isdigit():
             raise Exception("Expected all new brokerage-side orders to have a valid tag")
 
         # We will only process orders with even tags
-        return int(order.Tag) % 2 == 0
+        return int(order.tag) % 2 == 0

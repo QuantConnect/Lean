@@ -16,37 +16,37 @@ from QuantConnect.Data.Custom.IconicTypes import *
 
 class CustomDataLinkedIconicTypeAddDataCoarseSelectionRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2014, 3, 24)
-        self.SetEndDate(2014, 4, 7)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2014, 3, 24)
+        self.set_end_date(2014, 4, 7)
+        self.set_cash(100000)
 
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
-        self.AddUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseSelector))
+        self.add_universe_selection(CoarseFundamentalUniverseSelectionModel(self.coarse_selector))
 
-    def CoarseSelector(self, coarse):
+    def coarse_selector(self, coarse):
         symbols = [
-            Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-            Symbol.Create("BAC", SecurityType.Equity, Market.USA),
-            Symbol.Create("FB", SecurityType.Equity, Market.USA),
-            Symbol.Create("GOOGL", SecurityType.Equity, Market.USA),
-            Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
-            Symbol.Create("IBM", SecurityType.Equity, Market.USA),
+            Symbol.create("AAPL", SecurityType.EQUITY, Market.USA),
+            Symbol.create("BAC", SecurityType.EQUITY, Market.USA),
+            Symbol.create("FB", SecurityType.EQUITY, Market.USA),
+            Symbol.create("GOOGL", SecurityType.EQUITY, Market.USA),
+            Symbol.create("GOOG", SecurityType.EQUITY, Market.USA),
+            Symbol.create("IBM", SecurityType.EQUITY, Market.USA),
         ]
 
-        self.customSymbols = []
+        self.custom_symbols = []
 
         for symbol in symbols:
-            self.customSymbols.append(self.AddData(LinkedData, symbol, Resolution.Daily).Symbol)
+            self.custom_symbols.append(self.add_data(LinkedData, symbol, Resolution.DAILY).symbol)
 
         return symbols
 
-    def OnData(self, data):
-        if not self.Portfolio.Invested and len(self.Transactions.GetOpenOrders()) == 0:
-            aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
-            self.SetHoldings(aapl, 0.5)
+    def on_data(self, data):
+        if not self.portfolio.invested and len(self.transactions.get_open_orders()) == 0:
+            aapl = Symbol.create("AAPL", SecurityType.EQUITY, Market.USA)
+            self.set_holdings(aapl, 0.5)
 
-        for customSymbol in self.customSymbols:
-            if not self.ActiveSecurities.ContainsKey(customSymbol.Underlying):
-                raise Exception(f"Custom data undelrying ({customSymbol.Underlying}) Symbol was not found in active securities")
+        for custom_symbol in self.custom_symbols:
+            if not self.active_securities.contains_key(custom_symbol.underlying):
+                raise Exception(f"Custom data undelrying ({custom_symbol.underlying}) Symbol was not found in active securities")

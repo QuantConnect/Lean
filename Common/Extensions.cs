@@ -2665,6 +2665,15 @@ namespace QuantConnect
 
                     result = (T)pyObject.AsManagedObject(type);
 
+                    // The PyObject is a Python object of a Python class that is a subclass of a C# class.
+                    // In this case, we return false just because we want the actual Python object
+                    // so it gets wrapped in a python wrapper, not the C# object.
+                    if (result is IPythonDerivedType)
+                    {
+                        pythonType.Dispose();
+                        return false;
+                    }
+
                     // If the PyObject type and the managed object names are the same,
                     // pyObject is a C# object wrapped in PyObject, in this case return true
                     // Otherwise, pyObject is a python object that subclass a C# class, only return true if 'allowPythonDerivative'

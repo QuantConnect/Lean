@@ -28,60 +28,59 @@ class CustomModelsAlgorithm(QCAlgorithm):
     '''Demonstration of using custom fee, slippage, fill, and buying power models for modelling transactions in backtesting.
     QuantConnect allows you to model all orders as deeply and accurately as you need.'''
 
-    def Initialize(self):
-        self.SetStartDate(2013,10,1)   # Set Start Date
-        self.SetEndDate(2013,10,31)    # Set End Date
-        self.security = self.AddEquity("SPY", Resolution.Hour)
-        self.spy = self.security.Symbol
+    def initialize(self):
+        self.set_start_date(2013,10,1)   # Set Start Date
+        self.set_end_date(2013,10,31)    # Set End Date
+        self.security = self.add_equity("SPY", Resolution.HOUR)
+        self.spy = self.security.symbol
 
         # set our models
-        self.security.SetFeeModel(CustomFeeModel(self))
-        self.security.SetFillModel(CustomFillModel(self))
-        self.security.SetSlippageModel(CustomSlippageModel(self))
-        self.security.SetBuyingPowerModel(CustomBuyingPowerModel(self))
+        self.security.set_fee_model(CustomFeeModel(self))
+        self.security.set_fill_model(CustomFillModel(self))
+        self.security.set_slippage_model(CustomSlippageModel(self))
+        self.security.set_buying_power_model(CustomBuyingPowerModel(self))
 
-
-    def OnData(self, data):
-        open_orders = self.Transactions.GetOpenOrders(self.spy)
+    def on_data(self, data):
+        open_orders = self.transactions.get_open_orders(self.spy)
         if len(open_orders) != 0: return
 
-        if self.Time.day > 10 and self.security.Holdings.Quantity <= 0:
-            quantity = self.CalculateOrderQuantity(self.spy, .5)
-            self.Log(f"MarketOrder: {quantity}")
-            self.MarketOrder(self.spy, quantity, True)   # async needed for partial fill market orders
+        if self.time.day > 10 and self.security.holdings.quantity <= 0:
+            quantity = self.calculate_order_quantity(self.spy, .5)
+            self.log(f"MarketOrder: {quantity}")
+            self.market_order(self.spy, quantity, True)   # async needed for partial fill market orders
 
-        elif self.Time.day > 20 and self.security.Holdings.Quantity >= 0:
-            quantity = self.CalculateOrderQuantity(self.spy, -.5)
-            self.Log(f"MarketOrder: {quantity}")
-            self.MarketOrder(self.spy, quantity, True)   # async needed for partial fill market orders
+        elif self.time.day > 20 and self.security.holdings.quantity >= 0:
+            quantity = self.calculate_order_quantity(self.spy, -.5)
+            self.log(f"MarketOrder: {quantity}")
+            self.market_order(self.spy, quantity, True)   # async needed for partial fill market orders
 
 # If we want to use methods from other models, you need to inherit from one of them
 class CustomFillModel(ImmediateFillModel):
     def __init__(self, algorithm):
         super().__init__()
         self.algorithm = algorithm
-        self.absoluteRemainingByOrderId = {}
+        self.absolute_remaining_by_order_id = {}
         self.random = Random(387510346)
 
-    def MarketFill(self, asset, order):
-        absoluteRemaining = order.AbsoluteQuantity
+    def market_fill(self, asset, order):
+        absolute_remaining = order.absolute_quantity
 
-        if order.Id in self.absoluteRemainingByOrderId.keys():
-            absoluteRemaining = self.absoluteRemainingByOrderId[order.Id]
+        if order.id in self.absolute_remaining_by_order_id.keys():
+            absolute_remaining = self.absolute_remaining_by_order_id[order.id]
 
-        fill = super().MarketFill(asset, order)
-        absoluteFillQuantity = int(min(absoluteRemaining, self.random.Next(0, 2*int(order.AbsoluteQuantity))))
-        fill.FillQuantity = np.sign(order.Quantity) * absoluteFillQuantity
-        
-        if absoluteRemaining == absoluteFillQuantity:
-            fill.Status = OrderStatus.Filled
-            if self.absoluteRemainingByOrderId.get(order.Id):
-                self.absoluteRemainingByOrderId.pop(order.Id)
+        fill = super().market_fill(asset, order)
+        absolute_fill_quantity = int(min(absolute_remaining, self.random.next(0, 2*int(order.absolute_quantity))))
+        fill.fill_quantity = np.sign(order.quantity) * absolute_fill_quantity
+
+        if absolute_remaining == absolute_fill_quantity:
+            fill.status = OrderStatus.FILLED
+            if self.absolute_remaining_by_order_id.get(order.id):
+                self.absolute_remaining_by_order_id.pop(order.id)
         else:
-            absoluteRemaining = absoluteRemaining - absoluteFillQuantity
-            self.absoluteRemainingByOrderId[order.Id] = absoluteRemaining
-            fill.Status = OrderStatus.PartiallyFilled
-        self.algorithm.Log(f"CustomFillModel: {fill}")
+            absolute_remaining = absolute_remaining - absolute_fill_quantity
+            self.absolute_remaining_by_order_id[order.id] = absolute_remaining
+            fill.status = OrderStatus.PARTIALLY_FILLED
+        self.algorithm.log(f"CustomFillModel: {fill}")
         return fill
 
 class CustomFeeModel(FeeModel):
@@ -89,22 +88,22 @@ class CustomFeeModel(FeeModel):
         super().__init__()
         self.algorithm = algorithm
 
-    def GetOrderFee(self, parameters):
+    def get_order_fee(self, parameters):
         # custom fee math
-        fee = max(1, parameters.Security.Price
-                  * parameters.Order.AbsoluteQuantity
+        fee = max(1, parameters.security.price
+                  * parameters.order.absolute_quantity
                   * 0.00001)
-        self.algorithm.Log(f"CustomFeeModel: {fee}")
+        self.algorithm.log(f"CustomFeeModel: {fee}")
         return OrderFee(CashAmount(fee, "USD"))
 
 class CustomSlippageModel:
     def __init__(self, algorithm):
         self.algorithm = algorithm
 
-    def GetSlippageApproximation(self, asset, order):
+    def get_slippage_approximation(self, asset, order):
         # custom slippage math
-        slippage = asset.Price * 0.0001 * np.log10(2*float(order.AbsoluteQuantity))
-        self.algorithm.Log(f"CustomSlippageModel: {slippage}")
+        slippage = asset.price * 0.0001 * np.log10(2*float(order.absolute_quantity))
+        self.algorithm.log(f"CustomSlippageModel: {slippage}")
         return slippage
 
 class CustomBuyingPowerModel(BuyingPowerModel):
@@ -112,71 +111,71 @@ class CustomBuyingPowerModel(BuyingPowerModel):
         super().__init__()
         self.algorithm = algorithm
 
-    def HasSufficientBuyingPowerForOrder(self, parameters):
+    def has_sufficient_buying_power_for_order(self, parameters):
         # custom behavior: this model will assume that there is always enough buying power
-        hasSufficientBuyingPowerForOrderResult = HasSufficientBuyingPowerForOrderResult(True)
-        self.algorithm.Log(f"CustomBuyingPowerModel: {hasSufficientBuyingPowerForOrderResult.IsSufficient}")
-        return hasSufficientBuyingPowerForOrderResult
+        has_sufficient_buying_power_for_order_result = HasSufficientBuyingPowerForOrderResult(True)
+        self.algorithm.log(f"CustomBuyingPowerModel: {has_sufficient_buying_power_for_order_result.is_sufficient}")
+        return has_sufficient_buying_power_for_order_result
 
-# The simple fill model shows how to implement a simpler version of 
+# The simple fill model shows how to implement a simpler version of
 # the most popular order fills: Market, Stop Market and Limit
 class SimpleCustomFillModel(FillModel):
     def __init__(self):
         super().__init__()
 
     def _create_order_event(self, asset, order):
-        utcTime = Extensions.ConvertToUtc(asset.LocalTime, asset.Exchange.TimeZone)
-        return OrderEvent(order, utcTime, OrderFee.Zero)
+        utc_time = Extensions.convert_to_utc(asset.local_time, asset.exchange.time_zone)
+        return OrderEvent(order, utc_time, OrderFee.ZERO)
 
     def _set_order_event_to_filled(self, fill, fill_price, fill_quantity):
-        fill.Status = OrderStatus.Filled
-        fill.FillQuantity = fill_quantity
-        fill.FillPrice = fill_price
+        fill.status = OrderStatus.FILLED
+        fill.fill_quantity = fill_quantity
+        fill.fill_price = fill_price
         return fill
 
-    def _get_trade_bar(self, asset, orderDirection):
-        trade_bar = asset.Cache.GetData[TradeBar]()
+    def _get_trade_bar(self, asset, order_direction):
+        trade_bar = asset.cache.get_data[TradeBar]()
         if trade_bar: return trade_bar
 
         # Tick-resolution data doesn't have TradeBar, use the asset price
-        price = asset.Price
-        return TradeBar(asset.LocalTime, asset.Symbol, price, price, price, price, 0)
+        price = asset.price
+        return TradeBar(asset.local_time, asset.symbol, price, price, price, price, 0)
 
-    def MarketFill(self, asset, order):
+    def market_fill(self, asset, order):
         fill = self._create_order_event(asset, order)
-        if order.Status == OrderStatus.Canceled: return fill
+        if order.status == OrderStatus.CANCELED: return fill
 
-        return self._set_order_event_to_filled(fill, 
-            asset.Cache.AskPrice \
-                if order.Direction == OrderDirection.Buy else asset.Cache.BidPrice,
-            order.Quantity)
+        return self._set_order_event_to_filled(fill,
+            asset.cache.ask_price \
+                if order.direction == OrderDirection.BUY else asset.cache.bid_price,
+            order.quantity)
 
-    def StopMarketFill(self, asset, order):
+    def stop_market_fill(self, asset, order):
         fill = self._create_order_event(asset, order)
-        if order.Status == OrderStatus.Canceled: return fill
-        
-        stop_price = order.StopPrice
-        trade_bar = self._get_trade_bar(asset, order.Direction)
-        
-        if order.Direction == OrderDirection.Sell and trade_bar.Low < stop_price:
-            return self._set_order_event_to_filled(fill, stop_price, order.Quantity)
+        if order.status == OrderStatus.CANCELED: return fill
 
-        if order.Direction == OrderDirection.Buy and trade_bar.High > stop_price:
-            return self._set_order_event_to_filled(fill, stop_price, order.Quantity)
+        stop_price = order.stop_price
+        trade_bar = self._get_trade_bar(asset, order.direction)
+
+        if order.direction == OrderDirection.SELL and trade_bar.low < stop_price:
+            return self._set_order_event_to_filled(fill, stop_price, order.quantity)
+
+        if order.direction == OrderDirection.BUY and trade_bar.high > stop_price:
+            return self._set_order_event_to_filled(fill, stop_price, order.quantity)
 
         return fill
 
-    def LimitFill(self, asset, order):
+    def limit_fill(self, asset, order):
         fill = self._create_order_event(asset, order)
-        if order.Status == OrderStatus.Canceled: return fill
+        if order.status == OrderStatus.CANCELED: return fill
 
-        limit_price = order.LimitPrice
-        trade_bar = self._get_trade_bar(asset, order.Direction)
+        limit_price = order.limit_price
+        trade_bar = self._get_trade_bar(asset, order.direction)
 
-        if order.Direction == OrderDirection.Sell and trade_bar.High > limit_price:
-            return self._set_order_event_to_filled(fill, limit_price, order.Quantity)
+        if order.direction == OrderDirection.SELL and trade_bar.high > limit_price:
+            return self._set_order_event_to_filled(fill, limit_price, order.quantity)
 
-        if order.Direction == OrderDirection.Buy and trade_bar.Low < limit_price:
-            return self._set_order_event_to_filled(fill, limit_price, order.Quantity)
+        if order.direction == OrderDirection.BUY and trade_bar.low < limit_price:
+            return self._set_order_event_to_filled(fill, limit_price, order.quantity)
 
         return fill
