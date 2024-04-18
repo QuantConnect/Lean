@@ -20,15 +20,15 @@ from AlgorithmImports import *
 ### <meta name="tag" content="regression test" />
 class HourReverseSplitRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2013, 11, 7)
-        self. SetEndDate(2013, 11, 8)
-        self.SetCash(100000)
-        self.SetBenchmark(lambda x: 0)
+    def initialize(self):
+        self.set_start_date(2013, 11, 7)
+        self.set_end_date(2013, 11, 8)
+        self.set_cash(100000)
+        self.set_benchmark(lambda x: 0)
 
-        self.symbol = self.AddEquity("VXX.1", Resolution.Hour).Symbol
+        self._symbol = self.add_equity("VXX.1", Resolution.HOUR).symbol
     
-    def OnData(self, slice):
-        if slice.Bars.Count == 0: return
-        if (not self.Portfolio.Invested) and self.Time.date() == self.EndDate.date():
-            self.Buy(self.symbol, 1)
+    def on_data(self, slice):
+        if slice.bars.count == 0: return
+        if (not self.portfolio.invested) and self.time.date() == self.end_date.date():
+            self.buy(self._symbol, 1)

@@ -18,20 +18,20 @@ from AlgorithmImports import *
 ### </summary>
 class GetParameterRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 7)
-        self.CheckParameter(None, self.GetParameter("non-existing"), "GetParameter(\"non-existing\")")
-        self.CheckParameter("100", self.GetParameter("non-existing", "100"), "GetParameter(\"non-existing\", \"100\")")
-        self.CheckParameter(100, self.GetParameter("non-existing", 100), "GetParameter(\"non-existing\", 100)")
-        self.CheckParameter(100.0, self.GetParameter("non-existing", 100.0), "GetParameter(\"non-existing\", 100.0)")
+    def initialize(self):
+        self.set_start_date(2013, 10, 7)
+        self.check_parameter(None, self.get_parameter("non-existing"), "GetParameter(\"non-existing\")")
+        self.check_parameter("100", self.get_parameter("non-existing", "100"), "GetParameter(\"non-existing\", \"100\")")
+        self.check_parameter(100, self.get_parameter("non-existing", 100), "GetParameter(\"non-existing\", 100)")
+        self.check_parameter(100.0, self.get_parameter("non-existing", 100.0), "GetParameter(\"non-existing\", 100.0)")
 
-        self.CheckParameter("10", self.GetParameter("ema-fast"), "GetParameter(\"ema-fast\")")
-        self.CheckParameter(10, self.GetParameter("ema-fast", 100), "GetParameter(\"ema-fast\", 100)")
-        self.CheckParameter(10.0, self.GetParameter("ema-fast", 100.0), "GetParameter(\"ema-fast\", 100.0)")
+        self.check_parameter("10", self.get_parameter("ema-fast"), "GetParameter(\"ema-fast\")")
+        self.check_parameter(10, self.get_parameter("ema-fast", 100), "GetParameter(\"ema-fast\", 100)")
+        self.check_parameter(10.0, self.get_parameter("ema-fast", 100.0), "GetParameter(\"ema-fast\", 100.0)")
 
-        self.Quit()
+        self.quit()
 
-    def CheckParameter(self, expected, actual, call):
+    def check_parameter(self, expected, actual, call):
         if expected == None and actual != None:
             raise Exception(f"{call} should have returned null but returned {actual} ({type(actual)})")
 
