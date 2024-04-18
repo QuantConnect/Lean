@@ -18,26 +18,27 @@ from System import *
 ### Regression algorithm illustrating how to request history data for different data mapping modes.
 ### </summary>
 class HistoryWithDifferentDataMappingModeRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 6)
-        self.SetEndDate(2014, 1, 1)
-        self._continuousContractSymbol = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol
 
-    def OnEndOfAlgorithm(self):
-        dataMappingModes = [DataMappingMode(x) for x in Enum.GetValues(DataMappingMode)]
-        historyResults = [
-            self.History([self._continuousContractSymbol], self.StartDate, self.EndDate, Resolution.Daily, dataMappingMode=dataMappingMode)
+    def initialize(self):
+        self.set_start_date(2013, 10, 6)
+        self.set_end_date(2014, 1, 1)
+        self._continuous_contract_symbol = self.add_future(Futures.Indices.SP_500_E_MINI, Resolution.DAILY).symbol
+
+    def on_end_of_algorithm(self):
+        data_mapping_modes = [DataMappingMode(x) for x in Enum.get_values(DataMappingMode)]
+        history_results = [
+            self.history([self._continuous_contract_symbol], self.start_date, self.end_date, Resolution.DAILY, data_mapping_mode=data_mapping_mode)
                 .droplevel(0, axis=0)
-                .loc[self._continuousContractSymbol]
+                .loc[self._continuous_contract_symbol]
                 .close
-            for dataMappingMode in dataMappingModes
+            for data_mapping_mode in data_mapping_modes
         ]
 
-        if any(x.size != historyResults[0].size for x in historyResults):
+        if any(x.size != history_results[0].size for x in history_results):
             raise Exception("History results bar count did not match")
 
         # Check that close prices at each time are different for different data mapping modes
-        for j in range(historyResults[0].size):
-            closePrices = set(historyResults[i][j] for i in range(len(historyResults)))
-            if len(closePrices) != len(dataMappingModes):
+        for j in range(history_results[0].size):
+            close_prices = set(history_results[i][j] for i in range(len(history_results)))
+            if len(close_prices) != len(data_mapping_modes):
                 raise Exception("History results close prices should have been different for each data mapping mode at each time")

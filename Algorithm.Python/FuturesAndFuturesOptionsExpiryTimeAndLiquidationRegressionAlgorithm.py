@@ -16,87 +16,87 @@ from AlgorithmImports import *
 ### <summary>
 ### Tests delistings for Futures and Futures Options to ensure that they are delisted at the expected times.
 ### </summary>
-class FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
+class FuturesAndFutures_optionsExpiryTimeAndLiquidationRegressionAlgorithm(QCAlgorithm):
+
+    def initialize(self):
         self.invested = False
         self.liquidated = 0
-        self.delistingsReceived = 0
+        self.delistings_received = 0
 
-        self.expectedExpiryWarningTime = datetime(2020, 6, 19)
-        self.expectedExpiryDelistingTime = datetime(2020, 6, 20)
-        self.expectedLiquidationTime = datetime(2020, 6, 20)
+        self.expected_expiry_warning_time = datetime(2020, 6, 19)
+        self.expected_expiry_delisting_time = datetime(2020, 6, 20)
+        self.expected_liquidation_time = datetime(2020, 6, 20)
 
-        self.SetStartDate(2020, 1, 5)
-        self.SetEndDate(2020, 12, 1)
-        self.SetCash(100000)
+        self.set_start_date(2020, 1, 5)
+        self.set_end_date(2020, 12, 1)
+        self.set_cash(100000)
 
-        es = Symbol.CreateFuture(
+        es = Symbol.create_future(
             "ES",
             Market.CME,
             datetime(2020, 6, 19)
         )
 
-        esOption = Symbol.CreateOption(
+        es_option = Symbol.create_option(
             es,
             Market.CME,
-            OptionStyle.American,
-            OptionRight.Put,
+            OptionStyle.AMERICAN,
+            OptionRight.PUT,
             3400.0,
             datetime(2020, 6, 19)
         )
 
-        self.esFuture = self.AddFutureContract(es, Resolution.Minute).Symbol
-        self.esFutureOption = self.AddFutureOptionContract(esOption, Resolution.Minute).Symbol
+        self.es_future = self.add_future_contract(es, Resolution.MINUTE).symbol
+        self.es_future_option = self.add_future_option_contract(es_option, Resolution.MINUTE).symbol
 
-    def OnData(self, data: Slice):
-        for delisting in data.Delistings.Values:
-            self.delistingsReceived += 1
+    def on_data(self, data: Slice):
+        for delisting in data.delistings.values():
+            self.delistings_received += 1
 
-            if delisting.Type == DelistingType.Warning and delisting.Time != self.expectedExpiryWarningTime:
-                raise AssertionError(f"Expiry warning with time {delisting.Time} but is expected to be {self.expectedExpiryWarningTime}")
+            if delisting.type == DelistingType.WARNING and delisting.time != self.expected_expiry_warning_time:
+                raise AssertionError(f"Expiry warning with time {delisting.time} but is expected to be {self.expected_expiry_warning_time}")
 
-            if delisting.Type == DelistingType.Warning and delisting.Time != datetime(self.Time.year, self.Time.month, self.Time.day):
-                raise AssertionError(f"Delisting warning received at an unexpected date: {self.Time} - expected {delisting.Time}")
+            if delisting.type == DelistingType.WARNING and delisting.time != datetime(self.time.year, self.time.month, self.time.day):
+                raise AssertionError(f"Delisting warning received at an unexpected date: {self.time} - expected {delisting.time}")
 
-            if delisting.Type == DelistingType.Delisted and delisting.Time != self.expectedExpiryDelistingTime:
-                raise AssertionError(f"Delisting occurred at unexpected time: {delisting.Time} - expected: {self.expectedExpiryDelistingTime}")
+            if delisting.type == DelistingType.DELISTED and delisting.time != self.expected_expiry_delisting_time:
+                raise AssertionError(f"Delisting occurred at unexpected time: {delisting.time} - expected: {self.expected_expiry_delisting_time}")
 
-            if delisting.Type == DelistingType.Delisted and delisting.Time != datetime(self.Time.year, self.Time.month, self.Time.day):
-                raise AssertionError(f"Delisting notice received at an unexpected date: {self.Time} - expected {delisting.Time}")
+            if delisting.type == DelistingType.DELISTED and delisting.time != datetime(self.time.year, self.time.month, self.time.day):
+                raise AssertionError(f"Delisting notice received at an unexpected date: {self.time} - expected {delisting.time}")
 
         if not self.invested and \
-            (self.esFuture in data.Bars or self.esFuture in data.QuoteBars) and \
-            (self.esFutureOption in data.Bars or self.esFutureOption in data.QuoteBars):
+            (self.es_future in data.bars or self.es_future in data.quote_bars) and \
+            (self.es_future_option in data.bars or self.es_future_option in data.quote_bars):
 
             self.invested = True
 
-            self.MarketOrder(self.esFuture, 1)
-            self.MarketOrder(self.esFutureOption, 1)
+            self.market_order(self.es_future, 1)
+            self.market_order(self.es_future_option, 1)
 
-    def OnOrderEvent(self, orderEvent: OrderEvent):
-        if orderEvent.Direction != OrderDirection.Sell or orderEvent.Status != OrderStatus.Filled:
+    def on_order_event(self, order_event: OrderEvent):
+        if order_event.direction != OrderDirection.SELL or order_event.status != OrderStatus.FILLED:
             return
 
         # * Future Liquidation
         # * Future Option Exercise
         # * We expect NO Underlying Future Liquidation because we already hold a Long future position so the FOP Put selling leaves us breakeven
         self.liquidated += 1
-        if orderEvent.Symbol.SecurityType == SecurityType.FutureOption and self.expectedLiquidationTime != self.Time:
-            raise AssertionError(f"Expected to liquidate option {orderEvent.Symbol} at {self.expectedLiquidationTime}, instead liquidated at {self.Time}")
+        if order_event.symbol.security_type == SecurityType.FUTURE_OPTION and self.expected_liquidation_time != self.time:
+            raise AssertionError(f"Expected to liquidate option {order_event.symbol} at {self.expected_liquidation_time}, instead liquidated at {self.time}")
 
-        if orderEvent.Symbol.SecurityType == SecurityType.Future and \
-            (self.expectedLiquidationTime - timedelta(minutes=1)) != self.Time and \
-            self.expectedLiquidationTime != self.Time:
+        if order_event.symbol.security_type == SecurityType.FUTURE and \
+            (self.expected_liquidation_time - timedelta(minutes=1)) != self.time and \
+            self.expected_liquidation_time != self.time:
 
-            raise AssertionError(f"Expected to liquidate future {orderEvent.Symbol} at {self.expectedLiquidationTime} (+1 minute), instead liquidated at {self.Time}")
+            raise AssertionError(f"Expected to liquidate future {order_event.symbol} at {self.expected_liquidation_time} (+1 minute), instead liquidated at {self.time}")
 
-
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         if not self.invested:
             raise AssertionError("Never invested in ES futures and FOPs")
 
-        if self.delistingsReceived != 4:
-            raise AssertionError(f"Expected 4 delisting events received, found: {self.delistingsReceived}")
+        if self.delistings_received != 4:
+            raise AssertionError(f"Expected 4 delisting events received, found: {self.delistings_received}")
 
         if self.liquidated != 2:
             raise AssertionError(f"Expected 3 liquidation events, found {self.liquidated}")

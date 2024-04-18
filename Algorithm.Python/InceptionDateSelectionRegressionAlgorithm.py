@@ -19,33 +19,33 @@ from AlgorithmImports import *
 ### <meta name="tag" content="regression test" />
 class InceptionDateSelectionRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2013,10,1)
-        self.SetEndDate(2013,10,31)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2013,10,1)
+        self.set_end_date(2013,10,31)
+        self.set_cash(100000)
 
         self.changes = None
-        self.UniverseSettings.Resolution = Resolution.Hour
+        self.universe_settings.resolution = Resolution.HOUR
 
         # select IBM once a week, empty universe the other days
-        self.AddUniverseSelection(CustomUniverseSelectionModel("my-custom-universe", lambda dt: ["IBM"] if dt.day % 7 == 0 else []))
+        self.add_universe_selection(CustomUniverseSelectionModel("my-custom-universe", lambda dt: ["IBM"] if dt.day % 7 == 0 else []))
         # Adds SPY 5 days after StartDate and keep it in Universe
-        self.AddUniverseSelection(InceptionDateUniverseSelectionModel("spy-inception", {"SPY": self.StartDate + timedelta(5)}))
+        self.add_universe_selection(InceptionDateUniverseSelectionModel("spy-inception", {"SPY": self.start_date + timedelta(5)}))
 
 
-    def OnData(self, slice):
+    def on_data(self, slice):
         if self.changes is None:
            return
 
         # we'll simply go long each security we added to the universe
-        for security in self.changes.AddedSecurities:
-            self.SetHoldings(security.Symbol, .5)
+        for security in self.changes.added_securities:
+            self.set_holdings(security.symbol, .5)
 
         self.changes = None
 
-    def OnSecuritiesChanged(self, changes):
+    def on_securities_changed(self, changes):
         # liquidate removed securities
-        for security in changes.RemovedSecurities:
-            self.Liquidate(security.Symbol, "Removed from Universe")
+        for security in changes.removed_securities:
+            self.liquidate(security.symbol, "Removed from Universe")
 
         self.changes = changes

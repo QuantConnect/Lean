@@ -23,135 +23,134 @@ from AlgorithmImports import *
 ### <meta name="tag" content="warm up" />
 class HistoryAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
+        self.set_start_date(2013,10, 8)  #Set Start Date
+        self.set_end_date(2013,10,11)    #Set End Date
+        self.set_cash(100000)           #Set Strategy Cash
 
-        self.SetStartDate(2013,10, 8)  #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("SPY", Resolution.Daily)
-        self.AddData(CustomDataEquity, "IBM", Resolution.Daily)
+        self.add_equity("SPY", Resolution.DAILY)
+        self.add_data(CustomDataEquity, "IBM", Resolution.DAILY)
         # specifying the exchange will allow the history methods that accept a number of bars to return to work properly
 
         # we can get history in initialize to set up indicators and such
-        self.dailySma = SimpleMovingAverage(14)
+        self.daily_sma = SimpleMovingAverage(14)
 
         # get the last calendar year's worth of SPY data at the configured resolution (daily)
-        tradeBarHistory = self.History([self.Securities["SPY"].Symbol], timedelta(365))
-        self.AssertHistoryCount("History<TradeBar>([\"SPY\"], timedelta(365))", tradeBarHistory, 250)
+        trade_bar_history = self.history([self.securities["SPY"].symbol], timedelta(365))
+        self.assert_history_count("History<TradeBar>([\"SPY\"], timedelta(365))", trade_bar_history, 250)
 
         # get the last calendar day's worth of SPY data at the specified resolution
-        tradeBarHistory = self.History(["SPY"], timedelta(1), Resolution.Minute)
-        self.AssertHistoryCount("History([\"SPY\"], timedelta(1), Resolution.Minute)", tradeBarHistory, 390)
+        trade_bar_history = self.history(["SPY"], timedelta(1), Resolution.MINUTE)
+        self.assert_history_count("History([\"SPY\"], timedelta(1), Resolution.MINUTE)", trade_bar_history, 390)
 
         # get the last 14 bars of SPY at the configured resolution (daily)
-        tradeBarHistory = self.History(["SPY"], 14)
-        self.AssertHistoryCount("History([\"SPY\"], 14)", tradeBarHistory, 14)
+        trade_bar_history = self.history(["SPY"], 14)
+        self.assert_history_count("History([\"SPY\"], 14)", trade_bar_history, 14)
 
         # get the last 14 minute bars of SPY
-        tradeBarHistory = self.History(["SPY"], 14, Resolution.Minute)
-        self.AssertHistoryCount("History([\"SPY\"], 14, Resolution.Minute)", tradeBarHistory, 14)
+        trade_bar_history = self.history(["SPY"], 14, Resolution.MINUTE)
+        self.assert_history_count("History([\"SPY\"], 14, Resolution.MINUTE)", trade_bar_history, 14)
 
         # get the historical data from last current day to this current day in minute resolution
         # with Fill Forward and Extended Market options
-        intervalBarHistory = self.History(["SPY"], self.Time - timedelta(1), self.Time, Resolution.Minute, True, True)
-        self.AssertHistoryCount("History([\"SPY\"], self.Time - timedelta(1), self.Time, Resolution.Minute, True, True)", intervalBarHistory, 960)
+        interval_bar_history = self.history(["SPY"], self.time - timedelta(1), self.time, Resolution.MINUTE, True, True)
+        self.assert_history_count("History([\"SPY\"], self.time - timedelta(1), self.time, Resolution.MINUTE, True, True)", interval_bar_history, 960)
 
         # get the historical data from last current day to this current day in minute resolution
         # with Extended Market option
-        intervalBarHistory = self.History(["SPY"], self.Time - timedelta(1), self.Time, Resolution.Minute, False, True)
-        self.AssertHistoryCount("History([\"SPY\"], self.Time - timedelta(1), self.Time, Resolution.Minute, False, True)", intervalBarHistory, 828)
+        interval_bar_history = self.history(["SPY"], self.time - timedelta(1), self.time, Resolution.MINUTE, False, True)
+        self.assert_history_count("History([\"SPY\"], self.time - timedelta(1), self.time, Resolution.MINUTE, False, True)", interval_bar_history, 828)
 
         # get the historical data from last current day to this current day in minute resolution
         # with Fill Forward option
-        intervalBarHistory = self.History(["SPY"], self.Time - timedelta(1), self.Time, Resolution.Minute, True, False)
-        self.AssertHistoryCount("History([\"SPY\"], self.Time - timedelta(1), self.Time, Resolution.Minute, True, False)", intervalBarHistory, 390)
+        interval_bar_history = self.history(["SPY"], self.time - timedelta(1), self.time, Resolution.MINUTE, True, False)
+        self.assert_history_count("History([\"SPY\"], self.time - timedelta(1), self.time, Resolution.MINUTE, True, False)", interval_bar_history, 390)
 
         # get the historical data from last current day to this current day in minute resolution
-        intervalBarHistory = self.History(["SPY"], self.Time - timedelta(1), self.Time, Resolution.Minute, False, False)
-        self.AssertHistoryCount("History([\"SPY\"], self.Time - timedelta(1), self.Time, Resolution.Minute, False, False)", intervalBarHistory, 390)
+        interval_bar_history = self.history(["SPY"], self.time - timedelta(1), self.time, Resolution.MINUTE, False, False)
+        self.assert_history_count("History([\"SPY\"], self.time - timedelta(1), self.time, Resolution.MINUTE, False, False)", interval_bar_history, 390)
 
         # we can loop over the return value from these functions and we get TradeBars
         # we can use these TradeBars to initialize indicators or perform other math
-        for index, tradeBar in tradeBarHistory.loc["SPY"].iterrows():
-            self.dailySma.Update(index, tradeBar["close"])
+        for index, trade_bar in trade_bar_history.loc["SPY"].iterrows():
+            self.daily_sma.update(index, trade_bar["close"])
 
-        # get the last calendar year's worth of customData data at the configured resolution (daily)
-        customDataHistory = self.History(CustomDataEquity, "IBM", timedelta(365))
-        self.AssertHistoryCount("History(CustomDataEquity, \"IBM\", timedelta(365))", customDataHistory, 10)
+        # get the last calendar year's worth of custom_data data at the configured resolution (daily)
+        custom_data_history = self.history(CustomDataEquity, "IBM", timedelta(365))
+        self.assert_history_count("History(CustomDataEquity, \"IBM\", timedelta(365))", custom_data_history, 10)
 
         # get the last 10 bars of IBM at the configured resolution (daily)
-        customDataHistory = self.History(CustomDataEquity, "IBM", 14)
-        self.AssertHistoryCount("History(CustomDataEquity, \"IBM\", 14)", customDataHistory, 10)
+        custom_data_history = self.history(CustomDataEquity, "IBM", 14)
+        self.assert_history_count("History(CustomDataEquity, \"IBM\", 14)", custom_data_history, 10)
 
         # we can loop over the return values from these functions and we'll get Custom data
-        # this can be used in much the same way as the tradeBarHistory above
-        self.dailySma.Reset()
-        for index, customData in customDataHistory.loc["IBM"].iterrows():
-            self.dailySma.Update(index, customData["value"])
+        # this can be used in much the same way as the trade_bar_history above
+        self.daily_sma.reset()
+        for index, custom_data in custom_data_history.loc["IBM"].iterrows():
+            self.daily_sma.update(index, custom_data["value"])
 
         # get the last 10 bars worth of Custom data for the specified symbols at the configured resolution (daily)
-        allCustomData = self.History(CustomDataEquity, self.Securities.Keys, 14)
-        self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, 14)", allCustomData, 20)
+        all_custom_data = self.history(CustomDataEquity, self.securities.keys(), 14)
+        self.assert_history_count("History(CustomDataEquity, self.securities.keys(), 14)", all_custom_data, 20)
 
         # NOTE: Using different resolutions require that they are properly implemented in your data type. If your
         #  custom data source has different resolutions, it would need to be implemented in the GetSource and 
         #  Reader methods properly.
-        #customDataHistory = self.History(CustomDataEquity, "IBM", timedelta(7), Resolution.Minute)
-        #customDataHistory = self.History(CustomDataEquity, "IBM", 14, Resolution.Minute)
-        #allCustomData = self.History(CustomDataEquity, timedelta(365), Resolution.Minute)
-        #allCustomData = self.History(CustomDataEquity, self.Securities.Keys, 14, Resolution.Minute)
-        #allCustomData = self.History(CustomDataEquity, self.Securities.Keys, timedelta(1), Resolution.Minute)
-        #allCustomData = self.History(CustomDataEquity, self.Securities.Keys, 14, Resolution.Minute)
+        #custom_data_history = self.history(CustomDataEquity, "IBM", timedelta(7), Resolution.MINUTE)
+        #custom_data_history = self.history(CustomDataEquity, "IBM", 14, Resolution.MINUTE)
+        #all_custom_data = self.history(CustomDataEquity, timedelta(365), Resolution.MINUTE)
+        #all_custom_data = self.history(CustomDataEquity, self.securities.keys(), 14, Resolution.MINUTE)
+        #all_custom_data = self.history(CustomDataEquity, self.securities.keys(), timedelta(1), Resolution.MINUTE)
+        #all_custom_data = self.history(CustomDataEquity, self.securities.keys(), 14, Resolution.MINUTE)
 
-        # get the last calendar year's worth of all customData data
-        allCustomData = self.History(CustomDataEquity, self.Securities.Keys, timedelta(365))
-        self.AssertHistoryCount("History(CustomDataEquity, self.Securities.Keys, timedelta(365))", allCustomData, 20)
+        # get the last calendar year's worth of all custom_data data
+        all_custom_data = self.history(CustomDataEquity, self.securities.keys(), timedelta(365))
+        self.assert_history_count("History(CustomDataEquity, self.securities.keys(), timedelta(365))", all_custom_data, 20)
 
         # we can also access the return value from the multiple symbol functions to request a single
         # symbol and then loop over it
-        singleSymbolCustom = allCustomData.loc["IBM"]
-        self.AssertHistoryCount("allCustomData.loc[\"IBM\"]", singleSymbolCustom, 10)
-        for  customData in singleSymbolCustom:
-            # do something with 'IBM.CustomDataEquity' customData data
+        single_symbol_custom = all_custom_data.loc["IBM"]
+        self.assert_history_count("all_custom_data.loc[\"IBM\"]", single_symbol_custom, 10)
+        for  custom_data in single_symbol_custom:
+            # do something with 'IBM.custom_data_equity' custom_data data
             pass
 
-        customDataSpyValues = allCustomData.loc["IBM"]["value"]
-        self.AssertHistoryCount("allCustomData.loc[\"IBM\"][\"value\"]", customDataSpyValues, 10)
-        for value in customDataSpyValues:
-            # do something with 'IBM.CustomDataEquity' value data
+        custom_data_spyvalues = all_custom_data.loc["IBM"]["value"]
+        self.assert_history_count("all_custom_data.loc[\"IBM\"][\"value\"]", custom_data_spyvalues, 10)
+        for value in custom_data_spyvalues:
+            # do something with 'IBM.custom_data_equity' value data
             pass
 
-
-    def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+    def on_data(self, data):
+        '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if not self.Portfolio.Invested:
-            self.SetHoldings("SPY", 1)
+        if not self.portfolio.invested:
+            self.set_holdings("SPY", 1)
 
-    def AssertHistoryCount(self, methodCall, tradeBarHistory, expected):
-        count = len(tradeBarHistory.index)
+    def assert_history_count(self, method_call, trade_bar_history, expected):
+        count = len(trade_bar_history.index)
         if count != expected:
-            raise Exception("{} expected {}, but received {}".format(methodCall, expected, count))
+            raise Exception("{} expected {}, but received {}".format(method_call, expected, count))
 
 
 class CustomDataEquity(PythonData):
-    def GetSource(self, config, date, isLive):
+    def get_source(self, config, date, is_live):
         source = "https://www.dl.dropboxusercontent.com/s/o6ili2svndzn556/custom_data.csv?dl=0"
-        return SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile)
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.REMOTE_FILE)
 
-    def Reader(self, config, line, date, isLive):
+    def reader(self, config, line, date, is_live):
         if line == None:
             return None
 
-        customData = CustomDataEquity()
-        customData.Symbol = config.Symbol
+        custom_data = CustomDataEquity()
+        custom_data.symbol = config.symbol
 
         csv = line.split(",")
-        customData.Time = datetime.strptime(csv[0], '%Y%m%d %H:%M')
-        customData.EndTime = customData.Time + timedelta(days=1)
-        customData.Value = float(csv[1])
-        return customData
+        custom_data.time = datetime.strptime(csv[0], '%Y%m%d %H:%M')
+        custom_data.end_time = custom_data.time + timedelta(days=1)
+        custom_data.value = float(csv[1])
+        return custom_data

@@ -17,40 +17,41 @@ from AlgorithmImports import *
 ### Regression algorithm illustrating how to request history data for different data normalization modes.
 ### </summary>
 class HistoryWithDifferentDataMappingModeRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2014, 1, 1)
-        self.aaplEquitySymbol = self.AddEquity("AAPL", Resolution.Daily).Symbol
-        self.esFutureSymbol = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol
 
-    def OnEndOfAlgorithm(self):
-        equityDataNormalizationModes = [
-            DataNormalizationMode.Raw,
-            DataNormalizationMode.Adjusted,
-            DataNormalizationMode.SplitAdjusted
+    def initialize(self):
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2014, 1, 1)
+        self.aapl_equity_symbol = self.add_equity("AAPL", Resolution.DAILY).symbol
+        self.es_future_symbol = self.add_future(Futures.Indices.SP_500_E_MINI, Resolution.DAILY).symbol
+
+    def on_end_of_algorithm(self):
+        equity_data_normalization_modes = [
+            DataNormalizationMode.RAW,
+            DataNormalizationMode.ADJUSTED,
+            DataNormalizationMode.SPLIT_ADJUSTED
         ]
-        self.CheckHistoryResultsForDataNormalizationModes(self.aaplEquitySymbol, self.StartDate, self.EndDate, Resolution.Daily,
-            equityDataNormalizationModes)
+        self.check_history_results_for_data_normalization_modes(self.aapl_equity_symbol, self.start_date, self.end_date, Resolution.DAILY,
+            equity_data_normalization_modes)
 
-        futureDataNormalizationModes = [
-            DataNormalizationMode.Raw,
-            DataNormalizationMode.BackwardsRatio,
-            DataNormalizationMode.BackwardsPanamaCanal,
-            DataNormalizationMode.ForwardPanamaCanal
+        future_data_normalization_modes = [
+            DataNormalizationMode.RAW,
+            DataNormalizationMode.BACKWARDS_RATIO,
+            DataNormalizationMode.BACKWARDS_PANAMA_CANAL,
+            DataNormalizationMode.FORWARD_PANAMA_CANAL
         ]
-        self.CheckHistoryResultsForDataNormalizationModes(self.esFutureSymbol, self.StartDate, self.EndDate, Resolution.Daily,
-            futureDataNormalizationModes)
+        self.check_history_results_for_data_normalization_modes(self.es_future_symbol, self.start_date, self.end_date, Resolution.DAILY,
+            future_data_normalization_modes)
 
-    def CheckHistoryResultsForDataNormalizationModes(self, symbol, start, end, resolution, dataNormalizationModes):
-        historyResults = [self.History([symbol], start, end, resolution, dataNormalizationMode=x) for x in dataNormalizationModes]
-        historyResults = [x.droplevel(0, axis=0) for x in historyResults] if len(historyResults[0].index.levels) == 3 else historyResults
-        historyResults = [x.loc[symbol].close for x in historyResults]
+    def check_history_results_for_data_normalization_modes(self, symbol, start, end, resolution, data_normalization_modes):
+        history_results = [self.history([symbol], start, end, resolution, data_normalization_mode=x) for x in data_normalization_modes]
+        history_results = [x.droplevel(0, axis=0) for x in history_results] if len(history_results[0].index.levels) == 3 else history_results
+        history_results = [x.loc[symbol].close for x in history_results]
 
-        if any(x.size == 0 or x.size != historyResults[0].size for x in historyResults):
+        if any(x.size == 0 or x.size != history_results[0].size for x in history_results):
             raise Exception(f"History results for {symbol} have different number of bars")
 
         # Check that, for each history result, close prices at each time are different for these securities (AAPL and ES)
-        for j in range(historyResults[0].size):
-            closePrices = set(historyResults[i][j] for i in range(len(historyResults)))
-            if len(closePrices) != len(dataNormalizationModes):
+        for j in range(history_results[0].size):
+            close_prices = set(history_results[i][j] for i in range(len(history_results)))
+            if len(close_prices) != len(data_normalization_modes):
                 raise Exception(f"History results for {symbol} have different close prices at the same time")
