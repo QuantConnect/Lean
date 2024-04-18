@@ -21,53 +21,53 @@ from AlgorithmImports import *
 ### <meta name="tag" content="consolidating data" />
 class VolumeRenkoConsolidatorAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 11)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 11)
+        self.set_cash(100000)
 
         self.sma = SimpleMovingAverage(10)
         self.tick_consolidated = False
 
-        self.spy = self.AddEquity("SPY", Resolution.Minute).Symbol
+        self.spy = self.add_equity("SPY", Resolution.MINUTE).symbol
         self.tradebar_volume_consolidator = VolumeRenkoConsolidator(1000000)
-        self.tradebar_volume_consolidator.DataConsolidated += self.OnSPYDataConsolidated
+        self.tradebar_volume_consolidator.data_consolidated += self.on_spy_data_consolidated
 
-        self.ibm = self.AddEquity("IBM", Resolution.Tick).Symbol
+        self.ibm = self.add_equity("IBM", Resolution.TICK).symbol
         self.tick_volume_consolidator = VolumeRenkoConsolidator(1000000)
-        self.tick_volume_consolidator.DataConsolidated += self.OnIBMDataConsolidated
+        self.tick_volume_consolidator.data_consolidated += self.on_ibm_data_consolidated
 
-        history = self.History[TradeBar](self.spy, 1000, Resolution.Minute);
+        history = self.history[TradeBar](self.spy, 1000, Resolution.MINUTE)
         for bar in history:
-            self.tradebar_volume_consolidator.Update(bar)
+            self.tradebar_volume_consolidator.update(bar)
 
-    def OnSPYDataConsolidated(self, sender, bar):
-        self.sma.Update(bar.EndTime, bar.Value)
-        self.Debug(f"SPY {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}")
-        if bar.Volume != 1000000:
+    def on_spy_data_consolidated(self, sender, bar):
+        self.sma.update(bar.end_time, bar.value)
+        self.debug(f"SPY {bar.time} to {bar.end_time} :: O:{bar.open} H:{bar.high} L:{bar.low} C:{bar.close} V:{bar.volume}")
+        if bar.volume != 1000000:
             raise Exception("Volume of consolidated bar does not match set value!")
 
-    def OnIBMDataConsolidated(self, sender, bar):
-        self.Debug(f"IBM {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}")
-        if bar.Volume != 1000000:
+    def on_ibm_data_consolidated(self, sender, bar):
+        self.debug(f"IBM {bar.time} to {bar.end_time} :: O:{bar.open} H:{bar.high} L:{bar.low} C:{bar.close} V:{bar.volume}")
+        if bar.volume != 1000000:
             raise Exception("Volume of consolidated bar does not match set value!")
         self.tick_consolidated = True
 
-    def OnData(self, slice):
+    def on_data(self, slice):
         # Update by TradeBar
-        if slice.Bars.ContainsKey(self.spy):
-            self.tradebar_volume_consolidator.Update(slice.Bars[self.spy])
+        if slice.bars.contains_key(self.spy):
+            self.tradebar_volume_consolidator.update(slice.bars[self.spy])
 
         # Update by Tick
-        if slice.Ticks.ContainsKey(self.ibm):
-            for tick in slice.Ticks[self.ibm]:
-                self.tick_volume_consolidator.Update(tick)
+        if slice.ticks.contains_key(self.ibm):
+            for tick in slice.ticks[self.ibm]:
+                self.tick_volume_consolidator.update(tick)
 
-        if self.sma.IsReady and self.sma.Current.Value < self.Securities[self.spy].Price:
-            self.SetHoldings(self.spy, 1)
+        if self.sma.is_ready and self.sma.current.value < self.securities[self.spy].price:
+            self.set_holdings(self.spy, 1)
         else:
-            self.SetHoldings(self.spy, 0)
+            self.set_holdings(self.spy, 0)
             
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         if not self.tick_consolidated:
             raise Exception("Tick consolidator was never been called")

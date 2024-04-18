@@ -22,64 +22,64 @@ from AlgorithmImports import *
 class TrailingStopOrderRegressionAlgorithm(QCAlgorithm):
     '''Basic algorithm demonstrating how to place trailing stop orders.'''
 
-    BuyTrailingAmount = 2
-    SellTrailingAmount = 0.5
+    buy_trailing_amount = 2
+    sell_trailing_amount = 0.5
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2013,10, 7)
-        self.SetEndDate(2013,10,11)
-        self.SetCash(100000)
+        self.set_start_date(2013,10, 7)
+        self.set_end_date(2013,10,11)
+        self.set_cash(100000)
 
-        self._symbol = self.AddEquity("SPY").Symbol
+        self._symbol = self.add_equity("SPY").symbol
 
-        self._buyOrderTicket: OrderTicket = None
-        self._sellOrderTicket: OrderTicket = None
-        self._previousSlice: Slice = None
+        self._buy_order_ticket: OrderTicket = None
+        self._sell_order_ticket: OrderTicket = None
+        self._previous_slice: Slice = None
 
-    def OnData(self, slice: Slice):
-        if not slice.ContainsKey(self._symbol):
+    def on_data(self, slice: Slice):
+        if not slice.contains_key(self._symbol):
             return
 
-        if self._buyOrderTicket is None:
-            self._buyOrderTicket = self.TrailingStopOrder(self._symbol, 100, trailingAmount=self.BuyTrailingAmount, trailingAsPercentage=False)
-        elif self._buyOrderTicket.Status != OrderStatus.Filled:
-            stopPrice = self._buyOrderTicket.Get(OrderField.StopPrice)
+        if self._buy_order_ticket is None:
+            self._buy_order_ticket = self.trailing_stop_order(self._symbol, 100, trailing_amount=self.buy_trailing_amount, trailing_as_percentage=False)
+        elif self._buy_order_ticket.status != OrderStatus.FILLED:
+            stop_price = self._buy_order_ticket.get(OrderField.STOP_PRICE)
 
             # Get the previous bar to compare to the stop price,
             # because stop price update attempt with the current slice data happens after OnData.
-            low = self._previousSlice.QuoteBars[self._symbol].Ask.Low if self._previousSlice.QuoteBars.ContainsKey(self._symbol) \
-                  else self._previousSlice.Bars[self._symbol].Low
+            low = self._previous_slice.quote_bars[self._symbol].ask.low if self._previous_slice.quote_bars.contains_key(self._symbol) \
+                else self._previous_slice.bars[self._symbol].low
 
-            stopPriceToMarketPriceDistance = stopPrice - low
-            if stopPriceToMarketPriceDistance > self.BuyTrailingAmount:
-                raise Exception(f"StopPrice {stopPrice} should be within {self.BuyTrailingAmount} of the previous low price {low} at all times.")
+            stop_price_to_market_price_distance = stop_price - low
+            if stop_price_to_market_price_distance > self.buy_trailing_amount:
+                raise Exception(f"StopPrice {stop_price} should be within {self.buy_trailing_amount} of the previous low price {low} at all times.")
 
-        if self._sellOrderTicket is None:
-            if self.Portfolio.Invested:
-                self._sellOrderTicket = self.TrailingStopOrder(self._symbol, -100, trailingAmount=self.SellTrailingAmount, trailingAsPercentage=False)
-        elif self._sellOrderTicket.Status != OrderStatus.Filled:
-            stopPrice = self._sellOrderTicket.Get(OrderField.StopPrice)
+        if self._sell_order_ticket is None:
+            if self.portfolio.invested:
+                self._sell_order_ticket = self.trailing_stop_order(self._symbol, -100, trailing_amount=self.sell_trailing_amount, trailing_as_percentage=False)
+        elif self._sell_order_ticket.status != OrderStatus.FILLED:
+            stop_price = self._sell_order_ticket.get(OrderField.STOP_PRICE)
 
             # Get the previous bar to compare to the stop price,
             # because stop price update attempt with the current slice data happens after OnData.
-            high = self._previousSlice.QuoteBars[self._symbol].Bid.High if self._previousSlice.QuoteBars.ContainsKey(self._symbol) \
-                   else self._previousSlice.Bars[self._symbol].High
-            stopPriceToMarketPriceDistance = high - stopPrice
-            if stopPriceToMarketPriceDistance > self.SellTrailingAmount:
-                raise Exception(f"StopPrice {stopPrice} should be within {self.SellTrailingAmount} of the previous high price {high} at all times.")
+            high = self._previous_slice.quote_bars[self._symbol].bid.high if self._previous_slice.quote_bars.contains_key(self._symbol) \
+                    else self._previous_slice.bars[self._symbol].high
+            stop_price_to_market_price_distance = high - stop_price
+            if stop_price_to_market_price_distance > self.sell_trailing_amount:
+                raise Exception(f"StopPrice {stop_price} should be within {self.sell_trailing_amount} of the previous high price {high} at all times.")
 
-        self._previousSlice = slice
+        self._previous_slice = slice
 
-    def OnOrderEvent(self, orderEvent: OrderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            if orderEvent.Direction == OrderDirection.Buy:
-                stopPrice = self._buyOrderTicket.Get(OrderField.StopPrice)
-                if orderEvent.FillPrice < stopPrice:
-                    raise Exception(f"Buy trailing stop order should have filled with price greater than or equal to the stop price {stopPrice}. "
-                                    f"Fill price: {orderEvent.FillPrice}")
+    def on_order_event(self, orderEvent: OrderEvent):
+        if orderEvent.status == OrderStatus.FILLED:
+            if orderEvent.direction == OrderDirection.BUY:
+                stop_price = self._buy_order_ticket.get(OrderField.STOP_PRICE)
+                if orderEvent.fill_price < stop_price:
+                    raise Exception(f"Buy trailing stop order should have filled with price greater than or equal to the stop price {stop_price}. "
+                                    f"Fill price: {orderEvent.fill_price}")
             else:
-                stopPrice = self._sellOrderTicket.Get(OrderField.StopPrice)
-                if orderEvent.FillPrice > stopPrice:
-                    raise Exception(f"Sell trailing stop order should have filled with price less than or equal to the stop price {stopPrice}. "
-                                    f"Fill price: {orderEvent.FillPrice}")
+                stop_price = self._sell_order_ticket.get(OrderField.STOP_PRICE)
+                if orderEvent.fill_price > stop_price:
+                    raise Exception(f"Sell trailing stop order should have filled with price less than or equal to the stop price {stop_price}. "
+                                    f"Fill price: {orderEvent.fill_price}")

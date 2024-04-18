@@ -26,26 +26,26 @@ from System.Collections.Generic import List
 ### <meta name="tag" content="custom universes" />
 class UserDefinedUniverseAlgorithm(QCAlgorithm):
 
-	def Initialize(self):
-		self.SetCash(100000)
-		self.SetStartDate(2015,1,1)
-		self.SetEndDate(2015,12,1)
+	def initialize(self):
+		self.set_cash(100000)
+		self.set_start_date(2015,1,1)
+		self.set_end_date(2015,12,1)
 		self.symbols = [ "SPY", "GOOG", "IBM", "AAPL", "MSFT", "CSCO", "ADBE", "WMT"]
 
-		self.UniverseSettings.Resolution = Resolution.Hour
-		self.AddUniverse('my_universe_name', Resolution.Hour, self.selection)
+		self.universe_settings.resolution = Resolution.HOUR
+		self.add_universe('my_universe_name', Resolution.HOUR, self.selection)
 
 	def selection(self, time):
 		index = time.hour%len(self.symbols)
-		return self.symbols[index]
+		return [self.symbols[index]]
 
-	def OnData(self, slice):
+	def on_data(self, slice):
 		pass
 
-	def OnSecuritiesChanged(self, changes):
-		for removed in changes.RemovedSecurities:
-			if removed.Invested:
-				self.Liquidate(removed.Symbol)
+	def on_securities_changed(self, changes):
+		for removed in changes.removed_securities:
+			if removed.invested:
+				self.liquidate(removed.symbol)
 
-		for added in changes.AddedSecurities:
-			self.SetHoldings(added.Symbol, 1/float(len(changes.AddedSecurities)))
+		for added in changes.added_securities:
+			self.set_holdings(added.symbol, 1/float(len(changes.added_securities)))

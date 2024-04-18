@@ -15,31 +15,31 @@ from AlgorithmImports import *
 from time import sleep
 
 ### <summary>
-### Example algorithm showing how to use QCAlgorithm.Train method
+### Example algorithm showing how to use QCAlgorithm.train method
 ### </summary>
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="training" />
 class TrainingExampleAlgorithm(QCAlgorithm):
-    '''Example algorithm showing how to use QCAlgorithm.Train method'''
+    '''Example algorithm showing how to use QCAlgorithm.train method'''
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 14)
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 14)
 
-        self.AddEquity("SPY", Resolution.Daily)
+        self.add_equity("SPY", Resolution.DAILY)
 
         # Set TrainingMethod to be executed immediately
-        self.Train(self.TrainingMethod)
+        self.train(self.training_method)
 
         # Set TrainingMethod to be executed at 8:00 am every Sunday
-        self.Train(self.DateRules.Every(DayOfWeek.Sunday), self.TimeRules.At(8 , 0), self.TrainingMethod)
+        self.train(self.date_rules.every(DayOfWeek.SUNDAY), self.time_rules.at(8 , 0), self.training_method)
 
-    def TrainingMethod(self):
+    def training_method(self):
 
-        self.Log(f'Start training at {self.Time}')
+        self.log(f'Start training at {self.time}')
         # Use the historical data to train the machine learning model
-        history = self.History(["SPY"], 200, Resolution.Daily)
+        history = self.history(["SPY"], 200, Resolution.DAILY)
 
         # ML code:
         pass

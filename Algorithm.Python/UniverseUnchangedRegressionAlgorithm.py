@@ -14,49 +14,49 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Regression algorithm used to test a fine and coarse selection methods returning Universe.Unchanged
+### Regression algorithm used to test a fine and coarse selection methods returning Universe.UNCHANGED
 ### </summary>
 class UniverseUnchangedRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.UniverseSettings.Resolution = Resolution.Daily
+    def initialize(self):
+        self.universe_settings.resolution = Resolution.DAILY
 
         # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
         # Commented so regression algorithm is more sensitive
-        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
-        self.SetStartDate(2014,3,25)
-        self.SetEndDate(2014,4,7)
+        #self.settings.minimum_order_margin_portfolio_percentage = 0.005
+        self.set_start_date(2014,3,25)
+        self.set_end_date(2014,4,7)
 
-        self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(days = 1), 0.025, None))
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_alpha(ConstantAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(days = 1), 0.025, None))
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
 
-        self.AddUniverse(self.CoarseSelectionFunction, self.FineSelectionFunction)
+        self.add_universe(self.coarse_selection_function, self.fine_selection_function)
 
-        self.numberOfSymbolsFine = 2
+        self.number_of_symbols_fine = 2
 
-    def CoarseSelectionFunction(self, coarse):
+    def coarse_selection_function(self, coarse):
         # the first and second selection
-        if self.Time.date() <= date(2014, 3, 26):
+        if self.time.date() <= date(2014, 3, 26):
             tickers = [ "AAPL", "AIG", "IBM" ]
-            return [ Symbol.Create(x, SecurityType.Equity, Market.USA) for x in tickers ]
+            return [ Symbol.create(x, SecurityType.EQUITY, Market.USA) for x in tickers ]
 
         # will skip fine selection
-        return Universe.Unchanged
+        return Universe.UNCHANGED
 
-    def FineSelectionFunction(self, fine):
-        if self.Time.date() == date(2014, 3, 25):
-            sortedByPeRatio = sorted(fine, key=lambda x: x.ValuationRatios.PERatio, reverse=True)
-            return [ x.Symbol for x in sortedByPeRatio[:self.numberOfSymbolsFine] ]
+    def fine_selection_function(self, fine):
+        if self.time.date() == date(2014, 3, 25):
+            sorted_by_pe_ratio = sorted(fine, key=lambda x: x.valuation_ratios.pe_ratio, reverse=True)
+            return [ x.symbol for x in sorted_by_pe_ratio[:self.number_of_symbols_fine] ]
 
         # the second selection will return unchanged, in the following fine selection will be skipped
-        return Universe.Unchanged
+        return Universe.UNCHANGED
 
     # assert security changes, throw if called more than once
-    def OnSecuritiesChanged(self, changes):
-        addedSymbols = [ x.Symbol for x in changes.AddedSecurities ]
-        if (len(changes.AddedSecurities) != 2
-            or self.Time.date() != date(2014, 3, 25)
-            or Symbol.Create("AAPL", SecurityType.Equity, Market.USA) not in addedSymbols
-            or Symbol.Create("IBM", SecurityType.Equity, Market.USA) not in addedSymbols):
+    def on_securities_changed(self, changes):
+        added_symbols = [ x.symbol for x in changes.added_securities ]
+        if (len(changes.added_securities) != 2
+            or self.time.date() != date(2014, 3, 25)
+            or Symbol.create("AAPL", SecurityType.EQUITY, Market.USA) not in added_symbols
+            or Symbol.create("IBM", SecurityType.EQUITY, Market.USA) not in added_symbols):
             raise ValueError("Unexpected security changes")
-        self.Log(f"OnSecuritiesChanged({self.Time}):: {changes}")
+        self.log(f"OnSecuritiesChanged({self.time}):: {changes}")

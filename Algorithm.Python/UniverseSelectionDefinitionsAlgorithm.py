@@ -21,40 +21,40 @@ from AlgorithmImports import *
 ### <meta name="tag" content="coarse universes" />
 class UniverseSelectionDefinitionsAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         # subscriptions added via universe selection will have this resolution
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
-        self.SetStartDate(2014,3,24)    # Set Start Date
-        self.SetEndDate(2014,3,28)     # Set End Date
-        self.SetCash(100000)            # Set Strategy Cash
+        self.set_start_date(2014,3,24)    # Set Start Date
+        self.set_end_date(2014,3,28)     # Set End Date
+        self.set_cash(100000)            # Set Strategy Cash
 
         # add universe for the top 3 stocks by dollar volume
-        self.AddUniverse(self.Universe.Top(3))
+        self.add_universe(self.universe.top(3))
 
         self.changes = None
-        self.onSecuritiesChangedWasCalled = False
+        self.on_securities_changed_was_called = False
 
-    def OnData(self, data):
+    def on_data(self, data):
         if self.changes is None: return
 
         # liquidate securities that fell out of our universe
-        for security in self.changes.RemovedSecurities:
-            if security.Invested:
-                self.Liquidate(security.Symbol)
+        for security in self.changes.removed_securities:
+            if security.invested:
+                self.liquidate(security.symbol)
 
         # invest in securities just added to our universe
-        for security in self.changes.AddedSecurities:
-            if not security.Invested:
-                self.MarketOrder(security.Symbol, 10)
+        for security in self.changes.added_securities:
+            if not security.invested:
+                self.market_order(security.symbol, 10)
 
         self.changes = None
 
     # this event fires whenever we have changes to our universe
-    def OnSecuritiesChanged(self, changes):
+    def on_securities_changed(self, changes):
         self.changes = changes
-        self.onSecuritiesChangedWasCalled = True
+        self.on_securities_changed_was_called = True
 
-    def OnEndOfAlgorithm(self):
-        if not self.onSecuritiesChangedWasCalled:
+    def on_end_of_algorithm(self):
+        if not self.on_securities_changed_was_called:
             raise Exception("OnSecuritiesChanged() method was never called!")
