@@ -43,7 +43,7 @@ class CustomSettlementModelRegressionAlgorithm(QCAlgorithm):
 
 class CustomSettlementModel:
     def apply_funds(self, parameters):
-        self.currency = parameters.cash_amount.currency;
+        self.currency = parameters.cash_amount.currency
         self.amount = parameters.cash_amount.amount
         parameters.portfolio.cash_book[self.currency].add_amount(self.amount)
 

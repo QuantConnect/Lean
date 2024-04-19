@@ -42,7 +42,7 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         self.set_start_date(2014, 3, 25)
         self.set_end_date(2014, 3, 29)
         self.set_cash(10000000)
-        self.shortable_provider = RegressionTestShortableProvider();
+        self.shortable_provider = RegressionTestShortableProvider()
         self.security = self.add_equity(self._spy)
 
         self.add_universe(self.coarse_selection)
@@ -86,7 +86,7 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         if len(missing) != expected_missing:
             raise Exception(f"Expected Symbols selected on {self.time.strftime('%Y%m%d')} to match expected Symbols, but the following Symbols were missing: {', '.join(list(map(lambda x:x.value, missing)))}")
 
-        self.coarse_selected[self.time] = True;
+        self.coarse_selected[self.time] = True
         return selected_symbols
 
     def on_end_of_algorithm(self):
@@ -126,7 +126,7 @@ class RegressionTestShortableProvider(LocalDiskShortableProvider):
 
                 symbol = Symbol(SecurityIdentifier.generate_equity(ticker, Market.USA, mapping_resolve_date = localtime), ticker)
                 quantity = int(csv[1])
-                all_symbols[symbol] = quantity;
+                all_symbols[symbol] = quantity
 
             if len(all_symbols) > 0:
                 return all_symbols

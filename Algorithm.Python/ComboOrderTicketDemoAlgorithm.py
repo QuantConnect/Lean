@@ -53,7 +53,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
                     quantities = [1, -2, 1]
                     self._order_legs = []
                     for i, contract in enumerate(call_contracts[:3]):
-                        leg = Leg.create(contract.symbol, quantities[i]);
+                        leg = Leg.create(contract.symbol, quantities[i])
                         self._order_legs.append(leg)
         else:
             # COMBO MARKET ORDERS
@@ -70,7 +70,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
     def combo_market_orders(self):
         if len(self._open_market_orders) != 0 or self._order_legs is None:
-            return;
+            return
 
         self.log("Submitting combo market orders")
 

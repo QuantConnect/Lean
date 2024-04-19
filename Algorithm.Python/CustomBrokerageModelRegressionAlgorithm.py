@@ -32,8 +32,8 @@ class CustomBrokerageModelRegressionAlgorithm(QCAlgorithm):
 
     def on_data(self, slice):
         if not self.portfolio.invested:
-            self.market_order("SPY", 100.0);
-            self.aig_ticket = self.market_order("AIG", 100.0);
+            self.market_order("SPY", 100.0)
+            self.aig_ticket = self.market_order("AIG", 100.0)
 
     def on_order_event(self, order_event):
         spy_ticket = self.transactions.get_order_ticket(order_event.order_id)

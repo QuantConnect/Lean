@@ -29,7 +29,7 @@ class BybitCustomDataCryptoRegressionAlgorithm(QCAlgorithm):
         self.set_brokerage_model(BrokerageName.BYBIT, AccountType.CASH)
 
         symbol = self.add_crypto("BTCUSDT").symbol
-        self.btc_usdt = self.add_data(CustomCryptoData, symbol, Resolution.MINUTE).symbol;
+        self.btc_usdt = self.add_data(CustomCryptoData, symbol, Resolution.MINUTE).symbol
 
         # create two moving averages
         self.fast = self.ema(self.btc_usdt, 30, Resolution.MINUTE)
@@ -47,7 +47,7 @@ class BybitCustomDataCryptoRegressionAlgorithm(QCAlgorithm):
                 self.liquidate(self.btc_usdt)
 
     def on_order_event(self, order_event):
-        self.debug(f"{self.time} {order_event}");
+        self.debug(f"{self.time} {order_event}")
 
 class CustomCryptoData(PythonData):
     def get_source(self, config, date, is_live_mode):

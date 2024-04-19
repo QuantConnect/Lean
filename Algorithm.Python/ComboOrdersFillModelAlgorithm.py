@@ -81,7 +81,7 @@ class CustomPartialFillModel(FillModel):
             return partial_fills
 
         for kvp, fill in zip(sorted(parameters.securities_for_orders, key=lambda x: x.key.id), fills):
-            order = kvp.key;
+            order = kvp.key
 
             absolute_remaining = self.absolute_remaining_by_order_id.get(order.id, order.absolute_quantity)
 
@@ -108,11 +108,11 @@ class CustomPartialFillModel(FillModel):
         return partial_fills
 
     def combo_limit_fill(self, order, parameters):
-        fills = super().combo_limit_fill(order, parameters);
+        fills = super().combo_limit_fill(order, parameters)
         partial_fills = self.fill_orders_partially(parameters, fills, 20)
         return partial_fills
 
     def combo_leg_limit_fill(self, order, parameters):
-        fills = super().combo_leg_limit_fill(order, parameters);
+        fills = super().combo_leg_limit_fill(order, parameters)
         partial_fills = self.fill_orders_partially(parameters, fills, 10)
         return partial_fills

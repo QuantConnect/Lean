@@ -52,7 +52,7 @@ class LimitIfTouchedRegressionAlgorithm(QCAlgorithm):
 
                 new_quantity = int(self._request.quantity - self._negative)
                 self._request.update_quantity(new_quantity, f"LIT - Quantity: {new_quantity}")
-                self._request.update_trigger_price(Extensions.round_to_significant_digits(self._request.get(OrderField.TRIGGER_PRICE), 5));
+                self._request.update_trigger_price(Extensions.round_to_significant_digits(self._request.get(OrderField.TRIGGER_PRICE), 5))
 
     def on_order_event(self, order_event):
         if order_event.status == OrderStatus.FILLED:

@@ -38,7 +38,7 @@ class CalibratedResistanceAtmosphericScrubbers(QCAlgorithm):
         if self.is_warming_up:
             # Add latest close to rolling window
             row = pd.DataFrame({"close": [close]}, index=[data.time])
-            self.rolling_window = self.rolling_window.append(row).iloc[-self.window_size:]
+            self.rolling_window = pd.concat([self.rolling_window, row]).iloc[-self.window_size:]
             
             # If we have enough closing data to start calculating indicators...
             if self.rolling_window.shape[0] == self.window_size:
@@ -59,7 +59,7 @@ class CalibratedResistanceAtmosphericScrubbers(QCAlgorithm):
                             "WMA"  : talib.WMA(closes, self.wma_period)[-1]},
                             index=[data.time])
         
-        self.rolling_window = self.rolling_window.append(row).iloc[-self.window_size:]
+        self.rolling_window = pd.concat([self.rolling_window, row]).iloc[-self.window_size:]
 
         
     def on_end_of_algorithm(self):

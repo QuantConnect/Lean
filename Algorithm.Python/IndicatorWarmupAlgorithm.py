@@ -37,10 +37,10 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
 
         self.__sd = { }
         for security in self.securities:
-            self.__sd[security.key] = self.symbol_data(security.key, self)
+            self.__sd[security.key] = self.SymbolData(security.key, self)
 
         # we want to warm up our algorithm
-        self.set_warmup(self.symbol_data.required_bars_warmup)
+        self.set_warmup(self.SymbolData.REQUIRED_BARS_WARMUP)
 
     def on_data(self, data):
         '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -68,10 +68,10 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
             return time.second == 0
 
     class SymbolData:
-        RequiredBarsWarmup = 40
-        PercentTolerance = 0.001
-        PercentGlobalStopLoss = 0.01
-        LotSize = 10
+        REQUIRED_BARS_WARMUP = 40
+        PERCENT_TOLERANCE = 0.001
+        PERCENT_GLOBAL_STOP_LOSS = 0.01
+        LOT_SIZE = 10
 
         def __init__(self, symbol, algorithm):
             self.symbol = symbol
@@ -92,7 +92,7 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
         def update(self):
             self.is_ready = self.close.is_ready and self._adx.is_ready and self._ema.is_ready and self._macd.is_ready
 
-            tolerance = 1 - self.percent_tolerance
+            tolerance = 1 - self.PERCENT_TOLERANCE
             self.is_uptrend = self._macd.signal.current.value > self._macd.current.value * tolerance and\
                 self._ema.current.value > self.close.current.value * tolerance
 
@@ -111,10 +111,10 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
 
             if self.is_uptrend:
                 # 100 order lots
-                qty = self.lot_size
+                qty = self.LOT_SIZE
                 limit = self.security.low
             elif self.is_downtrend:
-                qty = -self.lot_size
+                qty = -self.LOT_SIZE
                 limit = self.security.high
 
             if qty != 0:
@@ -126,7 +126,7 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
 
             limit = 0
             qty = self.security.holdings.quantity
-            exit_tolerance = 1 + 2 * self.percent_tolerance
+            exit_tolerance = 1 + 2 * self.PERCENT_TOLERANCE
             if self.security.holdings.is_long and self.close.current.value * exit_tolerance < self._ema.current.value:
                 limit = self.security.high
             elif self.security.holdings.is_short and self.close.current.value > self._ema.current.value * exit_tolerance:
@@ -142,8 +142,8 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
 
             # if we just finished entering, place a stop loss as well
             if self.security.invested:
-                stop = fill.fill_price*(1 - self.percent_global_stop_loss) if self.security.holdings.is_long \
-                    else fill.fill_price*(1 + self.percent_global_stop_loss)
+                stop = fill.fill_price*(1 - self.PERCENT_GLOBAL_STOP_LOSS) if self.security.holdings.is_long \
+                    else fill.fill_price*(1 + self.PERCENT_GLOBAL_STOP_LOSS)
 
                 self.__current_stop_loss = self.__algorithm.stop_market_order(self.symbol, -qty, stop, "StopLoss at: {0}".format(stop))
 
