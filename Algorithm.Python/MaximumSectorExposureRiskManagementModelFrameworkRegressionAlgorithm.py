@@ -13,7 +13,6 @@
 
 from AlgorithmImports import *
 from BaseFrameworkRegressionAlgorithm import BaseFrameworkRegressionAlgorithm
-from Risk.MaximumSectorExposureRiskManagementModel import MaximumSectorExposureRiskManagementModel
 
 ### <summary>
 ### Regression algorithm to assert the behavior of <see cref="MaximumSectorExposureRiskManagementModel"/>.

@@ -25,47 +25,47 @@ from AlgorithmImports import *
 
 class OptionChainProviderAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2015, 12, 24)
-        self.SetEndDate(2015, 12, 24)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2015, 12, 24)
+        self.set_end_date(2015, 12, 24)
+        self.set_cash(100000)
         # add the underlying asset
-        self.equity = self.AddEquity("GOOG", Resolution.Minute)
-        self.equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
+        self.equity = self.add_equity("GOOG", Resolution.MINUTE)
+        self.equity.set_data_normalization_mode(DataNormalizationMode.RAW)
         # initialize the option contract with empty string
         self.contract = str()
-        self.contractsAdded = set()
+        self.contracts_added = set()
 
-    def OnData(self, data):
+    def on_data(self, data):
 
-        if not self.Portfolio[self.equity.Symbol].Invested:
-            self.MarketOrder(self.equity.Symbol, 100)
+        if not self.portfolio[self.equity.symbol].invested:
+            self.market_order(self.equity.symbol, 100)
 
-        if not (self.Securities.ContainsKey(self.contract) and self.Portfolio[self.contract].Invested):
-            self.contract = self.OptionsFilter(data)
+        if not (self.securities.contains_key(self.contract) and self.portfolio[self.contract].invested):
+            self.contract = self.options_filter(data)
 
-        if self.Securities.ContainsKey(self.contract) and not self.Portfolio[self.contract].Invested:
-            self.MarketOrder(self.contract, -1)
+        if self.securities.contains_key(self.contract) and not self.portfolio[self.contract].invested:
+            self.market_order(self.contract, -1)
 
-    def OptionsFilter(self, data):
+    def options_filter(self, data):
         ''' OptionChainProvider gets a list of option contracts for an underlying symbol at requested date.
             Then you can manually filter the contract list returned by GetOptionContractList.
             The manual filtering will be limited to the information included in the Symbol
             (strike, expiration, type, style) and/or prices from a History call '''
 
-        contracts = self.OptionChainProvider.GetOptionContractList(self.equity.Symbol, data.Time)
-        self.underlyingPrice = self.Securities[self.equity.Symbol].Price
+        contracts = self.option_chain_provider.get_option_contract_list(self.equity.symbol, data.time)
+        self.underlying_price = self.securities[self.equity.symbol].price
         # filter the out-of-money call options from the contract list which expire in 10 to 30 days from now on
-        otm_calls = [i for i in contracts if i.ID.OptionRight == OptionRight.Call and
-                                            i.ID.StrikePrice - self.underlyingPrice > 0 and
-                                            10 < (i.ID.Date - data.Time).days < 30]
+        otm_calls = [i for i in contracts if i.id.option_right == OptionRight.CALL and
+                                            i.id.strike_price - self.underlying_price > 0 and
+                                            10 < (i.id.date - data.time).days < 30]
         if len(otm_calls) > 0:
-            contract = sorted(sorted(otm_calls, key = lambda x: x.ID.Date),
-                                                     key = lambda x: x.ID.StrikePrice - self.underlyingPrice)[0]
-            if contract not in self.contractsAdded:
-                self.contractsAdded.add(contract)
+            contract = sorted(sorted(otm_calls, key = lambda x: x.id.date),
+                                                     key = lambda x: x.id.strike_price - self.underlying_price)[0]
+            if contract not in self.contracts_added:
+                self.contracts_added.add(contract)
                 # use AddOptionContract() to subscribe the data for specified contract
-                self.AddOptionContract(contract, Resolution.Minute)
+                self.add_option_contract(contract, Resolution.MINUTE)
             return contract
         else:
             return str()

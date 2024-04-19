@@ -18,33 +18,33 @@ from AlgorithmImports import *
 ### </summary>
 class NullMarginMultipleOrdersRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2015, 12, 24)
-        self.SetEndDate(2015, 12, 24)
-        self.SetCash(10000)
+    def initialize(self):
+        self.set_start_date(2015, 12, 24)
+        self.set_end_date(2015, 12, 24)
+        self.set_cash(10000)
 
         # override security position group model
-        self.Portfolio.SetPositions(SecurityPositionGroupModel.Null)
+        self.portfolio.set_positions(SecurityPositionGroupModel.NULL)
         # override margin requirements
-        self.SetSecurityInitializer(lambda security: security.SetBuyingPowerModel(ConstantBuyingPowerModel(1)))
+        self.set_security_initializer(lambda security: security.set_buying_power_model(ConstantBuyingPowerModel(1)))
 
-        equity = self.AddEquity("GOOG", leverage=4, fillForward=True)
-        option = self.AddOption(equity.Symbol, fillForward=True)
-        self._optionSymbol = option.Symbol
+        equity = self.add_equity("GOOG", leverage=4, fill_forward=True)
+        option = self.add_option(equity.symbol, fill_forward=True)
+        self._option_symbol = option.symbol
 
-        option.SetFilter(lambda u: u.Strikes(-2, +2).Expiration(0, 180))
+        option.set_filter(lambda u: u.strikes(-2, +2).expiration(0, 180))
 
-    def OnData(self, data: Slice):
-        if not self.Portfolio.Invested:
-            if self.IsMarketOpen(self._optionSymbol):
-                chain = data.OptionChains.GetValue(self._optionSymbol)
+    def on_data(self, data: Slice):
+        if not self.portfolio.invested:
+            if self.is_market_open(self._option_symbol):
+                chain = data.option_chains.get_value(self._option_symbol)
                 if chain is not None:
-                    callContracts = [contract for contract in chain if contract.Right == OptionRight.Call]
-                    callContracts.sort(key=lambda x: (x.Expiry, 1/ x.Strike), reverse=True)
+                    call_contracts = [contract for contract in chain if contract.right == OptionRight.CALL]
+                    call_contracts.sort(key=lambda x: (x.expiry, 1/ x.strike), reverse=True)
 
-                    optionContract = callContracts[0]
-                    self.MarketOrder(optionContract.Symbol.Underlying, 1000)
-                    self.MarketOrder(optionContract.Symbol, -10)
+                    option_contract = call_contracts[0]
+                    self.market_order(option_contract.symbol.underlying, 1000)
+                    self.market_order(option_contract.symbol, -10)
 
-                    if self.Portfolio.TotalMarginUsed != 1010:
-                        raise ValueError(f"Unexpected margin used {self.Portfolio.TotalMarginUsed}")
+                    if self.portfolio.total_margin_used != 1010:
+                        raise ValueError(f"Unexpected margin used {self.portfolio.total_margin_used}")

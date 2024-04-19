@@ -17,17 +17,17 @@ from AlgorithmImports import *
 ###  Regression algorithm asserting "OnWarmupFinished" is called even if no warmup period is set
 ### </summary>
 class OnWarmupFinishedNoWarmup(QCAlgorithm):
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10, 7)
-        self.SetEndDate(2013,10,11)
-        self.AddEquity("SPY", Resolution.Minute)
-        self._onWarmupFinished = 0
+        self.set_start_date(2013,10, 7)
+        self.set_end_date(2013,10,11)
+        self.add_equity("SPY", Resolution.MINUTE)
+        self._on_warmup_finished = 0
 
-    def OnWarmupFinished(self):
-        self._onWarmupFinished += 1
+    def on_warmup_finished(self):
+        self._on_warmup_finished += 1
 
-    def OnEndOfAlgorithm(self):
-        if self._onWarmupFinished != 1:
-            raise Exception(f"Unexpected OnWarmupFinished call count {self._onWarmupFinished}")
+    def on_end_of_algorithm(self):
+        if self._on_warmup_finished != 1:
+            raise Exception(f"Unexpected OnWarmupFinished call count {self._on_warmup_finished}")

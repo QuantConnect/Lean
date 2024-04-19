@@ -11,37 +11,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime
 from AlgorithmImports import *
 
 ### <summary>
 ### Custom data universe selection regression algorithm asserting it's behavior. See GH issue #6396
 ### </summary>
 class NoUniverseSelectorRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.SetStartDate(2014, 3, 24)
-        self.SetEndDate(2014, 3, 31)
+        self.set_start_date(2014, 3, 24)
+        self.set_end_date(2014, 3, 31)
 
-        self.UniverseSettings.Resolution = Resolution.Daily;
-        self.AddUniverse(CoarseFundamental)
+        self.universe_settings.resolution = Resolution.DAILY;
+        self.add_universe(CoarseFundamental)
         self.changes = None
 
-    def OnData(self, data):
+    def on_data(self, data):
         # if we have no changes, do nothing
         if not self.changes: return
 
         # liquidate removed securities
-        for security in self.changes.RemovedSecurities:
-            if security.Invested:
-                self.Liquidate(security.Symbol)
+        for security in self.changes.removed_securities:
+            if security.invested:
+                self.liquidate(security.symbol)
 
-        activeAndWithDataSecurities = sum(x.Value.HasData for x in self.ActiveSecurities)
+        active_and_with_data_securities = sum(x.value.has_data for x in self.active_securities)
         # we want 1/N allocation in each security in our universe
-        for security in self.changes.AddedSecurities:
-            if security.HasData:
-                self.SetHoldings(security.Symbol, 1 / activeAndWithDataSecurities)
+        for security in self.changes.added_securities:
+            if security.has_data:
+                self.set_holdings(security.symbol, 1 / active_and_with_data_securities)
         self.changes = None
 
-    def OnSecuritiesChanged(self, changes):
+    def on_securities_changed(self, changes):
         self.changes = changes

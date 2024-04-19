@@ -17,55 +17,55 @@ from AlgorithmImports import *
 
 class OnEndOfDayRegressionAlgorithm(QCAlgorithm):
     '''Test algorithm verifying OnEndOfDay callbacks are called as expected. See GH issue 2865.'''
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10, 7)
-        self.SetEndDate(2013,10,11)
-        self.SetCash(100000)
+        self.set_start_date(2013,10, 7)
+        self.set_end_date(2013,10,11)
+        self.set_cash(100000)
 
-        self._spySymbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
-        self._bacSymbol = Symbol.Create("BAC", SecurityType.Equity, Market.USA)
-        self._ibmSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA)
-        self._onEndOfDaySpyCallCount = 0
-        self._onEndOfDayBacCallCount = 0
-        self._onEndOfDayIbmCallCount = 0
+        self._spy_symbol = Symbol.create("SPY", SecurityType.EQUITY, Market.USA)
+        self._bac_symbol = Symbol.create("BAC", SecurityType.EQUITY, Market.USA)
+        self._ibm_symbol = Symbol.create("IBM", SecurityType.EQUITY, Market.USA)
+        self._on_end_of_day_spy_call_count = 0
+        self._on_end_of_day_bac_call_count = 0
+        self._on_end_of_day_ibm_call_count = 0
 
-        self.AddUniverse('my_universe_name', self.selection)
+        self.add_universe('my_universe_name', self.selection)
 
     def selection(self, time):
         if time.day == 8:
-            return [self._spySymbol.Value, self._ibmSymbol.Value]
-        return [self._spySymbol.Value]
+            return [self._spy_symbol.value, self._ibm_symbol.value]
+        return [self._spy_symbol.value]
 
-    def OnEndOfDay(self, symbol):
+    def on_end_of_day(self, symbol):
         '''We expect it to be called on each day after the first selection process
         happens and the algorithm has a security in it
         '''
-        if symbol == self._spySymbol:
-            if self._onEndOfDaySpyCallCount == 0:
+        if symbol == self._spy_symbol:
+            if self._on_end_of_day_spy_call_count == 0:
                 # just the first time
-                self.SetHoldings(self._spySymbol, 0.5)
-                self.AddEquity("BAC")
-            self._onEndOfDaySpyCallCount += 1
-        if symbol == self._bacSymbol:
-            if self._onEndOfDayBacCallCount == 0:
+                self.set_holdings(self._spy_symbol, 0.5)
+                self.add_equity("BAC")
+            self._on_end_of_day_spy_call_count += 1
+        if symbol == self._bac_symbol:
+            if self._on_end_of_day_bac_call_count == 0:
                 # just the first time
-                self.SetHoldings(self._bacSymbol, 0.5)
-            self._onEndOfDayBacCallCount += 1
-        if symbol == self._ibmSymbol:
-            self._onEndOfDayIbmCallCount += 1
+                self.set_holdings(self._bac_symbol, 0.5)
+            self._on_end_of_day_bac_call_count += 1
+        if symbol == self._ibm_symbol:
+            self._on_end_of_day_ibm_call_count += 1
 
-        self.Log("OnEndOfDay() called: " + str(self.UtcTime)
-                + ". SPY count " + str(self._onEndOfDaySpyCallCount)
-                + ". BAC count " + str(self._onEndOfDayBacCallCount)
-                + ". IBM count " + str(self._onEndOfDayIbmCallCount))
+        self.log("OnEndOfDay() called: " + str(self.utc_time)
+                + ". SPY count " + str(self._on_end_of_day_spy_call_count)
+                + ". BAC count " + str(self._on_end_of_day_bac_call_count)
+                + ". IBM count " + str(self._on_end_of_day_ibm_call_count))
 
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         '''Assert expected behavior'''
-        if self._onEndOfDaySpyCallCount != 5:
-            raise ValueError("OnEndOfDay(SPY) unexpected count call " + str(self._onEndOfDaySpyCallCount))
-        if self._onEndOfDayBacCallCount != 4:
-            raise ValueError("OnEndOfDay(BAC) unexpected count call " + str(self._onEndOfDayBacCallCount))
-        if self._onEndOfDayIbmCallCount != 1:
-            raise ValueError("OnEndOfDay(IBM) unexpected count call " + str(self._onEndOfDayIbmCallCount))
+        if self._on_end_of_day_spy_call_count != 5:
+            raise ValueError("OnEndOfDay(SPY) unexpected count call " + str(self._on_end_of_day_spy_call_count))
+        if self._on_end_of_day_bac_call_count != 4:
+            raise ValueError("OnEndOfDay(BAC) unexpected count call " + str(self._on_end_of_day_bac_call_count))
+        if self._on_end_of_day_ibm_call_count != 1:
+            raise ValueError("OnEndOfDay(IBM) unexpected count call " + str(self._on_end_of_day_ibm_call_count))
