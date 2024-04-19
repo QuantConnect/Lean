@@ -19,14 +19,14 @@ from OptionPriceModelForOptionStylesBaseRegressionAlgorithm import OptionPriceMo
 ### that supports European style options and asserting that the option price model is used.
 ### </summary>
 class OptionPriceModelForSupportedEuropeanOptionRegressionAlgorithm(OptionPriceModelForOptionStylesBaseRegressionAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2021, 1, 14)
-        self.SetEndDate(2021, 1, 14)
+    def initialize(self):
+        self.set_start_date(2021, 1, 14)
+        self.set_end_date(2021, 1, 14)
 
-        option = self.AddIndexOption("SPX", Resolution.Hour)
+        option = self.add_index_option("SPX", Resolution.HOUR)
         # BlackScholes model supports European style options
-        option.PriceModel = OptionPriceModels.BlackScholes()
+        option.price_model = OptionPriceModels.black_scholes()
 
-        self.SetWarmup(7, Resolution.Daily)
+        self.set_warmup(7, Resolution.DAILY)
 
-        self.Init(option, optionStyleIsSupported=True)
+        self.init(option, option_style_is_supported=True)

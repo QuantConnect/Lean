@@ -19,9 +19,9 @@ from OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm import Opti
 ### that supports American style options and asserting that the option price model is used.
 ### </summary>
 class OptionPriceModelForUnsupportedAmericanOptionTimeSpanWarmupRegressionAlgorithm(OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm):
-    def Initialize(self):
-        OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm.Initialize(self)
+    def initialize(self):
+        OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm.initialize(self)
 
         # We want to match the start time of the base algorithm: Base algorithm warmup is 2 bar of daily resolution.
-        # So to match the same start time we go back 4 days, we need to account for a single weekend. This is calculated by 'Time.GetStartTimeForTradeBars'
-        self.SetWarmup(TimeSpan.FromDays(4))
+        # So to match the same start time we go back 4 days, we need to account for a single weekend. This is calculated by 'Time.GET_START_TIME_FOR_TRADE_BARS'
+        self.set_warmup(TimeSpan.from_days(4))

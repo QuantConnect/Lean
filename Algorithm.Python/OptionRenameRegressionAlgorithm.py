@@ -20,53 +20,53 @@ from AlgorithmImports import *
 ### <meta name="tag" content="regression test" />
 class OptionRenameRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetCash(1000000)
-        self.SetStartDate(2013,6,28)
-        self.SetEndDate(2013,7,2)
-        option = self.AddOption("TFCFA")
+        self.set_cash(1000000)
+        self.set_start_date(2013,6,28)
+        self.set_end_date(2013,7,2)
+        option = self.add_option("TFCFA")
 
         # set our strike/expiry filter for this option chain
-        option.SetFilter(-1, 1, timedelta(0), timedelta(3650))
+        option.set_filter(-1, 1, timedelta(0), timedelta(3650))
         # use the underlying equity as the benchmark
-        self.SetBenchmark("TFCFA")
+        self.set_benchmark("TFCFA")
 
-    def OnData(self, slice):
+    def on_data(self, slice):
         ''' Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
         <param name="slice">The current slice of data keyed by symbol string</param> '''
-        if not self.Portfolio.Invested: 
-            for kvp in slice.OptionChains:
-                chain = kvp.Value
-                if self.Time.day == 28 and self.Time.hour > 9 and self.Time.minute > 0:
+        if not self.portfolio.invested: 
+            for kvp in slice.option_chains:
+                chain = kvp.value
+                if self.time.day == 28 and self.time.hour > 9 and self.time.minute > 0:
     
-                    contracts = [i for i in sorted(chain, key=lambda x:x.Expiry) 
-                                         if i.Right ==  OptionRight.Call and 
-                                            i.Strike == 33 and
-                                            i.Expiry.date() == datetime(2013,8,17).date()]
+                    contracts = [i for i in sorted(chain, key=lambda x:x.expiry) 
+                                         if i.right ==  OptionRight.CALL and 
+                                            i.strike == 33 and
+                                            i.expiry.date() == datetime(2013,8,17).date()]
                     if contracts:
                         # Buying option
                         contract = contracts[0]
-                        self.Buy(contract.Symbol, 1)
+                        self.buy(contract.symbol, 1)
                         # Buy the undelying stock
-                        underlyingSymbol = contract.Symbol.Underlying
-                        self.Buy (underlyingSymbol, 100)
+                        underlying_symbol = contract.symbol.underlying
+                        self.buy (underlying_symbol, 100)
                         # check
-                        if float(contract.AskPrice) != 1.1:
+                        if float(contract.ask_price) != 1.1:
                             raise ValueError("Regression test failed: current ask price was not loaded from NWSA backtest file and is not $1.1")
-        elif self.Time.day == 2 and self.Time.hour > 14 and self.Time.minute > 0:
-            for kvp in slice.OptionChains:
-                chain = kvp.Value
-                self.Liquidate()
-                contracts = [i for i in sorted(chain, key=lambda x:x.Expiry) 
-                                        if i.Right ==  OptionRight.Call and 
-                                           i.Strike == 33 and
-                                           i.Expiry.date() == datetime(2013,8,17).date()]
+        elif self.time.day == 2 and self.time.hour > 14 and self.time.minute > 0:
+            for kvp in slice.option_chains:
+                chain = kvp.value
+                self.liquidate()
+                contracts = [i for i in sorted(chain, key=lambda x:x.expiry) 
+                                        if i.right ==  OptionRight.CALL and 
+                                           i.strike == 33 and
+                                           i.expiry.date() == datetime(2013,8,17).date()]
             if contracts:
                 contract = contracts[0]
-                self.Log("Bid Price" + str(contract.BidPrice))
-                if float(contract.BidPrice) != 0.05:
+                self.log("Bid Price" + str(contract.bid_price))
+                if float(contract.bid_price) != 0.05:
                     raise ValueError("Regression test failed: current bid price was not loaded from FOXA file and is not $0.05")
 
-    def OnOrderEvent(self, orderEvent):
-        self.Log(str(orderEvent))
+    def on_order_event(self, order_event):
+        self.log(str(order_event))

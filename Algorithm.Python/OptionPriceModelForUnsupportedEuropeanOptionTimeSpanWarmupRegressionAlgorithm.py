@@ -19,10 +19,10 @@ from OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm import Opti
 ### that does not support European style options and asserting that the option price model is not used.
 ### </summary>
 class OptionPriceModelForUnsupportedEuropeanOptionTimeSpanWarmupRegressionAlgorithm(OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm):
-    def Initialize(self):
-        OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm.Initialize(self)
+    def initialize(self):
+        OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm.initialize(self)
 
         # We want to match the start time of the base algorithm. SPX index options data time zone is chicago, algorithm time zone is new york (default).
         # Base algorithm warmup is 7 bar of daily resolution starts at 23 PM new york time of T-1. So to match the same start time
-        # we go back a 9 day + 23 hours, we need to account for a single weekend. This is calculated by 'Time.GetStartTimeForTradeBars'
-        self.SetWarmup(TimeSpan.FromHours(24 * 9 + 23))
+        # we go back a 9 day + 23 hours, we need to account for a single weekend. This is calculated by 'Time.GET_START_TIME_FOR_TRADE_BARS'
+        self.set_warmup(TimeSpan.from_hours(24 * 9 + 23))

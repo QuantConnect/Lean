@@ -15,30 +15,30 @@ from AlgorithmImports import *
 
 class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2014, 6, 5)
-        self.SetEndDate(2014, 6, 7)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2014, 6, 5)
+        self.set_end_date(2014, 6, 7)
+        self.set_cash(100000)
 
-        self.AddEquity("AAPL", Resolution.Minute)
-        option = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505, datetime(2014, 6, 27))
-        self.AddOptionContract(option, Resolution.Minute)
+        self.add_equity("AAPL", Resolution.MINUTE)
+        option = Symbol.create_option("AAPL", Market.USA, OptionStyle.AMERICAN, OptionRight.PUT, 505, datetime(2014, 6, 27))
+        self.add_option_contract(option, Resolution.MINUTE)
 
-        self.impliedVolatility = self.IV(option, optionModel = OptionPricingModelType.BlackScholes, period = 2)
-        self.delta = self.D(option, optionModel = OptionPricingModelType.BinomialCoxRossRubinstein, ivModel = OptionPricingModelType.BlackScholes)
-        self.gamma = self.G(option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
-        self.vega = self.V(option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
-        self.theta = self.T(option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
-        self.rho = self.R(option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
+        self.implied_volatility = self.iv(option, option_model = OptionPricingModelType.BLACK_SCHOLES, period = 2)
+        self.delta = self.d(option, option_model = OptionPricingModelType.BINOMIAL_COX_ROSS_RUBINSTEIN, iv_model = OptionPricingModelType.BLACK_SCHOLES)
+        self.gamma = self.g(option, option_model = OptionPricingModelType.FORWARD_TREE, iv_model = OptionPricingModelType.BLACK_SCHOLES)
+        self.vega = self.v(option, option_model = OptionPricingModelType.FORWARD_TREE, iv_model = OptionPricingModelType.BLACK_SCHOLES)
+        self.theta = self.t(option, option_model = OptionPricingModelType.FORWARD_TREE, iv_model = OptionPricingModelType.BLACK_SCHOLES)
+        self.rho = self.r(option, option_model = OptionPricingModelType.FORWARD_TREE, iv_model = OptionPricingModelType.BLACK_SCHOLES)
 
-    def OnEndOfAlgorithm(self):
-        if self.impliedVolatility.Current.Value == 0 or self.delta.Current.Value == 0 or self.gamma.Current.Value == 0 \
-        or self.vega.Current.Value == 0 or self.theta.Current.Value == 0 or self.rho.Current.Value == 0:
+    def on_end_of_algorithm(self):
+        if self.implied_volatility.current.value == 0 or self.delta.current.value == 0 or self.gamma.current.value == 0 \
+        or self.vega.current.value == 0 or self.theta.current.value == 0 or self.rho.current.value == 0:
             raise Exception("Expected IV/greeks calculated")
 
-        self.Debug(f"""Implied Volatility: {self.impliedVolatility.Current.Value},
-Delta: {self.delta.Current.Value},
-Gamma: {self.gamma.Current.Value},
-Vega: {self.vega.Current.Value},
-Theta: {self.theta.Current.Value},
-Rho: {self.rho.Current.Value}""")
+        self.debug(f"""Implied Volatility: {self.implied_volatility.current.value},
+Delta: {self.delta.current.value},
+Gamma: {self.gamma.current.value},
+Vega: {self.vega.current.value},
+Theta: {self.theta.current.value},
+Rho: {self.rho.current.value}""")
