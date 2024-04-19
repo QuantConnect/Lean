@@ -21,84 +21,84 @@ class RegressionTestShortableProvider(LocalDiskShortableProvider):
 ### Tests that orders are denied if they exceed the max shortable quantity.
 ### </summary>
 class ShortableProviderOrdersRejectedRegressionAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.ordersAllowed = []
-        self.ordersDenied = []
-        self.initialize = False
-        self.invalidatedAllowedOrder = False
-        self.invalidatedNewOrderWithPortfolioHoldings = False
+    def initialize(self):
+        self.orders_allowed = []
+        self.orders_denied = []
+        self.initialized = False
+        self.invalidated_allowed_order = False
+        self.invalidated_new_order_with_portfolio_holdings = False
 
-        self.SetStartDate(2013, 10, 4)
-        self.SetEndDate(2013, 10, 11)
-        self.SetCash(10000000)
+        self.set_start_date(2013, 10, 4)
+        self.set_end_date(2013, 10, 11)
+        self.set_cash(10000000)
 
-        self.spy = self.AddEquity("SPY", Resolution.Minute)
-        self.aig = self.AddEquity("AIG", Resolution.Minute)
+        self.spy = self.add_equity("SPY", Resolution.MINUTE)
+        self.aig = self.add_equity("AIG", Resolution.MINUTE)
 
-        self.spy.SetShortableProvider(RegressionTestShortableProvider())
-        self.aig.SetShortableProvider(RegressionTestShortableProvider())
+        self.spy.set_shortable_provider(RegressionTestShortableProvider())
+        self.aig.set_shortable_provider(RegressionTestShortableProvider())
 
-    def OnData(self, data):
-        if not self.initialize:
-            self.HandleOrder(self.LimitOrder(self.spy.Symbol, -1001, 10000)) # Should be canceled, exceeds the max shortable quantity
-            orderTicket = self.LimitOrder(self.spy.Symbol, -1000, 10000)
-            self.HandleOrder(orderTicket) # Allowed, orders at or below 1000 should be accepted
-            self.HandleOrder(self.LimitOrder(self.spy.Symbol, -10, 0.01)) # Should be canceled, the total quantity we would be short would exceed the max shortable quantity.
+    def on_data(self, data):
+        if not self.initialized:
+            self.handle_order(self.limit_order(self.spy.symbol, -1001, 10000)) # Should be canceled, exceeds the max shortable quantity
+            order_ticket = self.limit_order(self.spy.symbol, -1000, 10000)
+            self.handle_order(order_ticket) # Allowed, orders at or below 1000 should be accepted
+            self.handle_order(self.limit_order(self.spy.symbol, -10, 0.01)) # Should be canceled, the total quantity we would be short would exceed the max shortable quantity.
 
-            response = orderTicket.UpdateQuantity(-999) # should be allowed, we are reducing the quantity we want to short
-            if not response.IsSuccess:
+            response = order_ticket.update_quantity(-999) # should be allowed, we are reducing the quantity we want to short
+            if not response.is_success:
                 raise ValueError("Order update should of succeeded!");
 
-            self.initialize = True
+            self.initialized = True
             return
 
-        if not self.invalidatedAllowedOrder:
-            if len(self.ordersAllowed) != 1:
-                raise Exception(f"Expected 1 successful order, found: {len(self.ordersAllowed)}")
-            if len(self.ordersDenied) != 2:
-                raise Exception(f"Expected 2 failed orders, found: {len(self.ordersDenied)}")
+        if not self.invalidated_allowed_order:
+            if len(self.orders_allowed) != 1:
+                raise Exception(f"Expected 1 successful order, found: {len(self.orders_allowed)}")
+            if len(self.orders_denied) != 2:
+                raise Exception(f"Expected 2 failed orders, found: {len(self.orders_denied)}")
 
-            allowedOrder = self.ordersAllowed[0]
-            orderUpdate = UpdateOrderFields()
-            orderUpdate.LimitPrice = 0.01
-            orderUpdate.Quantity = -1001
-            orderUpdate.Tag = "Testing updating and exceeding maximum quantity"
+            allowed_order = self.orders_allowed[0]
+            order_update = UpdateOrderFields()
+            order_update.limit_price = 0.01
+            order_update.quantity = -1001
+            order_update.tag = "Testing updating and exceeding maximum quantity"
 
-            response = allowedOrder.Update(orderUpdate)
-            if response.ErrorCode != OrderResponseErrorCode.ExceedsShortableQuantity:
-                raise Exception(f"Expected order to fail due to exceeded shortable quantity, found: {response.ErrorCode}")
+            response = allowed_order.update(order_update)
+            if response.error_code != OrderResponseErrorCode.EXCEEDS_SHORTABLE_QUANTITY:
+                raise Exception(f"Expected order to fail due to exceeded shortable quantity, found: {response.error_code}")
 
-            cancelResponse = allowedOrder.Cancel()
-            if cancelResponse.IsError:
+            cancel_response = allowed_order.cancel()
+            if cancel_response.is_error:
                 raise Exception("Expected to be able to cancel open order after bad qty update")
 
-            self.invalidatedAllowedOrder = True
-            self.ordersDenied.clear()
-            self.ordersAllowed.clear()
+            self.invalidated_allowed_order = True
+            self.orders_denied.clear()
+            self.orders_allowed.clear()
             return
 
-        if not self.invalidatedNewOrderWithPortfolioHoldings:
-            self.HandleOrder(self.MarketOrder(self.spy.Symbol, -1000)) # Should succeed, no holdings and no open orders to stop this
-            spyShares = self.Portfolio[self.spy.Symbol].Quantity
-            if spyShares != -1000:
-                raise Exception(f"Expected -1000 shares in portfolio, found: {spyShares}")
+        if not self.invalidated_new_order_with_portfolio_holdings:
+            self.handle_order(self.market_order(self.spy.symbol, -1000)) # Should succeed, no holdings and no open orders to stop this
+            spy_shares = self.portfolio[self.spy.symbol].quantity
+            if spy_shares != -1000:
+                raise Exception(f"Expected -1000 shares in portfolio, found: {spy_shares}")
 
-            self.HandleOrder(self.LimitOrder(self.spy.Symbol, -1, 0.01)) # Should fail, portfolio holdings are at the max shortable quantity.
-            if len(self.ordersDenied) != 1:
-                raise Exception(f"Expected limit order to fail due to existing holdings, but found {len(self.ordersDenied)} failures")
+            self.handle_order(self.limit_order(self.spy.symbol, -1, 0.01)) # Should fail, portfolio holdings are at the max shortable quantity.
+            if len(self.orders_denied) != 1:
+                raise Exception(f"Expected limit order to fail due to existing holdings, but found {len(self.orders_denied)} failures")
 
-            self.ordersAllowed.clear()
-            self.ordersDenied.clear()
+            self.orders_allowed.clear()
+            self.orders_denied.clear()
 
-            self.HandleOrder(self.MarketOrder(self.aig.Symbol, -1001))
-            if len(self.ordersAllowed) != 1:
+            self.handle_order(self.market_order(self.aig.symbol, -1001))
+            if len(self.orders_allowed) != 1:
                 raise Exception(f"Expected market order of -1001 BAC to not fail")
 
-            self.invalidatedNewOrderWithPortfolioHoldings = True
+            self.invalidated_new_order_with_portfolio_holdings = True
 
-    def HandleOrder(self, orderTicket):
-        if orderTicket.SubmitRequest.Status == OrderRequestStatus.Error:
-            self.ordersDenied.append(orderTicket)
+    def handle_order(self, order_ticket):
+        if order_ticket.submit_request.status == OrderRequestStatus.ERROR:
+            self.orders_denied.append(order_ticket)
             return
 
-        self.ordersAllowed.append(orderTicket)
+        self.orders_allowed.append(order_ticket)

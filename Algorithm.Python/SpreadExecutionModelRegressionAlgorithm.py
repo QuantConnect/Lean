@@ -18,7 +18,7 @@ from Execution.SpreadExecutionModel import SpreadExecutionModel
 
 ### <summary>
 ### Regression algorithm for the SpreadExecutionModel.
-### This algorithm shows how the execution model works to 
+### This algorithm shows how the execution model works to
 ### submit orders only when the price is on desirably tight spread.
 ### </summary>
 ### <meta name="tag" content="using data" />
@@ -26,29 +26,29 @@ from Execution.SpreadExecutionModel import SpreadExecutionModel
 ### <meta name="tag" content="trading and orders" />
 class SpreadExecutionModelRegressionAlgorithm(QCAlgorithm):
     '''Regression algorithm for the SpreadExecutionModel.
-    This algorithm shows how the execution model works to 
+    This algorithm shows how the execution model works to
     submit orders only when the price is on desirably tight spread.'''
 
-    def Initialize(self):
-        self.SetStartDate(2013,10,7)
-        self.SetEndDate(2013,10,11)
+    def initialize(self):
+        self.set_start_date(2013,10,7)
+        self.set_end_date(2013,10,11)
 
-        self.SetUniverseSelection(ManualUniverseSelectionModel([
-            Symbol.Create('AIG', SecurityType.Equity, Market.USA),
-            Symbol.Create('BAC', SecurityType.Equity, Market.USA),
-            Symbol.Create('IBM', SecurityType.Equity, Market.USA),
-            Symbol.Create('SPY', SecurityType.Equity, Market.USA)
+        self.set_universe_selection(ManualUniverseSelectionModel([
+            Symbol.create('AIG', SecurityType.EQUITY, Market.USA),
+            Symbol.create('BAC', SecurityType.EQUITY, Market.USA),
+            Symbol.create('IBM', SecurityType.EQUITY, Market.USA),
+            Symbol.create('SPY', SecurityType.EQUITY, Market.USA)
         ]))
 
         # using hourly rsi to generate more insights
-        self.SetAlpha(RsiAlphaModel(14, Resolution.Hour))
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        self.SetExecution(SpreadExecutionModel())
+        self.set_alpha(RsiAlphaModel(14, Resolution.HOUR))
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
+        self.set_execution(SpreadExecutionModel())
 
-        self.InsightsGenerated += self.OnInsightsGenerated
+        self.insights_generated += self.on_insights_generated
 
-    def OnInsightsGenerated(self, algorithm, data):
-        self.Log(f"{self.Time}: {', '.join(str(x) for x in data.Insights)}")
+    def on_insights_generated(self, algorithm, data):
+        self.log(f"{self.time}: {', '.join(str(x) for x in data.insights)}")
 
-    def OnOrderEvent(self, orderEvent):
-        self.Log(f"{self.Time}: {orderEvent}")
+    def on_order_event(self, order_event):
+        self.log(f"{self.time}: {order_event}")

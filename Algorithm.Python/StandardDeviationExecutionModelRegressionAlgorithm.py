@@ -29,26 +29,26 @@ class StandardDeviationExecutionModelRegressionAlgorithm(QCAlgorithm):
     This algorithm shows how the execution model works to split up orders and submit them
     only when the price is 2 standard deviations from the 60min mean (default model settings).'''
 
-    def Initialize(self):
+    def initialize(self):
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         # Set requested data resolution
-        self.UniverseSettings.Resolution = Resolution.Minute
+        self.universe_settings.resolution = Resolution.MINUTE
 
-        self.SetStartDate(2013,10,7)
-        self.SetEndDate(2013,10,11)
-        self.SetCash(1000000)
+        self.set_start_date(2013,10,7)
+        self.set_end_date(2013,10,11)
+        self.set_cash(1000000)
 
-        self.SetUniverseSelection(ManualUniverseSelectionModel([
-            Symbol.Create('AIG', SecurityType.Equity, Market.USA),
-            Symbol.Create('BAC', SecurityType.Equity, Market.USA),
-            Symbol.Create('IBM', SecurityType.Equity, Market.USA),
-            Symbol.Create('SPY', SecurityType.Equity, Market.USA)
+        self.set_universe_selection(ManualUniverseSelectionModel([
+            Symbol.create('AIG', SecurityType.EQUITY, Market.USA),
+            Symbol.create('BAC', SecurityType.EQUITY, Market.USA),
+            Symbol.create('IBM', SecurityType.EQUITY, Market.USA),
+            Symbol.create('SPY', SecurityType.EQUITY, Market.USA)
         ]))
 
-        self.SetAlpha(RsiAlphaModel(14, Resolution.Hour))
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        self.SetExecution(StandardDeviationExecutionModel())
+        self.set_alpha(RsiAlphaModel(14, Resolution.HOUR))
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
+        self.set_execution(StandardDeviationExecutionModel())
 
-    def OnOrderEvent(self, orderEvent):
-        self.Log(f"{self.Time}: {orderEvent}")
+    def on_order_event(self, order_event):
+        self.log(f"{self.time}: {order_event}")

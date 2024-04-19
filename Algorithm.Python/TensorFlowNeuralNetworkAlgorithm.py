@@ -16,34 +16,34 @@ import tensorflow.compat.v1 as tf
 
 class TensorFlowNeuralNetworkAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 7)  # Set Start Date
-        self.SetEndDate(2013, 10, 8) # Set End Date
+    def initialize(self):
+        self.set_start_date(2013, 10, 7)  # Set Start Date
+        self.set_end_date(2013, 10, 8) # Set End Date
         
-        self.SetCash(100000)  # Set Strategy Cash
-        spy = self.AddEquity("SPY", Resolution.Minute) # Add Equity
+        self.set_cash(100000)  # Set Strategy Cash
+        spy = self.add_equity("SPY", Resolution.MINUTE) # Add Equity
         
-        self.symbols = [spy.Symbol] # potential trading symbols pool (in this algorithm there is only 1). 
+        self.symbols = [spy.symbol] # potential trading symbols pool (in this algorithm there is only 1). 
         self.lookback = 30 # number of previous days for training
         
-        self.Schedule.On(self.DateRules.Every(DayOfWeek.Monday), self.TimeRules.AfterMarketOpen("SPY", 28), self.NetTrain) # train the neural network 28 mins after market open
-        self.Schedule.On(self.DateRules.Every(DayOfWeek.Monday), self.TimeRules.AfterMarketOpen("SPY", 30), self.Trade) # trade 30 mins after market open
+        self.schedule.on(self.date_rules.every(DayOfWeek.MONDAY), self.time_rules.after_market_open("SPY", 28), self.net_train) # train the neural network 28 mins after market open
+        self.schedule.on(self.date_rules.every(DayOfWeek.MONDAY), self.time_rules.after_market_open("SPY", 30), self.trade) # trade 30 mins after market open
         
     def add_layer(self, inputs, in_size, out_size, activation_function=None):
         # add one more layer and return the output of this layer
         # this is one NN with only one hidden layer
-        Weights = tf.Variable(tf.random_normal([in_size, out_size]))
+        weights = tf.Variable(tf.random_normal([in_size, out_size]))
         biases = tf.Variable(tf.zeros([1, out_size]) + 0.1)
-        Wx_plus_b = tf.matmul(inputs, Weights) + biases
+        wx_plus_b = tf.matmul(inputs, weights) + biases
         if activation_function is None:
-            outputs = Wx_plus_b
+            outputs = wx_plus_b
         else:
-            outputs = activation_function(Wx_plus_b)
+            outputs = activation_function(wx_plus_b)
         return outputs
     
-    def NetTrain(self):
+    def net_train(self):
         # Daily historical data is used to train the machine learning model
-        history = self.History(self.symbols, self.lookback + 1, Resolution.Daily)
+        history = self.history(self.symbols, self.lookback + 1, Resolution.DAILY)
         
         # model: use prices_x to fit prices_y; key: symbol; value: according price
         self.prices_x, self.prices_y = {}, {}
@@ -55,8 +55,8 @@ class TensorFlowNeuralNetworkAlgorithm(QCAlgorithm):
             if not history.empty:
                 # Daily historical data is used to train the machine learning model 
                 # use open prices to predict the next days'
-                self.prices_x[symbol] = list(history.loc[symbol.Value]['open'][:-1])
-                self.prices_y[symbol] = list(history.loc[symbol.Value]['open'][1:])
+                self.prices_x[symbol] = list(history.loc[symbol.value]['open'][:-1])
+                self.prices_y[symbol] = list(history.loc[symbol.value]['open'][1:])
         
         for symbol in self.symbols:
             if symbol in self.prices_x:
@@ -97,14 +97,14 @@ class TensorFlowNeuralNetworkAlgorithm(QCAlgorithm):
             self.sell_prices[symbol] = y_pred_final - np.std(y_data)
             self.buy_prices[symbol] = y_pred_final + np.std(y_data)
         
-    def Trade(self):
+    def trade(self):
         ''' 
         Enter or exit positions based on relationship of the open price of the current bar and the prices defined by the machine learning model.
         Liquidate if the open price is below the sell price and buy if the open price is above the buy price 
         ''' 
-        for holding in self.Portfolio.Values:
-            if self.CurrentSlice[holding.Symbol].Open < self.sell_prices[holding.Symbol] and holding.Invested:
-                self.Liquidate(holding.Symbol)
+        for holding in self.portfolio.Values:
+            if self.current_slice[holding.symbol].open < self.sell_prices[holding.symbol] and holding.invested:
+                self.liquidate(holding.symbol)
             
-            if self.CurrentSlice[holding.Symbol].Open > self.buy_prices[holding.Symbol] and not holding.Invested:
-                self.SetHoldings(holding.Symbol, 1 / len(self.symbols))
+            if self.current_slice[holding.symbol].open > self.buy_prices[holding.symbol] and not holding.invested:
+                self.set_holdings(holding.symbol, 1 / len(self.symbols))

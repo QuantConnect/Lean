@@ -22,56 +22,56 @@ from AlgorithmImports import *
 class StopLimitOrderRegressionAlgorithm(QCAlgorithm):
     '''Basic algorithm demonstrating how to place stop limit orders.'''
 
-    Tolerance = 0.001
-    FastPeriod = 30
-    SlowPeriod = 60
+    tolerance = 0.001
+    fast_period = 30
+    slow_period = 60
 
-    def Initialize(self):
-        self.SetStartDate(2013, 1, 1)
-        self.SetEndDate(2017, 1, 1)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2013, 1, 1)
+        self.set_end_date(2017, 1, 1)
+        self.set_cash(100000)
 
-        self._symbol = self.AddEquity("SPY", Resolution.Daily).Symbol
+        self._symbol = self.add_equity("SPY", Resolution.DAILY).symbol
 
-        self._fast = self.EMA(self._symbol, self.FastPeriod, Resolution.Daily)
-        self._slow = self.EMA(self._symbol, self.SlowPeriod, Resolution.Daily)
+        self._fast = self.ema(self._symbol, self.fast_period, Resolution.DAILY)
+        self._slow = self.ema(self._symbol, self.slow_period, Resolution.DAILY)
 
-        self._buyOrderTicket: OrderTicket = None
-        self._sellOrderTicket: OrderTicket = None
-        self._previousSlice: Slice = None
+        self._buy_order_ticket: OrderTicket = None
+        self._sell_order_ticket: OrderTicket = None
+        self._previous_slice: Slice = None
 
-    def OnData(self, slice: Slice):
-        if not self.IsReady():
+    def on_data(self, slice: Slice):
+        if not self.is_ready():
             return
 
-        security = self.Securities[self._symbol]
-        if self._buyOrderTicket is None and self.TrendIsUp():
-            self._buyOrderTicket = self.StopLimitOrder(self._symbol, 100, stopPrice=security.High * 1.10, limitPrice=security.High * 1.11)
-        elif self._buyOrderTicket.Status == OrderStatus.Filled and self._sellOrderTicket is None and self.TrendIsDown():
-            self._sellOrderTicket = self.StopLimitOrder(self._symbol, -100, stopPrice=security.Low * 0.99, limitPrice=security.Low * 0.98)
+        security = self.securities[self._symbol]
+        if self._buy_order_ticket is None and self.trend_is_up():
+            self._buy_order_ticket = self.stop_limit_order(self._symbol, 100, stop_price=security.high * 1.10, limit_price=security.high * 1.11)
+        elif self._buy_order_ticket.status == OrderStatus.FILLED and self._sell_order_ticket is None and self.trend_is_down():
+            self._sell_order_ticket = self.stop_limit_order(self._symbol, -100, stop_price=security.low * 0.99, limit_price=security.low * 0.98)
 
-    def OnOrderEvent(self, orderEvent: OrderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            order: StopLimitOrder = self.Transactions.GetOrderById(orderEvent.OrderId)
-            if not order.StopTriggered:
+    def on_order_event(self, order_event: OrderEvent):
+        if order_event.status == OrderStatus.FILLED:
+            order: StopLimitOrder = self.transactions.get_order_by_id(order_event.order_id)
+            if not order.stop_triggered:
                 raise Exception("StopLimitOrder StopTriggered should haven been set if the order filled.")
 
-            if orderEvent.Direction == OrderDirection.Buy:
-                limitPrice = self._buyOrderTicket.Get(OrderField.LimitPrice)
-                if orderEvent.FillPrice > limitPrice:
-                    raise Exception(f"Buy stop limit order should have filled with price less than or equal to the limit price {limitPrice}. "
-                                    f"Fill price: {orderEvent.FillPrice}")
+            if order_event.direction == OrderDirection.BUY:
+                limit_price = self._buy_order_ticket.get(OrderField.LIMIT_PRICE)
+                if order_event.fill_price > limit_price:
+                    raise Exception(f"Buy stop limit order should have filled with price less than or equal to the limit price {limit_price}. "
+                                    f"Fill price: {order_event.fill_price}")
             else:
-                limitPrice = self._sellOrderTicket.Get(OrderField.LimitPrice)
-                if orderEvent.FillPrice < limitPrice:
-                    raise Exception(f"Sell stop limit order should have filled with price greater than or equal to the limit price {limitPrice}. "
-                                    f"Fill price: {orderEvent.FillPrice}")
+                limit_price = self._sell_order_ticket.get(OrderField.LIMIT_PRICE)
+                if order_event.fill_price < limit_price:
+                    raise Exception(f"Sell stop limit order should have filled with price greater than or equal to the limit price {limit_price}. "
+                                    f"Fill price: {order_event.fill_price}")
 
-    def IsReady(self):
-        return self._fast.IsReady and self._slow.IsReady
+    def is_ready(self):
+        return self._fast.is_ready and self._slow.is_ready
 
-    def TrendIsUp(self):
-        return self.IsReady() and self._fast.Current.Value > self._slow.Current.Value * (1 + self.Tolerance)
+    def trend_is_up(self):
+        return self.is_ready() and self._fast.current.value > self._slow.current.value * (1 + self.tolerance)
 
-    def TrendIsDown(self):
-        return self.IsReady() and self._fast.Current.Value < self._slow.Current.Value * (1 + self.Tolerance)
+    def trend_is_down(self):
+        return self.is_ready() and self._fast.current.value < self._slow.current.value * (1 + self.tolerance)
