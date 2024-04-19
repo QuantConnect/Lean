@@ -128,7 +128,7 @@ class DualThrustAlphaModel(AlphaModel):
         for symbol in [x.symbol for x in changes.added_securities]:
             if symbol not in self._symbol_data_by_symbol:
                 # add symbol/symbol_data pair to collection
-                symbol_data = self.symbol_data(symbol, self.k1, self.k2, self.range_period, self.consolidator_time_span)
+                symbol_data = self.SymbolData(symbol, self.k1, self.k2, self.range_period, self.consolidator_time_span)
                 self._symbol_data_by_symbol[symbol] = symbol_data
                 # register consolidator
                 algorithm.subscription_manager.add_consolidator(symbol, symbol_data.get_consolidator())

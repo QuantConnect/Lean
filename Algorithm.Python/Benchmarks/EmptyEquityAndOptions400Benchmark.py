@@ -59,7 +59,7 @@ class EmptyEquityAndOptions400Benchmark(QCAlgorithm):
         ]
 
         self.set_warm_up(TimeSpan.from_days(1))
-        for ticker in  self.equity_symbols:
+        for ticker in self.equity_symbols:
             option = self.add_option(ticker)
             option.set_filter(1, 7, timedelta(0), timedelta(90))
         

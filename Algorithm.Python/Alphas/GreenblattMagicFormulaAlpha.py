@@ -107,7 +107,7 @@ class SymbolData:
 
     def warm_up_indicators(self, history):
         for tuple in history.itertuples():
-            self.roc.update(tuple.index, tuple.close)
+            self.roc.update(tuple.Index, tuple.close)
 
     @property
     def returns(self):

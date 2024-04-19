@@ -14,6 +14,9 @@
 from AlgorithmImports import *
 
 import scipy.stats as sp
+from Risk.NullRiskManagementModel import NullRiskManagementModel
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 
 class ContingentClaimsAnalysisDefaultPredictionAlpha(QCAlgorithm):
     ''' Contingent Claim Analysis is put forth by Robert Merton, recepient of the Noble Prize in Economics in 1997 for his work in contributing to
@@ -101,7 +104,7 @@ class ContingentClaimsAnalysisDefaultPredictionAlpha(QCAlgorithm):
                         statement.income_statement.gross_dividend_payment.twelve_months > 0 and \
                         ratios.roa.one_year > 0
 
-            return [x.symbol for x in sorted(fine, key=lambda x: IsValid(x))]
+            return [x.symbol for x in sorted(fine, key=lambda x: is_valid(x))]
 
 
 class ContingentClaimsAnalysisAlphaModel:

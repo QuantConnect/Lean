@@ -59,7 +59,7 @@ class SykesShortMicroCapAlphaModel(AlphaModel):
         insights = []
         symbols_ret = dict()
 
-        for security in algorithm.active_securities.values():
+        for security in algorithm.active_securities.values:
             if security.has_data:
                 open_ = security.open
                 if open_ != 0:
@@ -84,14 +84,14 @@ class PennyStockUniverseSelectionModel(FundamentalUniverseSelectionModel):
     The stock must have volume between $1000000 and $10000 on the previous trading day
     The stock must cost less than $5'''
     def __init__(self):
-        super().__init__(self.select)
+        super().__init__()
 
         # Number of stocks in Coarse Universe
         self.number_of_symbols_coarse = 500
 
-    def select(self, coarse
+    def select(self, algorithm, fundamental):
         # sort the stocks by dollar volume and take the top 500
-        top = sorted([x for x in coarse if x.has_fundamental_data
+        top = sorted([x for x in fundamental if x.has_fundamental_data
                                        and 5 > x.price > 0
                                        and 1000000 > x.volume > 10000],
                     key=lambda x: x.dollar_volume, reverse=True)[:self.number_of_symbols_coarse]

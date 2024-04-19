@@ -125,7 +125,7 @@ class SymbolData:
     def warm_up_indicators(self, history):
         self.close = history.iloc[-1].close
         for tuple in history.itertuples():
-            self.volatility.update(tuple.index, tuple.close)
+            self.volatility.update(tuple.Index, tuple.close)
 
     def is_trend(self, data):
 

@@ -87,12 +87,12 @@ class PairsAlphaModel:
             self.correlation_pairs_selection()
             self.next_update = algorithm.time + timedelta(30)
 
-        magnitude = round(self.pairs[0].return / 100, 6)
+        magnitude = round(self.pairs[0].rate_of_return / 100, 6)
 
         ## Check if Natural Gas returns are greater than the threshold we've set
-        if self.pairs[0].return > self.difference_trigger:
+        if self.pairs[0].rate_of_return > self.difference_trigger:
             return [Insight.price(self.pairs[1].symbol, self.prediction_interval, InsightDirection.UP, magnitude)]
-        if self.pairs[0].return < -self.difference_trigger:
+        if self.pairs[0].rate_of_return < -self.difference_trigger:
             return [Insight.price(self.pairs[1].symbol, self.prediction_interval, InsightDirection.DOWN, magnitude)]
 
         return []
@@ -172,14 +172,14 @@ class SymbolData:
 
     def update_rate_of_change(self, history):
         for tuple in history.itertuples():
-            self.rocp.update(tuple.index, tuple.close)
+            self.rocp.update(tuple.Index, tuple.close)
 
     def update_daily_rate_of_change(self, history):
         for tuple in history.itertuples():
-            self.daily_return.update(tuple.index, tuple.close)
+            self.daily_return.update(tuple.Index, tuple.close)
 
     @property
-    def return(self):
+    def rate_of_return(self):
         return float(self.rocp.current.value)
 
     @property

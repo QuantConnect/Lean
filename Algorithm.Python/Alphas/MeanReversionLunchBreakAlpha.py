@@ -96,10 +96,10 @@ class MeanReversionLunchBreakAlphaModel(AlphaModel):
             return
         history = history.close.unstack(level = 0)
 
-        for ticker, values in history.iteritems():
+        for ticker, values in history.items():
             symbol = next((x for x in symbols if str(x) == ticker ), None)
             if symbol in self._symbol_data_by_symbol or symbol is None: continue
-            self._symbol_data_by_symbol[symbol] = self.symbol_data(symbol, self.prediction_interval)
+            self._symbol_data_by_symbol[symbol] = self.SymbolData(symbol, self.prediction_interval)
             self._symbol_data_by_symbol[symbol].update(values.index[0], values[0])
 
 

@@ -40,7 +40,7 @@ class MortgageRateVolatilityAlpha(QCAlgorithmFramework):
         etfs = ['VNQ', 'REET', 'TAO', 'FREL', 'SRET', 'HIPS']
         symbols = [ Symbol.create(etf, SecurityType.EQUITY, Market.USA) for etf in etfs ]
         self.set_security_initializer(lambda security: security.set_fee_model(ConstantFeeModel(0)))
-        self.set_universe_selection( ManualUniverseSelectionModel(symbols) )
+        self.set_universe_selection(ManualUniverseSelectionModel(symbols) )
             
         self.set_alpha(MortgageRateVolatilityAlphaModel(self))
         
@@ -85,12 +85,12 @@ class MortgageRateVolatilityAlphaModel(AlphaModel):
             ## Emit insights for all securities that are currently in the Universe,
             ## except for the Quandl Symbol
             insights = [Insight(security, self.insight_duration, InsightType.PRICE, InsightDirection.DOWN, self.insight_magnitude, None) \
-                        for security in algorithm.active_securities.keys() if security != self.mortgage_rate]
+                        for security in algorithm.active_securities.keys if security != self.mortgage_rate]
         
         ## If volatility in mortgage rates is low, then we emit an Insight to buy
         if (mortgage_rate < sma - deviation/2) or (mortgage_rate > sma + deviation/2):
             insights = [Insight(security, self.insight_duration, InsightType.PRICE, InsightDirection.UP, self.insight_magnitude, None) \
-                        for security in algorithm.active_securities.keys() if security != self.mortgage_rate]
+                        for security in algorithm.active_securities.keys if security != self.mortgage_rate]
         
         return insights
     

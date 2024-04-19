@@ -33,7 +33,7 @@ class DropboxCoarseFineAlgorithm(QCAlgorithm):
         self.url = "https://www.dropbox.com/s/x2sb9gaiicc6hm3/tickers_with_dates.csv?dl=1" 
         
     def on_end_of_day(self): 
-        for security in self.active_securities.values():
+        for security in self.active_securities.values:
             self.debug(f"{self.time.date()} {security.symbol.value} with Market Cap: ${security.fundamentals.market_cap}")
         
     def select_coarse(self, coarse):

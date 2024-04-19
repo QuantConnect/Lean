@@ -78,7 +78,7 @@ class MeanReversionIBSAlphaModel(AlphaModel):
         symbols_ibs = dict()
         returns = dict()
 
-        for security in algorithm.active_securities.values():
+        for security in algorithm.active_securities.values:
             if security.has_data:
                 high = security.high
                 low = security.low
