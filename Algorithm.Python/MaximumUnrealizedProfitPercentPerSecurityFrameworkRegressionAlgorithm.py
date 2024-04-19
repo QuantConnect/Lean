@@ -13,6 +13,7 @@
 
 from AlgorithmImports import *
 from BaseFrameworkRegressionAlgorithm import BaseFrameworkRegressionAlgorithm
+from Risk.MaximumUnrealizedProfitPercentPerSecurity import MaximumUnrealizedProfitPercentPerSecurity
 
 ### <summary>
 ### Regression algorithm to assert the behavior of <see cref="MaximumUnrealizedProfitPercentPerSecurity"/>.

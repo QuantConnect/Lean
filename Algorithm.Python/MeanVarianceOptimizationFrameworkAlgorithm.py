@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from Portfolio.MeanVarianceOptimizationPortfolioConstructionModel import *
 
 ### <summary>
 ### Mean Variance Optimization algorithm

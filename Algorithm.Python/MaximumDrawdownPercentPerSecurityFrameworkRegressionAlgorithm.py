@@ -13,6 +13,7 @@
 
 from AlgorithmImports import *
 from BaseFrameworkRegressionAlgorithm import BaseFrameworkRegressionAlgorithm
+from Risk.MaximumDrawdownPercentPerSecurity import MaximumDrawdownPercentPerSecurity
 
 ### <summary>
 ### Regression algorithm to assert the behavior of <see cref="MaximumDrawdownPercentPerSecurity"/>.

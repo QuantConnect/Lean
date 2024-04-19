@@ -13,6 +13,8 @@
 
 from AlgorithmImports import *
 from BaseFrameworkRegressionAlgorithm import BaseFrameworkRegressionAlgorithm
+from Risk.CompositeRiskManagementModel import CompositeRiskManagementModel
+from Risk.MaximumDrawdownPercentPortfolio import MaximumDrawdownPercentPortfolio
 
 ### <summary>
 ### Regression algorithm to assert the behavior of <see cref="MaximumDrawdownPercentPortfolio"/>.

@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from Portfolio.MeanReversionPortfolioConstructionModel import *
 
 class MeanReversionPortfolioAlgorithm(QCAlgorithm):
     '''Example algorithm of using MeanReversionPortfolioConstructionModel'''
