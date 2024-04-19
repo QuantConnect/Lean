@@ -23,39 +23,39 @@ from AlgorithmImports import *
 ### <meta name="tag" content="fine universes" />
 class RawPricesUniverseRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         # what resolution should the data *added* to the universe be?
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
         # Use raw prices
-        self.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw
+        self.universe_settings.data_normalization_mode = DataNormalizationMode.RAW
 
-        self.SetStartDate(2014,3,24)    #Set Start Date
-        self.SetEndDate(2014,4,7)      #Set End Date
-        self.SetCash(50000)            #Set Strategy Cash
+        self.set_start_date(2014,3,24)    #Set Start Date
+        self.set_end_date(2014,4,7)      #Set End Date
+        self.set_cash(50000)            #Set Strategy Cash
 
         # Set the security initializer with zero fees
-        self.SetSecurityInitializer(lambda x: x.SetFeeModel(ConstantFeeModel(0)))
+        self.set_security_initializer(lambda x: x.set_fee_model(ConstantFeeModel(0)))
 
-        self.AddUniverse("MyUniverse", Resolution.Daily, self.SelectionFunction)
+        self.add_universe("MyUniverse", Resolution.DAILY, self.selection_function)
 
 
-    def SelectionFunction(self, dateTime):
-        if dateTime.day % 2 == 0:
+    def selection_function(self, date_time):
+        if date_time.day % 2 == 0:
             return ["SPY", "IWM", "QQQ"]
         else:
             return ["AIG", "BAC", "IBM"]
 
 
     # this event fires whenever we have changes to our universe
-    def OnSecuritiesChanged(self, changes):
+    def on_securities_changed(self, changes):
         # liquidate removed securities
-        for security in changes.RemovedSecurities:
-            if security.Invested:
-                self.Liquidate(security.Symbol)
+        for security in changes.removed_securities:
+            if security.invested:
+                self.liquidate(security.symbol)
 
         # we want 20% allocation in each security in our universe
-        for security in changes.AddedSecurities:
-            self.SetHoldings(security.Symbol, 0.2)
+        for security in changes.added_securities:
+            self.set_holdings(security.symbol, 0.2)

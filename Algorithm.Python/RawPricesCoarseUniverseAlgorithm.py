@@ -22,52 +22,52 @@ from AlgorithmImports import *
 ### <meta name="tag" content="fine universes" />
 class RawPricesCoarseUniverseAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         # what resolution should the data *added* to the universe be?
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
-        self.SetStartDate(2014,1,1)    #Set Start Date
-        self.SetEndDate(2015,1,1)      #Set End Date
-        self.SetCash(50000)            #Set Strategy Cash
+        self.set_start_date(2014,1,1)    #Set Start Date
+        self.set_end_date(2015,1,1)      #Set End Date
+        self.set_cash(50000)            #Set Strategy Cash
 
         # Set the security initializer with the characteristics defined in CustomSecurityInitializer
-        self.SetSecurityInitializer(self.CustomSecurityInitializer)
+        self.set_security_initializer(self.custom_security_initializer)
 
         # this add universe method accepts a single parameter that is a function that
         # accepts an IEnumerable<CoarseFundamental> and returns IEnumerable<Symbol>
-        self.AddUniverse(self.CoarseSelectionFunction)
+        self.add_universe(self.coarse_selection_function)
 
-        self.__numberOfSymbols = 5
+        self.__number_of_symbols = 5
 
-    def CustomSecurityInitializer(self, security):
+    def custom_security_initializer(self, security):
         '''Initialize the security with raw prices and zero fees 
         Args:
             security: Security which characteristics we want to change'''
-        security.SetDataNormalizationMode(DataNormalizationMode.Raw)
-        security.SetFeeModel(ConstantFeeModel(0))
+        security.set_data_normalization_mode(DataNormalizationMode.RAW)
+        security.set_fee_model(ConstantFeeModel(0))
 
     # sort the data by daily dollar volume and take the top 'NumberOfSymbols'
-    def CoarseSelectionFunction(self, coarse):
+    def coarse_selection_function(self, coarse):
         # sort descending by daily dollar volume
-        sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
+        sorted_by_dollar_volume = sorted(coarse, key=lambda x: x.dollar_volume, reverse=True)
 
         # return the symbol objects of the top entries from our sorted collection
-        return [ x.Symbol for x in sortedByDollarVolume[:self.__numberOfSymbols] ]
+        return [ x.symbol for x in sorted_by_dollar_volume[:self.__number_of_symbols] ]
 
 
     # this event fires whenever we have changes to our universe
-    def OnSecuritiesChanged(self, changes):
+    def on_securities_changed(self, changes):
         # liquidate removed securities
-        for security in changes.RemovedSecurities:
-            if security.Invested:
-                self.Liquidate(security.Symbol)
+        for security in changes.removed_securities:
+            if security.invested:
+                self.liquidate(security.symbol)
 
         # we want 20% allocation in each security in our universe
-        for security in changes.AddedSecurities:
-            self.SetHoldings(security.Symbol, 0.2)
+        for security in changes.added_securities:
+            self.set_holdings(security.symbol, 0.2)
 
-    def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            self.Log(f"OnOrderEvent({self.UtcTime}):: {orderEvent}")
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.FILLED:
+            self.log(f"OnOrderEvent({self.utc_time}):: {order_event}")
