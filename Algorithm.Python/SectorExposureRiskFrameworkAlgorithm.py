@@ -25,28 +25,28 @@ class SectorExposureRiskFrameworkAlgorithm(QCAlgorithm):
     '''This example algorithm defines its own custom coarse/fine fundamental selection model
 ### with equally weighted portfolio and a maximum sector exposure.'''
 
-    def Initialize(self):
+    def initialize(self):
 
         # Set requested data resolution
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
-        self.SetStartDate(2014, 3, 25)
-        self.SetEndDate(2014, 4, 7)
-        self.SetCash(100000)
+        self.set_start_date(2014, 3, 25)
+        self.set_end_date(2014, 4, 7)
+        self.set_cash(100000)
 
         # set algorithm framework models
-        self.SetUniverseSelection(FineFundamentalUniverseSelectionModel(self.SelectCoarse, self.SelectFine))
-        self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(1)))
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        self.SetRiskManagement(MaximumSectorExposureRiskManagementModel())
+        self.set_universe_selection(FineFundamentalUniverseSelectionModel(self.select_coarse, self.select_fine))
+        self.set_alpha(ConstantAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(1)))
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
+        self.set_risk_management(MaximumSectorExposureRiskManagementModel())
 
-    def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            self.Debug(f"Order event: {orderEvent}. Holding value: {self.Securities[orderEvent.Symbol].Holdings.AbsoluteHoldingsValue}")
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.FILLED:
+            self.debug(f"Order event: {order_event}. Holding value: {self.securities[order_event.symbol].holdings.absolute_holdings_value}")
 
-    def SelectCoarse(self, coarse):
-        tickers = ["AAPL", "AIG", "IBM"] if self.Time.date() < date(2014, 4, 1) else [ "GOOG", "BAC", "SPY" ]
-        return [Symbol.Create(x, SecurityType.Equity, Market.USA) for x in tickers]
+    def select_coarse(self, coarse):
+        tickers = ["AAPL", "AIG", "IBM"] if self.time.date() < date(2014, 4, 1) else [ "GOOG", "BAC", "SPY" ]
+        return [Symbol.create(x, SecurityType.EQUITY, Market.USA) for x in tickers]
 
-    def SelectFine(self, fine):
-        return [f.Symbol for f in fine]
+    def select_fine(self, fine):
+        return [f.symbol for f in fine]

@@ -29,9 +29,9 @@ class BrokerageModelAlgorithm(QCAlgorithm):
         self.add_equity("SPY", Resolution.SECOND)
         
         # there's two ways to set your brokerage model. The easiest would be to call
-        # SetBrokerageModel( BrokerageName ); // BrokerageName is an enum
-        # SetBrokerageModel(BrokerageName.INTERACTIVE_BROKERS_BROKERAGE);
-        # SetBrokerageModel(BrokerageName.DEFAULT);
+        # self.set_brokerage_model( BrokerageName ) # BrokerageName is an enum
+        # self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS_BROKERAGE)
+        # self.set_brokerage_model(BrokerageName.DEFAULT)
 
         # the other way is to call SetBrokerageModel( IBrokerageModel ) with your
         # own custom model. I've defined a simple extension to the default brokerage

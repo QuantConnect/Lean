@@ -16,46 +16,46 @@ from queue import Queue
 
 class ScheduledQueuingAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2020, 9, 1)
-        self.SetEndDate(2020, 9, 2)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2020, 9, 1)
+        self.set_end_date(2020, 9, 2)
+        self.set_cash(100000)
         
-        self.__numberOfSymbols = 2000
-        self.__numberOfSymbolsFine = 1000
-        self.SetUniverseSelection(FineFundamentalUniverseSelectionModel(self.CoarseSelectionFunction, self.FineSelectionFunction, None, None))
+        self.__number_of_symbols = 2000
+        self.__number_of_symbols_fine = 1000
+        self.set_universe_selection(FineFundamentalUniverseSelectionModel(self.coarse_selection_function, self.fine_selection_function, None))
         
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
         
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_execution(ImmediateExecutionModel())
         
         self.queue = Queue()
         self.dequeue_size = 100
         
-        self.AddEquity("SPY", Resolution.Minute)
-        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.At(0, 0), self.FillQueue)
-        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.Every(timedelta(minutes=60)), self.TakeFromQueue)
+        self.add_equity("SPY", Resolution.MINUTE)
+        self.schedule.on(self.date_rules.every_day("SPY"), self.time_rules.at(0, 0), self.fill_queue)
+        self.schedule.on(self.date_rules.every_day("SPY"), self.time_rules.every(timedelta(minutes=60)), self.take_from_queue)
 
-    def CoarseSelectionFunction(self, coarse):
-        has_fundamentals = [security for security in coarse if security.HasFundamentalData]
-        sorted_by_dollar_volume = sorted(has_fundamentals, key=lambda x: x.DollarVolume, reverse=True)
-        return [ x.Symbol for x in sorted_by_dollar_volume[:self.__numberOfSymbols] ]
+    def coarse_selection_function(self, coarse):
+        has_fundamentals = [security for security in coarse if security.has_fundamental_data]
+        sorted_by_dollar_volume = sorted(has_fundamentals, key=lambda x: x.dollar_volume, reverse=True)
+        return [ x.symbol for x in sorted_by_dollar_volume[:self.__number_of_symbols] ]
     
-    def FineSelectionFunction(self, fine):
-        sorted_by_pe_ratio = sorted(fine, key=lambda x: x.ValuationRatios.PERatio, reverse=True)
-        return [ x.Symbol for x in sorted_by_pe_ratio[:self.__numberOfSymbolsFine] ]
+    def fine_selection_function(self, fine):
+        sorted_by_pe_ratio = sorted(fine, key=lambda x: x.valuation_ratios.pe_ratio, reverse=True)
+        return [ x.symbol for x in sorted_by_pe_ratio[:self.__number_of_symbols_fine] ]
         
-    def FillQueue(self):
-        securities = [security for security in self.ActiveSecurities.Values if security.Fundamentals is not None]
+    def fill_queue(self):
+        securities = [security for security in self.active_securities.values() if security.fundamentals is not None]
         
         # Fill queue with symbols sorted by PE ratio (decreasing order)
         self.queue.queue.clear()
-        sorted_by_pe_ratio = sorted(securities, key=lambda x: x.Fundamentals.ValuationRatios.PERatio, reverse=True)
+        sorted_by_pe_ratio = sorted(securities, key=lambda x: x.fundamentals.valuation_ratios.pe_ratio, reverse=True)
         for security in sorted_by_pe_ratio:
-            self.queue.put(security.Symbol)
+            self.queue.put(security.symbol)
         
-    def TakeFromQueue(self):
+    def take_from_queue(self):
         symbols = [self.queue.get() for _ in range(min(self.dequeue_size, self.queue.qsize()))]
-        self.History(symbols, 10, Resolution.Daily)
+        self.history(symbols, 10, Resolution.DAILY)
         
-        self.Log(f"Symbols at {self.Time}: {[str(symbol) for symbol in symbols]}")
+        self.log(f"Symbols at {self.time}: {[str(symbol) for symbol in symbols]}")

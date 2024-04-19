@@ -31,14 +31,14 @@ class CustomDataBenchmarkRegressionAlgorithm(QCAlgorithm):
             self.set_holdings("SPY", 1)
 
     def on_end_of_algorithm(self):
-        security_benchmark = self.benchmark;
+        security_benchmark = self.benchmark
         if security_benchmark.security.price == 0:
             raise Exception("Security benchmark price was not expected to be zero")
 
 class ExampleCustomData(PythonData):
 
     def get_source(self, config, date, is_live):
-        source = "https://www.dl.dropboxusercontent.com/s/d83xvd7mm9fzpk0/path_to_my_csv_data.csv?dl=0";
+        source = "https://www.dl.dropboxusercontent.com/s/d83xvd7mm9fzpk0/path_to_my_csv_data.csv?dl=0"
         return SubscriptionDataSource(source, SubscriptionTransportMedium.REMOTE_FILE)
 
     def reader(self, config, line, date, is_live):

@@ -62,4 +62,4 @@ class CustomBuyingPowerModel(BuyingPowerModel):
     # Override this as well because the base implementation calls GetMaintenanceMargin (overridden)
     # because in C# it wouldn't resolve the overridden Python method
     def get_reserved_buying_power_for_position(self, parameters):
-        return parameters.result_in_account_currency(0);
+        return parameters.result_in_account_currency(0)

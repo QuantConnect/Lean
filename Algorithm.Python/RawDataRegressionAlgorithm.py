@@ -16,7 +16,7 @@ from QuantConnect.Data.Auxiliary import *
 from QuantConnect.Lean.Engine.DataFeeds import DefaultDataProvider
 
 _ticker = "GOOGL"
-_expectedRawPrices = [ 1157.93, 1158.72,
+_expected_raw_prices = [ 1157.93, 1158.72,
 1131.97, 1114.28, 1120.15, 1114.51, 1134.89, 567.55, 571.50, 545.25, 540.63 ]
 
 # <summary>
@@ -27,40 +27,40 @@ _expectedRawPrices = [ 1157.93, 1158.72,
 # <meta name="tag" content="regression test" />
 class RawDataRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2014, 3, 25)
-        self.SetEndDate(2014, 4, 7)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2014, 3, 25)
+        self.set_end_date(2014, 4, 7)
+        self.set_cash(100000)
 
         # Set our DataNormalizationMode to raw
-        self.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw
-        self._googl = self.AddEquity(_ticker, Resolution.Daily).Symbol
+        self.universe_settings.data_normalization_mode = DataNormalizationMode.RAW
+        self._googl = self.add_equity(_ticker, Resolution.DAILY).symbol
 
         # Get our factor file for this regression
-        dataProvider = DefaultDataProvider()
-        mapFileProvider = LocalDiskMapFileProvider()
-        mapFileProvider.Initialize(dataProvider)
-        factorFileProvider = LocalDiskFactorFileProvider()
-        factorFileProvider.Initialize(mapFileProvider, dataProvider)
+        data_provider = DefaultDataProvider()
+        map_file_provider = LocalDiskMapFileProvider()
+        map_file_provider.initialize(data_provider)
+        factor_file_provider = LocalDiskFactorFileProvider()
+        factor_file_provider.initialize(map_file_provider, data_provider)
 
         # Get our factor file for this regression
-        self._factorFile = factorFileProvider.Get(self._googl)
+        self._factor_file = factor_file_provider.get(self._googl)
 
 
-    def OnData(self, data):
-        if not self.Portfolio.Invested:
-            self.SetHoldings(self._googl, 1)
+    def on_data(self, data):
+        if not self.portfolio.invested:
+            self.set_holdings(self._googl, 1)
 
-        if data.Bars.ContainsKey(self._googl):
-            googlData = data.Bars[self._googl]
+        if data.bars.contains_key(self._googl):
+            googl_data = data.bars[self._googl]
 
             # Assert our volume matches what we expected
-            expectedRawPrice = _expectedRawPrices.pop(0)
-            if expectedRawPrice != googlData.Close:
+            expected_raw_price = _expected_raw_prices.pop(0)
+            if expected_raw_price != googl_data.close:
                 # Our values don't match lets try and give a reason why
-                dayFactor = self._factorFile.GetPriceScaleFactor(googlData.Time)
-                probableRawPrice = googlData.Close / dayFactor  # Undo adjustment
+                day_factor = self._factor_file.get_price_scale_factor(googl_data.time)
+                probable_raw_price = googl_data.close / day_factor  # Undo adjustment
 
                 raise Exception("Close price was incorrect; it appears to be the adjusted value"
-                    if expectedRawPrice == probableRawPrice else
+                    if expected_raw_price == probable_raw_price else
                    "Close price was incorrect; Data may have changed.")

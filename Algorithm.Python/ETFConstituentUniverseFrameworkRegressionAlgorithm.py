@@ -127,10 +127,10 @@ class ETFConstituentUniverseFrameworkRegressionAlgorithm(QCAlgorithm):
 
         historical_data = self.history(universe, 1)
         if len(historical_data) != 1:
-            raise ValueError(f"Unexpected history count {len(historical_data)}! Expected 1");
+            raise ValueError(f"Unexpected history count {len(historical_data)}! Expected 1")
         for universe_data_collection in historical_data:
             if len(universe_data_collection) < 200:
-               raise ValueError(f"Unexpected universe DataCollection count {len(universe_data_collection)}! Expected > 200");
+               raise ValueError(f"Unexpected universe DataCollection count {len(universe_data_collection)}! Expected > 200")
 
     ### <summary>
     ### Filters ETF constituents

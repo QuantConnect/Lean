@@ -18,8 +18,8 @@ from AlgorithmImports import *
 ### </summary>
 class CompleteOrderTagUpdateAlgorithm(QCAlgorithm):
 
-    tag_after_fill = "This is the tag set after order was filled.";
-    tag_after_canceled = "This is the tag set after order was canceled.";
+    tag_after_fill = "This is the tag set after order was filled."
+    tag_after_canceled = "This is the tag set after order was canceled."
 
     def initialize(self) -> None:
         self.set_start_date(2013,10, 7)

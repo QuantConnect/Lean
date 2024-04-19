@@ -16,29 +16,29 @@ import talib
 
 class CalibratedResistanceAtmosphericScrubbers(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2020, 1, 2)
-        self.SetEndDate(2020, 1, 6) 
-        self.SetCash(100000) 
-        self.AddEquity("SPY", Resolution.Hour)
+    def initialize(self):
+        self.set_start_date(2020, 1, 2)
+        self.set_end_date(2020, 1, 6) 
+        self.set_cash(100000) 
+        self.add_equity("SPY", Resolution.HOUR)
         
         self.rolling_window = pd.DataFrame()
         self.dema_period = 3
         self.sma_period = 3
         self.wma_period = 3
         self.window_size = self.dema_period * 2
-        self.SetWarmUp(self.window_size)
+        self.set_warm_up(self.window_size)
         
-    def OnData(self, data):
-        if "SPY" not in data.Bars:
+    def on_data(self, data):
+        if "SPY" not in data.bars:
             return
         
-        close = data["SPY"].Close
+        close = data["SPY"].close
         
-        if self.IsWarmingUp:
+        if self.is_warming_up:
             # Add latest close to rolling window
-            row = pd.DataFrame({"close": [close]}, index=[data.Time])
-            self.rolling_window = self.rolling_window.append(row).iloc[-self.window_size:]
+            row = pd.DataFrame({"close": [close]}, index=[data.time])
+            self.rolling_window = pd.concat([self.rolling_window, row]).iloc[-self.window_size:]
             
             # If we have enough closing data to start calculating indicators...
             if self.rolling_window.shape[0] == self.window_size:
@@ -57,11 +57,11 @@ class CalibratedResistanceAtmosphericScrubbers(QCAlgorithm):
                             "DEMA" : talib.DEMA(closes, self.dema_period)[-1],
                             "EMA"  : talib.EMA(closes, self.sma_period)[-1],
                             "WMA"  : talib.WMA(closes, self.wma_period)[-1]},
-                            index=[data.Time])
+                            index=[data.time])
         
-        self.rolling_window = self.rolling_window.append(row).iloc[-self.window_size:]
+        self.rolling_window = pd.concat([self.rolling_window, row]).iloc[-self.window_size:]
 
         
-    def OnEndOfAlgorithm(self):
-        self.Log(f"\nRolling Window:\n{self.rolling_window.to_string()}\n")
-        self.Log(f"\nLatest Values:\n{self.rolling_window.iloc[-1].to_string()}\n")
+    def on_end_of_algorithm(self):
+        self.log(f"\nRolling Window:\n{self.rolling_window.to_string()}\n")
+        self.log(f"\nLatest Values:\n{self.rolling_window.iloc[-1].to_string()}\n")

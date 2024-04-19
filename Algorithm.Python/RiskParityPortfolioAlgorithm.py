@@ -17,14 +17,14 @@ from Portfolio.RiskParityPortfolioConstructionModel import *
 class RiakParityPortfolioAlgorithm(QCAlgorithm):
     '''Example algorithm of using RiskParityPortfolioConstructionModel'''
 
-    def Initialize(self):
-        self.SetStartDate(2021, 2, 21)  # Set Start Date
-        self.SetEndDate(2021, 3, 30)
-        self.SetCash(100000)  # Set Strategy Cash
-        self.SetSecurityInitializer(lambda security: security.SetMarketPrice(self.GetLastKnownPrice(security)))
+    def initialize(self):
+        self.set_start_date(2021, 2, 21)  # Set Start Date
+        self.set_end_date(2021, 3, 30)
+        self.set_cash(100000)  # Set Strategy Cash
+        self.set_security_initializer(lambda security: security.set_market_price(self.get_last_known_price(security)))
         
-        self.AddEquity("SPY", Resolution.Daily)
-        self.AddEquity("AAPL", Resolution.Daily)
+        self.add_equity("SPY", Resolution.DAILY)
+        self.add_equity("AAPL", Resolution.DAILY)
 
-        self.AddAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(1)))
-        self.SetPortfolioConstruction(RiskParityPortfolioConstructionModel())
+        self.add_alpha(ConstantAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(1)))
+        self.set_portfolio_construction(RiskParityPortfolioConstructionModel())

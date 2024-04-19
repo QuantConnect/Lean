@@ -18,7 +18,7 @@ from SetHoldingsMultipleTargetsRegressionAlgorithm import SetHoldingsMultipleTar
 ### Regression algorithm testing GH feature 3790, using SetHoldings with a collection of targets
 ### which will be ordered by margin impact before being executed, with the objective of avoiding any
 ### margin errors
-### Asserts that liquidateExistingHoldings equal false does not close positions inadvertedly (GH 7008)
+### Asserts that liquidate_existing_holdings equal false does not close positions inadvertedly (GH 7008) 
 ### </summary>
 class SetHoldingsLiquidateExistingHoldingsMultipleTargetsRegressionAlgorithm(SetHoldingsMultipleTargetsRegressionAlgorithm):
     def on_data(self, data):

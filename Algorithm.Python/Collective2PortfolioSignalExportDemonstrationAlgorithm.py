@@ -44,8 +44,8 @@ class Collective2PortfolioSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.slow = self.ema("SPY", 100)
 
         # Initialize these flags, to check when the ema indicators crosses between themselves
-        self.ema_fast_is_not_set = True;
-        self.ema_fast_was_above = False;
+        self.ema_fast_is_not_set = True
+        self.ema_fast_was_above = False
 
         # Collective2 APIv4 KEY: This value is provided by Collective2 in their webpage in your account section (See https://collective2.com/account-info)
         # See API documentation at https://trade.collective2.com/c2-api
@@ -80,7 +80,7 @@ class Collective2PortfolioSignalExportDemonstrationAlgorithm(QCAlgorithm):
                 self.ema_fast_was_above = True
             else:
                 self.ema_fast_was_above = False
-            self.ema_fast_is_not_set = False;
+            self.ema_fast_is_not_set = False
 
         # Check whether ema fast and ema slow crosses. If they do, set holdings to SPY
         # or reduce its holdings, and send signals to Collective2 API from your Portfolio

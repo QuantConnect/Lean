@@ -78,7 +78,7 @@ class CustomImpliedVolatility(ImpliedVolatility):
     # we demonstate put-call parity calculation here, but note that it is not suitable for American options
     def f(self, vol: float, time_till_expiry: float) -> float:
         call_black_price = OptionGreekIndicatorsHelper.BlackTheoreticalPrice(
-            vol, UnderlyingPrice.Current.Value, Strike, timeTillExpiry, RiskFreeRate.Current.Value, DividendYield.Current.Value, OptionRight.Call);
+            vol, UnderlyingPrice.Current.Value, Strike, timeTillExpiry, RiskFreeRate.Current.Value, DividendYield.Current.Value, OptionRight.Call)
         put_black_price = OptionGreekIndicatorsHelper.BlackTheoreticalPrice(
-            vol, UnderlyingPrice.Current.Value, Strike, timeTillExpiry, RiskFreeRate.Current.Value, DividendYield.Current.Value, OptionRight.Put);
+            vol, UnderlyingPrice.Current.Value, Strike, timeTillExpiry, RiskFreeRate.Current.Value, DividendYield.Current.Value, OptionRight.Put)
         return Price.Current.Value + OppositePrice.Current.Value - call_black_price - put_black_price
