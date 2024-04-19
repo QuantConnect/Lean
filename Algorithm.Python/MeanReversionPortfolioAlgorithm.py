@@ -17,16 +17,16 @@ from Portfolio.MeanReversionPortfolioConstructionModel import *
 class MeanReversionPortfolioAlgorithm(QCAlgorithm):
     '''Example algorithm of using MeanReversionPortfolioConstructionModel'''
 
-    def Initialize(self):
+    def initialize(self):
         # Set starting date, cash and ending date of the backtest
-        self.SetStartDate(2020, 9, 1)
-        self.SetEndDate(2021, 2, 28)
-        self.SetCash(100000)
+        self.set_start_date(2020, 9, 1)
+        self.set_end_date(2021, 2, 28)
+        self.set_cash(100000)
 
-        self.SetSecurityInitializer(lambda security: security.SetMarketPrice(self.GetLastKnownPrice(security)))
+        self.set_security_initializer(lambda security: security.set_market_price(self.get_last_known_price(security)))
         
         # Subscribe to data of the selected stocks
-        self.symbols = [self.AddEquity(ticker, Resolution.Daily).Symbol for ticker in ["SPY", "AAPL"]]
+        self._symbols = [self.add_equity(ticker, Resolution.DAILY).symbol for ticker in ["SPY", "AAPL"]]
 
-        self.AddAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(1)))
-        self.SetPortfolioConstruction(MeanReversionPortfolioConstructionModel())
+        self.add_alpha(ConstantAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(1)))
+        self.set_portfolio_construction(MeanReversionPortfolioConstructionModel())

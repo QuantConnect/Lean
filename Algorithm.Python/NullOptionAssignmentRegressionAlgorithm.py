@@ -18,13 +18,13 @@ from QuantConnect.Algorithm.CSharp import *
 ### Regression algorithm assering we can disable automatic option assignment
 ### </summary>
 class NullOptionAssignmentRegressionAlgorithm(OptionAssignmentRegressionAlgorithm):
-    def Initialize(self):
-        self.SetSecurityInitializer(self.CustomSecurityInitializer)
-        super().Initialize()
+    def initialize(self):
+        self.set_security_initializer(self.custom_security_initializer)
+        super().initialize()
 
-    def OnData(self, data):
-        super().OnData(data)
+    def on_data(self, data):
+        super().on_data(data)
 
-    def CustomSecurityInitializer(self, security):
-        if Extensions.IsOption(security.Symbol.SecurityType):
-            security.SetOptionAssignmentModel(NullOptionAssignmentModel())
+    def custom_security_initializer(self, security):
+        if Extensions.is_option(security.symbol.security_type):
+            security.set_option_assignment_model(NullOptionAssignmentModel())
