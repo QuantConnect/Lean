@@ -16,69 +16,69 @@ from scipy.optimize import brentq
 
 class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2014, 6, 5)
-        self.SetEndDate(2014, 6, 7)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2014, 6, 5)
+        self.set_end_date(2014, 6, 7)
+        self.set_cash(100000)
 
-        equity = self.AddEquity("AAPL", Resolution.Daily).Symbol
-        option = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 650, datetime(2014, 6, 21))
-        self.AddOptionContract(option, Resolution.Daily)
+        equity = self.add_equity("AAPL", Resolution.DAILY).symbol
+        option = Symbol.create_option("AAPL", Market.USA, OptionStyle.AMERICAN, OptionRight.PUT, 650, datetime(2014, 6, 21))
+        self.add_option_contract(option, Resolution.DAILY)
         # add the call counter side of the mirrored pair
-        mirror_option = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 650, datetime(2014, 6, 21))
-        self.AddOptionContract(mirror_option, Resolution.Daily)
+        mirror_option = Symbol.create_option("AAPL", Market.USA, OptionStyle.AMERICAN, OptionRight.CALL, 650, datetime(2014, 6, 21))
+        self.add_option_contract(mirror_option, Resolution.DAILY)
 
-        self.delta = self.D(option, mirror_option, optionModel = OptionPricingModelType.BinomialCoxRossRubinstein, ivModel = OptionPricingModelType.BlackScholes)
-        self.gamma = self.G(option, mirror_option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
-        self.vega = self.V(option, mirror_option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
-        self.theta = self.T(option, mirror_option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
-        self.rho = self.R(option, mirror_option, optionModel = OptionPricingModelType.ForwardTree, ivModel = OptionPricingModelType.BlackScholes)
+        self.delta = self.d(option, mirror_option, option_model = OptionPricingModelType.BINOMIAL_COX_ROSS_RUBINSTEIN, iv_model = OptionPricingModelType.BLACK_SCHOLES)
+        self.gamma = self.g(option, mirror_option, option_model = OptionPricingModelType.FORWARD_TREE, iv_model = OptionPricingModelType.BLACK_SCHOLES)
+        self.vega = self.v(option, mirror_option, option_model = OptionPricingModelType.FORWARD_TREE, iv_model = OptionPricingModelType.BLACK_SCHOLES)
+        self.theta = self.t(option, mirror_option, option_model = OptionPricingModelType.FORWARD_TREE, iv_model = OptionPricingModelType.BLACK_SCHOLES)
+        self.rho = self.r(option, mirror_option, option_model = OptionPricingModelType.FORWARD_TREE, iv_model = OptionPricingModelType.BLACK_SCHOLES)
 
         # A custom IV indicator with custom calculation of IV
-        riskFreeRateModel = InterestRateProvider()
-        dividendYieldModel = DividendYieldProvider(equity)
-        self.impliedVolatility = CustomImpliedVolatility(option, mirror_option, riskFreeRateModel, dividendYieldModel)
-        self.RegisterIndicator(option, self.impliedVolatility, QuoteBarConsolidator(timedelta(1)))
-        self.RegisterIndicator(mirror_option, self.impliedVolatility, QuoteBarConsolidator(timedelta(1)))
-        self.RegisterIndicator(equity, self.impliedVolatility, TradeBarConsolidator(timedelta(1)))
+        risk_free_rate_model = InterestRateProvider()
+        dividend_yield_model = DividendYieldProvider(equity)
+        self.implied_volatility = CustomImpliedVolatility(option, mirror_option, risk_free_rate_model, dividend_yield_model)
+        self.register_indicator(option, self.implied_volatility, QuoteBarConsolidator(timedelta(1)))
+        self.register_indicator(mirror_option, self.implied_volatility, QuoteBarConsolidator(timedelta(1)))
+        self.register_indicator(equity, self.implied_volatility, TradeBarConsolidator(timedelta(1)))
 
         # custom IV smoothing function: assume the lower IV is more "fair"
         smoothing_func = lambda iv, mirror_iv: min(iv, mirror_iv)
         # set the smoothing function
-        self.delta.ImpliedVolatility.SetSmoothingFunction(smoothing_func)
-        self.gamma.ImpliedVolatility.SetSmoothingFunction(smoothing_func)
-        self.vega.ImpliedVolatility.SetSmoothingFunction(smoothing_func)
-        self.theta.ImpliedVolatility.SetSmoothingFunction(smoothing_func)
-        self.rho.ImpliedVolatility.SetSmoothingFunction(smoothing_func)
+        self.delta.implied_volatility.set_smoothing_function(smoothing_func)
+        self.gamma.implied_volatility.set_smoothing_function(smoothing_func)
+        self.vega.implied_volatility.set_smoothing_function(smoothing_func)
+        self.theta.implied_volatility.set_smoothing_function(smoothing_func)
+        self.rho.implied_volatility.set_smoothing_function(smoothing_func)
 
-    def OnEndOfAlgorithm(self):
-        if self.impliedVolatility.Current.Value == 0 or self.delta.Current.Value == 0 or self.gamma.Current.Value == 0 \
-        or self.vega.Current.Value == 0 or self.theta.Current.Value == 0 or self.rho.Current.Value == 0:
+    def on_end_of_algorithm(self):
+        if self.implied_volatility.current.value == 0 or self.delta.current.value == 0 or self.gamma.current.value == 0 \
+        or self.vega.current.value == 0 or self.theta.current.value == 0 or self.rho.current.value == 0:
             raise Exception("Expected IV/greeks calculated")
 
-        self.Debug(f"""Implied Volatility: {self.impliedVolatility.Current.Value},
-Delta: {self.delta.Current.Value},
-Gamma: {self.gamma.Current.Value},
-Vega: {self.vega.Current.Value},
-Theta: {self.theta.Current.Value},
-Rho: {self.rho.Current.Value}""")
+        self.debug(f"""Implied Volatility: {self.implied_volatility.current.value},
+Delta: {self.delta.current.value},
+Gamma: {self.gamma.current.value},
+Vega: {self.vega.current.value},
+Theta: {self.theta.current.value},
+Rho: {self.rho.current.value}""")
 
 class CustomImpliedVolatility(ImpliedVolatility):
     def __init__(self, option, mirror_option, risk_free_rate_model, dividend_yield_model):
         super().__init__(option, risk_free_rate_model, dividend_yield_model, mirror_option, period=2)
-        self.SetSmoothingFunction(lambda iv, mirror_iv: iv)
+        self.set_smoothing_function(lambda iv, mirror_iv: iv)
 
-    def CalculateIV(self, timeTillExpiry: float) -> float:
+    def calculate_iv(self, time_till_expiry: float) -> float:
         try:
-            return brentq(self.f, 1e-7, 2.0, args=(timeTillExpiry), xtol=1e-4, maxiter=100)
+            return brentq(self.f, 1e-7, 2.0, args=(time_till_expiry), xtol=1e-4, maxiter=100)
         except:
-            print("ImpliedVolatility.CalculateIV(): Fail to converge, returning 0.")
+            print("ImpliedVolatility.calculate_i_v(): Fail to converge, returning 0.")
             return 0.0
 
     # we demonstate put-call parity calculation here, but note that it is not suitable for American options
     def f(self, vol: float, time_till_expiry: float) -> float:
-        call_black_price = OptionGreekIndicatorsHelper.BlackTheoreticalPrice(
-            vol, UnderlyingPrice.Current.Value, Strike, timeTillExpiry, RiskFreeRate.Current.Value, DividendYield.Current.Value, OptionRight.Call)
-        put_black_price = OptionGreekIndicatorsHelper.BlackTheoreticalPrice(
-            vol, UnderlyingPrice.Current.Value, Strike, timeTillExpiry, RiskFreeRate.Current.Value, DividendYield.Current.Value, OptionRight.Put)
-        return Price.Current.Value + OppositePrice.Current.Value - call_black_price - put_black_price
+        call_black_price = OptionGreekIndicatorsHelper.black_theoretical_price(
+            vol, UnderlyingPrice.current.value, self.strike, time_till_expiry, RiskFreeRate.current.value, DividendYield.current.value, OptionRight.CALL)
+        put_black_price = OptionGreekIndicatorsHelper.black_theoretical_price(
+            vol, UnderlyingPrice.current.value, self.strike, time_till_expiry, RiskFreeRate.current.value, DividendYield.current.value, OptionRight.PUT)
+        return Price.current.value + OppositePrice.current.value - call_black_price - put_black_price

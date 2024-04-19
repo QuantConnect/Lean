@@ -20,60 +20,60 @@ from AlgorithmImports import *
 class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
     def __init__(self):
         super().__init__()
-        self._optionStyleIsSupported = False
-        self._checkGreeks = True
-        self._triedGreeksCalculation = False
+        self._option_style_is_supported = False
+        self._check_greeks = True
+        self._tried_greeks_calculation = False
         self._option = None
 
-    def OnData(self, slice):
-        if self.IsWarmingUp: return
+    def on_data(self, slice):
+        if self.is_warming_up: return
 
-        for kvp in slice.OptionChains:
-            if self._option is None or kvp.Key != self._option.Symbol: continue
+        for kvp in slice.option_chains:
+            if self._option is None or kvp.key != self._option.symbol: continue
 
-            self.CheckGreeks([contract for contract in kvp.Value])
+            self.check_greeks([contract for contract in kvp.value])
 
-    def OnEndOfDay(self, symbol):
-        self._checkGreeks = True
+    def on_end_of_day(self, symbol):
+        self._check_greeks = True
 
-    def OnEndOfAlgorithm(self):
-        if not self._triedGreeksCalculation:
+    def on_end_of_algorithm(self):
+        if not self._tried_greeks_calculation:
             raise Exception("Expected greeks to be accessed")
 
-    def Init(self, option, optionStyleIsSupported):
+    def init(self, option, option_style_is_supported):
         self._option = option
-        self._optionStyleIsSupported = optionStyleIsSupported
-        self._checkGreeks = True
-        self._triedGreeksCalculation = False
+        self._option_style_is_supported = option_style_is_supported
+        self._check_greeks = True
+        self._tried_greeks_calculation = False
 
-    def CheckGreeks(self, contracts):
-        if not self._checkGreeks or len(contracts) == 0: return
+    def check_greeks(self, contracts):
+        if not self._check_greeks or len(contracts) == 0: return
 
-        self._checkGreeks = False
-        self._triedGreeksCalculation = True
+        self._check_greeks = False
+        self._tried_greeks_calculation = True
 
         for contract in contracts:
             greeks = Greeks()
             try:
-                greeks = contract.Greeks
+                greeks = contract.greeks
 
                 # Greeks should have not been successfully accessed if the option style is not supported
-                optionStyleStr = 'American' if self._option.Style == OptionStyle.American else 'European'
-                if not self._optionStyleIsSupported:
-                    raise Exception(f'Expected greeks not to be calculated for {contract.Symbol.Value}, an {optionStyleStr} style option, using {type(self._option.PriceModel).__name__}, which does not support them, but they were')
+                option_style_str = 'American' if self._option.style == OptionStyle.AMERICAN else 'European'
+                if not self._option_style_is_supported:
+                    raise Exception(f'Expected greeks not to be calculated for {contract.symbol.value}, an {option_style_str} style option, using {type(self._option.price_model).__name__}, which does not support them, but they were')
             except ArgumentException:
                 # ArgumentException is only expected if the option style is not supported
-                if self._optionStyleIsSupported:
-                    raise Exception(f'Expected greeks to be calculated for {contract.Symbol.Value}, an {optionStyleStr} style option, using {type(self._option.PriceModel).__name__}, which supports them, but they were not')
+                if self._option_style_is_supported:
+                    raise Exception(f'Expected greeks to be calculated for {contract.symbol.value}, an {option_style_str} style option, using {type(self._option.price_model).__name__}, which supports them, but they were not')
 
             # Greeks should be valid if they were successfuly accessed for supported option style
             # Delta can be {-1, 0, 1} if the price is too wild, rho can be 0 if risk free rate is 0
             # Vega can be 0 if the price is very off from theoretical price, Gamma = 0 if Delta belongs to {-1, 1}
-            if (self._optionStyleIsSupported
-                and ((contract.Right == OptionRight.Call and (greeks.Delta < 0.0 or greeks.Delta > 1.0 or greeks.Rho < 0.0))
-                    or (contract.Right == OptionRight.Put and (greeks.Delta < -1.0 or greeks.Delta > 0.0 or greeks.Rho > 0.0))
-                    or greeks.Theta == 0.0 or greeks.Vega < 0.0 or greeks.Gamma < 0.0)):
-                raise Exception(f'Expected greeks to have valid values. Greeks were: Delta: {greeks.Delta}, Rho: {greeks.Rho}, Theta: {greeks.Theta}, Vega: {greeks.Vega}, Gamma: {greeks.Gamma}')
+            if (self._option_style_is_supported
+                and ((contract.right == OptionRight.CALL and (greeks.delta < 0.0 or greeks.delta > 1.0 or greeks.rho < 0.0))
+                    or (contract.right == OptionRight.PUT and (greeks.delta < -1.0 or greeks.delta > 0.0 or greeks.rho > 0.0))
+                    or greeks.theta == 0.0 or greeks.vega < 0.0 or greeks.gamma < 0.0)):
+                raise Exception(f'Expected greeks to have valid values. Greeks were: Delta: {greeks.delta}, Rho: {greeks.rho}, Theta: {greeks.theta}, Vega: {greeks.vega}, Gamma: {greeks.gamma}')
 
 
 

@@ -18,16 +18,16 @@ from AlgorithmImports import *
 ### </summary>
 class OptionDataNullReferenceRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2016, 12, 1)
-        self.SetEndDate(2017, 1, 1)
-        self.SetCash(500000)
+    def initialize(self):
+        self.set_start_date(2016, 12, 1)
+        self.set_end_date(2017, 1, 1)
+        self.set_cash(500000)
 
-        self.AddEquity("DUST")
+        self.add_equity("DUST")
 
-        option = self.AddOption("DUST")
+        option = self.add_option("DUST")
 
-        option.SetFilter(self.UniverseFunc)
+        option.set_filter(self.universe_func)
 
-    def UniverseFunc(self, universe):
-        return universe.IncludeWeeklys().Strikes(-1, +1).Expiration(timedelta(25), timedelta(100))
+    def universe_func(self, universe):
+        return universe.include_weeklys().strikes(-1, +1).expiration(timedelta(25), timedelta(100))

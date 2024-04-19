@@ -19,14 +19,14 @@ from OptionPriceModelForOptionStylesBaseRegressionAlgorithm import OptionPriceMo
 ### that supports American style options and asserting that the option price model is used.
 ### </summary>
 class OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm(OptionPriceModelForOptionStylesBaseRegressionAlgorithm):
-    def Initialize(self):
-        self.SetStartDate(2014, 6, 9)
-        self.SetEndDate(2014, 6, 9)
+    def initialize(self):
+        self.set_start_date(2014, 6, 9)
+        self.set_end_date(2014, 6, 9)
 
-        option = self.AddOption("AAPL", Resolution.Minute)
+        option = self.add_option("AAPL", Resolution.MINUTE)
         # BlackSholes model does not support American style options
-        option.PriceModel = OptionPriceModels.BlackScholes()
+        option.price_model = OptionPriceModels.black_scholes()
 
-        self.SetWarmup(2, Resolution.Daily)
+        self.set_warmup(2, Resolution.DAILY)
 
-        self.Init(option, optionStyleIsSupported=False)
+        self.init(option, option_style_is_supported=False)
