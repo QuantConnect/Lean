@@ -18,67 +18,67 @@ from AlgorithmImports import *
 ### </summary>
 class InsightTagAlphaRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2013,10,7)
-        self.SetEndDate(2013,10,11)
-        self.SetCash(100000)
+    def initialize(self):
+        self.set_start_date(2013,10,7)
+        self.set_end_date(2013,10,11)
+        self.set_cash(100000)
 
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
 
-        self.spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
-        self.fb = Symbol.Create("FB", SecurityType.Equity, Market.USA)
-        self.ibm = Symbol.Create("IBM", SecurityType.Equity, Market.USA)
+        self.spy = Symbol.create("SPY", SecurityType.EQUITY, Market.USA)
+        self.fb = Symbol.create("FB", SecurityType.EQUITY, Market.USA)
+        self.ibm = Symbol.create("IBM", SecurityType.EQUITY, Market.USA)
 
         # set algorithm framework models
-        self.SetUniverseSelection(ManualUniverseSelectionModel([self.spy, self.fb, self.ibm]))
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_universe_selection(ManualUniverseSelectionModel([self.spy, self.fb, self.ibm]))
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
+        self.set_execution(ImmediateExecutionModel())
 
-        self.AddAlpha(OneTimeAlphaModel(self.spy))
-        self.AddAlpha(OneTimeAlphaModel(self.fb))
-        self.AddAlpha(OneTimeAlphaModel(self.ibm))
+        self.add_alpha(OneTimeAlphaModel(self.spy))
+        self.add_alpha(OneTimeAlphaModel(self.fb))
+        self.add_alpha(OneTimeAlphaModel(self.ibm))
 
-        self.InsightsGenerated += self.OnInsightsGeneratedVerifier
+        self.insights_generated += self.on_insights_generated_verifier
 
-        self.symbols_with_generated_insights = []
+        self._symbols_with_generated_insights = []
 
-    def OnInsightsGeneratedVerifier(self, algorithm: IAlgorithm, insightsCollection: GeneratedInsightsCollection) -> None:
-        for insight in insightsCollection.Insights:
-            if insight.Tag != OneTimeAlphaModel.GenerateInsightTag(insight.Symbol):
+    def on_insights_generated_verifier(self, algorithm: IAlgorithm, insights_collection: GeneratedInsightsCollection) -> None:
+        for insight in insights_collection.insights:
+            if insight.tag != OneTimeAlphaModel.generate_insight_tag(insight.symbol):
                 raise Exception("Unexpected insight tag was emitted")
 
-            self.symbols_with_generated_insights.append(insight.Symbol)
+            self._symbols_with_generated_insights.append(insight.symbol)
 
-    def OnEndOfAlgorithm(self) -> None:
-        if len(self.symbols_with_generated_insights) != 3:
+    def on_end_of_algorithm(self) -> None:
+        if len(self._symbols_with_generated_insights) != 3:
             raise Exception("Unexpected number of symbols with generated insights")
 
-        if not self.spy in self.symbols_with_generated_insights:
+        if not self.spy in self._symbols_with_generated_insights:
             raise Exception("SPY symbol was not found in symbols with generated insights")
 
-        if not self.fb in self.symbols_with_generated_insights:
+        if not self.fb in self._symbols_with_generated_insights:
             raise Exception("FB symbol was not found in symbols with generated insights")
 
-        if not self.ibm in self.symbols_with_generated_insights:
+        if not self.ibm in self._symbols_with_generated_insights:
             raise Exception("IBM symbol was not found in symbols with generated insights")
 
 class OneTimeAlphaModel(AlphaModel):
     def __init__(self, symbol):
-        self.symbol = symbol
+        self._symbol = symbol
         self.triggered = False
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
         insights = []
         if not self.triggered:
             self.triggered = True
-            insights.append(Insight.Price(
-                self.symbol,
-                Resolution.Daily,
+            insights.append(Insight.price(
+                self._symbol,
+                Resolution.DAILY,
                 1,
-                InsightDirection.Down,
-                tag=OneTimeAlphaModel.GenerateInsightTag(self.symbol)))
+                InsightDirection.DOWN,
+                tag=OneTimeAlphaModel.generate_insight_tag(self._symbol)))
         return insights
 
     @staticmethod
-    def GenerateInsightTag(symbol: Symbol) -> str:
+    def generate_insight_tag(symbol: Symbol) -> str:
         return f"Insight generated for {symbol}";
