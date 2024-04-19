@@ -18,9 +18,9 @@ from AlgorithmImports import *
 ### </summary>
 class EmptyEquityAndOptions400Benchmark(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2022, 5, 11)
-        self.SetEndDate(2022, 5, 12)
+    def initialize(self):
+        self.set_start_date(2022, 5, 11)
+        self.set_end_date(2022, 5, 12)
         self.equity_symbols = [
 
 "MARK", "TSN", "DT", "RDW", "CVE", "NXPI", "FIVN", "CLX", "SPXL", "BKSY", "NUGT", "CF", "NEGG",
@@ -58,13 +58,13 @@ class EmptyEquityAndOptions400Benchmark(QCAlgorithm):
 
         ]
 
-        self.SetWarmUp(TimeSpan.FromDays(1))
+        self.set_warm_up(TimeSpan.from_days(1))
         for ticker in  self.equity_symbols:
-            option = self.AddOption(ticker)
-            option.SetFilter(1, 7, timedelta(0), timedelta(90))
+            option = self.add_option(ticker)
+            option.set_filter(1, 7, timedelta(0), timedelta(90))
         
-        self.AddEquity("SPY")
+        self.add_equity("SPY")
 
-    def OnData(self, slice):
-        if self.IsWarmingUp: return
-        self.Quit("The end!")
+    def on_data(self, slice):
+        if self.is_warming_up: return
+        self.quit("The end!")

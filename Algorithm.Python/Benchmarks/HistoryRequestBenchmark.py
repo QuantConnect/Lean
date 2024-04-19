@@ -15,20 +15,20 @@ from AlgorithmImports import *
 
 class HistoryRequestBenchmark(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2010, 1, 1)
-        self.SetEndDate(2018, 1, 1)
-        self.SetCash(10000)
-        self.symbol = self.AddEquity("SPY").Symbol
+    def initialize(self):
+        self.set_start_date(2010, 1, 1)
+        self.set_end_date(2018, 1, 1)
+        self.set_cash(10000)
+        self._symbol = self.add_equity("SPY").symbol
 
-    def OnEndOfDay(self, symbol):
-        minuteHistory = self.History([self.symbol], 60, Resolution.Minute)
-        lastHourHigh = 0
-        for index, row in minuteHistory.loc["SPY"].iterrows():
-            if lastHourHigh < row["high"]:
-                lastHourHigh = row["high"]
+    def on_end_of_day(self, symbol):
+        minute_history = self.history([self._symbol], 60, Resolution.MINUTE)
+        last_hour_high = 0
+        for index, row in minute_history.loc["SPY"].iterrows():
+            if last_hour_high < row["high"]:
+                last_hour_high = row["high"]
 
-        dailyHistory = self.History([self.symbol], 1, Resolution.Daily).loc["SPY"].head()
-        dailyHistoryHigh = dailyHistory["high"]
-        dailyHistoryLow = dailyHistory["low"]
-        dailyHistoryOpen = dailyHistory["open"]
+        daily_history = self.history([self._symbol], 1, Resolution.DAILY).loc["SPY"].head()
+        daily_history_high = daily_history["high"]
+        daily_history_low = daily_history["low"]
+        daily_history_open = daily_history["open"]

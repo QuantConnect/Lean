@@ -15,49 +15,49 @@ from AlgorithmImports import *
 
 class CoarseFineUniverseSelectionBenchmark(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2017, 11, 1)
-        self.SetEndDate(2018, 3, 1)
-        self.SetCash(50000)
+        self.set_start_date(2017, 11, 1)
+        self.set_end_date(2018, 3, 1)
+        self.set_cash(50000)
 
-        self.UniverseSettings.Resolution = Resolution.Minute
+        self.universe_settings.resolution = Resolution.MINUTE
 
-        self.AddUniverse(self.CoarseSelectionFunction, self.FineSelectionFunction)
+        self.add_universe(self.coarse_selection_function, self.fine_selection_function)
 
-        self.numberOfSymbols = 150
-        self.numberOfSymbolsFine = 40
+        self.number_of_symbols = 150
+        self.number_of_symbols_fine = 40
         self._changes = None
 
     # sort the data by daily dollar volume and take the top 'NumberOfSymbols'
-    def CoarseSelectionFunction(self, coarse):
+    def coarse_selection_function(self, coarse):
 
-        selected = [x for x in coarse if (x.HasFundamentalData)]
+        selected = [x for x in coarse if (x.has_fundamental_data)]
         # sort descending by daily dollar volume
-        sortedByDollarVolume = sorted(selected, key=lambda x: x.DollarVolume, reverse=True)
+        sorted_by_dollar_volume = sorted(selected, key=lambda x: x.dollar_volume, reverse=True)
 
         # return the symbol objects of the top entries from our sorted collection
-        return [ x.Symbol for x in sortedByDollarVolume[:self.numberOfSymbols] ]
+        return [ x.symbol for x in sorted_by_dollar_volume[:self.number_of_symbols] ]
 
     # sort the data by P/E ratio and take the top 'NumberOfSymbolsFine'
-    def FineSelectionFunction(self, fine):
+    def fine_selection_function(self, fine):
         # sort descending by P/E ratio
-        sortedByPeRatio = sorted(fine, key=lambda x: x.ValuationRatios.PERatio, reverse=True)
+        sorted_by_pe_ratio = sorted(fine, key=lambda x: x.valuation_ratios.pe_ratio, reverse=True)
         # take the top entries from our sorted collection
-        return [ x.Symbol for x in sortedByPeRatio[:self.numberOfSymbolsFine] ]
+        return [ x.symbol for x in sorted_by_pe_ratio[:self.number_of_symbols_fine] ]
 
-    def OnData(self, data):
+    def on_data(self, data):
         # if we have no changes, do nothing
         if self._changes is None: return
 
         # liquidate removed securities
-        for security in self._changes.RemovedSecurities:
-            if security.Invested:
-                self.Liquidate(security.Symbol)
+        for security in self._changes.removed_securities:
+            if security.invested:
+                self.liquidate(security.symbol)
 
-        for security in self._changes.AddedSecurities:
-            self.SetHoldings(security.Symbol, 0.02)
+        for security in self._changes.added_securities:
+            self.set_holdings(security.symbol, 0.02)
         self._changes = None
 
-    def OnSecuritiesChanged(self, changes):
+    def on_securities_changed(self, changes):
         self._changes = changes

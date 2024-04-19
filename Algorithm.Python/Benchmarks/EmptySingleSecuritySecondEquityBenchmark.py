@@ -21,11 +21,11 @@ from AlgorithmImports import *
 ### </remarks>
 class EmptySingleSecuritySecondEquityBenchmark(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2008, 1, 1)
-        self.SetEndDate(2008, 6, 1)
-        self.SetBenchmark(lambda x: 1)
-        self.AddEquity("SPY", Resolution.Second)
+    def initialize(self):
+        self.set_start_date(2008, 1, 1)
+        self.set_end_date(2008, 6, 1)
+        self.set_benchmark(lambda x: 1)
+        self.add_equity("SPY", Resolution.SECOND)
     
-    def OnData(self, data):
+    def on_data(self, data):
         pass

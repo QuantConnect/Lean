@@ -21,13 +21,13 @@ from AlgorithmImports import *
 ### </remarks>
 class BasicTemplateBenchmark(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2000, 1, 1)
-        self.SetEndDate(2022, 1, 1)
-        self.SetBenchmark(lambda x: 1)
-        self.AddEquity("SPY")
+    def initialize(self):
+        self.set_start_date(2000, 1, 1)
+        self.set_end_date(2022, 1, 1)
+        self.set_benchmark(lambda x: 1)
+        self.add_equity("SPY")
     
-    def OnData(self, data):
-        if not self.Portfolio.Invested:
-            self.SetHoldings("SPY", 1)
-            self.Debug("Purchased Stock")
+    def on_data(self, data):
+        if not self.portfolio.invested:
+            self.set_holdings("SPY", 1)
+            self.debug("Purchased Stock")
