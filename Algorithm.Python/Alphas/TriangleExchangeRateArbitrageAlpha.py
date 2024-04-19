@@ -28,65 +28,65 @@ from AlgorithmImports import *
 
 class TriangleExchangeRateArbitrageAlpha(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2019, 2, 1)   #Set Start Date
-        self.SetCash(100000)           #Set Strategy Cash
+        self.set_start_date(2019, 2, 1)   #Set Start Date
+        self.set_cash(100000)           #Set Strategy Cash
 
         # Set zero transaction fees
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
+        self.set_security_initializer(lambda security: security.set_fee_model(ConstantFeeModel(0)))
 
         ## Select trio of currencies to trade where
         ## Currency A = USD
         ## Currency B = EUR
         ## Currency C = GBP
         currencies = ['EURUSD','EURGBP','GBPUSD']
-        symbols = [ Symbol.Create(currency, SecurityType.Forex, Market.Oanda) for currency in currencies]
+        symbols = [ Symbol.create(currency, SecurityType.FOREX, Market.OANDA) for currency in currencies]
 
         ## Manual universe selection with tick-resolution data
-        self.UniverseSettings.Resolution = Resolution.Minute
-        self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
+        self.universe_settings.resolution = Resolution.MINUTE
+        self.set_universe_selection( ManualUniverseSelectionModel(symbols) )
 
-        self.SetAlpha(ForexTriangleArbitrageAlphaModel(Resolution.Minute, symbols))
+        self.set_alpha(ForexTriangleArbitrageAlphaModel(Resolution.MINUTE, symbols))
 
         ## Set Equal Weighting Portfolio Construction Model
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
 
         ## Set Immediate Execution Model
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_execution(ImmediateExecutionModel())
 
         ## Set Null Risk Management Model
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_risk_management(NullRiskManagementModel())
 
 
 class ForexTriangleArbitrageAlphaModel(AlphaModel):
 
     def __init__(self, insight_resolution, symbols):
-        self.insight_period = Time.Multiply(Extensions.ToTimeSpan(insight_resolution), 5)
-        self.symbols = symbols
+        self.insight_period = Time.multiply(Extensions.to_time_span(insight_resolution), 5)
+        self._symbols = symbols
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
         ## Check to make sure all currency symbols are present
-        if len(data.Keys) < 3:
+        if len(data.keys()) < 3:
             return []
 
         ## Extract QuoteBars for all three Forex securities
-        bar_a = data[self.symbols[0]]
-        bar_b = data[self.symbols[1]]
-        bar_c = data[self.symbols[2]]
+        bar_a = data[self._symbols[0]]
+        bar_b = data[self._symbols[1]]
+        bar_c = data[self._symbols[2]]
 
         ## Calculate the triangle exchange rate
         ## Bid(Currency A -> Currency B) * Bid(Currency B -> Currency C) * Bid(Currency C -> Currency A)
         ## If exchange rates are priced perfectly, then this yield 1. If it is different than 1, then an arbitrage opportunity exists
-        triangleRate = bar_a.Ask.Close / bar_b.Bid.Close / bar_c.Ask.Close
+        triangle_rate = bar_a.ask.close / bar_b.bid.close / bar_c.ask.close
 
         ## If the triangle rate is significantly different than 1, then emit insights
-        if triangleRate > 1.0005:
-            return Insight.Group(
+        if triangle_rate > 1.0005:
+            return Insight.group(
                 [
-                    Insight.Price(self.symbols[0], self.insight_period, InsightDirection.Up, 0.0001, None),
-                    Insight.Price(self.symbols[1], self.insight_period, InsightDirection.Down, 0.0001, None),
-                    Insight.Price(self.symbols[2], self.insight_period, InsightDirection.Up, 0.0001, None)
+                    Insight.price(self._symbols[0], self.insight_period, InsightDirection.UP, 0.0001, None),
+                    Insight.price(self._symbols[1], self.insight_period, InsightDirection.DOWN, 0.0001, None),
+                    Insight.price(self._symbols[2], self.insight_period, InsightDirection.UP, 0.0001, None)
                 ] )
 
         return []

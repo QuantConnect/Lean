@@ -24,36 +24,36 @@ class RebalancingLeveragedETFAlpha(QCAlgorithm):
         Strategy by Prof. Shum, reposted by Ernie Chan.
         Source: http://epchan.blogspot.com/2012/10/a-leveraged-etfs-strategy.html'''
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2017, 6, 1)
-        self.SetEndDate(2018, 8, 1)
-        self.SetCash(100000)
+        self.set_start_date(2017, 6, 1)
+        self.set_end_date(2018, 8, 1)
+        self.set_cash(100000)
 
         underlying = ["SPY","QLD","DIA","IJR","MDY","IWM","QQQ","IYE","EEM","IYW","EFA","GAZB","SLV","IEF","IYM","IYF","IYH","IYR","IYC","IBB","FEZ","USO","TLT"]
-        ultraLong =  ["SSO","UGL","DDM","SAA","MZZ","UWM","QLD","DIG","EET","ROM","EFO","BOIL","AGQ","UST","UYM","UYG","RXL","URE","UCC","BIB","ULE","UCO","UBT"]
-        ultraShort = ["SDS","GLL","DXD","SDD","MVV","TWM","QID","DUG","EEV","REW","EFU","KOLD","ZSL","PST","SMN","SKF","RXD","SRS","SCC","BIS","EPV","SCO","TBT"]
+        ultra_long =  ["SSO","UGL","DDM","SAA","MZZ","UWM","QLD","DIG","EET","ROM","EFO","BOIL","AGQ","UST","UYM","UYG","RXL","URE","UCC","BIB","ULE","UCO","UBT"]
+        ultra_short = ["SDS","GLL","DXD","SDD","MVV","TWM","QID","DUG","EEV","REW","EFU","KOLD","ZSL","PST","SMN","SKF","RXD","SRS","SCC","BIS","EPV","SCO","TBT"]
 
         groups = []
         for i in range(len(underlying)):
-            group = ETFGroup(self.AddEquity(underlying[i], Resolution.Minute).Symbol,
-                              self.AddEquity(ultraLong[i], Resolution.Minute).Symbol,
-                              self.AddEquity(ultraShort[i], Resolution.Minute).Symbol)
+            group = ETFGroup(self.add_equity(underlying[i], Resolution.MINUTE).symbol,
+                              self.add_equity(ultra_long[i], Resolution.MINUTE).symbol,
+                              self.add_equity(ultra_short[i], Resolution.MINUTE).symbol)
             groups.append(group)
 
         # Manually curated universe
-        self.SetUniverseSelection(ManualUniverseSelectionModel())
+        self.set_universe_selection(ManualUniverseSelectionModel())
         # Select the demonstration alpha model
-        self.SetAlpha(RebalancingLeveragedETFAlphaModel(groups))
+        self.set_alpha(RebalancingLeveragedETFAlphaModel(groups))
 
         # Equally weigh securities in portfolio, based on insights
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
 
         # Set Immediate Execution Model
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_execution(ImmediateExecutionModel())
 
         # Set Null Risk Management Model
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_risk_management(NullRiskManagementModel())
 
 
 class RebalancingLeveragedETFAlphaModel(AlphaModel):
@@ -65,11 +65,11 @@ class RebalancingLeveragedETFAlphaModel(AlphaModel):
 
     def __init__(self, ETFgroups):
 
-        self.ETFgroups = ETFgroups
+        self.etfgroups = ETFgroups
         self.date = datetime.min.date
-        self.Name = "RebalancingLeveragedETFAlphaModel"
+        self.name = "RebalancingLeveragedETFAlphaModel"
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
         '''Scan to see if the returns are greater than 1% at 2.15pm to emit an insight.'''
 
         insights = []
@@ -79,22 +79,22 @@ class RebalancingLeveragedETFAlphaModel(AlphaModel):
         period = timedelta(minutes=105)
 
         # Get yesterday's close price at the market open
-        if algorithm.Time.date() != self.date:
-            self.date = algorithm.Time.date()
+        if algorithm.time.date() != self.date:
+            self.date = algorithm.time.date()
             # Save yesterday's price and reset the signal
-            for group in self.ETFgroups:
-                history = algorithm.History([group.underlying], 1, Resolution.Daily)
-                group.yesterdayClose = None if history.empty else history.loc[str(group.underlying)]['close'][0]
+            for group in self.etfgroups:
+                history = algorithm.history([group.underlying], 1, Resolution.DAILY)
+                group.yesterday_close = None if history.empty else history.loc[str(group.underlying)]['close'][0]
 
         # Check if the returns are > 1% at 14.15
-        if algorithm.Time.hour == 14 and algorithm.Time.minute == 15:
-            for group in self.ETFgroups:
-                if group.yesterdayClose == 0 or group.yesterdayClose is None: continue
-                returns = round((algorithm.Portfolio[group.underlying].Price - group.yesterdayClose) / group.yesterdayClose, 10)
+        if algorithm.time.hour == 14 and algorithm.time.minute == 15:
+            for group in self.etfgroups:
+                if group.yesterday_close == 0 or group.yesterday_close is None: continue
+                returns = round((algorithm.portfolio[group.underlying].price - group.yesterday_close) / group.yesterday_close, 10)
                 if returns > 0.01:
-                    insights.append(Insight.Price(group.ultraLong, period, InsightDirection.Up, magnitude))
+                    insights.append(Insight.price(group.ultra_long, period, InsightDirection.UP, magnitude))
                 elif returns < -0.01:
-                    insights.append(Insight.Price(group.ultraShort, period, InsightDirection.Down, magnitude))
+                    insights.append(Insight.price(group.ultra_short, period, InsightDirection.DOWN, magnitude))
 
         return insights
 
@@ -103,11 +103,11 @@ class ETFGroup:
     Group the underlying ETF and it's ultra ETFs
     Args:
         underlying: The underlying index ETF
-        ultraLong: The long-leveraged version of underlying ETF
-        ultraShort: The short-leveraged version of the underlying ETF
+        ultra_long: The long-leveraged version of underlying ETF
+        ultra_short: The short-leveraged version of the underlying ETF
     '''
-    def __init__(self,underlying, ultraLong, ultraShort):
+    def __init__(self,underlying, ultra_long, ultra_short):
         self.underlying = underlying
-        self.ultraLong = ultraLong
-        self.ultraShort = ultraShort
-        self.yesterdayClose = 0
+        self.ultra_long = ultra_long
+        self.ultra_short = ultra_short
+        self.yesterday_close = 0
