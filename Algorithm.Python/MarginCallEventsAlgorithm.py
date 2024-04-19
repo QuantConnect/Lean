@@ -23,26 +23,24 @@ from AlgorithmImports import *
 class MarginCallEventsAlgorithm(QCAlgorithm):
     """
     This algorithm showcases two margin related event handlers.
-    OnMarginCallWarning: Fired when a portfolio's remaining margin dips below 5% of the total portfolio value
-    OnMarginCall: Fired immediately before margin call orders are execued, this gives the algorithm a change to regain margin on its own through liquidation
+    on_margin_call_warning: Fired when a portfolio's remaining margin dips below 5% of the total portfolio value
+    on_margin_call: Fired immediately before margin call orders are execued, this gives the algorithm a change to regain margin on its own through liquidation
     """
 
-    def Initialize(self):
-
-        self.SetCash(100000)
-        self.SetStartDate(2013,10,1)
-        self.SetEndDate(2013,12,11)
-        self.AddEquity("SPY", Resolution.Second)
+    def initialize(self):
+        self.set_cash(100000)
+        self.set_start_date(2013,10,1)
+        self.set_end_date(2013,12,11)
+        self.add_equity("SPY", Resolution.SECOND)
         # cranking up the leverage increases the odds of a margin call
         # when the security falls in value
-        self.Securities["SPY"].SetLeverage(100)
+        self.securities["SPY"].set_leverage(100)
 
-    def OnData(self, data):
-        if not self.Portfolio.Invested:
-            self.SetHoldings("SPY",100)
+    def on_data(self, data):
+        if not self.portfolio.invested:
+            self.set_holdings("SPY",100)
 
-    def OnMarginCall(self, requests):
-
+    def on_margin_call(self, requests):
         # Margin call event handler. This method is called right before the margin call orders are placed in the market.
         # <param name="requests">The orders to be executed to bring this algorithm within margin limits</param>
         # this code gets called BEFORE the orders are placed, so we can try to liquidate some of our positions
@@ -50,19 +48,18 @@ class MarginCallEventsAlgorithm(QCAlgorithm):
         for order in requests:
 
             # liquidate an extra 10% each time we get a margin call to give us more padding
-            newQuantity = int(np.sign(order.Quantity) * order.Quantity * 1.1)
+            new_quantity = int(np.sign(order.quantity) * order.quantity * 1.1)
             requests.remove(order)
-            requests.append(SubmitOrderRequest(order.OrderType, order.SecurityType, order.Symbol, newQuantity, order.StopPrice, order.LimitPrice, self.Time, "OnMarginCall"))
+            requests.append(SubmitOrderRequest(order.order_type, order.security_type, order.symbol, new_quantity, order.stop_price, order.limit_price, self.time, "on_margin_call"))
 
         return requests
 
-    def OnMarginCallWarning(self):
-
+    def on_margin_call_warning(self):
         # Margin call warning event handler.
-        # This method is called when Portfolio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
+        # This method is called when portfolio.margin_remaining is under 5% of your portfolio.total_portfolio_value
         # a chance to prevent a margin call from occurring
 
-        spyHoldings = self.Securities["SPY"].Holdings.Quantity
-        shares = int(-spyHoldings * 0.005)
-        self.Error("{0} - OnMarginCallWarning(): Liquidating {1} shares of SPY to avoid margin call.".format(self.Time, shares))
-        self.MarketOrder("SPY", shares)
+        spy_holdings = self.securities["SPY"].holdings.quantity
+        shares = int(-spy_holdings * 0.005)
+        self.error("{0} - on_margin_call_warning(): Liquidating {1} shares of SPY to avoid margin call.".format(self.time, shares))
+        self.market_order("SPY", shares)

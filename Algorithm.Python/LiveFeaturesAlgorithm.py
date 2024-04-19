@@ -27,95 +27,95 @@ from System.Globalization import *
 class LiveTradingFeaturesAlgorithm(QCAlgorithm):
 
     ### Initialize the Algorithm and Prepare Required Data
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 11)
-        self.SetCash(25000)
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 11)
+        self.set_cash(25000)
 
         ##Equity Data for US Markets
-        self.AddSecurity(SecurityType.Equity, 'IBM', Resolution.Second)
+        self.add_security(SecurityType.EQUITY, 'IBM', Resolution.SECOND)
         
         ##FOREX Data for Weekends: 24/6
-        self.AddSecurity(SecurityType.Forex, 'EURUSD', Resolution.Minute)
+        self.add_security(SecurityType.FOREX, 'EURUSD', Resolution.MINUTE)
 
         ##Custom/Bitcoin Live Data: 24/7
-        self.AddData(Bitcoin, 'BTC', Resolution.Second, TimeZones.Utc)
+        self.add_data(Bitcoin, 'BTC', Resolution.SECOND, TimeZones.UTC)
         
         ##if the algorithm is connected to the brokerage
         self.is_connected = True
 
 
     ### New Bitcoin Data Event
-    def OnData(Bitcoin, data):
-        if self.LiveMode:
-            self.SetRuntimeStatistic('BTC', str(data.Close))
+    def on_data(Bitcoin, data):
+        if self.live_mode:
+            self.set_runtime_statistic('BTC', str(data.close))
 
-        if not self.Portfolio.HoldStock:
-            self.MarketOrder('BTC', 100)
+        if not self.portfolio.hold_stock:
+            self.market_order('BTC', 100)
 
             ##Send a notification email/SMS/web request on events:
-            self.Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment")
-            self.Notify.Sms("+11233456789", str(data.Time) + ">> Test message from live BTC server.")
-            self.Notify.Web("http://api.quantconnect.com", str(data.Time) + ">> Test data packet posted from live BTC server.")
+            self.notify.email("myemail@gmail.com", "Test", "Test Body", "test attachment")
+            self.notify.sms("+11233456789", str(data.time) + ">> Test message from live BTC server.")
+            self.notify.web("http://api.quantconnect.com", str(data.time) + ">> Test data packet posted from live BTC server.")
 
 
     ### Raises the data event
-    def OnData(self, data):
-        if (not self.Portfolio['IBM'].HoldStock) and data.ContainsKey('IBM'):
-            quantity = int(np.floor(self.Portfolio.MarginRemaining / data['IBM'].Close))
-            self.MarketOrder('IBM',quantity)
-            self.Debug('Purchased IBM on ' + str(self.Time.strftime("%m/%d/%Y")))
-            self.Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment")
+    def on_data(self, data):
+        if (not self.portfolio['IBM'].hold_stock) and data.contains_key('IBM'):
+            quantity = int(np.floor(self.portfolio.margin_remaining / data['IBM'].close))
+            self.market_order('IBM',quantity)
+            self.debug('Purchased IBM on ' + str(self.time.strftime("%m/%d/%Y")))
+            self.notify.email("myemail@gmail.com", "Test", "Test Body", "test attachment")
             
     # Brokerage message event handler. This method is called for all types of brokerage messages.
-    def OnBrokerageMessage(self, messageEvent):
-        self.Debug(f"Brokerage meesage received - {messageEvent.ToString()}")
+    def on_brokerage_message(self, message_event):
+        self.debug(f"Brokerage meesage received - {message_event.to_string()}")
 
     # Brokerage disconnected event handler. This method is called when the brokerage connection is lost.
-    def OnBrokerageDisconnect(self):
+    def on_brokerage_disconnect(self):
         self.is_connected = False
-        self.Debug(f"Brokerage disconnected!")
+        self.debug(f"Brokerage disconnected!")
 
     # Brokerage reconnected event handler. This method is called when the brokerage connection is restored after a disconnection.
-    def OnBrokerageReconnect(self):
+    def on_brokerage_reconnect(self):
         self.is_connected = True
-        self.Debug(f"Brokerage reconnected!")
+        self.debug(f"Brokerage reconnected!")
 
 ###Custom Data Type: Bitcoin data from Quandl - http://www.quandl.com/help/api-for-bitcoin-data
 class Bitcoin(PythonData):
 
-    def GetSource(self, config, date, isLiveMode):
-        if isLiveMode:
-            return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.Rest)
+    def get_source(self, config, date, is_live_mode):
+        if is_live_mode:
+            return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.REST)
         
-        return  SubscriptionDataSource("https://www.quandl.com/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc", SubscriptionTransportMedium.RemoteFile)
+        return  SubscriptionDataSource("https://www.quandl.com/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc", SubscriptionTransportMedium.REMOTE_FILE)
 
 
-    def Reader(self, config, line, date, isLiveMode):
+    def reader(self, config, line, date, is_live_mode):
         coin = Bitcoin()
-        coin.Symbol = config.Symbol
+        coin.symbol = config.symbol
 
-        if isLiveMode:
+        if is_live_mode:
             # Example Line Format:
             # {"high": "441.00", "last": "421.86", "timestamp": "1411606877", "bid": "421.96", "vwap": "428.58", "volume": "14120.40683975", "low": "418.83", "ask": "421.99"}
             try:
-                liveBTC = json.loads(line)
+                live_btc = json.loads(line)
 
                 # If value is zero, return None
-                value = liveBTC["last"]
+                value = live_btc["last"]
                 if value == 0: return None
 
-                coin.Time = datetime.now()
-                coin.Value = value
-                coin["Open"] = float(liveBTC["open"])
-                coin["High"] = float(liveBTC["high"])
-                coin["Low"] = float(liveBTC["low"])
-                coin["Close"] = float(liveBTC["last"])
-                coin["Ask"] = float(liveBTC["ask"])
-                coin["Bid"] = float(liveBTC["bid"])
-                coin["VolumeBTC"] = float(liveBTC["volume"])
-                coin["WeightedPrice"] = float(liveBTC["vwap"])
+                coin.time = datetime.now()
+                coin.value = value
+                coin["Open"] = float(live_btc["open"])
+                coin["High"] = float(live_btc["high"])
+                coin["Low"] = float(live_btc["low"])
+                coin["Close"] = float(live_btc["last"])
+                coin["Ask"] = float(live_btc["ask"])
+                coin["Bid"] = float(live_btc["bid"])
+                coin["VolumeBTC"] = float(live_btc["volume"])
+                coin["WeightedPrice"] = float(live_btc["vwap"])
                 return coin
             except ValueError:
                 # Do nothing, possible error in json decoding
@@ -128,8 +128,8 @@ class Bitcoin(PythonData):
 
         try:
             data = line.split(',')
-            coin.Time = datetime.strptime(data[0], "%Y-%m-%d")
-            coin.Value = float(data[4])
+            coin.time = datetime.strptime(data[0], "%Y-%m-%d")
+            coin.value = float(data[4])
             coin["Open"] = float(data[1])
             coin["High"] = float(data[2])
             coin["Low"] = float(data[3])

@@ -16,50 +16,50 @@ from AlgorithmImports import *
 class MarketOnCloseOrderBufferExtendedMarketHoursRegressionAlgorithm(QCAlgorithm):
     '''This regression test is a version of "MarketOnCloseOrderBufferRegressionAlgorithm"
      where we test market-on-close modeling with data from the post market.'''
-    validOrderTicket = None
-    invalidOrderTicket = None
-    validOrderTicketExtendedMarketHours = None
+    valid_order_ticket = None
+    invalid_order_ticket = None
+    valid_order_ticket_extended_market_hours = None
 
-    def Initialize(self):
-        self.SetStartDate(2013,10,7)   #Set Start Date
-        self.SetEndDate(2013,10,8)    #Set End Date
+    def initialize(self):
+        self.set_start_date(2013,10,7)   #Set Start Date
+        self.set_end_date(2013,10,8)    #Set End Date
 
-        self.AddEquity("SPY", Resolution.Minute, extendedMarketHours = True)
+        self.add_equity("SPY", Resolution.MINUTE, extended_market_hours = True)
 
-        def mocAtMidNight():
-            self.validOrderTicketAtMidnight = self.MarketOnCloseOrder("SPY", 2)
+        def moc_at_mid_night():
+            self.valid_order_ticket_at_midnight = self.market_on_close_order("SPY", 2)
 
-        self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.Midnight, mocAtMidNight)
+        self.schedule.on(self.date_rules.tomorrow, self.time_rules.midnight, moc_at_mid_night)
 
         # Modify our submission buffer time to 10 minutes
-        MarketOnCloseOrder.SubmissionTimeBuffer = timedelta(minutes=10)
+        MarketOnCloseOrder.submission_time_buffer = timedelta(minutes=10)
 
-    def OnData(self, data):
+    def on_data(self, data):
         # Test our ability to submit MarketOnCloseOrders
         # Because we set our buffer to 10 minutes, any order placed
         # before 3:50PM should be accepted, any after marked invalid
 
         # Will not throw an order error and execute
-        if self.Time.hour == 15 and self.Time.minute == 49 and not self.validOrderTicket:
-            self.validOrderTicket = self.MarketOnCloseOrder("SPY", 2)
+        if self.time.hour == 15 and self.time.minute == 49 and not self.valid_order_ticket:
+            self.valid_order_ticket = self.market_on_close_order("SPY", 2)
 
         # Will throw an order error and be marked invalid
-        if self.Time.hour == 15 and self.Time.minute == 51 and not self.invalidOrderTicket:
-            self.invalidOrderTicket = self.MarketOnCloseOrder("SPY", 2)
+        if self.time.hour == 15 and self.time.minute == 51 and not self.invalid_order_ticket:
+            self.invalid_order_ticket = self.market_on_close_order("SPY", 2)
 
         # Will not throw an order error and execute
-        if self.Time.hour == 16 and self.Time.minute == 48 and not self.validOrderTicketExtendedMarketHours:
-            self.validOrderTicketExtendedMarketHours = self.MarketOnCloseOrder("SPY", 2)
+        if self.time.hour == 16 and self.time.minute == 48 and not self.valid_order_ticket_extended_market_hours:
+            self.valid_order_ticket_extended_market_hours = self.market_on_close_order("SPY", 2)
 
-    def OnEndOfAlgorithm(self):
+    def on_end_of_algorithm(self):
         # Set it back to default for other regressions
-        MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer
+        MarketOnCloseOrder.submission_time_buffer = MarketOnCloseOrder.DEFAULT_SUBMISSION_TIME_BUFFER
 
-        if self.validOrderTicket.Status != OrderStatus.Filled:
+        if self.valid_order_ticket.status != OrderStatus.FILLED:
             raise Exception("Valid order failed to fill")
 
-        if self.invalidOrderTicket.Status != OrderStatus.Invalid:
+        if self.invalid_order_ticket.status != OrderStatus.INVALID:
             raise Exception("Invalid order was not rejected")
 
-        if self.validOrderTicketExtendedMarketHours.Status != OrderStatus.Filled:
+        if self.valid_order_ticket_extended_market_hours.status != OrderStatus.FILLED:
             raise Exception("Valid order during extended market hours failed to fill")

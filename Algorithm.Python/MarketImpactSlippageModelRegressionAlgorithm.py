@@ -15,21 +15,21 @@ from AlgorithmImports import *
 
 class MarketImpactSlippageModelRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 13)
-        self.SetCash(10000000)
+    def initialize(self):
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 13)
+        self.set_cash(10000000)
 
-        spy = self.AddEquity("SPY", Resolution.Daily)
-        aapl = self.AddEquity("AAPL", Resolution.Daily)
+        spy = self.add_equity("SPY", Resolution.DAILY)
+        aapl = self.add_equity("AAPL", Resolution.DAILY)
 
-        spy.SetSlippageModel(MarketImpactSlippageModel(self))
-        aapl.SetSlippageModel(MarketImpactSlippageModel(self))
+        spy.set_slippage_model(MarketImpactSlippageModel(self))
+        aapl.set_slippage_model(MarketImpactSlippageModel(self))
 
-    def OnData(self, data):
-        self.SetHoldings("SPY", 0.5)
-        self.SetHoldings("AAPL", -0.5)
+    def on_data(self, data):
+        self.set_holdings("SPY", 0.5)
+        self.set_holdings("AAPL", -0.5)
 
-    def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            self.Debug(f"Price: {self.Securities[orderEvent.Symbol].Price}, filled price: {orderEvent.FillPrice}, quantity: {orderEvent.FillQuantity}")
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.FILLED:
+            self.debug(f"Price: {self.securities[order_event.symbol].price}, filled price: {order_event.fill_price}, quantity: {order_event.fill_quantity}")

@@ -42,7 +42,7 @@ class LongAndShortPutCalendarSpreadStrategiesAlgorithm(OptionStrategyFactoryMeth
             return
 
     def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
-        positions = list(position_group.Positions)
+        positions = list(position_group.positions)
         if len(positions) != 2:
             raise Exception(f"Expected position group to have 2 positions. Actual: {len(positions)}")
 

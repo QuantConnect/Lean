@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Represents the Energy ETF Category which can be used to access the list of Long and Inverse symbols
         /// </summary>
-        public static Grouping Energy = new Grouping(
+        public static readonly Grouping Energy = new Grouping(
             new[]
             {
                 "VDE", "USO", "XES", "XOP", "UNG", "ICLN", "ERX",
@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Represents the Metals ETF Category which can be used to access the list of Long and Inverse symbols
         /// </summary>
-        public static Grouping Metals = new Grouping(
+        public static readonly Grouping Metals = new Grouping(
             new[] {"GLD", "IAU", "SLV", "GDX", "AGQ", "PPLT", "NUGT", "USLV", "UGLD", "JNUG"},
             new[] {"DUST", "JDST"}
         );
@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Represents the Technology ETF Category which can be used to access the list of Long and Inverse symbols
         /// </summary>
-        public static Grouping Technology = new Grouping(
+        public static readonly Grouping Technology = new Grouping(
             new[] {"QQQ", "IGV", "QTEC", "FDN", "FXL", "TECL", "SOXL", "SKYY", "KWEB"},
             new[] {"TECS", "SOXS"}
         );
@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Represents the Treasuries ETF Category which can be used to access the list of Long and Inverse symbols
         /// </summary>
-        public static Grouping Treasuries = new Grouping(
+        public static readonly Grouping Treasuries = new Grouping(
             new[]
             {
                 "IEF", "SHY", "TLT", "IEI", "TLH", "BIL", "SPTL",
@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Represents the Volatility ETF Category which can be used to access the list of Long and Inverse symbols
         /// </summary>
-        public static Grouping Volatility = new Grouping(
+        public static readonly Grouping Volatility = new Grouping(
             new[] {"TVIX", "VIXY", "SPLV", "UVXY", "EEMV", "EFAV", "USMV"},
             new[] {"SVXY"}
         );
@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <summary>
         /// Represents the SP500 Sectors ETF Category which can be used to access the list of Long and Inverse symbols
         /// </summary>
-        public static Grouping SP500Sectors = new Grouping(
+        public static readonly Grouping SP500Sectors = new Grouping(
             new[] {"XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLU", "XLV", "XLY"},
             new string[0]
         );

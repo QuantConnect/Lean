@@ -19,60 +19,60 @@ from AlgorithmImports import *
 class InsightScoringRegressionAlgorithm(QCAlgorithm):
     '''Regression algorithm showing how to define a custom insight evaluator'''
 
-    def Initialize(self):
+    def initialize(self):
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.SetStartDate(2013,10,7)
-        self.SetEndDate(2013,10,11)
+        self.set_start_date(2013,10,7)
+        self.set_end_date(2013,10,11)
         
-        symbols = [ Symbol.Create("SPY", SecurityType.Equity, Market.USA) ]
+        symbols = [ Symbol.create("SPY", SecurityType.EQUITY, Market.USA) ]
 
-        self.SetUniverseSelection(ManualUniverseSelectionModel(symbols))
-        self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(minutes = 20), 0.025, None))
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(Resolution.Daily))
-        self.SetExecution(ImmediateExecutionModel())
-        self.SetRiskManagement(MaximumDrawdownPercentPerSecurity(0.01))
+        self.set_universe_selection(ManualUniverseSelectionModel(symbols))
+        self.set_alpha(ConstantAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(minutes = 20), 0.025, None))
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel(Resolution.DAILY))
+        self.set_execution(ImmediateExecutionModel())
+        self.set_risk_management(MaximumDrawdownPercentPerSecurity(0.01))
         
         # we specify a custom insight evaluator
-        self.Insights.SetInsightScoreFunction(CustomInsightScoreFunction(self.Securities))
+        self.insights.set_insight_score_function(CustomInsightScoreFunction(self.securities))
 
-    def OnEndOfAlgorithm(self):
-        allInsights = self.Insights.GetInsights(lambda insight: True)
+    def on_end_of_algorithm(self):
+        all_insights = self.insights.get_insights(lambda insight: True)
 
-        if len(allInsights) != 100 or len(self.Insights.GetInsights()) != 100:
-            raise ValueError(f'Unexpected insight count found {allInsights.Count}')
+        if len(all_insights) != 100 or len(self.insights.get_insights()) != 100:
+            raise ValueError(f'Unexpected insight count found {all_insights.count}')
 
-        if sum(1 for insight in allInsights if insight.Score.Magnitude == 0 or insight.Score.Direction == 0) < 5:
+        if sum(1 for insight in all_insights if insight.score.magnitude == 0 or insight.score.direction == 0) < 5:
             raise ValueError(f'Insights not scored!')
 
-        if sum(1 for insight in allInsights if insight.Score.IsFinalScore) < 99:
+        if sum(1 for insight in all_insights if insight.score.is_final_score) < 99:
             raise ValueError(f'Insights not finalized!')
 
 class CustomInsightScoreFunction():
 
     def __init__(self, securities):
         self._securities = securities
-        self._openInsights = {}
+        self._open_insights = {}
 
-    def Score(self, insightManager, utcTime):
-        openInsights = insightManager.GetActiveInsights(utcTime)
+    def score(self, insight_manager, utc_time):
+        open_insights = insight_manager.get_active_insights(utc_time)
 
-        for insight in openInsights:
-            self._openInsights[insight.Id] = insight
+        for insight in open_insights:
+            self._open_insights[insight.id] = insight
 
-        toRemove = []
-        for openInsight in self._openInsights.values():
-            security = self._securities[openInsight.Symbol]
-            openInsight.ReferenceValueFinal = security.Price
+        to_remove = []
+        for open_insight in self._open_insights.values():
+            security = self._securities[open_insight.symbol]
+            open_insight.reference_value_final = security.price
 
-            score = openInsight.ReferenceValueFinal - openInsight.ReferenceValue
-            openInsight.Score.SetScore(InsightScoreType.Direction, score, utcTime)
-            openInsight.Score.SetScore(InsightScoreType.Magnitude, score * 2, utcTime)
-            openInsight.EstimatedValue = score * 100
+            score = open_insight.reference_value_final - open_insight.reference_value
+            open_insight.score.set_score(InsightScoreType.DIRECTION, score, utc_time)
+            open_insight.score.set_score(InsightScoreType.MAGNITUDE, score * 2, utc_time)
+            open_insight.estimated_value = score * 100
 
-            if openInsight.IsExpired(utcTime):
-                openInsight.Score.Finalize(utcTime)
-                toRemove.append(openInsight)
+            if open_insight.is_expired(utc_time):
+                open_insight.score.finalize(utc_time)
+                to_remove.append(open_insight)
 
         # clean up
-        for insightToRemove in toRemove:
-            self._openInsights.pop(insightToRemove.Id)
+        for insight_to_remove in to_remove:
+            self._open_insights.pop(insight_to_remove.id)

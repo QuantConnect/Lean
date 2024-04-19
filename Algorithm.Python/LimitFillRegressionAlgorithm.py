@@ -23,25 +23,25 @@ from AlgorithmImports import *
 ### <meta name="tag" content="regression test" />
 class LimitFillRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10,7)  #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
+        self.set_start_date(2013,10,7)  #Set Start Date
+        self.set_end_date(2013,10,11)    #Set End Date
+        self.set_cash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("SPY", Resolution.Second)
+        self.add_equity("SPY", Resolution.SECOND)
 
-    def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
-        if data.ContainsKey("SPY"):
-            if self.IsRoundHour(self.Time):
-                negative = 1 if self.Time < (self.StartDate + timedelta(days=2)) else -1
-                self.LimitOrder("SPY", negative*10, data["SPY"].Price)
+    def on_data(self, data):
+        '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
+        if data.contains_key("SPY"):
+            if self.is_round_hour(self.time):
+                negative = 1 if self.time < (self.start_date + timedelta(days=2)) else -1
+                self.limit_order("SPY", negative*10, data["SPY"].price)
 
-    def IsRoundHour(self, dateTime):
+    def is_round_hour(self, date_time):
         '''Verify whether datetime is round hour'''
-        return dateTime.minute == 0 and dateTime.second == 0
+        return date_time.minute == 0 and date_time.second == 0
 
-    def OnOrderEvent(self, orderEvent):
-        self.Debug(str(orderEvent))
+    def on_order_event(self, order_event):
+        self.debug(str(order_event))

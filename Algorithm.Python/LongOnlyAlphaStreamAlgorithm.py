@@ -13,53 +13,53 @@
 
 from AlgorithmImports import *
 
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from Execution.ImmediateExecutionModel import ImmediateExecutionModel
+from Selection.ManualUniverseSelectionModel import ManualUniverseSelectionModel
+
 ### <summary>
 ### Basic template framework algorithm uses framework components to define the algorithm.
-### Shows EqualWeightingPortfolioConstructionModel.LongOnly() application
+### Shows EqualWeightingPortfolioConstructionModel.long_only() application
 ### </summary>
 ### <meta name="tag" content="alpha streams" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="algorithm framework" />
 class LongOnlyAlphaStreamAlgorithm(QCAlgorithm):
-    '''Basic template framework algorithm uses framework components to define the algorithm.
-    Shows EqualWeightingPortfolioConstructionModel.LongOnly() application'''
 
-    def Initialize(self):
-
-        # 1. Required: 
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 11)
+    def initialize(self):
+        # 1. Required:
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 11)
 
         # 2. Required: Alpha Streams Models:
-        self.SetBrokerageModel(BrokerageName.AlphaStreams)
+        self.set_brokerage_model(BrokerageName.ALPHA_STREAMS)
 
         # 3. Required: Significant AUM Capacity
-        self.SetCash(1000000)
+        self.set_cash(1000000)
 
         # Only SPY will be traded
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(Resolution.Daily, PortfolioBias.Long))
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel(Resolution.DAILY, PortfolioBias.LONG))
+        self.set_execution(ImmediateExecutionModel())
 
         # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
         # Commented so regression algorithm is more sensitive
-        #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
+        #self.settings.minimum_order_margin_portfolio_percentage = 0.005
 
         # Set algorithm framework models
-        self.SetUniverseSelection(ManualUniverseSelectionModel(
-            [Symbol.Create(x, SecurityType.Equity, Market.USA) for x in ["SPY", "IBM"]]))
+        self.set_universe_selection(ManualUniverseSelectionModel(
+            [Symbol.create(x, SecurityType.EQUITY, Market.USA) for x in ["SPY", "IBM"]]))
 
-    def OnData(self, slice):
+    def on_data(self, slice):
+        if self.portfolio.invested: return
 
-        if self.Portfolio.Invested: return
-
-        self.EmitInsights(
+        self.emit_insights(
             [
-                Insight.Price("SPY", timedelta(1), InsightDirection.Up),
-                Insight.Price("IBM", timedelta(1), InsightDirection.Down)
+                Insight.price("SPY", timedelta(1), InsightDirection.UP),
+                Insight.price("IBM", timedelta(1), InsightDirection.DOWN)
             ])
 
-    def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            if self.Securities[orderEvent.Symbol].Holdings.IsShort:
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.FILLED:
+            if self.securities[order_event.symbol].holdings.is_short:
                 raise ValueError("Invalid position, should not be short")
-            self.Debug(orderEvent)
+            self.debug(order_event)
