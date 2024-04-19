@@ -17,35 +17,35 @@ from AlgorithmImports import *
 ### Regression algorithm asserting the behavior of a ScheduledUniverse
 ### </summary>
 class BasicTemplateAlgorithm(QCAlgorithm):
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10, 7)
-        self.SetEndDate(2013,10, 8)
+        self.set_start_date(2013,10, 7)
+        self.set_end_date(2013,10, 8)
         
-        self._spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
-        self._selectionTime =[ datetime(2013, 10, 7, 1, 0, 0), datetime(2013, 10, 8, 1, 0, 0)]
+        self._spy = Symbol.create("SPY", SecurityType.EQUITY, Market.USA)
+        self._selection_time =[ datetime(2013, 10, 7, 1, 0, 0), datetime(2013, 10, 8, 1, 0, 0)]
 
-        self.AddUniverse(ScheduledUniverse(self.DateRules.EveryDay(), self.TimeRules.At(1, 0), self.SelectAssets))
+        self.add_universe(ScheduledUniverse(self.date_rules.every_day(), self.time_rules.at(1, 0), self.select_assets))
 
 
-    def SelectAssets(self, time):
-        self.Debug(f"Universe selection called: {Time}")
-        expectedTime = self._selectionTime.pop(0)
-        if expectedTime != self.Time:
-            raise ValueError(f"Unexpected selection time {self.Time} expected {expectedTime}")
+    def select_assets(self, time):
+        self.debug(f"Universe selection called: {Time}")
+        expected_time = self._selection_time.pop(0)
+        if expected_time != self.time:
+            raise ValueError(f"Unexpected selection time {self.time} expected {expected_time}")
 
         return [ self._spy ]
     
-    def OnData(self, data):
+    def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if not self.Portfolio.Invested:
-            self.SetHoldings(self._spy, 1)
+        if not self.portfolio.invested:
+            self.set_holdings(self._spy, 1)
 
-    def OnEndOfAlgorithm(self):
-        if len(self._selectionTime) > 0:
+    def on_end_of_algorithm(self):
+        if len(self._selection_time) > 0:
             raise ValueError("Unexpected selection times")
