@@ -13,6 +13,10 @@
 
 from AlgorithmImports import *
 
+from Selection.ManualUniverseSelectionModel import ManualUniverseSelectionModel
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from Execution.ImmediateExecutionModel import ImmediateExecutionModel
+
 ### <summary>
 ### Test algorithm generating insights with custom tags
 ### </summary>

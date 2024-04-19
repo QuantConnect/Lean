@@ -37,7 +37,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
                     continue
                 file_path = self.object_store.get_file_path(kvp.key)
                 self.model_by_symbol[symbol] = keras.models.load_model(file_path)
-                self.debug(f'Model for {symbol} sucessfully retrieved. File {file_path}. Size {kvp.value.LENGTH}. Weights {self.model_by_symbol[symbol].get_weights()}')
+                self.debug(f'Model for {symbol} sucessfully retrieved. File {file_path}. Size {kvp.value.length}. Weights {self.model_by_symbol[symbol].get_weights()}')
 
         # Look-back period for training set
         self.lookback = 30
@@ -87,7 +87,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
             model.add(Activation('relu'))
             model.add(Dense(1))
 
-            sgd = SGD(lr = 0.01)   # learning rate = 0.01
+            sgd = SGD(learning_rate = 0.01)   # learning rate = 0.01
 
             # choose loss function and optimizing method
             model.compile(loss='mse', optimizer=sgd)

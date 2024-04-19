@@ -13,6 +13,9 @@
 
 from AlgorithmImports import *
 
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from Execution.ImmediateExecutionModel import ImmediateExecutionModel
+
 ### <summary>
 ### Basic template framework algorithm uses framework components to define the algorithm.
 ### Liquid ETF Competition template
@@ -76,4 +79,4 @@ class LiquidETFUniverseFrameworkAlgorithm(QCAlgorithm):
         self.log(f'Technology: {LiquidETFUniverse.TECHNOLOGY}')
         self.log(f'Treasuries: {LiquidETFUniverse.TREASURIES}')
         self.log(f'Volatility: {LiquidETFUniverse.VOLATILITY}')
-        self.log(f'SP500Sectors: {LiquidETFUniverse.S_P500_SECTORS}')
+        self.log(f'SP500Sectors: {LiquidETFUniverse.SP_500_SECTORS}')

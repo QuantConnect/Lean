@@ -13,6 +13,11 @@
 
 from AlgorithmImports import *
 
+from Selection.ManualUniverseSelectionModel import ManualUniverseSelectionModel
+from Alphas.ConstantAlphaModel import ConstantAlphaModel
+from Portfolio.InsightWeightingPortfolioConstructionModel import InsightWeightingPortfolioConstructionModel
+from Execution.ImmediateExecutionModel import ImmediateExecutionModel
+
 ### <summary>
 ### Test algorithm using 'InsightWeightingPortfolioConstructionModel' and 'ConstantAlphaModel'
 ### generating a constant 'Insight' with a 0.25 weight

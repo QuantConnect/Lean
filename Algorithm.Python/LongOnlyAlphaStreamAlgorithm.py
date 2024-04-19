@@ -13,6 +13,10 @@
 
 from AlgorithmImports import *
 
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from Execution.ImmediateExecutionModel import ImmediateExecutionModel
+from Selection.ManualUniverseSelectionModel import ManualUniverseSelectionModel
+
 ### <summary>
 ### Basic template framework algorithm uses framework components to define the algorithm.
 ### Shows EqualWeightingPortfolioConstructionModel.long_only() application
@@ -23,7 +27,7 @@ from AlgorithmImports import *
 class LongOnlyAlphaStreamAlgorithm(QCAlgorithm):
 
     def initialize(self):
-        # 1. Required: 
+        # 1. Required:
         self.set_start_date(2013, 10, 7)
         self.set_end_date(2013, 10, 11)
 
