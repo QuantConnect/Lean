@@ -25,7 +25,7 @@ class OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm(OptionPric
 
         option = self.add_index_option("SPX", Resolution.HOUR)
         # BaroneAdesiWhaley model does not support European style options
-        option.set_price_model(OptionPriceModels.barone_adesi_whaley())
+        option.price_model = OptionPriceModels.barone_adesi_whaley()
 
         self.set_warmup(7, Resolution.DAILY)
 
