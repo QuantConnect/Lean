@@ -19,45 +19,45 @@ from AlgorithmImports import *
 ### <meta name="tag" content="regression test" />
 class RegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10,7)   #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
-        self.SetCash(10000000)         #Set Strategy Cash
+        self.set_start_date(2013,10,7)   #Set Start Date
+        self.set_end_date(2013,10,11)    #Set End Date
+        self.set_cash(10000000)         #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("SPY", Resolution.Tick)
-        self.AddEquity("BAC", Resolution.Minute)
-        self.AddEquity("AIG", Resolution.Hour)
-        self.AddEquity("IBM", Resolution.Daily)
+        self.add_equity("SPY", Resolution.TICK)
+        self.add_equity("BAC", Resolution.MINUTE)
+        self.add_equity("AIG", Resolution.HOUR)
+        self.add_equity("IBM", Resolution.DAILY)
 
-        self.__lastTradeTicks = self.StartDate
-        self.__lastTradeTradeBars = self.__lastTradeTicks
-        self.__tradeEvery = timedelta(minutes=1)
+        self.__last_trade_ticks = self.start_date
+        self.__last_trade_trade_bars = self.__last_trade_ticks
+        self.__trade_every = timedelta(minutes=1)
 
 
-    def OnData(self, data):
+    def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
-        if self.Time - self.__lastTradeTradeBars < self.__tradeEvery:
+        if self.time - self.__last_trade_trade_bars < self.__trade_every:
             return
-        self.__lastTradeTradeBars = self.Time
+        self.__last_trade_trade_bars = self.time
 
-        for kvp in data.Bars:
-            period = kvp.Value.Period.total_seconds()
+        for kvp in data.bars:
+            period = kvp.value.period.total_seconds()
 
-            if self.roundTime(self.Time, period) != self.Time:
+            if self.round_time(self.time, period) != self.time:
                 pass
 
-            symbol = kvp.Key
-            holdings = self.Portfolio[symbol]
+            symbol = kvp.key
+            holdings = self.portfolio[symbol]
 
-            if not holdings.Invested:
-                self.MarketOrder(symbol, 10)
+            if not holdings.invested:
+                self.market_order(symbol, 10)
             else:
-                self.MarketOrder(symbol, -holdings.Quantity)
+                self.market_order(symbol, -holdings.quantity)
 
 
-    def roundTime(self, dt=None, roundTo=60):
+    def round_time(self, dt=None, round_to=60):
         """Round a datetime object to any time laps in seconds
         dt : datetime object, default now.
         roundTo : Closest number of seconds to round to, default 1 minute.
@@ -65,5 +65,5 @@ class RegressionAlgorithm(QCAlgorithm):
         if dt is None : dt = datetime.now()
         seconds = (dt - dt.min).seconds
         # // is a floor division, not a comment on following line:
-        rounding = (seconds+roundTo/2) // roundTo * roundTo
+        rounding = (seconds+round_to/2) // round_to * round_to
         return dt + timedelta(0,rounding-seconds,-dt.microsecond)
