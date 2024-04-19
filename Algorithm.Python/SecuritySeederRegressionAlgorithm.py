@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,7 @@ class SecuritySeederRegressionAlgorithm(QCAlgorithm):
         self.set_end_date(2013,10,10)
 
         self.set_security_initializer(BrokerageModelSecurityInitializer(self.brokerage_model,
-                                                                      FuncSecuritySeeder(self.get_last_known_prices)))
+                                                                        FuncSecuritySeeder(self.get_last_known_prices)))
         self.add_equity("SPY", Resolution.MINUTE)
 
     def on_data(self, data):
@@ -37,16 +37,16 @@ class SecuritySeederRegressionAlgorithm(QCAlgorithm):
             self.set_holdings("SPY", 1)
 
     def on_securities_changed(self, changes):
-        for addedSecurity in changes.added_securities:
-            if not addedSecurity.has_data \
-                or addedSecurity.ask_price == 0 \
-                or addedSecurity.bid_price == 0 \
-                or addedSecurity.bid_size == 0 \
-                or addedSecurity.ask_size == 0 \
-                or addedSecurity.price == 0 \
-                or addedSecurity.volume == 0 \
-                or addedSecurity.high == 0 \
-                or addedSecurity.low == 0 \
-                or addedSecurity.open == 0 \
-                or addedSecurity.close == 0:
-                raise ValueError(f"Security {addedSecurity.SYMBOL} was not warmed up!")
+        for added_security in changes.added_securities:
+            if not added_security.has_data \
+                or added_security.ask_price == 0 \
+                or added_security.bid_price == 0 \
+                or added_security.bid_size == 0 \
+                or added_security.ask_size == 0 \
+                or added_security.price == 0 \
+                or added_security.volume == 0 \
+                or added_security.high == 0 \
+                or added_security.low == 0 \
+                or added_security.open == 0 \
+                or added_security.close == 0:
+                raise ValueError(f"Security {added_security.symbol} was not warmed up!")

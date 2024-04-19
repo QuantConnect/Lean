@@ -50,22 +50,22 @@ class StopLimitOrderRegressionAlgorithm(QCAlgorithm):
         elif self._buy_order_ticket.status == OrderStatus.FILLED and self._sell_order_ticket is None and self.trend_is_down():
             self._sell_order_ticket = self.stop_limit_order(self._symbol, -100, stop_price=security.low * 0.99, limit_price=security.low * 0.98)
 
-    def on_order_event(self, orderEvent: OrderEvent):
-        if orderEvent.status == OrderStatus.FILLED:
-            order: StopLimitOrder = self.transactions.get_order_by_id(orderEvent.order_id)
+    def on_order_event(self, order_event: OrderEvent):
+        if order_event.status == OrderStatus.FILLED:
+            order: StopLimitOrder = self.transactions.get_order_by_id(order_event.order_id)
             if not order.stop_triggered:
                 raise Exception("StopLimitOrder StopTriggered should haven been set if the order filled.")
 
-            if orderEvent.direction == OrderDirection.BUY:
+            if order_event.direction == OrderDirection.BUY:
                 limit_price = self._buy_order_ticket.get(OrderField.LIMIT_PRICE)
-                if orderEvent.fill_price > limit_price:
+                if order_event.fill_price > limit_price:
                     raise Exception(f"Buy stop limit order should have filled with price less than or equal to the limit price {limit_price}. "
-                                    f"Fill price: {orderEvent.fill_price}")
+                                    f"Fill price: {order_event.fill_price}")
             else:
                 limit_price = self._sell_order_ticket.get(OrderField.LIMIT_PRICE)
-                if orderEvent.fill_price < limit_price:
+                if order_event.fill_price < limit_price:
                     raise Exception(f"Sell stop limit order should have filled with price greater than or equal to the limit price {limit_price}. "
-                                    f"Fill price: {orderEvent.fill_price}")
+                                    f"Fill price: {order_event.fill_price}")
 
     def is_ready(self):
         return self._fast.is_ready and self._slow.is_ready

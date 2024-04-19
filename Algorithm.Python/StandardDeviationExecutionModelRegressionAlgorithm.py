@@ -50,5 +50,5 @@ class StandardDeviationExecutionModelRegressionAlgorithm(QCAlgorithm):
         self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
         self.set_execution(StandardDeviationExecutionModel())
 
-    def on_order_event(self, orderEvent):
-        self.log(f"{self.time}: {orderEvent}")
+    def on_order_event(self, order_event):
+        self.log(f"{self.time}: {order_event}")

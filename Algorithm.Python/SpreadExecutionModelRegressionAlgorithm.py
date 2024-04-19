@@ -18,7 +18,7 @@ from Execution.SpreadExecutionModel import SpreadExecutionModel
 
 ### <summary>
 ### Regression algorithm for the SpreadExecutionModel.
-### This algorithm shows how the execution model works to 
+### This algorithm shows how the execution model works to
 ### submit orders only when the price is on desirably tight spread.
 ### </summary>
 ### <meta name="tag" content="using data" />
@@ -26,7 +26,7 @@ from Execution.SpreadExecutionModel import SpreadExecutionModel
 ### <meta name="tag" content="trading and orders" />
 class SpreadExecutionModelRegressionAlgorithm(QCAlgorithm):
     '''Regression algorithm for the SpreadExecutionModel.
-    This algorithm shows how the execution model works to 
+    This algorithm shows how the execution model works to
     submit orders only when the price is on desirably tight spread.'''
 
     def initialize(self):
@@ -50,5 +50,5 @@ class SpreadExecutionModelRegressionAlgorithm(QCAlgorithm):
     def on_insights_generated(self, algorithm, data):
         self.log(f"{self.time}: {', '.join(str(x) for x in data.insights)}")
 
-    def on_order_event(self, orderEvent):
-        self.log(f"{self.time}: {orderEvent}")
+    def on_order_event(self, order_event):
+        self.log(f"{self.time}: {order_event}")

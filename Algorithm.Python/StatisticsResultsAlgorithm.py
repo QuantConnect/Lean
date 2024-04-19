@@ -50,8 +50,8 @@ class StatisticsResultsAlgorithm(QCAlgorithm):
         elif self.securities[self.ibm].invested:
             self.liquidate(self.ibm)
 
-    def on_order_event(self, orderEvent):
-        if orderEvent.status == OrderStatus.FILLED:
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.FILLED:
             # We can access the statistics summary at runtime
             statistics = self.statistics.summary
             statistics_str = "".join([f"{kvp.key}: {kvp.value}" for kvp in statistics])
@@ -76,7 +76,7 @@ class StatisticsResultsAlgorithm(QCAlgorithm):
                 self.check_most_traded_security_statistic(statistics, most_trade_security, most_trade_security_trade_count)
 
             # Update the trade count
-            self.trade_counts[orderEvent.symbol] += 1
+            self.trade_counts[order_event.symbol] += 1
 
             # Set the most traded security
             most_trade_security, most_trade_security_trade_count = self.get_most_trade_security()
@@ -99,17 +99,17 @@ class StatisticsResultsAlgorithm(QCAlgorithm):
         most_trade_security, most_trade_security_trade_count = self.get_most_trade_security()
         self.check_most_traded_security_statistic(statistics, most_trade_security, most_trade_security_trade_count)
 
-    def check_most_traded_security_statistic(self, statistics: Dict[str, str], mostTradedSecurity: Symbol, tradeCount: int):
+    def check_most_traded_security_statistic(self, statistics: Dict[str, str], most_traded_security: Symbol, trade_count: int):
         most_traded_security_statistic = statistics[StatisticsResultsAlgorithm.most_traded_security_statistic]
         most_traded_security_trade_count_statistic = statistics[StatisticsResultsAlgorithm.most_traded_security_trade_count_statistic]
         self.log(f"Most traded security: {most_traded_security_statistic}")
         self.log(f"Most traded security trade count: {most_traded_security_trade_count_statistic}")
 
-        if most_traded_security_statistic != mostTradedSecurity:
-            raise Exception(f"Most traded security should be {mostTradedSecurity} but it is {most_traded_security_statistic}")
+        if most_traded_security_statistic != most_traded_security:
+            raise Exception(f"Most traded security should be {most_traded_security} but it is {most_traded_security_statistic}")
 
-        if most_traded_security_trade_count_statistic != str(tradeCount):
-            raise Exception(f"Most traded security trade count should be {tradeCount} but it is {most_traded_security_trade_count_statistic}")
+        if most_traded_security_trade_count_statistic != str(trade_count):
+            raise Exception(f"Most traded security trade count should be {trade_count} but it is {most_traded_security_trade_count_statistic}")
 
     def get_most_trade_security(self) -> Tuple[Symbol, int]:
         most_trade_security = max(self.trade_counts, key=lambda symbol: self.trade_counts[symbol])

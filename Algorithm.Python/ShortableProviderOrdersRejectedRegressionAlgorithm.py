@@ -24,7 +24,7 @@ class ShortableProviderOrdersRejectedRegressionAlgorithm(QCAlgorithm):
     def initialize(self):
         self.orders_allowed = []
         self.orders_denied = []
-        self.initialize = False
+        self.initialized = False
         self.invalidated_allowed_order = False
         self.invalidated_new_order_with_portfolio_holdings = False
 
@@ -39,7 +39,7 @@ class ShortableProviderOrdersRejectedRegressionAlgorithm(QCAlgorithm):
         self.aig.set_shortable_provider(RegressionTestShortableProvider())
 
     def on_data(self, data):
-        if not self.initialize:
+        if not self.initialized:
             self.handle_order(self.limit_order(self.spy.symbol, -1001, 10000)) # Should be canceled, exceeds the max shortable quantity
             order_ticket = self.limit_order(self.spy.symbol, -1000, 10000)
             self.handle_order(order_ticket) # Allowed, orders at or below 1000 should be accepted
@@ -49,7 +49,7 @@ class ShortableProviderOrdersRejectedRegressionAlgorithm(QCAlgorithm):
             if not response.is_success:
                 raise ValueError("Order update should of succeeded!");
 
-            self.initialize = True
+            self.initialized = True
             return
 
         if not self.invalidated_allowed_order:

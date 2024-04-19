@@ -25,25 +25,24 @@ class SecurityDynamicPropertyPythonClassAlgorithm(QCAlgorithm):
 
         self.spy = self.add_equity("SPY", Resolution.MINUTE)
 
-        customSMA = CustomSimpleMovingAverage('custom', 60)
-        self.spy.customSMA = customSMA
-        customSMA.security = self.spy
+        custom_sma = CustomSimpleMovingAverage('custom', 60)
+        self.spy.custom_sma = custom_sma
+        custom_sma.security = self.spy
 
-        self.register_indicator(self.spy.symbol, self.spy.customSMA,  Resolution.MINUTE)
-
+        self.register_indicator(self.spy.symbol, self.spy.custom_sma,  Resolution.MINUTE)
 
     def on_warmup_finished(self) -> None:
-        if type(self.spy.customSMA) != CustomSimpleMovingAverage:
-            raise Exception("spy.customSMA is not an instance of CustomSimpleMovingAverage")
+        if type(self.spy.custom_sma) != CustomSimpleMovingAverage:
+            raise Exception("spy.custom_sma is not an instance of CustomSimpleMovingAverage")
 
-        if self.spy.customSMA.security is None:
-            raise Exception("spy.customSMA.security is None")
+        if self.spy.custom_sma.security is None:
+            raise Exception("spy.custom_sma.security is None")
         else:
-            self.debug(f"spy.customSMA.security.symbol: {self.spy.customSMA.security.symbol}")
+            self.debug(f"spy.custom_sma.security.symbol: {self.spy.custom_sma.security.symbol}")
 
     def on_data(self, slice: Slice) -> None:
-        if self.spy.customSMA.is_ready:
-            self.debug(f"CustomSMA: {self.spy.customSMA.current.value}")
+        if self.spy.custom_sma.is_ready:
+            self.debug(f"CustomSMA: {self.spy.custom_sma.current.value}")
 
 class CustomSimpleMovingAverage(PythonIndicator):
     def __init__(self, name, period):

@@ -61,10 +61,10 @@ class SecurityCustomPropertiesAlgorithm(QCAlgorithm):
         bb: BollingerBands = self.spy["bb"]
         self.plot("bb", bb.upper_band, bb.middle_band, bb.lower_band)
 
-    def on_order_event(self, orderEvent):
-        if orderEvent.status == OrderStatus.FILLED:
-            fee = orderEvent.order_fee
-            expected_fee = self.spy.orders_fees_prices[orderEvent.order_id] * orderEvent.absolute_fill_quantity * self.spy.fee_factor
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.FILLED:
+            fee = order_event.order_fee
+            expected_fee = self.spy.orders_fees_prices[order_event.order_id] * order_event.absolute_fill_quantity * self.spy.fee_factor
             if not isclose(fee.value.amount, expected_fee, rel_tol=1e-15):
                 raise Exception(f"Custom fee model failed to set the correct fee. Expected: {expected_fee}. Actual: {fee.value.amount}")
 
