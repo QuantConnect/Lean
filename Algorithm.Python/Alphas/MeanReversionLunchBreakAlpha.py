@@ -30,35 +30,35 @@ from AlgorithmImports import *
 
 class MeanReversionLunchBreakAlpha(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2018, 1, 1)
+        self.set_start_date(2018, 1, 1)
 
-        self.SetCash(100000)
+        self.set_cash(100000)
 
         # Set zero transaction fees
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
+        self.set_security_initializer(lambda security: security.set_fee_model(ConstantFeeModel(0)))
 
         # Use Hourly Data For Simplicity
-        self.UniverseSettings.Resolution = Resolution.Hour
-        self.SetUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseSelectionFunction))
+        self.universe_settings.resolution = Resolution.HOUR
+        self.set_universe_selection(CoarseFundamentalUniverseSelectionModel(self.coarse_selection_function))
 
         # Use MeanReversionLunchBreakAlphaModel to establish insights
-        self.SetAlpha(MeanReversionLunchBreakAlphaModel())
+        self.set_alpha(MeanReversionLunchBreakAlphaModel())
 
         # Equally weigh securities in portfolio, based on insights
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
 
         # Set Immediate Execution Model
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_execution(ImmediateExecutionModel())
 
         # Set Null Risk Management Model
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_risk_management(NullRiskManagementModel())
 
     # Sort the data by daily dollar volume and take the top '20' ETFs
-    def CoarseSelectionFunction(self, coarse):
-        sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
-        filtered = [ x.Symbol for x in sortedByDollarVolume if not x.HasFundamentalData ]
+    def coarse_selection_function(self, coarse):
+        sorted_by_dollar_volume = sorted(coarse, key=lambda x: x.dollar_volume, reverse=True)
+        filtered = [ x.symbol for x in sorted_by_dollar_volume if not x.has_fundamental_data ]
         return filtered[:20]
 
 
@@ -69,55 +69,55 @@ class MeanReversionLunchBreakAlphaModel(AlphaModel):
 
     def __init__(self, *args, **kwargs):
         lookback = kwargs['lookback'] if 'lookback' in kwargs else 1
-        self.resolution = Resolution.Hour
-        self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), lookback)
-        self.symbolDataBySymbol = dict()
+        self.resolution = Resolution.HOUR
+        self.prediction_interval = Time.multiply(Extensions.to_time_span(self.resolution), lookback)
+        self._symbol_data_by_symbol = dict()
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
 
-        for symbol, symbolData in self.symbolDataBySymbol.items():
-            if data.Bars.ContainsKey(symbol):
-                bar = data.Bars.GetValue(symbol)
-                symbolData.Update(bar.EndTime, bar.Close)
+        for symbol, symbol_data in self._symbol_data_by_symbol.items():
+            if data.bars.contains_key(symbol):
+                bar = data.bars.get_value(symbol)
+                symbol_data.update(bar.end_time, bar.close)
 
-        return [] if algorithm.Time.hour != 12 else \
-               [x.Insight for x in self.symbolDataBySymbol.values()]
+        return [] if algorithm.time.hour != 12 else \
+               [x.insight for x in self._symbol_data_by_symbol.values()]
 
-    def OnSecuritiesChanged(self, algorithm, changes):
-        for security in changes.RemovedSecurities:
-            self.symbolDataBySymbol.pop(security.Symbol, None)
+    def on_securities_changed(self, algorithm, changes):
+        for security in changes.removed_securities:
+            self._symbol_data_by_symbol.pop(security.symbol, None)
 
         # Retrieve price history for all securities in the security universe
         # and update the indicators in the SymbolData object
-        symbols = [x.Symbol for x in changes.AddedSecurities]
-        history = algorithm.History(symbols, 1, self.resolution)
+        symbols = [x.symbol for x in changes.added_securities]
+        history = algorithm.history(symbols, 1, self.resolution)
         if history.empty:
-            algorithm.Debug(f"No data on {algorithm.Time}")
+            algorithm.debug(f"No data on {algorithm.time}")
             return
         history = history.close.unstack(level = 0)
 
-        for ticker, values in history.iteritems():
+        for ticker, values in history.items():
             symbol = next((x for x in symbols if str(x) == ticker ), None)
-            if symbol in self.symbolDataBySymbol or symbol is None: continue
-            self.symbolDataBySymbol[symbol] = self.SymbolData(symbol, self.predictionInterval)
-            self.symbolDataBySymbol[symbol].Update(values.index[0], values[0])
+            if symbol in self._symbol_data_by_symbol or symbol is None: continue
+            self._symbol_data_by_symbol[symbol] = self.SymbolData(symbol, self.prediction_interval)
+            self._symbol_data_by_symbol[symbol].update(values.index[0], values[0])
 
 
     class SymbolData:
         def __init__(self, symbol, period):
-            self.symbol = symbol
+            self._symbol = symbol
             self.period = period
             # Mean value of returns for magnitude prediction
-            self.meanOfPriceChange = IndicatorExtensions.SMA(RateOfChangePercent(1),3)
+            self.mean_of_price_change = IndicatorExtensions.sma(RateOfChangePercent(1),3)
             # Price change from close price the previous day
-            self.priceChange = RateOfChangePercent(3)
+            self.price_change = RateOfChangePercent(3)
 
-        def Update(self, time, value):
-            return self.meanOfPriceChange.Update(time, value) and \
-                   self.priceChange.Update(time, value)
+        def update(self, time, value):
+            return self.mean_of_price_change.update(time, value) and \
+                   self.price_change.update(time, value)
 
         @property
-        def Insight(self):
-            direction = InsightDirection.Down if self.priceChange.Current.Value > 0 else InsightDirection.Up
-            margnitude = abs(self.meanOfPriceChange.Current.Value)
-            return Insight.Price(self.symbol, self.period, direction, margnitude, None)
+        def insight(self):
+            direction = InsightDirection.DOWN if self.price_change.current.value > 0 else InsightDirection.UP
+            margnitude = abs(self.mean_of_price_change.current.value)
+            return Insight.price(self._symbol, self.period, direction, margnitude, None)

@@ -22,40 +22,40 @@ from AlgorithmImports import *
 
 class VIXDualThrustAlpha(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
 
         # -- STRATEGY INPUT PARAMETERS --
         self.k1 = 0.63
         self.k2 = 0.63
-        self.rangePeriod = 20
-        self.consolidatorBars = 30
+        self.range_period = 20
+        self.consolidator_bars = 30
 
         # Settings
-        self.SetStartDate(2018, 10, 1)
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
-        self.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin)
+        self.set_start_date(2018, 10, 1)
+        self.set_security_initializer(lambda security: security.set_fee_model(ConstantFeeModel(0)))
+        self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS_BROKERAGE, AccountType.MARGIN)
 
         # Universe Selection
-        self.UniverseSettings.Resolution = Resolution.Minute   # it's minute by default, but lets leave this param here
-        symbols = [Symbol.Create("SPY", SecurityType.Equity, Market.USA)]
-        self.SetUniverseSelection(ManualUniverseSelectionModel(symbols))
+        self.universe_settings.resolution = Resolution.MINUTE   # it's minute by default, but lets leave this param here
+        symbols = [Symbol.create("SPY", SecurityType.EQUITY, Market.USA)]
+        self.set_universe_selection(ManualUniverseSelectionModel(symbols))
 
         # Warming up
-        resolutionInTimeSpan =  Extensions.ToTimeSpan(self.UniverseSettings.Resolution)
-        warmUpTimeSpan = Time.Multiply(resolutionInTimeSpan, self.consolidatorBars)
-        self.SetWarmUp(warmUpTimeSpan)
+        resolution_in_time_span =  Extensions.to_time_span(self.universe_settings.resolution)
+        warm_up_time_span = Time.multiply(resolution_in_time_span, self.consolidator_bars)
+        self.set_warm_up(warm_up_time_span)
 
         # Alpha Model
-        self.SetAlpha(DualThrustAlphaModel(self.k1, self.k2, self.rangePeriod, self.UniverseSettings.Resolution, self.consolidatorBars))
+        self.set_alpha(DualThrustAlphaModel(self.k1, self.k2, self.range_period, self.universe_settings.resolution, self.consolidator_bars))
 
         ## Portfolio Construction
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
 
         ## Execution
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_execution(ImmediateExecutionModel())
 
         ## Risk Management
-        self.SetRiskManagement(MaximumDrawdownPercentPerSecurity(0.03))
+        self.set_risk_management(MaximumDrawdownPercentPerSecurity(0.03))
 
 
 class DualThrustAlphaModel(AlphaModel):
@@ -67,16 +67,16 @@ class DualThrustAlphaModel(AlphaModel):
     def __init__(self,
                  k1,
                  k2,
-                 rangePeriod,
-                 resolution = Resolution.Daily,
-                 barsToConsolidate = 1):
+                 range_period,
+                 resolution = Resolution.DAILY,
+                 bars_to_consolidate = 1):
         '''Initializes a new instance of the class
         Args:
             k1: Coefficient for upper band
             k2: Coefficient for lower band
-            rangePeriod: Amount of last bars to calculate the range
+            range_period: Amount of last bars to calculate the range
             resolution: The resolution of data sent into the EMA indicators
-            barsToConsolidate: If we want alpha to work on trade bars whose length is different
+            bars_to_consolidate: If we want alpha to work on trade bars whose length is different
                 from the standard resolution - 1m 1h etc. - we need to pass this parameters along
                 with proper data resolution'''
 
@@ -85,93 +85,93 @@ class DualThrustAlphaModel(AlphaModel):
         self.k2 = k2
 
         # period the range is calculated over
-        self.rangePeriod = rangePeriod
+        self.range_period = range_period
 
         # initialize with empty dict.
-        self.symbolDataBySymbol = dict()
+        self._symbol_data_by_symbol = dict()
 
         # time for bars we make the calculations on
-        resolutionInTimeSpan =  Extensions.ToTimeSpan(resolution)
-        self.consolidatorTimeSpan = Time.Multiply(resolutionInTimeSpan, barsToConsolidate)
+        resolution_in_time_span =  Extensions.to_time_span(resolution)
+        self.consolidator_time_span = Time.multiply(resolution_in_time_span, bars_to_consolidate)
 
         # in 5 days after emission an insight is to be considered expired
         self.period = timedelta(5)
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
         insights = []
 
-        for symbol, symbolData in self.symbolDataBySymbol.items():
-            if not symbolData.IsReady:
+        for symbol, symbol_data in self._symbol_data_by_symbol.items():
+            if not symbol_data.is_ready:
                 continue
 
-            holding = algorithm.Portfolio[symbol]
-            price = algorithm.Securities[symbol].Price
+            holding = algorithm.portfolio[symbol]
+            price = algorithm.securities[symbol].price
 
             # buying condition
             # - (1) price is above upper line
             # - (2) and we are not long. this is a first time we crossed the line lately
-            if price > symbolData.UpperLine and not holding.IsLong:
-                insightCloseTimeUtc = algorithm.UtcTime + self.period
-                insights.append(Insight.Price(symbol, insightCloseTimeUtc, InsightDirection.Up))
+            if price > symbol_data.upper_line and not holding.is_long:
+                insight_close_time_utc = algorithm.utc_time + self.period
+                insights.append(Insight.price(symbol, insight_close_time_utc, InsightDirection.UP))
 
             # selling condition
             # - (1) price is lower that lower line
             # - (2) and we are not short. this is a first time we crossed the line lately
-            if price < symbolData.LowerLine and not holding.IsShort:
-                insightCloseTimeUtc = algorithm.UtcTime + self.period
-                insights.append(Insight.Price(symbol, insightCloseTimeUtc, InsightDirection.Down))
+            if price < symbol_data.lower_line and not holding.is_short:
+                insight_close_time_utc = algorithm.utc_time + self.period
+                insights.append(Insight.price(symbol, insight_close_time_utc, InsightDirection.DOWN))
 
         return insights
 
-    def OnSecuritiesChanged(self, algorithm, changes):
+    def on_securities_changed(self, algorithm, changes):
         # added
-        for symbol in [x.Symbol for x in changes.AddedSecurities]:
-            if symbol not in self.symbolDataBySymbol:
-                # add symbol/symbolData pair to collection
-                symbolData = self.SymbolData(symbol, self.k1, self.k2, self.rangePeriod, self.consolidatorTimeSpan)
-                self.symbolDataBySymbol[symbol] = symbolData
+        for symbol in [x.symbol for x in changes.added_securities]:
+            if symbol not in self._symbol_data_by_symbol:
+                # add symbol/symbol_data pair to collection
+                symbol_data = self.SymbolData(symbol, self.k1, self.k2, self.range_period, self.consolidator_time_span)
+                self._symbol_data_by_symbol[symbol] = symbol_data
                 # register consolidator
-                algorithm.SubscriptionManager.AddConsolidator(symbol, symbolData.GetConsolidator())
+                algorithm.subscription_manager.add_consolidator(symbol, symbol_data.get_consolidator())
 
         # removed
-        for symbol in [x.Symbol for x in changes.RemovedSecurities]:
-            symbolData = self.symbolDataBySymbol.pop(symbol, None)
-            if symbolData is None:
-                algorithm.Error("Unable to remove data from collection: DualThrustAlphaModel")
+        for symbol in [x.symbol for x in changes.removed_securities]:
+            symbol_data = self._symbol_data_by_symbol.pop(symbol, None)
+            if symbol_data is None:
+                algorithm.error("Unable to remove data from collection: DualThrustAlphaModel")
             else:
                 # unsubscribe consolidator from data updates
-                algorithm.SubscriptionManager.RemoveConsolidator(symbol, symbolData.GetConsolidator())
+                algorithm.subscription_manager.remove_consolidator(symbol, symbol_data.get_consolidator())
 
 
     class SymbolData:
         '''Contains data specific to a symbol required by this model'''
-        def __init__(self, symbol, k1, k2, rangePeriod, consolidatorResolution):
+        def __init__(self, symbol, k1, k2, range_period, consolidator_resolution):
 
-            self.Symbol = symbol
-            self.rangeWindow = RollingWindow[TradeBar](rangePeriod)
-            self.consolidator = TradeBarConsolidator(consolidatorResolution)
+            self.symbol = symbol
+            self.range_window = RollingWindow[TradeBar](range_period)
+            self.consolidator = TradeBarConsolidator(consolidator_resolution)
 
-            def onDataConsolidated(sender, consolidated):
+            def on_data_consolidated(sender, consolidated):
                 # add new tradebar to
-                self.rangeWindow.Add(consolidated)
+                self.range_window.add(consolidated)
 
-                if self.rangeWindow.IsReady:
-                    hh = max([x.High for x in self.rangeWindow])
-                    hc = max([x.Close for x in self.rangeWindow])
-                    lc = min([x.Close for x in self.rangeWindow])
-                    ll = min([x.Low for x in self.rangeWindow])
+                if self.range_window.is_ready:
+                    hh = max([x.high for x in self.range_window])
+                    hc = max([x.close for x in self.range_window])
+                    lc = min([x.close for x in self.range_window])
+                    ll = min([x.low for x in self.range_window])
 
                     range = max([hh - lc, hc - ll])
-                    self.UpperLine = consolidated.Close + k1 * range
-                    self.LowerLine = consolidated.Close - k2 * range
+                    self.upper_line = consolidated.close + k1 * range
+                    self.lower_line = consolidated.close - k2 * range
 
             # event fired at new consolidated trade bar
-            self.consolidator.DataConsolidated += onDataConsolidated
+            self.consolidator.data_consolidated += on_data_consolidated
 
         # Returns the interior consolidator
-        def GetConsolidator(self):
+        def get_consolidator(self):
             return self.consolidator
 
         @property
-        def IsReady(self):
-            return self.rangeWindow.IsReady
+        def is_ready(self):
+            return self.range_window.is_ready

@@ -43,77 +43,77 @@ class ContingentClaimsAnalysisDefaultPredictionAlpha(QCAlgorithm):
     This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     sourced so the community and client funds can see an example of an alpha.'''
 
-    def Initialize(self):
+    def initialize(self):
 
         ## Set requested data resolution and variables to help with Universe Selection control
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
         self.month = -1
 
         ## Declare single variable to be passed in multiple places -- prevents issue with conflicting start dates declared in different places
-        self.SetStartDate(2018,1,1)
-        self.SetCash(100000)
+        self.set_start_date(2018,1,1)
+        self.set_cash(100000)
 
         ## SPDR Small Cap ETF is a better benchmark than the default SP500
-        self.SetBenchmark('IJR')
+        self.set_benchmark('IJR')
 
         ## Set Universe Selection Model
-        self.SetUniverseSelection(FineFundamentalUniverseSelectionModel(self.CoarseSelectionFunction, self.FineSelectionFunction))
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
+        self.set_universe_selection(FineFundamentalUniverseSelectionModel(self.coarse_selection_function, self.fine_selection_function))
+        self.set_security_initializer(lambda security: security.set_fee_model(ConstantFeeModel(0)))
         ## Set CCA Alpha Model
-        self.SetAlpha(ContingentClaimsAnalysisAlphaModel())
+        self.set_alpha(ContingentClaimsAnalysisAlphaModel())
 
         ## Set Portfolio Construction Model
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
 
         ## Set Execution Model
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_execution(ImmediateExecutionModel())
 
         ## Set Risk Management Model
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_risk_management(NullRiskManagementModel())
 
 
-    def CoarseSelectionFunction(self, coarse):
+    def coarse_selection_function(self, coarse):
         ## Boolean controls so that our symbol universe is only updated once per month
-        if self.Time.month == self.month:
-            return Universe.Unchanged
-        self.month = self.Time.month
+        if self.time.month == self.month:
+            return Universe.UNCHANGED
+        self.month = self.time.month
 
         ## Sort by dollar volume, lowest to highest
-        sortedByDollarVolume = sorted([x for x in coarse if x.HasFundamentalData],
-            key=lambda x: x.DollarVolume, reverse=True)
+        sorted_by_dollar_volume = sorted([x for x in coarse if x.has_fundamental_data],
+            key=lambda x: x.dollar_volume, reverse=True)
 
         ## Return smallest 750 -- idea is that smaller companies are most likely to go bankrupt than blue-chip companies
         ## Filter for assets with fundamental data
-        return [x.Symbol for x in sortedByDollarVolume[:750]]
+        return [x.symbol for x in sorted_by_dollar_volume[:750]]
 
-    def FineSelectionFunction(self, fine):
+    def fine_selection_function(self, fine):
 
-            def IsValid(x):
-                statement = x.FinancialStatements
-                sheet = statement.BalanceSheet
-                total_assets = sheet.TotalAssets
-                ratios = x.OperationRatios
+            def is_valid(x):
+                statement = x.financial_statements
+                sheet = statement.balance_sheet
+                total_assets = sheet.total_assets
+                ratios = x.operation_ratios
 
-                return total_assets.OneMonth > 0 and \
-                        total_assets.ThreeMonths > 0 and \
-                        total_assets.SixMonths  > 0 and \
-                        total_assets.TwelveMonths > 0 and \
-                        sheet.CurrentLiabilities.TwelveMonths > 0 and \
-                        sheet.InterestPayable.TwelveMonths > 0 and \
-                        ratios.TotalAssetsGrowth.OneYear > 0 and \
-                        statement.IncomeStatement.GrossDividendPayment.TwelveMonths > 0 and \
-                        ratios.ROA.OneYear > 0
+                return total_assets.one_month > 0 and \
+                        total_assets.three_months > 0 and \
+                        total_assets.six_months  > 0 and \
+                        total_assets.twelve_months > 0 and \
+                        sheet.current_liabilities.twelve_months > 0 and \
+                        sheet.interest_payable.twelve_months > 0 and \
+                        ratios.total_assets_growth.one_year > 0 and \
+                        statement.income_statement.gross_dividend_payment.twelve_months > 0 and \
+                        ratios.roa.one_year > 0
 
-            return [x.Symbol for x in sorted(fine, key=lambda x: IsValid(x))]
+            return [x.symbol for x in sorted(fine, key=lambda x: is_valid(x))]
 
 
 class ContingentClaimsAnalysisAlphaModel:
 
     def __init__(self, *args, **kwargs):
-        self.ProbabilityOfDefaultBySymbol = {}
+        self.probability_of_default_by_symbol = {}
         self.default_threshold = kwargs['default_threshold'] if 'default_threshold' in kwargs else 0.25
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
         '''Updates this alpha model with the latest data from the algorithm.
         This is called each time the algorithm receives data for subscribed securities
         Args:
@@ -125,51 +125,51 @@ class ContingentClaimsAnalysisAlphaModel:
         ## Build a list to hold our insights
         insights = []
 
-        for symbol, pod in self.ProbabilityOfDefaultBySymbol.items():
+        for symbol, pod in self.probability_of_default_by_symbol.items():
 
             ## If Prob. of Default is greater than our set threshold, then emit an insight indicating that this asset is trending downward
             if pod >= self.default_threshold and pod != 1.0:
-                insights.append(Insight.Price(symbol, timedelta(30), InsightDirection.Down, pod, None))
+                insights.append(Insight.price(symbol, timedelta(30), InsightDirection.DOWN, pod, None))
 
         return insights
 
-    def OnSecuritiesChanged(self, algorithm, changes):
+    def on_securities_changed(self, algorithm, changes):
 
-        for removed in changes.RemovedSecurities:
-            self.ProbabilityOfDefaultBySymbol.pop(removed.Symbol, None)
+        for removed in changes.removed_securities:
+            self.probability_of_default_by_symbol.pop(removed.symbol, None)
 
         # initialize data for added securities
-        symbols = [ x.Symbol for x in changes.AddedSecurities ]
+        symbols = [ x.symbol for x in changes.added_securities ]
 
         for symbol in symbols:
-            if symbol not in self.ProbabilityOfDefaultBySymbol:
+            if symbol not in self.probability_of_default_by_symbol:
                 ## CCA valuation
-                pod = self.GetProbabilityOfDefault(algorithm, symbol)
+                pod = self.get_probability_of_default(algorithm, symbol)
                 if pod is not None:
-                    self.ProbabilityOfDefaultBySymbol[symbol] = pod
+                    self.probability_of_default_by_symbol[symbol] = pod
 
-    def GetProbabilityOfDefault(self, algorithm, symbol):
+    def get_probability_of_default(self, algorithm, symbol):
         '''This model applies options pricing theory, Black-Scholes specifically,
         to fundamental data to give the probability of a default'''
-        security = algorithm.Securities[symbol]
-        if security.Fundamentals is None or security.Fundamentals.FinancialStatements is None or security.Fundamentals.OperationRatios is None:
+        security = algorithm.securities[symbol]
+        if security.fundamentals is None or security.fundamentals.financial_statements is None or security.fundamentals.operation_ratios is None:
             return None
 
-        statement = security.Fundamentals.FinancialStatements
-        sheet = statement.BalanceSheet
-        total_assets = sheet.TotalAssets
+        statement = security.fundamentals.financial_statements
+        sheet = statement.balance_sheet
+        total_assets = sheet.total_assets
 
         tau = 360   ## Days
-        mu = security.Fundamentals.OperationRatios.ROA.OneYear
-        V = total_assets.TwelveMonths
-        B = sheet.CurrentLiabilities.TwelveMonths
-        D = statement.IncomeStatement.GrossDividendPayment.TwelveMonths + sheet.InterestPayable.TwelveMonths
+        mu = security.fundamentals.operation_ratios.roa.one_year
+        V = total_assets.twelve_months
+        B = sheet.current_liabilities.twelve_months
+        D = statement.income_statement.gross_dividend_payment.twelve_months + sheet.interest_payable.twelve_months
 
         series = pd.Series(
             [
-                total_assets.OneMonth,
-                total_assets.ThreeMonths,
-                total_assets.SixMonths,
+                total_assets.one_month,
+                total_assets.three_months,
+                total_assets.six_months,
                 V
             ])
         sigma = series.iloc[series.nonzero()[0]]

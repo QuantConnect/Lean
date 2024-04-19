@@ -15,34 +15,34 @@ from AlgorithmImports import *
 
 class StatelessCoarseUniverseSelectionBenchmark(QCAlgorithm):
 
-    def Initialize(self):
-        self.UniverseSettings.Resolution = Resolution.Daily
+    def initialize(self):
+        self.universe_settings.resolution = Resolution.DAILY
 
-        self.SetStartDate(2017, 1, 1)
-        self.SetEndDate(2019, 1, 1)
-        self.SetCash(50000)
+        self.set_start_date(2017, 1, 1)
+        self.set_end_date(2019, 1, 1)
+        self.set_cash(50000)
 
-        self.AddUniverse(self.CoarseSelectionFunction)
-        self.numberOfSymbols = 250
+        self.add_universe(self.coarse_selection_function)
+        self.number_of_symbols = 250
 
     # sort the data by daily dollar volume and take the top 'NumberOfSymbols'
-    def CoarseSelectionFunction(self, coarse):
+    def coarse_selection_function(self, coarse):
 
-        selected = [x for x in coarse if (x.HasFundamentalData)]
+        selected = [x for x in coarse if (x.has_fundamental_data)]
         # sort descending by daily dollar volume
-        sortedByDollarVolume = sorted(selected, key=lambda x: x.DollarVolume, reverse=True)
+        sorted_by_dollar_volume = sorted(selected, key=lambda x: x.dollar_volume, reverse=True)
 
         # return the symbol objects of the top entries from our sorted collection
-        return [ x.Symbol for x in sortedByDollarVolume[:self.numberOfSymbols] ]
+        return [ x.symbol for x in sorted_by_dollar_volume[:self.number_of_symbols] ]
 
-    def OnSecuritiesChanged(self, changes):
+    def on_securities_changed(self, changes):
         # if we have no changes, do nothing
         if changes is None: return
 
         # liquidate removed securities
-        for security in changes.RemovedSecurities:
-            if security.Invested:
-                self.Liquidate(security.Symbol)
+        for security in changes.removed_securities:
+            if security.invested:
+                self.liquidate(security.symbol)
 
-        for security in changes.AddedSecurities:
-            self.SetHoldings(security.Symbol, 0.001)
+        for security in changes.added_securities:
+            self.set_holdings(security.symbol, 0.001)

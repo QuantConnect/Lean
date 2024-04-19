@@ -28,82 +28,82 @@ from AlgorithmImports import *
 
 class MortgageRateVolatilityAlpha(QCAlgorithmFramework):
 
-    def Initialize(self):
+    def initialize(self):
 
         # Set requested data resolution
-        self.SetStartDate(2017, 1, 1)   #Set Start Date
-        self.SetCash(100000)           #Set Strategy Cash
+        self.set_start_date(2017, 1, 1)   #Set Start Date
+        self.set_cash(100000)           #Set Strategy Cash
 
-        self.UniverseSettings.Resolution = Resolution.Daily
+        self.universe_settings.resolution = Resolution.DAILY
         
         ## Universe of six liquid real estate ETFs
         etfs = ['VNQ', 'REET', 'TAO', 'FREL', 'SRET', 'HIPS']
-        symbols = [ Symbol.Create(etf, SecurityType.Equity, Market.USA) for etf in etfs ]
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
-        self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
+        symbols = [ Symbol.create(etf, SecurityType.EQUITY, Market.USA) for etf in etfs ]
+        self.set_security_initializer(lambda security: security.set_fee_model(ConstantFeeModel(0)))
+        self.set_universe_selection(ManualUniverseSelectionModel(symbols) )
             
-        self.SetAlpha(MortgageRateVolatilityAlphaModel(self))
+        self.set_alpha(MortgageRateVolatilityAlphaModel(self))
         
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel()) 
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel()) 
         
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_execution(ImmediateExecutionModel())
         
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_risk_management(NullRiskManagementModel())
 
 
 class MortgageRateVolatilityAlphaModel(AlphaModel):
     
-    def __init__(self, algorithm, indicatorPeriod = 15, insightMagnitude = 0.005, deviations = 2):
+    def __init__(self, algorithm, indicator_period = 15, insight_magnitude = 0.005, deviations = 2):
         ## Add Quandl data for a Well's Fargo 30-year Fixed Rate mortgage
-        self.mortgageRate = algorithm.AddData(QuandlMortgagePriceColumns, 'WFC/PR_GOV_30YFIXEDVA_APR').Symbol
-        self.indicatorPeriod = indicatorPeriod
-        self.insightDuration = TimeSpan.FromDays(indicatorPeriod)
-        self.insightMagnitude = insightMagnitude
+        self.mortgage_rate = algorithm.add_data(QuandlMortgagePriceColumns, 'WFC/PR_GOV_30YFIXEDVA_APR').symbol
+        self.indicator_period = indicator_period
+        self.insight_duration = TimeSpan.from_days(indicator_period)
+        self.insight_magnitude = insight_magnitude
         self.deviations = deviations
         
         ## Add indicators for the mortgage rate -- Standard Deviation and Simple Moving Average
-        self.mortgageRateStd = algorithm.STD(self.mortgageRate.Value, indicatorPeriod)
-        self.mortgageRateSma = algorithm.SMA(self.mortgageRate.Value, indicatorPeriod)
+        self.mortgage_rate_std = algorithm.std(self.mortgage_rate, indicator_period)
+        self.mortgage_rate_sma = algorithm.sma(self.mortgage_rate, indicator_period)
         
         ## Use a history call to warm-up the indicators
-        self.WarmupIndicators(algorithm)
+        self.warmup_indicators(algorithm)
     
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
         insights = []
         
         ## Return empty list if data slice doesn't contain monrtgage rate data
-        if self.mortgageRate not in data.Keys:
+        if self.mortgage_rate not in data.keys():
             return []
 
         ## Extract current mortgage rate, the current STD indicator value, and current SMA value
-        mortgageRate = data[self.mortgageRate].Value
-        deviation = self.deviations * self.mortgageRateStd.Current.Value
-        sma = self.mortgageRateSma.Current.Value
+        mortgage_rate = data[self.mortgage_rate].value
+        deviation = self.deviations * self.mortgage_rate_std.current.value
+        sma = self.mortgage_rate_sma.current.value
         
         ## If volatility in mortgage rates is high, then we emit an Insight to sell
-        if (mortgageRate < sma - deviation) or (mortgageRate > sma + deviation):
+        if (mortgage_rate < sma - deviation) or (mortgage_rate > sma + deviation):
             ## Emit insights for all securities that are currently in the Universe,
             ## except for the Quandl Symbol
-            insights = [Insight(security, self.insightDuration, InsightType.Price, InsightDirection.Down, self.insightMagnitude, None) \
-                        for security in algorithm.ActiveSecurities.Keys if security != self.mortgageRate]
+            insights = [Insight(security, self.insight_duration, InsightType.PRICE, InsightDirection.DOWN, self.insight_magnitude, None) \
+                        for security in algorithm.active_securities.keys if security != self.mortgage_rate]
         
         ## If volatility in mortgage rates is low, then we emit an Insight to buy
-        if (mortgageRate < sma - deviation/2) or (mortgageRate > sma + deviation/2):
-            insights = [Insight(security, self.insightDuration, InsightType.Price, InsightDirection.Up, self.insightMagnitude, None) \
-                        for security in algorithm.ActiveSecurities.Keys if security != self.mortgageRate]
+        if (mortgage_rate < sma - deviation/2) or (mortgage_rate > sma + deviation/2):
+            insights = [Insight(security, self.insight_duration, InsightType.PRICE, InsightDirection.UP, self.insight_magnitude, None) \
+                        for security in algorithm.active_securities.keys if security != self.mortgage_rate]
         
         return insights
     
-    def WarmupIndicators(self, algorithm):
+    def warmup_indicators(self, algorithm):
         ## Make a history call and update the indicators
-        history = algorithm.History(self.mortgageRate, self.indicatorPeriod, Resolution.Daily)
+        history = algorithm.history(self.mortgage_rate, self.indicator_period, Resolution.DAILY)
         for index, row in history.iterrows():
-            self.mortgageRateStd.Update(index[1], row['value'])
-            self.mortgageRateSma.Update(index[1], row['value'])
+            self.mortgage_rate_std.update(index[1], row['value'])
+            self.mortgage_rate_sma.update(index[1], row['value'])
     
 class QuandlMortgagePriceColumns(PythonQuandl):
     
     def __init__(self):
         ## Rename the Quandl object column to the data we want, which is the 'Value' column
         ## of the CSV that our API call returns
-        self.ValueColumnName = "Value"
+        self.value_column_name = "Value"

@@ -30,32 +30,32 @@ from AlgorithmImports import *
 
 class ShareClassMeanReversionAlpha(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2019, 1, 1)   #Set Start Date
-        self.SetCash(100000)           #Set Strategy Cash
-        self.SetWarmUp(20)
+        self.set_start_date(2019, 1, 1)   #Set Start Date
+        self.set_cash(100000)           #Set Strategy Cash
+        self.set_warm_up(20)
 
         ## Setup Universe settings and tickers to be used
         tickers = ['VIA','VIAB']
-        self.UniverseSettings.Resolution = Resolution.Minute
-        symbols = [ Symbol.Create(ticker, SecurityType.Equity, Market.USA) for ticker in tickers]
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))  ## Set $0 fees to mimic High-Frequency Trading
+        self.universe_settings.resolution = Resolution.MINUTE
+        symbols = [ Symbol.create(ticker, SecurityType.EQUITY, Market.USA) for ticker in tickers]
+        self.set_security_initializer(lambda security: security.set_fee_model(ConstantFeeModel(0)))  ## Set $0 fees to mimic High-Frequency Trading
 
         ## Set Manual Universe Selection
-        self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
+        self.set_universe_selection( ManualUniverseSelectionModel(symbols) )
 
         ## Set Custom Alpha Model
-        self.SetAlpha(ShareClassMeanReversionAlphaModel(tickers = tickers))
+        self.set_alpha(ShareClassMeanReversionAlphaModel(tickers = tickers))
 
         ## Set Equal Weighting Portfolio Construction Model
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
 
         ## Set Immediate Execution Model
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_execution(ImmediateExecutionModel())
 
         ## Set Null Risk Management Model
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_risk_management(NullRiskManagementModel())
 
 
 class ShareClassMeanReversionAlphaModel(AlphaModel):
@@ -74,79 +74,79 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
         self.liquidate = 'liquidate'
         self.long_symbol = self.tickers[0]
         self.short_symbol = self.tickers[1]
-        self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Minute
-        self.prediction_interval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), 5) ## Arbitrary
+        self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.MINUTE
+        self.prediction_interval = Time.multiply(Extensions.to_time_span(self.resolution), 5) ## Arbitrary
         self.insight_magnitude = 0.001
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
         insights = []
 
         ## Check to see if either ticker will return a NoneBar, and skip the data slice if so
-        for security in algorithm.Securities:
-            if self.DataEventOccured(data, security.Key):
+        for security in algorithm.securities:
+            if self.data_event_occured(data, security.key):
                 return insights
 
         ## If Alpha and Beta haven't been calculated yet, then do so
         if (self.alpha is None) or (self.beta is None):
-           self.CalculateAlphaBeta(algorithm, data)
-           algorithm.Log('Alpha: ' + str(self.alpha))
-           algorithm.Log('Beta: ' + str(self.beta))
+           self.calculate_alpha_beta(algorithm, data)
+           algorithm.log('Alpha: ' + str(self.alpha))
+           algorithm.log('Beta: ' + str(self.beta))
 
         ## If the SMA isn't fully warmed up, then perform an update
-        if not self.sma.IsReady:
-            self.UpdateIndicators(data)
+        if not self.sma.is_ready:
+            self.update_indicators(data)
             return insights
 
         ## Update indicator and Rolling Window for each data slice passed into Update() method
-        self.UpdateIndicators(data)
+        self.update_indicators(data)
 
         ## Check to see if the portfolio is invested. If no, then perform value comparisons and emit insights accordingly
         if not self.invested:
-            if self.position_value >= self.sma.Current.Value:
-                insights.append(Insight(self.long_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Down, self.insight_magnitude, None))
-                insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, self.insight_magnitude, None))
+            if self.position_value >= self.sma.current.value:
+                insights.append(Insight(self.long_symbol, self.prediction_interval, InsightType.PRICE, InsightDirection.DOWN, self.insight_magnitude, None))
+                insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.PRICE, InsightDirection.UP, self.insight_magnitude, None))
 
                 ## Reset invested boolean
                 self.invested = True
 
-            elif self.position_value < self.sma.Current.Value:
-                insights.append(Insight(self.long_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, self.insight_magnitude, None))
-                insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Down, self.insight_magnitude, None))
+            elif self.position_value < self.sma.current.value:
+                insights.append(Insight(self.long_symbol, self.prediction_interval, InsightType.PRICE, InsightDirection.UP, self.insight_magnitude, None))
+                insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.PRICE, InsightDirection.DOWN, self.insight_magnitude, None))
 
                 ## Reset invested boolean
                 self.invested = True
 
         ## If the portfolio is invested and crossed back over the SMA, then emit flat insights
-        elif self.invested and self.CrossedMean():
+        elif self.invested and self.crossed_mean():
             ## Reset invested boolean
             self.invested = False
 
-        return Insight.Group(insights)
+        return Insight.group(insights)
 
-    def DataEventOccured(self, data, symbol):
+    def data_event_occured(self, data, symbol):
         ## Helper function to check to see if data slice will contain a symbol
-        if data.Splits.ContainsKey(symbol) or \
-           data.Dividends.ContainsKey(symbol) or \
-           data.Delistings.ContainsKey(symbol) or \
-           data.SymbolChangedEvents.ContainsKey(symbol):
+        if data.splits.contains_key(symbol) or \
+           data.dividends.contains_key(symbol) or \
+           data.delistings.contains_key(symbol) or \
+           data.symbol_changed_events.contains_key(symbol):
             return True
 
-    def UpdateIndicators(self, data):
+    def update_indicators(self, data):
         ## Calculate position value and update the SMA indicator and Rolling Window
-        self.position_value = (self.alpha * data[self.long_symbol].Close) - (self.beta * data[self.short_symbol].Close)
-        self.sma.Update(data[self.long_symbol].EndTime, self.position_value)
-        self.position_window.Add(self.position_value)
+        self.position_value = (self.alpha * data[self.long_symbol].close) - (self.beta * data[self.short_symbol].close)
+        self.sma.update(data[self.long_symbol].end_time, self.position_value)
+        self.position_window.add(self.position_value)
 
-    def CrossedMean(self):
+    def crossed_mean(self):
         ## Check to see if the position value has crossed the SMA and then return a boolean value
-        if (self.position_window[0] >= self.sma.Current.Value) and (self.position_window[1] < self.sma.Current.Value):
+        if (self.position_window[0] >= self.sma.current.value) and (self.position_window[1] < self.sma.current.value):
             return True
-        elif (self.position_window[0] < self.sma.Current.Value) and (self.position_window[1] >= self.sma.Current.Value):
+        elif (self.position_window[0] < self.sma.current.value) and (self.position_window[1] >= self.sma.current.value):
             return True
         else:
             return False
 
-    def CalculateAlphaBeta(self, algorithm, data):
+    def calculate_alpha_beta(self, algorithm, data):
         ## Calculate Alpha and Beta, the initial number of shares for each security needed to achieve a 50/50 weighting
-        self.alpha = algorithm.CalculateOrderQuantity(self.long_symbol, 0.5)
-        self.beta = algorithm.CalculateOrderQuantity(self.short_symbol, 0.5)
+        self.alpha = algorithm.calculate_order_quantity(self.long_symbol, 0.5)
+        self.beta = algorithm.calculate_order_quantity(self.short_symbol, 0.5)

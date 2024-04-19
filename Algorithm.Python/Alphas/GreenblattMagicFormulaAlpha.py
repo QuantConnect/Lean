@@ -33,96 +33,96 @@ class GreenblattMagicFormulaAlpha(QCAlgorithm):
     This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     sourced so the community and client funds can see an example of an alpha.'''
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2018, 1, 1)
-        self.SetCash(100000)
+        self.set_start_date(2018, 1, 1)
+        self.set_cash(100000)
 
         #Set zero transaction fees
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
+        self.set_security_initializer(lambda security: security.set_fee_model(ConstantFeeModel(0)))
 
         # select stocks using MagicFormulaUniverseSelectionModel
-        self.SetUniverseSelection(GreenBlattMagicFormulaUniverseSelectionModel())
+        self.set_universe_selection(GreenBlattMagicFormulaUniverseSelectionModel())
 
         # Use MagicFormulaAlphaModel to establish insights
-        self.SetAlpha(RateOfChangeAlphaModel())
+        self.set_alpha(RateOfChangeAlphaModel())
 
         # Equally weigh securities in portfolio, based on insights
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
 
         ## Set Immediate Execution Model
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_execution(ImmediateExecutionModel())
 
         ## Set Null Risk Management Model
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_risk_management(NullRiskManagementModel())
 
 class RateOfChangeAlphaModel(AlphaModel):
     '''Uses Rate of Change (ROC) to create magnitude prediction for insights.'''
 
     def __init__(self, *args, **kwargs):
         self.lookback = kwargs.get('lookback', 1)
-        self.resolution = kwargs.get('resolution', Resolution.Daily)
-        self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), self.lookback)
-        self.symbolDataBySymbol = {}
+        self.resolution = kwargs.get('resolution', Resolution.DAILY)
+        self.prediction_interval = Time.multiply(Extensions.to_time_span(self.resolution), self.lookback)
+        self._symbol_data_by_symbol = {}
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
         insights = []
-        for symbol, symbolData in self.symbolDataBySymbol.items():
-            if symbolData.CanEmit:
-                insights.append(Insight.Price(symbol, self.predictionInterval, InsightDirection.Up, symbolData.Return, None))
+        for symbol, symbol_data in self._symbol_data_by_symbol.items():
+            if symbol_data.can_emit:
+                insights.append(Insight.price(symbol, self.prediction_interval, InsightDirection.UP, symbol_data.returns, None))
         return insights
 
-    def OnSecuritiesChanged(self, algorithm, changes):
+    def on_securities_changed(self, algorithm, changes):
 
         # clean up data for removed securities
-        for removed in changes.RemovedSecurities:
-            symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
-            if symbolData is not None:
-                symbolData.RemoveConsolidators(algorithm)
+        for removed in changes.removed_securities:
+            symbol_data = self._symbol_data_by_symbol.pop(removed.symbol, None)
+            if symbol_data is not None:
+                symbol_data.remove_consolidators(algorithm)
 
         # initialize data for added securities
-        symbols = [ x.Symbol for x in changes.AddedSecurities
-            if x.Symbol not in self.symbolDataBySymbol]
+        symbols = [ x.symbol for x in changes.added_securities
+            if x.symbol not in self._symbol_data_by_symbol]
 
-        history = algorithm.History(symbols, self.lookback, self.resolution)
+        history = algorithm.history(symbols, self.lookback, self.resolution)
         if history.empty: return
 
         for symbol in symbols:
-            symbolData = SymbolData(algorithm, symbol, self.lookback, self.resolution)
-            self.symbolDataBySymbol[symbol] = symbolData
-            symbolData.WarmUpIndicators(history.loc[symbol])
+            symbol_data = SymbolData(algorithm, symbol, self.lookback, self.resolution)
+            self._symbol_data_by_symbol[symbol] = symbol_data
+            symbol_data.warm_up_indicators(history.loc[symbol])
 
 
 class SymbolData:
     '''Contains data specific to a symbol required by this model'''
     def __init__(self, algorithm, symbol, lookback, resolution):
         self.previous = 0
-        self.symbol = symbol
-        self.ROC = RateOfChange(f'{symbol}.ROC({lookback})', lookback)
-        self.consolidator = algorithm.ResolveConsolidator(symbol, resolution)
-        algorithm.RegisterIndicator(symbol, self.ROC, self.consolidator)
+        self._symbol = symbol
+        self.roc = RateOfChange(f'{symbol}.roc({lookback})', lookback)
+        self.consolidator = algorithm.resolve_consolidator(symbol, resolution)
+        algorithm.register_indicator(symbol, self.roc, self.consolidator)
 
-    def RemoveConsolidators(self, algorithm):
-        algorithm.SubscriptionManager.RemoveConsolidator(self.symbol, self.consolidator)
+    def remove_consolidators(self, algorithm):
+        algorithm.subscription_manager.remove_consolidator(self._symbol, self.consolidator)
 
-    def WarmUpIndicators(self, history):
+    def warm_up_indicators(self, history):
         for tuple in history.itertuples():
-            self.ROC.Update(tuple.Index, tuple.close)
+            self.roc.update(tuple.Index, tuple.close)
 
     @property
-    def Return(self):
-        return self.ROC.Current.Value
+    def returns(self):
+        return self.roc.current.value
 
     @property
-    def CanEmit(self):
-        if self.previous == self.ROC.Samples:
+    def can_emit(self):
+        if self.previous == self.roc.samples:
             return False
 
-        self.previous = self.ROC.Samples
-        return self.ROC.IsReady
+        self.previous = self.roc.samples
+        return self.roc.is_ready
 
     def __str__(self, **kwargs):
-        return f'{self.ROC.Name}: {(1 + self.Return)**252 - 1:.2%}'
+        return f'{self.roc.name}: {(1 + self.returns)**252 - 1:.2%}'
 
 
 class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionModel):
@@ -131,39 +131,39 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
     '''
 
     def __init__(self,
-                 filterFineData = True,
-                 universeSettings = None):
+                 filter_fine_data = True,
+                 universe_settings = None):
         '''Initializes a new default instance of the MagicFormulaUniverseSelectionModel'''
-        super().__init__(filterFineData, universeSettings)
+        super().__init__(filter_fine_data, universe_settings)
 
         # Number of stocks in Coarse Universe
-        self.NumberOfSymbolsCoarse = 500
+        self.number_of_symbols_coarse = 500
         # Number of sorted stocks in the fine selection subset using the valuation ratio, EV to EBITDA (EV/EBITDA)
-        self.NumberOfSymbolsFine = 20
+        self.number_of_symbols_fine = 20
         # Final number of stocks in security list, after sorted by the valuation ratio, Return on Assets (ROA)
-        self.NumberOfSymbolsInPortfolio = 10
+        self.number_of_symbols_in_portfolio = 10
 
-        self.lastMonth = -1
-        self.dollarVolumeBySymbol = {}
+        self.last_month = -1
+        self.dollar_volume_by_symbol = {}
 
-    def SelectCoarse(self, algorithm, coarse):
+    def select_coarse(self, algorithm, coarse):
         '''Performs coarse selection for constituents.
         The stocks must have fundamental data'''
-        month = algorithm.Time.month
-        if month == self.lastMonth:
-            return Universe.Unchanged
-        self.lastMonth = month
+        month = algorithm.time.month
+        if month == self.last_month:
+            return Universe.UNCHANGED
+        self.last_month = month
 
         # sort the stocks by dollar volume and take the top 1000
-        top = sorted([x for x in coarse if x.HasFundamentalData],
-                    key=lambda x: x.DollarVolume, reverse=True)[:self.NumberOfSymbolsCoarse]
+        top = sorted([x for x in coarse if x.has_fundamental_data],
+                    key=lambda x: x.dollar_volume, reverse=True)[:self.number_of_symbols_coarse]
 
-        self.dollarVolumeBySymbol = { i.Symbol: i.DollarVolume for i in top }
+        self.dollar_volume_by_symbol = { i.symbol: i.dollar_volume for i in top }
 
-        return list(self.dollarVolumeBySymbol.keys())
+        return list(self.dollar_volume_by_symbol.keys())
 
 
-    def SelectFine(self, algorithm, fine):
+    def select_fine(self, algorithm, fine):
         '''QC500: Performs fine selection for the coarse selection constituents
         The company's headquarter must in the U.S.
         The stock must be traded on either the NYSE or NASDAQ
@@ -178,34 +178,34 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
         ## The stock must be traded on either the NYSE or NASDAQ
         ## At least half a year since its initial public offering
         ## The stock's market cap must be greater than 500 million
-        filteredFine = [x for x in fine if x.CompanyReference.CountryId == "USA"
-                                        and (x.CompanyReference.PrimaryExchangeID == "NYS" or x.CompanyReference.PrimaryExchangeID == "NAS")
-                                        and (algorithm.Time - x.SecurityReference.IPODate).days > 180
-                                        and x.EarningReports.BasicAverageShares.ThreeMonths * x.EarningReports.BasicEPS.TwelveMonths * x.ValuationRatios.PERatio > 5e8]
-        count = len(filteredFine)
+        filtered_fine = [x for x in fine if x.company_reference.country_id == "USA"
+                                        and (x.company_reference.primary_exchange_id == "NYS" or x.company_reference.primary_exchange_id == "NAS")
+                                        and (algorithm.time - x.security_reference.ipo_date).days > 180
+                                        and x.earning_reports.basic_average_shares.three_months * x.earning_reports.basic_eps.twelve_months * x.valuation_ratios.pe_ratio > 5e8]
+        count = len(filtered_fine)
         if count == 0: return []
 
-        myDict = dict()
-        percent = self.NumberOfSymbolsFine / count
+        my_dict = dict()
+        percent = self.number_of_symbols_fine / count
 
         # select stocks with top dollar volume in every single sector
         for key in ["N", "M", "U", "T", "B", "I"]:
-            value = [x for x in filteredFine if x.CompanyReference.IndustryTemplateCode == key]
-            value = sorted(value, key=lambda x: self.dollarVolumeBySymbol[x.Symbol], reverse = True)
-            myDict[key] = value[:ceil(len(value) * percent)]
+            value = [x for x in filtered_fine if x.company_reference.industry_template_code == key]
+            value = sorted(value, key=lambda x: self.dollar_volume_by_symbol[x.symbol], reverse = True)
+            my_dict[key] = value[:ceil(len(value) * percent)]
 
         # stocks in QC500 universe
-        topFine = chain.from_iterable(myDict.values())
+        top_fine = chain.from_iterable(my_dict.values())
 
         #  Magic Formula:
         ## Rank stocks by Enterprise Value to EBITDA (EV/EBITDA)
         ## Rank subset of previously ranked stocks (EV/EBITDA), using the valuation ratio Return on Assets (ROA)
 
         # sort stocks in the security universe of QC500 based on Enterprise Value to EBITDA valuation ratio
-        sortedByEVToEBITDA = sorted(topFine, key=lambda x: x.ValuationRatios.EVToEBITDA , reverse=True)
+        sorted_by_ev_to_ebitda = sorted(top_fine, key=lambda x: x.valuation_ratios.ev_to_ebitda , reverse=True)
 
         # sort subset of stocks that have been sorted by Enterprise Value to EBITDA, based on the valuation ratio Return on Assets (ROA)
-        sortedByROA = sorted(sortedByEVToEBITDA[:self.NumberOfSymbolsFine], key=lambda x: x.ValuationRatios.ForwardROA, reverse=False)
+        sorted_by_roa = sorted(sorted_by_ev_to_ebitda[:self.number_of_symbols_fine], key=lambda x: x.valuation_ratios.forward_roa, reverse=False)
 
         # retrieve list of securites in portfolio
-        return [f.Symbol for f in sortedByROA[:self.NumberOfSymbolsInPortfolio]]
+        return [f.symbol for f in sorted_by_roa[:self.number_of_symbols_in_portfolio]]

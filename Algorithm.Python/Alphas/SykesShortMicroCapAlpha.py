@@ -20,29 +20,30 @@ class SykesShortMicroCapAlpha(QCAlgorithm):
     This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
    sourced so the community and client funds can see an example of an alpha.'''
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2018, 1, 1)
-        self.SetCash(100000)
+        self.set_start_date(2018, 1, 1)
+        self.set_cash(100000)
 
         # Set zero transaction fees
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
+        self.set_security_initializer(lambda security: security.set_fee_model(ConstantFeeModel(0)))
 
         # select stocks using PennyStockUniverseSelectionModel
-        self.UniverseSettings.Resolution = Resolution.Daily
-        self.SetUniverseSelection(PennyStockUniverseSelectionModel())
+        self.universe_settings.resolution = Resolution.DAILY
+        self.universe_settings.schedule.on(self.date_rules.month_start())
+        self.set_universe_selection(PennyStockUniverseSelectionModel())
 
         # Use SykesShortMicroCapAlphaModel to establish insights
-        self.SetAlpha(SykesShortMicroCapAlphaModel())
+        self.set_alpha(SykesShortMicroCapAlphaModel())
 
         # Equally weigh securities in portfolio, based on insights
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
 
         # Set Immediate Execution Model
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_execution(ImmediateExecutionModel())
 
         # Set Null Risk Management Model
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_risk_management(NullRiskManagementModel())
 
 
 class SykesShortMicroCapAlphaModel(AlphaModel):
@@ -50,28 +51,28 @@ class SykesShortMicroCapAlphaModel(AlphaModel):
 
     def __init__(self, *args, **kwargs):
         lookback = kwargs['lookback'] if 'lookback' in kwargs else 1
-        resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Daily
-        self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(resolution), lookback)
-        self.numberOfStocks = kwargs['numberOfStocks'] if 'numberOfStocks' in kwargs else 10
+        resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.DAILY
+        self.prediction_interval = Time.multiply(Extensions.to_time_span(resolution), lookback)
+        self.number_of_stocks = kwargs['number_of_stocks'] if 'number_of_stocks' in kwargs else 10
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
         insights = []
-        symbolsRet = dict()
+        symbols_ret = dict()
 
-        for security in algorithm.ActiveSecurities.Values:
-            if security.HasData:
-                open = security.Open
-                if open != 0:
+        for security in algorithm.active_securities.values:
+            if security.has_data:
+                open_ = security.open
+                if open_ != 0:
                     # Intraday price change for penny stocks
-                    symbolsRet[security.Symbol] = security.Close / open - 1
+                    symbols_ret[security.symbol] = security.close / open_ - 1
 
         # Rank penny stocks on one day price change and retrieve list of ten "pumped" penny stocks
-        pumpedStocks = dict(sorted(symbolsRet.items(),
-                                   key = lambda kv: (-round(kv[1], 6), kv[0]))[:self.numberOfStocks])
+        pumped_stocks = dict(sorted(symbols_ret.items(),
+                                   key = lambda kv: (-round(kv[1], 6), kv[0]))[:self.number_of_stocks])
 
         # Emit "down" insight for "pumped" penny stocks
-        for symbol, value in pumpedStocks.items():
-            insights.append(Insight.Price(symbol, self.predictionInterval, InsightDirection.Down, abs(value), None))
+        for symbol, value in pumped_stocks.items():
+            insights.append(Insight.price(symbol, self.prediction_interval, InsightDirection.DOWN, abs(value), None))
 
         return insights
 
@@ -83,21 +84,16 @@ class PennyStockUniverseSelectionModel(FundamentalUniverseSelectionModel):
     The stock must have volume between $1000000 and $10000 on the previous trading day
     The stock must cost less than $5'''
     def __init__(self):
-        super().__init__(False)
+        super().__init__()
 
         # Number of stocks in Coarse Universe
-        self.numberOfSymbolsCoarse = 500
-        self.lastMonth = -1
+        self.number_of_symbols_coarse = 500
 
-    def SelectCoarse(self, algorithm, coarse):
-        if algorithm.Time.month == self.lastMonth:
-            return Universe.Unchanged
-        self.lastMonth = algorithm.Time.month
-
+    def select(self, algorithm, fundamental):
         # sort the stocks by dollar volume and take the top 500
-        top = sorted([x for x in coarse if x.HasFundamentalData
-                                       and 5 > x.Price > 0
-                                       and 1000000 > x.Volume > 10000],
-                    key=lambda x: x.DollarVolume, reverse=True)[:self.numberOfSymbolsCoarse]
+        top = sorted([x for x in fundamental if x.has_fundamental_data
+                                       and 5 > x.price > 0
+                                       and 1000000 > x.volume > 10000],
+                    key=lambda x: x.dollar_volume, reverse=True)[:self.number_of_symbols_coarse]
 
-        return [x.Symbol for x in top]
+        return [x.symbol for x in top]

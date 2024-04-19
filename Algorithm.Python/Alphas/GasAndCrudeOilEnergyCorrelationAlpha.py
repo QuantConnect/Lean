@@ -30,38 +30,38 @@ from AlgorithmImports import *
 
 class GasAndCrudeOilEnergyCorrelationAlpha(QCAlgorithm):
 
-    def Initialize(self):
-        self.SetStartDate(2018, 1, 1)   #Set Start Date
-        self.SetCash(100000)            #Set Strategy Cash
+    def initialize(self):
+        self.set_start_date(2018, 1, 1)   #Set Start Date
+        self.set_cash(100000)            #Set Strategy Cash
 
-        natural_gas = [Symbol.Create(x, SecurityType.Equity, Market.USA) for x in ['UNG','BOIL','FCG']]
-        crude_oil = [Symbol.Create(x, SecurityType.Equity, Market.USA) for x in ['USO','UCO','DBO']]
+        natural_gas = [Symbol.create(x, SecurityType.EQUITY, Market.USA) for x in ['UNG','BOIL','FCG']]
+        crude_oil = [Symbol.create(x, SecurityType.EQUITY, Market.USA) for x in ['USO','UCO','DBO']]
 
         ## Set Universe Selection
-        self.UniverseSettings.Resolution = Resolution.Minute
-        self.SetUniverseSelection( ManualUniverseSelectionModel(natural_gas + crude_oil) )
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
+        self.universe_settings.resolution = Resolution.MINUTE
+        self.set_universe_selection( ManualUniverseSelectionModel(natural_gas + crude_oil) )
+        self.set_security_initializer(lambda security: security.set_fee_model(ConstantFeeModel(0)))
 
         ## Custom Alpha Model
-        self.SetAlpha(PairsAlphaModel(leading = natural_gas, following = crude_oil, history_days = 90, resolution = Resolution.Minute))
+        self.set_alpha(PairsAlphaModel(leading = natural_gas, following = crude_oil, history_days = 90, resolution = Resolution.MINUTE))
 
         ## Equal-weight our positions, in this case 100% in USO
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(resolution = Resolution.Minute))
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel(resolution = Resolution.MINUTE))
 
         ## Immediate Execution Fill Model
-        self.SetExecution(CustomExecutionModel())
+        self.set_execution(CustomExecutionModel())
 
         ## Null Risk-Management Model
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_risk_management(NullRiskManagementModel())
 
-    def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            self.Debug(f'Purchased Stock: {orderEvent.Symbol}')
+    def on_order_event(self, order_event):
+        if order_event.status == OrderStatus.FILLED:
+            self.debug(f'Purchased Stock: {order_event.symbol}')
 
-    def OnEndOfAlgorithm(self):
-        for kvp in self.Portfolio:
-            if kvp.Value.Invested:
-                self.Log(f'Invested in: {kvp.Key}')
+    def on_end_of_algorithm(self):
+        for kvp in self.portfolio:
+            if kvp.value.invested:
+                self.log(f'Invested in: {kvp.key}')
 
 
 class PairsAlphaModel:
@@ -75,33 +75,33 @@ class PairsAlphaModel:
         self.following = kwargs.get('following', [])
         self.history_days = kwargs.get('history_days', 90) ## In days
         self.lookback = kwargs.get('lookback', 5)
-        self.resolution = kwargs.get('resolution', Resolution.Hour)
-        self.prediction_interval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), 5) ## Arbitrary
+        self.resolution = kwargs.get('resolution', Resolution.HOUR)
+        self.prediction_interval = Time.multiply(Extensions.to_time_span(self.resolution), 5) ## Arbitrary
         self.difference_trigger = kwargs.get('difference_trigger', 0.75)
-        self.symbolDataBySymbol = {}
+        self._symbol_data_by_symbol = {}
         self.next_update = None
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
 
-        if (self.next_update is None) or (algorithm.Time > self.next_update):
-            self.CorrelationPairsSelection()
-            self.next_update = algorithm.Time + timedelta(30)
+        if (self.next_update is None) or (algorithm.time > self.next_update):
+            self.correlation_pairs_selection()
+            self.next_update = algorithm.time + timedelta(30)
 
-        magnitude = round(self.pairs[0].Return / 100, 6)
+        magnitude = round(self.pairs[0].rate_of_return / 100, 6)
 
         ## Check if Natural Gas returns are greater than the threshold we've set
-        if self.pairs[0].Return > self.difference_trigger:
-            return [Insight.Price(self.pairs[1].Symbol, self.prediction_interval, InsightDirection.Up, magnitude)]
-        if self.pairs[0].Return < -self.difference_trigger:
-            return [Insight.Price(self.pairs[1].Symbol, self.prediction_interval, InsightDirection.Down, magnitude)]
+        if self.pairs[0].rate_of_return > self.difference_trigger:
+            return [Insight.price(self.pairs[1].symbol, self.prediction_interval, InsightDirection.UP, magnitude)]
+        if self.pairs[0].rate_of_return < -self.difference_trigger:
+            return [Insight.price(self.pairs[1].symbol, self.prediction_interval, InsightDirection.DOWN, magnitude)]
 
         return []
 
-    def CorrelationPairsSelection(self):
+    def correlation_pairs_selection(self):
         ## Get returns for each natural gas/oil ETF
         daily_return = {}
-        for symbol, symbolData in self.symbolDataBySymbol.items():
-            daily_return[symbol] = symbolData.DailyReturnArray
+        for symbol, symbol_data in self._symbol_data_by_symbol.items():
+            daily_return[symbol] = symbol_data.daily_return_array
 
         ## Estimate coefficients of different correlation measures
         tau = pd.DataFrame.from_dict(daily_return).corr(method='kendall')
@@ -113,81 +113,81 @@ class PairsAlphaModel:
             corr = float(df.max())
             if corr > max_corr:
                 self.pairs = (
-                    self.symbolDataBySymbol[x],
-                    self.symbolDataBySymbol[df.idxmax()[0]])
+                    self._symbol_data_by_symbol[x],
+                    self._symbol_data_by_symbol[df.idxmax()[0]])
                 max_corr = corr
 
-    def OnSecuritiesChanged(self, algorithm, changes):
+    def on_securities_changed(self, algorithm, changes):
         '''Event fired each time the we add/remove securities from the data feed
         Args:
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
-        for removed in changes.RemovedSecurities:
-            symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
-            if symbolData is not None:
-                symbolData.RemoveConsolidators(algorithm)
+        for removed in changes.removed_securities:
+            symbol_data = self._symbol_data_by_symbol.pop(removed.symbol, None)
+            if symbol_data is not None:
+                symbol_data.remove_consolidators(algorithm)
 
         # initialize data for added securities
-        symbols = [ x.Symbol for x in changes.AddedSecurities ]
-        history = algorithm.History(symbols, self.history_days + 1, Resolution.Daily)
+        symbols = [ x.symbol for x in changes.added_securities ]
+        history = algorithm.history(symbols, self.history_days + 1, Resolution.DAILY)
         if history.empty: return
 
         tickers = history.index.levels[0]
         for ticker in tickers:
-            symbol = SymbolCache.GetSymbol(ticker)
-            if symbol not in self.symbolDataBySymbol:
-                symbolData = SymbolData(symbol, self.history_days, self.lookback, self.resolution, algorithm)
-                self.symbolDataBySymbol[symbol] = symbolData
-                symbolData.UpdateDailyRateOfChange(history.loc[ticker])
+            symbol = SymbolCache.get_symbol(ticker)
+            if symbol not in self._symbol_data_by_symbol:
+                symbol_data = SymbolData(symbol, self.history_days, self.lookback, self.resolution, algorithm)
+                self._symbol_data_by_symbol[symbol] = symbol_data
+                symbol_data.update_daily_rate_of_change(history.loc[ticker])
 
-        history = algorithm.History(symbols, self.lookback, self.resolution)
+        history = algorithm.history(symbols, self.lookback, self.resolution)
         if history.empty: return
         for ticker in tickers:
-            symbol = SymbolCache.GetSymbol(ticker)
-            if symbol in self.symbolDataBySymbol:
-                self.symbolDataBySymbol[symbol].UpdateRateOfChange(history.loc[ticker])
+            symbol = SymbolCache.get_symbol(ticker)
+            if symbol in self._symbol_data_by_symbol:
+                self._symbol_data_by_symbol[symbol].update_rate_of_change(history.loc[ticker])
 
 class SymbolData:
     '''Contains data specific to a symbol required by this model'''
-    def __init__(self, symbol, dailyLookback, lookback, resolution, algorithm):
-        self.Symbol = symbol
+    def __init__(self, symbol, daily_lookback, lookback, resolution, algorithm):
+        self.symbol = symbol
 
-        self.dailyReturn = RateOfChangePercent(f'{symbol}.DailyROCP({1})', 1)
-        self.dailyConsolidator = algorithm.ResolveConsolidator(symbol, Resolution.Daily)
-        self.dailyReturnHistory = RollingWindow[IndicatorDataPoint](dailyLookback)
+        self.daily_return = RateOfChangePercent(f'{symbol}.daily_rocp({1})', 1)
+        self.daily_consolidator = algorithm.resolve_consolidator(symbol, Resolution.DAILY)
+        self.daily_return_history = RollingWindow[IndicatorDataPoint](daily_lookback)
 
-        def updatedailyReturnHistory(s, e):
-            self.dailyReturnHistory.Add(e)
+        def updatedaily_return_history(s, e):
+            self.daily_return_history.add(e)
 
-        self.dailyReturn.Updated += updatedailyReturnHistory
-        algorithm.RegisterIndicator(symbol, self.dailyReturn, self.dailyConsolidator)
+        self.daily_return.updated += updatedaily_return_history
+        algorithm.register_indicator(symbol, self.daily_return, self.daily_consolidator)
 
-        self.rocp = RateOfChangePercent(f'{symbol}.ROCP({lookback})', lookback)
-        self.consolidator = algorithm.ResolveConsolidator(symbol, resolution)
-        algorithm.RegisterIndicator(symbol, self.rocp, self.consolidator)
+        self.rocp = RateOfChangePercent(f'{symbol}.rocp({lookback})', lookback)
+        self.consolidator = algorithm.resolve_consolidator(symbol, resolution)
+        algorithm.register_indicator(symbol, self.rocp, self.consolidator)
 
-    def RemoveConsolidators(self, algorithm):
-        algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.consolidator)
-        algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.dailyConsolidator)
+    def remove_consolidators(self, algorithm):
+        algorithm.subscription_manager.remove_consolidator(self.symbol, self.consolidator)
+        algorithm.subscription_manager.remove_consolidator(self.symbol, self.daily_consolidator)
 
-    def UpdateRateOfChange(self, history):
+    def update_rate_of_change(self, history):
         for tuple in history.itertuples():
-            self.rocp.Update(tuple.Index, tuple.close)
+            self.rocp.update(tuple.Index, tuple.close)
 
-    def UpdateDailyRateOfChange(self, history):
+    def update_daily_rate_of_change(self, history):
         for tuple in history.itertuples():
-            self.dailyReturn.Update(tuple.Index, tuple.close)
+            self.daily_return.update(tuple.Index, tuple.close)
 
     @property
-    def Return(self):
-        return float(self.rocp.Current.Value)
+    def rate_of_return(self):
+        return float(self.rocp.current.value)
 
     @property
-    def DailyReturnArray(self):
-        return pd.Series({x.EndTime: x.Value for x in self.dailyReturnHistory})
+    def daily_return_array(self):
+        return pd.Series({x.end_time: x.value for x in self.daily_return_history})
 
     def __repr__(self):
-        return f"{self.rocp.Name} - {Return}"
+        return f"{self.rocp.name} - {Return}"
 
 
 class CustomExecutionModel(ExecutionModel):
@@ -195,25 +195,25 @@ class CustomExecutionModel(ExecutionModel):
 
     def __init__(self):
         '''Initializes a new instance of the ImmediateExecutionModel class'''
-        self.targetsCollection = PortfolioTargetCollection()
+        self.targets_collection = PortfolioTargetCollection()
         self.previous_symbol = None
 
-    def Execute(self, algorithm, targets):
+    def execute(self, algorithm, targets):
         '''Immediately submits orders for the specified portfolio targets.
         Args:
             algorithm: The algorithm instance
             targets: The portfolio targets to be ordered'''
 
-        self.targetsCollection.AddRange(targets)
+        self.targets_collection.add_range(targets)
 
-        for target in self.targetsCollection.OrderByMarginImpact(algorithm):
-            open_quantity = sum([x.Quantity for x in algorithm.Transactions.GetOpenOrders(target.Symbol)])
-            existing = algorithm.Securities[target.Symbol].Holdings.Quantity + open_quantity
-            quantity = target.Quantity - existing
+        for target in self.targets_collection.order_by_margin_impact(algorithm):
+            open_quantity = sum([x.quantity for x in algorithm.transactions.get_open_orders(target.symbol)])
+            existing = algorithm.securities[target.symbol].holdings.quantity + open_quantity
+            quantity = target.quantity - existing
             ## Liquidate positions in Crude Oil ETF that is no longer part of the highest-correlation pair
-            if (str(target.Symbol) != str(self.previous_symbol)) and (self.previous_symbol is not None):
-                algorithm.Liquidate(self.previous_symbol)
+            if (str(target.symbol) != str(self.previous_symbol)) and (self.previous_symbol is not None):
+                algorithm.liquidate(self.previous_symbol)
             if quantity != 0:
-                algorithm.MarketOrder(target.Symbol, quantity)
-                self.previous_symbol = target.Symbol
-        self.targetsCollection.ClearFulfilled(algorithm)
+                algorithm.market_order(target.symbol, quantity)
+                self.previous_symbol = target.symbol
+        self.targets_collection.clear_fulfilled(algorithm)

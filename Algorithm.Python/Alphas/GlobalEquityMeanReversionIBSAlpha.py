@@ -29,14 +29,14 @@ from AlgorithmImports import *
 
 class GlobalEquityMeanReversionIBSAlpha(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2018, 1, 1)
+        self.set_start_date(2018, 1, 1)
 
-        self.SetCash(100000)
+        self.set_cash(100000)
 
         # Set zero transaction fees
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
+        self.set_security_initializer(lambda security: security.set_fee_model(ConstantFeeModel(0)))
 
         # Global Equity ETF tickers
         tickers = ["ECH","EEM","EFA","EPHE","EPP","EWA","EWC","EWG",
@@ -44,23 +44,23 @@ class GlobalEquityMeanReversionIBSAlpha(QCAlgorithm):
                    "EWQ","EWS","EWT","EWU","EWY","EWZ","EZA","FXI",
                    "GXG","IDX","ILF","EWM","QQQ","RSX","SPY","THD"]
 
-        symbols = [Symbol.Create(ticker, SecurityType.Equity, Market.USA) for ticker in tickers]
+        symbols = [Symbol.create(ticker, SecurityType.EQUITY, Market.USA) for ticker in tickers]
 
         # Manually curated universe
-        self.UniverseSettings.Resolution = Resolution.Daily
-        self.SetUniverseSelection(ManualUniverseSelectionModel(symbols))
+        self.universe_settings.resolution = Resolution.DAILY
+        self.set_universe_selection(ManualUniverseSelectionModel(symbols))
 
         # Use GlobalEquityMeanReversionAlphaModel to establish insights
-        self.SetAlpha(MeanReversionIBSAlphaModel())
+        self.set_alpha(MeanReversionIBSAlphaModel())
 
         # Equally weigh securities in portfolio, based on insights
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
 
         # Set Immediate Execution Model
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_execution(ImmediateExecutionModel())
 
         # Set Null Risk Management Model
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_risk_management(NullRiskManagementModel())
 
 
 class MeanReversionIBSAlphaModel(AlphaModel):
@@ -68,44 +68,44 @@ class MeanReversionIBSAlphaModel(AlphaModel):
 
     def __init__(self, *args, **kwargs):
         lookback = kwargs['lookback'] if 'lookback' in kwargs else 1
-        resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Daily
-        self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(resolution), lookback)
-        self.numberOfStocks = kwargs['numberOfStocks'] if 'numberOfStocks' in kwargs else 2
+        resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.DAILY
+        self.prediction_interval = Time.multiply(Extensions.to_time_span(resolution), lookback)
+        self.number_of_stocks = kwargs['number_of_stocks'] if 'number_of_stocks' in kwargs else 2
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
 
         insights = []
-        symbolsIBS = dict()
+        symbols_ibs = dict()
         returns = dict()
 
-        for security in algorithm.ActiveSecurities.Values:
-            if security.HasData:
-                high = security.High
-                low = security.Low
+        for security in algorithm.active_securities.values:
+            if security.has_data:
+                high = security.high
+                low = security.low
                 hilo = high - low
 
                 # Do not consider symbol with zero open and avoid division by zero
-                if security.Open * hilo != 0:
+                if security.open * hilo != 0:
                     # Internal bar strength (IBS)
-                    symbolsIBS[security.Symbol] = (security.Close - low)/hilo
-                    returns[security.Symbol] = security.Close/security.Open-1
+                    symbols_ibs[security.symbol] = (security.close - low)/hilo
+                    returns[security.symbol] = security.close/security.open-1
 
-        # Number of stocks cannot be higher than half of symbolsIBS length
-        number_of_stocks = min(int(len(symbolsIBS)/2), self.numberOfStocks)
+        # Number of stocks cannot be higher than half of symbols_ibs length
+        number_of_stocks = min(int(len(symbols_ibs)/2), self.number_of_stocks)
         if number_of_stocks == 0:
             return []
 
         # Rank securities with the highest IBS value
-        ordered = sorted(symbolsIBS.items(), key=lambda kv: (round(kv[1], 6), kv[0]), reverse=True)
-        highIBS = dict(ordered[0:number_of_stocks])   # Get highest IBS
-        lowIBS = dict(ordered[-number_of_stocks:])    # Get lowest IBS
+        ordered = sorted(symbols_ibs.items(), key=lambda kv: (round(kv[1], 6), kv[0]), reverse=True)
+        high_ibs = dict(ordered[0:number_of_stocks])   # Get highest IBS
+        low_ibs = dict(ordered[-number_of_stocks:])    # Get lowest IBS
 
         # Emit "down" insight for the securities with the highest IBS value
-        for key,value in highIBS.items():
-            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Down, abs(returns[key]), None))
+        for key,value in high_ibs.items():
+            insights.append(Insight.price(key, self.prediction_interval, InsightDirection.DOWN, abs(returns[key]), None))
 
         # Emit "up" insight for the securities with the lowest IBS value
-        for key,value in lowIBS.items():
-            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Up, abs(returns[key]), None))
+        for key,value in low_ibs.items():
+            insights.append(Insight.price(key, self.prediction_interval, InsightDirection.UP, abs(returns[key]), None))
 
         return insights

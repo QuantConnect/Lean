@@ -27,34 +27,34 @@ from AlgorithmImports import *
 
 class TripleLeverageETFPairVolatilityDecayAlpha(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
 
-        self.SetStartDate(2018, 1, 1)
+        self.set_start_date(2018, 1, 1)
 
-        self.SetCash(100000)
+        self.set_cash(100000)
 
         # Set zero transaction fees
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
+        self.set_security_initializer(lambda security: security.set_fee_model(ConstantFeeModel(0)))
 
         # 3X ETF pair tickers
-        ultraLong = Symbol.Create("UGLD", SecurityType.Equity, Market.USA)
-        ultraShort = Symbol.Create("DGLD", SecurityType.Equity, Market.USA)
+        ultra_long = Symbol.create("UGLD", SecurityType.EQUITY, Market.USA)
+        ultra_short = Symbol.create("DGLD", SecurityType.EQUITY, Market.USA)
 
         # Manually curated universe
-        self.UniverseSettings.Resolution = Resolution.Daily
-        self.SetUniverseSelection(ManualUniverseSelectionModel([ultraLong, ultraShort]))
+        self.universe_settings.resolution = Resolution.DAILY
+        self.set_universe_selection(ManualUniverseSelectionModel([ultra_long, ultra_short]))
 
         # Select the demonstration alpha model
-        self.SetAlpha(RebalancingTripleLeveragedETFAlphaModel(ultraLong, ultraShort))
+        self.set_alpha(RebalancingTripleLeveragedETFAlphaModel(ultra_long, ultra_short))
 
         ## Set Equal Weighting Portfolio Construction Model
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel())
 
         ## Set Immediate Execution Model
-        self.SetExecution(ImmediateExecutionModel())
+        self.set_execution(ImmediateExecutionModel())
 
         ## Set Null Risk Management Model
-        self.SetRiskManagement(NullRiskManagementModel())
+        self.set_risk_management(NullRiskManagementModel())
 
 
 class RebalancingTripleLeveragedETFAlphaModel(AlphaModel):
@@ -62,20 +62,20 @@ class RebalancingTripleLeveragedETFAlphaModel(AlphaModel):
         Rebalance a pair of 3x leveraged ETFs and predict that the value of both ETFs in each pair will decrease.
     '''
 
-    def __init__(self, ultraLong, ultraShort):
+    def __init__(self, ultra_long, ultra_short):
         # Giving an insight period 1 days.
         self.period = timedelta(1)
 
         self.magnitude = 0.001
-        self.ultraLong = ultraLong
-        self.ultraShort = ultraShort
+        self.ultra_long = ultra_long
+        self.ultra_short = ultra_short
 
-        self.Name = "RebalancingTripleLeveragedETFAlphaModel"
+        self.name = "RebalancingTripleLeveragedETFAlphaModel"
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
 
-        return Insight.Group(
+        return Insight.group(
             [
-                Insight.Price(self.ultraLong, self.period, InsightDirection.Down, self.magnitude),
-                Insight.Price(self.ultraShort, self.period, InsightDirection.Down, self.magnitude)
+                Insight.price(self.ultra_long, self.period, InsightDirection.DOWN, self.magnitude),
+                Insight.price(self.ultra_short, self.period, InsightDirection.DOWN, self.magnitude)
             ] )
