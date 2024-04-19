@@ -13,6 +13,7 @@
 
 from AlgorithmImports import *
 from BaseFrameworkRegressionAlgorithm import BaseFrameworkRegressionAlgorithm
+from Alphas.RsiAlphaModel import RsiAlphaModel
 
 ### <summary>
 ### Regression algorithm to assert the behavior of <see cref="RsiAlphaModel"/>.

@@ -12,6 +12,10 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from Alphas.ConstantAlphaModel import ConstantAlphaModel
+from Execution.ImmediateExecutionModel import ImmediateExecutionModel
+from Risk.MaximumSectorExposureRiskManagementModel import MaximumSectorExposureRiskManagementModel
 
 ### <summary>
 ### This example algorithm defines its own custom coarse/fine fundamental selection model
