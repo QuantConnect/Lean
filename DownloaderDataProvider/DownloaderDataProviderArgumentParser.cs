@@ -14,8 +14,9 @@
  * limitations under the License.
 */
 
-using McMaster.Extensions.CommandLineUtils;
 using QuantConnect.Configuration;
+using McMaster.Extensions.CommandLineUtils;
+using QuantConnect.Lean.DownloaderDataProvider.Models.Constants;
 
 namespace QuantConnect.Lean.DownloaderDataProvider;
 
@@ -27,14 +28,15 @@ public static class DownloaderDataProviderArgumentParser
 
     private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
     {
-        new CommandLineOption("data-provider", CommandOptionType.SingleValue),
-        new CommandLineOption("destination-dir", CommandOptionType.SingleValue),
-        new CommandLineOption("data-type", CommandOptionType.SingleValue),
-        new CommandLineOption("tickers", CommandOptionType.MultipleValue),
-        new CommandLineOption("security-type", CommandOptionType.SingleValue),
-        new CommandLineOption("resolution", CommandOptionType.SingleValue),
-        new CommandLineOption("start-date", CommandOptionType.SingleValue),
-        new CommandLineOption("end-date", CommandOptionType.SingleValue)
+        new CommandLineOption(DownloaderCommandArguments.CommandDownloaderDataProvider, CommandOptionType.SingleValue),
+        new CommandLineOption(DownloaderCommandArguments.CommandDestinationDirectory, CommandOptionType.SingleValue),
+        new CommandLineOption(DownloaderCommandArguments.CommandDataType, CommandOptionType.SingleValue),
+        new CommandLineOption(DownloaderCommandArguments.CommandTickers, CommandOptionType.MultipleValue),
+        new CommandLineOption(DownloaderCommandArguments.CommandSecurityType, CommandOptionType.SingleValue),
+        new CommandLineOption(DownloaderCommandArguments.CommandMarketName, CommandOptionType.SingleValue),
+        new CommandLineOption(DownloaderCommandArguments.CommandResolution, CommandOptionType.SingleValue),
+        new CommandLineOption(DownloaderCommandArguments.CommandStartDate, CommandOptionType.SingleValue),
+        new CommandLineOption(DownloaderCommandArguments.CommandEndDate, CommandOptionType.SingleValue)
     };
 
     /// <summary>
@@ -47,6 +49,10 @@ public static class DownloaderDataProviderArgumentParser
     /// </remarks>
     public static Dictionary<string, object> ParseArguments(string[] args)
     {
-        return ApplicationParser.Parse(ApplicationName, ApplicationDescription, ApplicationHelpText, args, Options);
+        var parsedArguments = ApplicationParser.Parse(ApplicationName, ApplicationDescription, ApplicationHelpText, args, Options);
+
+        //parsedArguments[DownloaderCommandArguments.CommandTickers]
+
+        return parsedArguments;
     }
 }
