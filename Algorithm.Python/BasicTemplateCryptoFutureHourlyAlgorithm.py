@@ -21,106 +21,106 @@ class BasicTemplateCryptoFutureHourlyAlgorithm(QCAlgorithm):
     # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
     # </summary>
 
-    def Initialize(self):
-        self.SetStartDate(2022, 12, 13)
-        self.SetEndDate(2022, 12, 13)
+    def initialize(self):
+        self.set_start_date(2022, 12, 13)
+        self.set_end_date(2022, 12, 13)
 
-        self.SetTimeZone(TimeZones.Utc)
+        self.set_time_zone(TimeZones.UTC)
 
         try:
-            self.SetBrokerageModel(BrokerageName.BinanceCoinFutures, AccountType.Cash)
+            self.set_brokerage_model(BrokerageName.BINANCE_COIN_FUTURES, AccountType.CASH)
         except:
             # expected, we don't allow cash account type
             pass
 
-        self.SetBrokerageModel(BrokerageName.BinanceCoinFutures, AccountType.Margin)
+        self.set_brokerage_model(BrokerageName.BINANCE_COIN_FUTURES, AccountType.MARGIN)
 
-        self.adaUsdt = self.AddCryptoFuture("ADAUSDT", Resolution.Hour)
+        self.ada_usdt = self.add_crypto_future("ADAUSDT", Resolution.HOUR)
 
-        self.fast = self.EMA(self.adaUsdt.Symbol, 3, Resolution.Hour)
-        self.slow = self.EMA(self.adaUsdt.Symbol, 6, Resolution.Hour)
+        self.fast = self.ema(self.ada_usdt.symbol, 3, Resolution.HOUR)
+        self.slow = self.ema(self.ada_usdt.symbol, 6, Resolution.HOUR)
 
-        self.interestPerSymbol = {self.adaUsdt.Symbol: 0}
+        self.interest_per_symbol = {self.ada_usdt.symbol: 0}
 
         # Default USD cash, set 1M but it wont be used
-        self.SetCash(1000000)
+        self.set_cash(1000000)
 
         # the amount of USDT we need to hold to trade 'ADAUSDT'
-        self.adaUsdt.QuoteCurrency.SetAmount(200)
+        self.ada_usdt.quote_currency.set_amount(200)
 
     # <summary>
     # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
     # </summary>
     # <param name="data">Slice object keyed by symbol containing the stock data</param>
-    def OnData(self, slice):
-        interestRates = slice.Get(MarginInterestRate);
-        for interestRate in interestRates:
-            self.interestPerSymbol[interestRate.Key] += 1
-            self.cachedInterestRate = self.Securities[interestRate.Key].Cache.GetData[MarginInterestRate]()
-            if self.cachedInterestRate != interestRate.Value:
-                raise Exception(f"Unexpected cached margin interest rate for {interestRate.Key}!")
-            
+    def on_data(self, slice):
+        interest_rates = slice.get(MarginInterestRate);
+        for interest_rate in interest_rates:
+            self.interest_per_symbol[interest_rate.key] += 1
+            self.cached_interest_rate = self.securities[interest_rate.key].cache.get_data[MarginInterestRate]()
+            if self.cached_interest_rate != interest_rate.value:
+                raise Exception(f"Unexpected cached margin interest rate for {interest_rate.key}!")
+
         if self.fast > self.slow:
-            if self.Portfolio.Invested == False and self.Transactions.OrdersCount == 0:
-                self.ticket = self.Buy(self.adaUsdt.Symbol, 100000)
-                if self.ticket.Status != OrderStatus.Invalid:
+            if self.portfolio.invested == False and self.transactions.orders_count == 0:
+                self.ticket = self.buy(self.ada_usdt.symbol, 100000)
+                if self.ticket.status != OrderStatus.INVALID:
                     raise Exception(f"Unexpected valid order {self.ticket}, should fail due to margin not sufficient")
-                
-                self.Buy(self.adaUsdt.Symbol, 1000)
 
-                self.marginUsed = self.Portfolio.TotalMarginUsed
+                self.buy(self.ada_usdt.symbol, 1000)
 
-                self.adaUsdtHoldings = self.adaUsdt.Holdings
+                self.margin_used = self.portfolio.total_margin_used
+
+                self.ada_usdt_holdings = self.ada_usdt.holdings
 
                 # USDT/BUSD futures value is based on it's price
-                self.holdingsValueUsdt = self.adaUsdt.Price * self.adaUsdt.SymbolProperties.ContractMultiplier * 1000
+                self.holdings_value_usdt = self.ada_usdt.price * self.ada_usdt.symbol_properties.contract_multiplier * 1000
 
-                if abs(self.adaUsdtHoldings.TotalSaleVolume - self.holdingsValueUsdt) > 1:
-                    raise Exception(f"Unexpected TotalSaleVolume {self.adaUsdtHoldings.TotalSaleVolume}")
-                
-                if abs(self.adaUsdtHoldings.AbsoluteHoldingsCost - self.holdingsValueUsdt) > 1:
-                    raise Exception(f"Unexpected holdings cost {self.adaUsdtHoldings.HoldingsCost}")
-                
-                if (abs(self.adaUsdtHoldings.AbsoluteHoldingsCost * 0.05 - self.marginUsed) > 1) or (BuyingPowerModelExtensions.GetMaintenanceMargin(self.adaUsdt.BuyingPowerModel, self.adaUsdt) != self.marginUsed):
-                    raise Exception(f"Unexpected margin used {self.marginUsed}")
-                
+                if abs(self.ada_usdt_holdings.total_sale_volume - self.holdings_value_usdt) > 1:
+                    raise Exception(f"Unexpected TotalSaleVolume {self.ada_usdt_holdings.total_sale_volume}")
+
+                if abs(self.ada_usdt_holdings.absolute_holdings_cost - self.holdings_value_usdt) > 1:
+                    raise Exception(f"Unexpected holdings cost {self.ada_usdt_holdings.holdings_cost}")
+
+                if (abs(self.ada_usdt_holdings.absolute_holdings_cost * 0.05 - self.margin_used) > 1) or (BuyingPowerModelExtensions.get_maintenance_margin(self.ada_usdt.buying_power_model, self.ada_usdt) != self.margin_used):
+                    raise Exception(f"Unexpected margin used {self.margin_used}")
+
                 # position just opened should be just spread here
-                self.profit = self.Portfolio.TotalUnrealizedProfit
-                
-                if (5 - abs(self.profit)) < 0:
-                    raise Exception(f"Unexpected TotalUnrealizedProfit {self.Portfolio.TotalUnrealizedProfit}")
+                self.profit = self.portfolio.total_unrealized_profit
 
-                if (self.Portfolio.TotalProfit != 0):
-                    raise Exception(f"Unexpected TotalProfit {self.Portfolio.TotalProfit}")
-                
+                if (5 - abs(self.profit)) < 0:
+                    raise Exception(f"Unexpected TotalUnrealizedProfit {self.portfolio.total_unrealized_profit}")
+
+                if (self.portfolio.total_profit != 0):
+                    raise Exception(f"Unexpected TotalProfit {self.portfolio.total_profit}")
+
         else:
             # let's revert our position and double
-            if self.Time.hour > 10 and self.Transactions.OrdersCount == 2:
-                self.Sell(self.adaUsdt.Symbol, 3000)
+            if self.time.hour > 10 and self.transactions.orders_count == 2:
+                self.sell(self.ada_usdt.symbol, 3000)
 
-                self.adaUsdtHoldings = self.adaUsdt.Holdings
+                self.ada_usdt_holdings = self.ada_usdt.holdings
 
                 # USDT/BUSD futures value is based on it's price
-                self.holdingsValueUsdt = self.adaUsdt.Price * self.adaUsdt.SymbolProperties.ContractMultiplier * 2000
+                self.holdings_value_usdt = self.ada_usdt.price * self.ada_usdt.symbol_properties.contract_multiplier * 2000
 
-                if abs(self.adaUsdtHoldings.AbsoluteHoldingsCost - self.holdingsValueUsdt) > 1:
-                    raise Exception(f"Unexpected holdings cost {self.adaUsdtHoldings.HoldingsCost}")
+                if abs(self.ada_usdt_holdings.absolute_holdings_cost - self.holdings_value_usdt) > 1:
+                    raise Exception(f"Unexpected holdings cost {self.ada_usdt_holdings.holdings_cost}")
 
                 # position just opened should be just spread here
-                self.profit = self.Portfolio.TotalUnrealizedProfit
+                self.profit = self.portfolio.total_unrealized_profit
                 if (5 - abs(self.profit)) < 0:
-                    raise Exception(f"Unexpected TotalUnrealizedProfit {self.Portfolio.TotalUnrealizedProfit}")
-                                        
-                # we barely did any difference on the previous trade
-                if (5 - abs(self.Portfolio.TotalProfit)) < 0:
-                    raise Exception(f"Unexpected TotalProfit {self.Portfolio.TotalProfit}")
-                
-            if self.Time.hour >= 22 and self.Transactions.OrdersCount == 3:
-                self.Liquidate()
-                                            
-    def OnEndOfAlgorithm(self):
-        if self.interestPerSymbol[self.adaUsdt.Symbol] != 1:
-                raise Exception(f"Unexpected interest rate count {self.interestPerSymbol[self.adaUsdt.Symbol]}")
+                    raise Exception(f"Unexpected TotalUnrealizedProfit {self.portfolio.total_unrealized_profit}")
 
-    def OnOrderEvent(self, orderEvent):
-        self.Debug("{0} {1}".format(self.Time, orderEvent))
+                # we barely did any difference on the previous trade
+                if (5 - abs(self.portfolio.total_profit)) < 0:
+                    raise Exception(f"Unexpected TotalProfit {self.portfolio.total_profit}")
+
+            if self.time.hour >= 22 and self.transactions.orders_count == 3:
+                self.liquidate()
+
+    def on_end_of_algorithm(self):
+        if self.interest_per_symbol[self.ada_usdt.symbol] != 1:
+                raise Exception(f"Unexpected interest rate count {self.interest_per_symbol[self.ada_usdt.symbol]}")
+
+    def on_order_event(self, order_event):
+        self.debug("{0} {1}".format(self.time, order_event))
