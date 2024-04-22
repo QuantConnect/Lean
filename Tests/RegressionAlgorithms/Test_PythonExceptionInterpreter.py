@@ -14,14 +14,14 @@
 from AlgorithmImports import *
 
 class Test_PythonExceptionInterpreter(QCAlgorithm):
-    def Initialize(self):
+    def initialize(self):
         pass
 
     def key_error(self):
         x = dict()['SPY']
 
     def no_method_match(self):
-        self.SetCash('SPY')
+        self.set_cash('SPY')
 
     def unsupported_operand(self):
         x = None + "Pepe Grillo"
@@ -30,4 +30,4 @@ class Test_PythonExceptionInterpreter(QCAlgorithm):
         x = 1 / 0
 
     def dotnet_error(self):
-        self.MarketOrder(None, 1);
+        self.market_order(None, 1);

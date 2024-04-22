@@ -15,8 +15,8 @@ from AlgorithmImports import *
 
 class Test_AlgorithmPythonWrapper(QCAlgorithm):
 
-    def Initialize(self):
+    def initialize(self):
         pass
 
-    def OnData(self, slice):
+    def on_data(self, slice):
         pass

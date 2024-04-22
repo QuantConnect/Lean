@@ -41,8 +41,8 @@ namespace QuantConnect.Tests.Python
                 _algorithm = module.GetAttr("Test_MethodOverload").Invoke();
                 // this is required else will get a 'RuntimeBinderException' because fails to match constructor method
                 dynamic algo = _algorithm.AsManagedObject((Type)_algorithm.GetPythonType().AsManagedObject(typeof(Type)));
-                _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
-                _algorithm.Initialize();
+                _algorithm.subscription_manager.set_data_manager(new DataManagerStub(algo));
+                _algorithm.initialize();
             }
         }
 

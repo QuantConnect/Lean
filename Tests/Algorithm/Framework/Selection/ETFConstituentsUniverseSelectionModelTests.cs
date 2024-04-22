@@ -38,17 +38,17 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 dynamic module = PyModule.FromString("testModule",
                     @$"{importStatement}
 class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
-    def Initialize(self):
-        self.UniverseSettings.Resolution = Resolution.Daily
-        symbol = Symbol.Create('SPY', SecurityType.Equity, Market.USA)
-        selection_model = ETFConstituentsUniverseSelectionModel(symbol, self.UniverseSettings, self.ETFConstituentsFilter)
+    def initialize(self):
+        self.universe_settings.resolution = Resolution.DAILY
+        symbol = Symbol.create('SPY', SecurityType.EQUITY, Market.USA)
+        selection_model = ETFConstituentsUniverseSelectionModel(symbol, self.universe_settings, self.etf_constituents_filter)
         self.universe_type = str(type(selection_model))
 
-    def ETFConstituentsFilter(self, constituents):
-        return [c.Symbol for c in constituents]");
-                
+    def etf_constituents_filter(self, constituents):
+        return [c.symbol for c in constituents]");
+
                 dynamic algorithm = module.GetAttr("ETFConstituentsFrameworkAlgorithm").Invoke();
-                algorithm.Initialize();
+                algorithm.initialize();
                 string universeTypeStr = algorithm.universe_type.ToString();
                 Assert.IsTrue(universeTypeStr.Contains(expected, StringComparison.InvariantCulture));
             }
@@ -58,17 +58,17 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
         [TestCase("'SPY'")]
         [TestCase("'SPY', None")]
         [TestCase("'SPY', None, None")]
-        [TestCase("'SPY', self.UniverseSettings")]
-        [TestCase("'SPY', self.UniverseSettings, None")]
-        [TestCase("'SPY', None, self.ETFConstituentsFilter")]
-        [TestCase("'SPY', self.UniverseSettings, self.ETFConstituentsFilter")]
-        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA)")]
-        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA), None, None")]
-        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA), self.UniverseSettings")]
-        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA), self.UniverseSettings, None")]
-        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA), None, self.ETFConstituentsFilter")]
-        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA), self.UniverseSettings, self.ETFConstituentsFilter")]
-        [TestCase("Symbol.Create('SPY', SecurityType.Equity, Market.USA), universeFilterFunc=self.ETFConstituentsFilter")]
+        [TestCase("'SPY', self.universe_settings")]
+        [TestCase("'SPY', self.universe_settings, None")]
+        [TestCase("'SPY', None, self.etf_constituents_filter")]
+        [TestCase("'SPY', self.universe_settings, self.etf_constituents_filter")]
+        [TestCase("Symbol.create('SPY', SecurityType.EQUITY, Market.USA)")]
+        [TestCase("Symbol.create('SPY', SecurityType.EQUITY, Market.USA), None, None")]
+        [TestCase("Symbol.create('SPY', SecurityType.EQUITY, Market.USA), self.universe_settings")]
+        [TestCase("Symbol.create('SPY', SecurityType.EQUITY, Market.USA), self.universe_settings, None")]
+        [TestCase("Symbol.create('SPY', SecurityType.EQUITY, Market.USA), None, self.etf_constituents_filter")]
+        [TestCase("Symbol.create('SPY', SecurityType.EQUITY, Market.USA), self.universe_settings, self.etf_constituents_filter")]
+        [TestCase("Symbol.create('SPY', SecurityType.EQUITY, Market.USA), universe_filter_func=self.etf_constituents_filter")]
         public void ETFConstituentsUniverseSelectionModelWithVariousConstructor(string constructorParameters)
         {
             using (Py.GIL())
@@ -78,15 +78,15 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
 from Selection.ETFConstituentsUniverseSelectionModel import *
 class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
     selection_model = None
-    def Initialize(self):
-        self.UniverseSettings.Resolution = Resolution.Daily
+    def initialize(self):
+        self.universe_settings.resolution = Resolution.DAILY
         self.selection_model = ETFConstituentsUniverseSelectionModel({constructorParameters})
 
-    def ETFConstituentsFilter(self, constituents):
-        return [c.Symbol for c in constituents]");
+    def etf_constituents_filter(self, constituents):
+        return [c.symbol for c in constituents]");
 
                 dynamic algorithm = module.GetAttr("ETFConstituentsFrameworkAlgorithm").Invoke();
-                algorithm.Initialize();
+                algorithm.initialize();
                 Assert.IsNotNull(algorithm.selection_model);
                 Assert.IsTrue(algorithm.selection_model.etf_symbol.GetPythonType().ToString().Contains($"{nameof(Symbol)}", StringComparison.InvariantCulture));
                 Assert.IsTrue(algorithm.selection_model.etf_symbol.ToString().Contains(Symbols.SPY, StringComparison.InvariantCulture));
@@ -99,7 +99,7 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
             using (Py.GIL())
             {
                 var etfAlgorithm = GetETFConstituentsFrameworkAlgorithm(ticker);
-                etfAlgorithm.Initialize();
+                etfAlgorithm.initialize();
 
                 Assert.IsNotNull(etfAlgorithm.selection_model);
                 Assert.IsTrue(etfAlgorithm.selection_model.etf_symbol.GetPythonType().ToString().Contains($"{nameof(Symbol)}", StringComparison.InvariantCulture));
@@ -117,7 +117,7 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
             using (Py.GIL())
             {
                 var etfAlgorithm = GetETFConstituentsFrameworkAlgorithm(ticker);
-                etfAlgorithm.Initialize();
+                etfAlgorithm.initialize();
 
                 Assert.IsNotNull(etfAlgorithm.selection_model);
                 Assert.IsTrue(etfAlgorithm.selection_model.etf_symbol.GetPythonType().ToString().Contains($"{nameof(Symbol)}", StringComparison.InvariantCulture));
@@ -185,9 +185,9 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
 from Selection.ETFConstituentsUniverseSelectionModel import *
 class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
     selection_model = None
-    def Initialize(self):
-        SymbolCache.Set('SPY', Symbol.Create('SPY', SecurityType.Equity, Market.USA, '{cachedAlias}'))
-        self.UniverseSettings.Resolution = Resolution.Daily
+    def initialize(self):
+        SymbolCache.set('SPY', Symbol.create('SPY', SecurityType.EQUITY, Market.USA, '{cachedAlias}'))
+        self.universe_settings.resolution = Resolution.DAILY
         self.selection_model = ETFConstituentsUniverseSelectionModel(""{etfTicker}"")"
 );
 
