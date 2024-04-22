@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;

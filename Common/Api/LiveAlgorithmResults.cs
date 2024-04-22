@@ -27,7 +27,7 @@ namespace QuantConnect.Api
     public class LiveAlgorithmResults : RestResponse
     {
         /// <summary>
-        /// Algorithm message
+        /// Error message
         /// </summary>
         [JsonProperty(PropertyName = "message")]
         public string Message { get; set; }
@@ -45,7 +45,7 @@ namespace QuantConnect.Api
         public string DeployId { get; set; }
 
         /// <summary>
-        /// The ID of the project this live algorithm was cloned
+        /// The snapshot project ID for cloning the live development's source code.
         /// </summary>
         [JsonProperty(PropertyName = "cloneId")]
         public int CloneId { get; set; }
@@ -81,16 +81,16 @@ namespace QuantConnect.Api
         public string ProjectName { get; set; }
 
         /// <summary>
-        /// Name of the data center
+        /// Name of the data center where the algorithm is physically located.
         /// </summary>
         [JsonProperty(PropertyName = "datacenter")]
         public string Datacenter { get; set; }
 
         /// <summary>
-        /// Indicates if the live algorithm is streaming to the public
+        /// Indicates if the algorithm is being live shared
         /// </summary>
-        [JsonProperty(PropertyName = "isPublicStreaming")]
-        public bool IsPublicStreaming { get; set; }
+        [JsonProperty(PropertyName = "public")]
+        public bool Public { get; set; }
 
         /// <summary>
         /// Files present in the project in which the algorithm is

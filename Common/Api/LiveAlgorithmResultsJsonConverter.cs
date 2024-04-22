@@ -88,23 +88,23 @@ namespace QuantConnect.Api
                 SecurityTypes = jObject["securityTypes"].Value<string>(),
                 ProjectName = jObject["projectName"].Value<string>(),
                 Datacenter = jObject["datacenter"].Value<string>(),
-                IsPublicStreaming = jObject["isPublicStreaming"].Value<bool>(),
+                Public = jObject["public"].Value<bool>(),
                 Success = jObject["success"].Value<bool>()
             };
 
             if (!liveAlgoResults.Success)
             {
-                // Either there was an error in the running algrithm or the algorithm hasn't started
+                // Either there was an error in the running algorithm or the algorithm hasn't started
                 liveAlgoResults.Errors = jObject.Last.Children().Select(error => error.ToString()).ToList();
                 return liveAlgoResults;
             }
 
             // Deserialize charting data
             Dictionary<string, Chart> chartDictionary = new();
-            var charts = jObject["charts"];
+            var charts = jObject["charts"] ?? jObject["Charts"];
             if (charts != null)
             {
-                var stringCharts = jObject["charts"].ToString();
+                var stringCharts = jObject["charts"]?.ToString() ?? jObject["Charts"].ToString();
                 if(!string.IsNullOrEmpty(stringCharts))
                 {
                     chartDictionary = JsonConvert.DeserializeObject<Dictionary<string, Chart>>(stringCharts);
@@ -113,10 +113,10 @@ namespace QuantConnect.Api
 
             // Deserialize files data
             List<ProjectFile> projectFiles = new List<ProjectFile>();
-            var files = jObject["files"];
+            var files = jObject["files"] ?? jObject["Files"];
             if (files != null)
             {
-                var stringFiles = jObject["files"].ToString();
+                var stringFiles = jObject["files"]?.ToString() ?? jObject["Files"].ToString();
                 if (!string.IsNullOrEmpty(stringFiles))
                 {
                     projectFiles = JsonConvert.DeserializeObject<List<ProjectFile>>(stringFiles);

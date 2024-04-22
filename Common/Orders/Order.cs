@@ -135,7 +135,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Tag the order with some custom data
         /// </summary>
-        [JsonProperty(PropertyName = "tag" ,DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [DefaultValue(""), JsonProperty(PropertyName = "tag" ,DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Tag { get; internal set; }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Get the absolute quantity for this order
         /// </summary>
-        [JsonProperty(PropertyName = "absoluteQuantity")]
+        [JsonIgnore]
         public decimal AbsoluteQuantity => Math.Abs(Quantity);
 
         /// <summary>

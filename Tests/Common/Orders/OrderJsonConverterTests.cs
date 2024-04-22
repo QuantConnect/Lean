@@ -958,7 +958,6 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 1,
             ""direction"": 0,
-            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -995,7 +994,6 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 1,
             ""direction"": 0,
-            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -1032,7 +1030,6 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 1,
             ""direction"": 0,
-            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -1071,7 +1068,6 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 1,
             ""direction"": 0,
-            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -1107,7 +1103,6 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 1,
             ""direction"": 0,
-            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -1143,7 +1138,6 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 1,
             ""direction"": 0,
-            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -1184,7 +1178,6 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 2,
             ""direction"": 0,
-            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -1223,7 +1216,6 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 1,
             ""direction"": 0,
-            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -1264,7 +1256,6 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 2,
             ""direction"": 0,
-            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -1317,7 +1308,6 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 2,
             ""direction"": 0,
-            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -1371,7 +1361,6 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 2,
             ""direction"": 0,
-            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -1422,7 +1411,6 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 1,
             ""direction"": 0,
-            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,

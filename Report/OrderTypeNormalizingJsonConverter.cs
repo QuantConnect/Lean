@@ -54,14 +54,22 @@ namespace QuantConnect.Report
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var token = JToken.ReadFrom(reader);
+            int orderType = default;
             // Takes the Type field and selects the correct OrderType instance
-            var orderTypeValue = token["type"].Value<string>();
-            int orderTypeNumber;
-            var orderType = Parse.TryParse(orderTypeValue, NumberStyles.Any, out orderTypeNumber) ?
-                orderTypeNumber :
-                (int)(OrderType)Enum.Parse(typeof(OrderType), orderTypeValue, true);
+            if (token["type"] != null){
+                orderType = GetOrderType(token["type"]);
+                token["type"] = orderType;
+            }
+            else if (token["Type"] != null)
+            {
+                orderType = GetOrderType(token["Type"]);
+                token["Type"] = orderType;
+            }
+            else
+            {
+                throw new ArgumentException($"The order does not have a property called 'type' nor 'Type'.");
+            }
 
-            token["type"] = orderType;
             return OrderJsonConverter.CreateOrderFromJObject((JObject)token);
         }
 
@@ -71,6 +79,15 @@ namespace QuantConnect.Report
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             throw new NotImplementedException();
+        }
+
+        private int GetOrderType(JToken type)
+        {
+            var orderTypeValue = type.Value<string>();
+            int orderTypeNumber;
+            return Parse.TryParse(orderTypeValue, NumberStyles.Any, out orderTypeNumber) ?
+                orderTypeNumber :
+                (int)(OrderType)Enum.Parse(typeof(OrderType), orderTypeValue, true);
         }
     }
 }
