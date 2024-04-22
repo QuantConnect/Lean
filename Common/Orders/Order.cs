@@ -135,7 +135,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Tag the order with some custom data
         /// </summary>
-        [DefaultValue(""), JsonProperty(PropertyName = "tag" ,DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(PropertyName = "tag" ,DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Tag { get; internal set; }
 
         /// <summary>

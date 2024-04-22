@@ -123,7 +123,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "₹61000000000.00"},
             {"Lowest Capacity Asset", "YESBANK UL"},
             {"Portfolio Turnover", "0.00%"},
-            {"OrderListHash", "877a2cff7eb411d38e7d3ac7638cdc4c"}
+            {"OrderListHash", "7a0257f08e3bb9143b825e07ab47fea0"}
         };
     }
 }
