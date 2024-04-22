@@ -415,8 +415,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 12016
         /// </remarks>
         [JsonProperty("12016")]
-        public DebttoAssets DebttoAssets => _debttoAssets ??= new(_timeProvider, _securityIdentifier);
-        private DebttoAssets _debttoAssets;
+        public DebtToAssets DebtToAssets => _debtToAssets ??= new(_timeProvider, _securityIdentifier);
+        private DebtToAssets _debtToAssets;
 
         /// <summary>
         /// This is a financial ratio of common stock equity to total assets that indicates the relative proportion of equity used to finance a company's assets.
