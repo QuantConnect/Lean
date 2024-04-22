@@ -19,98 +19,98 @@ from CustomDataRegressionAlgorithm import Bitcoin
 ### </summary>
 class RegisterIndicatorRegressionAlgorithm(QCAlgorithm):
     # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-    def Initialize(self):
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 9)
+    def initialize(self):
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 9)
 
-        SP500 = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME)
-        self._symbol = _symbol = self.FutureChainProvider.GetFutureContractList(SP500, (self.StartDate + timedelta(days=1)))[0]
-        self.AddFutureContract(_symbol)
+        SP500 = Symbol.create(Futures.Indices.SP_500_E_MINI, SecurityType.FUTURE, Market.CME)
+        self._symbol = _symbol = self.future_chain_provider.get_future_contract_list(SP500, (self.start_date + timedelta(days=1)))[0]
+        self.add_future_contract(_symbol)
 
         # this collection will hold all indicators and at the end of the algorithm we will assert that all of them are ready
         self._indicators = []
 
         # this collection will be used to determine if the Selectors were called, we will assert so at the end of algorithm
-        self._selectorCalled = [ False, False, False, False, False, False ]
+        self._selector_called = [ False, False, False, False, False, False ]
 
         # First we will test that we can register our custom indicator using a QuoteBar consolidator
         indicator = CustomIndicator()
-        consolidator = self.ResolveConsolidator(_symbol, Resolution.Minute, QuoteBar)
-        self.RegisterIndicator(_symbol, indicator, consolidator)
+        consolidator = self.resolve_consolidator(_symbol, Resolution.MINUTE, QuoteBar)
+        self.register_indicator(_symbol, indicator, consolidator)
         self._indicators.append(indicator)
 
         indicator2 = CustomIndicator()
         # We use the TimeDelta overload to fetch the consolidator
-        consolidator = self.ResolveConsolidator(_symbol, timedelta(minutes=1), QuoteBar)
+        consolidator = self.resolve_consolidator(_symbol, timedelta(minutes=1), QuoteBar)
         # We specify a custom selector to be used
-        self.RegisterIndicator(_symbol, indicator2, consolidator, lambda bar: self.SetSelectorCalled(0) and bar)
+        self.register_indicator(_symbol, indicator2, consolidator, lambda bar: self.set_selector_called(0) and bar)
         self._indicators.append(indicator2)
 
         # We use a IndicatorBase<IndicatorDataPoint> with QuoteBar data and a custom selector
         indicator3 = SimpleMovingAverage(10)
-        consolidator = self.ResolveConsolidator(_symbol, timedelta(minutes=1), QuoteBar)
-        self.RegisterIndicator(_symbol, indicator3, consolidator, lambda bar: self.SetSelectorCalled(1) and (bar.Ask.High - bar.Bid.Low))
+        consolidator = self.resolve_consolidator(_symbol, timedelta(minutes=1), QuoteBar)
+        self.register_indicator(_symbol, indicator3, consolidator, lambda bar: self.set_selector_called(1) and (bar.ask.high - bar.bid.low))
         self._indicators.append(indicator3)
 
         # We test default consolidator resolution works correctly
-        movingAverage = SimpleMovingAverage(10)
-        # Using Resolution, specifying custom selector and explicitly using TradeBar.Volume
-        self.RegisterIndicator(_symbol, movingAverage, Resolution.Minute, lambda bar: self.SetSelectorCalled(2) and bar.Volume)
-        self._indicators.append(movingAverage)
+        moving_average = SimpleMovingAverage(10)
+        # Using Resolution, specifying custom selector and explicitly using TradeBar.volume
+        self.register_indicator(_symbol, moving_average, Resolution.MINUTE, lambda bar: self.set_selector_called(2) and bar.volume)
+        self._indicators.append(moving_average)
 
-        movingAverage2 = SimpleMovingAverage(10)
+        moving_average2 = SimpleMovingAverage(10)
         # Using Resolution
-        self.RegisterIndicator(_symbol, movingAverage2, Resolution.Minute)
-        self._indicators.append(movingAverage2)
+        self.register_indicator(_symbol, moving_average2, Resolution.MINUTE)
+        self._indicators.append(moving_average2)
 
-        movingAverage3 = SimpleMovingAverage(10)
+        moving_average3 = SimpleMovingAverage(10)
         # Using timedelta
-        self.RegisterIndicator(_symbol, movingAverage3, timedelta(minutes=1))
-        self._indicators.append(movingAverage3)
+        self.register_indicator(_symbol, moving_average3, timedelta(minutes=1))
+        self._indicators.append(moving_average3)
 
-        movingAverage4 = SimpleMovingAverage(10)
-        # Using timeDelta, specifying custom selector and explicitly using TradeBar.Volume
-        self.RegisterIndicator(_symbol, movingAverage4, timedelta(minutes=1), lambda bar: self.SetSelectorCalled(3) and bar.Volume)
-        self._indicators.append(movingAverage4)
+        moving_average4 = SimpleMovingAverage(10)
+        # Using time_delta, specifying custom selector and explicitly using TradeBar.volume
+        self.register_indicator(_symbol, moving_average4, timedelta(minutes=1), lambda bar: self.set_selector_called(3) and bar.volume)
+        self._indicators.append(moving_average4)
 
         # Test custom data is able to register correctly and indicators updated
-        symbolCustom = self.AddData(Bitcoin, "BTC", Resolution.Minute).Symbol
+        symbol_custom = self.add_data(Bitcoin, "BTC", Resolution.MINUTE).symbol
 
-        smaCustomData = SimpleMovingAverage(1)
-        self.RegisterIndicator(symbolCustom, smaCustomData, timedelta(minutes=1), lambda bar: self.SetSelectorCalled(4) and bar.Volume)
-        self._indicators.append(smaCustomData)
+        sma_custom_data = SimpleMovingAverage(1)
+        self.register_indicator(symbol_custom, sma_custom_data, timedelta(minutes=1), lambda bar: self.set_selector_called(4) and bar.volume)
+        self._indicators.append(sma_custom_data)
 
-        smaCustomData2 = SimpleMovingAverage(1)
-        self.RegisterIndicator(symbolCustom, smaCustomData2, Resolution.Minute)
-        self._indicators.append(smaCustomData2)
+        sma_custom_data2 = SimpleMovingAverage(1)
+        self.register_indicator(symbol_custom, sma_custom_data2, Resolution.MINUTE)
+        self._indicators.append(sma_custom_data2)
 
-        smaCustomData3 = SimpleMovingAverage(1)
-        consolidator = self.ResolveConsolidator(symbolCustom, timedelta(minutes=1))
-        self.RegisterIndicator(symbolCustom, smaCustomData3, consolidator, lambda bar: self.SetSelectorCalled(5) and bar.Volume)
-        self._indicators.append(smaCustomData3)
+        sma_custom_data3 = SimpleMovingAverage(1)
+        consolidator = self.resolve_consolidator(symbol_custom, timedelta(minutes=1))
+        self.register_indicator(symbol_custom, sma_custom_data3, consolidator, lambda bar: self.set_selector_called(5) and bar.volume)
+        self._indicators.append(sma_custom_data3)
 
-    def SetSelectorCalled(self, position):
-        self._selectorCalled[position] = True
+    def set_selector_called(self, position):
+        self._selector_called[position] = True
         return True
 
     # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-    def OnData(self, data):
-        if not self.Portfolio.Invested:
-           self.SetHoldings(self._symbol, 0.5)
+    def on_data(self, data):
+        if not self.portfolio.invested:
+           self.set_holdings(self._symbol, 0.5)
 
-    def OnEndOfAlgorithm(self):
-        if any(not wasCalled for wasCalled in self._selectorCalled):
+    def on_end_of_algorithm(self):
+        if any(not was_called for was_called in self._selector_called):
             raise ValueError("All selectors should of been called")
-        if any(not indicator.IsReady for indicator in self._indicators):
+        if any(not indicator.is_ready for indicator in self._indicators):
             raise ValueError("All indicators should be ready")
-        self.Log(f'Total of {len(self._indicators)} are ready')
+        self.log(f'Total of {len(self._indicators)} are ready')
 
 class CustomIndicator(PythonIndicator):
     def __init__(self):
         super().__init__()
-        self.Name = "Jose"
-        self.Value = 0
+        self.name = "Jose"
+        self.value = 0
 
-    def Update(self, input):
-        self.Value = input.Ask.High
+    def update(self, input):
+        self.value = input.ask.high
         return True

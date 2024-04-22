@@ -18,24 +18,24 @@ class ETFConstituentsUniverseSelectionModel(UniverseSelectionModel):
     '''Universe selection model that selects the constituents of an ETF.'''
 
     def __init__(self,
-                 etfSymbol,
-                 universeSettings = None,
-                 universeFilterFunc = None):
+                 etf_symbol,
+                 universe_settings = None,
+                 universe_filter_func = None):
         '''Initializes a new instance of the ETFConstituentsUniverseSelectionModel class
         Args:
             etfSymbol: Symbol of the ETF to get constituents for
             universeSettings: Universe settings
             universeFilterFunc: Function to filter universe results'''
-        if type(etfSymbol) is str:
-            symbol = SymbolCache.try_get_symbol(etfSymbol, None)
+        if type(etf_symbol) is str:
+            symbol = SymbolCache.try_get_symbol(etf_symbol, None)
             if symbol[0] and symbol[1].security_type == SecurityType.EQUITY:
                 self.etf_symbol = symbol[1]
             else:
-                self.etf_symbol = Symbol.create(etfSymbol, SecurityType.EQUITY, Market.USA)
+                self.etf_symbol = Symbol.create(etf_symbol, SecurityType.EQUITY, Market.USA)
         else:
-            self.etf_symbol = etfSymbol
-        self.universe_settings = universeSettings
-        self.universe_filter_function = universeFilterFunc
+            self.etf_symbol = etf_symbol
+        self.universe_settings = universe_settings
+        self.universe_filter_function = universe_filter_func
 
         self.universe = None
 
