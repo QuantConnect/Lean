@@ -55,13 +55,13 @@ namespace QuantConnect.Report
         {
             var token = JToken.ReadFrom(reader);
             // Takes the Type field and selects the correct OrderType instance
-            var orderTypeValue = token["Type"].Value<string>();
+            var orderTypeValue = token["type"].Value<string>();
             int orderTypeNumber;
             var orderType = Parse.TryParse(orderTypeValue, NumberStyles.Any, out orderTypeNumber) ?
                 orderTypeNumber :
                 (int)(OrderType)Enum.Parse(typeof(OrderType), orderTypeValue, true);
 
-            token["Type"] = orderType;
+            token["type"] = orderType;
             return OrderJsonConverter.CreateOrderFromJObject((JObject)token);
         }
 
