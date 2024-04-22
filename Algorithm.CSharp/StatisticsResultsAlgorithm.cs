@@ -226,7 +226,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Portfolio Turnover", "549.26%"},
             {"Most Traded Security Trade Count", "63"},
             {"Most Traded Security", "IBM"},
-            {"OrderListHash", "3555aa1d5bfc70ba8a460752f3904327"}
+            {"OrderListHash", "e40d359cc5d4bf1fe5bfb889721b6675"}
         };
     }
 }

@@ -180,7 +180,7 @@ namespace QuantConnect.Tests.Python
                         {"Estimated Strategy Capacity", "$56000000.00"},
                         {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
                         {"Portfolio Turnover", "19.93%"},
-                        {"OrderListHash", "0c0f9328786b0c9e8f88d271673d16c3"}
+                        {"OrderListHash", "ba7efbc23d8a59d439c25e39e0b6a61d"}
                     },
                     Language.Python,
                     AlgorithmStatus.Completed,
@@ -220,7 +220,7 @@ namespace QuantConnect.Tests.Python
                         {"Estimated Strategy Capacity", "$52000000.00"},
                         {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
                         {"Portfolio Turnover", "197.95%"},
-                        {"OrderListHash", "f19ae2dbd12a1a8cc4da90523a37dfdf"}
+                        {"OrderListHash", "970b2968f6b709dcf379d1c6c3fa50a0"}
                     },
                     Language.Python,
                     AlgorithmStatus.Completed,

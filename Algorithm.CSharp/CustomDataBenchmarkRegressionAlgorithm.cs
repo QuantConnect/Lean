@@ -106,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$180000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "24.86%"},
-            {"OrderListHash", "543c39983f298dd868296de07e9b407d"}
+            {"OrderListHash", "05b7e9460fd9df97515c3424816ca395"}
         };
 
         public class ExampleCustomData : BaseData

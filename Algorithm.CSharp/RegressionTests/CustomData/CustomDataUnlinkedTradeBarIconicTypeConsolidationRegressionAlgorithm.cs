@@ -171,7 +171,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "VIX.IncrementallyGeneratedCustomData 2S"},
             {"Portfolio Turnover", "0.02%"},
-            {"OrderListHash", "04c8ea3753ae34727dc3ca58e68146c0"}
+            {"OrderListHash", "af48b1f2512d05f0ac255349b6bdfdec"}
         };
     }
 }

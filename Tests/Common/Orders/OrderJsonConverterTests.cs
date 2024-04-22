@@ -606,7 +606,7 @@ namespace QuantConnect.Tests.Common.Orders
         {
             var order = GetAndAssertOrder(json, type);
             var serializedOrder = JsonConvert.SerializeObject(order);
-            var jsonFormat = json.Replace("\r\n            ", "").Replace(": ", ":").Replace("    ", "").Replace("\r\n", "").Replace("\t", "");
+            var jsonFormat = json.Replace("\r\n            ", "").Replace(": ", ":").Replace("    ", "").Replace("\r\n", "").Replace("\t", "").Replace("\n", "");
             if (order.Type == OrderType.ComboMarket || order.Type == OrderType.ComboLimit || order.Type == OrderType.ComboLegLimit)
             {
                 jsonFormat = Regex.Replace(jsonFormat, @"\""value\"":\""(.*?)\"",", "");
@@ -1443,7 +1443,7 @@ namespace QuantConnect.Tests.Common.Orders
             new object[] { _marketOnClose, OrderType.MarketOnClose, "SPY R735QTJ8XC9X", SecurityType.Equity },
             new object[] { _optionExercise, OrderType.OptionExercise, "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option },
             new object[] { _limitIfTouched, OrderType.LimitIfTouched, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _marketOrder, OrderType.ComboMarket, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _comboMarket, OrderType.ComboMarket, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
             new object[] { _comboLimit, OrderType.ComboLimit, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
             new object[] { _comboLegLimit, OrderType.ComboLegLimit, "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option },
             new object[] { _trailingStop, OrderType.TrailingStop, "SPY R735QTJ8XC9X", SecurityType.Equity }
@@ -1459,7 +1459,7 @@ namespace QuantConnect.Tests.Common.Orders
             new object[] { _marketOnClose, OrderType.MarketOnClose },
             new object[] { _optionExercise, OrderType.OptionExercise },
             new object[] { _limitIfTouched, OrderType.LimitIfTouched },
-            new object[] { _marketOrder, OrderType.ComboMarket },
+            new object[] { _comboMarket, OrderType.ComboMarket },
             new object[] { _comboLimit, OrderType.ComboLimit },
             new object[] { _comboLegLimit, OrderType.ComboLegLimit },
             new object[] { _trailingStop, OrderType.TrailingStop }

@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
                     {"Estimated Strategy Capacity", "$2200000000.00"},
                     {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
                     {"Portfolio Turnover", "0.28%"},
-                    {"OrderListHash", "490a9beb7a7b09c88db446e4fbd392cc"}
+                    {"OrderListHash", "2fd8c0100ed60174e23272c6053cf22f"}
                 },
                 Language.Python,
                 AlgorithmStatus.Completed);
