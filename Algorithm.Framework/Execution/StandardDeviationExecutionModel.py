@@ -20,7 +20,7 @@ class StandardDeviationExecutionModel(ExecutionModel):
     def __init__(self,
                  period = 60,
                  deviations = 2,
-                 resolution = Resolution.Minute):
+                 resolution = Resolution.MINUTE):
         '''Initializes a new instance of the StandardDeviationExecutionModel class
         Args:
             period: Period of the standard deviation indicator
@@ -29,96 +29,96 @@ class StandardDeviationExecutionModel(ExecutionModel):
         self.period = period
         self.deviations = deviations
         self.resolution = resolution
-        self.targetsCollection = PortfolioTargetCollection()
-        self.symbolData = {}
+        self.targets_collection = PortfolioTargetCollection()
+        self._symbol_data = {}
 
         # Gets or sets the maximum order value in units of the account currency.
         # This defaults to $20,000. For example, if purchasing a stock with a price
         # of $100, then the maximum order size would be 200 shares.
-        self.MaximumOrderValue = 20000
+        self.maximum_order_value = 20000
 
 
-    def Execute(self, algorithm, targets):
+    def execute(self, algorithm, targets):
         '''Executes market orders if the standard deviation of price is more
        than the configured number of deviations in the favorable direction.
        Args:
            algorithm: The algorithm instance
            targets: The portfolio targets'''
-        self.targetsCollection.AddRange(targets)
+        self.targets_collection.add_range(targets)
 
         # for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
-        if not self.targetsCollection.IsEmpty:
-            for target in self.targetsCollection.OrderByMarginImpact(algorithm):
-                symbol = target.Symbol
+        if not self.targets_collection.is_empty:
+            for target in self.targets_collection.order_by_margin_impact(algorithm):
+                symbol = target.symbol
 
                 # calculate remaining quantity to be ordered
-                unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target)
+                unordered_quantity = OrderSizing.get_unordered_quantity(algorithm, target)
 
                 # fetch our symbol data containing our STD/SMA indicators
-                data = self.symbolData.get(symbol, None)
+                data = self._symbol_data.get(symbol, None)
                 if data is None: return
 
                 # check order entry conditions
-                if data.STD.IsReady and self.PriceIsFavorable(data, unorderedQuantity):
+                if data.std.is_ready and self.price_is_favorable(data, unordered_quantity):
                     # Adjust order size to respect the maximum total order value
-                    orderSize = OrderSizing.GetOrderSizeForMaximumValue(data.Security, self.MaximumOrderValue, unorderedQuantity)
+                    order_size = OrderSizing.get_order_size_for_maximum_value(data.security, self.maximum_order_value, unordered_quantity)
 
-                    if orderSize != 0:
-                        algorithm.MarketOrder(symbol, orderSize)
+                    if order_size != 0:
+                        algorithm.market_order(symbol, order_size)
 
-            self.targetsCollection.ClearFulfilled(algorithm)
+            self.targets_collection.clear_fulfilled(algorithm)
 
 
-    def OnSecuritiesChanged(self, algorithm, changes):
+    def on_securities_changed(self, algorithm, changes):
         '''Event fired each time the we add/remove securities from the data feed
         Args:
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
-        for added in changes.AddedSecurities:
-            if added.Symbol not in self.symbolData:
-                self.symbolData[added.Symbol] = SymbolData(algorithm, added, self.period, self.resolution)
+        for added in changes.added_securities:
+            if added.symbol not in self._symbol_data:
+                self._symbol_data[added.symbol] = SymbolData(algorithm, added, self.period, self.resolution)
 
-        for removed in changes.RemovedSecurities:
+        for removed in changes.removed_securities:
             # clean up data from removed securities
-            symbol = removed.Symbol
-            if symbol in self.symbolData:
-                if self.IsSafeToRemove(algorithm, symbol):
-                    data = self.symbolData.pop(symbol)
-                    algorithm.SubscriptionManager.RemoveConsolidator(symbol, data.Consolidator)
+            symbol = removed.symbol
+            if symbol in self._symbol_data:
+                if self.is_safe_to_remove(algorithm, symbol):
+                    data = self._symbol_data.pop(symbol)
+                    algorithm.subscription_manager.remove_consolidator(symbol, data.consolidator)
 
 
-    def PriceIsFavorable(self, data, unorderedQuantity):
+    def price_is_favorable(self, data, unordered_quantity):
         '''Determines if the current price is more than the configured
        number of standard deviations away from the mean in the favorable direction.'''
-        sma = data.SMA.Current.Value
-        deviations = self.deviations * data.STD.Current.Value
-        if unorderedQuantity > 0:
-            return data.Security.BidPrice < sma - deviations
+        sma = data.sma.current.value
+        deviations = self.deviations * data.std.current.value
+        if unordered_quantity > 0:
+            return data.security.bid_price < sma - deviations
         else:
-            return data.Security.AskPrice > sma + deviations
+            return data.security.ask_price > sma + deviations
 
 
-    def IsSafeToRemove(self, algorithm, symbol):
+    def is_safe_to_remove(self, algorithm, symbol):
         '''Determines if it's safe to remove the associated symbol data'''
         # confirm the security isn't currently a member of any universe
-        return not any([kvp.Value.ContainsMember(symbol) for kvp in algorithm.UniverseManager])
+        return not any([kvp.value.contains_member(symbol) for kvp in algorithm.universe_manager])
 
 class SymbolData:
     def __init__(self, algorithm, security, period, resolution):
-        symbol = security.Symbol
-        self.Security = security
-        self.Consolidator = algorithm.ResolveConsolidator(symbol, resolution)
+        symbol = security.symbol
+        self.security = security
+        self.consolidator = algorithm.resolve_consolidator(symbol, resolution)
 
-        smaName = algorithm.CreateIndicatorName(symbol, f"SMA{period}", resolution)
-        self.SMA = SimpleMovingAverage(smaName, period)
-        algorithm.RegisterIndicator(symbol, self.SMA, self.Consolidator)
+        sma_name = algorithm.create_indicator_name(symbol, f"SMA{period}", resolution)
+        self.sma = SimpleMovingAverage(sma_name, period)
+        algorithm.register_indicator(symbol, self.sma, self.consolidator)
 
-        stdName = algorithm.CreateIndicatorName(symbol, f"STD{period}", resolution)
-        self.STD = StandardDeviation(stdName, period)
-        algorithm.RegisterIndicator(symbol, self.STD, self.Consolidator)
+        std_name = algorithm.create_indicator_name(symbol, f"STD{period}", resolution)
+        self.std = StandardDeviation(std_name, period)
+        algorithm.register_indicator(symbol, self.std, self.consolidator)
 
         # warmup our indicators by pushing history through the indicators
-        bars = algorithm.History[self.Consolidator.InputType](symbol, period, resolution)
+        bars = algorithm.history[self.consolidator.input_type](symbol, period, resolution)
         for bar in bars:
-            self.SMA.Update(bar.EndTime, bar.Close)
-            self.STD.Update(bar.EndTime, bar.Close)
+            self.sma.update(bar.end_time, bar.close)
+            self.std.update(bar.end_time, bar.close)

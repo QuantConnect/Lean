@@ -16,58 +16,58 @@ from AlgorithmImports import *
 class TrailingStopRiskManagementModel(RiskManagementModel):
     '''Provides an implementation of IRiskManagementModel that limits the maximum possible loss
     measured from the highest unrealized profit'''
-    def __init__(self, maximumDrawdownPercent = 0.05):
+    def __init__(self, maximum_drawdown_percent = 0.05):
         '''Initializes a new instance of the TrailingStopRiskManagementModel class
         Args:
-            maximumDrawdownPercent: The maximum percentage drawdown allowed for algorithm portfolio compared with the highest unrealized profit, defaults to 5% drawdown'''
-        self.maximumDrawdownPercent = abs(maximumDrawdownPercent)
-        self.trailingAbsoluteHoldingsState = dict()
+            maximum_drawdown_percent: The maximum percentage drawdown allowed for algorithm portfolio compared with the highest unrealized profit, defaults to 5% drawdown'''
+        self.maximum_drawdown_percent = abs(maximum_drawdown_percent)
+        self.trailing_absolute_holdings_state = dict()
 
-    def ManageRisk(self, algorithm, targets):
+    def manage_risk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step
         Args:
             algorithm: The algorithm instance
             targets: The current portfolio targets to be assessed for risk'''
-        riskAdjustedTargets = list()
+        risk_adjusted_targets = list()
 
-        for kvp in algorithm.Securities:
-            symbol = kvp.Key
-            security = kvp.Value
+        for kvp in algorithm.securities:
+            symbol = kvp.key
+            security = kvp.value
 
             # Remove if not invested
-            if not security.Invested:
-                self.trailingAbsoluteHoldingsState.pop(symbol, None)
+            if not security.invested:
+                self.trailing_absolute_holdings_state.pop(symbol, None)
                 continue
 
-            position = PositionSide.Long if security.Holdings.IsLong else PositionSide.Short
-            absoluteHoldingsValue = security.Holdings.AbsoluteHoldingsValue
-            trailingAbsoluteHoldingsState = self.trailingAbsoluteHoldingsState.get(symbol)
+            position = PositionSide.LONG if security.holdings.is_long else PositionSide.SHORT
+            absolute_holdings_value = security.holdings.absolute_holdings_value
+            trailing_absolute_holdings_state = self.trailing_absolute_holdings_state.get(symbol)
 
             # Add newly invested security (if doesn't exist) or reset holdings state (if position changed)
-            if trailingAbsoluteHoldingsState == None or position != trailingAbsoluteHoldingsState.position:
-                self.trailingAbsoluteHoldingsState[symbol] = trailingAbsoluteHoldingsState = self.HoldingsState(position, security.Holdings.AbsoluteHoldingsCost)
+            if trailing_absolute_holdings_state == None or position != trailing_absolute_holdings_state.position:
+                self.trailing_absolute_holdings_state[symbol] = trailing_absolute_holdings_state = self.HoldingsState(position, security.holdings.absolute_holdings_cost)
 
-            trailingAbsoluteHoldingsValue = trailingAbsoluteHoldingsState.absoluteHoldingsValue
+            trailing_absolute_holdings_value = trailing_absolute_holdings_state.absolute_holdings_value
 
             # Check for new max (for long position) or min (for short position) absolute holdings value
-            if ((position == PositionSide.Long and trailingAbsoluteHoldingsValue < absoluteHoldingsValue) or
-                (position == PositionSide.Short and trailingAbsoluteHoldingsValue > absoluteHoldingsValue)):
-                self.trailingAbsoluteHoldingsState[symbol].absoluteHoldingsValue = absoluteHoldingsValue
+            if ((position == PositionSide.LONG and trailing_absolute_holdings_value < absolute_holdings_value) or
+                (position == PositionSide.SHORT and trailing_absolute_holdings_value > absolute_holdings_value)):
+                self.trailing_absolute_holdings_state[symbol].absolute_holdings_value = absolute_holdings_value
                 continue
 
-            drawdown = abs((trailingAbsoluteHoldingsValue - absoluteHoldingsValue) / trailingAbsoluteHoldingsValue)
+            drawdown = abs((trailing_absolute_holdings_value - absolute_holdings_value) / trailing_absolute_holdings_value)
 
-            if self.maximumDrawdownPercent < drawdown:
+            if self.maximum_drawdown_percent < drawdown:
                 # Cancel insights
-                algorithm.Insights.Cancel([ symbol ]);
+                algorithm.insights.cancel([ symbol ]);
 
-                self.trailingAbsoluteHoldingsState.pop(symbol, None)
+                self.trailing_absolute_holdings_state.pop(symbol, None)
                 # liquidate
-                riskAdjustedTargets.append(PortfolioTarget(symbol, 0))
+                risk_adjusted_targets.append(PortfolioTarget(symbol, 0))
 
-        return riskAdjustedTargets
+        return risk_adjusted_targets
 
     class HoldingsState:
-        def __init__(self, position, absoluteHoldingsValue):
+        def __init__(self, position, absolute_holdings_value):
             self.position = position
-            self.absoluteHoldingsValue = absoluteHoldingsValue
+            self.absolute_holdings_value = absolute_holdings_value

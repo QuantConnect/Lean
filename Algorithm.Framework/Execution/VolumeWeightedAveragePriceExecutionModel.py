@@ -18,16 +18,16 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
 
     def __init__(self):
         '''Initializes a new instance of the VolumeWeightedAveragePriceExecutionModel class'''
-        self.targetsCollection = PortfolioTargetCollection()
-        self.symbolData = {}
+        self.targets_collection = PortfolioTargetCollection()
+        self.symbol_data = {}
 
         # Gets or sets the maximum order quantity as a percentage of the current bar's volume.
         # This defaults to 0.01m = 1%. For example, if the current bar's volume is 100,
         # then the maximum order size would equal 1 share.
-        self.MaximumOrderQuantityPercentVolume = 0.01
+        self.maximum_order_quantity_percent_volume = 0.01
 
 
-    def Execute(self, algorithm, targets):
+    def execute(self, algorithm, targets):
         '''Executes market orders if the standard deviation of price is more
        than the configured number of deviations in the favorable direction.
        Args:
@@ -35,124 +35,124 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
            targets: The portfolio targets'''
 
         # update the complete set of portfolio targets with the new targets
-        self.targetsCollection.AddRange(targets)
+        self.targets_collection.add_range(targets)
 
         # for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
-        if not self.targetsCollection.IsEmpty:
-            for target in self.targetsCollection.OrderByMarginImpact(algorithm):
-                symbol = target.Symbol
+        if not self.targets_collection.is_empty:
+            for target in self.targets_collection.order_by_margin_impact(algorithm):
+                symbol = target.symbol
 
                 # calculate remaining quantity to be ordered
-                unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target)
+                unordered_quantity = OrderSizing.get_unordered_quantity(algorithm, target)
 
                 # fetch our symbol data containing our VWAP indicator
-                data = self.symbolData.get(symbol, None)
+                data = self.symbol_data.get(symbol, None)
                 if data is None: return
 
                 # check order entry conditions
-                if self.PriceIsFavorable(data, unorderedQuantity):
+                if self.price_is_favorable(data, unordered_quantity):
                     # adjust order size to respect maximum order size based on a percentage of current volume
-                    orderSize = OrderSizing.GetOrderSizeForPercentVolume(data.Security, self.MaximumOrderQuantityPercentVolume, unorderedQuantity)
+                    order_size = OrderSizing.get_order_size_for_percent_volume(data.security, self.maximum_order_quantity_percent_volume, unordered_quantity)
 
-                    if orderSize != 0:
-                        algorithm.MarketOrder(symbol, orderSize)
+                    if order_size != 0:
+                        algorithm.market_order(symbol, order_size)
 
-            self.targetsCollection.ClearFulfilled(algorithm)
+            self.targets_collection.clear_fulfilled(algorithm)
 
 
-    def OnSecuritiesChanged(self, algorithm, changes):
+    def on_securities_changed(self, algorithm, changes):
         '''Event fired each time the we add/remove securities from the data feed
         Args:
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
-        for removed in changes.RemovedSecurities:
+        for removed in changes.removed_securities:
             # clean up removed security data
-            if removed.Symbol in self.symbolData:
-                if self.IsSafeToRemove(algorithm, removed.Symbol):
-                    data = self.symbolData.pop(removed.Symbol)
-                    algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator)
+            if removed.symbol in self.symbol_data:
+                if self.is_safe_to_remove(algorithm, removed.symbol):
+                    data = self.symbol_data.pop(removed.symbol)
+                    algorithm.subscription_manager.remove_consolidator(removed.symbol, data.consolidator)
 
-        for added in changes.AddedSecurities:
-            if added.Symbol not in self.symbolData:
-                self.symbolData[added.Symbol] = SymbolData(algorithm, added)
+        for added in changes.added_securities:
+            if added.symbol not in self.symbol_data:
+                self.symbol_data[added.symbol] = SymbolData(algorithm, added)
 
 
-    def PriceIsFavorable(self, data, unorderedQuantity):
+    def price_is_favorable(self, data, unordered_quantity):
         '''Determines if the current price is more than the configured
        number of standard deviations away from the mean in the favorable direction.'''
-        if unorderedQuantity > 0:
-            if data.Security.BidPrice < data.VWAP:
+        if unordered_quantity > 0:
+            if data.security.bid_price < data.vwap:
                 return True
         else:
-            if data.Security.AskPrice > data.VWAP:
+            if data.security.ask_price > data.vwap:
                 return True
 
         return False
 
-    def IsSafeToRemove(self, algorithm, symbol):
+    def is_safe_to_remove(self, algorithm, symbol):
         '''Determines if it's safe to remove the associated symbol data'''
         # confirm the security isn't currently a member of any universe
-        return not any([kvp.Value.ContainsMember(symbol) for kvp in algorithm.UniverseManager])
+        return not any([kvp.value.contains_member(symbol) for kvp in algorithm.universe_manager])
 
 class SymbolData:
     def __init__(self, algorithm, security):
-        self.Security = security
-        self.Consolidator = algorithm.ResolveConsolidator(security.Symbol, security.Resolution)
-        name = algorithm.CreateIndicatorName(security.Symbol, "VWAP", security.Resolution)
-        self.vwap = IntradayVwap(name)
-        algorithm.RegisterIndicator(security.Symbol, self.vwap, self.Consolidator)
+        self.security = security
+        self.consolidator = algorithm.resolve_consolidator(security.symbol, security.resolution)
+        name = algorithm.create_indicator_name(security.symbol, "VWAP", security.resolution)
+        self._vwap = IntradayVwap(name)
+        algorithm.register_indicator(security.symbol, self._vwap, self.consolidator)
 
     @property
-    def VWAP(self):
-       return self.vwap.Value
+    def vwap(self):
+       return self._vwap.value
 
 class IntradayVwap:
     '''Defines the canonical intraday VWAP indicator'''
     def __init__(self, name):
-        self.Name = name
-        self.Value = 0.0
-        self.lastDate = datetime.min
-        self.sumOfVolume = 0.0
-        self.sumOfPriceTimesVolume = 0.0
+        self.name = name
+        self.value = 0.0
+        self.last_date = datetime.min
+        self.sum_of_volume = 0.0
+        self.sum_of_price_times_volume = 0.0
 
     @property
-    def IsReady(self):
-        return self.sumOfVolume > 0.0
+    def is_ready(self):
+        return self.sum_of_volume > 0.0
 
-    def Update(self, input):
+    def update(self, input):
         '''Computes the new VWAP'''
-        success, volume, averagePrice = self.GetVolumeAndAveragePrice(input)
+        success, volume, average_price = self.get_volume_and_average_price(input)
         if not success:
-            return self.IsReady
+            return self.is_ready
 
         # reset vwap on daily boundaries
-        if self.lastDate != input.EndTime.date():
-            self.sumOfVolume = 0.0
-            self.sumOfPriceTimesVolume = 0.0
-            self.lastDate = input.EndTime.date()
+        if self.last_date != input.end_time.date():
+            self.sum_of_volume = 0.0
+            self.sum_of_price_times_volume = 0.0
+            self.last_date = input.end_time.date()
 
         # running totals for Σ PiVi / Σ Vi
-        self.sumOfVolume += volume
-        self.sumOfPriceTimesVolume += averagePrice * volume
+        self.sum_of_volume += volume
+        self.sum_of_price_times_volume += average_price * volume
 
-        if self.sumOfVolume == 0.0:
+        if self.sum_of_volume == 0.0:
            # if we have no trade volume then use the current price as VWAP
-           self.Value = input.Value
-           return self.IsReady
+           self.value = input.value
+           return self.is_ready
 
-        self.Value = self.sumOfPriceTimesVolume / self.sumOfVolume
-        return self.IsReady
+        self.value = self.sum_of_price_times_volume / self.sum_of_volume
+        return self.is_ready
 
-    def GetVolumeAndAveragePrice(self, input):
+    def get_volume_and_average_price(self, input):
         '''Determines the volume and price to be used for the current input in the VWAP computation'''
 
         if type(input) is Tick:
-            if input.TickType == TickType.Trade:
-                return True, float(input.Quantity), float(input.LastPrice)
+            if input.tick_type == TickType.TRADE:
+                return True, float(input.quantity), float(input.last_price)
 
         if type(input) is TradeBar:
-            if not input.IsFillForward:
-                averagePrice = float(input.High + input.Low + input.Close) / 3
-                return True, float(input.Volume), averagePrice
+            if not input.is_fill_forward:
+                average_price = float(input.high + input.low + input.close) / 3
+                return True, float(input.volume), average_price
 
         return False, 0.0, 0.0

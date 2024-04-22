@@ -30,20 +30,20 @@ class RiskParityPortfolioOptimizer:
         self.minimum_weight = minimum_weight if minimum_weight >= 1e-05 else 1e-05
         self.maximum_weight = maximum_weight if maximum_weight >= minimum_weight else minimum_weight
 
-    def Optimize(self, historicalReturns, budget = None, covariance = None):
+    def optimize(self, historical_returns, budget = None, covariance = None):
         '''
         Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
         args:
-            historicalReturns: Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).
+            historical_returns: Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).
             budget: Risk budget vector (size: K x 1).
             covariance: Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).
         Returns:
             Array of double with the portfolio weights (size: K x 1)
         '''
         if covariance is None:
-            covariance = np.cov(historicalReturns.T)
+            covariance = np.cov(historical_returns.T)
 
-        size = historicalReturns.columns.size   # K x 1
+        size = historical_returns.columns.size   # K x 1
         
         # Optimization Problem
         # minimize_{x >= 0} f(x) = 1/2 * x^T.S.x - b^T.log(x)
