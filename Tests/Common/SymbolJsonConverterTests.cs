@@ -134,13 +134,14 @@ namespace QuantConnect.Tests.Common
             Assert.IsFalse(actual.All(x => x.Symbol == new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD")));
         }
 
-        [Test]
-        public void SymbolTypeNameHandling()
+        [TestCaseSource(nameof(TestSymbols))]
+        public void CamelCaseSymbolIsDeserializedCorrectly(string json, string value, string id, SecurityType securityType, Symbol underlying)
         {
-            const string json = @"{'$type':'QuantConnect.Symbol, QuantConnect.Common', 'Value':'EURGBP', 'ID': 'EURGBP 5O'}";
-            var expected = new Symbol(SecurityIdentifier.GenerateForex("EURGBP", Market.FXCM), "EURGBP");
-            var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
-            Assert.AreEqual(expected, actual);
+            var deserializedSymbol = JsonConvert.DeserializeObject<Symbol>(json, Settings);
+            Assert.AreEqual(value, deserializedSymbol.Value);
+            Assert.AreEqual(id, deserializedSymbol.ID.ToString());
+            Assert.AreEqual(securityType, deserializedSymbol.SecurityType);
+            Assert.AreEqual(underlying, deserializedSymbol.Underlying);
         }
 
         [Test]
@@ -227,6 +228,60 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(symbolTicker, symbol.ID.Symbol);
             Assert.AreEqual(market, symbol.ID.Market);
         }
+
+        public static object[] TestSymbols =
+        {
+            new object[] { @"{
+				""value"": ""AAPL  140613P00660000"",
+				""id"": ""AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X"",
+				""permtick"": ""AAPL  140613P00660000"",
+				""underlying"": {
+					""value"": ""AAPL"",
+					""id"": ""AAPL R735QTJ8XC9X"",
+					""permtick"": ""AAPL""
+				}
+			}", "AAPL  140613P00660000", "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option, Symbols.AAPL },
+            new object[] { @"{
+                ""value"": ""GOOG  160115C00750000"",
+                ""id"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
+                ""permtick"": ""GOOG  160115C00750000"",
+                ""underlying"": {
+                    ""value"": ""GOOG"",
+                    ""id"": ""GOOCV VP83T1ZUHROL"",
+                    ""permtick"": ""GOOG""
+                }
+            }", "GOOG  160115C00750000", "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option, Symbols.GOOG },
+            new object[] { @"{
+                ""value"": ""SPY"",
+                ""id"": ""SPY R735QTJ8XC9X"",
+                ""permtick"": ""SPY""
+            }", "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity, null },
+            new object[] { @"{
+				""Value"": ""AAPL  140613P00660000"",
+				""ID"": ""AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X"",
+				""Permtick"": ""AAPL  140613P00660000"",
+				""Underlying"": {
+					""value"": ""AAPL"",
+					""id"": ""AAPL R735QTJ8XC9X"",
+					""permtick"": ""AAPL""
+				}
+			}", "AAPL  140613P00660000", "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option, Symbols.AAPL },
+            new object[] { @"{
+                ""Value"": ""GOOG  160115C00750000"",
+                ""ID"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
+                ""Permtick"": ""GOOG  160115C00750000"",
+                ""Underlying"": {
+                    ""value"": ""GOOG"",
+                    ""id"": ""GOOCV VP83T1ZUHROL"",
+                    ""permtick"": ""GOOG""
+                }
+            }", "GOOG  160115C00750000", "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option, Symbols.GOOG },
+            new object[] { @"{
+                ""Value"": ""SPY"",
+                ""ID"": ""SPY R735QTJ8XC9X"",
+                ""Permtick"": ""SPY""
+            }", "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity, null }
+        };
 
         class OldSymbol
         {

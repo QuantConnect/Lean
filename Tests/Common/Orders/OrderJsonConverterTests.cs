@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Orders;
@@ -573,80 +574,15 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(Market.USA, actual.ID.Market);
         }
 
-        [TestCaseSource(nameof(camelCaseOrders))]
-        public void DeserializesCamelCaseMarketOrder(string json, OrderType type, string value, string id, SecurityType securityType)
+        [TestCaseSource(nameof(camelCaseDeserializeOrdersTests))]
+        public void DeserializesCamelCaseMarketOrder(string json, OrderType type, string id, SecurityType securityType)
         {
-            Order order = default;
-            switch (type)
-            {
-                case OrderType.Market:
-                    order = DeserializeOrder<MarketOrder>(json);
-                    Assert.IsTrue(order.IsMarketable, "Failed in Order.IsMarketable");
-                    break;
-                case OrderType.Limit:
-                    order = DeserializeOrder<LimitOrder>(json);
-                    Assert.AreEqual(139.240078869942m, (order as LimitOrder).LimitPrice);
-                    Assert.IsTrue(order.IsMarketable, "Failed in Order.IsMarketable");
-                    break;
-                case OrderType.StopMarket:
-                    order = DeserializeOrder<StopMarketOrder>(json);
-                    Assert.AreEqual(138.232948134345, (order as StopMarketOrder).StopPrice);
-                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
-                    break;
-                case OrderType.StopLimit:
-                    order = DeserializeOrder<StopLimitOrder>(json);
-                    Assert.AreEqual(139.240078869942m, (order as StopLimitOrder).LimitPrice);
-                    Assert.AreEqual(138.232948134345, (order as StopLimitOrder).StopPrice);
-                    Assert.AreEqual(false, (order as StopLimitOrder).StopTriggered);
-                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
-                    break;
-                case OrderType.MarketOnOpen:
-                    order = DeserializeOrder<MarketOnOpenOrder>(json);
-                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
-                    break;
-                case OrderType.MarketOnClose:
-                    order = DeserializeOrder<MarketOnCloseOrder>(json);
-                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
-                    break;
-                case OrderType.OptionExercise:
-                    order = DeserializeOrder<OptionExerciseOrder>(json);
-                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
-                    break;
-                case OrderType.LimitIfTouched:
-                    order = DeserializeOrder<LimitIfTouchedOrder>(json);
-                    Assert.AreEqual(139.240078869942m, (order as LimitIfTouchedOrder).LimitPrice);
-                    Assert.AreEqual(0, (order as LimitIfTouchedOrder).TriggerPrice);
-                    Assert.AreEqual(false, (order as LimitIfTouchedOrder).TriggerTouched);
-                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
-                    break;
-                case OrderType.ComboMarket:
-                    order = DeserializeOrder<ComboMarketOrder>(json);
-                    Assert.IsTrue(order.IsMarketable, "Failed in Order.IsMarketable");
-                    break;
-                case OrderType.ComboLimit:
-                    order = DeserializeOrder<ComboLimitOrder>(json);
-                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
-                    break;
-                case OrderType.ComboLegLimit:
-                    order = DeserializeOrder<ComboLegLimitOrder>(json);
-                    Assert.AreEqual(139.240078869942m, (order as ComboLegLimitOrder).LimitPrice);
-                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
-                    break;
-                case OrderType.TrailingStop:
-                    order = DeserializeOrder<TrailingStopOrder>(json);
-                    Assert.AreEqual(138.232948134345m, (order as TrailingStopOrder).StopPrice);
-                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
-                    break;
-                default:
-                    throw new Exception($"Unknown order type, {type}");
-                    break;
-            }
+            var order = GetAndAssertOrder(json, type);
 
             Assert.AreEqual(1, order.Id, "Failed in Order.Id");
             Assert.AreEqual(0, order.ContingentId, "Failed in Order.ContingentId");
             Assert.AreEqual(new List<string>() { "1" }, order.BrokerId, "Failed in Order.BrokerId");
             Assert.AreEqual(id, order.Symbol.ID.ToString(), "Failed in Order.ID.Symbol");
-            Assert.AreEqual(value, order.Symbol.Value, "Failed in Order.Symbol.Value");
             Assert.AreEqual(Market.USA, order.Symbol.ID.Market, "Failed in Order.Symbol.ID.Market");
             Assert.AreEqual(138.513986945m, order.Price, "Failed in Order.Price");
             Assert.AreEqual("USD", order.PriceCurrency, "Failed in Order.PriceCurrency");
@@ -663,6 +599,22 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(138.513986945m, order.OrderSubmissionData.AskPrice, "Failed in Order.OrderSubmissionData.AskPrice");
             Assert.AreEqual(138.505714984m, order.OrderSubmissionData.LastPrice, "Failed in Order.OrderSubmissionData.LastPrice");
             Assert.AreEqual(DataNormalizationMode.Adjusted, order.PriceAdjustmentMode, "Failed in Order.PriceAdjustmentMode");
+        }
+
+        [TestCaseSource(nameof(camelCaseSerializeOrdersTests))]
+        public void SerializesCamelCaseMarketOrder(string json, OrderType type)
+        {
+            var order = GetAndAssertOrder(json, type);
+            var serializedOrder = JsonConvert.SerializeObject(order);
+            var jsonFormat = json.Replace("\r\n            ", "").Replace(": ", ":").Replace("    ", "").Replace("\r\n", "").Replace("\t", "");
+            if (order.Type == OrderType.ComboMarket || order.Type == OrderType.ComboLimit || order.Type == OrderType.ComboLegLimit)
+            {
+                jsonFormat = Regex.Replace(jsonFormat, @"\""value\"":\""(.*?)\"",", "");
+                jsonFormat = Regex.Replace(jsonFormat, @"\""permtick\"":\""(.*?)\"",", "");
+                serializedOrder = Regex.Replace(serializedOrder, @"\""value\"":\""(.*?)\"",", "");
+                serializedOrder = Regex.Replace(serializedOrder, @"\""permtick\"":\""(.*?)\"",", "");
+            }
+            Assert.AreEqual(jsonFormat, serializedOrder);
         }
 
         [Test]
@@ -883,6 +835,77 @@ namespace QuantConnect.Tests.Common.Orders
             return (T) actual;
         }
 
+        private Order GetAndAssertOrder(string json, OrderType type)
+        {
+            Order order = default;
+            switch (type)
+            {
+                case OrderType.Market:
+                    order = DeserializeOrder<MarketOrder>(json);
+                    Assert.IsTrue(order.IsMarketable, "Failed in Order.IsMarketable");
+                    break;
+                case OrderType.Limit:
+                    order = DeserializeOrder<LimitOrder>(json);
+                    Assert.AreEqual(139.240078869942m, (order as LimitOrder).LimitPrice);
+                    Assert.IsTrue(order.IsMarketable, "Failed in Order.IsMarketable");
+                    break;
+                case OrderType.StopMarket:
+                    order = DeserializeOrder<StopMarketOrder>(json);
+                    Assert.AreEqual(138.232948134345, (order as StopMarketOrder).StopPrice);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
+                    break;
+                case OrderType.StopLimit:
+                    order = DeserializeOrder<StopLimitOrder>(json);
+                    Assert.AreEqual(139.240078869942m, (order as StopLimitOrder).LimitPrice);
+                    Assert.AreEqual(138.232948134345, (order as StopLimitOrder).StopPrice);
+                    Assert.AreEqual(false, (order as StopLimitOrder).StopTriggered);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
+                    break;
+                case OrderType.MarketOnOpen:
+                    order = DeserializeOrder<MarketOnOpenOrder>(json);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
+                    break;
+                case OrderType.MarketOnClose:
+                    order = DeserializeOrder<MarketOnCloseOrder>(json);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
+                    break;
+                case OrderType.OptionExercise:
+                    order = DeserializeOrder<OptionExerciseOrder>(json);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
+                    break;
+                case OrderType.LimitIfTouched:
+                    order = DeserializeOrder<LimitIfTouchedOrder>(json);
+                    Assert.AreEqual(139.240078869942m, (order as LimitIfTouchedOrder).LimitPrice);
+                    Assert.AreEqual(138.26, (order as LimitIfTouchedOrder).TriggerPrice);
+                    Assert.AreEqual(false, (order as LimitIfTouchedOrder).TriggerTouched);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
+                    break;
+                case OrderType.ComboMarket:
+                    order = DeserializeOrder<ComboMarketOrder>(json);
+                    Assert.IsTrue(order.IsMarketable, "Failed in Order.IsMarketable");
+                    break;
+                case OrderType.ComboLimit:
+                    order = DeserializeOrder<ComboLimitOrder>(json);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
+                    break;
+                case OrderType.ComboLegLimit:
+                    order = DeserializeOrder<ComboLegLimitOrder>(json);
+                    Assert.AreEqual(139.240078869942m, (order as ComboLegLimitOrder).LimitPrice);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
+                    break;
+                case OrderType.TrailingStop:
+                    order = DeserializeOrder<TrailingStopOrder>(json);
+                    Assert.AreEqual(138.232948134345m, (order as TrailingStopOrder).StopPrice);
+                    Assert.IsFalse(order.IsMarketable, "Failed in Order.IsMarketable");
+                    break;
+                default:
+                    throw new Exception($"Unknown order type, {type}");
+                    break;
+            }
+
+            return order;
+        }
+
         private static void TestGroupOrderManager(GroupOrderManager expected, GroupOrderManager actual)
         {
             if (expected == null)
@@ -910,9 +933,7 @@ namespace QuantConnect.Tests.Common.Orders
             return actual;
         }
 
-        public static object[] camelCaseOrders =
-        {
-            new object[] { @"{
+        private const string _marketOrder = @"{
             ""type"": 0,
             ""id"": 1,
             ""contingentId"": 0,
@@ -931,11 +952,13 @@ namespace QuantConnect.Tests.Common.Orders
             ""lastFillTime"": ""2013-10-07T13:31:00Z"",
             ""quantity"": 10.0,
             ""status"": 1,
+            ""tag"": """",
             ""properties"": {
                 ""timeInForce"": {}
             },
             ""securityType"": 1,
             ""direction"": 0,
+            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -943,29 +966,10 @@ namespace QuantConnect.Tests.Common.Orders
                 ""lastPrice"": 138.505714984
             },
             ""isMarketable"": true,
-            ""priceAdjustmentMode"": 1,
-            ""events"": [
-                {
-                    ""id"": ""3b2259c444e04c9124784bb491bf016f-1-1"",
-                    ""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
-                    ""orderId"": 1,
-                    ""orderEventId"": 1,
-                    ""symbol"": ""SPY R735QTJ8XC9X"",
-                    ""symbolValue"": ""SPY"",
-                    ""symbolPermtick"": ""SPY"",
-                    ""time"": 1381152660.0,
-                    ""status"": ""submitted"",
-                    ""fillPrice"": 0.0,
-                    ""fillPriceCurrency"": ""USD"",
-                    ""fillQuantity"": 0.0,
-                    ""direction"": ""buy"",
-                    ""message"": null,
-                    ""isAssignment"": false,
-                    ""quantity"": 10.0
-                }
-            ]
-        }", OrderType.Market, "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { @"{
+            ""priceAdjustmentMode"": 1
+        }";
+
+        private const string _limitOrder = @"{
 			""limitPrice"": 139.240078869942,
 			""type"": 1,
 			""id"": 1,
@@ -985,11 +989,13 @@ namespace QuantConnect.Tests.Common.Orders
             ""lastFillTime"": ""2013-10-07T13:31:00Z"",
             ""quantity"": 10.0,
             ""status"": 1,
+            ""tag"": """",
             ""properties"": {
                 ""timeInForce"": {}
             },
             ""securityType"": 1,
             ""direction"": 0,
+            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -997,30 +1003,10 @@ namespace QuantConnect.Tests.Common.Orders
                 ""lastPrice"": 138.505714984
             },
             ""isMarketable"": true,
-            ""priceAdjustmentMode"": 1,
-			""events"": [
-				{
-					""id"": ""3b2259c444e04c9124784bb491bf016f-4-1"",
-					""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
-					""orderId"": 4,
-					""orderEventId"": 1,
-					""symbol"": ""SPY R735QTJ8XC9X"",
-					""symbolValue"": ""SPY"",
-					""symbolPermtick"": ""SPY"",
-					""time"": 1381161600.0,
-					""status"": ""submitted"",
-					""fillPrice"": 0.0,
-					""fillPriceCurrency"": ""USD"",
-					""fillQuantity"": 0.0,
-					""direction"": ""sell"",
-					""message"": null,
-					""isAssignment"": false,
-					""quantity"": -10.0,
-					""limitPrice"": 139.290078869942
-				}
-			]
-		}", OrderType.Limit, "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { @"{
+            ""priceAdjustmentMode"": 1
+		}";
+
+        private const string _stopMarket = @"{
 			""stopPrice"": 138.232948134345,
 			""type"": 2,
 			""id"": 1,
@@ -1040,42 +1026,24 @@ namespace QuantConnect.Tests.Common.Orders
             ""lastFillTime"": ""2013-10-07T13:31:00Z"",
             ""quantity"": 10.0,
             ""status"": 1,
+            ""tag"": """",
             ""properties"": {
                 ""timeInForce"": {}
             },
             ""securityType"": 1,
             ""direction"": 0,
+            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
                 ""askPrice"": 138.513986945,
                 ""lastPrice"": 138.505714984
             },
-            ""isMarketable"": true,
-            ""priceAdjustmentMode"": 1,
-			""events"": [
-				{
-					""id"": ""3b2259c444e04c9124784bb491bf016f-8-1"",
-					""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
-					""orderId"": 8,
-					""orderEventId"": 1,
-					""symbol"": ""SPY R735QTJ8XC9X"",
-					""symbolValue"": ""SPY"",
-					""symbolPermtick"": ""SPY"",
-					""time"": 1381176000.0,
-					""status"": ""submitted"",
-					""fillPrice"": 0.0,
-					""fillPriceCurrency"": ""USD"",
-					""fillQuantity"": 0.0,
-					""direction"": ""sell"",
-					""message"": null,
-					""isAssignment"": false,
-					""quantity"": -10.0,
-					""stopPrice"": 138.142948134345
-				}
-			]
-		}", OrderType.StopMarket, "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { @"{
+            ""isMarketable"": false,
+            ""priceAdjustmentMode"": 1
+		}";
+
+        private const string _stopLimitOrder = @"{
 			""stopPrice"": 138.232948134345,
 			""stopTriggered"": false,
 			""limitPrice"": 139.240078869942,
@@ -1097,44 +1065,24 @@ namespace QuantConnect.Tests.Common.Orders
             ""lastFillTime"": ""2013-10-07T13:31:00Z"",
             ""quantity"": 10.0,
             ""status"": 1,
-            ""tag"": ""Update message"",
+            ""tag"": """",
             ""properties"": {
                 ""timeInForce"": {}
             },
             ""securityType"": 1,
             ""direction"": 0,
+            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
                 ""askPrice"": 138.513986945,
                 ""lastPrice"": 138.505714984
             },
-            ""isMarketable"": true,
-            ""priceAdjustmentMode"": 1,
-			""events"": [
-				{
-					""id"": ""3b2259c444e04c9124784bb491bf016f-10-1"",
-					""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
-					""orderId"": 10,
-					""orderEventId"": 1,
-					""symbol"": ""SPY R735QTJ8XC9X"",
-					""symbolValue"": ""SPY"",
-					""symbolPermtick"": ""SPY"",
-					""time"": 1381248060.0,
-					""status"": ""submitted"",
-					""fillPrice"": 0.0,
-					""fillPriceCurrency"": ""USD"",
-					""fillQuantity"": 0.0,
-					""direction"": ""sell"",
-					""message"": null,
-					""isAssignment"": false,
-					""quantity"": -10.0,
-					""stopPrice"": 137.367302895297,
-					""limitPrice"": 137.534807703
-				}
-			]
-		}", OrderType.StopLimit, "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { @"{
+            ""isMarketable"": false,
+            ""priceAdjustmentMode"": 1
+		}";
+
+        private const string _marketOnOpen = @"{
 			""type"": 4,
 			""id"": 1,
 			""contingentId"": 0,
@@ -1153,41 +1101,24 @@ namespace QuantConnect.Tests.Common.Orders
             ""lastFillTime"": ""2013-10-07T13:31:00Z"",
             ""quantity"": 10.0,
             ""status"": 1,
+            ""tag"": """",
             ""properties"": {
                 ""timeInForce"": {}
             },
             ""securityType"": 1,
             ""direction"": 0,
+            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
                 ""askPrice"": 138.513986945,
                 ""lastPrice"": 138.505714984
             },
-            ""isMarketable"": true,
-            ""priceAdjustmentMode"": 1,
-			""events"": [
-				{
-					""id"": ""3b2259c444e04c9124784bb491bf016f-11-1"",
-					""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
-					""orderId"": 11,
-					""orderEventId"": 1,
-					""symbol"": ""SPY R735QTJ8XC9X"",
-					""symbolValue"": ""SPY"",
-					""symbolPermtick"": ""SPY"",
-					""time"": 1381255200.0,
-					""status"": ""submitted"",
-					""fillPrice"": 0.0,
-					""fillPriceCurrency"": ""USD"",
-					""fillQuantity"": 0.0,
-					""direction"": ""buy"",
-					""message"": null,
-					""isAssignment"": false,
-					""quantity"": 50.0
-				}
-			]
-		}", OrderType.MarketOnOpen, "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { @"{
+            ""isMarketable"": false,
+            ""priceAdjustmentMode"": 1
+		}";
+
+        private const string _marketOnClose = @"{
 			""type"": 5,
 			""id"": 1,
 			""contingentId"": 0,
@@ -1206,41 +1137,24 @@ namespace QuantConnect.Tests.Common.Orders
             ""lastFillTime"": ""2013-10-07T13:31:00Z"",
             ""quantity"": 10.0,
             ""status"": 1,
+            ""tag"": """",
             ""properties"": {
                 ""timeInForce"": {}
             },
             ""securityType"": 1,
             ""direction"": 0,
+            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
                 ""askPrice"": 138.513986945,
                 ""lastPrice"": 138.505714984
             },
-            ""isMarketable"": true,
-            ""priceAdjustmentMode"": 1,
-			""events"": [
-				{
-					""id"": ""3b2259c444e04c9124784bb491bf016f-12-1"",
-					""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
-					""orderId"": 12,
-					""orderEventId"": 1,
-					""symbol"": ""SPY R735QTJ8XC9X"",
-					""symbolValue"": ""SPY"",
-					""symbolPermtick"": ""SPY"",
-					""time"": 1381334400.0,
-					""status"": ""submitted"",
-					""fillPrice"": 0.0,
-					""fillPriceCurrency"": ""USD"",
-					""fillQuantity"": 0.0,
-					""direction"": ""buy"",
-					""message"": null,
-					""isAssignment"": false,
-					""quantity"": 104.0
-				}
-			]
-		}", OrderType.MarketOnClose, "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { @"{
+            ""isMarketable"": false,
+            ""priceAdjustmentMode"": 1
+		}";
+
+        private const string _optionExercise = @"{
             ""type"": 6,
             ""id"": 1,
             ""contingentId"": 0,
@@ -1264,42 +1178,24 @@ namespace QuantConnect.Tests.Common.Orders
             ""lastFillTime"": ""2013-10-07T13:31:00Z"",
             ""quantity"": 10.0,
             ""status"": 1,
+            ""tag"": """",
             ""properties"": {
                 ""timeInForce"": {}
             },
-            ""securityType"": 1,
+            ""securityType"": 2,
             ""direction"": 0,
+            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
                 ""askPrice"": 138.513986945,
                 ""lastPrice"": 138.505714984
             },
-            ""isMarketable"": true,
-            ""priceAdjustmentMode"": 1,
-            ""Events"": [
-                {
-                    ""id"": ""1a9ec93f4763e28d2ec1ae34dd3ce47d-3-2"",
-                    ""algorithmId"": ""1a9ec93f4763e28d2ec1ae34dd3ce47d"",
-                    ""orderId"": 3,
-                    ""orderEventId"": 2,
-                    ""symbol"": ""AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X"",
-                    ""symbolValue"": ""AAPL  140613P00660000"",
-                    ""symbolPermtick"": ""AAPL"",
-                    ""time"": 1402061460.0,
-                    ""status"": ""filled"",
-                    ""fillPrice"": 0.0,
-                    ""fillPriceCurrency"": """",
-                    ""fillQuantity"": -20.0,
-                    ""direction"": ""sell"",
-                    ""message"": ""Automatic Exercise. Underlying: 649.3400"",
-                    ""isAssignment"": false,
-                    ""quantity"": -20.0,
-                    ""isInTheMoney"": true
-                }
-            ]
-        }", OrderType.OptionExercise, "AAPL  140613P00660000", "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option },
-            new object[] { @"{
+            ""isMarketable"": false,
+            ""priceAdjustmentMode"": 1
+        }";
+
+        private const string _limitIfTouched = @"{
 			""type"": 7,
 			""triggerPrice"": 138.26,
 			""limitPrice"": 139.240078869942,
@@ -1321,42 +1217,24 @@ namespace QuantConnect.Tests.Common.Orders
             ""lastFillTime"": ""2013-10-07T13:31:00Z"",
             ""quantity"": 10.0,
             ""status"": 1,
+            ""tag"": """",
             ""properties"": {
                 ""timeInForce"": {}
             },
             ""securityType"": 1,
             ""direction"": 0,
+            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
                 ""askPrice"": 138.513986945,
                 ""lastPrice"": 138.505714984
             },
-            ""isMarketable"": true,
-            ""priceAdjustmentMode"": 1,
-			""events"": [
-				{
-					""id"": ""4c4c10b22ca562d9419c869abd23bfaf-1-1"",
-					""algorithmId"": ""4c4c10b22ca562d9419c869abd23bfaf"",
-					""orderId"": 1,
-					""orderEventId"": 1,
-					""symbol"": ""SPY R735QTJ8XC9X"",
-					""symbolValue"": ""SPY"",
-					""symbolPermtick"": ""SPY"",
-					""time"": 1381152660.0,
-					""status"": ""submitted"",
-					""fillPrice"": 0.0,
-					""fillPriceCurrency"": ""USD"",
-					""fillQuantity"": 0.0,
-					""direction"": ""buy"",
-					""message"": null,
-					""isAssignment"": false,
-					""quantity"": 10.0,
-					""limitPrice"": 137.505714984
-				}
-			]
-		}", OrderType.LimitIfTouched, "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { @"{
+            ""isMarketable"": false,
+            ""priceAdjustmentMode"": 1
+		}";
+
+        private const string _comboMarket = @"{
             ""type"": 8,
             ""quantity"": 10.0,
             ""id"": 1,
@@ -1365,10 +1243,10 @@ namespace QuantConnect.Tests.Common.Orders
                 ""1""
             ],
             ""symbol"": {
-                ""value"": ""GOOG  160115C00750000"",
-                ""id"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
-                ""permtick"": ""GOOG  160115C00750000"",
-                ""Underlying"": {
+                ""value"": ""GOOG  160115C00745000"",
+                ""id"": ""GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"",
+                ""permtick"": ""GOOG  160115C00745000"",
+                ""underlying"": {
                     ""value"": ""GOOG"",
                     ""id"": ""GOOCV VP83T1ZUHROL"",
                     ""permtick"": ""GOOG""
@@ -1379,13 +1257,14 @@ namespace QuantConnect.Tests.Common.Orders
             ""time"": ""2013-10-07T13:31:00Z"",
             ""createdTime"": ""2013-10-07T13:31:00Z"",
             ""lastFillTime"": ""2013-10-07T13:31:00Z"",
-            ""quantity"": 10.0,
             ""status"": 1,
+            ""tag"": """",
             ""properties"": {
                 ""timeInForce"": {}
             },
-            ""securityType"": 1,
+            ""securityType"": 2,
             ""direction"": 0,
+            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
@@ -1393,7 +1272,6 @@ namespace QuantConnect.Tests.Common.Orders
                 ""lastPrice"": 138.505714984
             },
             ""isMarketable"": true,
-            ""priceAdjustmentMode"": 1,
             ""groupOrderManager"": {
                 ""id"": 1,
                 ""quantity"": 10.0,
@@ -1406,28 +1284,10 @@ namespace QuantConnect.Tests.Common.Orders
                 ],
                 ""direction"": 0
             },
-            ""events"": [
-                {
-                    ""id"": ""c628892c0f508fd780013e01383f1c4e-3-1"",
-                    ""algorithmId"": ""c628892c0f508fd780013e01383f1c4e"",
-                    ""orderId"": 3,
-                    ""orderEventId"": 1,
-                    ""symbol"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
-                    ""symbolValue"": ""GOOG  160115C00750000"",
-                    ""symbolPermtick"": ""GOOCV"",
-                    ""time"": 1450967460.0,
-                    ""status"": ""submitted"",
-                    ""fillPrice"": 0.0,
-                    ""fillPriceCurrency"": ""USD"",
-                    ""fillQuantity"": 0.0,
-                    ""direction"": ""buy"",
-                    ""message"": null,
-                    ""isAssignment"": false,
-                    ""quantity"": 10.0
-                }
-            ]
-        }", OrderType.ComboMarket, "GOOCV 160115C00750000", "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { @"{
+            ""priceAdjustmentMode"": 1
+        }";
+
+        private const string _comboLimit = @"{
             ""type"": 9,
             ""quantity"": 10.0,
             ""id"": 1,
@@ -1439,7 +1299,7 @@ namespace QuantConnect.Tests.Common.Orders
                 ""value"": ""GOOG  160115C00745000"",
                 ""id"": ""GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"",
                 ""permtick"": ""GOOG  160115C00745000"",
-                ""Underlying"": {
+                ""underlying"": {
                     ""value"": ""GOOG"",
                     ""id"": ""GOOCV VP83T1ZUHROL"",
                     ""permtick"": ""GOOG""
@@ -1450,21 +1310,21 @@ namespace QuantConnect.Tests.Common.Orders
             ""time"": ""2013-10-07T13:31:00Z"",
             ""createdTime"": ""2013-10-07T13:31:00Z"",
             ""lastFillTime"": ""2013-10-07T13:31:00Z"",
-            ""quantity"": 10.0,
             ""status"": 1,
+            ""tag"": """",
             ""properties"": {
                 ""timeInForce"": {}
             },
-            ""securityType"": 1,
+            ""securityType"": 2,
             ""direction"": 0,
+            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
                 ""askPrice"": 138.513986945,
                 ""lastPrice"": 138.505714984
             },
-            ""isMarketable"": true,
-            ""priceAdjustmentMode"": 1,
+            ""isMarketable"": false,
             ""groupOrderManager"": {
                 ""id"": 1,
                 ""quantity"": 10.0,
@@ -1477,28 +1337,10 @@ namespace QuantConnect.Tests.Common.Orders
                 ],
                 ""direction"": 0
             },
-            ""events"": [
-                {
-                    ""id"": ""02162a310244a08034bcbcd571f5aec9-1-1"",
-                    ""algorithmId"": ""02162a310244a08034bcbcd571f5aec9"",
-                    ""orderId"": 1,
-                    ""orderEventId"": 1,
-                    ""symbol"": ""GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"",
-                    ""symbolValue"": ""GOOG  160115C00745000"",
-                    ""symbolPermtick"": ""GOOCV"",
-                    ""time"": 1450967460.0,
-                    ""status"": ""submitted"",
-                    ""fillPrice"": 0.0,
-                    ""fillPriceCurrency"": ""USD"",
-                    ""fillQuantity"": 0.0,
-                    ""direction"": ""buy"",
-                    ""message"": null,
-                    ""isAssignment"": false,
-                    ""quantity"": 100.0
-                }
-            ]
-        }", OrderType.ComboLimit, "GOOCV 160115C00745000", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { @"{
+            ""priceAdjustmentMode"": 1
+        }";
+
+        private const string _comboLegLimit = @"{
             ""type"": 10,
             ""limitPrice"": 139.240078869942,
             ""quantity"": 10.0,
@@ -1511,7 +1353,7 @@ namespace QuantConnect.Tests.Common.Orders
                 ""value"": ""GOOG  160115C00750000"",
                 ""id"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
                 ""permtick"": ""GOOG  160115C00750000"",
-                ""Underlying"": {
+                ""underlying"": {
                     ""value"": ""GOOG"",
                     ""id"": ""GOOCV VP83T1ZUHROL"",
                     ""permtick"": ""GOOG""
@@ -1522,21 +1364,21 @@ namespace QuantConnect.Tests.Common.Orders
             ""time"": ""2013-10-07T13:31:00Z"",
             ""createdTime"": ""2013-10-07T13:31:00Z"",
             ""lastFillTime"": ""2013-10-07T13:31:00Z"",
-            ""quantity"": 10.0,
             ""status"": 1,
+            ""tag"": """",
             ""properties"": {
                 ""timeInForce"": {}
             },
-            ""securityType"": 1,
+            ""securityType"": 2,
             ""direction"": 0,
+            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
                 ""askPrice"": 138.513986945,
                 ""lastPrice"": 138.505714984
             },
-            ""isMarketable"": true,
-            ""priceAdjustmentMode"": 1,
+            ""isMarketable"": false,
             ""groupOrderManager"": {
                 ""id"": 1,
                 ""quantity"": 10.0,
@@ -1549,29 +1391,10 @@ namespace QuantConnect.Tests.Common.Orders
                 ],
                 ""direction"": 0
             },
-            ""events"": [
-                {
-                    ""id"": ""a19c5b42ef28e3db679bb6fd59c14984-3-1"",
-                    ""algorithmId"": ""a19c5b42ef28e3db679bb6fd59c14984"",
-                    ""orderId"": 3,
-                    ""orderEventId"": 1,
-                    ""symbol"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
-                    ""symbolValue"": ""GOOG  160115C00750000"",
-                    ""symbolPermtick"": ""GOOCV"",
-                    ""time"": 1450967460.0,
-                    ""status"": ""submitted"",
-                    ""fillPrice"": 0.0,
-                    ""fillPriceCurrency"": ""USD"",
-                    ""fillQuantity"": 0.0,
-                    ""direction"": ""buy"",
-                    ""message"": null,
-                    ""isAssignment"": false,
-                    ""quantity"": 10.0,
-                    ""limitPrice"": 28.0
-                }
-            ]
-        }", OrderType.ComboLegLimit, "GOOCV 160115C00750000", "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { @"{
+            ""priceAdjustmentMode"": 1
+        }";
+
+        private const string _trailingStop = @"{
 			""trailingAmount"": 0.0019,
 			""trailingAsPercentage"": true,
 			""type"": 11,
@@ -1593,41 +1416,53 @@ namespace QuantConnect.Tests.Common.Orders
             ""lastFillTime"": ""2013-10-07T13:31:00Z"",
             ""quantity"": 10.0,
             ""status"": 1,
+            ""tag"": """",
             ""properties"": {
                 ""timeInForce"": {}
             },
             ""securityType"": 1,
             ""direction"": 0,
+            ""absoluteQuantity"": 10.0,
             ""value"": 1385.139869450,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
                 ""askPrice"": 138.513986945,
                 ""lastPrice"": 138.505714984
             },
-            ""isMarketable"": true,
-            ""priceAdjustmentMode"": 1,
-			""events"": [
-				{
-					""id"": ""3b2259c444e04c9124784bb491bf016f-6-1"",
-					""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
-					""orderId"": 6,
-					""orderEventId"": 1,
-					""symbol"": ""SPY R735QTJ8XC9X"",
-					""symbolValue"": ""SPY"",
-					""symbolPermtick"": ""SPY"",
-					""time"": 1381161600.0,
-					""status"": ""submitted"",
-					""fillPrice"": 0.0,
-					""fillPriceCurrency"": ""USD"",
-					""fillQuantity"": 0.0,
-					""direction"": ""sell"",
-					""message"": null,
-					""isAssignment"": false,
-					""quantity"": -10.0,
-					""stopPrice"": 138.803050622145
-				}
-			]
-		}", OrderType.TrailingStop, "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity }
+            ""isMarketable"": false,
+            ""priceAdjustmentMode"": 1
+		}";
+
+        public static object[] camelCaseDeserializeOrdersTests =
+        {
+            new object[] { _marketOrder, OrderType.Market, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _limitOrder, OrderType.Limit, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _stopMarket, OrderType.StopMarket, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _stopLimitOrder, OrderType.StopLimit, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _marketOnOpen, OrderType.MarketOnOpen, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _marketOnClose, OrderType.MarketOnClose, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _optionExercise, OrderType.OptionExercise, "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option },
+            new object[] { _limitIfTouched, OrderType.LimitIfTouched, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _marketOrder, OrderType.ComboMarket, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _comboLimit, OrderType.ComboLimit, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _comboLegLimit, OrderType.ComboLegLimit, "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _trailingStop, OrderType.TrailingStop, "SPY R735QTJ8XC9X", SecurityType.Equity }
+        };
+
+        public static object[] camelCaseSerializeOrdersTests =
+        {
+            new object[] { _marketOrder, OrderType.Market },
+            new object[] { _limitOrder, OrderType.Limit },
+            new object[] { _stopMarket, OrderType.StopMarket },
+            new object[] { _stopLimitOrder, OrderType.StopLimit },
+            new object[] { _marketOnOpen, OrderType.MarketOnOpen },
+            new object[] { _marketOnClose, OrderType.MarketOnClose },
+            new object[] { _optionExercise, OrderType.OptionExercise },
+            new object[] { _limitIfTouched, OrderType.LimitIfTouched },
+            new object[] { _marketOrder, OrderType.ComboMarket },
+            new object[] { _comboLimit, OrderType.ComboLimit },
+            new object[] { _comboLegLimit, OrderType.ComboLegLimit },
+            new object[] { _trailingStop, OrderType.TrailingStop }
         };
     }
 }

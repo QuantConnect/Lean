@@ -85,12 +85,15 @@ namespace QuantConnect
             JToken symbolId;
             JToken value;
 
-            if (jObject.TryGetValue("ID", StringComparison.InvariantCultureIgnoreCase, out symbolId)
+            if ((jObject.TryGetValue("ID", StringComparison.InvariantCultureIgnoreCase, out symbolId)
                 && jObject.TryGetValue("Value", StringComparison.InvariantCultureIgnoreCase, out value))
+                || (jObject.TryGetValue("id", StringComparison.InvariantCultureIgnoreCase, out symbolId)
+                && jObject.TryGetValue("value", StringComparison.InvariantCultureIgnoreCase, out value)))
             {
                 Symbol underlyingSymbol = null;
                 JToken underlying;
-                if (jObject.TryGetValue("Underlying", StringComparison.InvariantCultureIgnoreCase, out underlying))
+                if (jObject.TryGetValue("Underlying", StringComparison.InvariantCultureIgnoreCase, out underlying)
+                    || jObject.TryGetValue("underlying", StringComparison.InvariantCultureIgnoreCase, out underlying))
                 {
                     underlyingSymbol = ReadSymbolFromJson(underlying as JObject);
                 }

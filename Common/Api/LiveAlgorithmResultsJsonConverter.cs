@@ -74,6 +74,8 @@ namespace QuantConnect.Api
         {
             var jObject = JObject.Load(reader);
 
+            // We don't deserialize the json object directly since it contains properties such as `files` and `charts`
+            // that need to be deserialized in a different way
             var liveAlgoResults = new LiveAlgorithmResults
             {
                 Message = jObject["message"].Value<string>(),
@@ -109,6 +111,7 @@ namespace QuantConnect.Api
                 }
             }
 
+            // Deserialize files data
             List<ProjectFile> projectFiles = new List<ProjectFile>();
             var files = jObject["files"];
             if (files != null)
