@@ -21,19 +21,19 @@ class RsiAlphaModel(AlphaModel):
 
     def __init__(self,
                  period = 14,
-                 resolution = Resolution.Daily):
+                 resolution = Resolution.DAILY):
         '''Initializes a new instance of the RsiAlphaModel class
         Args:
             period: The RSI indicator period'''
         self.period = period
         self.resolution = resolution
-        self.insightPeriod = Time.Multiply(Extensions.ToTimeSpan(resolution), period)
-        self.symbolDataBySymbol ={}
+        self.insight_period = Time.multiply(Extensions.to_time_span(resolution), period)
+        self.symbol_data_by_symbol ={}
 
-        resolutionString = Extensions.GetEnumString(resolution, Resolution)
-        self.Name = '{}({},{})'.format(self.__class__.__name__, period, resolutionString)
+        resolution_string = Extensions.get_enum_string(resolution, Resolution)
+        self.name = '{}({},{})'.format(self.__class__.__name__, period, resolution_string)
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
         '''Updates this alpha model with the latest data from the algorithm.
         This is called each time the algorithm receives data for subscribed securities
         Args:
@@ -42,63 +42,63 @@ class RsiAlphaModel(AlphaModel):
         Returns:
             The new insights generated'''
         insights = []
-        for symbol, symbolData in self.symbolDataBySymbol.items():
-            rsi = symbolData.RSI
-            previous_state = symbolData.State
-            state = self.GetState(rsi, previous_state)
+        for symbol, symbol_data in self.symbol_data_by_symbol.items():
+            rsi = symbol_data.rsi
+            previous_state = symbol_data.state
+            state = self.get_state(rsi, previous_state)
 
-            if state != previous_state and rsi.IsReady:
-                if state == State.TrippedLow:
-                    insights.append(Insight.Price(symbol, self.insightPeriod, InsightDirection.Up))
-                if state == State.TrippedHigh:
-                    insights.append(Insight.Price(symbol, self.insightPeriod, InsightDirection.Down))
+            if state != previous_state and rsi.is_ready:
+                if state == State.TRIPPED_LOW:
+                    insights.append(Insight.price(symbol, self.insight_period, InsightDirection.UP))
+                if state == State.TRIPPED_HIGH:
+                    insights.append(Insight.price(symbol, self.insight_period, InsightDirection.DOWN))
 
-            symbolData.State = state
+            symbol_data.state = state
 
         return insights
 
 
-    def OnSecuritiesChanged(self, algorithm, changes):
+    def on_securities_changed(self, algorithm, changes):
         '''Cleans out old security data and initializes the RSI for any newly added securities.
         Event fired each time the we add/remove securities from the data feed
         Args:
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
         # clean up data for removed securities
-        for security in changes.RemovedSecurities:
-            symbol_data = self.symbolDataBySymbol.pop(security.Symbol, None)
+        for security in changes.removed_securities:
+            symbol_data = self.symbol_data_by_symbol.pop(security.symbol, None)
             if symbol_data:
                 symbol_data.dispose()
 
         # initialize data for added securities
         added_symbols = []
-        for security in changes.AddedSecurities:
-            symbol = security.Symbol 
-            if symbol not in self.symbolDataBySymbol:
+        for security in changes.added_securities:
+            symbol = security.symbol
+            if symbol not in self.symbol_data_by_symbol:
                 symbol_data = SymbolData(algorithm, symbol, self.period, self.resolution)
-                self.symbolDataBySymbol[symbol] = symbol_data
+                self.symbol_data_by_symbol[symbol] = symbol_data
                 added_symbols.append(symbol)
-                
+
         if added_symbols:
-            history = algorithm.History[TradeBar](added_symbols, self.period, self.resolution)
+            history = algorithm.history[TradeBar](added_symbols, self.period, self.resolution)
             for trade_bars in history:
-                for bar in trade_bars.Values:
-                    self.symbolDataBySymbol[bar.Symbol].update(bar)
+                for bar in trade_bars.values():
+                    self.symbol_data_by_symbol[bar.symbol].update(bar)
 
 
-    def GetState(self, rsi, previous):
+    def get_state(self, rsi, previous):
         ''' Determines the new state. This is basically cross-over detection logic that
         includes considerations for bouncing using the configured bounce tolerance.'''
-        if rsi.Current.Value > 70:
-            return State.TrippedHigh
-        if rsi.Current.Value < 30:
-            return State.TrippedLow
-        if previous == State.TrippedLow:
-            if rsi.Current.Value > 35:
-                return State.Middle
-        if previous == State.TrippedHigh:
-            if rsi.Current.Value < 65:
-                return State.Middle
+        if rsi.current.value > 70:
+            return State.TRIPPED_HIGH
+        if rsi.current.value < 30:
+            return State.TRIPPED_LOW
+        if previous == State.TRIPPED_LOW:
+            if rsi.current.value > 35:
+                return State.MIDDLE
+        if previous == State.TRIPPED_HIGH:
+            if rsi.current.value < 65:
+                return State.MIDDLE
 
         return previous
 
@@ -107,22 +107,22 @@ class SymbolData:
     '''Contains data specific to a symbol required by this model'''
     def __init__(self, algorithm, symbol, period, resolution):
         self.algorithm = algorithm
-        self.Symbol = symbol
-        self.State = State.Middle
+        self.symbol = symbol
+        self.state = State.MIDDLE
 
-        self.RSI = RelativeStrengthIndex(period, MovingAverageType.Wilders)
-        self.consolidator = algorithm.ResolveConsolidator(symbol, resolution)
-        algorithm.RegisterIndicator(symbol, self.RSI, self.consolidator)
+        self.rsi = RelativeStrengthIndex(period, MovingAverageType.WILDERS)
+        self.consolidator = algorithm.resolve_consolidator(symbol, resolution)
+        algorithm.register_indicator(symbol, self.rsi, self.consolidator)
 
     def update(self, bar):
-        self.consolidator.Update(bar)
+        self.consolidator.update(bar)
 
     def dispose(self):
-        self.algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.consolidator)
+        self.algorithm.subscription_manager.remove_consolidator(self.symbol, self.consolidator)
 
 
 class State(Enum):
     '''Defines the state. This is used to prevent signal spamming and aid in bounce detection.'''
-    TrippedLow = 0
-    Middle = 1
-    TrippedHigh = 2
+    TRIPPED_LOW = 0
+    MIDDLE = 1
+    TRIPPED_HIGH = 2
