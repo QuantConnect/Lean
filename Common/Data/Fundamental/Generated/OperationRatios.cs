@@ -645,8 +645,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 12039
         /// </remarks>
         [JsonProperty("12039")]
-        public CashFlowfromFinancingGrowth CashFlowfromFinancingGrowth => _cashFlowfromFinancingGrowth ??= new(_timeProvider, _securityIdentifier);
-        private CashFlowfromFinancingGrowth _cashFlowfromFinancingGrowth;
+        public CashFlowFromFinancingGrowth CashFlowFromFinancingGrowth => _cashFlowFromFinancingGrowth ??= new(_timeProvider, _securityIdentifier);
+        private CashFlowFromFinancingGrowth _cashFlowFromFinancingGrowth;
 
         /// <summary>
         /// The growth in the company's cash flows from investing on a percentage basis. Morningstar calculates the growth percentage based on the cash flows from investing reported in the Cash Flow Statement within the company filings or reports.
@@ -655,8 +655,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 12040
         /// </remarks>
         [JsonProperty("12040")]
-        public CashFlowfromInvestingGrowth CashFlowfromInvestingGrowth => _cashFlowfromInvestingGrowth ??= new(_timeProvider, _securityIdentifier);
-        private CashFlowfromInvestingGrowth _cashFlowfromInvestingGrowth;
+        public CashFlowFromInvestingGrowth CashFlowFromInvestingGrowth => _cashFlowFromInvestingGrowth ??= new(_timeProvider, _securityIdentifier);
+        private CashFlowFromInvestingGrowth _cashFlowFromInvestingGrowth;
 
         /// <summary>
         /// The growth in the company's capital expenditures on a percentage basis. Morningstar calculates the growth percentage based on the capital expenditures reported in the Cash Flow Statement within the company filings or reports.

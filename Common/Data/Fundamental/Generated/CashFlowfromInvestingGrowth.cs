@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// The growth in the company's cash flows from investing on a percentage basis. Morningstar calculates the growth percentage based on the cash flows from investing reported in the Cash Flow Statement within the company filings or reports.
     /// </summary>
-    public class CashFlowfromInvestingGrowth : MultiPeriodField
+    public class CashFlowFromInvestingGrowth : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -37,24 +37,24 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneYear period value for the field
         /// </summary>
         [JsonProperty("1Y")]
-        public double OneYear => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_CashFlowfromInvestingGrowth_OneYear);
+        public double OneYear => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_CashFlowFromInvestingGrowth_OneYear);
 
         /// <summary>
         /// Gets/sets the ThreeYears period value for the field
         /// </summary>
         [JsonProperty("3Y")]
-        public double ThreeYears => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_CashFlowfromInvestingGrowth_ThreeYears);
+        public double ThreeYears => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_CashFlowFromInvestingGrowth_ThreeYears);
 
         /// <summary>
         /// Gets/sets the FiveYears period value for the field
         /// </summary>
         [JsonProperty("5Y")]
-        public double FiveYears => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_CashFlowfromInvestingGrowth_FiveYears);
+        public double FiveYears => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_CashFlowFromInvestingGrowth_FiveYears);
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_CashFlowfromInvestingGrowth_OneYear));
+        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_CashFlowFromInvestingGrowth_OneYear));
 
         /// <summary>
         /// Returns the default value for the field
@@ -63,7 +63,7 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_CashFlowfromInvestingGrowth_OneYear);
+                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_CashFlowFromInvestingGrowth_OneYear);
                 if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
                 {
                     return defaultValue;
@@ -99,14 +99,14 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public CashFlowfromInvestingGrowth()
+        public CashFlowFromInvestingGrowth()
         {
         }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public CashFlowfromInvestingGrowth(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        public CashFlowFromInvestingGrowth(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }
