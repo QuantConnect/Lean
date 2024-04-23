@@ -16,11 +16,11 @@ from AlgorithmImports import *
 import decimal
 
 class CustomPythonData(PythonData):
-    def GetSource(self, config, date, isLive):
+    def get_source(self, config, date, is_live):
         source = Globals.DataFolder + "/equity/usa/daily/ibm.zip"
         return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
 
-    def Reader(self, config, line, date, isLive):
+    def reader(self, config, line, date, is_live):
         if line == None:
             return None
 
@@ -39,24 +39,24 @@ class CustomPythonData(PythonData):
 
 class Nifty(PythonData):
     '''NIFTY Custom Data Class'''
-    def GetSource(self, config, date, isLiveMode):
-        return SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.RemoteFile)
+    def get_source(self, config, date, is_live_mode):
+        return SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.REMOTE_FILE)
 
 
-    def Reader(self, config, line, date, isLiveMode):
+    def reader(self, config, line, date, is_live_mode):
         if not (line.strip() and line[0].isdigit()): return None
 
         # New Nifty object
         index = Nifty()
-        index.Symbol = config.Symbol
+        index.symbol = config.symbol
 
         try:
             # Example File Format:
             # Date,       Open       High        Low       Close     Volume      Turnover
             # 2011-09-13  7792.9    7799.9     7722.65    7748.7    116534670    6107.78
             data = line.split(',')
-            index.Time = datetime.strptime(data[0], "%Y-%m-%d")
-            index.Value = decimal.Decimal(data[4])
+            index.time = datetime.strptime(data[0], "%Y-%m-%d")
+            index.value = decimal.Decimal(data[4])
             index["Open"] = float(data[1])
             index["High"] = float(data[2])
             index["Low"] = float(data[3])

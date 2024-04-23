@@ -22,12 +22,12 @@ class HistoricalReturnsAlphaModel(AlphaModel):
             lookback(int): Historical return lookback period
             resolution: The resolution of historical data'''
         self.lookback = kwargs['lookback'] if 'lookback' in kwargs else 1
-        self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Daily
-        self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), self.lookback)
-        self.symbolDataBySymbol = {}
-        self.insightCollection = InsightCollection()
+        self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.DAILY
+        self.prediction_interval = Time.multiply(Extensions.to_time_span(self.resolution), self.lookback)
+        self._symbol_data_by_symbol = {}
+        self.insight_collection = InsightCollection()
 
-    def Update(self, algorithm, data):
+    def update(self, algorithm, data):
         '''Updates this alpha model with the latest data from the algorithm.
         This is called each time the algorithm receives data for subscribed securities
         Args:
@@ -37,90 +37,90 @@ class HistoricalReturnsAlphaModel(AlphaModel):
             The new insights generated'''
         insights = []
 
-        for symbol, symbolData in self.symbolDataBySymbol.items():
-            if symbolData.CanEmit:
+        for symbol, symbol_data in self._symbol_data_by_symbol.items():
+            if symbol_data.can_emit:
 
-                direction = InsightDirection.Flat
-                magnitude = symbolData.Return
-                if magnitude > 0: direction = InsightDirection.Up
-                if magnitude < 0: direction = InsightDirection.Down
-                
-                if direction == InsightDirection.Flat:
-                    self.CancelInsights(algorithm, symbol)
+                direction = InsightDirection.FLAT
+                magnitude = symbol_data.return_
+                if magnitude > 0: direction = InsightDirection.UP
+                if magnitude < 0: direction = InsightDirection.DOWN
+
+                if direction == InsightDirection.FLAT:
+                    self.cancel_insights(algorithm, symbol)
                     continue
 
-                insights.append(Insight.Price(symbol, self.predictionInterval, direction, magnitude, None))
+                insights.append(Insight.price(symbol, self.prediction_interval, direction, magnitude, None))
 
-        self.insightCollection.AddRange(insights)
+        self.insight_collection.add_range(insights)
         return insights
 
-    def OnSecuritiesChanged(self, algorithm, changes):
+    def on_securities_changed(self, algorithm, changes):
         '''Event fired each time the we add/remove securities from the data feed
         Args:
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
 
         # clean up data for removed securities
-        for removed in changes.RemovedSecurities:
-            symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
-            if symbolData is not None:
-                symbolData.RemoveConsolidators(algorithm)
-            self.CancelInsights(algorithm, removed.Symbol)
+        for removed in changes.removed_securities:
+            symbol_data = self._symbol_data_by_symbol.pop(removed.symbol, None)
+            if symbol_data is not None:
+                symbol_data.remove_consolidators(algorithm)
+            self.cancel_insights(algorithm, removed.symbol)
 
         # initialize data for added securities
-        symbols = [ x.Symbol for x in changes.AddedSecurities ]
-        history = algorithm.History(symbols, self.lookback, self.resolution)
+        symbols = [ x.symbol for x in changes.added_securities ]
+        history = algorithm.history(symbols, self.lookback, self.resolution)
         if history.empty: return
 
         tickers = history.index.levels[0]
         for ticker in tickers:
-            symbol = SymbolCache.GetSymbol(ticker)
+            symbol = SymbolCache.get_symbol(ticker)
 
-            if symbol not in self.symbolDataBySymbol:
-                symbolData = SymbolData(symbol, self.lookback)
-                self.symbolDataBySymbol[symbol] = symbolData
-                symbolData.RegisterIndicators(algorithm, self.resolution)
-                symbolData.WarmUpIndicators(history.loc[ticker])
+            if symbol not in self._symbol_data_by_symbol:
+                symbol_data = SymbolData(symbol, self.lookback)
+                self._symbol_data_by_symbol[symbol] = symbol_data
+                symbol_data.register_indicators(algorithm, self.resolution)
+                symbol_data.warm_up_indicators(history.loc[ticker])
 
-    def CancelInsights(self, algorithm, symbol):
-        if not self.insightCollection.ContainsKey(symbol):
+    def cancel_insights(self, algorithm, symbol):
+        if not self.insight_collection.contains_key(symbol):
             return
-        insights = self.insightCollection[symbol]
-        algorithm.Insights.Cancel(insights)
-        self.insightCollection.Clear([ symbol ]);
+        insights = self.insight_collection[symbol]
+        algorithm.insights.cancel(insights)
+        self.insight_collection.clear([ symbol ]);
 
 
 class SymbolData:
     '''Contains data specific to a symbol required by this model'''
     def __init__(self, symbol, lookback):
-        self.Symbol = symbol
-        self.ROC = RateOfChange('{}.ROC({})'.format(symbol, lookback), lookback)
-        self.Consolidator = None
+        self.symbol = symbol
+        self.roc = RateOfChange('{}.roc({})'.format(symbol, lookback), lookback)
+        self.consolidator = None
         self.previous = 0
 
-    def RegisterIndicators(self, algorithm, resolution):
-        self.Consolidator = algorithm.ResolveConsolidator(self.Symbol, resolution)
-        algorithm.RegisterIndicator(self.Symbol, self.ROC, self.Consolidator)
+    def register_indicators(self, algorithm, resolution):
+        self.consolidator = algorithm.resolve_consolidator(self.symbol, resolution)
+        algorithm.register_indicator(self.symbol, self.roc, self.consolidator)
 
-    def RemoveConsolidators(self, algorithm):
-        if self.Consolidator is not None:
-            algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.Consolidator)
+    def remove_consolidators(self, algorithm):
+        if self.consolidator is not None:
+            algorithm.subscription_manager.remove_consolidator(self.symbol, self.consolidator)
 
-    def WarmUpIndicators(self, history):
+    def warm_up_indicators(self, history):
         for tuple in history.itertuples():
-            self.ROC.Update(tuple.Index, tuple.close)
+            self.roc.update(tuple.Index, tuple.close)
 
     @property
-    def Return(self):
-        return float(self.ROC.Current.Value)
+    def return_(self):
+        return float(self.roc.current.value)
 
     @property
-    def CanEmit(self):
-        if self.previous == self.ROC.Samples:
+    def can_emit(self):
+        if self.previous == self.roc.samples:
             return False
 
-        self.previous = self.ROC.Samples
-        return self.ROC.IsReady
+        self.previous = self.roc.samples
+        return self.roc.is_ready
 
     def __str__(self, **kwargs):
-        return '{}: {:.2%}'.format(self.ROC.Name, (1 + self.Return)**252 - 1)
+        return '{}: {:.2%}'.format(self.roc.name, (1 + self.return_)**252 - 1)

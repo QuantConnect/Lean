@@ -15,15 +15,15 @@ from AlgorithmImports import *
 from scipy.optimize import minimize
 
 ### <summary>
-### Provides an implementation of a portfolio optimizer that calculate the optimal weights 
+### Provides an implementation of a portfolio optimizer that calculate the optimal weights
 ### with the weight range from -1 to 1 and minimize the portfolio variance with a target return of 2%
 ### </summary>
 ### <remarks>The budged constrain is scaled down/up to ensure that the sum of the absolute value of the weights is 1.</remarks>
 class MinimumVariancePortfolioOptimizer:
-    '''Provides an implementation of a portfolio optimizer that calculate the optimal weights 
+    '''Provides an implementation of a portfolio optimizer that calculate the optimal weights
     with the weight range from -1 to 1 and minimize the portfolio variance with a target return of 2%'''
-    def __init__(self, 
-                 minimum_weight = -1, 
+    def __init__(self,
+                 minimum_weight = -1,
                  maximum_weight = 1,
                  target_return = 0.02):
         '''Initialize the MinimumVariancePortfolioOptimizer
@@ -35,27 +35,27 @@ class MinimumVariancePortfolioOptimizer:
         self.maximum_weight = maximum_weight
         self.target_return = target_return
 
-    def Optimize(self, historicalReturns, expectedReturns = None, covariance = None):
+    def optimize(self, historical_returns, expected_returns = None, covariance = None):
         '''
         Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
         args:
-            historicalReturns: Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).
-            expectedReturns: Array of double with the portfolio annualized expected returns (size: K x 1).
+            historical_returns: Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).
+            expected_returns: Array of double with the portfolio annualized expected returns (size: K x 1).
             covariance: Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).
         Returns:
             Array of double with the portfolio weights (size: K x 1)
         '''
         if covariance is None:
-            covariance = historicalReturns.cov()
-        if expectedReturns is None:
-            expectedReturns = historicalReturns.mean()
+            covariance = historical_returns.cov()
+        if expected_returns is None:
+            expected_returns = historical_returns.mean()
 
-        size = historicalReturns.columns.size   # K x 1
+        size = historical_returns.columns.size   # K x 1
         x0 = np.array(size * [1. / size])
 
         constraints = [
             {'type': 'eq', 'fun': lambda weights: self.get_budget_constraint(weights)},
-            {'type': 'eq', 'fun': lambda weights: self.get_target_constraint(weights, expectedReturns)}]
+            {'type': 'eq', 'fun': lambda weights: self.get_target_constraint(weights, expected_returns)}]
 
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
         opt = minimize(lambda weights: self.portfolio_variance(weights, covariance),     # Objective function
@@ -89,6 +89,6 @@ class MinimumVariancePortfolioOptimizer:
         '''Defines a budget constraint: the sum of the weights equals unity'''
         return np.sum(weights) - 1
 
-    def get_target_constraint(self, weights, expectedReturns):
+    def get_target_constraint(self, weights, expected_returns):
         '''Ensure that the portfolio return target a given return'''
-        return np.dot(np.matrix(expectedReturns), np.matrix(weights).T).item() - self.target_return
+        return np.dot(np.matrix(expected_returns), np.matrix(weights).T).item() - self.target_return

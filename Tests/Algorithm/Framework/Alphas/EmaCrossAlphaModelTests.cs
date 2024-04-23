@@ -113,7 +113,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Algorithm.OnFrameworkSecuritiesChanged(changes);
 
                 // Get the dictionary of ema cross indicators
-                var symbolData = instance.symbolDataBySymbol;
+                var symbolData = instance.symbol_data_by_symbol;
 
                 // Check the dictionary is not empty
                 Assert.NotZero(symbolData.Length());
@@ -122,8 +122,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 // one datapoint
                 foreach (var item in symbolData)
                 {
-                    var fast = symbolData[item].Fast;
-                    var slow = symbolData[item].Slow;
+                    var fast = symbolData[item].fast;
+                    var slow = symbolData[item].slow;
 
                     Assert.IsTrue(fast.IsReady.IsTrue());
                     Assert.NotZero(((PyObject)fast.Samples).GetAndDispose<int>());

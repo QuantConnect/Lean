@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 from Portfolio.RiskParityPortfolioConstructionModel import *
 
-class RiakParityPortfolioAlgorithm(QCAlgorithm):
+class RiskParityPortfolioAlgorithm(QCAlgorithm):
     '''Example algorithm of using RiskParityPortfolioConstructionModel'''
 
     def initialize(self):
@@ -22,7 +22,7 @@ class RiakParityPortfolioAlgorithm(QCAlgorithm):
         self.set_end_date(2021, 3, 30)
         self.set_cash(100000)  # Set Strategy Cash
         self.set_security_initializer(lambda security: security.set_market_price(self.get_last_known_price(security)))
-        
+
         self.add_equity("SPY", Resolution.DAILY)
         self.add_equity("AAPL", Resolution.DAILY)
 

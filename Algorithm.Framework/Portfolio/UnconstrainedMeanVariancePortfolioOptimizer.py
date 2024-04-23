@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,19 +19,19 @@ from numpy.linalg import inv
 ### </summary>
 class UnconstrainedMeanVariancePortfolioOptimizer:
     '''Provides an implementation of a portfolio optimizer with unconstrained mean variance.'''
-    def Optimize(self, historicalReturns, expectedReturns = None, covariance = None):
+    def optimize(self, historical_returns, expected_returns = None, covariance = None):
         '''
         Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
         args:
-            historicalReturns: Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).
-            expectedReturns: Array of double with the portfolio annualized expected returns (size: K x 1).
+            historical_returns: Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).
+            expected_returns: Array of double with the portfolio annualized expected returns (size: K x 1).
             covariance: Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).</param>
         Returns:
             Array of double with the portfolio weights (size: K x 1)
         '''
-        if expectedReturns is None:
-            expectedReturns = historicalReturns.mean()
+        if expected_returns is None:
+            expected_returns = historical_returns.mean()
         if covariance is None:
-            covariance = historicalReturns.cov()
+            covariance = historical_returns.cov()
 
-        return expectedReturns.dot(inv(covariance))
+        return expected_returns.dot(inv(covariance))

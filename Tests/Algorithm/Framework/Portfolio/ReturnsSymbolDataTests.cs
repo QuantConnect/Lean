@@ -187,9 +187,9 @@ def GetDeterminantFromHistory(history):
     for symbol, df in history.items():
         symbolData = blopcm.BlackLittermanSymbolData(symbol, 1, 5)
         for time, close in df.dropna().items():
-            symbolData.Update(time, close)
+            symbolData.update(time, close)
 
-        returns[symbol] = symbolData.Return
+        returns[symbol] = symbolData.return_
     
     df = pd.DataFrame(returns)
     if df.isna().sum().sum() > 0:
