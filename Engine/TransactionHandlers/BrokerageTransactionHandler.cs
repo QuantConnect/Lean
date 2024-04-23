@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
@@ -1505,7 +1506,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                                 // so we get ALL orders for this symbol that were placed or got an update in the last 'orderWindowSeconds'
 
                                 const int orderWindowSeconds = 10;
-                                if (!GetOrders(x =>
+                                if (_brokerage is BacktestingBrokerage ||
+                                    !GetOrders(x =>
                                         x.Symbol == e.Symbol
                                         && (x.Status.IsOpen() || x.Status.IsFill() &&
                                             (Math.Abs((x.Time - nowUtc).TotalSeconds) < orderWindowSeconds
