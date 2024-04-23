@@ -30,13 +30,13 @@ namespace QuantConnect.Api
         public List<string> Logs { get; set; }
 
         /// <summary>
-        /// Time when the first log was generated
+        /// Epoch time in seconds when the first log was generated
         /// </summary>
         [JsonProperty(PropertyName = "start")]
         public int Start { get; set; }
 
         /// <summary>
-        /// Time of the last log retrieved
+        /// Epoch time in seconds when the last log retrieved
         /// </summary>
         [JsonProperty(PropertyName = "end")]
         public int End { get; set; }

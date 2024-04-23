@@ -574,8 +574,8 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(Market.USA, actual.ID.Market);
         }
 
-        [TestCaseSource(nameof(camelCaseDeserializeOrdersTests))]
-        public void DeserializesCamelCaseMarketOrder(string json, OrderType type, string id, SecurityType securityType)
+        [TestCaseSource(nameof(DeserializeOrdersTests))]
+        public void DeserializesCamelAndCapitalCaseOrders(string json, OrderType type, string id, SecurityType securityType)
         {
             var order = GetAndAssertOrder(json, type);
 
@@ -601,8 +601,8 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(DataNormalizationMode.Adjusted, order.PriceAdjustmentMode, "Failed in Order.PriceAdjustmentMode");
         }
 
-        [TestCaseSource(nameof(camelCaseSerializeOrdersTests))]
-        public void SerializesCamelCaseMarketOrder(string json, OrderType type)
+        [TestCaseSource(nameof(SerializeOrdersTests))]
+        public void SerializesCamelAndCapitalCaseOrders(string json, OrderType type)
         {
             var order = GetAndAssertOrder(json, type);
             var serializedOrder = JsonConvert.SerializeObject(order);
@@ -933,7 +933,7 @@ namespace QuantConnect.Tests.Common.Orders
             return actual;
         }
 
-        private const string _marketOrder = @"{
+        private const string _camelCaseMarketOrder = @"{
             ""type"": 0,
             ""id"": 1,
             ""contingentId"": 0,
@@ -968,7 +968,7 @@ namespace QuantConnect.Tests.Common.Orders
             ""priceAdjustmentMode"": 1
         }";
 
-        private const string _limitOrder = @"{
+        private const string _camelCaseLimitOrder = @"{
 			""limitPrice"": 139.240078869942,
 			""type"": 1,
 			""id"": 1,
@@ -1004,7 +1004,7 @@ namespace QuantConnect.Tests.Common.Orders
             ""priceAdjustmentMode"": 1
 		}";
 
-        private const string _stopMarket = @"{
+        private const string _camelCaseStopMarket = @"{
 			""stopPrice"": 138.232948134345,
 			""type"": 2,
 			""id"": 1,
@@ -1040,7 +1040,7 @@ namespace QuantConnect.Tests.Common.Orders
             ""priceAdjustmentMode"": 1
 		}";
 
-        private const string _stopLimitOrder = @"{
+        private const string _camelCaseStopLimitOrder = @"{
 			""stopPrice"": 138.232948134345,
 			""stopTriggered"": false,
 			""limitPrice"": 139.240078869942,
@@ -1078,7 +1078,7 @@ namespace QuantConnect.Tests.Common.Orders
             ""priceAdjustmentMode"": 1
 		}";
 
-        private const string _marketOnOpen = @"{
+        private const string _camelCaseMarketOnOpen = @"{
 			""type"": 4,
 			""id"": 1,
 			""contingentId"": 0,
@@ -1113,7 +1113,7 @@ namespace QuantConnect.Tests.Common.Orders
             ""priceAdjustmentMode"": 1
 		}";
 
-        private const string _marketOnClose = @"{
+        private const string _camelCaseMarketOnClose = @"{
 			""type"": 5,
 			""id"": 1,
 			""contingentId"": 0,
@@ -1148,7 +1148,7 @@ namespace QuantConnect.Tests.Common.Orders
             ""priceAdjustmentMode"": 1
 		}";
 
-        private const string _optionExercise = @"{
+        private const string _camelCaseOptionExercise = @"{
             ""type"": 6,
             ""id"": 1,
             ""contingentId"": 0,
@@ -1188,7 +1188,7 @@ namespace QuantConnect.Tests.Common.Orders
             ""priceAdjustmentMode"": 1
         }";
 
-        private const string _limitIfTouched = @"{
+        private const string _camelCaseLimitIfTouched = @"{
 			""type"": 7,
 			""triggerPrice"": 138.26,
 			""limitPrice"": 139.240078869942,
@@ -1226,7 +1226,7 @@ namespace QuantConnect.Tests.Common.Orders
             ""priceAdjustmentMode"": 1
 		}";
 
-        private const string _comboMarket = @"{
+        private const string _camelCaseComboMarket = @"{
             ""type"": 8,
             ""quantity"": 10.0,
             ""id"": 1,
@@ -1278,7 +1278,7 @@ namespace QuantConnect.Tests.Common.Orders
             ""priceAdjustmentMode"": 1
         }";
 
-        private const string _comboLimit = @"{
+        private const string _camelCaseComboLimit = @"{
             ""type"": 9,
             ""quantity"": 10.0,
             ""id"": 1,
@@ -1330,7 +1330,7 @@ namespace QuantConnect.Tests.Common.Orders
             ""priceAdjustmentMode"": 1
         }";
 
-        private const string _comboLegLimit = @"{
+        private const string _camelCaseComboLegLimit = @"{
             ""type"": 10,
             ""limitPrice"": 139.240078869942,
             ""quantity"": 10.0,
@@ -1383,7 +1383,7 @@ namespace QuantConnect.Tests.Common.Orders
             ""priceAdjustmentMode"": 1
         }";
 
-        private const string _trailingStop = @"{
+        private const string _camelCaseTrailingStop = @"{
 			""trailingAmount"": 0.0019,
 			""trailingAsPercentage"": true,
 			""type"": 11,
@@ -1421,36 +1421,536 @@ namespace QuantConnect.Tests.Common.Orders
             ""priceAdjustmentMode"": 1
 		}";
 
-        public static object[] camelCaseDeserializeOrdersTests =
+        private const string _capitalCaseMarketOrder = @"{
+            ""Type"": 0,
+            ""Id"": 1,
+            ""ContingentId"": 0,
+            ""BrokerId"": [
+                ""1""
+            ],
+            ""Symbol"": {
+                ""Value"": ""SPY"",
+                ""ID"": ""SPY R735QTJ8XC9X"",
+                ""Permtick"": ""SPY""
+            },
+            ""Price"": 138.513986945,
+            ""PriceCurrency"": ""USD"",
+            ""Time"": ""2013-10-07T13:31:00Z"",
+            ""CreatedTime"": ""2013-10-07T13:31:00Z"",
+            ""LastFillTime"": ""2013-10-07T13:31:00Z"",
+            ""Quantity"": 10.0,
+            ""Status"": 1,
+            ""Tag"": """",
+            ""Properties"": {
+                ""TimeInForce"": {}
+            },
+            ""SecurityType"": 1,
+            ""Direction"": 0,
+            ""Value"": 1385.139869450,
+            ""OrderSubmissionData"": {
+                ""BidPrice"": 138.505714984,
+                ""AskPrice"": 138.513986945,
+                ""LastPrice"": 138.505714984
+            },
+            ""IsMarketable"": true,
+            ""PriceAdjustmentMode"": 1
+        }";
+
+        private const string _capitalCaseLimitOrder = @"{
+	""LimitPrice"": 139.240078869942,
+	""Type"": 1,
+	""Id"": 1,
+	""ContingentId"": 0,
+	""BrokerId"": [
+		""1""
+	],
+	""Symbol"": {
+		""Value"": ""SPY"",
+		""ID"": ""SPY R735QTJ8XC9X"",
+		""Permtick"": ""SPY""
+	},
+	""Price"": 138.513986945,
+    ""PriceCurrency"": ""USD"",
+    ""Time"": ""2013-10-07T13:31:00Z"",
+    ""CreatedTime"": ""2013-10-07T13:31:00Z"",
+    ""LastFillTime"": ""2013-10-07T13:31:00Z"",
+    ""Quantity"": 10.0,
+    ""Status"": 1,
+    ""Tag"": """",
+    ""Properties"": {
+        ""TimeInForce"": {}
+    },
+    ""SecurityType"": 1,
+    ""Direction"": 0,
+    ""Value"": 1385.139869450,
+    ""OrderSubmissionData"": {
+        ""BidPrice"": 138.505714984,
+        ""AskPrice"": 138.513986945,
+        ""LastPrice"": 138.505714984
+    },
+    ""IsMarketable"": true,
+    ""PriceAdjustmentMode"": 1
+}";
+
+        private const string _capitalCaseStopMarket = @"{
+	""StopPrice"": 138.232948134345,
+	""Type"": 2,
+	""Id"": 1,
+	""ContingentId"": 0,
+	""BrokerId"": [
+		""1""
+	],
+	""Symbol"": {
+		""Value"": ""SPY"",
+		""ID"": ""SPY R735QTJ8XC9X"",
+		""Permtick"": ""SPY""
+	},
+	""Price"": 138.513986945,
+    ""PriceCurrency"": ""USD"",
+    ""Time"": ""2013-10-07T13:31:00Z"",
+    ""CreatedTime"": ""2013-10-07T13:31:00Z"",
+    ""LastFillTime"": ""2013-10-07T13:31:00Z"",
+    ""Quantity"": 10.0,
+    ""Status"": 1,
+    ""Tag"": """",
+    ""Properties"": {
+        ""TimeInForce"": {}
+    },
+    ""SecurityType"": 1,
+    ""Direction"": 0,
+    ""Value"": 1385.139869450,
+    ""OrderSubmissionData"": {
+        ""BidPrice"": 138.505714984,
+        ""AskPrice"": 138.513986945,
+        ""LastPrice"": 138.505714984
+    },
+    ""IsMarketable"": false,
+    ""PriceAdjustmentMode"": 1
+}";
+
+        private const string _capitalCaseStopLimitOrder = @"{
+	""StopPrice"": 138.232948134345,
+	""StopTriggered"": false,
+	""LimitPrice"": 139.240078869942,
+	""Type"": 3,
+	""Id"": 1,
+	""ContingentId"": 0,
+	""BrokerId"": [
+		""1""
+	],
+	""Symbol"": {
+		""Value"": ""SPY"",
+		""ID"": ""SPY R735QTJ8XC9X"",
+		""Permtick"": ""SPY""
+	},
+	""Price"": 138.513986945,
+    ""PriceCurrency"": ""USD"",
+    ""Time"": ""2013-10-07T13:31:00Z"",
+    ""CreatedTime"": ""2013-10-07T13:31:00Z"",
+    ""LastFillTime"": ""2013-10-07T13:31:00Z"",
+    ""Quantity"": 10.0,
+    ""Status"": 1,
+    ""Tag"": """",
+    ""Properties"": {
+        ""TimeInForce"": {}
+    },
+    ""SecurityType"": 1,
+    ""Direction"": 0,
+    ""Value"": 1385.139869450,
+    ""OrderSubmissionData"": {
+        ""BidPrice"": 138.505714984,
+        ""AskPrice"": 138.513986945,
+        ""LastPrice"": 138.505714984
+    },
+    ""IsMarketable"": false,
+    ""PriceAdjustmentMode"": 1
+}";
+
+        private const string _capitalCaseMarketOnOpen = @"{
+	""Type"": 4,
+	""Id"": 1,
+	""ContingentId"": 0,
+	""BrokerId"": [
+		""1""
+	],
+	""Symbol"": {
+		""Value"": ""SPY"",
+		""ID"": ""SPY R735QTJ8XC9X"",
+		""Permtick"": ""SPY""
+	},
+	""Price"": 138.513986945,
+    ""PriceCurrency"": ""USD"",
+    ""Time"": ""2013-10-07T13:31:00Z"",
+    ""CreatedTime"": ""2013-10-07T13:31:00Z"",
+    ""LastFillTime"": ""2013-10-07T13:31:00Z"",
+    ""Quantity"": 10.0,
+    ""Status"": 1,
+    ""Tag"": """",
+    ""Properties"": {
+        ""TimeInForce"": {}
+    },
+    ""SecurityType"": 1,
+    ""Direction"": 0,
+    ""Value"": 1385.139869450,
+    ""OrderSubmissionData"": {
+        ""BidPrice"": 138.505714984,
+        ""AskPrice"": 138.513986945,
+        ""LastPrice"": 138.505714984
+    },
+    ""IsMarketable"": false,
+    ""PriceAdjustmentMode"": 1
+}";
+
+        private const string _capitalCaseMarketOnClose = @"{
+	""Type"": 5,
+	""Id"": 1,
+	""ContingentId"": 0,
+	""BrokerId"": [
+		""1""
+	],
+	""Symbol"": {
+		""Value"": ""SPY"",
+		""ID"": ""SPY R735QTJ8XC9X"",
+		""Permtick"": ""SPY""
+	},
+	""Price"": 138.513986945,
+    ""PriceCurrency"": ""USD"",
+    ""Time"": ""2013-10-07T13:31:00Z"",
+    ""CreatedTime"": ""2013-10-07T13:31:00Z"",
+    ""LastFillTime"": ""2013-10-07T13:31:00Z"",
+    ""Quantity"": 10.0,
+    ""Status"": 1,
+    ""Tag"": """",
+    ""Properties"": {
+        ""TimeInForce"": {}
+    },
+    ""SecurityType"": 1,
+    ""Direction"": 0,
+    ""Value"": 1385.139869450,
+    ""OrderSubmissionData"": {
+        ""BidPrice"": 138.505714984,
+        ""AskPrice"": 138.513986945,
+        ""LastPrice"": 138.505714984
+    },
+    ""IsMarketable"": false,
+    ""PriceAdjustmentMode"": 1
+}";
+
+        private const string _capitalCaseOptionExercise = @"{
+    ""Type"": 6,
+    ""Id"": 1,
+    ""ContingentId"": 0,
+    ""BrokerId"": [
+        ""1""
+    ],
+    ""Symbol"": {
+        ""Value"": ""AAPL  140613P00660000"",
+        ""ID"": ""AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X"",
+        ""Permtick"": ""AAPL  140613P00660000"",
+        ""Underlying"": {
+            ""Value"": ""AAPL"",
+            ""ID"": ""AAPL R735QTJ8XC9X"",
+            ""Permtick"": ""AAPL""
+        }
+    },
+    ""Price"": 138.513986945,
+    ""PriceCurrency"": ""USD"",
+    ""Time"": ""2013-10-07T13:31:00Z"",
+    ""CreatedTime"": ""2013-10-07T13:31:00Z"",
+    ""LastFillTime"": ""2013-10-07T13:31:00Z"",
+    ""Quantity"": 10.0,
+    ""Status"": 1,
+    ""Tag"": """",
+    ""Properties"": {
+        ""TimeInForce"": {}
+    },
+    ""SecurityType"": 2,
+    ""Direction"": 0,
+    ""Value"": 1385.139869450,
+    ""OrderSubmissionData"": {
+        ""BidPrice"": 138.505714984,
+        ""AskPrice"": 138.513986945,
+        ""LastPrice"": 138.505714984
+    },
+    ""IsMarketable"": false,
+    ""PriceAdjustmentMode"": 1
+}";
+
+        private const string _capitalCaseLimitIfTouched = @"{
+	""Type"": 7,
+	""triggerPrice"": 138.26,
+	""LimitPrice"": 139.240078869942,
+	""TriggerTouched"": false,
+	""Id"": 1,
+	""ContingentId"": 0,
+	""BrokerId"": [
+		""1""
+	],
+	""Symbol"": {
+		""Value"": ""SPY"",
+		""ID"": ""SPY R735QTJ8XC9X"",
+		""Permtick"": ""SPY""
+	},
+	""Price"": 138.513986945,
+    ""PriceCurrency"": ""USD"",
+    ""Time"": ""2013-10-07T13:31:00Z"",
+    ""CreatedTime"": ""2013-10-07T13:31:00Z"",
+    ""LastFillTime"": ""2013-10-07T13:31:00Z"",
+    ""Quantity"": 10.0,
+    ""Status"": 1,
+    ""Tag"": """",
+    ""Properties"": {
+        ""TimeInForce"": {}
+    },
+    ""SecurityType"": 1,
+    ""Direction"": 0,
+    ""Value"": 1385.139869450,
+    ""OrderSubmissionData"": {
+        ""BidPrice"": 138.505714984,
+        ""AskPrice"": 138.513986945,
+        ""LastPrice"": 138.505714984
+    },
+    ""IsMarketable"": false,
+    ""PriceAdjustmentMode"": 1
+}";
+
+        private const string _capitalCaseComboMarket = @"{
+    ""Type"": 8,
+    ""Quantity"": 10.0,
+    ""Id"": 1,
+    ""ContingentId"": 0,
+    ""BrokerId"": [
+        ""1""
+    ],
+    ""Symbol"": {
+        ""Value"": ""GOOG  160115C00745000"",
+        ""ID"": ""GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"",
+        ""Permtick"": ""GOOG  160115C00745000"",
+        ""Underlying"": {
+            ""Value"": ""GOOG"",
+            ""ID"": ""GOOCV VP83T1ZUHROL"",
+            ""Permtick"": ""GOOG""
+        }
+    },
+    ""Price"": 138.513986945,
+    ""PriceCurrency"": ""USD"",
+    ""Time"": ""2013-10-07T13:31:00Z"",
+    ""CreatedTime"": ""2013-10-07T13:31:00Z"",
+    ""LastFillTime"": ""2013-10-07T13:31:00Z"",
+    ""Status"": 1,
+    ""Tag"": """",
+    ""Properties"": {
+        ""TimeInForce"": {}
+    },
+    ""SecurityType"": 2,
+    ""Direction"": 0,
+    ""Value"": 1385.139869450,
+    ""OrderSubmissionData"": {
+        ""BidPrice"": 138.505714984,
+        ""AskPrice"": 138.513986945,
+        ""LastPrice"": 138.505714984
+    },
+    ""IsMarketable"": true,
+    ""GroupOrderManager"": {
+        ""Id"": 1,
+        ""Quantity"": 10.0,
+        ""Count"": 3,
+        ""LimitPrice"": 0.0,
+        ""OrderIds"": [
+            1,
+            2,
+            3
+        ],
+        ""Direction"": 0
+    },
+    ""PriceAdjustmentMode"": 1
+}";
+
+        private const string _capitalCaseComboLimit = @"{
+    ""Type"": 9,
+    ""Quantity"": 10.0,
+    ""Id"": 1,
+    ""ContingentId"": 0,
+    ""BrokerId"": [
+        ""1""
+    ],
+    ""Symbol"": {
+        ""Value"": ""GOOG  160115C00745000"",
+        ""ID"": ""GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"",
+        ""Permtick"": ""GOOG  160115C00745000"",
+        ""Underlying"": {
+            ""Value"": ""GOOG"",
+            ""ID"": ""GOOCV VP83T1ZUHROL"",
+            ""Permtick"": ""GOOG""
+        }
+    },
+    ""Price"": 138.513986945,
+    ""PriceCurrency"": ""USD"",
+    ""Time"": ""2013-10-07T13:31:00Z"",
+    ""CreatedTime"": ""2013-10-07T13:31:00Z"",
+    ""LastFillTime"": ""2013-10-07T13:31:00Z"",
+    ""Status"": 1,
+    ""Tag"": """",
+    ""Properties"": {
+        ""TimeInForce"": {}
+    },
+    ""SecurityType"": 2,
+    ""Direction"": 0,
+    ""Value"": 1385.139869450,
+    ""OrderSubmissionData"": {
+        ""BidPrice"": 138.505714984,
+        ""AskPrice"": 138.513986945,
+        ""LastPrice"": 138.505714984
+    },
+    ""IsMarketable"": false,
+    ""GroupOrderManager"": {
+        ""Id"": 1,
+        ""Quantity"": 10.0,
+        ""Count"": 3,
+        ""LimitPrice"": 1.9,
+        ""OrderIds"": [
+            1,
+            2,
+            3
+        ],
+        ""Direction"": 0
+    },
+    ""PriceAdjustmentMode"": 1
+}";
+
+        private const string _capitalCaseComboLegLimit = @"{
+    ""Type"": 10,
+    ""LimitPrice"": 139.240078869942,
+    ""Quantity"": 10.0,
+    ""Id"": 1,
+    ""ContingentId"": 0,
+    ""BrokerId"": [
+        ""1""
+    ],
+    ""Symbol"": {
+        ""Value"": ""GOOG  160115C00750000"",
+        ""ID"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
+        ""Permtick"": ""GOOG  160115C00750000"",
+        ""Underlying"": {
+            ""Value"": ""GOOG"",
+            ""ID"": ""GOOCV VP83T1ZUHROL"",
+            ""Permtick"": ""GOOG""
+        }
+    },
+    ""Price"": 138.513986945,
+    ""PriceCurrency"": ""USD"",
+    ""Time"": ""2013-10-07T13:31:00Z"",
+    ""CreatedTime"": ""2013-10-07T13:31:00Z"",
+    ""LastFillTime"": ""2013-10-07T13:31:00Z"",
+    ""Status"": 1,
+    ""Tag"": """",
+    ""Properties"": {
+        ""TimeInForce"": {}
+    },
+    ""SecurityType"": 2,
+    ""Direction"": 0,
+    ""Value"": 1385.139869450,
+    ""OrderSubmissionData"": {
+        ""BidPrice"": 138.505714984,
+        ""AskPrice"": 138.513986945,
+        ""LastPrice"": 138.505714984
+    },
+    ""IsMarketable"": false,
+    ""GroupOrderManager"": {
+        ""Id"": 1,
+        ""Quantity"": 10.0,
+        ""Count"": 3,
+        ""LimitPrice"": 0.0,
+        ""OrderIds"": [
+            1,
+            2,
+            3
+        ],
+        ""Direction"": 0
+    },
+    ""PriceAdjustmentMode"": 1
+}";
+
+        private const string _capitalCaseTrailingStop = @"{
+	""TrailingAmount"": 0.0019,
+	""TrailingAsPercentage"": true,
+	""Type"": 11,
+	""StopPrice"": 138.232948134345,
+	""Id"": 1,
+	""ContingentId"": 0,
+	""BrokerId"": [
+		""1""
+	],
+	""Symbol"": {
+		""Value"": ""SPY"",
+		""ID"": ""SPY R735QTJ8XC9X"",
+		""Permtick"": ""SPY""
+	},
+	""Price"": 138.513986945,
+    ""PriceCurrency"": ""USD"",
+    ""Time"": ""2013-10-07T13:31:00Z"",
+    ""CreatedTime"": ""2013-10-07T13:31:00Z"",
+    ""LastFillTime"": ""2013-10-07T13:31:00Z"",
+    ""Quantity"": 10.0,
+    ""Status"": 1,
+    ""Tag"": """",
+    ""Properties"": {
+        ""TimeInForce"": {}
+    },
+    ""SecurityType"": 1,
+    ""Direction"": 0,
+    ""Value"": 1385.139869450,
+    ""OrderSubmissionData"": {
+        ""BidPrice"": 138.505714984,
+        ""AskPrice"": 138.513986945,
+        ""LastPrice"": 138.505714984
+    },
+    ""IsMarketable"": false,
+    ""PriceAdjustmentMode"": 1
+}";
+
+        public static object[] DeserializeOrdersTests =
         {
-            new object[] { _marketOrder, OrderType.Market, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _limitOrder, OrderType.Limit, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _stopMarket, OrderType.StopMarket, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _stopLimitOrder, OrderType.StopLimit, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _marketOnOpen, OrderType.MarketOnOpen, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _marketOnClose, OrderType.MarketOnClose, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _optionExercise, OrderType.OptionExercise, "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option },
-            new object[] { _limitIfTouched, OrderType.LimitIfTouched, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _comboMarket, OrderType.ComboMarket, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _comboLimit, OrderType.ComboLimit, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _comboLegLimit, OrderType.ComboLegLimit, "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _trailingStop, OrderType.TrailingStop, "SPY R735QTJ8XC9X", SecurityType.Equity }
+            new object[] { _camelCaseMarketOrder, OrderType.Market, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _camelCaseLimitOrder, OrderType.Limit, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _camelCaseStopMarket, OrderType.StopMarket, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _camelCaseStopLimitOrder, OrderType.StopLimit, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _camelCaseMarketOnOpen, OrderType.MarketOnOpen, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _camelCaseMarketOnClose, OrderType.MarketOnClose, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _camelCaseOptionExercise, OrderType.OptionExercise, "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option },
+            new object[] { _camelCaseLimitIfTouched, OrderType.LimitIfTouched, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _camelCaseComboMarket, OrderType.ComboMarket, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _camelCaseComboLimit, OrderType.ComboLimit, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _camelCaseComboLegLimit, OrderType.ComboLegLimit, "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _camelCaseTrailingStop, OrderType.TrailingStop, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _capitalCaseMarketOrder, OrderType.Market, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _capitalCaseLimitOrder, OrderType.Limit, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _capitalCaseStopMarket, OrderType.StopMarket, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _capitalCaseStopLimitOrder, OrderType.StopLimit, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _capitalCaseMarketOnOpen, OrderType.MarketOnOpen, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _capitalCaseMarketOnClose, OrderType.MarketOnClose, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _capitalCaseOptionExercise, OrderType.OptionExercise, "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option },
+            new object[] { _capitalCaseLimitIfTouched, OrderType.LimitIfTouched, "SPY R735QTJ8XC9X", SecurityType.Equity },
+            new object[] { _capitalCaseComboMarket, OrderType.ComboMarket, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _capitalCaseComboLimit, OrderType.ComboLimit, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _capitalCaseComboLegLimit, OrderType.ComboLegLimit, "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _capitalCaseTrailingStop, OrderType.TrailingStop, "SPY R735QTJ8XC9X", SecurityType.Equity }
         };
 
-        public static object[] camelCaseSerializeOrdersTests =
+        public static object[] SerializeOrdersTests =
         {
-            new object[] { _marketOrder, OrderType.Market },
-            new object[] { _limitOrder, OrderType.Limit },
-            new object[] { _stopMarket, OrderType.StopMarket },
-            new object[] { _stopLimitOrder, OrderType.StopLimit },
-            new object[] { _marketOnOpen, OrderType.MarketOnOpen },
-            new object[] { _marketOnClose, OrderType.MarketOnClose },
-            new object[] { _optionExercise, OrderType.OptionExercise },
-            new object[] { _limitIfTouched, OrderType.LimitIfTouched },
-            new object[] { _comboMarket, OrderType.ComboMarket },
-            new object[] { _comboLimit, OrderType.ComboLimit },
-            new object[] { _comboLegLimit, OrderType.ComboLegLimit },
-            new object[] { _trailingStop, OrderType.TrailingStop }
+            new object[] { _camelCaseMarketOrder, OrderType.Market },
+            new object[] { _camelCaseLimitOrder, OrderType.Limit },
+            new object[] { _camelCaseStopMarket, OrderType.StopMarket },
+            new object[] { _camelCaseStopLimitOrder, OrderType.StopLimit },
+            new object[] { _camelCaseMarketOnOpen, OrderType.MarketOnOpen },
+            new object[] { _camelCaseMarketOnClose, OrderType.MarketOnClose },
+            new object[] { _camelCaseOptionExercise, OrderType.OptionExercise },
+            new object[] { _camelCaseLimitIfTouched, OrderType.LimitIfTouched },
+            new object[] { _camelCaseComboMarket, OrderType.ComboMarket },
+            new object[] { _camelCaseComboLimit, OrderType.ComboLimit },
+            new object[] { _camelCaseComboLegLimit, OrderType.ComboLegLimit },
+            new object[] { _camelCaseTrailingStop, OrderType.TrailingStop },
         };
     }
 }

@@ -54,21 +54,8 @@ namespace QuantConnect.Report
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var token = JToken.ReadFrom(reader);
-            int orderType = default;
-            // Takes the Type field and selects the correct OrderType instance
-            if (token["type"] != null){
-                orderType = GetOrderType(token["type"]);
-                token["type"] = orderType;
-            }
-            else if (token["Type"] != null)
-            {
-                orderType = GetOrderType(token["Type"]);
-                token["Type"] = orderType;
-            }
-            else
-            {
-                throw new ArgumentException($"The order does not have a property called 'type' nor 'Type'.");
-            }
+            var jtokenType = token["Type"] ?? token["type"];
+            int orderType = GetOrderType(jtokenType);
 
             return OrderJsonConverter.CreateOrderFromJObject((JObject)token);
         }

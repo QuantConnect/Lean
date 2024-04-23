@@ -112,7 +112,7 @@ namespace QuantConnect.Orders
             {
                 // `Time` can potentially be null in some LiveResultPacket instances, but
                 // `CreatedTime` will always be there if `Time` is absent.
-                order.Time = (jObject["CreatedTime"]?.Value<DateTime>() ?? jObject["type"].Value<DateTime>());
+                order.Time = (jObject["CreatedTime"]?.Value<DateTime>() ?? jObject["createdTime"].Value<DateTime>());
             }
 
             var orderSubmissionData = jObject["OrderSubmissionData"] ?? jObject["orderSubmissionData"];
@@ -262,7 +262,7 @@ namespace QuantConnect.Orders
                 case OrderType.StopMarket:
                     order = new StopMarketOrder
                     {
-                        StopPrice = jObject["stopPrice"]?.Value<decimal>() ?? jObject["stopPrice"]?.Value<decimal>() ?? default(decimal)
+                        StopPrice = jObject["stopPrice"]?.Value<decimal>() ?? jObject["StopPrice"]?.Value<decimal>() ?? default(decimal)
                     };
                     break;
 
@@ -270,7 +270,7 @@ namespace QuantConnect.Orders
                     order = new StopLimitOrder
                     {
                         LimitPrice = jObject["LimitPrice"]?.Value<decimal>() ?? jObject["limitPrice"]?.Value<decimal>() ?? default(decimal),
-                        StopPrice = jObject["stopPrice"]?.Value<decimal>() ?? jObject["stopPrice"]?.Value<decimal>() ?? default(decimal)
+                        StopPrice = jObject["stopPrice"]?.Value<decimal>() ?? jObject["StopPrice"]?.Value<decimal>() ?? default(decimal)
                     };
                     break;
 

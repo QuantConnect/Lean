@@ -100,7 +100,7 @@ namespace QuantConnect.Api
             }
 
             // Deserialize charting data
-            Dictionary<string, Chart> chartDictionary = new();
+            var chartDictionary = new Dictionary<string, Chart>();
             var charts = jObject["charts"] ?? jObject["Charts"];
             if (charts != null)
             {
@@ -112,7 +112,7 @@ namespace QuantConnect.Api
             }
 
             // Deserialize files data
-            List<ProjectFile> projectFiles = new List<ProjectFile>();
+            var projectFiles = new List<ProjectFile>();
             var files = jObject["files"] ?? jObject["Files"];
             if (files != null)
             {
