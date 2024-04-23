@@ -15,105 +15,93 @@
 */
 
 using QuantConnect.Util;
+using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.DownloaderDataProvider.Models.Constants;
-using McMaster.Extensions.CommandLineUtils;
-using System.Globalization;
 
 namespace QuantConnect.Lean.DownloaderDataProvider;
 class Program
 {
+    /// <summary>
+    /// Synchronizer in charge of guaranteeing a single operation per file path
+    /// </summary>
+    private readonly static KeyStringSynchronizer DiskSynchronizer = new();
+
+    /// <summary>
+    /// The provider used to cache history data files
+    /// </summary>
+    private static readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(DiskSynchronizer);
+
+    /// <summary>
+    /// The main entry point for the application.
+    /// </summary>
+    /// <param name="args">Command-line arguments passed to the application.</param>
     public static void Main(string[] args)
     {
+        // Parse report arguments and merge with config to use in the optimizer
         if (args.Length > 0)
         {
-            ProcessCommand(args);
+            Config.MergeCommandLineArgumentsWithConfiguration(DownloaderDataProviderArgumentParser.ParseArguments(args));
         }
-        else
+
+        InitializeConfigurations();
+
+        var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
+
+        var dataDownloadConfig = new DataDownloadConfig();
+        Log.Trace($"{nameof(DownloaderDataProvider)}.Configs: {dataDownloadConfig}");
+
+        var writer = default(LeanDataWriter);
+        foreach (var symbol in dataDownloadConfig.Symbols)
         {
-            throw new ArgumentException($"{nameof(DownloaderDataProvider)}: The arguments array is empty. Please provide valid command line arguments.");
+            var download = new DataDownloaderGetParameters(symbol, dataDownloadConfig.Resolution, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate, dataDownloadConfig.TickType);
+
+            if (writer == null)
+            {
+                writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, Globals.DataFolder, dataDownloadConfig.TickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
+            }
+
+            var downloadedData = dataDownloader.Get(download);
+
+            if (downloadedData == null)
+            {
+                Log.Trace($"No data available for the following parameters: Symbol: {download.Symbol}, Tick Type: {dataDownloadConfig.TickType}, Resolution: {download.Resolution}, Date Range: [{dataDownloadConfig.StartDate} - {dataDownloadConfig.EndDate}]");
+                continue;
+            }
+
+            // Save the data
+            writer.Write(downloadedData);
         }
+
     }
-    public static void ProcessCommand(string[] args)
+
+    /// <summary>
+    /// Initializes various configurations for the application.
+    /// This method sets up logging, data providers, map file providers, and factor file providers.
+    /// </summary>
+    /// <remarks>
+    /// The method reads configuration values to determine whether debugging is enabled, 
+    /// which log handler to use, and which data, map file, and factor file providers to initialize.
+    /// </remarks>
+    /// <seealso cref="Log"/>
+    /// <seealso cref="Config"/>
+    /// <seealso cref="Composer"/>
+    /// <seealso cref="ILogHandler"/>
+    /// <seealso cref="IDataProvider"/>
+    /// <seealso cref="IMapFileProvider"/>
+    /// <seealso cref="IFactorFileProvider"/>
+    public static void InitializeConfigurations()
     {
-        var dataProvider
-            = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider", "DefaultDataProvider"));
-        var mapFileProvider
-            = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
-        var factorFileProvider
-            = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+        Log.DebuggingEnabled = Config.GetBool("debug-mode", false);
+        Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+
+        var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>("DefaultDataProvider");
+        var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
+        var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
 
         mapFileProvider.Initialize(dataProvider);
         factorFileProvider.Initialize(mapFileProvider, dataProvider);
-
-        var optionsObject = DownloaderDataProviderArgumentParser.ParseArguments(args);
-
-        Log.Trace($"{nameof(ProcessCommand)}:Prompt Command: {string.Join(',', optionsObject)}");
-
-        Log.DebuggingEnabled = Config.GetBool("debug-mode");
-        Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
-
-        if (!optionsObject.TryGetValue("data-provider", out var parsedDataProvider))
-        {
-            parsedDataProvider = "DefaultDataProvider";
-        }
-
-        var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(parsedDataProvider.ToString());
-
-        Log.Trace($"{nameof(ProcessCommand)}: dataProvider: {dataProvider}, {dataProvider.GetType()}");
-
-        ParsedOptionObject(optionsObject);
-
-        //dataProvider.Get(new DataDownloaderGetParameters());
-    }
-
-    public static void ParsedOptionObject(Dictionary<string, object> parsedArguments)
-    {
-        var dataProvider = parsedArguments[DownloaderCommandArguments.CommandDownloaderDataProvider];
-        var destinationDirectory = parsedArguments[DownloaderCommandArguments.CommandDestinationDirectory];
-
-        if (!Enum.TryParse<TickType>(
-            parsedArguments[DownloaderCommandArguments.CommandDataType].ToString(), out var tickType) || !Enum.IsDefined(typeof(TickType), tickType))
-        {
-            throw new ArgumentException("Invalid TickType specified. Please provide a valid TickType.");
-        }
-
-        if (!Enum.TryParse<SecurityType>(
-            parsedArguments[DownloaderCommandArguments.CommandSecurityType].ToString(), out var securityType) || !Enum.IsDefined(typeof(SecurityType), securityType))
-        {
-            throw new ArgumentException("Invalid SecurityType specified. Please provide a valid SecurityType.");
-        }
-
-        if (!Enum.TryParse<Resolution>(
-    parsedArguments[DownloaderCommandArguments.CommandResolution].ToString(), out var resolution) || !Enum.IsDefined(typeof(Resolution), resolution))
-        {
-            throw new ArgumentException("Invalid SecurityType specified. Please provide a valid SecurityType.");
-        }
-
-        var startDate = DateTime.ParseExact(parsedArguments[DownloaderCommandArguments.CommandStartDate].ToString()!, "yyyyMMdd", CultureInfo.InvariantCulture);
-        var endDate = DateTime.ParseExact(parsedArguments[DownloaderCommandArguments.CommandEndDate].ToString()!, "yyyyMMdd", CultureInfo.InvariantCulture);
-
-
-        if(!parsedArguments.TryGetValue(DownloaderCommandArguments.CommandMarketName, out var marketNameObj))
-        {
-            marketNameObj = Market.USA;
-        }
-
-        var marketName = marketNameObj.ToString()?.ToLower();
-        if (!Market.SupportedMarkets().Contains(marketName))
-        {
-            var supportedMarkets = string.Join(", ", Market.SupportedMarkets());
-            throw new ArgumentException($"The specified market '{marketName}' is not supported. Supported markets are: {supportedMarkets}.");
-        }
-
-        var symbols = new List<Symbol>();
-        foreach (var ticker in (parsedArguments[DownloaderCommandArguments.CommandTickers] as Dictionary<string, string>)!.Keys)
-        {
-            symbols.Add(Symbol.Create(ticker, securityType, marketName));
-        }
-
-        Log.Trace($"{nameof(ProcessCommand)}: dataProvider: {dataProvider}, {dataProvider.GetType()}");
     }
 }

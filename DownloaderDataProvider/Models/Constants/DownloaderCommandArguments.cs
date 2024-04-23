@@ -20,7 +20,7 @@ namespace QuantConnect.Lean.DownloaderDataProvider.Models.Constants
 {
     public sealed class DownloaderCommandArguments
     {
-        public const string CommandDownloaderDataProvider = "data-provider";
+        public const string CommandDownloaderDataDownloader = "data-downloader";
 
         public const string CommandDestinationDirectory = "destination-dir";
 

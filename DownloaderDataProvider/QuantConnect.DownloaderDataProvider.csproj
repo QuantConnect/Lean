@@ -37,4 +37,9 @@
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

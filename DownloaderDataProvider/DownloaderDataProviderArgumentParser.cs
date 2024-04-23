@@ -28,7 +28,7 @@ public static class DownloaderDataProviderArgumentParser
 
     private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
     {
-        new CommandLineOption(DownloaderCommandArguments.CommandDownloaderDataProvider, CommandOptionType.SingleValue),
+        new CommandLineOption(DownloaderCommandArguments.CommandDownloaderDataDownloader, CommandOptionType.SingleValue),
         new CommandLineOption(DownloaderCommandArguments.CommandDestinationDirectory, CommandOptionType.SingleValue),
         new CommandLineOption(DownloaderCommandArguments.CommandDataType, CommandOptionType.SingleValue),
         new CommandLineOption(DownloaderCommandArguments.CommandTickers, CommandOptionType.MultipleValue),
@@ -40,19 +40,17 @@ public static class DownloaderDataProviderArgumentParser
     };
 
     /// <summary>
-    /// Parses the given array of strings representing arguments into a dictionary of key-value pairs.
+    /// Parses the command-line arguments and returns a dictionary containing parsed values.
     /// </summary>
-    /// <param name="args">An array of strings representing the command line arguments.</param>
-    /// <returns>A dictionary containing parsed arguments with keys as argument names and values as argument values.</returns>
+    /// <param name="args">An array of command-line arguments.</param>
+    /// <returns>A dictionary containing parsed values from the command-line arguments.</returns>
     /// <remarks>
-    /// The arguments are expected to be in the format "--key value". For example, "--data-provider Polygon --tickers AAPL,NVDA".
+    /// The <paramref name="args"/> parameter should contain the command-line arguments to be parsed.
+    /// The method uses the ApplicationParser class to parse the arguments based on the ApplicationName, 
+    /// ApplicationDescription, ApplicationHelpText, and Options properties.
     /// </remarks>
     public static Dictionary<string, object> ParseArguments(string[] args)
     {
-        var parsedArguments = ApplicationParser.Parse(ApplicationName, ApplicationDescription, ApplicationHelpText, args, Options);
-
-        //parsedArguments[DownloaderCommandArguments.CommandTickers]
-
-        return parsedArguments;
+        return ApplicationParser.Parse(ApplicationName, ApplicationDescription, ApplicationHelpText, args, Options);
     }
 }
