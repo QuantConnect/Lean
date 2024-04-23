@@ -56,7 +56,7 @@ class Nifty(PythonData):
             # 2011-09-13  7792.9    7799.9     7722.65    7748.7    116534670    6107.78
             data = line.split(',')
             index.time = datetime.strptime(data[0], "%Y-%m-%d")
-            index.value = decimal.decimal(data[4])
+            index.value = decimal.Decimal(data[4])
             index["Open"] = float(data[1])
             index["High"] = float(data[2])
             index["Low"] = float(data[3])
