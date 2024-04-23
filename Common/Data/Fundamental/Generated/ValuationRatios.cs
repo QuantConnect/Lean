@@ -359,7 +359,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 14036
         /// </remarks>
         [JsonProperty("14036")]
-        public double PricetoEBITDA => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_PricetoEBITDA);
+        public double PriceToEBITDA => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_PriceToEBITDA);
 
         /// <summary>
         /// Average of the last 60 monthly observations of trailing dividend yield in the last 5 years.
@@ -1142,7 +1142,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 14123
         /// </remarks>
         [JsonProperty("14123")]
-        public double NormalizedPEGatio => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedPEGatio);
+        public double NormalizedPEGRatio => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedPEGRatio);
 
         /// <summary>
         /// Creates a new instance for the given time and security
