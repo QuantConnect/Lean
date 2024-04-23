@@ -56,6 +56,14 @@ namespace QuantConnect.Report
             var token = JToken.ReadFrom(reader);
             var jtokenType = token["Type"] ?? token["type"];
             int orderType = GetOrderType(jtokenType);
+            if (token["Type"] != null)
+            {
+                token["Type"] = orderType;
+            }
+            else if (token["type"] != null)
+            {
+                token["type"] = orderType;
+            }
 
             return OrderJsonConverter.CreateOrderFromJObject((JObject)token);
         }
