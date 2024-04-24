@@ -63,5 +63,11 @@ namespace QuantConnect
             EndUtc = endUtc;
             TickType = tickType ?? TickType.Trade;
         }
+
+        /// <summary>
+        /// Returns a string representation of the <see cref="DataDownloaderGetParameters"/> object.
+        /// </summary>
+        /// <returns>A string representing the object's properties.</returns>
+        public override string ToString() => $"Symbol: {Symbol}, Resolution: {Resolution}, StartUtc: {StartUtc}, EndUtc: {EndUtc}, TickType: {TickType}";
     }
 }
