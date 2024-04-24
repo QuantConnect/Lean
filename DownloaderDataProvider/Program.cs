@@ -51,30 +51,65 @@ class Program
         var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
 
         var dataDownloadConfig = new DataDownloadConfig();
-        Log.Trace($"{nameof(DownloaderDataProvider)}.Configs: {dataDownloadConfig}");
 
         var writer = default(LeanDataWriter);
         foreach (var symbol in dataDownloadConfig.Symbols)
         {
-            var download = new DataDownloaderGetParameters(symbol, dataDownloadConfig.Resolution, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate, dataDownloadConfig.TickType);
+            var downloadParameters = new DataDownloaderGetParameters(symbol, dataDownloadConfig.Resolution, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate, dataDownloadConfig.TickType);
 
             if (writer == null)
             {
                 writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, Globals.DataFolder, dataDownloadConfig.TickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
             }
 
-            var downloadedData = dataDownloader.Get(download);
+            Log.Trace($"Starting download {downloadParameters}");
+            var downloadedData = dataDownloader.Get(downloadParameters);
 
             if (downloadedData == null)
             {
-                Log.Trace($"No data available for the following parameters: Symbol: {download.Symbol}, Tick Type: {dataDownloadConfig.TickType}, Resolution: {download.Resolution}, Date Range: [{dataDownloadConfig.StartDate} - {dataDownloadConfig.EndDate}]");
+                Log.Trace($"No data available for the following parameters: {downloadParameters}");
                 continue;
             }
 
+            var downloadedFirstDate = default(DateTime);
+            DateTime lastTenSecDisplayTime = DateTime.MinValue;
             // Save the data
-            writer.Write(downloadedData);
-        }
+            writer.Write(downloadedData.Select(data =>
+            {
+                // Some data sources may have restrictions and might not return the exact requested data.Time.
+                // For instance, if we request data for 2010/01/02, the DataSource might return 2020/01/01 instead.
+                if (downloadedFirstDate == default)
+                {
+                    downloadedFirstDate = data.Time;
+                }
 
+                if (DateTime.Now - lastTenSecDisplayTime >= TimeSpan.FromSeconds(5))
+                {
+                    lastTenSecDisplayTime = DateTime.Now;
+                    double progress = CalculateProgress(data.EndTime, downloadedFirstDate, dataDownloadConfig.EndDate);
+                    Log.Trace($"Downloading {downloadParameters.Symbol} data: {progress:F2}% / 100%");
+                }
+
+                return data;
+            }));
+
+            Log.Trace($"Download completed for {downloadParameters.Symbol} at {downloadParameters.Resolution} resolution, covering the period from {downloadedFirstDate} to {dataDownloadConfig.EndDate}.");
+        }
+    }
+
+    /// <summary>
+    /// Calculates the progress as a percentage based on the elapsed time between the start and end dates.
+    /// </summary>
+    /// <param name="currentTime">The current date and time.</param>
+    /// <param name="start">The start date and time.</param>
+    /// <param name="end">The end date and time.</param>
+    /// <returns>A double representing the progress as a percentage.</returns>
+    private static double CalculateProgress(DateTime currentTime, DateTime start, DateTime end)
+    {
+        double totalDays = (end - start).TotalDays;
+        double elapsedDays = (currentTime - start).TotalDays;
+
+        return (elapsedDays / totalDays) * 100;
     }
 
     /// <summary>
