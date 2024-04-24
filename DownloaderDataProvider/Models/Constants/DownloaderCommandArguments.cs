@@ -14,15 +14,11 @@
  * limitations under the License.
 */
 
-using McMaster.Extensions.CommandLineUtils;
-
 namespace QuantConnect.Lean.DownloaderDataProvider.Models.Constants
 {
     public sealed class DownloaderCommandArguments
     {
         public const string CommandDownloaderDataDownloader = "data-downloader";
-
-        public const string CommandDestinationDirectory = "destination-dir";
 
         public const string CommandDataType = "data-type";
 

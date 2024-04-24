@@ -29,7 +29,6 @@ public static class DownloaderDataProviderArgumentParser
     private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
     {
         new CommandLineOption(DownloaderCommandArguments.CommandDownloaderDataDownloader, CommandOptionType.SingleValue),
-        new CommandLineOption(DownloaderCommandArguments.CommandDestinationDirectory, CommandOptionType.SingleValue),
         new CommandLineOption(DownloaderCommandArguments.CommandDataType, CommandOptionType.SingleValue),
         new CommandLineOption(DownloaderCommandArguments.CommandTickers, CommandOptionType.MultipleValue),
         new CommandLineOption(DownloaderCommandArguments.CommandSecurityType, CommandOptionType.SingleValue),
