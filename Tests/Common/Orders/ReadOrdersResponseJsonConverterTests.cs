@@ -158,7 +158,26 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""isMarketable"": true,
             ""priceAdjustmentMode"": 1,
-            ""events"": []
+            ""events"": [
+                {
+                    ""id"": ""3b2259c444e04c9124784bb491bf016f-1-1"",
+                    ""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
+                    ""orderId"": 1,
+                    ""orderEventId"": 1,
+                    ""symbol"": ""SPY R735QTJ8XC9X"",
+                    ""symbolValue"": ""SPY"",
+                    ""symbolPermtick"": ""SPY"",
+                    ""time"": 1381152660.0,
+                    ""status"": ""submitted"",
+                    ""fillPrice"": 0.0,
+                    ""fillPriceCurrency"": ""USD"",
+                    ""fillQuantity"": 0.0,
+                    ""direction"": ""buy"",
+                    ""message"": null,
+                    ""isAssignment"": false,
+                    ""quantity"": 10.0
+                }
+            ]
         }";
 
         private const string _camelCaseLimitOrder = @"{
@@ -195,7 +214,27 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""isMarketable"": true,
             ""priceAdjustmentMode"": 1,
-            ""events"": []
+            ""events"": [
+                {
+					""id"": ""3b2259c444e04c9124784bb491bf016f-4-1"",
+					""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
+					""orderId"": 4,
+					""orderEventId"": 1,
+					""symbol"": ""SPY R735QTJ8XC9X"",
+					""symbolValue"": ""SPY"",
+					""symbolPermtick"": ""SPY"",
+					""time"": 1381161600.0,
+					""status"": ""submitted"",
+					""fillPrice"": 0.0,
+					""fillPriceCurrency"": ""USD"",
+					""fillQuantity"": 0.0,
+					""direction"": ""sell"",
+					""message"": null,
+					""isAssignment"": false,
+					""quantity"": -10.0,
+					""limitPrice"": 139.290078869942
+				}
+            ]
 		}";
 
         private const string _camelCaseStopMarket = @"{
@@ -232,7 +271,27 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""isMarketable"": false,
             ""priceAdjustmentMode"": 1,
-            ""events"": []
+            ""events"": [
+                {
+					""id"": ""3b2259c444e04c9124784bb491bf016f-8-1"",
+					""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
+					""orderId"": 8,
+					""orderEventId"": 1,
+					""symbol"": ""SPY R735QTJ8XC9X"",
+					""symbolValue"": ""SPY"",
+					""symbolPermtick"": ""SPY"",
+					""time"": 1381176000.0,
+					""status"": ""submitted"",
+					""fillPrice"": 0.0,
+					""fillPriceCurrency"": ""USD"",
+					""fillQuantity"": 0.0,
+					""direction"": ""sell"",
+					""message"": null,
+					""isAssignment"": false,
+					""quantity"": -10.0,
+					""stopPrice"": 138.142948134345
+				}
+            ]
 		}";
 
         private const string _camelCaseStopLimitOrder = @"{
@@ -271,7 +330,28 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""isMarketable"": false,
             ""priceAdjustmentMode"": 1,
-            ""events"": []
+            ""events"": [
+                {
+					""id"": ""3b2259c444e04c9124784bb491bf016f-10-1"",
+					""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
+					""orderId"": 10,
+					""orderEventId"": 1,
+					""symbol"": ""SPY R735QTJ8XC9X"",
+					""symbolValue"": ""SPY"",
+					""symbolPermtick"": ""SPY"",
+					""time"": 1381248060.0,
+					""status"": ""submitted"",
+					""fillPrice"": 0.0,
+					""fillPriceCurrency"": ""USD"",
+					""fillQuantity"": 0.0,
+					""direction"": ""sell"",
+					""message"": null,
+					""isAssignment"": false,
+					""quantity"": -10.0,
+					""stopPrice"": 137.367302895297,
+					""limitPrice"": 137.534807703
+				}
+            ]
 		}";
 
         private const string _camelCaseMarketOnOpen = @"{
@@ -307,7 +387,26 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""isMarketable"": false,
             ""priceAdjustmentMode"": 1,
-            ""events"": []
+            ""events"": [
+                {
+					""id"": ""3b2259c444e04c9124784bb491bf016f-11-1"",
+					""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
+					""orderId"": 11,
+					""orderEventId"": 1,
+					""symbol"": ""SPY R735QTJ8XC9X"",
+					""symbolValue"": ""SPY"",
+					""symbolPermtick"": ""SPY"",
+					""time"": 1381255200.0,
+					""status"": ""submitted"",
+					""fillPrice"": 0.0,
+					""fillPriceCurrency"": ""USD"",
+					""fillQuantity"": 0.0,
+					""direction"": ""buy"",
+					""message"": null,
+					""isAssignment"": false,
+					""quantity"": 50.0
+				}
+            ]
 		}";
 
         private const string _camelCaseMarketOnClose = @"{
@@ -343,7 +442,26 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""isMarketable"": false,
             ""priceAdjustmentMode"": 1,
-            ""events"": []
+            ""events"": [
+                {
+					""id"": ""3b2259c444e04c9124784bb491bf016f-12-1"",
+					""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
+					""orderId"": 12,
+					""orderEventId"": 1,
+					""symbol"": ""SPY R735QTJ8XC9X"",
+					""symbolValue"": ""SPY"",
+					""symbolPermtick"": ""SPY"",
+					""time"": 1381334400.0,
+					""status"": ""submitted"",
+					""fillPrice"": 0.0,
+					""fillPriceCurrency"": ""USD"",
+					""fillQuantity"": 0.0,
+					""direction"": ""buy"",
+					""message"": null,
+					""isAssignment"": false,
+					""quantity"": 104.0
+				}
+            ]
 		}";
 
         private const string _camelCaseOptionExercise = @"{
@@ -384,7 +502,26 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""isMarketable"": false,
             ""priceAdjustmentMode"": 1,
-            ""events"": []
+            ""events"": [
+                {
+					""id"": ""015fbee84f01918498775c6c3a08dd39-3-1"",
+					""algorithmId"": ""015fbee84f01918498775c6c3a08dd39"",
+					""orderId"": 3,
+					""orderEventId"": 1,
+					""symbol"": ""AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X"",
+					""symbolValue"": ""AAPL  140613P00660000"",
+					""symbolPermtick"": ""AAPL"",
+					""time"": 1402061460.0,
+					""status"": ""submitted"",
+					""fillPrice"": 0.0,
+					""fillPriceCurrency"": ""USD"",
+					""fillQuantity"": 0.0,
+					""direction"": ""sell"",
+					""message"": null,
+					""isAssignment"": false,
+					""quantity"": -20.0
+				}
+            ]
         }";
 
         private const string _camelCaseLimitIfTouched = @"{
@@ -423,7 +560,27 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""isMarketable"": false,
             ""priceAdjustmentMode"": 1,
-            ""events"": []
+            ""events"": [
+                {
+					""id"": ""4c4c10b22ca562d9419c869abd23bfaf-1-1"",
+					""algorithmId"": ""4c4c10b22ca562d9419c869abd23bfaf"",
+					""orderId"": 1,
+					""orderEventId"": 1,
+					""symbol"": ""SPY R735QTJ8XC9X"",
+					""symbolValue"": ""SPY"",
+					""symbolPermtick"": ""SPY"",
+					""time"": 1381152660.0,
+					""status"": ""submitted"",
+					""fillPrice"": 0.0,
+					""fillPriceCurrency"": ""USD"",
+					""fillQuantity"": 0.0,
+					""direction"": ""buy"",
+					""message"": null,
+					""isAssignment"": false,
+					""quantity"": 10.0,
+					""limitPrice"": 137.505714984
+				}
+            ]
 		}";
 
         private const string _camelCaseComboMarket = @"{
@@ -476,7 +633,26 @@ namespace QuantConnect.Tests.Common.Orders
                 ""direction"": 0
             },
             ""priceAdjustmentMode"": 1,
-            ""events"": []
+            ""events"": [
+                {
+                    ""id"": ""c628892c0f508fd780013e01383f1c4e-3-1"",
+                    ""algorithmId"": ""c628892c0f508fd780013e01383f1c4e"",
+                    ""orderId"": 3,
+                    ""orderEventId"": 1,
+                    ""symbol"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
+                    ""symbolValue"": ""GOOG  160115C00750000"",
+                    ""symbolPermtick"": ""GOOCV"",
+                    ""time"": 1450967460.0,
+                    ""status"": ""submitted"",
+                    ""fillPrice"": 0.0,
+                    ""fillPriceCurrency"": ""USD"",
+                    ""fillQuantity"": 0.0,
+                    ""direction"": ""buy"",
+                    ""message"": null,
+                    ""isAssignment"": false,
+                    ""quantity"": 10.0
+                }
+            ]
         }";
 
         private const string _camelCaseComboLimit = @"{
@@ -529,7 +705,26 @@ namespace QuantConnect.Tests.Common.Orders
                 ""direction"": 0
             },
             ""priceAdjustmentMode"": 1,
-            ""events"": []
+            ""events"": [
+                {
+                    ""id"": ""02162a310244a08034bcbcd571f5aec9-1-1"",
+                    ""algorithmId"": ""02162a310244a08034bcbcd571f5aec9"",
+                    ""orderId"": 1,
+                    ""orderEventId"": 1,
+                    ""symbol"": ""GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"",
+                    ""symbolValue"": ""GOOG  160115C00745000"",
+                    ""symbolPermtick"": ""GOOCV"",
+                    ""time"": 1450967460.0,
+                    ""status"": ""submitted"",
+                    ""fillPrice"": 0.0,
+                    ""fillPriceCurrency"": ""USD"",
+                    ""fillQuantity"": 0.0,
+                    ""direction"": ""buy"",
+                    ""message"": null,
+                    ""isAssignment"": false,
+                    ""quantity"": 100.0
+                }
+            ]
         }";
 
         private const string _camelCaseComboLegLimit = @"{
@@ -583,7 +778,27 @@ namespace QuantConnect.Tests.Common.Orders
                 ""direction"": 0
             },
             ""priceAdjustmentMode"": 1,
-            ""events"": []
+            ""events"": [
+                {
+                    ""id"": ""a19c5b42ef28e3db679bb6fd59c14984-3-1"",
+                    ""algorithmId"": ""a19c5b42ef28e3db679bb6fd59c14984"",
+                    ""orderId"": 3,
+                    ""orderEventId"": 1,
+                    ""symbol"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
+                    ""symbolValue"": ""GOOG  160115C00750000"",
+                    ""symbolPermtick"": ""GOOCV"",
+                    ""time"": 1450967460.0,
+                    ""status"": ""submitted"",
+                    ""fillPrice"": 0.0,
+                    ""fillPriceCurrency"": ""USD"",
+                    ""fillQuantity"": 0.0,
+                    ""direction"": ""buy"",
+                    ""message"": null,
+                    ""isAssignment"": false,
+                    ""quantity"": 10.0,
+                    ""limitPrice"": 28.0
+                }
+            ]
         }";
 
         private const string _camelCaseTrailingStop = @"{
@@ -622,7 +837,27 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""isMarketable"": false,
             ""priceAdjustmentMode"": 1,
-            ""events"": []
+            ""events"": [
+                {
+					""id"": ""3b2259c444e04c9124784bb491bf016f-6-1"",
+					""algorithmId"": ""3b2259c444e04c9124784bb491bf016f"",
+					""orderId"": 6,
+					""orderEventId"": 1,
+					""symbol"": ""SPY R735QTJ8XC9X"",
+					""symbolValue"": ""SPY"",
+					""symbolPermtick"": ""SPY"",
+					""time"": 1381161600.0,
+					""status"": ""submitted"",
+					""fillPrice"": 0.0,
+					""fillPriceCurrency"": ""USD"",
+					""fillQuantity"": 0.0,
+					""direction"": ""sell"",
+					""message"": null,
+					""isAssignment"": false,
+					""quantity"": -10.0,
+					""stopPrice"": 138.803050622145
+				}
+            ]
 		}";
 
         private const string _capitalCaseMarketOrder = @"{
