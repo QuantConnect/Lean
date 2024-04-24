@@ -41,8 +41,8 @@ namespace QuantConnect.Orders
         {
             var orderResponse = (ApiOrderResponse)value;
             var jObject = JObject.FromObject(orderResponse.Order);
-            jObject["Symbol"] = JToken.FromObject(orderResponse.Symbol);
-            jObject["Events"] = JToken.FromObject(orderResponse.Events);
+            jObject["symbol"] = JToken.FromObject(orderResponse.Symbol);
+            jObject["events"] = JToken.FromObject(orderResponse.Events);
             jObject.WriteTo(writer);
         }
 

@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.API
             // Create default algorithm settings
             var settings = new Dictionary<string, object>() {
                 { "id", "InteractiveBrokersBrokerage" },
-                { "environment", environment },
+                { "ib-trading-mode", environment },
                 { "ib-user-name", user },
                 { "ib-password", password },
                 { "ib-account", account },
@@ -129,7 +129,18 @@ namespace QuantConnect.Tests.API
                 { "binance-api-secret", apiSecret },
                 { "binance-api-key", apiKey },
                 { "binance-api-url", apiUrl },
-                { "binance-websocket-url", websocketUrl }
+                { "binance-websocket-url", websocketUrl },
+                { "holdings", new List<Holding>() },
+                { "cash", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "currency" , "USD"},
+                            { "amount", 100000}
+                        }
+                    }
+                    }
+                },
             };
 
             var dataProviders = new Dictionary<string, object>
@@ -154,7 +165,18 @@ namespace QuantConnect.Tests.API
                 { "binanceus-api-secret", apiSecret },
                 { "binanceus-api-key", apiKey },
                 { "binanceus-api-url", apiUrl },
-                { "binanceus-websocket-url", websocketUrl }
+                { "binanceus-websocket-url", websocketUrl },
+                { "holdings", new List<Holding>() },
+                { "cash", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "currency" , "USD"},
+                            { "amount", 100000}
+                        }
+                    }
+                    }
+                },
             };
 
             var dataProviders = new Dictionary<string, object>
@@ -179,7 +201,18 @@ namespace QuantConnect.Tests.API
                 { "binance-api-secret", apiSecret },
                 { "binance-api-key", apiKey },
                 { "binance-fapi-url", apiUrl },
-                { "binance-fwebsocket-url", websocketUrl }
+                { "binance-fwebsocket-url", websocketUrl },
+                { "holdings", new List<Holding>() },
+                { "cash", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "currency" , "USD"},
+                            { "amount", 100000}
+                        }
+                    }
+                    }
+                },
             };
 
             var dataProviders = new Dictionary<string, object>
@@ -204,7 +237,18 @@ namespace QuantConnect.Tests.API
                 { "binance-api-secret", apiSecret },
                 { "binance-api-key", apiKey },
                 { "binance-dapi-url", apiUrl },
-                { "binance-dwebsocket-url", websocketUrl }
+                { "binance-dwebsocket-url", websocketUrl },
+                { "holdings", new List<Holding>() },
+                { "cash", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "currency" , "USD"},
+                            { "amount", 100000}
+                        }
+                    }
+                    }
+                },
             };
 
             var dataProviders = new Dictionary<string, object>
@@ -287,7 +331,18 @@ namespace QuantConnect.Tests.API
                 { "id", "TradierBrokerage" },
                 { "tradier-account-id", account },
                 { "tradier-access-token", accessToken },
-                { "tradier-environment", "paper" }
+                { "tradier-environment", "paper" },
+                { "holdings", new List<Holding>() },
+                { "cash", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "currency" , "USD"},
+                            { "amount", 100000}
+                        }
+                    }
+                    }
+                }
             };
 
             var dataProvider = new Dictionary<string, object>()
@@ -312,7 +367,18 @@ namespace QuantConnect.Tests.API
             {
                 { "id", "BitfinexBrokerage" },
                 { "bitfinex-api-secret", secretKey },
-                { "bitfinex-api-key", key }
+                { "bitfinex-api-key", key },
+                { "holdings", new List<Holding>() },
+                { "cash", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "currency" , "USD"},
+                            { "amount", 100000}
+                        }
+                    }
+                    }
+                },
             };
 
             var dataProvider = new Dictionary<string, object>()
@@ -342,6 +408,17 @@ namespace QuantConnect.Tests.API
                 { "coinbase-api-secret", secretKey },
                 { "coinbase-rest-api", apiUrl },
                 { "coinbase-url", wsUrl },
+                { "holdings", new List<Holding>() },
+                { "cash", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "currency" , "USD"},
+                            { "amount", 100000}
+                        }
+                    }
+                    }
+                }
             };
 
             var dataProvider = new Dictionary<string, object>
@@ -360,7 +437,18 @@ namespace QuantConnect.Tests.API
                 { "id", "KrakenBrokerage" },
                 { "kraken-api-key", Config.Get("kraken-api-key") },
                 { "kraken-api-secret", Config.Get("kraken-api-secret") },
-                { "kraken-verification-tier", Config.Get("kraken-verification-tier") }
+                { "kraken-verification-tier", Config.Get("kraken-verification-tier") },
+                { "holdings", new List<Holding>() },
+                { "cash", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "currency" , "USD"},
+                            { "amount", 100000}
+                        }
+                    }
+                    }
+                }
             };
 
             var dataProvider = new Dictionary<string, object>
@@ -382,7 +470,18 @@ namespace QuantConnect.Tests.API
                 { "bybit-api-url", Config.Get("bybit-api-url") },
                 { "bybit-websocket-url", Config.Get("bybit-websocket-url") },
                 { "bybit-use-testnet", "paper" },
-                { "bybit-vip-level", "VIP0" }
+                { "bybit-vip-level", "VIP0" },
+                { "holdings", new List<Holding>() },
+                { "cash", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "currency" , "USD"},
+                            { "amount", 100000}
+                        }
+                    }
+                    }
+                }
             };
 
             var dataProvider = new Dictionary<string, object>
