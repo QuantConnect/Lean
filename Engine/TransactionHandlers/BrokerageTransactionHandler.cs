@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
@@ -37,6 +38,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     {
         private IAlgorithm _algorithm;
         private IBrokerage _brokerage;
+        private bool _brokerageIsBacktesting;
         private bool _loggedFeeAdjustmentWarning;
 
         // Counter to keep track of total amount of processed orders
@@ -157,6 +159,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _resultHandler = resultHandler;
 
             _brokerage = brokerage;
+            _brokerageIsBacktesting = brokerage is BacktestingBrokerage;
 
             _brokerage.OrdersStatusChanged += (sender, orderEvents) =>
             {
@@ -1505,7 +1508,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                                 // so we get ALL orders for this symbol that were placed or got an update in the last 'orderWindowSeconds'
 
                                 const int orderWindowSeconds = 10;
-                                if (!GetOrders(x =>
+                                // NOTE: We do this checks for actual live trading only to handle the race condition stated above
+                                // for actual brokerages (excluding paper trading with PaperBrokerage).
+                                // TODO: If we confirm this race condition applies for IB only, we could move this to the brokerage itself.
+                                if (_brokerageIsBacktesting ||
+                                    !GetOrders(x =>
                                         x.Symbol == e.Symbol
                                         && (x.Status.IsOpen() || x.Status.IsFill() &&
                                             (Math.Abs((x.Time - nowUtc).TotalSeconds) < orderWindowSeconds

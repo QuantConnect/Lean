@@ -2031,7 +2031,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         [TestCase(-3, OptionRight.Call, 450, 300, 455, -1, OrderDirection.Sell)]
         // Short Put --> ITM (assigned early - partial)
         [TestCase(-3, OptionRight.Put, 455, 100, 450, -1, OrderDirection.Sell)]
-        public void EarlyAssignmentDoesNotEmitsOrderEvents(
+        public void EarlyAssignmentDoesNotEmitsOrderEventsInLive(
             int initialOptionPosition,
             OptionRight optionRight,
             decimal strikePrice,
@@ -2330,10 +2330,17 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
-        internal class NoSubmitTestBrokerage : BacktestingBrokerage
+        // Implemented through an underlying BactestingBrokerage instead of directly inheriting from it for easy implementation
+        // and for tests that require simulating using a live brokerage, not derived from BacktestingBrokerage.
+        internal class NoSubmitTestBrokerage : Brokerage
         {
-            public NoSubmitTestBrokerage(IAlgorithm algorithm) : base(algorithm)
+            private BacktestingBrokerage _underlyingBrokerage;
+
+            public override bool IsConnected => _underlyingBrokerage.IsConnected;
+
+            public NoSubmitTestBrokerage(IAlgorithm algorithm) : base("NoSubmitTestBrokerage")
             {
+                _underlyingBrokerage = new BacktestingBrokerage(algorithm);
             }
             public override bool PlaceOrder(Order order)
             {
@@ -2346,6 +2353,36 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public void PublishOrderEvent(OrderEvent orderEvent)
             {
                 OnOrderEvent(orderEvent);
+            }
+
+            public override bool CancelOrder(Order order)
+            {
+                return _underlyingBrokerage.CancelOrder(order);
+            }
+
+            public override void Connect()
+            {
+                _underlyingBrokerage.Connect();
+            }
+
+            public override void Disconnect()
+            {
+                _underlyingBrokerage.Disconnect();
+            }
+
+            public override List<Order> GetOpenOrders()
+            {
+                return _underlyingBrokerage.GetOpenOrders();
+            }
+
+            public override List<Holding> GetAccountHoldings()
+            {
+                return _underlyingBrokerage.GetAccountHoldings();
+            }
+
+            public override List<CashAmount> GetCashBalance()
+            {
+                return _underlyingBrokerage.GetCashBalance();
             }
         }
 
