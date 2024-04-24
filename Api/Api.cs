@@ -44,6 +44,10 @@ namespace QuantConnect.Api
         private readonly Lazy<HttpClient> _client = new ();
         private string _dataFolder;
 
+        private Lazy<WebClient> _webClient = new ();
+
+        private WebClient WebClient => _webClient.Value;
+
         /// <summary>
         /// Returns the underlying API connection
         /// </summary>
@@ -1164,33 +1168,49 @@ namespace QuantConnect.Api
         /// <returns></returns>
         public virtual string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
         {
-            using (var client = new WebClient { Credentials = new NetworkCredential(userName, password) })
+            using var stream = Read(address, headers, userName, password);
+            using var reader = new StreamReader(stream);
+            var contents = reader.ReadToEnd();
+            stream.Close();
+            return contents;
+        }
+
+        /// <summary>
+        /// Local implementation for downloading data to algorithms
+        /// </summary>
+        /// <param name="address">URL to download</param>
+        /// <param name="headers">KVP headers</param>
+        /// <param name="userName">Username for basic authentication</param>
+        /// <param name="password">Password for basic authentication</param>
+        /// <returns>A stream from which the data can be read</returns>
+        /// <remarks>Stream.Close() most be called to avoid running out of resources</remarks>
+        public virtual Stream Read(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
+        {
+            WebClient.Credentials = new NetworkCredential(userName, password);
+            WebClient.Proxy = WebRequest.GetSystemWebProxy();
+            if (headers != null)
             {
-                client.Proxy = WebRequest.GetSystemWebProxy();
-                if (headers != null)
+                foreach (var header in headers)
                 {
-                    foreach (var header in headers)
-                    {
-                        client.Headers.Add(header.Key, header.Value);
-                    }
+                    WebClient.Headers.Add(header.Key, header.Value);
                 }
-                // Add a user agent header in case the requested URI contains a query.
-                client.Headers.Add("user-agent", "QCAlgorithm.Download(): User Agent Header");
+            }
+            // Add a user agent header in case the requested URI contains a query.
+            WebClient.Headers.Add("user-agent", "QCAlgorithm.Download(): User Agent Header");
 
-                try
+            try
+            {
+                return WebClient.OpenRead(address);
+            }
+            catch (WebException exception)
+            {
+                var message = $"Api.Download(): Failed to download data from {address}";
+                if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
                 {
-                    return client.DownloadString(address);
+                    message += $" with username: {userName} and password {password}";
                 }
-                catch (WebException exception)
-                {
-                    var message = $"Api.Download(): Failed to download data from {address}";
-                    if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
-                    {
-                        message += $" with username: {userName} and password {password}";
-                    }
 
-                    throw new WebException($"{message}. Please verify the source for missing http:// or https://", exception);
-                }
+                throw new WebException($"{message}. Please verify the source for missing http:// or https://", exception);
             }
         }
 
@@ -1203,6 +1223,11 @@ namespace QuantConnect.Api
             if (_client.IsValueCreated)
             {
                 _client.Value.DisposeSafely();
+            }
+
+            if (_webClient.IsValueCreated)
+            {
+                _webClient.Value.DisposeSafely();
             }
         }
 

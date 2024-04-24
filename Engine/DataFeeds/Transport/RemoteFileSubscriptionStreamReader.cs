@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
@@ -59,28 +60,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             var filename = (useCache ? source.ToMD5() : Guid.NewGuid().ToString())  + source.GetExtension();
             var destination = Path.Combine(downloadDirectory, filename);
 
-            string contents = null;
+            Stream stream = null;
             if (useCache)
             {
                 lock (_fileSystemLock)
                 {
                     if (!File.Exists(destination))
                     {
-                        contents = _downloader.Download(source, headers, null, null);
-                        File.WriteAllText(destination, contents);
+                        stream = _downloader.Read(source, headers, null, null);
                     }
                 }
             }
             else
             {
-                contents = _downloader.Download(source, headers, null, null);
-                File.WriteAllText(destination, contents);
+                stream = _downloader.Read(source, headers, null, null);
             }
 
-            if (contents != null)
+            if (stream != null)
             {
+                var bytes = stream.GetBytes();
+                File.WriteAllBytes(destination, bytes);
+
                 // Send the file to the dataCacheProvider so it is available when the streamReader asks for it
-                dataCacheProvider.Store(destination, System.Text.Encoding.UTF8.GetBytes(contents));
+                dataCacheProvider.Store(destination, bytes);
+
+                stream.Close();
+                stream.DisposeSafely();
             }
 
             // now we can just use the local file reader
