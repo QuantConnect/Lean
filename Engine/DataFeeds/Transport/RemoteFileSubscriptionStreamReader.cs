@@ -44,6 +44,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         public StreamReader StreamReader => _streamReader.StreamReader;
 
         /// <summary>
+        /// The local file name of the downloaded file
+        /// </summary>
+        public string LocalFileName { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="RemoteFileSubscriptionStreamReader"/> class.
         /// </summary>
         /// <param name="dataCacheProvider">The <see cref="IDataCacheProvider"/> used to retrieve a stream of data</param>
@@ -58,14 +63,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 
             // create a hash for a new filename
             var filename = (useCache ? source.ToMD5() : Guid.NewGuid().ToString())  + source.GetExtension();
-            var destination = Path.Combine(downloadDirectory, filename);
+            LocalFileName = Path.Combine(downloadDirectory, filename);
 
             Stream stream = null;
             if (useCache)
             {
                 lock (_fileSystemLock)
                 {
-                    if (!File.Exists(destination))
+                    if (!File.Exists(LocalFileName))
                     {
                         stream = _downloader.Read(source, headers, null, null);
                     }
@@ -79,17 +84,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             if (stream != null)
             {
                 var bytes = stream.GetBytes();
-                File.WriteAllBytes(destination, bytes);
+                File.WriteAllBytes(LocalFileName, bytes);
 
                 // Send the file to the dataCacheProvider so it is available when the streamReader asks for it
-                dataCacheProvider.Store(destination, bytes);
+                dataCacheProvider.Store(LocalFileName, bytes);
 
                 stream.Close();
                 stream.DisposeSafely();
             }
 
             // now we can just use the local file reader
-            _streamReader = new LocalFileSubscriptionStreamReader(dataCacheProvider, destination);
+            _streamReader = new LocalFileSubscriptionStreamReader(dataCacheProvider, LocalFileName);
         }
 
         /// <summary>
