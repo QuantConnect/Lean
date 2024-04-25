@@ -69,10 +69,6 @@ namespace QuantConnect.Algorithm.CSharp
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
             {
                 var csv = line.ToCsv(2);
-                if (csv.Count != 2)
-                {
-                    return null;
-                }
 
                 try
                 {

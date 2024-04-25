@@ -33,6 +33,9 @@ using QuantConnect.Util;
 using QuantConnect.Notifications;
 using Python.Runtime;
 using System.Threading;
+using System.Net.Http.Headers;
+using System.Collections.Concurrent;
+using System.Text;
 
 namespace QuantConnect.Api
 {
@@ -41,12 +44,8 @@ namespace QuantConnect.Api
     /// </summary>
     public class Api : IApi, IDownloadProvider
     {
-        private readonly Lazy<HttpClient> _client = new ();
+        private BlockingCollection<Lazy<HttpClient>> _clientPool;
         private string _dataFolder;
-
-        private Lazy<WebClient> _webClient = new ();
-
-        private WebClient WebClient => _webClient.Value;
 
         /// <summary>
         /// Returns the underlying API connection
@@ -60,6 +59,12 @@ namespace QuantConnect.Api
         {
             ApiConnection = new ApiConnection(userId, token);
             _dataFolder = dataFolder?.Replace("\\", "/", StringComparison.InvariantCulture);
+
+            _clientPool = new BlockingCollection<Lazy<HttpClient>>(new ConcurrentQueue<Lazy<HttpClient>>(), 5);
+            for (int i = 0; i < _clientPool.BoundedCapacity; i++)
+            {
+                _clientPool.Add(new Lazy<HttpClient>());
+            }
 
             //Allow proper decoding of orders from the API.
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -1082,11 +1087,12 @@ namespace QuantConnect.Api
                 Directory.CreateDirectory(directory);
             }
 
+            var client = BorrowClient();
             try
             {
                 // Download the file
                 var uri = new Uri(dataLink.Url);
-                using var dataStream = _client.Value.GetStreamAsync(uri);
+                using var dataStream = client.Value.GetStreamAsync(uri);
 
                 using var fileStream = new FileStream(FileExtension.ToNormalizedPath(filePath), FileMode.Create);
                 dataStream.Result.CopyTo(fileStream);
@@ -1095,6 +1101,10 @@ namespace QuantConnect.Api
             {
                 Log.Error($"Api.DownloadData(): Failed to download zip for path ({filePath})");
                 return false;
+            }
+            finally
+            {
+                ReturnClient(client);
             }
 
             return true;
@@ -1186,31 +1196,44 @@ namespace QuantConnect.Api
         /// <remarks>Stream.Close() most be called to avoid running out of resources</remarks>
         public virtual Stream DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
         {
-            WebClient.Credentials = new NetworkCredential(userName, password);
-            WebClient.Proxy = WebRequest.GetSystemWebProxy();
+            var client = BorrowClient();
+            client.Value.DefaultRequestHeaders.Clear();
+
+            // Add a user agent header in case the requested URI contains a query.
+            client.Value.DefaultRequestHeaders.TryAddWithoutValidation("user-agent", "QCAlgorithm.Download(): User Agent Header");
+
             if (headers != null)
             {
                 foreach (var header in headers)
                 {
-                    WebClient.Headers.Add(header.Key, header.Value);
+                    client.Value.DefaultRequestHeaders.Add(header.Key, header.Value);
                 }
             }
-            // Add a user agent header in case the requested URI contains a query.
-            WebClient.Headers.Add("user-agent", "QCAlgorithm.Download(): User Agent Header");
+
+            if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
+            {
+                var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{userName}:{password}"));
+                client.Value.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
+            }
 
             try
             {
-                return WebClient.OpenRead(address);
+                return client.Value.GetStreamAsync(new Uri(address)).Result;
             }
-            catch (WebException exception)
+            catch (Exception exception)
             {
-                var message = $"Api.Download(): Failed to download data from {address}";
+                var message = $"Api.DownloadBytes(): Failed to download data from {address}";
                 if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
                 {
                     message += $" with username: {userName} and password {password}";
                 }
 
                 throw new WebException($"{message}. Please verify the source for missing http:// or https://", exception);
+            }
+            finally
+            {
+                client.Value.DefaultRequestHeaders.Clear();
+                ReturnClient(client);
             }
         }
 
@@ -1220,15 +1243,16 @@ namespace QuantConnect.Api
         /// <filterpriority>2</filterpriority>
         public virtual void Dispose()
         {
-            if (_client.IsValueCreated)
+            // Dispose of the HttpClient pool
+            _clientPool.CompleteAdding();
+            foreach (var client in _clientPool.GetConsumingEnumerable())
             {
-                _client.Value.DisposeSafely();
+                if (client.IsValueCreated)
+                {
+                    client.Value.DisposeSafely();
+                }
             }
-
-            if (_webClient.IsValueCreated)
-            {
-                _webClient.Value.DisposeSafely();
-            }
+            _clientPool.DisposeSafely();
         }
 
         /// <summary>
@@ -1568,17 +1592,18 @@ namespace QuantConnect.Api
             }
 
             var directory = destinationFolder ?? Directory.GetCurrentDirectory();
+            var client = BorrowClient();
 
             try
             {
-                if (_client.Value.Timeout != TimeSpan.FromMinutes(20))
+                if (client.Value.Timeout != TimeSpan.FromMinutes(20))
                 {
-                    _client.Value.Timeout = TimeSpan.FromMinutes(20);
+                    client.Value.Timeout = TimeSpan.FromMinutes(20);
                 }
 
                 // Download the file
                 var uri = new Uri(result.Url);
-                using var byteArray = _client.Value.GetByteArrayAsync(uri);
+                using var byteArray = client.Value.GetByteArrayAsync(uri);
 
                 Compression.UnzipToFolder(byteArray.Result, directory);
             }
@@ -1586,6 +1611,10 @@ namespace QuantConnect.Api
             {
                 Log.Error($"Api.GetObjectStore(): Failed to download zip for path ({directory}). Error: {e.Message}");
                 return false;
+            }
+            finally
+            {
+                ReturnClient(client);
             }
 
             return true;
@@ -1737,6 +1766,22 @@ namespace QuantConnect.Api
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Borrows and HTTP client from the pool
+        /// </summary>
+        private Lazy<HttpClient> BorrowClient()
+        {
+            return _clientPool.Take();
+        }
+
+        /// <summary>
+        /// Returns the HTTP client to the pool
+        /// </summary>
+        private void ReturnClient(Lazy<HttpClient> client)
+        {
+            _clientPool.Add(client);
         }
     }
 }
