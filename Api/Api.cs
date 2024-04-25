@@ -44,7 +44,7 @@ namespace QuantConnect.Api
     /// </summary>
     public class Api : IApi, IDownloadProvider
     {
-        private BlockingCollection<Lazy<HttpClient>> _clientPool;
+        private readonly BlockingCollection<Lazy<HttpClient>> _clientPool;
         private string _dataFolder;
 
         /// <summary>
@@ -53,18 +53,24 @@ namespace QuantConnect.Api
         protected ApiConnection ApiConnection { get; private set; }
 
         /// <summary>
+        /// Creates a new instance of <see cref="Api"/>
+        /// </summary>
+        public Api()
+        {
+            _clientPool = new BlockingCollection<Lazy<HttpClient>>(new ConcurrentQueue<Lazy<HttpClient>>(), 5);
+            for (int i = 0; i < _clientPool.BoundedCapacity; i++)
+            {
+                _clientPool.Add(new Lazy<HttpClient>());
+            }
+        }
+
+        /// <summary>
         /// Initialize the API with the given variables
         /// </summary>
         public virtual void Initialize(int userId, string token, string dataFolder)
         {
             ApiConnection = new ApiConnection(userId, token);
             _dataFolder = dataFolder?.Replace("\\", "/", StringComparison.InvariantCulture);
-
-            _clientPool = new BlockingCollection<Lazy<HttpClient>>(new ConcurrentQueue<Lazy<HttpClient>>(), 5);
-            for (int i = 0; i < _clientPool.BoundedCapacity; i++)
-            {
-                _clientPool.Add(new Lazy<HttpClient>());
-            }
 
             //Allow proper decoding of orders from the API.
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -1179,10 +1185,7 @@ namespace QuantConnect.Api
         public virtual string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
         {
             using var stream = DownloadBytes(address, headers, userName, password);
-            using var reader = new StreamReader(stream);
-            var contents = reader.ReadToEnd();
-            stream.Close();
-            return contents;
+            return Encoding.UTF8.GetString(stream.GetBytes());
         }
 
         /// <summary>
