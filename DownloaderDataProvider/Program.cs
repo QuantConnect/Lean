@@ -35,6 +35,11 @@ class Program
     private static readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(DiskSynchronizer);
 
     /// <summary>
+    /// Represents the time interval of 5 seconds.
+    /// </summary>
+    private static TimeSpan _logDisplayInterval = TimeSpan.FromSeconds(5);
+
+    /// <summary>
     /// The main entry point for the application.
     /// </summary>
     /// <param name="args">Command-line arguments passed to the application.</param>
@@ -53,6 +58,13 @@ class Program
         var dataDownloadConfig = new DataDownloadConfig();
 
         var writer = default(LeanDataWriter);
+
+        // Calculate the total number of seconds between the EndDate and StartDate
+        var totalDataSecond = (dataDownloadConfig.EndDate - dataDownloadConfig.StartDate).TotalSeconds;
+        // Determine the multiplier based on the number of symbols minus one
+        int dateMultiplier = dataDownloadConfig.Symbols.Count - 1;
+        // Calculate the new endDate by adding the calculated seconds multiplied by the dateMultiplier to the original EndDate
+        var endDate = dataDownloadConfig.EndDate.AddSeconds(totalDataSecond * dateMultiplier);
         foreach (var symbol in dataDownloadConfig.Symbols)
         {
             var downloadParameters = new DataDownloaderGetParameters(symbol, dataDownloadConfig.Resolution, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate, dataDownloadConfig.TickType);
@@ -62,6 +74,7 @@ class Program
                 writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, Globals.DataFolder, dataDownloadConfig.TickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
             }
 
+            var startDownloadTime = DateTime.UtcNow;
             Log.Trace($"Starting download {downloadParameters}");
             var downloadedData = dataDownloader.Get(downloadParameters);
 
@@ -71,30 +84,59 @@ class Program
                 continue;
             }
 
-            var downloadedFirstDate = default(DateTime);
-            DateTime lastTenSecDisplayTime = DateTime.MinValue;
-            // Save the data
+            var lastLogStatusTime = DateTime.UtcNow;
             writer.Write(downloadedData.Select(data =>
             {
-                // Some data sources may have restrictions and might not return the exact requested data.Time.
-                // For instance, if we request data for 2010/01/02, the DataSource might return 2020/01/01 instead.
-                if (downloadedFirstDate == default)
+                var utcNow = DateTime.UtcNow;
+                if (utcNow - lastLogStatusTime >= _logDisplayInterval)
                 {
-                    downloadedFirstDate = data.Time;
-                }
-
-                if (DateTime.Now - lastTenSecDisplayTime >= TimeSpan.FromSeconds(5))
-                {
-                    lastTenSecDisplayTime = DateTime.Now;
-                    double progress = CalculateProgress(data.EndTime, downloadedFirstDate, dataDownloadConfig.EndDate);
-                    Log.Trace($"Downloading {downloadParameters.Symbol} data: {progress:F2}% / 100%");
+                    lastLogStatusTime = utcNow;
+                    var eta = CalculateETA(utcNow, startDownloadTime, endDate, data.EndTime, dataDownloadConfig.StartDate);
+                    double progress = CalculateProgress(data.EndTime, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate);
+                    Log.Trace($"Downloading {downloadParameters.Symbol} data: {progress:F2}%. ETA: {eta}");
                 }
 
                 return data;
             }));
-
-            Log.Trace($"Download completed for {downloadParameters.Symbol} at {downloadParameters.Resolution} resolution, covering the period from {downloadedFirstDate} to {dataDownloadConfig.EndDate}.");
+            // Correct endDate by removing the totalDataSecond to adjust for overlap periods.
+            endDate = endDate.AddSeconds(-totalDataSecond);
+            Log.Trace($"Download completed for {downloadParameters.Symbol} at {downloadParameters.Resolution} resolution, covering the period from {dataDownloadConfig.StartDate} to {dataDownloadConfig.EndDate}.");
         }
+    }
+
+    /// <summary>
+    /// Calculates the Estimated Time of Arrival (ETA) based on the current progress of a download.
+    /// </summary>
+    /// <param name="utcNow">The current UTC DateTime.</param>
+    /// <param name="startDownloadTime">The DateTime when the download started.</param>
+    /// <param name="completelyLastEndDate">The actual end date of the download considering all downloading symbols.</param>
+    /// <param name="currentDownloadedEndDate">The current end date time in downloading process.</param>
+    /// <param name="configStartDateTime">The start date of the download.</param>
+    /// <returns>A TimeSpan representing the Estimated Time of Arrival (ETA).</returns>
+    /// <remarks>
+    /// The method calculates the time elapsed since the start of downloading and estimates
+    /// the remaining time based on the current progress. It uses the difference between
+    /// the end time and the end date to calculate missing data time, and the difference
+    /// between the end time and the start date to calculate the progress so far.
+    /// The ETA is then calculated based on these values.
+    /// </remarks>
+    public static TimeSpan CalculateETA(DateTime utcNow, DateTime startDownloadTime, DateTime completelyLastEndDate, DateTime currentDownloadedEndDate, DateTime configStartDateTime)
+    {
+        // Calculate how much time has passed since the start of downloading
+        TimeSpan howMuchItTookSoFar = utcNow - startDownloadTime;
+
+        // Calculate ETA in seconds
+        var missingDataSecond = (completelyLastEndDate - currentDownloadedEndDate).TotalSeconds; // multiple to symbol.count 
+
+        var currentProgressSecond = (currentDownloadedEndDate - configStartDateTime).TotalSeconds; // howMuch it process so far 
+
+        // Calculate ETA in seconds
+        var etaSeconds = (missingDataSecond / currentProgressSecond) * howMuchItTookSoFar.TotalSeconds;
+
+        // Convert ETA from seconds to TimeSpan
+        TimeSpan etaTimeSpan = TimeSpan.FromSeconds(etaSeconds);
+
+        return etaTimeSpan;
     }
 
     /// <summary>
