@@ -51,11 +51,6 @@ namespace QuantConnect.Lean.DownloaderDataProvider
         private string _endDate;
 
         /// <summary>
-        /// Full name of the data provider for downloading data.
-        /// </summary>
-        public string DataProviderFullName { get; }
-
-        /// <summary>
         /// Type of tick data to download.
         /// </summary>
         public TickType TickType { get => ParseEnum<TickType>(_tickType); }
@@ -96,8 +91,6 @@ namespace QuantConnect.Lean.DownloaderDataProvider
         /// <param name="parameters">Dictionary containing the parameters for data download.</param>
         public DataDownloadConfig()
         {
-            DataProviderFullName = Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader).ToString() ?? string.Empty;
-
             _tickType = Config.Get(DownloaderCommandArguments.CommandDataType).ToString() ?? string.Empty;
             _securityType = Config.Get(DownloaderCommandArguments.CommandSecurityType).ToString() ?? string.Empty;
             _resolution = Config.Get(DownloaderCommandArguments.CommandResolution).ToString() ?? string.Empty;
@@ -124,8 +117,7 @@ namespace QuantConnect.Lean.DownloaderDataProvider
         /// <returns>A string representation of the <see cref="DataDownloadConfig"/> struct.</returns>
         public override string ToString()
         {
-            return $"DataProviderFullName: {DataProviderFullName}, " +
-                   $"TickType: {TickType}, " +
+            return $"TickType: {TickType}, " +
                    $"SecurityType: {SecurityType}, " +
                    $"Resolution: {Resolution}, " +
                    $"StartDate: {StartDate:yyyyMMdd}, " +
