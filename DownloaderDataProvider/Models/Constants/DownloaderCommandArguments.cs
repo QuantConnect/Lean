@@ -14,7 +14,7 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Lean.DownloaderDataProvider.Models.Constants
+namespace QuantConnect.DownloaderDataProvider.Launcher.Models.Constants
 {
     public sealed class DownloaderCommandArguments
     {

@@ -16,9 +16,9 @@
 
 using QuantConnect.Configuration;
 using McMaster.Extensions.CommandLineUtils;
-using QuantConnect.Lean.DownloaderDataProvider.Models.Constants;
+using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
 
-namespace QuantConnect.Lean.DownloaderDataProvider;
+namespace QuantConnect.DownloaderDataProvider.Launcher;
 
 public static class DownloaderDataProviderArgumentParser
 {

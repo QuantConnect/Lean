@@ -19,10 +19,10 @@ using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
-using QuantConnect.Lean.DownloaderDataProvider.Models.Constants;
+using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
 
-namespace QuantConnect.Lean.DownloaderDataProvider;
-class Program
+namespace QuantConnect.DownloaderDataProvider.Launcher;
+public static class Program
 {
     /// <summary>
     /// Synchronizer in charge of guaranteeing a single operation per file path

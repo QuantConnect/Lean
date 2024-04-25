@@ -16,9 +16,9 @@
 
 using System.Globalization;
 using QuantConnect.Configuration;
-using QuantConnect.Lean.DownloaderDataProvider.Models.Constants;
+using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
 
-namespace QuantConnect.Lean.DownloaderDataProvider
+namespace QuantConnect.DownloaderDataProvider.Launcher
 {
     /// <summary>
     /// Represents the configuration for data download.
