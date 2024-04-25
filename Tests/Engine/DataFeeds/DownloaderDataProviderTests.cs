@@ -25,7 +25,7 @@ using System.Threading.Tasks;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Lean.Engine.DataFeeds;
+using DataFeed = QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.Custom.IconicTypes;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             Log.DebuggingEnabled = true;
             var downloader = new DataDownloaderTest();
-            using var dataProvider = new DownloaderDataProvider(downloader);
+            using var dataProvider = new DataFeed.DownloaderDataProvider(downloader);
 
             var date = new DateTime(2000, 3, 17);
             var dataSymbol = Symbol.Create("TEST", SecurityType.Equity, Market.USA);
@@ -108,7 +108,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void CustomDataRequest()
         {
             var downloader = new DataDownloaderTest();
-            using var dataProvider = new DownloaderDataProvider(downloader);
+            using var dataProvider = new DataFeed.DownloaderDataProvider(downloader);
 
             var customData = Symbol.CreateBase(typeof(LinkedData), Symbols.SPY, Market.USA);
             var date = new DateTime(2023, 3, 17);
@@ -151,7 +151,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void CorrectArguments(Resolution resolution, SecurityType securityType)
         {
             var downloader = new DataDownloaderTest();
-            using var dataProvider = new DownloaderDataProvider(downloader);
+            using var dataProvider = new DataFeed.DownloaderDataProvider(downloader);
 
             Symbol symbol = null;
             Symbol expectedSymbol = null;
