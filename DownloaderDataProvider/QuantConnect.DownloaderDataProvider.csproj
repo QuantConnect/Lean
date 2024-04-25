@@ -7,9 +7,12 @@
     <RootNamespace>QuantConnect.Lean.DownloaderDataProvider</RootNamespace>
     <AssemblyName>QuantConnect.Lean.DownloaderDataProvider</AssemblyName>
     <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Description>QuantConnect LEAN Downloader Data Provider: Project - Main startup executable for download data from various sources with our Lean-friendly application.</Description>
   </PropertyGroup>
@@ -28,6 +31,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.6.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
 
   <ItemGroup>
