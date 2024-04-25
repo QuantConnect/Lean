@@ -167,10 +167,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             {
                 DownloadCount = 0;
             }
-            public override Stream Read(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
+            public override Stream DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
             {
                 DownloadCount++;
-                return base.Read(address, headers, userName, password);
+                return base.DownloadBytes(address, headers, userName, password);
             }
         }
     }

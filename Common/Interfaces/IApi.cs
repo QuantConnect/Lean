@@ -451,7 +451,7 @@ namespace QuantConnect.Interfaces
         /// <param name="userName">Username for basic authentication</param>
         /// <param name="password">Password for basic authentication</param>
         /// <returns></returns>
-        Stream Read(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
+        Stream DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
 
         /// <summary>
         /// Download the object store associated with the given organization ID and key

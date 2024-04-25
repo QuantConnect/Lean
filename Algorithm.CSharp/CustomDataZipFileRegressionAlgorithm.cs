@@ -35,6 +35,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2021, 12, 31);
 
             _customDataSymbol = AddData<CustomData>("CustomData", Resolution.Daily).Symbol;
+
+            SetBenchmark(x => 0);
         }
 
         public override void OnData(Slice slice)
@@ -59,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new SubscriptionDataSource("https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_daily_CSV.zip",
+                return new SubscriptionDataSource(@"https://cdn.quantconnect.com/uploads/multi_csv_zipped_file.zip",
                     SubscriptionTransportMedium.RemoteFile,
                     FileFormat.Csv);
             }
@@ -101,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 27358;
+        public long DataPoints => 79;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -132,8 +134,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.74"},
-            {"Tracking Error", "0.109"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

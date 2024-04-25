@@ -1168,7 +1168,7 @@ namespace QuantConnect.Api
         /// <returns></returns>
         public virtual string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
         {
-            using var stream = Read(address, headers, userName, password);
+            using var stream = DownloadBytes(address, headers, userName, password);
             using var reader = new StreamReader(stream);
             var contents = reader.ReadToEnd();
             stream.Close();
@@ -1184,7 +1184,7 @@ namespace QuantConnect.Api
         /// <param name="password">Password for basic authentication</param>
         /// <returns>A stream from which the data can be read</returns>
         /// <remarks>Stream.Close() most be called to avoid running out of resources</remarks>
-        public virtual Stream Read(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
+        public virtual Stream DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
         {
             WebClient.Credentials = new NetworkCredential(userName, password);
             WebClient.Proxy = WebRequest.GetSystemWebProxy();

@@ -2999,47 +2999,6 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Downloads the requested resource as a byte array.
-        /// The resource to download is specified as a <see cref="string"/> containing the URI.
-        /// </summary>
-        /// <param name="address">A string containing the URI to download</param>
-        /// <returns>The requested resource as byte array</returns>
-        [DocumentationAttribute(AddingData)]
-        [DocumentationAttribute(MachineLearning)]
-        public byte[] Read(string address) => Read(address, Enumerable.Empty<KeyValuePair<string, string>>());
-
-        /// <summary>
-        /// Downloads the requested resource as a byte array.
-        /// The resource to download is specified as a <see cref="string"/> containing the URI.
-        /// </summary>
-        /// <param name="address">A string containing the URI to download</param>
-        /// <param name="headers">Defines header values to add to the request</param>
-        /// <returns>The requested resource as byte array</returns>
-        [DocumentationAttribute(AddingData)]
-        [DocumentationAttribute(MachineLearning)]
-        public byte[] Read(string address, IEnumerable<KeyValuePair<string, string>> headers) => Read(address, headers, null, null);
-
-        /// <summary>
-        /// Downloads the requested resource as a byte array.
-        /// The resource to download is specified as a <see cref="string"/> containing the URI.
-        /// </summary>
-        /// <param name="address">A string containing the URI to download</param>
-        /// <param name="headers">Defines header values to add to the request</param>
-        /// <param name="userName">The user name associated with the credentials</param>
-        /// <param name="password">The password for the user name associated with the credentials</param>
-        /// <returns>The requested resource as byte array</returns>
-        [DocumentationAttribute(AddingData)]
-        [DocumentationAttribute(MachineLearning)]
-        public byte[] Read(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
-        {
-            using var stream = _api.Read(address, headers, userName, password);
-            var bytes = stream.GetBytes();
-            stream.Close();
-
-            return bytes;
-        }
-
-        /// <summary>
         /// Schedules the provided training code to execute immediately
         /// </summary>
         /// <param name="trainingCode">The training code to be invoked</param>
