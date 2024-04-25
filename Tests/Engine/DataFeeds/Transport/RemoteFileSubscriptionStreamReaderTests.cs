@@ -15,12 +15,12 @@
 */
 
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using NUnit.Framework;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Transport
 {
@@ -70,9 +70,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
 
             Assert.IsFalse(remoteReader.EndOfStream);
             Assert.AreEqual(isDataEphemeral ? 2 : 1, TestDownloadProvider.DownloadCount);
-
-            remoteReader.Dispose();
-            remoteReader2.Dispose();
         }
 
         [TestCase(true)]
@@ -100,10 +97,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
 
             Assert.IsFalse(remoteReader.EndOfStream);
             Assert.AreEqual(isDataEphemeral ? 2 : 1, TestDownloadProvider.DownloadCount);
-
-            remoteReader.Dispose();
-            remoteReader2.Dispose();
-            cacheProvider.DisposeSafely();
         }
 
         [TestCase(true)]
@@ -114,7 +107,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             using var cacheProvider = new ZipDataCacheProvider(dataProvider, isDataEphemeral: isDataEphemeral);
             using var remoteReader = new RemoteFileSubscriptionStreamReader(
                 cacheProvider,
-                @"https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_daily_CSV.zip",
+                @"https://cdn.quantconnect.com/uploads/multi_csv_zipped_file.zip",
                 Globals.Cache,
                 null);
 
@@ -123,16 +116,43 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
 
             using var remoteReader2 = new RemoteFileSubscriptionStreamReader(
                 cacheProvider,
-                @"https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_daily_CSV.zip",
+                @"https://cdn.quantconnect.com/uploads/multi_csv_zipped_file.zip",
                 Globals.Cache,
                 null);
 
             Assert.IsFalse(remoteReader.EndOfStream);
             Assert.AreEqual(isDataEphemeral ? 2 : 1, TestDownloadProvider.DownloadCount);
+        }
 
-            remoteReader.Dispose();
-            remoteReader2.Dispose();
-            cacheProvider.DisposeSafely();
+        [TestCase(true)]
+        [TestCase(false)]
+        public void GetsZippedDataForUrlNotEndingWithZipExtension(bool withQuery)
+        {
+            using var dataProvider = new DefaultDataProvider();
+            using var cacheProvider = new ZipDataCacheProvider(dataProvider);
+            using var remoteReader = new RemoteFileSubscriptionStreamReader(
+                cacheProvider,
+                // The url might have a query string
+                @"https://cdn.quantconnect.com/uploads/multi_csv_zipped_file.zip" + (withQuery ? "?" : ""),
+                Globals.Cache,
+                null);
+
+            Assert.IsFalse(remoteReader.EndOfStream);
+            Assert.AreEqual(1, TestDownloadProvider.DownloadCount);
+
+            var count = 0;
+            while (!remoteReader.EndOfStream)
+            {
+                var line = remoteReader.ReadLine();
+                count++;
+
+                var csv = line.ToCsv();
+                Assert.AreEqual(2, csv.Count);
+                Assert.IsTrue(int.TryParse(csv[0], NumberStyles.Number, CultureInfo.InvariantCulture, out _));
+                Assert.IsTrue(decimal.TryParse(csv[1], NumberStyles.Number, CultureInfo.InvariantCulture, out _));
+            }
+
+            Assert.Greater(count, 0);
         }
 
         [Test]
@@ -156,8 +176,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
                     null),
                 "Api.Download(): Failed to download data from quantconnect.com. Please verify the source for missing http:// or https://"
             );
-
-            remoteReader.DisposeSafely();
         }
 
         private class TestDownloadProvider : QuantConnect.Api.Api
