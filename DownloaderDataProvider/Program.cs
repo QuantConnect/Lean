@@ -57,32 +57,27 @@ class Program
 
         var dataDownloadConfig = new DataDownloadConfig();
 
-        var writer = default(LeanDataWriter);
-
         // Calculate the total number of seconds between the EndDate and StartDate
-        var totalDataSecond = (dataDownloadConfig.EndDate - dataDownloadConfig.StartDate).TotalSeconds;
-        // Determine the multiplier based on the number of symbols minus one
-        int dateMultiplier = dataDownloadConfig.Symbols.Count - 1;
-        // Calculate the new endDate by adding the calculated seconds multiplied by the dateMultiplier to the original EndDate
-        var endDate = dataDownloadConfig.EndDate.AddSeconds(totalDataSecond * dateMultiplier);
+        var totalDataPerSymbolInSeconds = (dataDownloadConfig.EndDate - dataDownloadConfig.StartDate).TotalSeconds;
+        var totalDataInSeconds = totalDataPerSymbolInSeconds * dataDownloadConfig.Symbols.Count;
+        var completeSymbolCount = 0;
+        var startUtcTime = DateTime.UtcNow;
+
         foreach (var symbol in dataDownloadConfig.Symbols)
         {
             var downloadParameters = new DataDownloaderGetParameters(symbol, dataDownloadConfig.Resolution, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate, dataDownloadConfig.TickType);
 
-            if (writer == null)
-            {
-                writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, Globals.DataFolder, dataDownloadConfig.TickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
-            }
-
-            var startDownloadTime = DateTime.UtcNow;
-            Log.Trace($"Starting download {downloadParameters}");
+            Log.Trace($"DownloaderDataProvider.Main(): Starting download {downloadParameters}");
             var downloadedData = dataDownloader.Get(downloadParameters);
 
             if (downloadedData == null)
             {
-                Log.Trace($"No data available for the following parameters: {downloadParameters}");
+                completeSymbolCount++;
+                Log.Trace($"DownloaderDataProvider.Main(): No data available for the following parameters: {downloadParameters}");
                 continue;
             }
+            var writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, Globals.DataFolder, dataDownloadConfig.TickType, mapSymbol: true,
+                dataCacheProvider: _dataCacheProvider);
 
             var lastLogStatusTime = DateTime.UtcNow;
             writer.Write(downloadedData.Select(data =>
@@ -91,16 +86,17 @@ class Program
                 if (utcNow - lastLogStatusTime >= _logDisplayInterval)
                 {
                     lastLogStatusTime = utcNow;
-                    var eta = CalculateETA(utcNow, startDownloadTime, endDate, data.EndTime, dataDownloadConfig.StartDate);
-                    double progress = CalculateProgress(data.EndTime, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate);
-                    Log.Trace($"Downloading {downloadParameters.Symbol} data: {progress:F2}%. ETA: {eta}");
+                    var progressSoFar = (data.EndTime - dataDownloadConfig.StartDate).TotalSeconds + totalDataPerSymbolInSeconds * completeSymbolCount;
+                    var eta = CalculateETA(utcNow, startUtcTime, totalDataInSeconds, progressSoFar);
+                    var progress = CalculateProgress(data.EndTime, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate);
+                    Log.Trace($"DownloaderDataProvider.Main(): Downloading {downloadParameters.Symbol} data: {progress:F2}%. ETA: {eta}");
                 }
 
                 return data;
             }));
-            // Correct endDate by removing the totalDataSecond to adjust for overlap periods.
-            endDate = endDate.AddSeconds(-totalDataSecond);
-            Log.Trace($"Download completed for {downloadParameters.Symbol} at {downloadParameters.Resolution} resolution, covering the period from {dataDownloadConfig.StartDate} to {dataDownloadConfig.EndDate}.");
+            completeSymbolCount++;
+            Log.Trace($"DownloaderDataProvider.Main(): Download completed for {downloadParameters.Symbol} at {downloadParameters.Resolution} resolution, " +
+                $"covering the period from {dataDownloadConfig.StartDate} to {dataDownloadConfig.EndDate}.");
         }
     }
 
@@ -108,10 +104,9 @@ class Program
     /// Calculates the Estimated Time of Arrival (ETA) based on the current progress of a download.
     /// </summary>
     /// <param name="utcNow">The current UTC DateTime.</param>
-    /// <param name="startDownloadTime">The DateTime when the download started.</param>
-    /// <param name="completelyLastEndDate">The actual end date of the download considering all downloading symbols.</param>
-    /// <param name="currentDownloadedEndDate">The current end date time in downloading process.</param>
-    /// <param name="configStartDateTime">The start date of the download.</param>
+    /// <param name="startUtcTime">The DateTime when the download started.</param>
+    /// <param name="totalDataInSeconds"></param>
+    /// <param name="currentProgressSecond"></param>
     /// <returns>A TimeSpan representing the Estimated Time of Arrival (ETA).</returns>
     /// <remarks>
     /// The method calculates the time elapsed since the start of downloading and estimates
@@ -120,15 +115,12 @@ class Program
     /// between the end time and the start date to calculate the progress so far.
     /// The ETA is then calculated based on these values.
     /// </remarks>
-    public static TimeSpan CalculateETA(DateTime utcNow, DateTime startDownloadTime, DateTime completelyLastEndDate, DateTime currentDownloadedEndDate, DateTime configStartDateTime)
+    public static TimeSpan CalculateETA(DateTime utcNow, DateTime startUtcTime, double totalDataInSeconds, double currentProgressSecond)
     {
         // Calculate how much time has passed since the start of downloading
-        TimeSpan howMuchItTookSoFar = utcNow - startDownloadTime;
+        TimeSpan howMuchItTookSoFar = utcNow - startUtcTime;
 
-        // Calculate ETA in seconds
-        var missingDataSecond = (completelyLastEndDate - currentDownloadedEndDate).TotalSeconds; // multiple to symbol.count 
-
-        var currentProgressSecond = (currentDownloadedEndDate - configStartDateTime).TotalSeconds; // howMuch it process so far 
+        var missingDataSecond = totalDataInSeconds - currentProgressSecond;
 
         // Calculate ETA in seconds
         var etaSeconds = (missingDataSecond / currentProgressSecond) * howMuchItTookSoFar.TotalSeconds;
@@ -149,6 +141,10 @@ class Program
     private static double CalculateProgress(DateTime currentTime, DateTime start, DateTime end)
     {
         double totalDays = (end - start).TotalDays;
+        if (totalDays == 0)
+        {
+            return 0;
+        }
         double elapsedDays = (currentTime - start).TotalDays;
 
         return (elapsedDays / totalDays) * 100;
