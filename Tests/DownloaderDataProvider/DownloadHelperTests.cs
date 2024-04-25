@@ -28,8 +28,8 @@ namespace QuantConnect.Tests.DownloaderDataProvider
         {
             var totalDataPerSymbolInSeconds = (downloadEndDate - downloadStartDate).TotalSeconds;
             var totalDataInSeconds = totalDataPerSymbolInSeconds * amountDownloadSymbol;
-            
-            var startUtcTime = DateTime.UtcNow;
+
+            var mockRunningDateTime = new DateTime(2024, 04, 26, 1, 10, 10);
             var endDateTime = downloadStartDate;
             while (alreadyDownloadedSymbol != amountDownloadSymbol)
             {
@@ -37,9 +37,10 @@ namespace QuantConnect.Tests.DownloaderDataProvider
                 {
                     endDateTime = endDateTime.AddDays(1);
 
-                    var utcNow = DateTime.UtcNow;
+                    // Simulate real-time by advancing the mockRunningDateTime by 2 milliseconds
+                    var utcNow = mockRunningDateTime.AddMilliseconds(2);
                     var progressSoFar = (endDateTime - downloadStartDate).TotalSeconds + totalDataPerSymbolInSeconds * alreadyDownloadedSymbol;
-                    var eta = Program.CalculateETA(utcNow, startUtcTime, totalDataInSeconds, progressSoFar);
+                    var eta = Program.CalculateETA(utcNow, mockRunningDateTime, totalDataInSeconds, progressSoFar);
 
                     if (endDateTime < downloadEndDate)
                     {
