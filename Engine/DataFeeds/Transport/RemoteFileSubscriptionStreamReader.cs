@@ -62,7 +62,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             var useCache = !dataCacheProvider.IsDataEphemeral;
 
             // create a hash for a new filename
-            var filename = (useCache ? source.ToMD5() : Guid.NewGuid().ToString())  + new Uri(source).AbsolutePath.GetExtension();
+            string extension = null;
+            try
+            {
+                extension = new Uri(source).AbsolutePath.GetExtension();
+            }
+            catch (Exception)
+            {
+                extension = source.GetExtension();
+            }
+            var filename = (useCache ? source.ToMD5() : Guid.NewGuid().ToString()) + extension;
             LocalFileName = Path.Combine(downloadDirectory, filename);
 
             Stream stream = null;
