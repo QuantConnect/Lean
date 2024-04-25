@@ -946,7 +946,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="filePath">File path representing the data requested</param>
         /// <param name="organizationId">Organization to download from</param>
-        /// <returns><see cref="Link"/> to the downloadable data.</returns>
+        /// <returns><see cref="DataLink"/> to the downloadable data.</returns>
         public DataLink ReadDataLink(string filePath, string organizationId)
         {
             if (filePath == null)

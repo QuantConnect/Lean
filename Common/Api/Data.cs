@@ -62,6 +62,8 @@ namespace QuantConnect.Api
     /// </summary>
     public class DataPricesList : RestResponse
     {
+        [JsonProperty(PropertyName = "datasources")]
+        public Dictionary<string, DataSource> DataSources { get; set; }
         /// <summary>
         /// Collection of prices objects
         /// </summary>
@@ -89,6 +91,78 @@ namespace QuantConnect.Api
             var entry = Prices.FirstOrDefault(x => x.RegEx.IsMatch(path));
             return entry?.Price ?? -1;
         }
+    }
+
+    public class DataSource
+    {
+        [JsonProperty(PropertyName = "requiresSecurityMaster")]
+        public bool RequiresSecurityMaster { get; set; }
+
+        [JsonProperty(PropertyName = "options")]
+        public List<DataSourceOption> Options { get; set; }
+
+        [JsonProperty(PropertyName = "paths")]
+        public List<DataSourcePath> Paths { get; set; }
+
+        [JsonProperty(PropertyName = "requirements")]
+        public Dictionary<string, string> Requirements { get; set; }
+    }
+
+    public class DataSourceOption
+    {
+        [JsonProperty(PropertyName = "type")]
+        public string Type { get; set; }
+
+        [JsonProperty(PropertyName = "id")]
+        public string Id { get; set; }
+
+        [JsonProperty(PropertyName = "label")]
+        public string Label { get; set; }
+
+        [JsonProperty(PropertyName = "default")]
+        public string Default { get; set; }
+
+        [JsonProperty(PropertyName = "description")]
+        public string Description { get; set; }
+
+        [JsonProperty(PropertyName = "choices")]
+        public Dictionary<string, string> Choices { get; set; }
+
+        [JsonProperty(PropertyName = "multiple")]
+        public bool Multiple { get; set; }
+
+        [JsonProperty(PropertyName = "transform")]
+        public string Transform { get; set; }
+    }
+
+    public class DataSourcePath
+    {
+        [JsonProperty(PropertyName = "condition")]
+        public DataSourcePathCondition Condition { get; set; }
+
+        [JsonProperty(PropertyName = "templates")]
+        public DataSourcePathTemplates Templates { get; set; }
+    }
+
+    public class DataSourcePathCondition
+    {
+        [JsonProperty(PropertyName = "type")]
+        public string Type { get; set; }
+
+        [JsonProperty(PropertyName = "option")]
+        public string Option { get; set; }
+
+        [JsonProperty(PropertyName = "values")]
+        public List<string> Values { get; set; }
+    }
+
+    public class DataSourcePathTemplates
+    {
+        [JsonProperty(PropertyName = "all")]
+        public List<string> All { get; set; }
+
+        [JsonProperty(PropertyName = "latest")]
+        public List<string> Latest { get; set; }
     }
 
     /// <summary>
