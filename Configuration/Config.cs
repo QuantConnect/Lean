@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -331,11 +331,17 @@ namespace QuantConnect.Configuration
         /// <summary>
         /// Write the contents of the serialized configuration back to the disk.
         /// </summary>
-        public static void Write()
+        public static void Write(string targetPath = null)
         {
             if (!Settings.IsValueCreated) return;
             var serialized = JsonConvert.SerializeObject(Settings.Value, Formatting.Indented);
-            File.WriteAllText(ConfigurationFileName, serialized);
+
+            var taget = ConfigurationFileName;
+            if (!string.IsNullOrEmpty(targetPath))
+            {
+                taget = Path.Combine(targetPath, ConfigurationFileName);
+            }
+            File.WriteAllText(taget, serialized);
         }
 
         /// <summary>
