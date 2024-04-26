@@ -33,6 +33,9 @@ using QuantConnect.Util;
 using QuantConnect.Notifications;
 using Python.Runtime;
 using System.Threading;
+using System.Net.Http.Headers;
+using System.Collections.Concurrent;
+using System.Text;
 
 namespace QuantConnect.Api
 {
@@ -41,13 +44,25 @@ namespace QuantConnect.Api
     /// </summary>
     public class Api : IApi, IDownloadProvider
     {
-        private readonly Lazy<HttpClient> _client = new ();
+        private readonly BlockingCollection<Lazy<HttpClient>> _clientPool;
         private string _dataFolder;
 
         /// <summary>
         /// Returns the underlying API connection
         /// </summary>
         protected ApiConnection ApiConnection { get; private set; }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="Api"/>
+        /// </summary>
+        public Api()
+        {
+            _clientPool = new BlockingCollection<Lazy<HttpClient>>(new ConcurrentQueue<Lazy<HttpClient>>(), 5);
+            for (int i = 0; i < _clientPool.BoundedCapacity; i++)
+            {
+                _clientPool.Add(new Lazy<HttpClient>());
+            }
+        }
 
         /// <summary>
         /// Initialize the API with the given variables
@@ -125,9 +140,9 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId
-                }), ParameterType.RequestBody);
+            {
+                projectId
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out ProjectResponse result);
             return result;
@@ -166,11 +181,11 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId,
-                    name,
-                    content
-                }), ParameterType.RequestBody);
+            {
+                projectId,
+                name,
+                content
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
@@ -193,11 +208,11 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId,
-                    name = oldFileName,
-                    newName = newFileName
-                }), ParameterType.RequestBody);
+            {
+                projectId,
+                name = oldFileName,
+                newName = newFileName
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
@@ -220,11 +235,11 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId,
-                    name = fileName,
-                    content = newFileContents
-                }), ParameterType.RequestBody);
+            {
+                projectId,
+                name = fileName,
+                content = newFileContents
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
@@ -245,9 +260,9 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId
-                }), ParameterType.RequestBody);
+            {
+                projectId
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out ProjectFilesResponse result);
             return result;
@@ -313,10 +328,10 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId,
-                    name = fileName
-                }), ParameterType.RequestBody);
+            {
+                projectId,
+                name = fileName
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out ProjectFilesResponse result);
             return result;
@@ -351,10 +366,10 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId,
-                    name,
-                }), ParameterType.RequestBody);
+            {
+                projectId,
+                name,
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
@@ -830,10 +845,10 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId,
-                    deployId
-                }), ParameterType.RequestBody);
+            {
+                projectId,
+                deployId
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out LiveAlgorithmResults result);
             return result;
@@ -879,9 +894,9 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId
-                }), ParameterType.RequestBody);
+            {
+                projectId
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
@@ -1078,11 +1093,12 @@ namespace QuantConnect.Api
                 Directory.CreateDirectory(directory);
             }
 
+            var client = BorrowClient();
             try
             {
                 // Download the file
                 var uri = new Uri(dataLink.Url);
-                using var dataStream = _client.Value.GetStreamAsync(uri);
+                using var dataStream = client.Value.GetStreamAsync(uri);
 
                 using var fileStream = new FileStream(FileExtension.ToNormalizedPath(filePath), FileMode.Create);
                 dataStream.Result.CopyTo(fileStream);
@@ -1091,6 +1107,10 @@ namespace QuantConnect.Api
             {
                 Log.Error($"Api.DownloadData(): Failed to download zip for path ({filePath})");
                 return false;
+            }
+            finally
+            {
+                ReturnClient(client);
             }
 
             return true;
@@ -1164,33 +1184,58 @@ namespace QuantConnect.Api
         /// <returns></returns>
         public virtual string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
         {
-            using (var client = new WebClient { Credentials = new NetworkCredential(userName, password) })
+            return Encoding.UTF8.GetString(DownloadBytes(address, headers, userName, password));
+        }
+
+        /// <summary>
+        /// Local implementation for downloading data to algorithms
+        /// </summary>
+        /// <param name="address">URL to download</param>
+        /// <param name="headers">KVP headers</param>
+        /// <param name="userName">Username for basic authentication</param>
+        /// <param name="password">Password for basic authentication</param>
+        /// <returns>A stream from which the data can be read</returns>
+        /// <remarks>Stream.Close() most be called to avoid running out of resources</remarks>
+        public virtual byte[] DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
+        {
+            var client = BorrowClient();
+            try
             {
-                client.Proxy = WebRequest.GetSystemWebProxy();
+                client.Value.DefaultRequestHeaders.Clear();
+
+                // Add a user agent header in case the requested URI contains a query.
+                client.Value.DefaultRequestHeaders.TryAddWithoutValidation("user-agent", "QCAlgorithm.Download(): User Agent Header");
+
                 if (headers != null)
                 {
                     foreach (var header in headers)
                     {
-                        client.Headers.Add(header.Key, header.Value);
+                        client.Value.DefaultRequestHeaders.Add(header.Key, header.Value);
                     }
                 }
-                // Add a user agent header in case the requested URI contains a query.
-                client.Headers.Add("user-agent", "QCAlgorithm.Download(): User Agent Header");
 
-                try
+                if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
                 {
-                    return client.DownloadString(address);
+                    var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{userName}:{password}"));
+                    client.Value.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
                 }
-                catch (WebException exception)
-                {
-                    var message = $"Api.Download(): Failed to download data from {address}";
-                    if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
-                    {
-                        message += $" with username: {userName} and password {password}";
-                    }
 
-                    throw new WebException($"{message}. Please verify the source for missing http:// or https://", exception);
+                return client.Value.GetByteArrayAsync(new Uri(address)).Result;
+            }
+            catch (Exception exception)
+            {
+                var message = $"Api.DownloadBytes(): Failed to download data from {address}";
+                if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
+                {
+                    message += $" with username: {userName} and password {password}";
                 }
+
+                throw new WebException($"{message}. Please verify the source for missing http:// or https://", exception);
+            }
+            finally
+            {
+                client.Value.DefaultRequestHeaders.Clear();
+                ReturnClient(client);
             }
         }
 
@@ -1200,10 +1245,16 @@ namespace QuantConnect.Api
         /// <filterpriority>2</filterpriority>
         public virtual void Dispose()
         {
-            if (_client.IsValueCreated)
+            // Dispose of the HttpClient pool
+            _clientPool.CompleteAdding();
+            foreach (var client in _clientPool.GetConsumingEnumerable())
             {
-                _client.Value.DisposeSafely();
+                if (client.IsValueCreated)
+                {
+                    client.Value.DisposeSafely();
+                }
             }
+            _clientPool.DisposeSafely();
         }
 
         /// <summary>
@@ -1543,17 +1594,18 @@ namespace QuantConnect.Api
             }
 
             var directory = destinationFolder ?? Directory.GetCurrentDirectory();
+            var client = BorrowClient();
 
             try
             {
-                if (_client.Value.Timeout != TimeSpan.FromMinutes(20))
+                if (client.Value.Timeout != TimeSpan.FromMinutes(20))
                 {
-                    _client.Value.Timeout = TimeSpan.FromMinutes(20);
+                    client.Value.Timeout = TimeSpan.FromMinutes(20);
                 }
 
                 // Download the file
                 var uri = new Uri(result.Url);
-                using var byteArray = _client.Value.GetByteArrayAsync(uri);
+                using var byteArray = client.Value.GetByteArrayAsync(uri);
 
                 Compression.UnzipToFolder(byteArray.Result, directory);
             }
@@ -1561,6 +1613,10 @@ namespace QuantConnect.Api
             {
                 Log.Error($"Api.GetObjectStore(): Failed to download zip for path ({directory}). Error: {e.Message}");
                 return false;
+            }
+            finally
+            {
+                ReturnClient(client);
             }
 
             return true;
@@ -1712,6 +1768,23 @@ namespace QuantConnect.Api
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Borrows and HTTP client from the pool
+        /// </summary>
+        private Lazy<HttpClient> BorrowClient()
+        {
+            using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+            return _clientPool.Take(cancellationTokenSource.Token);
+        }
+
+        /// <summary>
+        /// Returns the HTTP client to the pool
+        /// </summary>
+        private void ReturnClient(Lazy<HttpClient> client)
+        {
+            _clientPool.Add(client);
         }
     }
 }

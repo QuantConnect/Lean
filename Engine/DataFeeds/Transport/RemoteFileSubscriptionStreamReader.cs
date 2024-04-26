@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
@@ -43,6 +44,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         public StreamReader StreamReader => _streamReader.StreamReader;
 
         /// <summary>
+        /// The local file name of the downloaded file
+        /// </summary>
+        public string LocalFileName { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="RemoteFileSubscriptionStreamReader"/> class.
         /// </summary>
         /// <param name="dataCacheProvider">The <see cref="IDataCacheProvider"/> used to retrieve a stream of data</param>
@@ -56,35 +62,61 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             var useCache = !dataCacheProvider.IsDataEphemeral;
 
             // create a hash for a new filename
-            var filename = (useCache ? source.ToMD5() : Guid.NewGuid().ToString())  + source.GetExtension();
-            var destination = Path.Combine(downloadDirectory, filename);
+            string baseFileName = string.Empty;
+            string extension = string.Empty;
+            string entryName = string.Empty;
+            try
+            {
+                var uri = new Uri(source);
+                baseFileName = uri.OriginalString;
+                if (!string.IsNullOrEmpty(uri.Fragment))
+                {
+                    baseFileName = baseFileName.Replace(uri.Fragment, "", StringComparison.InvariantCulture);
+                }
+                extension = uri.AbsolutePath.GetExtension();
+                entryName = uri.Fragment;
+            }
+            catch
+            {
+                LeanData.ParseKey(source, out baseFileName, out entryName);
+                extension = Path.GetExtension(baseFileName);
+            }
 
-            string contents = null;
+            var cacheFileName = (useCache ? baseFileName.ToMD5() : Guid.NewGuid().ToString()) + extension;
+            LocalFileName = Path.Combine(downloadDirectory, cacheFileName);
+
+            byte[] bytes = null;
             if (useCache)
             {
                 lock (_fileSystemLock)
                 {
-                    if (!File.Exists(destination))
+                    if (!File.Exists(LocalFileName))
                     {
-                        contents = _downloader.Download(source, headers, null, null);
-                        File.WriteAllText(destination, contents);
+                        bytes = _downloader.DownloadBytes(source, headers, null, null);
                     }
                 }
             }
             else
             {
-                contents = _downloader.Download(source, headers, null, null);
-                File.WriteAllText(destination, contents);
+                bytes = _downloader.DownloadBytes(source, headers, null, null);
             }
 
-            if (contents != null)
+            if (bytes != null)
             {
+                File.WriteAllBytes(LocalFileName, bytes);
+
                 // Send the file to the dataCacheProvider so it is available when the streamReader asks for it
-                dataCacheProvider.Store(destination, System.Text.Encoding.UTF8.GetBytes(contents));
+                dataCacheProvider.Store(LocalFileName, bytes);
             }
 
-            // now we can just use the local file reader
-            _streamReader = new LocalFileSubscriptionStreamReader(dataCacheProvider, destination);
+            // now we can just use the local file reader.
+            // add the entry name to the local file name so the correct entry is read
+            var fileNameWithEntry = LocalFileName;
+            if (!string.IsNullOrEmpty(entryName))
+            {
+                fileNameWithEntry += entryName;
+            }
+            _streamReader = new LocalFileSubscriptionStreamReader(dataCacheProvider, fileNameWithEntry);
         }
 
         /// <summary>

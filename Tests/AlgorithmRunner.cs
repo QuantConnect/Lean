@@ -124,8 +124,8 @@ namespace QuantConnect.Tests
                 }
 
                 using (Log.LogHandler = new CompositeLogHandler(newLogHandlers.ToArray()))
-                using (var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance))
-                using (var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance))
+                using (var algorithmHandlers = Initializer.GetAlgorithmHandlers())
+                using (var systemHandlers = Initializer.GetSystemHandlers())
                 using (var workerThread  = new TestWorkerThread())
                 {
                     Log.DebuggingEnabled = !reducedDiskSize;

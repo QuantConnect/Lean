@@ -410,7 +410,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // use local file instead of remote file
                 var source = GetLocalFileName(config.Symbol.Value, "test");
 
-                return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
+                return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
             }
 
             public static string GetLocalFileName(string ticker, string fileExtension)

@@ -818,6 +818,18 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Reads the entire content of a stream and returns it as a byte array.
+        /// </summary>
+        /// <param name="stream">Stream to read bytes from</param>
+        /// <returns>The bytes read from the stream</returns>
+        public static byte[] GetBytes(this Stream stream)
+        {
+            using var memoryStream = new MemoryStream();
+            stream.CopyTo(memoryStream);
+            return memoryStream.ToArray();
+        }
+
+        /// <summary>
         /// Extentsion method to clear all items from a thread safe queue
         /// </summary>
         /// <remarks>Small risk of race condition if a producer is adding to the list.</remarks>

@@ -17,25 +17,20 @@ using System;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
     /// Provides an implementation of <see cref="ISubscriptionDataSourceReader"/> that reads zip entry names
     /// </summary>
-    public class ZipEntryNameSubscriptionDataSourceReader : ISubscriptionDataSourceReader
+    public class ZipEntryNameSubscriptionDataSourceReader : BaseSubscriptionDataSourceReader
     {
         private readonly IDataCacheProvider _dataProvider;
         private readonly SubscriptionDataConfig _config;
         private readonly DateTime _date;
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
-
-        /// <summary>
-        /// Event fired when the specified source is considered invalid, this may
-        /// be from a missing file or failure to download a remote source
-        /// </summary>
-        public event EventHandler<InvalidSourceEventArgs> InvalidSource;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionDataSourceReader"/> class
@@ -45,6 +40,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
         public ZipEntryNameSubscriptionDataSourceReader(IDataCacheProvider dataProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            : base(dataProvider, isLiveMode, null)
         {
             _date = date;
             _config = config;
@@ -58,12 +54,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="source">The source to be read</param>
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
-        public IEnumerable<BaseData> Read(SubscriptionDataSource source)
+        public override IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
+            var fileName = source.Source;
+
+            if (source.TransportMedium == SubscriptionTransportMedium.RemoteFile)
+            {
+                using var reader = CreateStreamReader(source) as RemoteFileSubscriptionStreamReader;
+                if (reader != null)
+                {
+                    fileName = reader.LocalFileName;
+                }
+            }
+
             List<string> entryNames;
             try
             {
-                entryNames = _dataProvider.GetZipEntries(source.Source);
+                entryNames = _dataProvider.GetZipEntries(fileName);
             }
             catch (Exception err)
             {
@@ -88,7 +95,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="exception">The exception if one was raised, otherwise null</param>
         private void OnInvalidSource(SubscriptionDataSource source, Exception exception)
         {
-            InvalidSource?.Invoke(this, new InvalidSourceEventArgs(source, exception));
+            OnInvalidSource(source, exception);
         }
     }
 }

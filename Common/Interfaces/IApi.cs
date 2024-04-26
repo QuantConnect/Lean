@@ -253,14 +253,14 @@ namespace QuantConnect.Interfaces
 
         /// <summary>
         /// Read an optimization
-        /// </summary>        
+        /// </summary>
         /// <param name="optimizationId">Optimization id for the optimization we want to read</param>
         /// <returns><see cref="Optimization"/></returns>
         public Optimization ReadOptimization(string optimizationId);
 
         /// <summary>
         /// Abort an optimization
-        /// </summary>        
+        /// </summary>
         /// <param name="optimizationId">Optimization id for the optimization we want to abort</param>
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse AbortOptimization(string optimizationId);
@@ -275,7 +275,7 @@ namespace QuantConnect.Interfaces
 
         /// <summary>
         /// Delete an optimization
-        /// </summary>        
+        /// </summary>
         /// <param name="optimizationId">Optimization id for the optimization we want to delete</param>
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse DeleteOptimization(string optimizationId);
@@ -441,6 +441,16 @@ namespace QuantConnect.Interfaces
         /// <param name="password">Password for basic authentication</param>
         /// <returns></returns>
         string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
+
+        /// <summary>
+        /// Local implementation for downloading data to algorithms
+        /// </summary>
+        /// <param name="address">URL to download</param>
+        /// <param name="headers">KVP headers</param>
+        /// <param name="userName">Username for basic authentication</param>
+        /// <param name="password">Password for basic authentication</param>
+        /// <returns></returns>
+        byte[] DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
 
         /// <summary>
         /// Download the object store associated with the given organization ID and key
