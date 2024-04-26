@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new SubscriptionDataSource(@"https://cdn.quantconnect.com/uploads/multi_csv_zipped_file.zip?",
+                return new SubscriptionDataSource(@"https://cdn.quantconnect.com/uploads/multi_csv_zipped_file.zip?some=query&for=testing#csv_file_10.csv",
                     SubscriptionTransportMedium.RemoteFile,
                     FileFormat.ZipEntryName);
             }

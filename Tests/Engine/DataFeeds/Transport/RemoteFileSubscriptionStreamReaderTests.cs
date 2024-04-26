@@ -121,17 +121,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             Assert.AreEqual(isDataEphemeral ? 2 : 1, TestDownloadProvider.DownloadCount);
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void GetsZippedDataForUrlNotEndingWithZipExtension(bool withQuery)
+        [TestCase(true, "", 78)]    // No fragment, will read the first entry
+        [TestCase(false, "", 78)]
+        [TestCase(true, "#csv_file_10.csv", 1)]
+        [TestCase(false, "#csv_file_10.csv", 1)]
+        public void GetsZippedDataForUrlNotEndingWithZipExtension(bool withQuery, string entryName, int expectedLines)
         {
             using var cacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
-            using var remoteReader = new RemoteFileSubscriptionStreamReader(
-                cacheProvider,
-                // The url might have a query string
-                @"https://cdn.quantconnect.com/uploads/multi_csv_zipped_file.zip" + (withQuery ? "?" : ""),
-                Globals.Cache,
-                null);
+            var url = @"https://cdn.quantconnect.com/uploads/multi_csv_zipped_file.zip" + (withQuery ? "?some=query" : "") + entryName;
+            using var remoteReader = new RemoteFileSubscriptionStreamReader(cacheProvider, url, Globals.Cache, null);
 
             Assert.IsFalse(remoteReader.EndOfStream);
             Assert.AreEqual(1, TestDownloadProvider.DownloadCount);
@@ -148,7 +146,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
                 Assert.IsTrue(decimal.TryParse(csv[1], NumberStyles.Number, CultureInfo.InvariantCulture, out _));
             }
 
-            Assert.Greater(count, 0);
+            Assert.AreEqual(expectedLines, count);
         }
 
         [Test]

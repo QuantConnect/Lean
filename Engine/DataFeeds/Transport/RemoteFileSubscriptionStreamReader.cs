@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
@@ -61,17 +62,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             var useCache = !dataCacheProvider.IsDataEphemeral;
 
             // create a hash for a new filename
-            string extension = null;
+            string baseFileName = string.Empty;
+            string extension = string.Empty;
+            string entryName = string.Empty;
             try
             {
-                extension = new Uri(source).AbsolutePath.GetExtension();
+                var uri = new Uri(source);
+                baseFileName = uri.OriginalString;
+                if (!string.IsNullOrEmpty(uri.Fragment))
+                {
+                    baseFileName = baseFileName.Replace(uri.Fragment, "", StringComparison.InvariantCulture);
+                }
+                extension = uri.AbsolutePath.GetExtension();
+                entryName = uri.Fragment;
             }
             catch
             {
-                extension = source.GetExtension();
+                LeanData.ParseKey(source, out baseFileName, out entryName);
+                extension = Path.GetExtension(baseFileName);
             }
-            var filename = (useCache ? source.ToMD5() : Guid.NewGuid().ToString()) + extension;
-            LocalFileName = Path.Combine(downloadDirectory, filename);
+
+            var cacheFileName = (useCache ? baseFileName.ToMD5() : Guid.NewGuid().ToString()) + extension;
+            LocalFileName = Path.Combine(downloadDirectory, cacheFileName);
 
             byte[] bytes = null;
             if (useCache)
@@ -97,8 +109,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
                 dataCacheProvider.Store(LocalFileName, bytes);
             }
 
-            // now we can just use the local file reader
-            _streamReader = new LocalFileSubscriptionStreamReader(dataCacheProvider, LocalFileName);
+            // now we can just use the local file reader.
+            // add the entry name to the local file name so the correct entry is read
+            var fileNameWithEntry = LocalFileName;
+            if (!string.IsNullOrEmpty(entryName))
+            {
+                fileNameWithEntry += entryName;
+            }
+            _streamReader = new LocalFileSubscriptionStreamReader(dataCacheProvider, fileNameWithEntry);
         }
 
         /// <summary>

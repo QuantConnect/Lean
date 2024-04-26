@@ -34,6 +34,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2021, 01, 01);
             SetEndDate(2021, 12, 31);
 
+            CustomData.Url = GetCustomDataUrl();
+
             _customDataSymbol = AddData<CustomData>("CustomData", Resolution.Daily).Symbol;
 
             SetBenchmark(x => 0);
@@ -57,11 +59,18 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        protected virtual string GetCustomDataUrl()
+        {
+            return @"https://cdn.quantconnect.com/uploads/multi_csv_zipped_file.zip?some=query&for=testing";
+        }
+
         public class CustomData : BaseData
         {
+            public static string Url { get; set; }
+
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new SubscriptionDataSource(@"https://cdn.quantconnect.com/uploads/multi_csv_zipped_file.zip");
+                return new SubscriptionDataSource(Url);
             }
 
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
@@ -97,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 79;
+        public virtual long DataPoints => 79;
 
         /// <summary>
         /// Data Points count of the algorithm history
