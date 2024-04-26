@@ -147,10 +147,11 @@ namespace QuantConnect.Tests.Report
         'OrderIds': [1, 2, 3]
     }
 }}";
-        [Test]
-        public void ValidBacktestResultDefaultSerializer()
+        [TestCase("charts")]
+        [TestCase("Charts")]
+        public void ValidBacktestResultDefaultSerializer(string chartKey)
         {
-            var result = JsonConvert.DeserializeObject<BacktestResponseWrapper>(ValidBacktestResultJson2).Backtest;
+            var result = JsonConvert.DeserializeObject<BacktestResponseWrapper>(ValidBacktestResultJson2.Replace("charts", chartKey, StringComparison.InvariantCulture)).Backtest;
 
             Assert.AreEqual(7, result.Charts.Count);
             Assert.IsTrue(result.Charts.Where(x => x.Key == "Drawdown").All(kvp => !kvp.Value.IsEmpty()));

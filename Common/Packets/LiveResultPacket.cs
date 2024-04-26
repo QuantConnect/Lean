@@ -153,7 +153,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Holdings dictionary of algorithm holdings information
         /// </summary>
-        [JsonProperty(PropertyName = "Holdings", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, Holding> Holdings;
 
         /// <summary>
@@ -179,19 +179,19 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Cash for the algorithm's live results.
         /// </summary>
-        [JsonProperty(PropertyName = "Cash", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, Cash> Cash;
 
         /// <summary>
         /// The algorithm's account currency
         /// </summary>
-        [JsonProperty(PropertyName = "AccountCurrency", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string AccountCurrency;
 
         /// <summary>
         /// The algorithm's account currency
         /// </summary>
-        [JsonProperty(PropertyName = "AccountCurrencySymbol", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string AccountCurrencySymbol;
 
         /// <summary>
