@@ -140,9 +140,9 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId
-                }), ParameterType.RequestBody);
+            {
+                projectId
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out ProjectResponse result);
             return result;
@@ -181,11 +181,11 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId,
-                    name,
-                    content
-                }), ParameterType.RequestBody);
+            {
+                projectId,
+                name,
+                content
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
@@ -208,11 +208,11 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId,
-                    name = oldFileName,
-                    newName = newFileName
-                }), ParameterType.RequestBody);
+            {
+                projectId,
+                name = oldFileName,
+                newName = newFileName
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
@@ -235,11 +235,11 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId,
-                    name = fileName,
-                    content = newFileContents
-                }), ParameterType.RequestBody);
+            {
+                projectId,
+                name = fileName,
+                content = newFileContents
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
@@ -260,9 +260,9 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId
-                }), ParameterType.RequestBody);
+            {
+                projectId
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out ProjectFilesResponse result);
             return result;
@@ -328,10 +328,10 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId,
-                    name = fileName
-                }), ParameterType.RequestBody);
+            {
+                projectId,
+                name = fileName
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out ProjectFilesResponse result);
             return result;
@@ -366,10 +366,10 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId,
-                    name,
-                }), ParameterType.RequestBody);
+            {
+                projectId,
+                name,
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
@@ -845,10 +845,10 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId,
-                    deployId
-                }), ParameterType.RequestBody);
+            {
+                projectId,
+                deployId
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out LiveAlgorithmResults result);
             return result;
@@ -894,9 +894,9 @@ namespace QuantConnect.Api
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
-                {
-                    projectId
-                }), ParameterType.RequestBody);
+            {
+                projectId
+            }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
@@ -1184,8 +1184,7 @@ namespace QuantConnect.Api
         /// <returns></returns>
         public virtual string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
         {
-            using var stream = DownloadBytes(address, headers, userName, password);
-            return Encoding.UTF8.GetString(stream.GetBytes());
+            return Encoding.UTF8.GetString(DownloadBytes(address, headers, userName, password));
         }
 
         /// <summary>
@@ -1197,31 +1196,31 @@ namespace QuantConnect.Api
         /// <param name="password">Password for basic authentication</param>
         /// <returns>A stream from which the data can be read</returns>
         /// <remarks>Stream.Close() most be called to avoid running out of resources</remarks>
-        public virtual Stream DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
+        public virtual byte[] DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
         {
             var client = BorrowClient();
-            client.Value.DefaultRequestHeaders.Clear();
-
-            // Add a user agent header in case the requested URI contains a query.
-            client.Value.DefaultRequestHeaders.TryAddWithoutValidation("user-agent", "QCAlgorithm.Download(): User Agent Header");
-
-            if (headers != null)
-            {
-                foreach (var header in headers)
-                {
-                    client.Value.DefaultRequestHeaders.Add(header.Key, header.Value);
-                }
-            }
-
-            if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
-            {
-                var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{userName}:{password}"));
-                client.Value.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
-            }
-
             try
             {
-                return client.Value.GetStreamAsync(new Uri(address)).Result;
+                client.Value.DefaultRequestHeaders.Clear();
+
+                // Add a user agent header in case the requested URI contains a query.
+                client.Value.DefaultRequestHeaders.TryAddWithoutValidation("user-agent", "QCAlgorithm.Download(): User Agent Header");
+
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        client.Value.DefaultRequestHeaders.Add(header.Key, header.Value);
+                    }
+                }
+
+                if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
+                {
+                    var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{userName}:{password}"));
+                    client.Value.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
+                }
+
+                return client.Value.GetByteArrayAsync(new Uri(address)).Result;
             }
             catch (Exception exception)
             {
@@ -1776,7 +1775,8 @@ namespace QuantConnect.Api
         /// </summary>
         private Lazy<HttpClient> BorrowClient()
         {
-            return _clientPool.Take();
+            using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+            return _clientPool.Take(cancellationTokenSource.Token);
         }
 
         /// <summary>

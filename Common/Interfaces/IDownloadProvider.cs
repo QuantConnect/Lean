@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 using System.Collections.Generic;
-using System.IO;
 
 namespace QuantConnect.Interfaces
 {
@@ -40,6 +39,6 @@ namespace QuantConnect.Interfaces
         /// <param name="userName">Username for basic authentication</param>
         /// <param name="password">Password for basic authentication</param>
         /// <returns>String contents of file</returns>
-        Stream DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
+        byte[] DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
     }
 }

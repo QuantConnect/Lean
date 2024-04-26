@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Interfaces;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
@@ -67,39 +66,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             {
                 extension = new Uri(source).AbsolutePath.GetExtension();
             }
-            catch (Exception)
+            catch
             {
                 extension = source.GetExtension();
             }
             var filename = (useCache ? source.ToMD5() : Guid.NewGuid().ToString()) + extension;
             LocalFileName = Path.Combine(downloadDirectory, filename);
 
-            Stream stream = null;
+            byte[] bytes = null;
             if (useCache)
             {
                 lock (_fileSystemLock)
                 {
                     if (!File.Exists(LocalFileName))
                     {
-                        stream = _downloader.DownloadBytes(source, headers, null, null);
+                        bytes = _downloader.DownloadBytes(source, headers, null, null);
                     }
                 }
             }
             else
             {
-                stream = _downloader.DownloadBytes(source, headers, null, null);
+                bytes = _downloader.DownloadBytes(source, headers, null, null);
             }
 
-            if (stream != null)
+            if (bytes != null)
             {
-                var bytes = stream.GetBytes();
                 File.WriteAllBytes(LocalFileName, bytes);
 
                 // Send the file to the dataCacheProvider so it is available when the streamReader asks for it
                 dataCacheProvider.Store(LocalFileName, bytes);
-
-                stream.Close();
-                stream.DisposeSafely();
             }
 
             // now we can just use the local file reader

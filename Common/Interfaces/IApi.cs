@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.IO;
 using QuantConnect.Api;
 using QuantConnect.Notifications;
 using QuantConnect.Optimizer.Objectives;
@@ -451,7 +450,7 @@ namespace QuantConnect.Interfaces
         /// <param name="userName">Username for basic authentication</param>
         /// <param name="password">Password for basic authentication</param>
         /// <returns></returns>
-        Stream DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
+        byte[] DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
 
         /// <summary>
         /// Download the object store associated with the given organization ID and key
