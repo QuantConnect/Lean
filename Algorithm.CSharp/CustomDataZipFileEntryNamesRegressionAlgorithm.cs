@@ -64,6 +64,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
+                // Even though the url includes a specific entry name, FileFormat.ZipEntryName indicates that
+                // the entry names should be read, not the content of the given entry
                 return new SubscriptionDataSource(@"https://cdn.quantconnect.com/uploads/multi_csv_zipped_file.zip?some=query&for=testing#csv_file_10.csv",
                     SubscriptionTransportMedium.RemoteFile,
                     FileFormat.ZipEntryName);
