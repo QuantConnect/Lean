@@ -32,71 +32,61 @@ namespace QuantConnect
         /// <summary>
         /// The algorithm's name
         /// </summary>
-        [JsonProperty(PropertyName = "Name")]
         public string Name;
 
         /// <summary>
         /// List of tags associated with the algorithm
         /// </summary>
-        [JsonProperty(PropertyName = "Tags")]
         public ISet<string> Tags;
 
         /// <summary>
         /// The algorithm's account currency
         /// </summary>
-        [JsonProperty(PropertyName = "AccountCurrency", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string AccountCurrency;
 
         /// <summary>
         /// The algorithm's brokerage model
         /// </summary>
         /// <remarks> Required to set the correct brokerage model on report generation.</remarks>
-        [JsonProperty(PropertyName = "Brokerage")]
-        public BrokerageName BrokerageName;
+        public BrokerageName Brokerage;
 
         /// <summary>
         /// The algorithm's account type
         /// </summary>
         /// <remarks> Required to set the correct brokerage model on report generation.</remarks>
-        [JsonProperty(PropertyName = "AccountType")]
         public AccountType AccountType;
 
         /// <summary>
         /// The parameters used by the algorithm
         /// </summary>
-        [JsonProperty(PropertyName = "Parameters")]
         public IReadOnlyDictionary<string, string> Parameters;
 
         /// <summary>
         /// Backtest maximum end date
         /// </summary>
-        [JsonProperty(PropertyName = "OutOfSampleMaxEndDate")]
         public DateTime? OutOfSampleMaxEndDate;
 
         /// <summary>
         /// The backtest out of sample day count
         /// </summary>
-        [JsonProperty(PropertyName = "OutOfSampleDays")]
         public int OutOfSampleDays;
 
         /// <summary>
         /// The backtest start date
         /// </summary>
-        [JsonProperty(PropertyName = "StartDate")]
         [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
         public DateTime StartDate;
 
         /// <summary>
         /// The backtest end date
         /// </summary>
-        [JsonProperty(PropertyName = "EndDate")]
         [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
         public DateTime EndDate;
 
         /// <summary>
         /// Number of trading days per year for Algorithm's portfolio statistics.
         /// </summary>
-        [JsonProperty(PropertyName = "TradingDaysPerYear")]
         public int TradingDaysPerYear;
 
         /// <summary>
@@ -112,7 +102,7 @@ namespace QuantConnect
             TradingDaysPerYear = tradingDaysPerYear;
             OutOfSampleDays = outOfSampleDays;
             AccountCurrency = accountCurrency;
-            BrokerageName = brokerageName;
+            Brokerage = brokerageName;
             AccountType = accountType;
             Parameters = parameters;
             StartDate = startDate;
