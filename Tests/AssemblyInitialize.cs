@@ -23,6 +23,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Python;
 using QuantConnect.Tests;
@@ -34,6 +35,8 @@ namespace QuantConnect.Tests
     [SetUpFixture]
     public class AssemblyInitialize
     {
+        private static bool _initialized;
+
         [OneTimeSetUp]
         public void InitializeTestEnvironment()
         {
@@ -44,6 +47,12 @@ namespace QuantConnect.Tests
 
         public static void AdjustCurrentDirectory()
         {
+            if (_initialized)
+            {
+                return;
+            }
+            _initialized = true;
+
             // nunit 3 sets the current folder to a temp folder we need it to be the test bin output folder
             var dir = TestContext.CurrentContext.TestDirectory;
             Environment.CurrentDirectory = dir;
