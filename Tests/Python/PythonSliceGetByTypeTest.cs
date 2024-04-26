@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Common
                     {"Tracking Error", "0.001"},
                     {"Treynor Ratio", "1.972"},
                     {"Total Fees", "$3.45"},
-                    {"OrderListHash", "08d233e8d221c40246dec8b6bbce7118"}
+                    {"OrderListHash", "275925e122dc6f40501d1e3f35339e26"}
                 },
                 Language.Python,
                 AlgorithmStatus.Completed);

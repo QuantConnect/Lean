@@ -224,7 +224,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "SPX 31KC0UJHC75TA|SPX 31"},
             {"Portfolio Turnover", "0.19%"},
-            {"OrderListHash", "ce46943469dff0dcc2ad57ff845cf73c"}
+            {"OrderListHash", "9040053de564aa65587e2daf5f9b22be"}
         };
     }
 }

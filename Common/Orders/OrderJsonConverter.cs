@@ -83,14 +83,14 @@ namespace QuantConnect.Orders
         public static Order CreateOrderFromJObject(JObject jObject)
         {
             // create order instance based on order type field
-            var orderType = (OrderType)jObject["Type"].Value<int>();
+            var orderType = (OrderType)(jObject["Type"]?.Value<int>() ?? jObject["type"].Value<int>());
             var order = CreateOrder(orderType, jObject);
 
             // populate common order properties
-            order.Id = jObject["Id"].Value<int>();
+            order.Id = jObject["Id"]?.Value<int>() ?? jObject["id"].Value<int>();
 
-            var jsonStatus = jObject["Status"];
-            var jsonTime = jObject["Time"];
+            var jsonStatus = jObject["Status"] ?? jObject["status"];
+            var jsonTime = jObject["Time"] ?? jObject["time"];
             if (jsonStatus.Type == JTokenType.Integer)
             {
                 order.Status = (OrderStatus)jsonStatus.Value<int>();
@@ -112,28 +112,28 @@ namespace QuantConnect.Orders
             {
                 // `Time` can potentially be null in some LiveResultPacket instances, but
                 // `CreatedTime` will always be there if `Time` is absent.
-                order.Time = jObject["CreatedTime"].Value<DateTime>();
+                order.Time = (jObject["CreatedTime"]?.Value<DateTime>() ?? jObject["createdTime"].Value<DateTime>());
             }
 
-            var orderSubmissionData = jObject["OrderSubmissionData"];
+            var orderSubmissionData = jObject["OrderSubmissionData"] ?? jObject["orderSubmissionData"];
             if (orderSubmissionData != null && orderSubmissionData.Type != JTokenType.Null)
             {
-                var bidPrice = orderSubmissionData["BidPrice"].Value<decimal>();
-                var askPrice = orderSubmissionData["AskPrice"].Value<decimal>();
-                var lastPrice = orderSubmissionData["LastPrice"].Value<decimal>();
+                var bidPrice = orderSubmissionData["BidPrice"]?.Value<decimal>() ?? orderSubmissionData["bidPrice"].Value<decimal>();
+                var askPrice = orderSubmissionData["AskPrice"]?.Value<decimal>() ?? orderSubmissionData["askPrice"].Value<decimal>();
+                var lastPrice = orderSubmissionData["LastPrice"]?.Value<decimal>() ?? orderSubmissionData["lastPrice"].Value<decimal>();
                 order.OrderSubmissionData = new OrderSubmissionData(bidPrice, askPrice, lastPrice);
             }
 
-            var priceAdjustmentMode = jObject["PriceAdjustmentMode"];
+            var priceAdjustmentMode = jObject["PriceAdjustmentMode"] ?? jObject["priceAdjustmentMode"];
             if (priceAdjustmentMode != null && priceAdjustmentMode.Type != JTokenType.Null)
             {
                 var value = priceAdjustmentMode.Value<int>();
                 order.PriceAdjustmentMode = (DataNormalizationMode)value;
             }
 
-            var lastFillTime = jObject["LastFillTime"];
-            var lastUpdateTime = jObject["LastUpdateTime"];
-            var canceledTime = jObject["CanceledTime"];
+            var lastFillTime = jObject["LastFillTime"] ?? jObject["lastFillTime"];
+            var lastUpdateTime = jObject["LastUpdateTime"] ?? jObject["lastUpdateTime"];
+            var canceledTime = jObject["CanceledTime"] ?? jObject["canceledTime"];
 
             if (canceledTime != null && canceledTime.Type != JTokenType.Null)
             {
@@ -147,7 +147,7 @@ namespace QuantConnect.Orders
             {
                 order.LastUpdateTime = lastUpdateTime.Value<DateTime>();
             }
-            var tag = jObject["Tag"];
+            var tag = jObject["Tag"] ?? jObject["tag"];
             if (tag != null && tag.Type != JTokenType.Null)
             {
                 order.Tag = tag.Value<string>();
@@ -157,8 +157,8 @@ namespace QuantConnect.Orders
                 order.Tag = string.Empty;
             }
 
-            order.Quantity = jObject["Quantity"].Value<decimal>();
-            var orderPrice = jObject["Price"];
+            order.Quantity = jObject["Quantity"]?.Value<decimal>() ?? jObject["quantity"].Value<decimal>();
+            var orderPrice = jObject["Price"] ?? jObject["price"];
             if (orderPrice != null && orderPrice.Type != JTokenType.Null)
             {
                 order.Price = orderPrice.Value<decimal>();
@@ -168,19 +168,23 @@ namespace QuantConnect.Orders
                 order.Price = default(decimal);
             }
 
-            var priceCurrency = jObject["PriceCurrency"];
+            var priceCurrency = jObject["PriceCurrency"] ?? jObject["priceCurrency"];
             if (priceCurrency != null && priceCurrency.Type != JTokenType.Null)
             {
                 order.PriceCurrency = priceCurrency.Value<string>();
             }
-            order.BrokerId = jObject["BrokerId"].Select(x => x.Value<string>()).ToList();
-            var jsonContingentId = jObject["ContingentId"];
+            order.BrokerId = jObject["BrokerId"]?.Select(x => x.Value<string>()).ToList() ?? jObject["brokerId"].Select(x => x.Value<string>()).ToList();
+            var jsonContingentId = jObject["ContingentId"] ?? jObject["contingentId"];
             if (jsonContingentId != null && jsonContingentId.Type != JTokenType.Null)
             {
                 order.ContingentId = jsonContingentId.Value<int>();
             }
 
             var timeInForce = jObject["Properties"]?["TimeInForce"] ?? jObject["TimeInForce"] ?? jObject["Duration"];
+            if (timeInForce == null)
+            {
+                timeInForce = jObject["properties"]?["timeInForce"] ?? jObject["timeInForce"] ?? jObject["duration"];
+            }
             order.Properties.TimeInForce = (timeInForce != null)
                 ? CreateTimeInForce(timeInForce, jObject)
                 : TimeInForce.GoodTilCanceled;
@@ -191,40 +195,49 @@ namespace QuantConnect.Orders
                 var ticker = jObject.SelectTokens("Symbol.Value").Single().Value<string>();
                 order.Symbol = new Symbol(sid, ticker);
             }
+            else if (jObject.SelectTokens("symbol.id").Any())
+            {
+                var sid = SecurityIdentifier.Parse(jObject.SelectTokens("symbol.id").Single().Value<string>());
+                var ticker = jObject.SelectTokens("symbol.value").Single().Value<string>();
+                order.Symbol = new Symbol(sid, ticker);
+            }
             else
             {
                 string market = null;
 
                 //does data have market?
-                var suppliedMarket = jObject.SelectTokens("Symbol.ID.Market");
+                var suppliedMarket = jObject.SelectTokens("Symbol.ID.Market") ?? jObject.SelectTokens("symbol.ID.Market");
                 if (suppliedMarket.Any())
                 {
                     market = suppliedMarket.Single().Value<string>();
                 }
 
                 // we only get the security type if we need it, because it might not be there in other cases
-                var securityType = (SecurityType)jObject["SecurityType"].Value<int>();
-                if (jObject.SelectTokens("Symbol.Value").Any())
+                var securityType = (SecurityType)(jObject["SecurityType"]?.Value<int>() ?? jObject["securityType"].Value<int>());
+
+                var symbolValueUpperCase = jObject.SelectTokens("Symbol.Value");
+                var symbolValueCamelCase = jObject.SelectTokens("symbol.value");
+                string ticker = default;
+                if (symbolValueUpperCase.Any())
                 {
                     // provide for backwards compatibility
-                    var ticker = jObject.SelectTokens("Symbol.Value").Single().Value<string>();
-
-                    if (market == null && !SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(ticker, securityType, out market))
-                    {
-                        market = DefaultBrokerageModel.DefaultMarketMap[securityType];
-                    }
-                    order.Symbol = Symbol.Create(ticker, securityType, market);
+                    ticker = symbolValueUpperCase.Single().Value<string>();
+                }
+                else if (symbolValueCamelCase.Any())
+                {
+                    // provide compatibility for orders in camel case
+                    ticker = symbolValueCamelCase.Single().Value<string>();
                 }
                 else
                 {
-                    var tickerstring = jObject["Symbol"].Value<string>();
-
-                    if (market == null && !SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(tickerstring, securityType, out market))
-                    {
-                        market = DefaultBrokerageModel.DefaultMarketMap[securityType];
-                    }
-                    order.Symbol = Symbol.Create(tickerstring, securityType, market);
+                    ticker = jObject["Symbol"]?.Value<string>() ?? jObject["symbol"]?.Value<string>();
                 }
+
+                if (market == null && !SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(ticker, securityType, out market))
+                {
+                    market = DefaultBrokerageModel.DefaultMarketMap[securityType];
+                }
+                order.Symbol = Symbol.Create(ticker, securityType, market);
             }
 
             return order;
@@ -243,38 +256,38 @@ namespace QuantConnect.Orders
                     break;
 
                 case OrderType.Limit:
-                    order = new LimitOrder { LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>() };
+                    order = new LimitOrder { LimitPrice = jObject["LimitPrice"]?.Value<decimal>() ?? jObject["limitPrice"]?.Value<decimal>() ?? default(decimal) };
                     break;
 
                 case OrderType.StopMarket:
                     order = new StopMarketOrder
                     {
-                        StopPrice = jObject["StopPrice"] == null ? default(decimal) : jObject["StopPrice"].Value<decimal>()
+                        StopPrice = jObject["stopPrice"]?.Value<decimal>() ?? jObject["StopPrice"]?.Value<decimal>() ?? default(decimal)
                     };
                     break;
 
                 case OrderType.StopLimit:
                     order = new StopLimitOrder
                     {
-                        LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>(),
-                        StopPrice = jObject["StopPrice"] == null ? default(decimal) : jObject["StopPrice"].Value<decimal>()
+                        LimitPrice = jObject["LimitPrice"]?.Value<decimal>() ?? jObject["limitPrice"]?.Value<decimal>() ?? default(decimal),
+                        StopPrice = jObject["stopPrice"]?.Value<decimal>() ?? jObject["StopPrice"]?.Value<decimal>() ?? default(decimal)
                     };
                     break;
 
                 case OrderType.TrailingStop:
                     order = new TrailingStopOrder
                     {
-                        StopPrice = jObject["StopPrice"] == null ? default(decimal) : jObject["StopPrice"].Value<decimal>(),
-                        TrailingAmount = jObject["TrailingAmount"] == null ? default(decimal) : jObject["TrailingAmount"].Value<decimal>(),
-                        TrailingAsPercentage = jObject["TrailingAsPercentage"] == null ? default(bool) : jObject["TrailingAsPercentage"].Value<bool>()
+                        StopPrice = jObject["StopPrice"]?.Value<decimal>() ?? jObject["stopPrice"]?.Value<decimal>() ?? default(decimal),
+                        TrailingAmount = jObject["TrailingAmount"]?.Value<decimal>() ?? jObject["trailingAmount"]?.Value<decimal>() ??  default(decimal),
+                        TrailingAsPercentage = jObject["TrailingAsPercentage"]?.Value<bool>() ?? jObject["trailingAsPercentage"]?.Value<bool>() ?? default(bool)
                     };
                     break;
 
                 case OrderType.LimitIfTouched:
                     order = new LimitIfTouchedOrder
                     {
-                        LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>(),
-                        TriggerPrice = jObject["TriggerPrice"] == null ? default(decimal) : jObject["TriggerPrice"].Value<decimal>()
+                        LimitPrice = jObject["LimitPrice"]?.Value<decimal>() ?? jObject["limitPrice"]?.Value<decimal>() ?? default(decimal),
+                        TriggerPrice = jObject["TriggerPrice"]?.Value<decimal>() ?? jObject["triggerPrice"]?.Value<decimal>() ?? default(decimal)
                     };
                     break;
 
@@ -302,7 +315,7 @@ namespace QuantConnect.Orders
                     order = new ComboLegLimitOrder
                     {
                         GroupOrderManager = DeserializeGroupOrderManager(jObject),
-                        LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>()
+                        LimitPrice = jObject["LimitPrice"]?.Value<decimal>() ?? jObject["limitPrice"]?.Value<decimal>() ?? default(decimal)
                     };
                     break;
 
@@ -348,7 +361,7 @@ namespace QuantConnect.Orders
         /// </summary>
         private static GroupOrderManager DeserializeGroupOrderManager(JObject jObject)
         {
-            var groupOrderManagerJObject = jObject["GroupOrderManager"];
+            var groupOrderManagerJObject = jObject["GroupOrderManager"] ?? jObject["groupOrderManager"];
 
             // this should never happen
             if (groupOrderManagerJObject == null)
@@ -357,13 +370,13 @@ namespace QuantConnect.Orders
             }
 
             var result = new GroupOrderManager(
-                groupOrderManagerJObject["Id"].Value<int>(),
-                groupOrderManagerJObject["Count"].Value<int>(),
-                groupOrderManagerJObject["Quantity"].Value<decimal>(),
-                groupOrderManagerJObject["LimitPrice"].Value<decimal>()
+                groupOrderManagerJObject["Id"]?.Value<int>() ?? groupOrderManagerJObject["id"].Value<int>(),
+                groupOrderManagerJObject["Count"]?.Value<int>() ?? groupOrderManagerJObject["count"].Value<int>(),
+                groupOrderManagerJObject["Quantity"]?.Value<decimal>() ?? groupOrderManagerJObject["quantity"].Value<decimal>(),
+                groupOrderManagerJObject["LimitPrice"]?.Value<decimal>() ?? groupOrderManagerJObject["limitPrice"].Value<decimal>()
             );
 
-            foreach (var orderId in groupOrderManagerJObject["OrderIds"].Values<int>())
+            foreach (var orderId in (groupOrderManagerJObject["OrderIds"]?.Values<int>() ?? groupOrderManagerJObject["orderIds"].Values<int>()))
             {
                 result.OrderIds.Add(orderId);
             }

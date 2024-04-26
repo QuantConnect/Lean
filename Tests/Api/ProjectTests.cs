@@ -457,9 +457,13 @@ namespace QuantConnect.Tests.API
             var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings, dataProviders: dataProviders);
             var createLiveAlgorithmWorkedCorrectly = createLiveAlgorithm.Success;
 
-            // Liquidate live algorithm; will also stop algorithm
-            var liquidateLive = ApiClient.LiquidateLiveAlgorithm(projectId);
-            var liquidateLiveWorkedCorrectly = liquidateLive.Success;
+            // Read live algorithm
+            var readLiveAlgorithm = ApiClient.ReadLiveAlgorithm(projectId, createLiveAlgorithm.DeployId);
+            var readLiveAlgorithmWorkedCorrectly = readLiveAlgorithm.Success;
+
+            // Stop the algorithm
+            var stopLive = ApiClient.StopLiveAlgorithm(projectId);
+            var stopLiveWorkedCorrectly = stopLive.Success;
 
             // Delete the project
             var deleteProject = ApiClient.DeleteProject(projectId);
@@ -469,7 +473,8 @@ namespace QuantConnect.Tests.API
             // even if it fails, we want the project to be deleted and not leave any garbage
             // around
             Assert.IsTrue(createLiveAlgorithmWorkedCorrectly);
-            Assert.IsTrue(liquidateLiveWorkedCorrectly);
+            Assert.IsTrue(readLiveAlgorithmWorkedCorrectly);
+            Assert.IsTrue(stopLiveWorkedCorrectly);
         }
 
         [Test]

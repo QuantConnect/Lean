@@ -157,7 +157,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "NWSA.CustomDataUsingMapping T3MO1488O0H0"},
             {"Portfolio Turnover", "16.62%"},
-            {"OrderListHash", "5e0d1db2b31926e10f09de86b7e585b9"}
+            {"OrderListHash", "a605ae85beeb854fde8d7b7eff9040ac"}
         };
 
         /// <summary>

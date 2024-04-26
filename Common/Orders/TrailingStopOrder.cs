@@ -14,6 +14,7 @@
 */
 
 using System;
+using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Orders
@@ -26,11 +27,13 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Trailing amount for this trailing stop order
         /// </summary>
+        [JsonProperty(PropertyName = "trailingAmount")]
         public decimal TrailingAmount { get; internal set; }
 
         /// <summary>
         /// Determines whether the <see cref="TrailingAmount"/> is a percentage or an absolute currency value
         /// </summary>
+        [JsonProperty(PropertyName = "trailingAsPercentage")]
         public bool TrailingAsPercentage { get; internal set; }
 
         /// <summary>

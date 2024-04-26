@@ -36,15 +36,15 @@ namespace QuantConnect
             if (ReferenceEquals(symbol, null)) return;
 
             writer.WriteStartObject();
-            writer.WritePropertyName("Value");
+            writer.WritePropertyName("value");
             writer.WriteValue(symbol.Value);
-            writer.WritePropertyName("ID");
+            writer.WritePropertyName("id");
             writer.WriteValue(symbol.ID.ToString());
-            writer.WritePropertyName("Permtick");
+            writer.WritePropertyName("permtick");
             writer.WriteValue(symbol.Value);
             if (symbol.HasUnderlying)
             {
-                writer.WritePropertyName("Underlying");
+                writer.WritePropertyName("underlying");
                 WriteJson(writer, symbol.Underlying, serializer);
             }
             writer.WriteEndObject();
@@ -85,12 +85,15 @@ namespace QuantConnect
             JToken symbolId;
             JToken value;
 
-            if (jObject.TryGetValue("ID", StringComparison.InvariantCultureIgnoreCase, out symbolId)
+            if ((jObject.TryGetValue("ID", StringComparison.InvariantCultureIgnoreCase, out symbolId)
                 && jObject.TryGetValue("Value", StringComparison.InvariantCultureIgnoreCase, out value))
+                || (jObject.TryGetValue("id", StringComparison.InvariantCultureIgnoreCase, out symbolId)
+                && jObject.TryGetValue("value", StringComparison.InvariantCultureIgnoreCase, out value)))
             {
                 Symbol underlyingSymbol = null;
                 JToken underlying;
-                if (jObject.TryGetValue("Underlying", StringComparison.InvariantCultureIgnoreCase, out underlying))
+                if (jObject.TryGetValue("Underlying", StringComparison.InvariantCultureIgnoreCase, out underlying)
+                    || jObject.TryGetValue("underlying", StringComparison.InvariantCultureIgnoreCase, out underlying))
                 {
                     underlyingSymbol = ReadSymbolFromJson(underlying as JObject);
                 }

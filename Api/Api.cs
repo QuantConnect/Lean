@@ -713,8 +713,8 @@ namespace QuantConnect.Api
         ///                         and its corresponding value is another dictionary with the required key-value pairs of credential
         ///                         names and values. For example: "dataProviders: { "InteractiveBrokersBrokerage" : { "id": 12345, "environment" : "paper",
         ///                         "username": "testUsername", "password": "testPassword"}}"</param>
-        /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
-        public LiveAlgorithm CreateLiveAlgorithm(int projectId,
+        /// <returns>Information regarding the new algorithm <see cref="CreateLiveAlgorithmResponse"/></returns>
+        public CreateLiveAlgorithmResponse CreateLiveAlgorithm(int projectId,
                                                  string compileId,
                                                  string nodeId,
                                                  Dictionary<string, object> brokerageSettings,
@@ -737,8 +737,7 @@ namespace QuantConnect.Api
                 )
                 ), ParameterType.RequestBody);
 
-            LiveAlgorithm result;
-            ApiConnection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out CreateLiveAlgorithmResponse result);
             return result;
         }
 
@@ -762,9 +761,9 @@ namespace QuantConnect.Api
         ///                         and its corresponding value is another dictionary with the required key-value pairs of credential
         ///                         names and values. For example: "dataProviders: { "InteractiveBrokersBrokerage" : { "id": 12345, "environment" : "paper",
         ///                         "username": "testUsername", "password": "testPassword"}}"</param>
-        /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
+        /// <returns>Information regarding the new algorithm <see cref="CreateLiveAlgorithmResponse"/></returns>
 
-        public LiveAlgorithm CreateLiveAlgorithm(int projectId, string compileId, string nodeId, PyObject brokerageSettings, string versionId = "-1", PyObject dataProviders = null)
+        public CreateLiveAlgorithmResponse CreateLiveAlgorithm(int projectId, string compileId, string nodeId, PyObject brokerageSettings, string versionId = "-1", PyObject dataProviders = null)
         {
             return CreateLiveAlgorithm(projectId, compileId, nodeId, ConvertToDictionary(brokerageSettings), versionId, dataProviders != null ? ConvertToDictionary(dataProviders) : null);
         }

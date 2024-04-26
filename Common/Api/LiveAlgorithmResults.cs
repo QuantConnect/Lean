@@ -16,6 +16,8 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using QuantConnect.Packets;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Api
 {
@@ -25,9 +27,88 @@ namespace QuantConnect.Api
     public class LiveAlgorithmResults : RestResponse
     {
         /// <summary>
-        /// Represents data about the live running algorithm returned from the server
+        /// Error message
         /// </summary>
-        public LiveResultsData LiveResults { get; set; }
+        [JsonProperty(PropertyName = "message")]
+        public string Message { get; set; }
+
+        /// <summary>
+        /// Indicates the status of the algorihtm, i.e. 'Running', 'Stopped'
+        /// </summary>
+        [JsonProperty(PropertyName = "status")]
+        public string Status { get; set; }
+
+        /// <summary>
+        /// Algorithm deployment ID
+        /// </summary>
+        [JsonProperty(PropertyName = "deployId")]
+        public string DeployId { get; set; }
+
+        /// <summary>
+        /// The snapshot project ID for cloning the live development's source code.
+        /// </summary>
+        [JsonProperty(PropertyName = "cloneId")]
+        public int CloneId { get; set; }
+
+        /// <summary>
+        /// Date the live algorithm was launched
+        /// </summary>
+        [JsonProperty(PropertyName = "launched")]
+        public DateTime Launched { get; set; }
+
+        /// <summary>
+        /// Date the live algorithm was stopped
+        /// </summary>
+        [JsonProperty(PropertyName = "stopped")]
+        public DateTime? Stopped { get; set; }
+
+        /// <summary>
+        /// Brokerage used in the live algorithm
+        /// </summary>
+        [JsonProperty(PropertyName = "brokerage")]
+        public string Brokerage { get; set; }
+
+        /// <summary>
+        /// Security types present in the live algorithm
+        /// </summary>
+        [JsonProperty(PropertyName = "securityTypes")]
+        public string SecurityTypes { get; set; }
+
+        /// <summary>
+        /// Name of the project the live algorithm is in
+        /// </summary>
+        [JsonProperty(PropertyName = "projectName")]
+        public string ProjectName { get; set; }
+
+        /// <summary>
+        /// Name of the data center where the algorithm is physically located.
+        /// </summary>
+        [JsonProperty(PropertyName = "datacenter")]
+        public string Datacenter { get; set; }
+
+        /// <summary>
+        /// Indicates if the algorithm is being live shared
+        /// </summary>
+        [JsonProperty(PropertyName = "public")]
+        public bool Public { get; set; }
+
+        /// <summary>
+        /// Files present in the project in which the algorithm is
+        /// </summary>
+        [JsonProperty(PropertyName = "files")]
+        public List<ProjectFile> Files { get; set; }
+
+        /// <summary>
+        /// Runtime banner/updating statistics in the title banner of the live algorithm GUI.
+        /// </summary>
+        [JsonProperty(PropertyName = "runtimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, string> RuntimeStatistics { get; set; }
+
+        /// <summary>
+        /// Charts updates for the live algorithm since the last result packet
+        /// </summary>
+        [JsonProperty(PropertyName = "charts", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, Chart> Charts { get; set; }
     }
 
     /// <summary>

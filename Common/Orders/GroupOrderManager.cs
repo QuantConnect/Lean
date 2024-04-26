@@ -27,32 +27,38 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The unique order group Id
         /// </summary>
+        [JsonProperty(PropertyName = "id")]
         public long Id { get; }
 
         /// <summary>
         /// The group order quantity
         /// </summary>
+        [JsonProperty(PropertyName = "quantity")]
         public decimal Quantity { get; internal set; }
 
         /// <summary>
         /// The total order count associated with this order group
         /// </summary>
+        [JsonProperty(PropertyName = "count")]
         public int Count { get; }
 
         /// <summary>
         /// The limit price associated with this order group if any
         /// </summary>
+        [JsonProperty(PropertyName = "limitPrice")]
         public decimal LimitPrice { get; set; }
 
         /// <summary>
         /// The order Ids in this group
         /// </summary>
         /// <remarks>In live trading we process orders in a dedicated thread so we need to be thread safe</remarks>
+        [JsonProperty(PropertyName = "orderIds")]
         public HashSet<int> OrderIds { get; }
 
         /// <summary>
         /// Order Direction Property based off Quantity.
         /// </summary>
+        [JsonProperty(PropertyName = "direction")]
         public OrderDirection Direction
         {
             get
