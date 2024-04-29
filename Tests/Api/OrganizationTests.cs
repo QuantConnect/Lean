@@ -38,17 +38,14 @@ namespace QuantConnect.Tests.API
         }
 
         [Test]
-        public void ListOrganization()
-        {
-            var list = ApiClient.ListOrganizations();
-            Assert.IsTrue(list.Count > 0);
-        }
-
-        [Test]
         public void ReadOrganization()
         {
             var organization = ApiClient.ReadOrganization(TestOrganization);
-            Assert.IsNotNull(organization.Credit);
+
+            Assert.AreNotEqual(default(DateTime), organization.DataAgreement.Signed);
+            Assert.AreNotEqual(0, organization.DataAgreement.EpochSignedTime);
+            Assert.AreNotEqual(0, organization.Credit.Balance);
+            Assert.AreNotEqual(0, organization.Products.Count);
         }
     }
 }

@@ -1047,7 +1047,13 @@ namespace QuantConnect.Api
                 projectId
             }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out BacktestReport report);
+            BacktestReport report = new BacktestReport();
+            var finish = DateTime.UtcNow.AddMinutes(1);
+            while (DateTime.UtcNow < finish && !report.Success)
+            {
+                Thread.Sleep(10000);
+                ApiConnection.TryRequest(request, out report);
+            }
             return report;
         }
 
@@ -1236,21 +1242,6 @@ namespace QuantConnect.Api
 
             ApiConnection.TryRequest(request, out Account account);
             return account;
-        }
-
-        /// <summary>
-        /// Get a list of organizations tied to this account
-        /// </summary>
-        /// <returns></returns>
-        public List<Organization> ListOrganizations()
-        {
-            var request = new RestRequest("organizations/list", Method.POST)
-            {
-                RequestFormat = DataFormat.Json
-            };
-
-            ApiConnection.TryRequest(request, out OrganizationResponseList response);
-            return response.List;
         }
 
         /// <summary>
