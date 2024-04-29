@@ -32,43 +32,36 @@ namespace QuantConnect.Packets
         /// <summary>
         /// User Id sending result packet
         /// </summary>
-        [JsonProperty(PropertyName = "iUserID")]
         public int UserId = 0;
 
         /// <summary>
         /// Project Id of the result packet
         /// </summary>
-        [JsonProperty(PropertyName = "iProjectID")]
         public int ProjectId = 0;
 
         /// <summary>
         /// User session Id who issued the result packet
         /// </summary>
-        [JsonProperty(PropertyName = "sSessionID")]
         public string SessionId = "";
 
         /// <summary>
         /// Live Algorithm Id (DeployId) for this result packet
         /// </summary>
-        [JsonProperty(PropertyName = "sDeployID")]
         public string DeployId = "";
 
         /// <summary>
         /// Compile Id algorithm which generated this result packet
         /// </summary>
-        [JsonProperty(PropertyName = "sCompileID")]
         public string CompileId = "";
 
         /// <summary>
         /// Result data object for this result packet
         /// </summary>
-        [JsonProperty(PropertyName = "oResults")]
         public LiveResult Results = new LiveResult();
 
         /// <summary>
         /// Processing time / running time for the live algorithm.
         /// </summary>
-        [JsonProperty(PropertyName = "dProcessingTime")]
         public double ProcessingTime = 0;
 
         /// <summary>

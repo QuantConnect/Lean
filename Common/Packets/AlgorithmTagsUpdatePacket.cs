@@ -14,8 +14,6 @@
  *
 */
 
-
-using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace QuantConnect.Packets
@@ -28,13 +26,11 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Algorithm id for this order event
         /// </summary>
-        [JsonProperty(PropertyName = "sAlgorithmID")]
         public string AlgorithmId;
 
         /// <summary>
         /// The new tags
         /// </summary>
-        [JsonProperty(PropertyName = "aTags")]
         public HashSet<string> Tags = new();
 
         /// <summary>

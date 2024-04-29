@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using QuantConnect.Packets;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
+using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Tests.Common
 {
@@ -65,7 +66,18 @@ namespace QuantConnect.Tests.Common
             };
             var algorithmConfiguration = AlgorithmConfiguration.Create(algorithm, backtestNode);
 
-            var serialized = JsonConvert.SerializeObject(algorithmConfiguration);
+            var settings = new JsonSerializerSettings()
+            {
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy
+                    {
+                        ProcessDictionaryKeys = false,
+                        OverrideSpecifiedNames = true
+                    }
+                }
+            };
+            var serialized = JsonConvert.SerializeObject(algorithmConfiguration, settings);
             if (backwardsCompatible)
             {
                 serialized = $"{{\"Name\":\"Backtest name\",\"Tags\":[\"tag1\",\"tag2\"],\"AccountCurrency\":\"GBP\",\"Brokerage\":32," +

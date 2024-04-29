@@ -16,6 +16,7 @@
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Serialization;
@@ -25,11 +26,23 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class InsightJsonConverterTests
     {
+        private JsonSerializerSettings _serializerSettings = new()
+        {
+            ContractResolver = new DefaultContractResolver
+            {
+                NamingStrategy = new CamelCaseNamingStrategy
+                {
+                    ProcessDictionaryKeys = false,
+                    OverrideSpecifiedNames = true
+                }
+            }
+        };
+
         [Test]
         public void DeserializesInsightWithoutScore()
         {
-            var jObject = JObject.Parse(jsonNoScore);
-            var result = JsonConvert.DeserializeObject<Insight>(jsonNoScore);
+            var jObject = JObject.Parse(jsonNoScoreBackwardsCompatible);
+            var result = JsonConvert.DeserializeObject<Insight>(jsonNoScoreBackwardsCompatible);
             Assert.AreEqual(jObject["id"].Value<string>(), result.Id.ToStringInvariant("N"));
             Assert.AreEqual(jObject["source-model"].Value<string>(), result.SourceModel);
             Assert.AreEqual(jObject["group-id"]?.Value<string>(), result.GroupId?.ToStringInvariant("N"));
@@ -54,8 +67,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
         [Test]
         public void DeserializesInsightWithScore()
         {
-            var jObject = JObject.Parse(jsonWithScore);
-            var result = JsonConvert.DeserializeObject<Insight>(jsonWithScore);
+            var jObject = JObject.Parse(jsonWithScoreBackwardsCompatible);
+            var result = JsonConvert.DeserializeObject<Insight>(jsonWithScoreBackwardsCompatible);
             Assert.AreEqual(jObject["id"].Value<string>(), result.Id.ToStringInvariant("N"));
             Assert.AreEqual(jObject["source-model"].Value<string>(), result.SourceModel);
             Assert.AreEqual(jObject["group-id"]?.Value<string>(), result.GroupId?.ToStringInvariant("N"));
@@ -75,141 +88,79 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             Assert.AreEqual(jObject["reference-final"].Value<decimal>(), result.ReferenceValueFinal);
         }
 
-        [Test]
-        public void SerializesInsightWithoutScore()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SerializesInsightWithoutScore(bool backwardsCompatible)
         {
-            var jObject = JObject.Parse(jsonNoScore);
-            var insight = Insight.FromSerializedInsight(new SerializedInsight
-            {
-                Id = jObject["id"].Value<string>(),
-                SourceModel = jObject["source-model"].Value<string>(),
-                GroupId = jObject["group-id"]?.Value<string>(),
-                CreatedTime = jObject["created-time"].Value<double>(),
-                CloseTime = jObject["close-time"].Value<double>(),
-                Symbol = jObject["symbol"].Value<string>(),
-                Ticker = jObject["ticker"].Value<string>(),
-                Type = (InsightType)Enum.Parse(typeof(InsightType), jObject["type"].Value<string>(), true),
-                ReferenceValue = jObject["reference"].Value<decimal>(),
-                Direction = (InsightDirection)Enum.Parse(typeof(InsightDirection), jObject["direction"].Value<string>(), true),
-                Period = jObject["period"].Value<double>(),
-                Magnitude = jObject["magnitude"].Value<double>()
-            });
-            var result = JsonConvert.SerializeObject(insight, Formatting.None);
-            Assert.AreEqual(jsonNoScore, result);
+            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(backwardsCompatible ? jsonNoScoreBackwardsCompatible : jsonNoScore2);
+            var insight = Insight.FromSerializedInsight(serializedInsight);
+            var result = JsonConvert.SerializeObject(insight, Formatting.None, _serializerSettings);
+            Assert.AreEqual(jsonNoScore2, result);
         }
 
-        [Test]
-        public void SerializesInsightWithScore()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SerializesInsightWithScore(bool backwardsCompatible)
         {
-            var jObject = JObject.Parse(jsonWithScore);
-            var insight = Insight.FromSerializedInsight(new SerializedInsight
-            {
-                Id = jObject["id"].Value<string>(),
-                SourceModel = jObject["source-model"].Value<string>(),
-                GroupId = jObject["group-id"]?.Value<string>(),
-                CreatedTime = jObject["created-time"].Value<double>(),
-                CloseTime = jObject["close-time"].Value<double>(),
-                Symbol = jObject["symbol"].Value<string>(),
-                Ticker = jObject["ticker"].Value<string>(),
-                Type = (InsightType)Enum.Parse(typeof(InsightType), jObject["type"].Value<string>(), true),
-                ReferenceValue = jObject["reference"].Value<decimal>(),
-                Direction = (InsightDirection)Enum.Parse(typeof(InsightDirection), jObject["direction"].Value<string>(), true),
-                Period = jObject["period"].Value<double>(),
-                Magnitude = jObject["magnitude"].Value<double>(),
-                ScoreIsFinal = jObject["score-final"].Value<bool>(),
-                ScoreMagnitude = jObject["score-magnitude"].Value<double>(),
-                ScoreDirection = jObject["score-direction"].Value<double>(),
-                EstimatedValue = jObject["estimated-value"].Value<decimal>(),
-                ReferenceValueFinal = jObject["reference-final"].Value<decimal>()
-            });
-            var result = JsonConvert.SerializeObject(insight, Formatting.None);
+            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(backwardsCompatible ? jsonWithScoreBackwardsCompatible : jsonWithScore);
+            var insight = Insight.FromSerializedInsight(serializedInsight);
+            var result = JsonConvert.SerializeObject(insight, Formatting.None, _serializerSettings);
             Assert.AreEqual(jsonWithScore, result);
         }
 
         [Test]
         public void SerializesOldInsightWithMissingCreatedTime()
         {
-            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(jsonWithMissingCreatedTime);
+            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(jsonWithMissingCreatedTimeBackwardsCompatible);
             var insight = Insight.FromSerializedInsight(serializedInsight);
-            var result = JsonConvert.SerializeObject(insight, Formatting.None);
+            var result = JsonConvert.SerializeObject(insight, Formatting.None, _serializerSettings);
 
             Assert.AreEqual(serializedInsight.CreatedTime, serializedInsight.GeneratedTime);
             Assert.AreEqual(jsonWithExpectedOutputFromMissingCreatedTimeValue, result);
         }
 
-        [Test]
-        public void SerializesInsightWithTag()
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SerializesInsightWithTag(bool backwardsCompatible)
         {
-            var jObject = JObject.Parse(jsonWithTag);
-            var insight = Insight.FromSerializedInsight(new SerializedInsight
-            {
-                Id = jObject["id"].Value<string>(),
-                GroupId = jObject["group-id"]?.Value<string>(),
-                SourceModel = jObject["source-model"].Value<string>(),
-                GeneratedTime = jObject["generated-time"].Value<double>(),
-                CreatedTime = jObject["created-time"].Value<double>(),
-                CloseTime = jObject["close-time"].Value<double>(),
-                Symbol = jObject["symbol"].Value<string>(),
-                Ticker = jObject["ticker"].Value<string>(),
-                Type = (InsightType)Enum.Parse(typeof(InsightType), jObject["type"].Value<string>(), true),
-                ReferenceValue = jObject["reference"].Value<decimal>(),
-                ReferenceValueFinal = jObject["reference-final"].Value<decimal>(),
-                Direction = (InsightDirection)Enum.Parse(typeof(InsightDirection), jObject["direction"].Value<string>(), true),
-                Period = jObject["period"].Value<double>(),
-                ScoreIsFinal = jObject["score-final"].Value<bool>(),
-                ScoreMagnitude = jObject["score-magnitude"].Value<double>(),
-                ScoreDirection = jObject["score-direction"].Value<double>(),
-                EstimatedValue = jObject["estimated-value"].Value<decimal>(),
-                Tag = jObject["tag"].Value<string>()
-            });
-            var result = JsonConvert.SerializeObject(insight, Formatting.None);
+            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(backwardsCompatible ? jsonWithTagBackwardsCompatible : jsonWithTag);
+            var insight = Insight.FromSerializedInsight(serializedInsight);
+            var result = JsonConvert.SerializeObject(insight, Formatting.None, _serializerSettings);
             Assert.AreEqual(jsonWithTag, result);
         }
 
-        [Test]
-        public void SerializesInsightWithoutTag()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SerializesInsightWithoutTag(bool backwardsCompatible)
         {
-            var jObject = JObject.Parse(jsonWithoutTag);
-            var insight = Insight.FromSerializedInsight(new SerializedInsight
-            {
-                Id = jObject["id"].Value<string>(),
-                GroupId = jObject["group-id"]?.Value<string>(),
-                SourceModel = jObject["source-model"].Value<string>(),
-                GeneratedTime = jObject["generated-time"].Value<double>(),
-                CreatedTime = jObject["created-time"].Value<double>(),
-                CloseTime = jObject["close-time"].Value<double>(),
-                Symbol = jObject["symbol"].Value<string>(),
-                Ticker = jObject["ticker"].Value<string>(),
-                Type = (InsightType)Enum.Parse(typeof(InsightType), jObject["type"].Value<string>(), true),
-                ReferenceValue = jObject["reference"].Value<decimal>(),
-                ReferenceValueFinal = jObject["reference-final"].Value<decimal>(),
-                Direction = (InsightDirection)Enum.Parse(typeof(InsightDirection), jObject["direction"].Value<string>(), true),
-                Period = jObject["period"].Value<double>(),
-                ScoreIsFinal = jObject["score-final"].Value<bool>(),
-                ScoreMagnitude = jObject["score-magnitude"].Value<double>(),
-                ScoreDirection = jObject["score-direction"].Value<double>(),
-                EstimatedValue = jObject["estimated-value"].Value<decimal>(),
-            });
-            var result = JsonConvert.SerializeObject(insight, Formatting.None);
+            var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(backwardsCompatible ? jsonWithoutTagBackwardsCompatible : jsonWithoutTag);
+            var insight = Insight.FromSerializedInsight(serializedInsight);
+            var result = JsonConvert.SerializeObject(insight, Formatting.None, _serializerSettings);
             Assert.AreEqual(jsonWithoutTag, result);
         }
 
         [Test]
         public void DeserializesInsightWithTag()
         {
-            var jObject = JObject.Parse(jsonWithTag);
-            var result = JsonConvert.DeserializeObject<Insight>(jsonWithTag);
+            var jObject = JObject.Parse(jsonWithTagBackwardsCompatible);
+            var result = JsonConvert.DeserializeObject<Insight>(jsonWithTagBackwardsCompatible);
             Assert.AreEqual(jObject["tag"].Value<string>(), result.Tag);
         }
 
         [Test]
         public void DeserializesInsightWithoutTag()
         {
-            var result = JsonConvert.DeserializeObject<Insight>(jsonWithoutTag);
+            var result = JsonConvert.DeserializeObject<Insight>(jsonWithoutTagBackwardsCompatible);
             Assert.IsNull(result.Tag);
         }
 
-        private const string jsonNoScore =
+        private string jsonNoScore2 = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":null,""sourceModel"":""mySourceModel-1"",""generatedTime"":1520711961.00055,
+""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""ticker"":""BTCUSD"",""type"":""price"",""reference"":9143.53,""referenceValueFinal"":0.0,
+""direction"":""up"",""period"":5.0,""magnitude"":""0.025"",""confidence"":null,""weight"":null,""scoreIsFinal"":false,""scoreMagnitude"":""0"",""scoreDirection"":""0"",
+""estimatedValue"":""0"",""tag"":null}".ReplaceLineEndings(string.Empty);
+
+        private const string jsonNoScoreBackwardsCompatible =
             "{" +
             "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
             "\"group-id\":null," +
@@ -233,7 +184,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"estimated-value\":\"0\"," +
             "\"tag\":null}";
 
-        private const string jsonWithScore =
+        private string jsonWithScore = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",""sourceModel"":""mySourceModel-1"",
+""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""ticker"":""BTCUSD"",""type"":""price"",
+""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":""0.025"",""confidence"":null,""weight"":null,
+""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":null}".ReplaceLineEndings(string.Empty);
+        private const string jsonWithScoreBackwardsCompatible =
             "{" +
             "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
             "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
@@ -257,7 +212,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"estimated-value\":\"1113.2484\"," +
             "\"tag\":null}";
 
-        private const string jsonWithMissingCreatedTime =
+        private const string jsonWithMissingCreatedTimeBackwardsCompatible =
             "{" +
             "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
             "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
@@ -280,31 +235,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"estimated-value\":\"1113.2484\"," +
             "\"tag\":null}";
 
-        private const string jsonWithExpectedOutputFromMissingCreatedTimeValue =
-            "{" +
-            "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
-            "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
-            "\"source-model\":\"mySourceModel-1\"," +
-            "\"generated-time\":1520711961.00055," +
-            "\"created-time\":1520711961.00055," +
-            "\"close-time\":1520711961.00055," +
-            "\"symbol\":\"BTCUSD XJ\"," +
-            "\"ticker\":\"BTCUSD\"," +
-            "\"type\":\"price\"," +
-            "\"reference\":9143.53," +
-            "\"reference-final\":9243.53," +
-            "\"direction\":\"up\"," +
-            "\"period\":5.0," +
-            "\"magnitude\":\"0.025\"," +
-            "\"confidence\":null," +
-            "\"weight\":null," +
-            "\"score-final\":true," +
-            "\"score-magnitude\":\"1\"," +
-            "\"score-direction\":\"1\"," +
-            "\"estimated-value\":\"1113.2484\"," +
-            "\"tag\":null}";
+        private string jsonWithExpectedOutputFromMissingCreatedTimeValue = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",
+""sourceModel"":""mySourceModel-1"",""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""ticker"":
+""BTCUSD"",""type"":""price"",""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":""0.025"",""confidence"":null,
+""weight"":null,""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":null}".ReplaceLineEndings(string.Empty);
 
-        private const string jsonWithTag =
+        private string jsonWithTag = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",""sourceModel"":""mySourceModel-1"",
+""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""ticker"":""BTCUSD"",""type"":
+""price"",""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":null,""confidence"":null,""weight"":null,
+""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":""additional information""}".ReplaceLineEndings(string.Empty);
+        private const string jsonWithTagBackwardsCompatible =
             "{" +
             "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
             "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
@@ -328,7 +268,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"estimated-value\":\"1113.2484\"," +
             "\"tag\":\"additional information\"}";
 
-        private const string jsonWithoutTag =
+        private string jsonWithoutTag = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",
+""sourceModel"":""mySourceModel-1"",""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",
+""ticker"":""BTCUSD"",""type"":""price"",""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":null,
+""confidence"":null,""weight"":null,""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":null}".ReplaceLineEndings(string.Empty);
+
+        private const string jsonWithoutTagBackwardsCompatible =
             "{" +
             "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
             "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +

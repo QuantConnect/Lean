@@ -31,26 +31,22 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// <summary>
         /// See <see cref="Insight.Id"/>
         /// </summary>
-        [JsonProperty("id")]
         public string Id { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.GroupId"/>
         /// </summary>
-        [JsonProperty("group-id")]
         public string GroupId { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.SourceModel"/>
         /// </summary>
-        [JsonProperty("source-model")]
         public string SourceModel { get; set; }
 
         /// <summary>
         /// Pass-through for <see cref="CreatedTime"/>
         /// </summary>
         [Obsolete("Deprecated as of 2020-01-23. Please use the `CreatedTime` property instead.")]
-        [JsonProperty("generated-time")]
         public double GeneratedTime
         {
             get { return _createdTime; }
@@ -60,7 +56,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// <summary>
         /// See <see cref="Insight.GeneratedTimeUtc"/>
         /// </summary>
-        [JsonProperty("created-time")]
         public double CreatedTime
         {
             get { return _createdTime; }
@@ -70,27 +65,23 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// <summary>
         /// See <see cref="Insight.CloseTimeUtc"/>
         /// </summary>
-        [JsonProperty("close-time")]
         public double CloseTime { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.Symbol"/>
         /// The symbol's security identifier string
         /// </summary>
-        [JsonProperty("symbol")]
         public string Symbol { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.Symbol"/>
         /// The symbol's ticker at the generated time
         /// </summary>
-        [JsonProperty("ticker")]
         public string Ticker { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.Type"/>
         /// </summary>
-        [JsonProperty("type")]
         public InsightType Type { get; set; }
 
         /// <summary>
@@ -102,72 +93,61 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// <summary>
         /// See <see cref="Insight.ReferenceValueFinal"/>
         /// </summary>
-        [JsonProperty("reference-final")]
         public decimal ReferenceValueFinal { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.Direction"/>
         /// </summary>
-        [JsonProperty("direction")]
         public InsightDirection Direction { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.Period"/>
         /// </summary>
-        [JsonProperty("period")]
         public double Period { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.Magnitude"/>
         /// </summary>
-        [JsonProperty("magnitude")]
         [JsonConverter(typeof(JsonRoundingConverter))]
         public double? Magnitude { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.Confidence"/>
         /// </summary>
-        [JsonProperty("confidence")]
         [JsonConverter(typeof(JsonRoundingConverter))]
         public double? Confidence { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.Weight"/>
         /// </summary>
-        [JsonProperty("weight")]
         public double? Weight { get; set; }
 
         /// <summary>
         /// See <see cref="InsightScore.IsFinalScore"/>
         /// </summary>
-        [JsonProperty("score-final")]
         public bool ScoreIsFinal { get; set; }
 
         /// <summary>
         /// See <see cref="InsightScore.Magnitude"/>
         /// </summary>
-        [JsonProperty("score-magnitude")]
         [JsonConverter(typeof(JsonRoundingConverter))]
         public double ScoreMagnitude { get; set; }
 
         /// <summary>
         /// See <see cref="InsightScore.Direction"/>
         /// </summary>
-        [JsonProperty("score-direction")]
         [JsonConverter(typeof(JsonRoundingConverter))]
         public double ScoreDirection { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.EstimatedValue"/>
         /// </summary>
-        [JsonProperty("estimated-value")]
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal EstimatedValue { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.Tag"/>
         /// </summary>
-        [JsonProperty("tag")]
         public string Tag { get; set; }
 
         /// <summary>
@@ -204,5 +184,100 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
             Weight = insight.Weight;
             Tag = insight.Tag;
         }
+
+        #region BackwardsCompatibility
+        [JsonProperty("group-id")]
+        string OldGroupId
+        {
+            set
+            {
+                GroupId = value;
+            }
+        }
+
+        [JsonProperty("source-model")]
+        string OldSourceModel
+        {
+            set
+            {
+                SourceModel = value;
+            }
+        }
+
+        [JsonProperty("generated-time")]
+        double OldGeneratedTime
+        {
+            set
+            {
+                GeneratedTime = value;
+            }
+        }
+
+        [JsonProperty("created-time")]
+        public double OldCreatedTime
+        {
+            set
+            {
+                CreatedTime = value;
+            }
+        }
+
+        [JsonProperty("close-time")]
+        public double OldCloseTime
+        {
+            set
+            {
+                CloseTime = value;
+            }
+        }
+
+        [JsonProperty("reference-final")]
+        decimal OldReferenceValueFinal
+        {
+            set
+            {
+                ReferenceValueFinal = value;
+            }
+        }
+
+        [JsonProperty("score-final")]
+        bool OldScoreIsFinal
+        {
+            set
+            {
+                ScoreIsFinal = value;
+            }
+        }
+
+        [JsonProperty("score-magnitude")]
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        double OldScoreMagnitude
+        {
+            set
+            {
+                ScoreMagnitude = value;
+            }
+        }
+
+        [JsonProperty("score-direction")]
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        double OldScoreDirection
+        {
+            set
+            {
+                ScoreDirection = value;
+            }
+        }
+
+        [JsonProperty("estimated-value")]
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        decimal OldEstimatedValue
+        {
+            set
+            {
+                EstimatedValue = value;
+            }
+        }
+        #endregion
     }
 }
