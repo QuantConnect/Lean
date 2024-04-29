@@ -331,12 +331,6 @@ namespace QuantConnect.Interfaces
         public Account ReadAccount(string organizationId = null);
 
         /// <summary>
-        /// Get a list of organizations tied to this account
-        /// </summary>
-        /// <returns></returns>
-        public List<Organization> ListOrganizations();
-
-        /// <summary>
         /// Fetch organization data from web API
         /// </summary>
         /// <param name="organizationId"></param>

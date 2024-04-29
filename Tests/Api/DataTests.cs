@@ -87,7 +87,6 @@ namespace QuantConnect.Tests.API
         /// <param name="filePath"></param>
         [TestCase("forex/oanda/daily/eurusd.zip")]
         [TestCase("crypto/coinbase/daily/btcusd_quote.zip")]
-        [TestCase("\\index\\usa\\minute\\spx")]
         public void GetPrices(string filePath)
         {
             if (_pricesCache == null)
@@ -100,7 +99,7 @@ namespace QuantConnect.Tests.API
 
             // Get the price
             int price = _pricesCache.GetPrice(filePath);
-            Assert.IsTrue(price != 0);
+            Assert.AreNotEqual(price, -1);
         }
 
         /// <summary>

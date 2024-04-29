@@ -319,6 +319,10 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtestOrdersRead.Any());
             Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.First().Symbol.Value);
 
+            var readBacktestReport = ApiClient.ReadBacktestReport(project.ProjectId, backtest.BacktestId);
+            Assert.IsTrue(readBacktestReport.Success);
+            Assert.IsFalse(string.IsNullOrEmpty(readBacktestReport.Report));
+
             // Delete the backtest we just created
             var deleteBacktest = ApiClient.DeleteBacktest(project.ProjectId, backtest.BacktestId);
             Assert.IsTrue(deleteBacktest.Success);
