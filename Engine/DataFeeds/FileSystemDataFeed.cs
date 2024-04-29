@@ -326,8 +326,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     fillForwardSpan = Ref.Create(fillForwardResolution.Value.ToTimeSpan());
                 }
 
-                enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardSpan,
-                    request.Configuration.ExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone);
+                enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardSpan, request.Configuration.ExtendedMarketHours, request.EndTimeLocal,
+                    request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone, request.Security.Symbol);
             }
 
             return enumerator;

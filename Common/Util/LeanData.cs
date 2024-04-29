@@ -1373,6 +1373,48 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Helper method to determine if we should use strict end time
+        /// </summary>
+        /// <param name="securityType">The associated security type</param>
+        /// <param name="increment">The datas time increment</param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool UseStrictEndTime(SecurityType securityType, TimeSpan increment)
+        {
+            return (securityType == SecurityType.IndexOption || securityType == SecurityType.Index) && increment == Time.OneDay;
+        }
+
+        /// <summary>
+        /// Helper method that if appropiate, will set the Time and EndTime of the given data point to it's daily strict times
+        /// </summary>
+        /// <param name="baseData">The target data point</param>
+        /// <param name="increment">The data span increment</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void TrySetStrictEndTimes(BaseData baseData, TimeSpan increment)
+        {
+            var symbol = baseData.Symbol;
+            if (UseStrictEndTime(symbol.SecurityType, increment))
+            {
+                SetStrictEndTimes(baseData);
+            }
+        }
+
+        /// <summary>
+        /// Helper method that if appropiate, will set the Time and EndTime of the given data point to it's daily strict times
+        /// </summary>
+        /// <param name="baseData">The target data point</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void SetStrictEndTimes(BaseData baseData)
+        {
+            var symbol = baseData.Symbol;
+            var mhdb = MarketHoursDatabase.FromDataFolder();
+            var exchange = mhdb.GetExchangeHours(symbol.ID.Market, baseData.Symbol, symbol.SecurityType);
+            var dailyCalendar = GetDailyCalendar(baseData.EndTime, exchange, extendedMarketHours: false);
+            baseData.Time = dailyCalendar.Start;
+            baseData.EndTime = dailyCalendar.End;
+        }
+
+        /// <summary>
         /// Helper to separate filename and entry from a given key for DataProviders
         /// </summary>
         /// <param name="key">The key to parse</param>

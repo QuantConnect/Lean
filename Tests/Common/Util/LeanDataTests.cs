@@ -63,6 +63,28 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(expected, result);
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void TrySetStrictEndTime(bool useStrictEndTime)
+        {
+            var dailyBar = new TradeBar(new DateTime(2024, 05, 13), useStrictEndTime ? Symbols.SPX : Symbols.SPY, 5, 10, 2, 7, 1000, Time.OneDay);
+
+            LeanData.TrySetStrictEndTimes(dailyBar, dailyBar.Period);
+
+            if (useStrictEndTime)
+            {
+                Assert.AreEqual(new DateTime(2024, 05, 13, 8, 30, 0), dailyBar.Time);
+                Assert.AreEqual(new DateTime(2024, 05, 13, 15, 15, 0), dailyBar.EndTime);
+                Assert.AreEqual(new TimeSpan(6, 45, 0), dailyBar.Period);
+            }
+            else
+            {
+                Assert.AreEqual(new DateTime(2024, 05, 13, 0, 0, 0), dailyBar.Time);
+                Assert.AreEqual(new DateTime(2024, 05, 14, 0, 0, 0), dailyBar.EndTime);
+                Assert.AreEqual(Time.OneDay, dailyBar.Period);
+            }
+        }
+
         [Test, TestCaseSource(nameof(GetLeanDataTestParameters))]
         public void GenerateZipFileName(LeanDataTestParameters parameters)
         {

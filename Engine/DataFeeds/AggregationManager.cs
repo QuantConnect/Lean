@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Data;
+using QuantConnect.Data.Common;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -135,6 +136,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual IDataConsolidator GetConsolidator(SubscriptionDataConfig config)
         {
             var period = config.Resolution.ToTimeSpan();
+            if (config.Resolution == Resolution.Daily && (config.Type == typeof(QuoteBar) || config.Type == typeof(TradeBar)))
+            {
+                // let's build daily bars that respect market hours data as requested by 'ExtendedMarketHours',
+                // also this allows us to enable the daily strict end times if required
+                return new MarketHourAwareConsolidator(config.Resolution, typeof(Tick), config.TickType, config.ExtendedMarketHours);
+            }
             if (config.Type == typeof(QuoteBar))
             {
                 return new TickQuoteBarConsolidator(period);

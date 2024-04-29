@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Data;
-using QuantConnect.Data.Consolidators;
 using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp

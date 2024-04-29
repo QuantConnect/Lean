@@ -562,7 +562,7 @@ namespace QuantConnect.Data.Market
             }
 
             quoteBar.Value = quoteBar.Close;
-
+            LeanData.TrySetStrictEndTimes(quoteBar, config.Increment);
             return quoteBar;
         }
 
@@ -630,7 +630,7 @@ namespace QuantConnect.Data.Market
             }
 
             quoteBar.Value = quoteBar.Close;
-
+            LeanData.TrySetStrictEndTimes(quoteBar, config.Increment);
             return quoteBar;
         }
 

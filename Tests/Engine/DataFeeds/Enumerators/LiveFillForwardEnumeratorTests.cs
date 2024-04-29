@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
             timeProvider.SetCurrentTime(reference);
             var exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
-            var fillForward = new LiveFillForwardEnumerator(timeProvider, underlying.GetEnumerator(), exchange, Ref.Create(Time.OneSecond), false, Time.EndOfTime, Time.OneSecond, exchange.TimeZone);
+            var fillForward = new LiveFillForwardEnumerator(timeProvider, underlying.GetEnumerator(), exchange, Ref.Create(Time.OneSecond), false, Time.EndOfTime, Time.OneSecond, exchange.TimeZone, Symbols.SPY);
 
             // first point is always emitted
             Assert.IsTrue(fillForward.MoveNext());
@@ -133,7 +133,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 false,
                 Time.EndOfTime,
                 Time.OneDay,
-                exchange.TimeZone);
+                exchange.TimeZone, Symbols.SPY);
 
             // first point is always emitted
             Assert.IsTrue(fillForward.MoveNext());
@@ -180,7 +180,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 false,
                 now,
                 Resolution.Minute.ToTimeSpan(),
-                TimeZones.NewYork
+                TimeZones.NewYork, Symbols.AAPL
             );
             var openingBar = new TradeBar
             {

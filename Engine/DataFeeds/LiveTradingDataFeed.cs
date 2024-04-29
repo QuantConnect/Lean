@@ -263,7 +263,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
 
-                enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone);
+                enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours,
+                    localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone, request.Configuration.Symbol);
             }
 
             // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
@@ -367,7 +368,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
                     var input = Subscribe(subRequest.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), (_) => false);
-                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours, localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone);
+                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours,
+                        localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone, request.Configuration.Symbol);
                 };
 
                 var symbolUniverse = GetUniverseProvider(request.Configuration.SecurityType);

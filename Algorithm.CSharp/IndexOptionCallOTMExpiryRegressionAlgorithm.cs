@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -44,21 +43,24 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _spx;
         private Symbol _spxOption;
+        private int _optionOrders;
         private Symbol _expectedContract;
+
+        protected virtual Resolution Resolution => Resolution.Minute;
 
         public override void Initialize()
         {
             SetStartDate(2021, 1, 4);
             SetEndDate(2021, 1, 31);
 
-            _spx = AddIndex("SPX", Resolution.Minute).Symbol;
+            _spx = AddIndex("SPX", Resolution).Symbol;
 
             // Select a index option call expiring OTM, and adds it to the algorithm.
             _spxOption = AddIndexOptionContract(OptionChainProvider.GetOptionContractList(_spx, Time)
                 .Where(x => x.ID.StrikePrice >= 4250m && x.ID.OptionRight == OptionRight.Call && x.ID.Date.Year == 2021 && x.ID.Date.Month == 1)
                 .OrderBy(x => x.ID.StrikePrice)
                 .Take(1)
-                .Single(), Resolution.Minute).Symbol;
+                .Single(), Resolution).Symbol;
 
             _expectedContract = QuantConnect.Symbol.CreateOption(_spx, Market.USA, OptionStyle.European, OptionRight.Call, 4250m, new DateTime(2021, 1, 15));
             if (_spxOption != _expectedContract)
@@ -143,6 +145,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Exercised option, even though it expires OTM");
             }
+            _optionOrders++;
         }
 
         /// <summary>
@@ -155,6 +158,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
             }
+
+            if (_optionOrders != 2)
+            {
+                throw new Exception("Option orders were not as expected!");
+            }
         }
 
         /// <summary>
@@ -165,12 +173,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 15941;
+        public virtual long DataPoints => 15941;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -180,7 +188,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "2"},
             {"Average Win", "0%"},
