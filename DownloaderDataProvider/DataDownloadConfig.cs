@@ -98,8 +98,9 @@ namespace QuantConnect.DownloaderDataProvider.Launcher
             _startDate = Config.Get(DownloaderCommandArguments.CommandStartDate).ToString() ?? string.Empty;
             _endDate = Config.Get(DownloaderCommandArguments.CommandEndDate).ToString() ?? string.Empty;
 
-            MarketName = Config.Get(DownloaderCommandArguments.CommandMarketName).ToString()?.ToLower() ?? Market.USA;
-
+#pragma warning disable CA1308 // class Market keeps all name in lowercase
+            MarketName = Config.Get(DownloaderCommandArguments.CommandMarketName).ToString()?.ToLower(CultureInfo.InvariantCulture) ?? Market.USA;
+#pragma warning restore CA1308
             if (!Market.SupportedMarkets().Contains(MarketName))
             {
                 throw new ArgumentException($"The specified market '{MarketName}' is not supported. Supported markets are: {string.Join(", ", Market.SupportedMarkets())}.");
@@ -132,7 +133,7 @@ namespace QuantConnect.DownloaderDataProvider.Launcher
         /// <typeparam name="TEnum">The enum type to parse to.</typeparam>
         /// <param name="value">The string value to parse.</param>
         /// <returns>The parsed enum value.</returns>
-        private TEnum ParseEnum<TEnum>(string value) where TEnum : struct, Enum
+        private static TEnum ParseEnum<TEnum>(string value) where TEnum : struct, Enum
         {
             if (!Enum.TryParse(value, true, out TEnum result) || !Enum.IsDefined(typeof(TEnum), result))
             {
