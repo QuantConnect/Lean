@@ -224,29 +224,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // doesn't support this download request, that's okay
                     continue;
                 }
-                var startDateTimeInExchangeTimeZone = downloaderDataParameter.StartUtc.ConvertFromUtc(exchangeTimeZone);
-                var endDateTimeInExchangeTimeZone = downloaderDataParameter.EndUtc.ConvertFromUtc(exchangeTimeZone);
 
-                var groupedData = downloadedData
-                    .Where(baseData =>
-                    {
-                        // Sometimes, external Downloader provider returns excess data
-                        if (baseData.Time < startDateTimeInExchangeTimeZone || baseData.Time > endDateTimeInExchangeTimeZone)
-                        {
-                            return false;
-                        }
-
-                        if (symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
-                        {
-                            // we need to store the data in data time zone
-                            baseData.Time = baseData.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
-                            baseData.EndTime = baseData.EndTime.ConvertTo(exchangeTimeZone, dataTimeZone);
-                            return true;
-                        }
-                        return false;
-                    })
-                    // for canonical symbols, downloader will return data for all of the chain
-                    .GroupBy(baseData => baseData.Symbol);
+                var groupedData = FilterAndGroupDownloadDataBySymbol(
+                    downloadedData,
+                    symbol,
+                    dataType,
+                    exchangeTimeZone,
+                    dataTimeZone,
+                    downloaderDataParameter.StartUtc,
+                    downloaderDataParameter.EndUtc);
 
                 foreach (var data in groupedData)
                 {
@@ -303,6 +289,53 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Only download if it doesn't exist or is out of date.
             // Files are only "out of date" for non date based files (hour, daily, margins, etc.) because this data is stored all in one file
             return !File.Exists(filePath) || filePath.IsOutOfDate();
+        }
+
+        /// <summary>
+        /// Filters and groups the provided download data by symbol, based on specified criteria.
+        /// </summary>
+        /// <param name="downloadData">The collection of download data to process.</param>
+        /// <param name="symbol">The symbol to filter the data for.</param>
+        /// <param name="dataType">The type of data to filter for.</param>
+        /// <param name="exchangeTimeZone">The time zone of the exchange.</param>
+        /// <param name="dataTimeZone">The desired time zone for the data.</param>
+        /// <param name="downloaderStartTimeUtc">The start time of data downloading in UTC.</param>
+        /// <param name="downloaderEndTimeUtc">The end time of data downloading in UTC.</param>
+        /// <returns>
+        /// An enumerable collection of groupings of download data, grouped by symbol.
+        /// </returns>
+        public static IEnumerable<IGrouping<Symbol, BaseData>> FilterAndGroupDownloadDataBySymbol(
+            IEnumerable<BaseData> downloadData,
+            Symbol symbol,
+            Type dataType,
+            DateTimeZone exchangeTimeZone,
+            DateTimeZone dataTimeZone,
+            DateTime downloaderStartTimeUtc,
+            DateTime downloaderEndTimeUtc)
+        {
+            var startDateTimeInExchangeTimeZone = downloaderStartTimeUtc.ConvertFromUtc(exchangeTimeZone);
+            var endDateTimeInExchangeTimeZone = downloaderEndTimeUtc.ConvertFromUtc(exchangeTimeZone);
+
+            return downloadData
+                .Where(baseData =>
+                {
+                    // Sometimes, external Downloader provider returns excess data
+                    if (baseData.Time < startDateTimeInExchangeTimeZone || baseData.Time > endDateTimeInExchangeTimeZone)
+                    {
+                        return false;
+                    }
+
+                    if (symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
+                    {
+                        // we need to store the data in data time zone
+                        baseData.Time = baseData.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
+                        baseData.EndTime = baseData.EndTime.ConvertTo(exchangeTimeZone, dataTimeZone);
+                        return true;
+                    }
+                    return false;
+                })
+                // for canonical symbols, downloader will return data for all of the chain
+                .GroupBy(baseData => baseData.Symbol);
         }
     }
 }

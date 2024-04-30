@@ -21,6 +21,7 @@ using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Configuration;
+using DataFeeds = QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
 
 namespace QuantConnect.DownloaderDataProvider.Launcher;
@@ -103,30 +104,14 @@ public static class Program
 
             var writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, Globals.DataFolder, dataDownloadConfig.TickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
 
-            var startDateTimeInExchangeTimeZone = downloadParameters.StartUtc.ConvertFromUtc(exchangeTimeZone);
-            var endDateTimeInExchangeTimeZone = downloadParameters.EndUtc.ConvertFromUtc(exchangeTimeZone);
-
-            var dataType = LeanData.GetDataType(downloadParameters.Resolution, downloadParameters.TickType);
-            var groupedData = downloadedData
-                .Where(baseData =>
-                {
-                    // Sometimes, external Downloader provider returns excess data
-                    if (baseData.Time < startDateTimeInExchangeTimeZone || baseData.Time > endDateTimeInExchangeTimeZone)
-                    {
-                        return false;
-                    }
-
-                    if (symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
-                    {
-                        // we need to store the data in data time zone
-                        baseData.Time = baseData.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
-                        baseData.EndTime = baseData.EndTime.ConvertTo(exchangeTimeZone, dataTimeZone);
-                        return true;
-                    }
-                    return false;
-                })
-                // for canonical symbols, downloader will return data for all of the chain
-                .GroupBy(baseData => baseData.Symbol);
+            var groupedData = DataFeeds.DownloaderDataProvider.FilterAndGroupDownloadDataBySymbol(
+                downloadedData,
+                symbol,
+                LeanData.GetDataType(downloadParameters.Resolution, downloadParameters.TickType),
+                exchangeTimeZone,
+                dataTimeZone,
+                downloadParameters.StartUtc,
+                downloadParameters.EndUtc);
 
             var lastLogStatusTime = DateTime.UtcNow;
 
