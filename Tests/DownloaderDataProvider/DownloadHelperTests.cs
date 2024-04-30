@@ -95,10 +95,10 @@ namespace QuantConnect.Tests.DownloaderDataProvider
             var tradeDate = new DateTime(2024, 01, 10);
             var endDate = new DateTime(2024, 02, 02);
             var symbol = Symbols.AAPL;
-
-            var downloadDataConfig = InitializeDataDownloadConfigParameters(tickType, SecurityType.Option, resolution, startDate, endDate, new string[] { symbol.Value });
+            var downloadDataConfig = new DataDownloadConfig(tickType, SecurityType.Option, resolution, startDate, endDate, Market.USA, new List<Symbol>() { symbol });
 
             var optionContracts = GenerateOptionContracts(symbol, 100, new DateTime(2024, 03, 16));
+            var generateOptionContactFileName = optionContracts.ToList(contract => LeanData.GenerateZipEntryName(contract, contract.ID.Date, resolution, tickType));
 
             Assert.That(optionContracts.Distinct().Count(), Is.EqualTo(optionContracts.Count));
 
@@ -109,9 +109,15 @@ namespace QuantConnect.Tests.DownloaderDataProvider
             Program.RunDownload(downloader, downloadDataConfig);
 
             var filePath = LeanData.GenerateZipFilePath(Globals.DataFolder, optionContracts.First(), startDate, resolution, tickType);
-            var data = QuantConnect.Compression.Unzip(filePath).ToDictionary(x => x.Key, x => x.Value.ToList());
+            var unZipData = QuantConnect.Compression.Unzip(filePath).ToDictionary(x => x.Key, x => x.Value.ToList());
+            Assert.GreaterOrEqual(unZipData.Count, optionContracts.Count);
 
-            Assert.Greater(data.Count, 1);
+            foreach (var dataInZip in unZipData)
+            {
+                Assert.IsTrue(generateOptionContactFileName.Contains(dataInZip.Key));
+                Assert.Greater(dataInZip.Value.Count, 0);
+                Assert.IsTrue(dataInZip.Value.All(row => row.Length > 0));
+            }
         }
 
         private static IEnumerable<BaseData> GenerateTradeBarByEachSymbol(IEnumerable<Symbol> symbols, DateTime tradeDateTime)
@@ -149,21 +155,6 @@ namespace QuantConnect.Tests.DownloaderDataProvider
             {
                 return Data.Select(x => x);
             }
-        }
-
-        private static DataDownloadConfig InitializeDataDownloadConfigParameters(TickType tickType, SecurityType securityType, Resolution resolution,
-            DateTime startDate, DateTime endDate, string[] tickers, string market = Market.USA)
-        {
-            Config.Set("data-type", tickType.ToStringInvariant());
-            Config.Set("security-type", securityType.ToStringInvariant());
-            Config.Set("market", market);
-            Config.Set("resolution", resolution.ToStringInvariant());
-            Config.Set("start-date", startDate.ToStringInvariant("yyyyMMdd"));
-            Config.Set("end-date", endDate.ToStringInvariant("yyyyMMdd"));
-            // serializes tickers into a dictionary similar to using DownloaderDataProviderArgumentParser.
-            Config.Set("tickers", JsonSerializer.Serialize(tickers.ToDictionary(t => t, _ => "")));
-
-            return new DataDownloadConfig();
         }
     }
 }
