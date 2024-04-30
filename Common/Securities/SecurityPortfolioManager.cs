@@ -817,7 +817,8 @@ namespace QuantConnect.Securities
             }
 
             security.ApplySplit(split);
-            _baseCurrencyCash.AddAmount(leftOver * next.Price * split.SplitFactor);
+            // The data price should have been adjusted already
+            _baseCurrencyCash.AddAmount(leftOver * next.Price);
 
             // security price updated
             InvalidateTotalPortfolioValue();

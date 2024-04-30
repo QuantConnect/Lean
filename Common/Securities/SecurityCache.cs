@@ -37,7 +37,7 @@ namespace QuantConnect.Securities
         private DateTime _lastOHLCUpdate;
         private BaseData _lastData;
 
-        private readonly object _locker = new ();
+        private readonly object _locker = new();
         private IReadOnlyList<BaseData> _lastTickQuotes = _empty;
         private IReadOnlyList<BaseData> _lastTickTrades = _empty;
         private Dictionary<Type, IReadOnlyList<BaseData>> _dataByType;
@@ -262,7 +262,7 @@ namespace QuantConnect.Securities
             }
             else if (data.DataType != MarketDataType.Auxiliary)
             {
-                if(data.DataType != MarketDataType.Base || data.Price != 0)
+                if (data.DataType != MarketDataType.Base || data.Price != 0)
                 {
                     Price = data.Price;
                 }
@@ -488,30 +488,6 @@ namespace QuantConnect.Securities
         /// </summary>
         internal void ApplySplit(Split split)
         {
-            // For daily data, the split and the data point might come at the same time,
-            // so the data must be adjusted.
-            if (_lastData.EndTime == split.EndTime)
-            {
-                _lastData.Value *= split.SplitFactor;
-
-                // make sure to modify open/high/low as well for tradebar data types
-                var tradeBar = _lastData as TradeBar;
-                if (tradeBar != null)
-                {
-                    tradeBar.Open *= split.SplitFactor;
-                    tradeBar.High *= split.SplitFactor;
-                    tradeBar.Low *= split.SplitFactor;
-                }
-
-                // make sure to modify bid/ask as well for tradebar data types
-                var tick = _lastData as Tick;
-                if (tick != null)
-                {
-                    tick.AskPrice *= split.SplitFactor;
-                    tick.BidPrice *= split.SplitFactor;
-                }
-            }
-
             Price *= split.SplitFactor;
             Open *= split.SplitFactor;
             High *= split.SplitFactor;
@@ -519,6 +495,27 @@ namespace QuantConnect.Securities
             Close *= split.SplitFactor;
             BidPrice *= split.SplitFactor;
             AskPrice *= split.SplitFactor;
+
+            _lastData.Value *= split.SplitFactor;
+
+            // make sure to modify open/high/low as well for tradebar data types
+            var tradeBar = _lastData as TradeBar;
+            if (tradeBar != null)
+            {
+                tradeBar.Open *= split.SplitFactor;
+                tradeBar.High *= split.SplitFactor;
+                tradeBar.Low *= split.SplitFactor;
+            }
+
+            // make sure to modify bid/ask as well for tradebar data types
+            var tick = _lastData as Tick;
+            if (tick != null)
+            {
+                tick.AskPrice *= split.SplitFactor;
+                tick.BidPrice *= split.SplitFactor;
+            }
+
+            ProcessDataPoint(_lastData, cacheByType: true);
         }
     }
 }
