@@ -68,8 +68,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             // Act
             forexHolding.SetHoldings(entryPrice, entryQuantity);
             var priceVariation = pips * 10 * minimumPriceVariation;
-            forexHolding.UpdateMarketPrice(entryPrice + priceVariation);
-            pair.SetMarketPrice(new Tick(DateTime.Now, pair.Symbol, forexHolding.Price, forexHolding.Price));
+            var newPrice = entryPrice + priceVariation;
+            pair.SetMarketPrice(new Tick(DateTime.Now, pair.Symbol, newPrice, newPrice));
             var actualPips = forexHolding.TotalCloseProfitPips();
             // Assert
             Assert.AreEqual(pips, actualPips);

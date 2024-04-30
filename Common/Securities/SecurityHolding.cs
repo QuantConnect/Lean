@@ -34,7 +34,7 @@ namespace QuantConnect.Securities
         private bool _invested;
         private decimal _averagePrice;
         private decimal _quantity;
-        private decimal _price;
+        //private decimal _price;
         private decimal _totalSaleVolume;
         private decimal _profit;
         private decimal _lastTradeProfit;
@@ -66,7 +66,7 @@ namespace QuantConnect.Securities
             _security = holding._security;
             _averagePrice = holding._averagePrice;
             Quantity = holding._quantity;
-            _price = holding._price;
+            //_price = holding._price;
             _totalSaleVolume = holding._totalSaleVolume;
             _profit = holding._profit;
             _lastTradeProfit = holding._lastTradeProfit;
@@ -189,12 +189,12 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return _price;
+                return _security.Price;
             }
-            protected set
-            {
-                _price = value;
-            }
+            //protected set
+            //{
+            //    _price = value;
+            //}
         }
 
         /// <summary>
@@ -443,7 +443,7 @@ namespace QuantConnect.Securities
         /// <param name="closingPrice">Price of the underlying asset to be used for calculating market price / portfolio value</param>
         public virtual void UpdateMarketPrice(decimal closingPrice)
         {
-            _price = closingPrice;
+            //_price = closingPrice;
         }
 
         /// <summary>
@@ -454,7 +454,7 @@ namespace QuantConnect.Securities
         /// <returns>The value of the quantity of shares in the account currency</returns>
         public virtual ConvertibleCashAmount GetQuantityValue(decimal quantity)
         {
-            return GetQuantityValue(quantity, _price);
+            return GetQuantityValue(quantity, Price);
         }
 
         /// <summary>

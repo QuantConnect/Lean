@@ -482,5 +482,43 @@ namespace QuantConnect.Securities
             targetToModify._lastTickTrades = sourceToShare._lastTickTrades;
             targetToModify._lastTickQuotes = sourceToShare._lastTickQuotes;
         }
+
+        /// <summary>
+        /// Applies the split to the security cache values
+        /// </summary>
+        internal void ApplySplit(Split split)
+        {
+            // For daily data, the split and the data point might come at the same time,
+            // so the data must be adjusted.
+            if (_lastData.EndTime == split.EndTime)
+            {
+                _lastData.Value *= split.SplitFactor;
+
+                // make sure to modify open/high/low as well for tradebar data types
+                var tradeBar = _lastData as TradeBar;
+                if (tradeBar != null)
+                {
+                    tradeBar.Open *= split.SplitFactor;
+                    tradeBar.High *= split.SplitFactor;
+                    tradeBar.Low *= split.SplitFactor;
+                }
+
+                // make sure to modify bid/ask as well for tradebar data types
+                var tick = _lastData as Tick;
+                if (tick != null)
+                {
+                    tick.AskPrice *= split.SplitFactor;
+                    tick.BidPrice *= split.SplitFactor;
+                }
+            }
+
+            Price *= split.SplitFactor;
+            Open *= split.SplitFactor;
+            High *= split.SplitFactor;
+            Low *= split.SplitFactor;
+            Close *= split.SplitFactor;
+            BidPrice *= split.SplitFactor;
+            AskPrice *= split.SplitFactor;
+        }
     }
 }

@@ -2567,6 +2567,35 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(initialCash + cashDifference, algorithm.Portfolio.CashBook.TotalValueInAccountCurrency);
         }
 
+        [Test]
+        public void HoldingsPriceIsUpdatedOnSplit()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var spy = algorithm.AddEquity("SPY", dataNormalizationMode: DataNormalizationMode.Raw);
+            // Update with both a trade and quote bar
+            spy.SetMarketPrice(new TradeBar(new DateTime(2000, 01, 01), Symbols.SPY, 100m, 100m, 100m, 100m, 100m, Time.OneMinute));
+            spy.SetMarketPrice(new QuoteBar(new DateTime(2000, 01, 01), Symbols.SPY, new Bar(100m, 100m, 100m, 100m), 100m, new Bar(100m, 100m, 100m, 100m), 100m, Time.OneMinute));
+            spy.Holdings.SetHoldings(100m, 100);
+
+            var split = new Split(Symbols.SPY, new DateTime(2000, 01, 01), 100, 0.5m, SplitType.SplitOccurred);
+
+            algorithm.Portfolio.ApplySplit(split,
+                spy,
+                algorithm.LiveMode,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(spy.Symbol)
+                    .DataNormalizationMode());
+
+            // confirm the split was properly applied to our holdings
+            Assert.AreEqual(50m, spy.Holdings.AveragePrice);
+            Assert.AreEqual(200, spy.Holdings.Quantity);
+
+            // Market price should have also been updated
+            Assert.AreEqual(50m, spy.Holdings.Price);
+        }
+
         [TestCase(DataNormalizationMode.Adjusted)]
         [TestCase(DataNormalizationMode.Raw)]
         [TestCase(DataNormalizationMode.SplitAdjusted)]
