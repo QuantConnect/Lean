@@ -65,15 +65,17 @@ public static class Program
 
         var dataDownloadConfig = new DataDownloadConfig();
 
-        RunDownload(dataDownloader, dataDownloadConfig);
+        RunDownload(dataDownloader, dataDownloadConfig, Globals.DataFolder);
     }
 
     /// <summary>
     /// Executes a data download operation using the specified data downloader.
     /// </summary>
     /// <param name="dataDownloader">An instance of an object implementing the <see cref="IDataDownloader"/> interface, responsible for downloading data.</param>
+    /// <param name="dataDownloadConfig">Configuration settings for the data download operation.</param>
+    /// <param name="dataDirectory">The directory where the downloaded data will be stored.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="dataDownloader"/> is null.</exception>
-    public static void RunDownload(IDataDownloader dataDownloader, DataDownloadConfig dataDownloadConfig)
+    public static void RunDownload(IDataDownloader dataDownloader, DataDownloadConfig dataDownloadConfig, string dataDirectory)
     {
         if (dataDownloader == null)
         {
@@ -102,7 +104,7 @@ public static class Program
 
             var (dataTimeZone, exchangeTimeZone) = GetDataAndExchangeTimeZoneBySymbol(symbol);
 
-            var writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, Globals.DataFolder, dataDownloadConfig.TickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
+            var writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, dataDirectory, dataDownloadConfig.TickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
 
             var groupedData = DataFeeds.DownloaderDataProvider.FilterAndGroupDownloadDataBySymbol(
                 downloadedData,

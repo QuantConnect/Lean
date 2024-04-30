@@ -15,13 +15,12 @@
 */
 
 using System;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
-using System.Text.Json;
 using QuantConnect.Data;
 using QuantConnect.Util;
 using QuantConnect.Data.Market;
-using QuantConnect.Configuration;
 using System.Collections.Generic;
 using QuantConnect.DownloaderDataProvider.Launcher;
 
@@ -30,6 +29,11 @@ namespace QuantConnect.Tests.DownloaderDataProvider
     [TestFixture]
     public class DownloadHelperTests
     {
+        /// <summary>
+        /// Temporary data download directory
+        /// </summary>
+        private readonly string _dataDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+
         [TestCase("2020/01/01", "2024/01/01", 3, 0)]
         public void CalculateETAShouldDownloadAllSymbols(DateTime downloadStartDate, DateTime downloadEndDate, int amountDownloadSymbol, int alreadyDownloadedSymbol)
         {
@@ -106,9 +110,9 @@ namespace QuantConnect.Tests.DownloaderDataProvider
 
             var downloader = new DataDownloaderTest(mockBaseDate);
 
-            Program.RunDownload(downloader, downloadDataConfig);
+            Program.RunDownload(downloader, downloadDataConfig, _dataDirectory);
 
-            var filePath = LeanData.GenerateZipFilePath(Globals.DataFolder, optionContracts.First(), startDate, resolution, tickType);
+            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, optionContracts.First(), startDate, resolution, tickType);
             var unZipData = QuantConnect.Compression.Unzip(filePath).ToDictionary(x => x.Key, x => x.Value.ToList());
             Assert.GreaterOrEqual(unZipData.Count, optionContracts.Count);
 
