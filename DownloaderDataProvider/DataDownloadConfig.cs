@@ -26,54 +26,29 @@ namespace QuantConnect.DownloaderDataProvider.Launcher
     public struct DataDownloadConfig
     {
         /// <summary>
-        /// The tick type as a string.
-        /// </summary>
-        private string _tickType;
-
-        /// <summary>
-        /// The security type as a string.
-        /// </summary>
-        private string _securityType;
-
-        /// <summary>
-        /// The resolution as a string.
-        /// </summary>
-        private string _resolution;
-
-        /// <summary>
-        /// The start date as a string.
-        /// </summary>
-        private string _startDate;
-
-        /// <summary>
-        /// The end date as a string.
-        /// </summary>
-        private string _endDate;
-
-        /// <summary>
         /// Type of tick data to download.
         /// </summary>
-        public TickType TickType { get => ParseEnum<TickType>(_tickType); }
+        public TickType TickType { get; }
 
         /// <summary>
         /// Type of security for which data is to be downloaded.
         /// </summary>
-        public SecurityType SecurityType { get => ParseEnum<SecurityType>(_securityType); }
+        public SecurityType SecurityType { get; }
 
         /// <summary>
         /// Resolution of the downloaded data.
         /// </summary>
-        public Resolution Resolution { get => ParseEnum<Resolution>(_resolution); }
+        public Resolution Resolution { get; }
 
         /// <summary>
         /// Start date for the data download.
         /// </summary>
-        public DateTime StartDate { get => DateTime.ParseExact(_startDate, DateFormat.EightCharacter, CultureInfo.InvariantCulture); }
+        public DateTime StartDate { get; }
 
         /// <summary>
         /// End date for the data download.
         /// </summary>
-        public DateTime EndDate { get => DateTime.ParseExact(_endDate, DateFormat.EightCharacter, CultureInfo.InvariantCulture); }
+        public DateTime EndDate { get; }
 
         /// <summary>
         /// Market name for which the data is to be downloaded.
@@ -91,12 +66,12 @@ namespace QuantConnect.DownloaderDataProvider.Launcher
         /// <param name="parameters">Dictionary containing the parameters for data download.</param>
         public DataDownloadConfig()
         {
-            _tickType = Config.Get(DownloaderCommandArguments.CommandDataType).ToString() ?? string.Empty;
-            _securityType = Config.Get(DownloaderCommandArguments.CommandSecurityType).ToString() ?? string.Empty;
-            _resolution = Config.Get(DownloaderCommandArguments.CommandResolution).ToString() ?? string.Empty;
+            TickType = ParseEnum<TickType>(Config.Get(DownloaderCommandArguments.CommandDataType).ToString());
+            SecurityType = ParseEnum<SecurityType>(Config.Get(DownloaderCommandArguments.CommandSecurityType).ToString());
+            Resolution = ParseEnum<Resolution>(Config.Get(DownloaderCommandArguments.CommandResolution).ToString());
 
-            _startDate = Config.Get(DownloaderCommandArguments.CommandStartDate).ToString() ?? string.Empty;
-            _endDate = Config.Get(DownloaderCommandArguments.CommandEndDate).ToString() ?? string.Empty;
+            StartDate = DateTime.ParseExact(Config.Get(DownloaderCommandArguments.CommandStartDate).ToString(), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+            EndDate = DateTime.ParseExact(Config.Get(DownloaderCommandArguments.CommandEndDate).ToString(), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
 #pragma warning disable CA1308 // class Market keeps all name in lowercase
             MarketName = Config.Get(DownloaderCommandArguments.CommandMarketName).ToString()?.ToLower(CultureInfo.InvariantCulture) ?? Market.USA;
@@ -110,6 +85,27 @@ namespace QuantConnect.DownloaderDataProvider.Launcher
             {
                 Symbols.Add(Symbol.Create(ticker, SecurityType, MarketName));
             }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataDownloadConfig"/> class with the specified parameters.
+        /// </summary>
+        /// <param name="tickType">The type of tick data to be downloaded.</param>
+        /// <param name="securityType">The type of security for which data is being downloaded.</param>
+        /// <param name="resolution">The resolution of the data being downloaded.</param>
+        /// <param name="startDate">The start date for the data download range.</param>
+        /// <param name="endDate">The end date for the data download range.</param>
+        /// <param name="market">The name of the market from which the data is being downloaded.</param>
+        /// <param name="symbols">A list of symbols for which data is being downloaded.</param>
+        public DataDownloadConfig(TickType tickType, SecurityType securityType, Resolution resolution, DateTime startDate, DateTime endDate, string market, List<Symbol> symbols)
+        {
+            TickType = tickType;
+            SecurityType = securityType;
+            Resolution = resolution;
+            StartDate = startDate;
+            EndDate = endDate;
+            MarketName = market;
+            Symbols = symbols;
         }
 
         /// <summary>
