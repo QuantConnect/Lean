@@ -14,10 +14,12 @@
  *
 */
 
+using NodaTime;
 using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Configuration;
 using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
 
@@ -40,6 +42,11 @@ public static class Program
     private static TimeSpan _logDisplayInterval = TimeSpan.FromSeconds(5);
 
     /// <summary>
+    /// Provides access to exchange hours and raw data times zones in various markets
+    /// </summary>
+    private static readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+
+    /// <summary>
     /// The main entry point for the application.
     /// </summary>
     /// <param name="args">Command-line arguments passed to the application.</param>
@@ -57,11 +64,26 @@ public static class Program
 
         var dataDownloadConfig = new DataDownloadConfig();
 
+        RunDownload(dataDownloader, dataDownloadConfig);
+    }
+
+    /// <summary>
+    /// Executes a data download operation using the specified data downloader.
+    /// </summary>
+    /// <param name="dataDownloader">An instance of an object implementing the <see cref="IDataDownloader"/> interface, responsible for downloading data.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="dataDownloader"/> is null.</exception>
+    public static void RunDownload(IDataDownloader dataDownloader, DataDownloadConfig dataDownloadConfig)
+    {
+        if (dataDownloader == null)
+        {
+            throw new ArgumentNullException(nameof(dataDownloader), "The data downloader instance cannot be null. Please ensure that a valid instance of data downloader is provided.");
+        }
+
         // Calculate the total number of seconds between the EndDate and StartDate
         var totalDataPerSymbolInSeconds = (dataDownloadConfig.EndDate - dataDownloadConfig.StartDate).TotalSeconds;
         var totalDataInSeconds = totalDataPerSymbolInSeconds * dataDownloadConfig.Symbols.Count;
         var completeSymbolCount = 0;
-        var startUtcTime = DateTime.UtcNow;
+        var startDownloadUtcTime = DateTime.UtcNow;
 
         foreach (var symbol in dataDownloadConfig.Symbols)
         {
@@ -76,28 +98,77 @@ public static class Program
                 Log.Trace($"DownloaderDataProvider.Main(): No data available for the following parameters: {downloadParameters}");
                 continue;
             }
-            var writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, Globals.DataFolder, dataDownloadConfig.TickType, mapSymbol: true,
-                dataCacheProvider: _dataCacheProvider);
+
+            var (dataTimeZone, exchangeTimeZone) = GetDataAndExchangeTimeZoneBySymbol(symbol);
+
+            var writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, Globals.DataFolder, dataDownloadConfig.TickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
+
+            var startDateTimeInExchangeTimeZone = downloadParameters.StartUtc.ConvertFromUtc(exchangeTimeZone);
+            var endDateTimeInExchangeTimeZone = downloadParameters.EndUtc.ConvertFromUtc(exchangeTimeZone);
+
+            var dataType = LeanData.GetDataType(downloadParameters.Resolution, downloadParameters.TickType);
+            var groupedData = downloadedData
+                .Where(baseData =>
+                {
+                    // Sometimes, external Downloader provider returns excess data
+                    if (baseData.Time < startDateTimeInExchangeTimeZone || baseData.Time > endDateTimeInExchangeTimeZone)
+                    {
+                        return false;
+                    }
+
+                    if (symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
+                    {
+                        // we need to store the data in data time zone
+                        baseData.Time = baseData.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
+                        baseData.EndTime = baseData.EndTime.ConvertTo(exchangeTimeZone, dataTimeZone);
+                        return true;
+                    }
+                    return false;
+                })
+                // for canonical symbols, downloader will return data for all of the chain
+                .GroupBy(baseData => baseData.Symbol);
 
             var lastLogStatusTime = DateTime.UtcNow;
-            writer.Write(downloadedData.Select(data =>
-            {
-                var utcNow = DateTime.UtcNow;
-                if (utcNow - lastLogStatusTime >= _logDisplayInterval)
-                {
-                    lastLogStatusTime = utcNow;
-                    var progressSoFar = (data.EndTime - dataDownloadConfig.StartDate).TotalSeconds + totalDataPerSymbolInSeconds * completeSymbolCount;
-                    var eta = CalculateETA(utcNow, startUtcTime, totalDataInSeconds, progressSoFar);
-                    var progress = CalculateProgress(data.EndTime, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate);
-                    Log.Trace($"DownloaderDataProvider.Main(): Downloading {downloadParameters.Symbol} data: {progress:F2}%. ETA: {eta}");
-                }
 
-                return data;
-            }));
+            foreach (var data in groupedData)
+            {
+                writer.Write(data.Select(data =>
+                {
+                    var utcNow = DateTime.UtcNow;
+                    if (utcNow - lastLogStatusTime >= _logDisplayInterval)
+                    {
+                        lastLogStatusTime = utcNow;
+                        var progressSoFar = (data.EndTime - dataDownloadConfig.StartDate).TotalSeconds + totalDataPerSymbolInSeconds * completeSymbolCount;
+                        var eta = CalculateETA(utcNow, startDownloadUtcTime, totalDataInSeconds, progressSoFar);
+                        var progress = CalculateProgress(data.EndTime, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate);
+                        Log.Trace($"DownloaderDataProvider.RunDownload(): Downloading {downloadParameters.Symbol} data: {progress:F2}%. ETA: {eta}");
+                    }
+
+                    return data;
+                }));
+            }
+
             completeSymbolCount++;
-            Log.Trace($"DownloaderDataProvider.Main(): Download completed for {downloadParameters.Symbol} at {downloadParameters.Resolution} resolution, " +
+
+            Log.Trace($"DownloaderDataProvider.RunDownload(): Download completed for {downloadParameters.Symbol} at {downloadParameters.Resolution} resolution, " +
                 $"covering the period from {dataDownloadConfig.StartDate} to {dataDownloadConfig.EndDate}.");
         }
+        Log.Trace($"All downloads completed in {(DateTime.UtcNow - startDownloadUtcTime).TotalSeconds:F2} seconds.");
+    }
+
+    /// <summary>
+    /// Retrieves the data time zone and exchange time zone associated with the specified symbol.
+    /// </summary>
+    /// <param name="symbol">The symbol for which to retrieve time zones.</param>
+    /// <returns>
+    /// A tuple containing the data time zone and exchange time zone.
+    /// The data time zone represents the time zone for data related to the symbol.
+    /// The exchange time zone represents the time zone for trading activities related to the symbol.
+    /// </returns>
+    private static (DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone) GetDataAndExchangeTimeZoneBySymbol(Symbol symbol)
+    {
+        var entry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
+        return (entry.DataTimeZone, entry.ExchangeHours.TimeZone);
     }
 
     /// <summary>
