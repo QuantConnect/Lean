@@ -498,9 +498,10 @@ namespace QuantConnect.Securities
             AskPrice *= split.SplitFactor;
 
             // Adjust values for the last data we have cached
-            _dataByType?.Values.DoForEach(x => x.DoForEach(y => y.Normalize(split.SplitFactor, DataNormalizationMode.Adjusted, decimal.Zero)));
-            _lastTickQuotes.DoForEach(x => x.Normalize(split.SplitFactor, DataNormalizationMode.Adjusted, decimal.Zero));
-            _lastTickTrades.DoForEach(x => x.Normalize(split.SplitFactor, DataNormalizationMode.Adjusted, decimal.Zero));
+            Action<BaseData> scale = data => data.Scale((target, factor, _) => target * factor, 1 / split.SplitFactor, split.SplitFactor, decimal.Zero);
+            _dataByType?.Values.DoForEach(x => x.DoForEach(scale));
+            _lastTickQuotes.DoForEach(scale);
+            _lastTickTrades.DoForEach(scale);
         }
     }
 }
