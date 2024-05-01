@@ -106,6 +106,8 @@ namespace QuantConnect.Tests.ToolBox
         [TestCase(false)]
         public void Mapping(bool mapSymbol)
         {
+            LeanDataWriter.MapFileProvider = new Lazy<IMapFileProvider>(TestGlobals.MapFileProvider);
+
             // asset got mapped on 20080929 to SPWRA
             var symbol = Symbol.Create("SPWR", SecurityType.Equity, Market.USA);
             var leanDataWriter = new LeanDataWriter(Resolution.Daily, symbol, _dataDirectory, TickType.Trade, mapSymbol: mapSymbol);
