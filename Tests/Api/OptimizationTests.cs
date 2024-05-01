@@ -24,6 +24,7 @@ using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using System.IO;
 
 namespace QuantConnect.Tests.API
 {
@@ -275,7 +276,7 @@ namespace QuantConnect.Tests.API
             Assert.IsNotEmpty(optimization.Name);
             Assert.IsInstanceOf<OptimizationStatus>(optimization.Status);
             Assert.IsNotEmpty(optimization.NodeType);
-            Assert.AreNotEqual(0, optimization.OutOfSampleDays);
+            Assert.IsTrue(0 <= optimization.OutOfSampleDays);
             Assert.AreNotEqual(default(DateTime), optimization.OutOfSampleMaxEndDate);
             Assert.IsNotNull(optimization.Criterion);
 

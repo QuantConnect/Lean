@@ -20,6 +20,10 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Api;
 using System.Collections.Generic;
+using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Util;
+using QuantConnect.Optimizer;
+using QuantConnect.Optimizer.Objectives;
 
 namespace QuantConnect.Tests.API
 {
@@ -487,6 +491,84 @@ namespace QuantConnect.Tests.API
             var result = ApiClient.ReadLeanVersions();
             Assert.IsTrue(result.Success);
             Assert.IsNotEmpty(result.Versions);
+        }
+
+        [Test]
+        public void CreatesOptimization()
+        {
+            var file = new ProjectFile
+            {
+                Name = "main.py",
+                Code = File.ReadAllText("../../../Algorithm.Python/Test.py")
+            };
+
+            // Create a new project
+            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.Python, TestOrganization);
+            var projectId = project.Projects.First().ProjectId;
+
+            // Update Project Files
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "main.py", file.Code);
+            Assert.IsTrue(updateProjectFileContent.Success);
+
+            // Create compile
+            var compile = ApiClient.CreateCompile(projectId);
+            Assert.IsTrue(compile.Success);
+
+            // Wait at max 30 seconds for project to compile
+            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId);
+            Assert.IsTrue(compileCheck.Success);
+            Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
+
+            var backtestName = $"Estimate optimization Backtest";
+            var backtest = ApiClient.CreateBacktest(projectId, compile.CompileId, backtestName);
+
+            // Now wait until the backtest is completed and request the orders again
+            var backtestReady = WaitForBacktestCompletion(projectId, backtest.BacktestId);
+            Assert.IsTrue(backtestReady.Success);
+
+            var optimization = ApiClient.CreateOptimization(
+                projectId: projectId,
+                name: "My Testable Optimization",
+                target: "TotalPerformance.PortfolioStatistics.SharpeRatio",
+                targetTo: "max",
+                targetValue: null,
+                strategy: "QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy",
+                compileId: compile.CompileId,
+                parameters: new HashSet<OptimizationParameter>
+                {
+                    new OptimizationStepParameter("ema-fast", 20, 50, 1, 1) // Replace params with valid optimization parameter data for test project
+                },
+                constraints: new List<Constraint>
+                {
+                    new Constraint("TotalPerformance.PortfolioStatistics.SharpeRatio", ComparisonOperatorTypes.GreaterOrEqual, 1)
+                },
+                estimatedCost: 0.06m,
+                nodeType: OptimizationNodes.O2_8,
+                parallelNodes: 12
+            );
+
+            Assert.IsNotNull(optimization);
+            Assert.IsNotEmpty(optimization.OptimizationId);
+            Assert.AreNotEqual(default(DateTime), optimization.Created);
+            Assert.Positive(optimization.ProjectId);
+            Assert.IsNotEmpty(optimization.Name);
+            Assert.IsInstanceOf<OptimizationStatus>(optimization.Status);
+            Assert.IsNotEmpty(optimization.NodeType);
+            Assert.IsTrue(0 <= optimization.OutOfSampleDays);
+            Assert.AreNotEqual(default(DateTime), optimization.OutOfSampleMaxEndDate);
+            Assert.IsNotNull(optimization.Criterion);
+
+            foreach (var item in optimization.Parameters)
+            {
+                Assert.IsFalse(string.IsNullOrEmpty(item.Name));
+                Assert.IsNotNull(item.MinValue);
+                Assert.IsNotNull(item.MaxValue);
+                Assert.IsTrue(0 < item.Step);
+            }
+
+            // Delete the project
+            var deleteProject = ApiClient.DeleteProject(projectId);
+            Assert.IsTrue(deleteProject.Success);
         }
 
         private static string GetTimestamp()
