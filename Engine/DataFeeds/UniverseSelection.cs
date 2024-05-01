@@ -353,6 +353,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         resolution = supportedResolutions.OrderByDescending(x => x).First();
                     }
 
+                    // If the benchmark security was also added by the user, we use the same data normalization mode
+                    var dataNormalizationMode = _algorithm.SubscriptionManager.SubscriptionDataConfigService
+                        .GetSubscriptionDataConfigs(securityBenchmark.Security.Symbol)
+                        .DataNormalizationMode();
+
                     var subscriptionList = new List<Tuple<Type, TickType>>() {subscriptionType};
                     var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
                         securityBenchmark.Security.Symbol,
@@ -360,7 +365,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         isInternalFeed: true,
                         fillForward: false,
                         isCustomData: isCustomData,
-                        subscriptionDataTypes: subscriptionList
+                        subscriptionDataTypes: subscriptionList,
+                        dataNormalizationMode: dataNormalizationMode
                         ).First();
 
                     // we want to start from the previous tradable bar so the benchmark security
