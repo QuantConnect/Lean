@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -496,26 +497,10 @@ namespace QuantConnect.Securities
             BidPrice *= split.SplitFactor;
             AskPrice *= split.SplitFactor;
 
-            _lastData.Value *= split.SplitFactor;
-
-            // make sure to modify open/high/low as well for tradebar data types
-            var tradeBar = _lastData as TradeBar;
-            if (tradeBar != null)
-            {
-                tradeBar.Open *= split.SplitFactor;
-                tradeBar.High *= split.SplitFactor;
-                tradeBar.Low *= split.SplitFactor;
-            }
-
-            // make sure to modify bid/ask as well for tradebar data types
-            var tick = _lastData as Tick;
-            if (tick != null)
-            {
-                tick.AskPrice *= split.SplitFactor;
-                tick.BidPrice *= split.SplitFactor;
-            }
-
-            ProcessDataPoint(_lastData, cacheByType: true);
+            // Adjust values for the last data we have cached
+            _dataByType?.Values.DoForEach(x => x.DoForEach(y => y.Normalize(split.SplitFactor, DataNormalizationMode.Adjusted, decimal.Zero)));
+            _lastTickQuotes.DoForEach(x => x.Normalize(split.SplitFactor, DataNormalizationMode.Adjusted, decimal.Zero));
+            _lastTickTrades.DoForEach(x => x.Normalize(split.SplitFactor, DataNormalizationMode.Adjusted, decimal.Zero));
         }
     }
 }
