@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -37,7 +38,7 @@ namespace QuantConnect.Securities
         private DateTime _lastOHLCUpdate;
         private BaseData _lastData;
 
-        private readonly object _locker = new ();
+        private readonly object _locker = new();
         private IReadOnlyList<BaseData> _lastTickQuotes = _empty;
         private IReadOnlyList<BaseData> _lastTickTrades = _empty;
         private Dictionary<Type, IReadOnlyList<BaseData>> _dataByType;
@@ -262,7 +263,7 @@ namespace QuantConnect.Securities
             }
             else if (data.DataType != MarketDataType.Auxiliary)
             {
-                if(data.DataType != MarketDataType.Base || data.Price != 0)
+                if (data.DataType != MarketDataType.Base || data.Price != 0)
                 {
                     Price = data.Price;
                 }
@@ -481,6 +482,29 @@ namespace QuantConnect.Securities
             targetToModify._dataByType = sourceToShare._dataByType;
             targetToModify._lastTickTrades = sourceToShare._lastTickTrades;
             targetToModify._lastTickQuotes = sourceToShare._lastTickQuotes;
+        }
+
+        /// <summary>
+        /// Applies the split to the security cache values
+        /// </summary>
+        internal void ApplySplit(Split split)
+        {
+            Price *= split.SplitFactor;
+            Open *= split.SplitFactor;
+            High *= split.SplitFactor;
+            Low *= split.SplitFactor;
+            Close *= split.SplitFactor;
+            Volume /= split.SplitFactor;
+            BidPrice *= split.SplitFactor;
+            AskPrice *= split.SplitFactor;
+            AskSize /= split.SplitFactor;
+            BidSize /= split.SplitFactor;
+
+            // Adjust values for the last data we have cached
+            Action<BaseData> scale = data => data.Scale((target, factor, _) => target * factor, 1 / split.SplitFactor, split.SplitFactor, decimal.Zero);
+            _dataByType?.Values.DoForEach(x => x.DoForEach(scale));
+            _lastTickQuotes.DoForEach(scale);
+            _lastTickTrades.DoForEach(scale);
         }
     }
 }

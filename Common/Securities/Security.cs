@@ -1136,5 +1136,14 @@ namespace QuantConnect.Securities
 
             return value;
         }
+
+        /// <summary>
+        /// Applies the split to the security
+        /// </summary>
+        internal void ApplySplit(Split split)
+        {
+            Cache.ApplySplit(split);
+            UpdateMarketPrice(Cache.GetData());
+        }
     }
 }

@@ -815,26 +815,9 @@ namespace QuantConnect.Securities
                 _baseCurrencyCash.AddAmount(leftOver * split.ReferencePrice * split.SplitFactor);
                 return;
             }
-            next.Value *= split.SplitFactor;
 
-            // make sure to modify open/high/low as well for tradebar data types
-            var tradeBar = next as TradeBar;
-            if (tradeBar != null)
-            {
-                tradeBar.Open *= split.SplitFactor;
-                tradeBar.High *= split.SplitFactor;
-                tradeBar.Low *= split.SplitFactor;
-            }
-
-            // make sure to modify bid/ask as well for tradebar data types
-            var tick = next as Tick;
-            if (tick != null)
-            {
-                tick.AskPrice *= split.SplitFactor;
-                tick.BidPrice *= split.SplitFactor;
-            }
-
-            security.SetMarketPrice(next);
+            security.ApplySplit(split);
+            // The data price should have been adjusted already
             _baseCurrencyCash.AddAmount(leftOver * next.Price);
 
             // security price updated
