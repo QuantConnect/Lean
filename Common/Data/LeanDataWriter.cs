@@ -35,7 +35,12 @@ namespace QuantConnect.Data
     public class LeanDataWriter
     {
         private static KeyStringSynchronizer _keySynchronizer = new();
-        private static readonly Lazy<IMapFileProvider> MapFileProvider = new(
+
+        /// <summary>
+        /// The map file provider instance to use
+        /// </summary>
+        /// <remarks>Public for testing</remarks>
+        public static Lazy<IMapFileProvider> MapFileProvider { get; set; } = new(
             Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"), forceTypeNameOnExisting: false)
         );
 
