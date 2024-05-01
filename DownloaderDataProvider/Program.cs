@@ -75,8 +75,9 @@ public static class Program
     /// <param name="dataDownloadConfig">Configuration settings for the data download operation.</param>
     /// <param name="dataDirectory">The directory where the downloaded data will be stored.</param>
     /// <param name="dataCacheProvider">The provider used to cache history data files</param>
+    /// <param name="mapSymbol">True if the symbol should be mapped while writing the data</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="dataDownloader"/> is null.</exception>
-    public static void RunDownload(IDataDownloader dataDownloader, DataDownloadConfig dataDownloadConfig, string dataDirectory, IDataCacheProvider dataCacheProvider)
+    public static void RunDownload(IDataDownloader dataDownloader, DataDownloadConfig dataDownloadConfig, string dataDirectory, IDataCacheProvider dataCacheProvider, bool mapSymbol = true)
     {
         if (dataDownloader == null)
         {
@@ -105,7 +106,7 @@ public static class Program
 
             var (dataTimeZone, exchangeTimeZone) = GetDataAndExchangeTimeZoneBySymbol(symbol);
 
-            var writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, dataDirectory, dataDownloadConfig.TickType, mapSymbol: true, dataCacheProvider: dataCacheProvider);
+            var writer = new LeanDataWriter(dataDownloadConfig.Resolution, symbol, dataDirectory, dataDownloadConfig.TickType, dataCacheProvider, mapSymbol: mapSymbol);
 
             var groupedData = DataFeeds.DownloaderDataProvider.FilterAndGroupDownloadDataBySymbol(
                 downloadedData,

@@ -20,6 +20,7 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.DownloaderDataProvider.Launcher;
@@ -29,6 +30,23 @@ namespace QuantConnect.Tests.DownloaderDataProvider
     [TestFixture]
     public class DownloadHelperTests
     {
+        private IDataCacheProvider _cacheProvider;
+
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            _cacheProvider = new DiskDataCacheProvider();
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            if (_cacheProvider != null)
+            {
+                _cacheProvider.Dispose();
+            }
+        }
+
         /// <summary>
         /// Temporary data download directory
         /// </summary>
@@ -98,10 +116,10 @@ namespace QuantConnect.Tests.DownloaderDataProvider
             var startDate = new DateTime(2024, 01, 01);
             var tradeDate = new DateTime(2024, 01, 10);
             var endDate = new DateTime(2024, 02, 02);
-            var symbol = Symbols.AAPL;
+            var symbol = Symbol.CreateCanonicalOption(Symbols.AAPL);
             var downloadDataConfig = new DataDownloadConfig(tickType, SecurityType.Option, resolution, startDate, endDate, Market.USA, new List<Symbol>() { symbol });
 
-            var optionContracts = GenerateOptionContracts(symbol, 100, new DateTime(2024, 03, 16));
+            var optionContracts = GenerateOptionContracts(Symbols.AAPL, 100, new DateTime(2024, 03, 16), expiryAddDay: 30);
             var generateOptionContactFileName = optionContracts.ToList(contract => LeanData.GenerateZipEntryName(contract, contract.ID.Date, resolution, tickType));
 
             Assert.That(optionContracts.Distinct().Count(), Is.EqualTo(optionContracts.Count));
@@ -110,11 +128,14 @@ namespace QuantConnect.Tests.DownloaderDataProvider
 
             var downloader = new DataDownloaderTest(mockBaseDate);
 
-            Program.RunDownload(downloader, downloadDataConfig, _dataDirectory, TestGlobals.DataCacheProvider);
+            Program.RunDownload(downloader, downloadDataConfig, _dataDirectory, _cacheProvider);
 
-            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, optionContracts.First(), startDate, resolution, tickType);
+            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, symbol, startDate, resolution, tickType);
+            var fileNames = _cacheProvider.GetZipEntries(filePath);
             var unZipData = QuantConnect.Compression.Unzip(filePath).ToDictionary(x => x.Key, x => x.Value.ToList());
-            Assert.GreaterOrEqual(unZipData.Count, optionContracts.Count);
+
+            Assert.AreEqual(fileNames.Count, unZipData.Count);
+            Assert.AreEqual(fileNames.Count, optionContracts.Count);
 
             foreach (var dataInZip in unZipData)
             {
