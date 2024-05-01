@@ -30,6 +30,15 @@ namespace QuantConnect.Algorithm.CSharp
         private Security _aapl;
 
         private decimal _aaplPriceBeforeSplit;
+        private decimal _aaplVolumeBeforeSplit;
+        private decimal _aaplOpenBeforeSplit;
+        private decimal _aaplCloseBeforeSplit;
+        private decimal _aaplHighBeforeSplit;
+        private decimal _aaplLowBeforeSplit;
+        private decimal _aaplAskPriceBeforeSplit;
+        private decimal _aaplBidPriceBeforeSplit;
+        private decimal _aaplAskSizeBeforeSplit;
+        private decimal _aaplBidSizeBeforeSplit;
 
         private bool _splitOccurred;
 
@@ -66,15 +75,42 @@ namespace QuantConnect.Algorithm.CSharp
                         $"AAPL price: {_aapl.Price}, AAPL holdings price: {_aapl.Holdings.Price}");
                 }
 
-                if (Math.Abs(_aapl.Holdings.Price / _aaplPriceBeforeSplit - split.SplitFactor) >= 0.0001m)
+                AssertFactorChange("Price check", _aaplPriceBeforeSplit, _aapl.Price, split.SplitFactor);
+                AssertFactorChange("Open price check", _aaplOpenBeforeSplit, _aapl.Open, split.SplitFactor);
+                AssertFactorChange("Close price check", _aaplCloseBeforeSplit, _aapl.Close, split.SplitFactor);
+                AssertFactorChange("High price check", _aaplHighBeforeSplit, _aapl.High, split.SplitFactor);
+                AssertFactorChange("Low price check", _aaplLowBeforeSplit, _aapl.Low, split.SplitFactor);
+                AssertFactorChange("Volume check", _aaplVolumeBeforeSplit, _aapl.Volume, 1 / split.SplitFactor);
+
+                if (Resolution < Resolution.Hour)
                 {
-                    throw new Exception($"Split factor is not correct. Expected: {split.SplitFactor}, " +
-                        $"Actual: {_aapl.Holdings.Price / _aaplPriceBeforeSplit}");
+                    AssertFactorChange("Ask price check", _aaplAskPriceBeforeSplit, _aapl.AskPrice, split.SplitFactor);
+                    AssertFactorChange("Bid price check", _aaplBidPriceBeforeSplit, _aapl.BidPrice, split.SplitFactor);
+                    AssertFactorChange("Ask size check", _aaplAskSizeBeforeSplit, _aapl.AskSize, 1 / split.SplitFactor);
+                    AssertFactorChange("Bid size check", _aaplBidSizeBeforeSplit, _aapl.BidSize, 1 / split.SplitFactor);
                 }
             }
             else
             {
                 _aaplPriceBeforeSplit = _aapl.Price;
+                _aaplOpenBeforeSplit = _aapl.Open;
+                _aaplCloseBeforeSplit = _aapl.Close;
+                _aaplHighBeforeSplit = _aapl.High;
+                _aaplLowBeforeSplit = _aapl.Low;
+                _aaplVolumeBeforeSplit = _aapl.Volume;
+                _aaplAskPriceBeforeSplit = _aapl.AskPrice;
+                _aaplBidPriceBeforeSplit = _aapl.BidPrice;
+                _aaplAskSizeBeforeSplit = _aapl.AskSize;
+                _aaplBidSizeBeforeSplit = _aapl.BidSize;
+            }
+        }
+
+        private static void AssertFactorChange(string messagePrefix, decimal priceBeforeSplit, decimal priceAfterSplit, decimal splitFactor)
+        {
+            if (Math.Abs(priceAfterSplit / priceBeforeSplit - splitFactor) >= 0.0001m)
+            {
+                throw new Exception($"{messagePrefix}: split factor is not correct. Expected: {splitFactor}, " +
+                    $"Actual: {priceAfterSplit / priceBeforeSplit}");
             }
         }
 

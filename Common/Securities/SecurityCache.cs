@@ -494,8 +494,11 @@ namespace QuantConnect.Securities
             High *= split.SplitFactor;
             Low *= split.SplitFactor;
             Close *= split.SplitFactor;
+            Volume /= split.SplitFactor;
             BidPrice *= split.SplitFactor;
             AskPrice *= split.SplitFactor;
+            AskSize /= split.SplitFactor;
+            BidSize /= split.SplitFactor;
 
             // Adjust values for the last data we have cached
             Action<BaseData> scale = data => data.Scale((target, factor, _) => target * factor, 1 / split.SplitFactor, split.SplitFactor, decimal.Zero);
