@@ -41,6 +41,10 @@ namespace QuantConnect.Report
             {CrisisEvent.Recovery, new Crisis("Recovery 2010-2012", new DateTime(2010, 1, 1), new DateTime(2012, 10, 1))},
             {CrisisEvent.NewNormal, new Crisis("New Normal 2014-2019", new DateTime(2014, 1, 1), new DateTime(2019, 1, 1))},
             {CrisisEvent.COVID19, new Crisis("COVID-19 Pandemic 2020", new DateTime(2020, 2, 10), new DateTime(2020, 9, 20))},
+            {CrisisEvent.PostCOVIDRunUp, new Crisis("Post-COVID Run-up 2020-2021", new DateTime(2020, 4, 1), new DateTime(2022, 1, 1))},
+            {CrisisEvent.MemeSeason, new Crisis("Meme Season 2021", new DateTime(2021, 1, 1), new DateTime(2021, 5, 15))},
+            {CrisisEvent.RussiaInvadesUkraine, new Crisis("Russia Invades Ukraine 2022-2023", new DateTime(2022, 2, 1), new DateTime(2024, 1, 1))},
+            {CrisisEvent.AIBoom, new Crisis("AI Boom 2022-Present", new DateTime(2022, 11, 30), DateTime.Now)},
         };
 
         /// <summary>
