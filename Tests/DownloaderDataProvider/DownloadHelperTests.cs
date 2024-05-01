@@ -110,7 +110,7 @@ namespace QuantConnect.Tests.DownloaderDataProvider
 
             var downloader = new DataDownloaderTest(mockBaseDate);
 
-            Program.RunDownload(downloader, downloadDataConfig, _dataDirectory);
+            Program.RunDownload(downloader, downloadDataConfig, _dataDirectory, TestGlobals.DataCacheProvider);
 
             var filePath = LeanData.GenerateZipFilePath(_dataDirectory, optionContracts.First(), startDate, resolution, tickType);
             var unZipData = QuantConnect.Compression.Unzip(filePath).ToDictionary(x => x.Key, x => x.Value.ToList());
