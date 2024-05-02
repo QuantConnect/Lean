@@ -127,10 +127,8 @@ public static class Program
                     if (utcNow - lastLogStatusTime >= _logDisplayInterval)
                     {
                         lastLogStatusTime = utcNow;
-                        var progressSoFar = (data.EndTime - dataDownloadConfig.StartDate).TotalSeconds + totalDataPerSymbolInSeconds * completeSymbolCount;
-                        var eta = CalculateETA(utcNow, startDownloadUtcTime, totalDataInSeconds, progressSoFar);
                         var progress = CalculateProgress(data.EndTime, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate);
-                        Log.Trace($"DownloaderDataProvider.RunDownload(): Downloading {downloadParameters.Symbol} data: {progress:F2}%. ETA: {eta}");
+                        Log.Trace($"DownloaderDataProvider.RunDownload(): Downloading {downloadParameters.Symbol} data: {progress:F2}%.");
                     }
 
                     return data;
@@ -158,37 +156,6 @@ public static class Program
     {
         var entry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
         return (entry.DataTimeZone, entry.ExchangeHours.TimeZone);
-    }
-
-    /// <summary>
-    /// Calculates the Estimated Time of Arrival (ETA) based on the current progress of a download.
-    /// </summary>
-    /// <param name="utcNow">The current UTC DateTime.</param>
-    /// <param name="startUtcTime">The DateTime when the download started.</param>
-    /// <param name="totalDataInSeconds"></param>
-    /// <param name="currentProgressSecond"></param>
-    /// <returns>A TimeSpan representing the Estimated Time of Arrival (ETA).</returns>
-    /// <remarks>
-    /// The method calculates the time elapsed since the start of downloading and estimates
-    /// the remaining time based on the current progress. It uses the difference between
-    /// the end time and the end date to calculate missing data time, and the difference
-    /// between the end time and the start date to calculate the progress so far.
-    /// The ETA is then calculated based on these values.
-    /// </remarks>
-    public static TimeSpan CalculateETA(DateTime utcNow, DateTime startUtcTime, double totalDataInSeconds, double currentProgressSecond)
-    {
-        // Calculate how much time has passed since the start of downloading
-        TimeSpan howMuchItTookSoFar = utcNow - startUtcTime;
-
-        var missingDataSecond = totalDataInSeconds - currentProgressSecond;
-
-        // Calculate ETA in seconds
-        var etaSeconds = (missingDataSecond / currentProgressSecond) * howMuchItTookSoFar.TotalSeconds;
-
-        // Convert ETA from seconds to TimeSpan
-        TimeSpan etaTimeSpan = TimeSpan.FromSeconds(etaSeconds);
-
-        return etaTimeSpan;
     }
 
     /// <summary>
