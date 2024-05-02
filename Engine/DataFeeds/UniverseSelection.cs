@@ -333,11 +333,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var symbol = securityBenchmark.Security.Symbol;
                     var isCustomData = false;
 
+                    var symbolDataConfigs = _algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol);
+
                     // Check if the benchmark security is a custom data in order to make sure we get the correct
                     // type
                     if (symbol.SecurityType == SecurityType.Base)
                     {
-                        var symbolDataConfigs = _algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol);
                         if (symbolDataConfigs.Any())
                         {
                             subscriptionType = new Tuple<Type, TickType>(symbolDataConfigs.First().Type, TickType.Trade);
@@ -353,11 +354,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         resolution = supportedResolutions.OrderByDescending(x => x).First();
                     }
 
-                    // If the benchmark security was also added by the user, we use the same data normalization mode
-                    var dataNormalizationMode = _algorithm.SubscriptionManager.SubscriptionDataConfigService
-                        .GetSubscriptionDataConfigs(securityBenchmark.Security.Symbol)
-                        .DataNormalizationMode();
-
                     var subscriptionList = new List<Tuple<Type, TickType>>() {subscriptionType};
                     var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
                         securityBenchmark.Security.Symbol,
@@ -366,7 +362,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         fillForward: false,
                         isCustomData: isCustomData,
                         subscriptionDataTypes: subscriptionList,
-                        dataNormalizationMode: dataNormalizationMode
+                        // If the benchmark security was also added by the user, we use the same data normalization mode
+                        dataNormalizationMode: symbolDataConfigs.DataNormalizationMode()
                         ).First();
 
                     // we want to start from the previous tradable bar so the benchmark security
