@@ -120,12 +120,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0.001"},
             {"Information Ratio", "0.336"},
             {"Tracking Error", "0.096"},
-            {"Treynor Ratio", "-0.798"},
+            {"Treynor Ratio", "-0.797"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$49000000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
             {"Portfolio Turnover", "31.92%"},
-            {"OrderListHash", "978f7804f369ace63ca96c0f1775cc6f"}
+            {"OrderListHash", "a65fa654ddcbef0af086c6c022325f50"}
         };
     }
 }
