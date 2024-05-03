@@ -32,7 +32,7 @@ namespace QuantConnect.Optimizer.Objectives
         /// The target comparison operation, eg. 'Greater'
         /// </summary>
         [JsonProperty("operator"), JsonConverter(typeof(StringEnumConverter), typeof(DefaultNamingStrategy))]
-        public ComparisonOperatorTypes Operator { get; }
+        public ComparisonOperatorTypes Operator { get; set; }
 
         public Constraint()
         {
