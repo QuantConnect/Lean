@@ -14,6 +14,7 @@
 */
 
 using Python.Runtime;
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Python
@@ -21,7 +22,7 @@ namespace QuantConnect.Python
     /// <summary>
     /// Base class for Python wrapper classes
     /// </summary>
-    public class BasePythonWrapper<TInterface>
+    public class BasePythonWrapper<TInterface> : IEquatable<BasePythonWrapper<TInterface>>
     {
         private PyObject _instance;
         private object _underlyingClrObject;
@@ -221,6 +222,43 @@ namespace QuantConnect.Python
             {
                 [key] = value
             };
+        }
+
+        /// <summary>
+        /// Determines whether the specified instance wraps the same Python object reference as this instance,
+        /// which would indicate that they are equal.
+        /// </summary>
+        /// <param name="other">The other object to compare this with</param>
+        /// <returns>True if both instances are equal, that is if both wrap the same Python object reference</returns>
+        public virtual bool Equals(BasePythonWrapper<TInterface> other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other) || ReferenceEquals(_instance, other._instance)) return true;
+
+            using var _ = Py.GIL();
+            // We only care about the Python object reference, not the underlying C# object reference for comparison
+            return PythonReferenceComparer.Instance.Equals(_instance, other._instance);
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is an instance of <see cref="BasePythonWrapper{TInterface}"/>
+        /// and wraps the same Python object reference as this instance, which would indicate that they are equal.
+        /// </summary>
+        /// <param name="obj">The other object to compare this with</param>
+        /// <returns>True if both instances are equal, that is if both wrap the same Python object reference</returns>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as BasePythonWrapper<TInterface>);
+        }
+
+        /// <summary>
+        /// Gets the hash code for the current instance
+        /// </summary>
+        /// <returns>The hash code of the current instance</returns>
+        public override int GetHashCode()
+        {
+            using var _ = Py.GIL();
+            return PythonReferenceComparer.Instance.GetHashCode(_instance);
         }
     }
 }
