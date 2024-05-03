@@ -15,6 +15,7 @@
 */
 
 using NodaTime;
+using System.Timers;
 using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Logging;
@@ -84,9 +85,7 @@ public static class Program
             throw new ArgumentNullException(nameof(dataDownloader), "The data downloader instance cannot be null. Please ensure that a valid instance of data downloader is provided.");
         }
 
-        // Calculate the total number of seconds between the EndDate and StartDate
-        var totalDataPerSymbolInSeconds = (dataDownloadConfig.EndDate - dataDownloadConfig.StartDate).TotalSeconds;
-        var totalDataInSeconds = totalDataPerSymbolInSeconds * dataDownloadConfig.Symbols.Count;
+        var totalDownloadSymbols = dataDownloadConfig.Symbols.Count;
         var completeSymbolCount = 0;
         var startDownloadUtcTime = DateTime.UtcNow;
 
@@ -127,15 +126,15 @@ public static class Program
                     if (utcNow - lastLogStatusTime >= _logDisplayInterval)
                     {
                         lastLogStatusTime = utcNow;
-                        var progress = CalculateProgress(data.EndTime, dataDownloadConfig.StartDate, dataDownloadConfig.EndDate);
-                        Log.Trace($"DownloaderDataProvider.RunDownload(): Downloading {downloadParameters.Symbol} data: {progress:F2}%.");
+                        Log.Trace($"Downloading data for {downloadParameters.Symbol}. Please hold on...");
                     }
-
                     return data;
                 }));
             }
 
             completeSymbolCount++;
+            var symbolPercentComplete = (double)completeSymbolCount / totalDownloadSymbols * 100;
+            Log.Trace($"DownloaderDataProvider.RunDownload(): {symbolPercentComplete:F2}% complete ({completeSymbolCount} out of {totalDownloadSymbols} symbols)");
 
             Log.Trace($"DownloaderDataProvider.RunDownload(): Download completed for {downloadParameters.Symbol} at {downloadParameters.Resolution} resolution, " +
                 $"covering the period from {dataDownloadConfig.StartDate} to {dataDownloadConfig.EndDate}.");
@@ -156,25 +155,6 @@ public static class Program
     {
         var entry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
         return (entry.DataTimeZone, entry.ExchangeHours.TimeZone);
-    }
-
-    /// <summary>
-    /// Calculates the progress as a percentage based on the elapsed time between the start and end dates.
-    /// </summary>
-    /// <param name="currentTime">The current date and time.</param>
-    /// <param name="start">The start date and time.</param>
-    /// <param name="end">The end date and time.</param>
-    /// <returns>A double representing the progress as a percentage.</returns>
-    private static double CalculateProgress(DateTime currentTime, DateTime start, DateTime end)
-    {
-        double totalDays = (end - start).TotalDays;
-        if (totalDays == 0)
-        {
-            return 0;
-        }
-        double elapsedDays = (currentTime - start).TotalDays;
-
-        return (elapsedDays / totalDays) * 100;
     }
 
     /// <summary>
