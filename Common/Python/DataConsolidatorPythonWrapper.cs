@@ -26,6 +26,8 @@ namespace QuantConnect.Python
     /// TODO: Inherit from BasePythonWrapper<IDataConsolidator> instead of BasePythonWrapper. But first fix ValidateImplementationOf to exclude properties getters and setters (IsSpecialName)
     public class DataConsolidatorPythonWrapper : BasePythonWrapper<IDataConsolidator>, IDataConsolidator
     {
+        internal PyObject Model => Instance;
+
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
         /// has not produced any data yet.

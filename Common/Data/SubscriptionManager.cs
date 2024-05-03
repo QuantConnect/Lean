@@ -33,6 +33,7 @@ namespace QuantConnect.Data
     {
         private readonly PriorityQueue<ConsolidatorWrapper, DateTime> _consolidatorsSortedByScanTime;
         private readonly Dictionary<IDataConsolidator, ConsolidatorWrapper> _consolidators;
+        private readonly Dictionary<PyObject, IDataConsolidator> _pythonConsolidators;
         private readonly ITimeKeeper _timeKeeper;
         private IAlgorithmSubscriptionManager _subscriptionManager;
 
@@ -63,6 +64,7 @@ namespace QuantConnect.Data
         public SubscriptionManager(ITimeKeeper timeKeeper)
         {
             _consolidators = new();
+            _pythonConsolidators = new();
             _timeKeeper = timeKeeper;
             _consolidatorsSortedByScanTime = new(1000);
         }
@@ -153,7 +155,6 @@ namespace QuantConnect.Data
                 dataNormalizationMode).First();
         }
 
-
         /// <summary>
         /// Add a consolidator for the symbol
         /// </summary>
@@ -178,6 +179,10 @@ namespace QuantConnect.Data
                 if (IsSubscriptionValidForConsolidator(subscription, consolidator, tickType))
                 {
                     subscription.Consolidators.Add(consolidator);
+                    if (consolidator is DataConsolidatorPythonWrapper pyConsolidator)
+                    {
+                        _pythonConsolidators[pyConsolidator.Model] = consolidator;
+                    }
 
                     var wrapper = _consolidators[consolidator] =
                         new ConsolidatorWrapper(consolidator, subscription.Increment, _timeKeeper, _timeKeeper.GetLocalTimeKeeper(subscription.ExchangeTimeZone));
@@ -224,18 +229,48 @@ namespace QuantConnect.Data
             symbol ??= consolidator.Consolidated?.Symbol;
             symbol ??= consolidator.WorkingData?.Symbol;
 
+            PyObject pyConsolidatorInstance = null;
+
             // remove consolidator from each subscription
             foreach (var subscription in _subscriptionManager.GetSubscriptionDataConfigs(symbol))
             {
-                subscription.Consolidators.Remove(consolidator);
+                var instance = consolidator;
+                if (consolidator is DataConsolidatorPythonWrapper pyConsolidator)
+                {
+                    pyConsolidatorInstance = pyConsolidator.Model;
+                    instance = _pythonConsolidators.GetValueOrDefault(pyConsolidatorInstance);
+                }
+                subscription.Consolidators.Remove(instance);
+
                 if (_consolidators.Remove(consolidator, out var consolidatorsToScan))
                 {
                     consolidatorsToScan.Dispose();
                 }
             }
 
+            // Remove the python consolidator instance
+            if (pyConsolidatorInstance != null)
+            {
+                _pythonConsolidators.Remove(pyConsolidatorInstance);
+            }
+
             // dispose of the consolidator to remove any remaining event handlers
             consolidator.DisposeSafely();
+        }
+
+        /// <summary>
+        /// Removes the specified python consolidator for the symbol
+        /// </summary>
+        /// <param name="symbol">The symbol the consolidator is receiving data from</param>
+        /// <param name="pyConsolidator">The python consolidator instance to be removed</param>
+        public void RemoveConsolidator(Symbol symbol, PyObject pyConsolidator)
+        {
+            if (!pyConsolidator.TryConvert(out IDataConsolidator consolidator))
+            {
+                consolidator = new DataConsolidatorPythonWrapper(pyConsolidator);
+            }
+
+            RemoveConsolidator(symbol, consolidator);
         }
 
         /// <summary>

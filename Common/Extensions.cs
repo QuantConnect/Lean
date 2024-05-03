@@ -2691,6 +2691,7 @@ namespace QuantConnect
                     // Otherwise, pyObject is a python object that subclass a C# class, only return true if 'allowPythonDerivative'
                     var name = (((dynamic) pythonType).__name__ as PyObject).GetAndDispose<string>();
                     pythonType.Dispose();
+                    // TODO: This doesn't work for generic types: python type name != C# type name (e.g. IdentityDataConsolidator[TradeBar] != IdentityDataConsolidator`1)
                     return name == result.GetType().Name;
                 }
                 catch
