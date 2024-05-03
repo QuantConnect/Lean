@@ -26,12 +26,20 @@ namespace QuantConnect.Optimizer.Objectives
     public abstract class Objective
     {
         private readonly Regex _targetTemplate = new Regex("['(.+)']");
+        private string _target;
 
         /// <summary>
         /// Target; property of json file we want to track
         /// </summary>
         [JsonProperty("target")]
-        public string Target { get; }
+        public string Target
+        {
+            get => _target;
+            set
+            {
+                _target = string.Join(".", value.Split('.').Select(s => _targetTemplate.Match(s).Success ? s : $"['{s}']"));
+            }
+        }
 
         /// <summary>
         /// Target value
@@ -39,7 +47,12 @@ namespace QuantConnect.Optimizer.Objectives
         /// <remarks>For <see cref="Objectives.Target"/> if defined and backtest complies with the targets then finish optimization</remarks>
         /// <remarks>For <see cref="Constraint"/> non optional, the value of the target constraint</remarks>
         [JsonProperty("targetValue")]
-        public decimal? TargetValue { get; }
+        public decimal? TargetValue { get; set; }
+
+        protected Objective()
+        {
+
+        }
 
         /// <summary>
         /// Creates a new instance
@@ -58,8 +71,24 @@ namespace QuantConnect.Optimizer.Objectives
                 objective = $"Statistics.{objective}";
             }
             // escape empty space in json path
-            Target = string.Join(".", objective.Split('.').Select(s => _targetTemplate.Match(s).Success ? s : $"['{s}']"));
+            _target = string.Join(".", objective.Split('.').Select(s => _targetTemplate.Match(s).Success ? s : $"['{s}']"));
             TargetValue = targetValue;
         }
+
+        #region Backwards Compatibility
+        /// <summary>
+        /// Target value
+        /// </summary>
+        /// <remarks>For <see cref="Objectives.Target"/> if defined and backtest complies with the targets then finish optimization</remarks>
+        /// <remarks>For <see cref="Constraint"/> non optional, the value of the target constraint</remarks>
+        [JsonProperty("target-value")]
+        private decimal? OldTargetValue
+        {
+            set
+            {
+                TargetValue = value;
+            }
+        }
+        #endregion
     }
 }

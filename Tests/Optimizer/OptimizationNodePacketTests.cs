@@ -112,8 +112,8 @@ namespace QuantConnect.Tests.Optimizer
         {
             var json = "{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
                        "{\"Name\":\"total-trades\",\"min\":0,\"max\":2,\"Step\":1}]," +
-                       "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"target-value\": 10}," +
-                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"target-value\": 11}],"+
+                       "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"targetValue\": 10}," +
+                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"targetValue\": 11}],"+
                        $"\"optimizationStrategySettings\":{{\"$type\":\"QuantConnect.Optimizer.Strategies.{settingTypeName}, QuantConnect.Optimizer\",\"default-segment-amount\":0,\"max-run-time\":\"10675199.02:48:05.4775807\"}}}}";
 
             var packet = (OptimizationNodePacket)JsonConvert.DeserializeObject(json, typeof(OptimizationNodePacket));
@@ -131,8 +131,8 @@ namespace QuantConnect.Tests.Optimizer
         {
             var json = "{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
                        "{\"Name\":\"total-trades\",\"min\":0,\"max\":2,\"Step\":1}]," +
-                       "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"target-value\": 10}," +
-                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"target-value\": 11}]}";
+                       "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"targetValue\": 10}," +
+                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"targetValue\": 11}]}";
 
             var packet = (OptimizationNodePacket)JsonConvert.DeserializeObject(json, typeof(OptimizationNodePacket));
 

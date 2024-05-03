@@ -28,7 +28,9 @@ namespace QuantConnect
     /// </summary>
     public class Chart
     {
-        /// Name of the Chart:
+        /// Name of the Chart: <summary>
+        [JsonProperty(PropertyName = "name")]
+        /// </summary>
         public string Name = "";
 
         /// Type of the Chart, Overlayed or Stacked.

@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Optimizer.Objectives
         [Test]
         public void FromJson()
         {
-            var json = "{\"operator\": \"equals\",\"target\": \"pin ocho.Gepetto\",\"target-value\": 11}";
+            var json = "{\"operator\": \"equals\",\"target\": \"pin ocho.Gepetto\",\"targetValue\": 11}";
 
             var constraint = (Constraint)JsonConvert.DeserializeObject(json, typeof(Constraint));
 

@@ -24,6 +24,7 @@ using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Util;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Objectives;
+using System.Threading;
 
 namespace QuantConnect.Tests.API
 {
@@ -499,7 +500,7 @@ namespace QuantConnect.Tests.API
             var file = new ProjectFile
             {
                 Name = "main.py",
-                Code = File.ReadAllText("../../../Algorithm.Python/Test.py")
+                Code = File.ReadAllText("../../../Tests/TestData/Test.py")
             };
 
             // Create a new project
@@ -546,6 +547,15 @@ namespace QuantConnect.Tests.API
                 nodeType: OptimizationNodes.O2_8,
                 parallelNodes: 12
             );
+
+            var finish = DateTime.UtcNow.AddMinutes(5);
+            var readOptimization = ApiClient.ReadOptimization(optimization.OptimizationId);
+            do
+            {
+                Thread.Sleep(5000);
+                readOptimization = ApiClient.ReadOptimization(optimization.OptimizationId);
+            }
+            while (finish > DateTime.UtcNow && readOptimization.Status != OptimizationStatus.Completed);
 
             Assert.IsNotNull(optimization);
             Assert.IsNotEmpty(optimization.OptimizationId);
