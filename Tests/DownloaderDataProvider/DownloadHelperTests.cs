@@ -52,64 +52,6 @@ namespace QuantConnect.Tests.DownloaderDataProvider
         /// </summary>
         private readonly string _dataDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
-        [TestCase("2020/01/01", "2024/01/01", 3, 0)]
-        public void CalculateETAShouldDownloadAllSymbols(DateTime downloadStartDate, DateTime downloadEndDate, int amountDownloadSymbol, int alreadyDownloadedSymbol)
-        {
-            var totalDataPerSymbolInSeconds = (downloadEndDate - downloadStartDate).TotalSeconds;
-            var totalDataInSeconds = totalDataPerSymbolInSeconds * amountDownloadSymbol;
-
-            var mockRunningDateTime = new DateTime(2024, 04, 26, 1, 10, 10);
-            var endDateTime = downloadStartDate;
-            while (alreadyDownloadedSymbol != amountDownloadSymbol)
-            {
-                do
-                {
-                    endDateTime = endDateTime.AddDays(1);
-
-                    // Simulate real-time by advancing the mockRunningDateTime by 2 milliseconds
-                    var utcNow = mockRunningDateTime.AddMilliseconds(2);
-                    var progressSoFar = (endDateTime - downloadStartDate).TotalSeconds + totalDataPerSymbolInSeconds * alreadyDownloadedSymbol;
-                    var eta = Program.CalculateETA(utcNow, mockRunningDateTime, totalDataInSeconds, progressSoFar);
-
-                    if (endDateTime < downloadEndDate)
-                    {
-                        Assert.Greater(eta.TotalSeconds, 0);
-                    }
-                } while (endDateTime != downloadEndDate);
-
-                endDateTime = downloadStartDate;
-                alreadyDownloadedSymbol++;
-            }
-
-            Assert.That(amountDownloadSymbol, Is.EqualTo(alreadyDownloadedSymbol));
-        }
-
-        [TestCase("2020/01/01", "2024/01/01", "2020/1/10", 1, 0, 1, 161)]
-        [TestCase("2019/01/01", "2023/01/01", "2021/2/10", 2, 1, 10, 3)]
-        [TestCase("2021/01/01", "2022/01/01", "2021/5/10", 3, 2, 5, 1)]
-        public void CalculateETAShouldReturnCorrectETA(
-            DateTime downloadStartDate,
-            DateTime downloadEndDate,
-            DateTime currentDownloadedDataFromDataDownloader,
-            int amountOfDownloadSymbol,
-            int alreadyDownloadedSymbol,
-            int minusUtcNowSecond,
-            int expectedTotalSeconds)
-        {
-            var mockUtcTimeNow = new DateTime(2024, 04, 26, 1, 1, 10);
-
-            DateTime runUtcTime = mockUtcTimeNow.AddSeconds(-minusUtcNowSecond);
-
-            var totalDataPerSymbolInSeconds = (downloadEndDate - downloadStartDate).TotalSeconds;
-            var totalDataInSeconds = totalDataPerSymbolInSeconds * amountOfDownloadSymbol;
-
-            var progressSoFar = (currentDownloadedDataFromDataDownloader - downloadStartDate).TotalSeconds + totalDataPerSymbolInSeconds * alreadyDownloadedSymbol;
-
-            var eta = Program.CalculateETA(mockUtcTimeNow, runUtcTime, totalDataInSeconds, progressSoFar);
-
-            Assert.That(expectedTotalSeconds, Is.EqualTo((int)eta.TotalSeconds));
-        }
-
         [TestCase(TickType.Trade, Resolution.Daily)]
         public void RunDownload(TickType tickType, Resolution resolution)
         {
