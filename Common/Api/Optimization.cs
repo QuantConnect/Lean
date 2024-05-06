@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Optimizer.Objectives;
-using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Api
 {
@@ -26,6 +25,24 @@ namespace QuantConnect.Api
     /// </summary>
     public class Optimization : BaseOptimization
     {
+        /// <summary>
+        /// Snapshot ID of this optimization
+        /// </summary>
+        [JsonProperty(PropertyName = "snapshotId")]
+        public int? SnapshotId { get; set; }
+
+        /// <summary>
+        /// Statistic to be optimized
+        /// </summary>
+        [JsonProperty(PropertyName = "optimizationTarget")]
+        public string OptimizationTarget { get; set; }
+
+        /// <summary>
+        /// List with grid charts representing the grid layout
+        /// </summary>
+        [JsonProperty(PropertyName = "gridLayout")]
+        public List<GridChart> GridLayout { get; set; }
+
         /// <summary>
         /// Runtime banner/updating statistics for the optimization
         /// </summary>
@@ -37,12 +54,6 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "constraints", NullValueHandling = NullValueHandling.Ignore)]
         public IReadOnlyList<Constraint> Constraints { get; set; }
-
-        /// <summary>
-        /// Optimization parameters
-        /// </summary>
-        [JsonProperty(PropertyName = "parameters", NullValueHandling = NullValueHandling.Ignore)]
-        public HashSet<OptimizationParameter> Parameters { get; set; }
 
         /// <summary>
         /// Number of parallel nodes for optimization

@@ -108,7 +108,7 @@ namespace QuantConnect.Tests.Optimizer.Objectives
         [TestCase("11")]
         public void FromJson(string value)
         {
-            var json = $"{{\"extremum\": \"max\",\"target\": \"pin ocho.Gepetto\",\"target-value\": {value}}}";
+            var json = $"{{\"extremum\": \"max\",\"target\": \"pin ocho.Gepetto\",\"targetValue\": {value}}}";
 
             var target = (Target)JsonConvert.DeserializeObject(json, typeof(Target));
 

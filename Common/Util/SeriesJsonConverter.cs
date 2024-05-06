@@ -111,15 +111,15 @@ namespace QuantConnect.Util
         {
             var jObject = JObject.Load(reader);
 
-            var name = jObject["Name"].Value<string>();
-            var unit = jObject["Unit"].Value<string>();
-            var index = jObject["Index"].Value<int>();
-            var seriesType = (SeriesType)jObject["SeriesType"].Value<int>();
-            var values = (JArray)jObject["Values"];
+            var name = (jObject["Name"] ?? jObject["name"]).Value<string>();
+            var unit = (jObject["Unit"] ?? jObject["unit"]).Value<string>();
+            var index = (jObject["Index"] ?? jObject["index"]).Value<int>();
+            var seriesType = (SeriesType)((jObject["SeriesType"] ?? jObject["seriesType"]).Value<int>());
+            var values = (JArray)(jObject["Values"] ?? jObject["values"]);
 
-            var zindex = jObject.TryGetPropertyValue<int?>("ZIndex");
-            var indexName = jObject.TryGetPropertyValue<string>("IndexName");
-            var tooltip = jObject.TryGetPropertyValue<string>("Tooltip");
+            var zindex = jObject.TryGetPropertyValue<int?>("ZIndex") ?? jObject.TryGetPropertyValue<int?>("zIndex");
+            var indexName = jObject.TryGetPropertyValue<string>("IndexName") ?? jObject.TryGetPropertyValue<string>("indexName");
+            var tooltip = jObject.TryGetPropertyValue<string>("Tooltip") ?? jObject.TryGetPropertyValue<string>("tooltip");
 
             if (seriesType == SeriesType.Candle)
             {
@@ -145,8 +145,8 @@ namespace QuantConnect.Util
                 Tooltip = tooltip,
                 IndexName = indexName,
                 SeriesType = seriesType,
-                Color = jObject["Color"].ToObject<Color>(serializer),
-                ScatterMarkerSymbol = jObject["ScatterMarkerSymbol"].ToObject<ScatterMarkerSymbol>(serializer)
+                Color = (jObject["Color"] ?? jObject["color"])?.ToObject<Color>(serializer) ?? Color.Empty,
+                ScatterMarkerSymbol = (jObject["ScatterMarkerSymbol"] ?? jObject["scatterMarkerSymbol"])?.ToObject<ScatterMarkerSymbol>(serializer) ?? ScatterMarkerSymbol.None
             };
 
             if (seriesType == SeriesType.Scatter)

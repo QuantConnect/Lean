@@ -28,7 +28,10 @@ namespace QuantConnect
     /// </summary>
     public class Chart
     {
-        /// Name of the Chart:
+
+        /// <summary>
+        /// Name of the Chart
+        /// </summary>
         public string Name = "";
 
         /// Type of the Chart, Overlayed or Stacked.

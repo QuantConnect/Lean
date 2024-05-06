@@ -45,7 +45,7 @@ namespace QuantConnect.Optimizer.Parameters
         /// Minimal possible movement for current parameter, should be positive
         /// </summary>
         /// <remarks>Used by <see cref="Strategies.EulerSearchOptimizationStrategy"/> to determine when this parameter can no longer be optimized</remarks>
-        [JsonProperty("min-step")]
+        [JsonProperty("minStep")]
         public decimal? MinStep { get; set; }
 
         /// <summary>

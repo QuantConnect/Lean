@@ -106,16 +106,28 @@ namespace QuantConnect.Tests.Optimizer
             Assert.AreEqual(settingType, result.OptimizationStrategySettings.GetType());
         }
 
-        [TestCase("StepBaseOptimizationStrategySettings")]
-        [TestCase("OptimizationStrategySettings")]
-        public void FromJson(string settingTypeName)
-        {
-            var json = "{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
+        [TestCase("StepBaseOptimizationStrategySettings", "{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
+                       "{\"Name\":\"total-trades\",\"min\":0,\"max\":2,\"Step\":1}]," +
+                       "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"targetValue\": 10}," +
+                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"targetValue\": 11}]," +
+                       $"\"optimizationStrategySettings\":{{\"$type\":\"QuantConnect.Optimizer.Strategies.StepBaseOptimizationStrategySettings, QuantConnect.Optimizer\",\"default-segment-amount\":0,\"max-run-time\":\"10675199.02:48:05.4775807\"}}}}")]
+        [TestCase("OptimizationStrategySettings", "{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
+                       "{\"Name\":\"total-trades\",\"min\":0,\"max\":2,\"Step\":1}]," +
+                       "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"targetValue\": 10}," +
+                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"targetValue\": 11}]," +
+                       $"\"optimizationStrategySettings\":{{\"$type\":\"QuantConnect.Optimizer.Strategies.OptimizationStrategySettings, QuantConnect.Optimizer\",\"default-segment-amount\":0,\"max-run-time\":\"10675199.02:48:05.4775807\"}}}}")]
+        [TestCase("StepBaseOptimizationStrategySettings", "{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
                        "{\"Name\":\"total-trades\",\"min\":0,\"max\":2,\"Step\":1}]," +
                        "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"target-value\": 10}," +
-                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"target-value\": 11}],"+
-                       $"\"optimizationStrategySettings\":{{\"$type\":\"QuantConnect.Optimizer.Strategies.{settingTypeName}, QuantConnect.Optimizer\",\"default-segment-amount\":0,\"max-run-time\":\"10675199.02:48:05.4775807\"}}}}";
-
+                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"target-value\": 11}]," +
+                       $"\"optimizationStrategySettings\":{{\"$type\":\"QuantConnect.Optimizer.Strategies.StepBaseOptimizationStrategySettings, QuantConnect.Optimizer\",\"default-segment-amount\":0,\"max-run-time\":\"10675199.02:48:05.4775807\"}}}}")]
+        [TestCase("OptimizationStrategySettings", "{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
+                       "{\"Name\":\"total-trades\",\"min\":0,\"max\":2,\"Step\":1}]," +
+                       "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"target-value\": 10}," +
+                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"target-value\": 11}]," +
+                       $"\"optimizationStrategySettings\":{{\"$type\":\"QuantConnect.Optimizer.Strategies.OptimizationStrategySettings, QuantConnect.Optimizer\",\"default-segment-amount\":0,\"max-run-time\":\"10675199.02:48:05.4775807\"}}}}")]
+        public void FromJson(string settingTypeName ,string json)
+        {
             var packet = (OptimizationNodePacket)JsonConvert.DeserializeObject(json, typeof(OptimizationNodePacket));
 
             Assert.AreEqual("['Statistics'].['Sharpe Ratio']", packet.Criterion.Target);
@@ -126,14 +138,16 @@ namespace QuantConnect.Tests.Optimizer
             Assert.AreEqual(settingTypeName, packet.OptimizationStrategySettings.GetType().Name);
         }
 
-        [Test]
-        public void FromJsonNoSettings()
-        {
-            var json = "{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
+        [TestCase("{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
+                       "{\"Name\":\"total-trades\",\"min\":0,\"max\":2,\"Step\":1}]," +
+                       "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"targetValue\": 10}," +
+                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"targetValue\": 11}]}")]
+        [TestCase("{\"OptimizationParameters\": [{\"Name\":\"sleep-ms\",\"min\":0,\"max\":0,\"Step\":1}," +
                        "{\"Name\":\"total-trades\",\"min\":0,\"max\":2,\"Step\":1}]," +
                        "\"criterion\": {\"extremum\" : \"min\",\"target\": \"Statistics.Sharpe Ratio\",\"target-value\": 10}," +
-                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"target-value\": 11}]}";
-
+                       "\"constraints\": [{\"target\": \"Statistics.Sharpe Ratio\",\"operator\": \"equals\",\"target-value\": 11}]}")]
+        public void FromJsonNoSettings(string json)
+        {
             var packet = (OptimizationNodePacket)JsonConvert.DeserializeObject(json, typeof(OptimizationNodePacket));
 
             Assert.AreEqual("['Statistics'].['Sharpe Ratio']", packet.Criterion.Target);
