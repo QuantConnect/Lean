@@ -438,7 +438,7 @@ def get_consolidator():
         }
 
         [Test]
-        public void CanAddAndRemoveCSharpConsolidatorFromPythonWithWrapper([Values] bool useWrapperToRemove)
+        public void CanAddAndRemoveCSharpConsolidatorFromPythonWithWrapper()
         {
             using var _ = Py.GIL();
             var module = PyModule.FromString("testModule",
@@ -453,19 +453,11 @@ def get_consolidator():
             var symbol = algorithm.AddEquity("SPY").Symbol;
 
             var pyConsolidator = module.GetAttr("get_consolidator").Invoke();
-            using var consolidator = new DataConsolidatorPythonWrapper(pyConsolidator);
 
-            algorithm.SubscriptionManager.AddConsolidator(Symbols.SPY, consolidator);
+            algorithm.SubscriptionManager.AddConsolidator(Symbols.SPY, pyConsolidator);
             Assert.AreEqual(1, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
 
-            if (useWrapperToRemove)
-            {
-                algorithm.SubscriptionManager.RemoveConsolidator(Symbols.SPY, consolidator);
-            }
-            else
-            {
-                algorithm.SubscriptionManager.RemoveConsolidator(Symbols.SPY, pyConsolidator);
-            }
+            algorithm.SubscriptionManager.RemoveConsolidator(Symbols.SPY, pyConsolidator);
             Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
         }
 

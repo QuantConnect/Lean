@@ -23,7 +23,6 @@ namespace QuantConnect.Python
     /// <summary>
     /// Provides an Data Consolidator that wraps a <see cref="PyObject"/> object that represents a custom Python consolidator
     /// </summary>
-    /// TODO: Inherit from BasePythonWrapper<IDataConsolidator> instead of BasePythonWrapper. But first fix ValidateImplementationOf to exclude properties getters and setters (IsSpecialName)
     public class DataConsolidatorPythonWrapper : BasePythonWrapper<IDataConsolidator>, IDataConsolidator
     {
         internal PyObject Model => Instance;
@@ -83,16 +82,8 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="consolidator">Represents a custom python consolidator</param>
         public DataConsolidatorPythonWrapper(PyObject consolidator)
-            : base(consolidator, false)
+            : base(consolidator, true)
         {
-            foreach (var attributeName in new[] { "InputType", "OutputType", "WorkingData", "Consolidated" })
-            {
-                if (!HasAttr(attributeName))
-                {
-                    throw new NotImplementedException(
-                        Messages.PythonCommon.AttributeNotImplemented($"IDataConsolidator.{attributeName}", consolidator.GetPythonType()));
-                }
-            }
         }
 
         /// <summary>
