@@ -2666,12 +2666,11 @@ namespace QuantConnect
                         return true;
                     }
 
-                    var pythonType = pyObject.GetPythonType();
+                    using var pythonType = pyObject.GetPythonType();
                     var csharpType = pythonType.As<Type>();
 
                     if (!type.IsAssignableFrom(csharpType))
                     {
-                        pythonType.Dispose();
                         return false;
                     }
 
@@ -2682,15 +2681,20 @@ namespace QuantConnect
                     // so it gets wrapped in a python wrapper, not the C# object.
                     if (result is IPythonDerivedType)
                     {
-                        pythonType.Dispose();
                         return false;
+                    }
+
+                    // If the python type object is just a representation of the C# type, the conversion is direct,
+                    // The python object is an instance of the C# class.
+                    if (PyType.Get(csharpType).Equals(pythonType))
+                    {
+                        return true;
                     }
 
                     // If the PyObject type and the managed object names are the same,
                     // pyObject is a C# object wrapped in PyObject, in this case return true
                     // Otherwise, pyObject is a python object that subclass a C# class, only return true if 'allowPythonDerivative'
-                    var name = (((dynamic) pythonType).__name__ as PyObject).GetAndDispose<string>();
-                    pythonType.Dispose();
+                    var name = (((dynamic)pythonType).__name__ as PyObject).GetAndDispose<string>();
                     return name == result.GetType().Name;
                 }
                 catch
