@@ -84,6 +84,26 @@ namespace QuantConnect.Report
         /// <summary>
         /// COVID-19 pandemic market crash (12)
         /// </summary>
-        COVID19
+        COVID19,
+
+        /// <summary>
+        /// Post COVID-19 recovery (13)
+        /// </summary>
+        PostCOVIDRunUp,
+
+        /// <summary>
+        /// Meme-craze era like GME, AMC, and DOGE (14)
+        /// </summary>
+        MemeSeason,
+
+        /// <summary>
+        /// Russia invased Ukraine (15)
+        /// </summary>
+        RussiaInvadesUkraine,
+
+        /// <summary>
+        /// Artificial intelligence boom (16)
+        /// </summary>
+        AIBoom
     }
 }
