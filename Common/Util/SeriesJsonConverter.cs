@@ -111,11 +111,11 @@ namespace QuantConnect.Util
         {
             var jObject = JObject.Load(reader);
 
-            var name = jObject["Name"].Value<string>();
-            var unit = jObject["Unit"].Value<string>();
-            var index = jObject["Index"].Value<int>();
-            var seriesType = (SeriesType)jObject["SeriesType"].Value<int>();
-            var values = (JArray)jObject["Values"];
+            var name = jObject["Name"]?.Value<string>() ?? jObject["name"].Value<string>();
+            var unit = jObject["Unit"]?.Value<string>() ?? jObject["unit"].Value<string>();
+            var index = jObject["Index"]?.Value<int>() ?? jObject["index"].Value<int>();
+            var seriesType = (SeriesType)(jObject["SeriesType"]?.Value<int>() ?? jObject["seriesType"].Value<int>());
+            var values = (JArray)(jObject["Values"] ?? jObject["values"]);
 
             var zindex = jObject.TryGetPropertyValue<int?>("ZIndex");
             var indexName = jObject.TryGetPropertyValue<string>("IndexName");
@@ -145,8 +145,8 @@ namespace QuantConnect.Util
                 Tooltip = tooltip,
                 IndexName = indexName,
                 SeriesType = seriesType,
-                Color = jObject["Color"].ToObject<Color>(serializer),
-                ScatterMarkerSymbol = jObject["ScatterMarkerSymbol"].ToObject<ScatterMarkerSymbol>(serializer)
+                Color = (jObject["Color"] ?? jObject["color"]).ToObject<Color>(serializer),
+                ScatterMarkerSymbol = (jObject["ScatterMarkerSymbol"] ?? jObject["scatterMarkerSymbol"]).ToObject<ScatterMarkerSymbol>(serializer)
             };
 
             if (seriesType == SeriesType.Scatter)

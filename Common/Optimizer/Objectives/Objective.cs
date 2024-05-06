@@ -71,7 +71,7 @@ namespace QuantConnect.Optimizer.Objectives
                 objective = $"Statistics.{objective}";
             }
             // escape empty space in json path
-            _target = string.Join(".", objective.Split('.').Select(s => _targetTemplate.Match(s).Success ? s : $"['{s}']"));
+            Target = objective;
             TargetValue = targetValue;
         }
 

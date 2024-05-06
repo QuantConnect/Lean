@@ -28,8 +28,9 @@ namespace QuantConnect
     /// </summary>
     public class Chart
     {
-        /// Name of the Chart: <summary>
-        [JsonProperty(PropertyName = "name")]
+
+        /// <summary>
+        /// Name of the Chart
         /// </summary>
         public string Name = "";
 

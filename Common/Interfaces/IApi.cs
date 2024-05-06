@@ -291,6 +291,17 @@ namespace QuantConnect.Interfaces
         LiveLog ReadLiveLogs(int projectId, string algorithmId, DateTime? startTime = null, DateTime? endTime = null);
 
         /// <summary>
+        /// Returns a chart object from a live algorithm
+        /// </summary>
+        /// <param name="projectId">Project ID of the request</param>
+        /// <param name="name">The requested chart name</param>
+        /// <param name="start">The Utc start seconds timestamp of the request</param>
+        /// <param name="end">The Utc end seconds timestamp of the request</param>
+        /// <param name="count">The number of data points to request</param>
+        /// <returns></returns>
+        public ReadChartResponse ReadLiveChart(int projectId, string name, int start, int end, uint count);
+
+        /// <summary>
         /// Gets the link to the downloadable data.
         /// </summary>
         /// <param name="filePath">File path representing the data requested</param>
@@ -316,6 +327,17 @@ namespace QuantConnect.Interfaces
         /// <param name="backtestId">Specific backtest id to read</param>
         /// <returns><see cref="BacktestReport"/></returns>
         public BacktestReport ReadBacktestReport(int projectId, string backtestId);
+
+        /// <summary>
+        /// Returns a requested chart object from a backtest
+        /// <param name="projectId">Project ID of the request</param>
+        /// <param name="name">The requested chart name</param>
+        /// <param name="start">The Utc start seconds timestamp of the request</param>
+        /// <param name="end">The Utc end seconds timestamp of the request</param>
+        /// <param name="count">The number of data points to request</param>
+        /// <param name="backtestId">Associated Backtest ID for this chart request</param>
+        /// <returns></returns>
+        public ReadChartResponse ReadBacktestChart(int projectId, string name, int start, int end, uint count, string backtestId);
 
         /// <summary>
         /// Method to download and save the data purchased through QuantConnect

@@ -591,6 +591,36 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Returns a requested chart object from a backtest
+        /// <param name="projectId">Project ID of the request</param>
+        /// <param name="name">The requested chart name</param>
+        /// <param name="start">The Utc start seconds timestamp of the request</param>
+        /// <param name="end">The Utc end seconds timestamp of the request</param>
+        /// <param name="count">The number of data points to request</param>
+        /// <param name="backtestId">Associated Backtest ID for this chart request</param>
+        /// <returns></returns>
+        public ReadChartResponse ReadBacktestChart(int projectId, string name, int start, int end, uint count, string backtestId)
+        {
+            var request = new RestRequest("backtests/chart/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+                name,
+                start,
+                end,
+                count,
+                backtestId,
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out ReadChartResponse result);
+            return result;
+        }
+
+        /// <summary>
         /// Update a backtest name
         /// </summary>
         /// <param name="projectId">Project for the backtest we want to update</param>
@@ -937,7 +967,7 @@ namespace QuantConnect.Api
             var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
             var epochEndTime   = endTime   == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
 
-            var request = new RestRequest("live/read/log", Method.POST)
+            var request = new RestRequest("live/log/read", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
@@ -952,6 +982,41 @@ namespace QuantConnect.Api
             }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out LiveLog result);
+            return result;
+        }
+
+        /// <summary>
+        /// Returns a chart object from a live algorithm
+        /// </summary>
+        /// <param name="projectId">Project ID of the request</param>
+        /// <param name="name">The requested chart name</param>
+        /// <param name="start">The Utc start seconds timestamp of the request</param>
+        /// <param name="end">The Utc end seconds timestamp of the request</param>
+        /// <param name="count">The number of data points to request</param>
+        /// <returns></returns>
+        public ReadChartResponse ReadLiveChart(int projectId, string name, int start, int end, uint count)
+        {
+            var request = new RestRequest("live/chart/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+                name,
+                start,
+                end,
+                count
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out ReadChartResponse result);
+
+            var finish = DateTime.UtcNow.AddMinutes(1);
+            while(DateTime.UtcNow < finish && !result.Success)
+            {
+                ApiConnection.TryRequest(request, out result);
+            }
             return result;
         }
 

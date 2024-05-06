@@ -69,9 +69,9 @@
   "reserved-words-prefix": "@",
 
   // To get your api access token go to quantconnect.com/account
-  "job-user-id": "0",
-  "api-access-token": "",
-  "job-organization-id": "",
+  "job-user-id": "144419",
+  "api-access-token": "5b3fc5225f7466b5e8aa7225a6bba314d86ee594932cec749ede9ab218a6d6e7",
+  "job-organization-id": "d6d62db48592c72e67b534553413b691",
 
   // live data configuration
   "live-data-url": "ws://www.quantconnect.com/api/v2/live/data/",

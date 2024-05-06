@@ -25,6 +25,7 @@ using QuantConnect.Util;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Objectives;
 using System.Threading;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.API
 {
@@ -289,7 +290,7 @@ namespace QuantConnect.Tests.API
         }
 
         [Test]
-        public void ReadBacktestOrders()
+        public void ReadBacktestOrdersReportAndChart()
         {
             // Project settings
             var language = Language.CSharp;
@@ -327,6 +328,15 @@ namespace QuantConnect.Tests.API
             var readBacktestReport = ApiClient.ReadBacktestReport(project.ProjectId, backtest.BacktestId);
             Assert.IsTrue(readBacktestReport.Success);
             Assert.IsFalse(string.IsNullOrEmpty(readBacktestReport.Report));
+
+            var readBacktestChart = ApiClient.ReadBacktestChart(
+                project.ProjectId, "Strategy Equity",
+                new DateTime(2013, 10, 07).Second,
+                new DateTime(2013, 10, 11).Second,
+                1000,
+                backtest.BacktestId);
+            Assert.IsTrue(readBacktestChart.Success);
+            Assert.IsNotNull(readBacktestChart.Chart);
 
             // Delete the backtest we just created
             var deleteBacktest = ApiClient.DeleteBacktest(project.ProjectId, backtest.BacktestId);
@@ -474,6 +484,9 @@ namespace QuantConnect.Tests.API
             var stopLive = ApiClient.StopLiveAlgorithm(projectId);
             var stopLiveWorkedCorrectly = stopLive.Success;
 
+            var readChart = ApiClient.ReadLiveChart(projectId, "Strategy Equity", new DateTime(2013, 10, 07).Second, new DateTime(2013, 10, 11).Second, 1000);
+            var readChartWorkedCorrectly = readChart.Success;
+
             // Delete the project
             var deleteProject = ApiClient.DeleteProject(projectId);
             Assert.IsTrue(deleteProject.Success);
@@ -484,6 +497,8 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(createLiveAlgorithmWorkedCorrectly);
             Assert.IsTrue(readLiveAlgorithmWorkedCorrectly);
             Assert.IsTrue(stopLiveWorkedCorrectly);
+            Assert.IsTrue(readChartWorkedCorrectly);
+            Assert.IsNotNull(readChart.Chart);
         }
 
         [Test]
@@ -499,16 +514,17 @@ namespace QuantConnect.Tests.API
         {
             var file = new ProjectFile
             {
-                Name = "main.py",
-                Code = File.ReadAllText("../../../Tests/TestData/Test.py")
+                Name = "Main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/ParameterizedAlgorithm.cs")
             };
 
+
             // Create a new project
-            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.Python, TestOrganization);
+            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
             var projectId = project.Projects.First().ProjectId;
 
             // Update Project Files
-            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "main.py", file.Code);
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
             Assert.IsTrue(updateProjectFileContent.Success);
 
             // Create compile
@@ -537,7 +553,7 @@ namespace QuantConnect.Tests.API
                 compileId: compile.CompileId,
                 parameters: new HashSet<OptimizationParameter>
                 {
-                    new OptimizationStepParameter("ema-fast", 20, 50, 1, 1) // Replace params with valid optimization parameter data for test project
+                    new OptimizationStepParameter("ema-fast", 50, 150, 1, 1) // Replace params with valid optimization parameter data for test project
                 },
                 constraints: new List<Constraint>
                 {
