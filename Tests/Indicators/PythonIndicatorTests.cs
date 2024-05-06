@@ -243,16 +243,20 @@ class BadCustomIndicator(PythonIndicator):
                     "timeDelta = timedelta(days=2)\n" +
                     "class CustomIndicator(PythonIndicator):\n" +
                     "   def __init__(self):\n" +
-                    "       self.Value = 0\n" +
-                    "   def Update(self, input):\n" +
-                    "       self.Value = input.Value\n" +
+                    "       self.value = 0\n" +
+                    "   def update(self, input):\n" +
+                    "       self.value = input.value\n" +
                     "       return True\n" +
                     "class CustomConsolidator(PythonConsolidator):\n" +
                     "   def __init__(self):\n" +
-                    "       self.InputType = QuoteBar\n" +
-                    "       self.OutputType = QuoteBar\n" +
-                    "       self.Consolidated = None\n" +
-                    "       self.WorkingData = None\n"
+                    "       self.input_type = QuoteBar\n" +
+                    "       self.output_type = QuoteBar\n" +
+                    "       self.consolidated = None\n" +
+                    "       self.working_data = None\n" +
+                    "   def update(self, data):\n" +
+                    "       pass\n" +
+                    "   def scan(self, time):\n" +
+                    "       pass\n"
                 );
 
                 //Get our variables from Python
@@ -297,16 +301,20 @@ class BadCustomIndicator(PythonIndicator):
                     "consolidator = QuoteBarConsolidator(timedelta(days = 5)) \n" +
                     "class CustomIndicator(PythonIndicator):\n" +
                     "   def __init__(self):\n" +
-                    "       self.Value = 0\n" +
-                    "   def Update(self, input):\n" +
-                    "       self.Value = input.Value\n" +
+                    "       self.value = 0\n" +
+                    "   def update(self, input):\n" +
+                    "       self.value = input.value\n" +
                     "       return True\n" +
                     "class CustomConsolidator(PythonConsolidator):\n" +
                     "   def __init__(self):\n" +
-                    "       self.InputType = QuoteBar\n" +
-                    "       self.OutputType = QuoteBar\n" +
-                    "       self.Consolidated = None\n" +
-                    "       self.WorkingData = None\n" +
+                    "       self.input_type = QuoteBar\n" +
+                    "       self.output_type = QuoteBar\n" +
+                    "       self.consolidated = None\n" +
+                    "       self.working_data = None\n" +
+                    "   def update(self, data):\n" +
+                    "       pass\n" +
+                    "   def scan(self, time):\n" +
+                    "       pass\n" +
                     "class InvalidConsolidator:\n" +
                     "   pass\n"
                 );
