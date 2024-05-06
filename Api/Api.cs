@@ -592,13 +592,14 @@ namespace QuantConnect.Api
 
         /// <summary>
         /// Returns a requested chart object from a backtest
+        /// </summary>
         /// <param name="projectId">Project ID of the request</param>
         /// <param name="name">The requested chart name</param>
         /// <param name="start">The Utc start seconds timestamp of the request</param>
         /// <param name="end">The Utc end seconds timestamp of the request</param>
         /// <param name="count">The number of data points to request</param>
         /// <param name="backtestId">Associated Backtest ID for this chart request</param>
-        /// <returns></returns>
+        /// <returns>The chart</returns>
         public ReadChartResponse ReadBacktestChart(int projectId, string name, int start, int end, uint count, string backtestId)
         {
             var request = new RestRequest("backtests/chart/read", Method.POST)
@@ -616,7 +617,7 @@ namespace QuantConnect.Api
                 backtestId,
             }), ParameterType.RequestBody);
 
-            ReadChartResponse result = default;
+            ReadChartResponse result;
             ApiConnection.TryRequest(request, out result);
 
             var finish = DateTime.UtcNow.AddMinutes(1);
@@ -1002,7 +1003,7 @@ namespace QuantConnect.Api
         /// <param name="start">The Utc start seconds timestamp of the request</param>
         /// <param name="end">The Utc end seconds timestamp of the request</param>
         /// <param name="count">The number of data points to request</param>
-        /// <returns></returns>
+        /// <returns>The chart</returns>
         public ReadChartResponse ReadLiveChart(int projectId, string name, int start, int end, uint count)
         {
             var request = new RestRequest("live/chart/read", Method.POST)
