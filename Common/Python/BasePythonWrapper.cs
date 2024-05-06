@@ -232,12 +232,7 @@ namespace QuantConnect.Python
         /// <returns>True if both instances are equal, that is if both wrap the same Python object reference</returns>
         public virtual bool Equals(BasePythonWrapper<TInterface> other)
         {
-            if (other is null) return false;
-            if (ReferenceEquals(this, other) || ReferenceEquals(_instance, other._instance)) return true;
-
-            using var _ = Py.GIL();
-            // We only care about the Python object reference, not the underlying C# object reference for comparison
-            return PythonReferenceComparer.Instance.Equals(_instance, other._instance);
+            return other is not null && (ReferenceEquals(this, other) || Equals(other._instance));
         }
 
         /// <summary>
@@ -248,7 +243,7 @@ namespace QuantConnect.Python
         /// <returns>True if both instances are equal, that is if both wrap the same Python object reference</returns>
         public override bool Equals(object obj)
         {
-            return Equals(obj as BasePythonWrapper<TInterface>);
+            return Equals(obj as PyObject) || Equals(obj as BasePythonWrapper<TInterface>);
         }
 
         /// <summary>
@@ -259,6 +254,19 @@ namespace QuantConnect.Python
         {
             using var _ = Py.GIL();
             return PythonReferenceComparer.Instance.GetHashCode(_instance);
+        }
+
+        /// <summary>
+        /// Determines whether the specified <see cref="PyObject"/> is equal to the current instance's underlying Python object.
+        /// </summary>
+        private bool Equals(PyObject other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(_instance, other)) return true;
+
+            using var _ = Py.GIL();
+            // We only care about the Python object reference, not the underlying C# object reference for comparison
+            return PythonReferenceComparer.Instance.Equals(_instance, other);
         }
     }
 }
