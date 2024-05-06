@@ -145,8 +145,8 @@ namespace QuantConnect.Util
                 Tooltip = tooltip,
                 IndexName = indexName,
                 SeriesType = seriesType,
-                Color = (jObject["Color"] ?? jObject["color"]).ToObject<Color>(serializer),
-                ScatterMarkerSymbol = (jObject["ScatterMarkerSymbol"] ?? jObject["scatterMarkerSymbol"]).ToObject<ScatterMarkerSymbol>(serializer)
+                Color = (jObject["Color"] ?? jObject["color"])?.ToObject<Color>(serializer) ?? default,
+                ScatterMarkerSymbol = (jObject["ScatterMarkerSymbol"] ?? jObject["scatterMarkerSymbol"])?.ToObject<ScatterMarkerSymbol>(serializer) ?? default
             };
 
             if (seriesType == SeriesType.Scatter)

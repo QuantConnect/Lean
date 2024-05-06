@@ -616,7 +616,16 @@ namespace QuantConnect.Api
                 backtestId,
             }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out ReadChartResponse result);
+            ReadChartResponse result = default;
+            ApiConnection.TryRequest(request, out result);
+
+            var finish = DateTime.UtcNow.AddMinutes(1);
+            while (DateTime.UtcNow < finish && result.Chart == null)
+            {
+                Thread.Sleep(5000);
+                ApiConnection.TryRequest(request, out result);
+            }
+
             return result;
         }
 
@@ -1010,11 +1019,13 @@ namespace QuantConnect.Api
                 count
             }), ParameterType.RequestBody);
 
-            ApiConnection.TryRequest(request, out ReadChartResponse result);
+            ReadChartResponse result = default;
+            ApiConnection.TryRequest(request, out result);
 
             var finish = DateTime.UtcNow.AddMinutes(1);
-            while(DateTime.UtcNow < finish && !result.Success)
+            while(DateTime.UtcNow < finish && result.Chart == null)
             {
+                Thread.Sleep(5000);
                 ApiConnection.TryRequest(request, out result);
             }
             return result;
