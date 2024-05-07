@@ -174,8 +174,8 @@ namespace QuantConnect.Indicators
                 RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
                 DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
 
-                var timeTillExpiry = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
-                _greekValue = CalculateGreek(timeTillExpiry);
+                var timeTillExpiry = Convert.ToDecimal((Expiry - time).TotalDays / 365);
+                _greekValue = timeTillExpiry < 0 ? 0 : CalculateGreek(timeTillExpiry);
             }
 
             return _greekValue;

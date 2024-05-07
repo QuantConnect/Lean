@@ -184,11 +184,6 @@ namespace QuantConnect.Indicators
         // Calculate the Rho of the option
         protected override decimal CalculateGreek(decimal timeTillExpiry)
         {
-            if (timeTillExpiry <= 0)
-            {
-                return 0;
-            }
-
             var math = OptionGreekIndicatorsHelper.DecimalMath;
 
             switch (_optionModel)

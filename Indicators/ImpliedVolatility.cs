@@ -309,17 +309,18 @@ namespace QuantConnect.Indicators
         private decimal TheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeTillExpiry, decimal riskFreeRate, 
             decimal dividendYield, OptionRight optionType, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes)
         {
-            switch (optionModel)
+            if (timeTillExpiry <= 0m)
+            {
+                return 0m;
+            }
+
+            return optionModel switch
             {
                 // Binomial model also follows BSM process (log-normal)
-                case OptionPricingModelType.BinomialCoxRossRubinstein:
-                    return OptionGreekIndicatorsHelper.CRRTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType);
-                case OptionPricingModelType.ForwardTree:
-                    return OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType);
-                case OptionPricingModelType.BlackScholes:
-                default:
-                    return OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType);
-            }
+                OptionPricingModelType.BinomialCoxRossRubinstein => OptionGreekIndicatorsHelper.CRRTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType),
+                OptionPricingModelType.ForwardTree => OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType),
+                _ => OptionGreekIndicatorsHelper.BlackTheoreticalPrice(volatility, spotPrice, strikePrice, timeTillExpiry, riskFreeRate, dividendYield, optionType),
+            };
         }
 
         /// <summary>
