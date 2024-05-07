@@ -31,6 +31,11 @@ namespace QuantConnect.Indicators
      
         public static decimal BlackTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, OptionRight optionType)
         {
+            if (timeToExpiration <= 0m)
+            {
+                return 0m;
+            }
+
             var d1 = CalculateD1(spotPrice, strikePrice, timeToExpiration, riskFreeRate, dividendYield, volatility);
             var d2 = CalculateD2(d1, volatility, timeToExpiration);
             var norm = new Normal();
@@ -57,6 +62,7 @@ namespace QuantConnect.Indicators
 
         internal static decimal CalculateD1(decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, decimal volatility)
         {
+            timeToExpiration = Math.Max(0m, timeToExpiration);
             var numerator = DecimalMath(Math.Log, spotPrice / strikePrice) + (riskFreeRate - dividendYield + 0.5m * volatility * volatility) * timeToExpiration;
             var denominator = volatility * DecimalMath(Math.Sqrt, timeToExpiration);
             if (denominator == 0m)
@@ -69,6 +75,7 @@ namespace QuantConnect.Indicators
 
         internal static decimal CalculateD2(decimal d1, decimal volatility, decimal timeToExpiration)
         {
+            timeToExpiration = Math.Max(0m, timeToExpiration);
             return d1 - volatility * DecimalMath(Math.Sqrt, timeToExpiration);
         }
 
@@ -76,6 +83,11 @@ namespace QuantConnect.Indicators
         public static decimal CRRTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice,
             decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, OptionRight optionType, int steps = Steps)
         {
+            if (timeToExpiration <= 0m)
+            {
+                return 0m;
+            }
+
             var deltaTime = timeToExpiration / steps;
             var upFactor = DecimalMath(Math.Exp, volatility * DecimalMath(Math.Sqrt, deltaTime));
             if (upFactor == 1m)
@@ -92,6 +104,11 @@ namespace QuantConnect.Indicators
         public static decimal ForwardTreeTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice,
             decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, OptionRight optionType, int steps = Steps)
         {
+            if (timeToExpiration <= 0m)
+            {
+                return 0m;
+            }
+
             var deltaTime = timeToExpiration / steps;
             var discount = DecimalMath(Math.Exp, (riskFreeRate - dividendYield) * deltaTime);
             var upFactor = DecimalMath(Math.Exp, volatility * DecimalMath(Math.Sqrt, deltaTime)) * discount;
