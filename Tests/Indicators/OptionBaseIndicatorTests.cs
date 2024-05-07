@@ -107,6 +107,20 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void ZeroGreeksIfExpired()
+        {
+            var indicator = CreateIndicator();
+            var date = new DateTime(2099, 1, 1);    // date that the option must be expired already
+            var price = 500m;
+            var optionPrice = 10m;
+
+            indicator.Update(new IndicatorDataPoint(_symbol, date, optionPrice));
+            indicator.Update(new IndicatorDataPoint(_underlying, date, price));
+
+            Assert.AreEqual(0m, indicator.Current.Value);
+        }
+
+        [Test]
         public override void ResetsProperly()
         {
             var indicator = CreateIndicator();
