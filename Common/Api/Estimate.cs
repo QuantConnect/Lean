@@ -25,19 +25,16 @@ namespace QuantConnect.Api
         /// <summary>
         /// Estimate id
         /// </summary>
-        [JsonProperty(PropertyName = "estimateId")]
         public string EstimateId { get; set; }
 
         /// <summary>
         /// Estimate time in seconds
         /// </summary>
-        [JsonProperty(PropertyName = "time")]
         public int Time { get; set; }
 
         /// <summary>
         /// Estimate balance in QCC
         /// </summary>
-        [JsonProperty(PropertyName = "balance")]
         public int Balance { get; set; }
     }
 
@@ -50,7 +47,6 @@ namespace QuantConnect.Api
         /// <summary>
         /// Estimate object
         /// </summary>
-        [JsonProperty(PropertyName = "estimate")]
         public Estimate Estimate { get; set; }
     }
 }

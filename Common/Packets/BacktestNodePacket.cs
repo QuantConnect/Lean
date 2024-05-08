@@ -74,7 +74,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// True, if this is a debugging backtest
         /// </summary>
-        public bool IsDebugging;
+        public bool Debugging;
 
         /// <summary>
         /// Optional initial cash amount if set

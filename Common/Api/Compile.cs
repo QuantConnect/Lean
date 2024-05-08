@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -27,38 +27,32 @@ namespace QuantConnect.Api
         /// <summary>
         /// Compile Id for a sucessful build
         /// </summary>
-        [JsonProperty(PropertyName = "compileId")]
         public string CompileId { get; set; }
 
         /// <summary>
         /// True on successful compile
         /// </summary>
-        [JsonProperty(PropertyName = "state")]
         [JsonConverter(typeof(StringEnumConverter))]
         public CompileState State { get; set; }
 
         /// <summary>
         /// Logs of the compilation request
         /// </summary>
-        [JsonProperty(PropertyName = "logs")]
         public List<string> Logs { get; set; }
 
         /// <summary>
         /// Project Id we sent for compile
         /// </summary>
-        [JsonProperty(PropertyName = "projectId")]
         public int ProjectId { get; set; }
 
         /// <summary>
         /// Signature key of compilation
         /// </summary>
-        [JsonProperty(PropertyName = "signature")]
         public string Signature {  get; set; }
 
         /// <summary>
         /// Signature order of files to be compiled
         /// </summary>
-        [JsonProperty(PropertyName = "signatureOrder")]
         public List<string> SignatureOrder { get; set; }
     }
 }

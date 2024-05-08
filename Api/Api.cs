@@ -1179,7 +1179,7 @@ namespace QuantConnect.Api
             try
             {
                 // Download the file
-                var uri = new Uri(dataLink.Url);
+                var uri = new Uri(dataLink.Link);
                 using var dataStream = client.Value.GetStreamAsync(uri);
 
                 using var fileStream = new FileStream(FileExtension.ToNormalizedPath(filePath), FileMode.Create);

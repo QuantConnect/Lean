@@ -90,7 +90,7 @@ namespace QuantConnect.Lean.Engine.Setup
             IAlgorithm algorithm;
 
             var debugNode = algorithmNodePacket as BacktestNodePacket;
-            var debugging = debugNode != null && debugNode.IsDebugging || Config.GetBool("debugging", false);
+            var debugging = debugNode != null && debugNode.Debugging || Config.GetBool("debugging", false);
 
             if (debugging && !BaseSetupHandler.InitializeDebugging(algorithmNodePacket, WorkerThread))
             {
