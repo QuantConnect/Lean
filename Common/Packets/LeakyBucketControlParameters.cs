@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -52,7 +52,6 @@ namespace QuantConnect.Packets
         /// instantaneous usage of 'units'. In reality, the usage of 'units' takes times, and so it
         /// is possible for the bucket to incrementally refill while consuming from the bucket.
         /// </summary>
-        [JsonProperty("iCapacity")]
         public int Capacity;
 
         /// <summary>
@@ -61,7 +60,6 @@ namespace QuantConnect.Packets
         /// equal to one, then each time interval one new 'unit' will be made available for a consumer that is
         /// throttled by the leaky bucket.
         /// </summary>
-        [JsonProperty("iRefillAmount")]
         public int RefillAmount;
 
         /// <summary>
@@ -71,7 +69,6 @@ namespace QuantConnect.Packets
         /// every 30 minutes, 10 more 'units' become available for a consumer. The available 'units' will
         /// continue to increase until the bucket capacity is reached.
         /// </summary>
-        [JsonProperty("iTimeIntervalMinutes")]
         public int TimeIntervalMinutes;
 
         /// <summary>

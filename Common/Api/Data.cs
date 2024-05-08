@@ -29,19 +29,16 @@ namespace QuantConnect.Api
         /// <summary>
         /// Url to the data requested
         /// </summary>
-        [JsonProperty(PropertyName = "link")]
-        public string Url { get; set; }
+        public string Link { get; set; }
 
         /// <summary>
         /// Remaining QCC balance on account after this transaction
         /// </summary>
-        [JsonProperty(PropertyName = "balance")]
         public double Balance { get; set; }
 
         /// <summary>
         /// QCC Cost for this data link
         /// </summary>
-        [JsonProperty(PropertyName = "cost")]
         public double Cost { get; set; }
     }
 
@@ -65,7 +62,6 @@ namespace QuantConnect.Api
         /// <summary>
         /// Collection of prices objects
         /// </summary>
-        [JsonProperty(PropertyName = "prices")]
         public List<PriceEntry> Prices { get; set; }
 
         /// <summary>
@@ -130,31 +126,26 @@ namespace QuantConnect.Api
         /// <summary>
         /// The price for this entry in QCC
         /// </summary>
-        [JsonProperty(PropertyName = "price")]
         public int? Price { get; set; }
 
         /// <summary>
         /// The type associated to this price entry if any
         /// </summary>
-        [JsonProperty(PropertyName = "type")]
         public string Type { get; set; }
 
         /// <summary>
         /// True if the user is subscribed
         /// </summary>
-        [JsonProperty(PropertyName = "subscribed")]
         public bool? Subscribed { get; set; }
 
         /// <summary>
         /// The associated product id
         /// </summary>
-        [JsonProperty(PropertyName = "productId")]
         public int ProductId { get; set; }
 
         /// <summary>
         /// The associated data paths
         /// </summary>
-        [JsonProperty(PropertyName = "paths")]
         public HashSet<string> Paths { get; set; }
     }
 }

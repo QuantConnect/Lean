@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.API
             var dataLink = ApiClient.ReadDataLink(path, TestOrganization);
 
             Assert.IsTrue(dataLink.Success);
-            Assert.IsFalse(dataLink.Url.IsNullOrEmpty());
+            Assert.IsFalse(dataLink.Link.IsNullOrEmpty());
         }
 
         /// <summary>

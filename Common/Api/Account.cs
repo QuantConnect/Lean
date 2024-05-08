@@ -26,19 +26,16 @@ namespace QuantConnect.Api
         /// <summary>
         /// The organization Id
         /// </summary>
-        [JsonProperty(PropertyName = "organizationId")]
         public string OrganizationId { get; set; }
 
         /// <summary>
         /// The current account balance
         /// </summary>
-        [JsonProperty(PropertyName = "creditBalance")]
         public decimal CreditBalance { get; set; }
 
         /// <summary>
         /// The current organizations credit card
         /// </summary>
-        [JsonProperty(PropertyName = "card")]
         public Card Card { get; set; }
     }
 
@@ -50,13 +47,11 @@ namespace QuantConnect.Api
         /// <summary>
         /// Credit card brand
         /// </summary>
-        [JsonProperty(PropertyName = "brand")]
         public string Brand { get; set; }
 
         /// <summary>
         /// The credit card expiration
         /// </summary>
-        [JsonProperty(PropertyName = "expiration")]
         [JsonConverter(typeof(Time.MonthYearJsonConverter))]
         public DateTime Expiration { get; set; }
 
