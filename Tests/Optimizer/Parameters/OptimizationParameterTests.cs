@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,6 +21,7 @@ using NUnit.Framework;
 using QuantConnect.Optimizer.Parameters;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Tests.Optimizer.Parameters
 {
@@ -132,7 +133,17 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                 Assert.AreEqual("50.0", staticParameter.Value);
                 Assert.AreEqual("ema-fast", staticParameter.Name);
 
-                var serialized = JsonConvert.SerializeObject(staticParameter);
+                var serialized = JsonConvert.SerializeObject(staticParameter, new JsonSerializerSettings()
+                {
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new CamelCaseNamingStrategy
+                        {
+                            ProcessDictionaryKeys = false,
+                            OverrideSpecifiedNames = true
+                        }
+                    }
+                });
 
                 Assert.AreEqual(expected, serialized);
             }
