@@ -32,7 +32,7 @@ namespace QuantConnect.Util
     public class PythonUtil
     {
         private static Regex LineRegex = new Regex("line (\\d+)", RegexOptions.Compiled);
-        private static Regex StackTraceFileLineReguex = new Regex("\"(.+)\", line (\\d+), in (.+)", RegexOptions.Compiled | RegexOptions.Singleline);
+        private static Regex StackTraceFileLineRegex = new Regex("\"(.+)\", line (\\d+), in (.+)", RegexOptions.Compiled | RegexOptions.Singleline);
         private static readonly Lazy<dynamic> lazyInspect = new Lazy<dynamic>(() => Py.Import("inspect"));
 
         /// <summary>
@@ -221,7 +221,7 @@ namespace QuantConnect.Util
                         return string.Empty;
                     }
 
-                    var match = StackTraceFileLineReguex.Match(trimedTrace);
+                    var match = StackTraceFileLineRegex.Match(trimedTrace);
                     if (!match.Success)
                     {
                         return string.Empty;
@@ -242,8 +242,7 @@ namespace QuantConnect.Util
 
                     return $"  at {locationAndInfo}{Environment.NewLine} in {fileName}: line {lineNumber}";
                 })
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .ToList();
+                .Where(x => !string.IsNullOrWhiteSpace(x));
 
             var result = string.Join(Environment.NewLine, blocks);
             result = Extensions.ClearLeanPaths(result);
