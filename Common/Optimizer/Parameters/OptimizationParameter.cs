@@ -26,6 +26,7 @@ namespace QuantConnect.Optimizer.Parameters
         /// <summary>
         /// Name of optimization parameter
         /// </summary>
+        [JsonProperty("name")]
         public string Name { get; }
 
         /// <summary>
