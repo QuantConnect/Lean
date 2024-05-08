@@ -29,7 +29,6 @@ namespace QuantConnect.Api
         /// <summary>
         /// Organization read from the response
         /// </summary>
-        [JsonProperty(PropertyName = "organization")]
         public Organization Organization { get; set; }
     }
 
@@ -47,13 +46,11 @@ namespace QuantConnect.Api
         /// <summary>
         /// Organization Product Subscriptions
         /// </summary>
-        [JsonProperty(PropertyName = "products")]
         public List<Product> Products { get; set; }
 
         /// <summary>
         /// Organization Credit Balance and Transactions
         /// </summary>
-        [JsonProperty(PropertyName = "credit")]
         public Credit Credit { get; set; }
     }
 
@@ -89,7 +86,6 @@ namespace QuantConnect.Api
         /// <summary>
         /// QCC Current Balance
         /// </summary>
-        [JsonProperty(PropertyName = "balance")]
         public decimal Balance { get; set; }
     }
 

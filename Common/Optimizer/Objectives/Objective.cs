@@ -31,7 +31,6 @@ namespace QuantConnect.Optimizer.Objectives
         /// <summary>
         /// Target; property of json file we want to track
         /// </summary>
-        [JsonProperty("target")]
         public string Target
         {
             get => _target;
@@ -46,7 +45,6 @@ namespace QuantConnect.Optimizer.Objectives
         /// </summary>
         /// <remarks>For <see cref="Objectives.Target"/> if defined and backtest complies with the targets then finish optimization</remarks>
         /// <remarks>For <see cref="Constraint"/> non optional, the value of the target constraint</remarks>
-        [JsonProperty("targetValue")]
         public decimal? TargetValue { get; set; }
 
         protected Objective()

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,7 +26,6 @@ namespace QuantConnect.Optimizer.Strategies
         /// <summary>
         /// TODO: implement
         /// </summary>
-        [JsonProperty("max-run-time")]
         public TimeSpan MaxRuntime { get; set; } = TimeSpan.MaxValue;
     }
 }
