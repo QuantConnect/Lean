@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using System.Text.RegularExpressions;
 using QuantConnect.Data.UniverseSelection;
+using System.IO;
+using System.Globalization;
 
 namespace QuantConnect.Util
 {
@@ -30,6 +32,7 @@ namespace QuantConnect.Util
     public class PythonUtil
     {
         private static Regex LineRegex = new Regex("line (\\d+)", RegexOptions.Compiled);
+        private static Regex StackTraceFileLineReguex = new Regex("\"(.+)\", line (\\d+), in (.+)", RegexOptions.Compiled | RegexOptions.Singleline);
         private static readonly Lazy<dynamic> lazyInspect = new Lazy<dynamic>(() => Py.Import("inspect"));
 
         /// <summary>
@@ -203,41 +206,43 @@ namespace QuantConnect.Util
                 return string.Empty;
             }
 
-            // Format the information in every line
-            var lines = value.Substring(1, value.Length - 1)
-                .Split(new[] { "  File " }, StringSplitOptions.RemoveEmptyEntries)
-                .Where(x => x.Split(',').Length > 2)
-                .Select(x =>
+            // The stack trace info before "at Python.Runtime." is the trace we want,
+            // which is for user Python code.
+            var endIndex = value.IndexOf("at Python.Runtime.", StringComparison.InvariantCulture);
+            var neededStackTrace = endIndex > 0 ? value.Substring(0, endIndex) : value;
+
+            // The stack trace is separated in blocks by file
+            var blocks = neededStackTrace.Split("  File ", StringSplitOptions.RemoveEmptyEntries)
+                .Select(fileTrace =>
                 {
-                    // Get the directory where the user files are located
-                    var baseScript = value.GetStringBetweenChars('\"', '\"');
-                    var length = Math.Max(baseScript.LastIndexOf('/'), baseScript.LastIndexOf('\\'));
-                    if (length < 0)
+                    var trimedTrace = fileTrace.Trim();
+                    if (string.IsNullOrWhiteSpace(trimedTrace))
                     {
                         return string.Empty;
                     }
-                    var directory = baseScript.Substring(0, 1 + length);
 
-                    var info = x.Replace(directory, string.Empty).Split(',');
-                    var line = info[0].GetStringBetweenChars('\"', '\"');
-                    var lineNumber = int.Parse(info[1].Replace("line", string.Empty).Trim()) + ExceptionLineShift;
-                    line = $" in {line}: line {lineNumber}";
+                    var match = StackTraceFileLineReguex.Match(trimedTrace);
+                    if (!match.Success)
+                    {
+                        return string.Empty;
+                    }
 
-                    info = info[2].Split(new[] { "\\n" }, StringSplitOptions.RemoveEmptyEntries);
-                    line = $" {info[0].Replace(" in ", " at ")}{line}";
+                    var capture = match.Captures[0] as Match;
+                    var fileName = Path.GetFileName(capture.Groups[1].Value);
+                    var lineNumber = int.Parse(capture.Groups[2].Value, CultureInfo.InvariantCulture) + ExceptionLineShift;
+                    var locationAndInfo = capture.Groups[3].Value.Trim();
 
-                    // If we have the exact statement, add it to the error line
-                    if (info.Length > 2) line += $" :: {info[1].Trim()}";
+                    return $"  at {locationAndInfo}{Environment.NewLine} in {fileName}: line {lineNumber}";
+                })
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToList();
 
-                    return line;
-                });
+            var result = string.Join(Environment.NewLine, blocks);
+            result = Extensions.ClearLeanPaths(result);
 
-            var errorLine = string.Join(Environment.NewLine, lines);
-            errorLine = Extensions.ClearLeanPaths(errorLine);
-
-            return string.IsNullOrWhiteSpace(errorLine)
+            return string.IsNullOrWhiteSpace(result)
                 ? string.Empty
-                : $"{Environment.NewLine}{errorLine}{Environment.NewLine}";
+                : $"{Environment.NewLine}{result}{Environment.NewLine}";
         }
 
         /// <summary>

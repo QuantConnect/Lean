@@ -121,9 +121,9 @@ def Test2(securityType: SecurityType) -> None:
   at Initialize
     s
 ===
-   at Python.Runtime.PyObject.Invoke(PyTuple args in BasicTemplateAlgorithm.py: line 20
+ in BasicTemplateAlgorithm.py: line 20
 ",
-            @"   File ""D:/QuantConnect/MyLean/Lean/Algorithm.Python\BasicTemplateAlgorithm.py"", line 30, in Initialize
+            @"  File ""D:/QuantConnect/MyLean/Lean/Algorithm.Python\BasicTemplateAlgorithm.py"", line 30, in Initialize
     s
 ===
    at Python.Runtime.PyObject.Invoke(PyTuple args, PyDict kw)
@@ -136,12 +136,12 @@ def Test2(securityType: SecurityType) -> None:
             -10)]
         [TestCase(@"
   at Initialize
-    self.SetEndDate(201)
+    self.SetEndDate(201, 1)
 ===
-   at Python.Runtime.PyObject.Invoke(PyTuple args in BasicTemplateAlgorithm.py: line 40
+ in BasicTemplateAlgorithm.py: line 40
 ",
             @"  File ""D:/QuantConnect/MyLean/Lean/Algorithm.Python\BasicTemplateAlgorithm.py"", line 30, in Initialize
-    self.SetEndDate(201)
+    self.SetEndDate(201, 1)
 ===
    at Python.Runtime.PyObject.Invoke(PyTuple args, PyDict kw)
    at Python.Runtime.PyObject.InvokeMethod(String name, PyTuple args, PyDict kw)
@@ -154,11 +154,7 @@ def Test2(securityType: SecurityType) -> None:
         [TestCase(@"
   at <module>
     class BasicTemplateAlgorithm(QCAlgorithm):
-   at Python.Runtime.PythonException.ThrowLastAsClrException()
-   at Python.Runtime.NewReferenceExtensions.BorrowOrThrow(NewReference& reference)
-   at Python.Runtime.PyModule.Import(String name)
-   at Python.Runtime.Py.Import(String name)
-   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper..ctor(String moduleName) at AlgorithmFactory\Python\Wrappers\AlgorithmPythonWrapper.cs:line 74 in BasicTemplateAlgorithm.py: line 23
+ in BasicTemplateAlgorithm.py: line 23
 ",
             @"  File ""D:/QuantConnect/MyLean/Lean/Algorithm.Python\BasicTemplateAlgorithm.py"", line 23, in <module>
     class BasicTemplateAlgorithm(QCAlgorithm):
@@ -174,11 +170,10 @@ def Test2(securityType: SecurityType) -> None:
  in PandasMapper.py: line 76
   at HistoryCall
     history.loc['QQQ']   # <--- raises Key Error
- in Algorithm.Python/TestAlgorithm.py: line 27
+ in TestAlgorithm.py: line 27
   at OnData
     self.HistoryCall()
-   at Python.Runtime.PythonException.ThrowLastAsClrException()
-   at Python.Runtime.PyObject.Invoke(PyTuple args in Algorithm.Python/TestAlgorithm.py: line 23
+ in TestAlgorithm.py: line 23
 ",
             @"  File ""/home/user/QuantConnect/Lean/Launcher/bin/Debug/PandasMapper.py"", line 76, in wrapped_function
     raise KeyError(f""No key found for either mapped or original key. Mapped Key: {mKey}; Original Key: {oKey}"")
@@ -191,14 +186,13 @@ def Test2(securityType: SecurityType) -> None:
    at Python.Runtime.PyObject.TryInvoke(InvokeBinder binder, Object[] args, Object& result)
    at CallSite.Target(Closure , CallSite , Object , PythonSlice )
    at System.Dynamic.UpdateDelegates.UpdateAndExecuteVoid2[T0,T1](CallSite site, T0 arg0, T1 arg1)
-   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper.OnData(Slice slice) in /home/jhonathan/QuantConnect/Lean/AlgorithmFactory/Python/Wrappers/AlgorithmPythonWrapper.cs:line 587
-   at QuantConnect.Lean.Engine.AlgorithmManager.Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token) in /home/jhonathan/QuantConnect/Lean/Engine/AlgorithmManager.cs:line 523",
+   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper.OnData(Slice slice) in /home/user/QuantConnect/Lean/AlgorithmFactory/Python/Wrappers/AlgorithmPythonWrapper.cs:line 587
+   at QuantConnect.Lean.Engine.AlgorithmManager.Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token) in /home/user/QuantConnect/Lean/Engine/AlgorithmManager.cs:line 523",
             0)]
         [TestCase(@"
   at OnData
     raise ValueError(""""ASD"""")
-   at Python.Runtime.PythonException.ThrowLastAsClrException() at src\runtime\PythonException.cs:line 52
-   at Python.Runtime.PyObject.Invoke(PyTuple args in BasicTemplateAlgorithm.py: line 43
+ in BasicTemplateAlgorithm.py: line 43
 ",
             @"  File ""D:\QuantConnect/MyLean/Lean/Algorithm.Python\BasicTemplateAlgorithm.py"", line 43, in OnData
     raise ValueError(""""ASD"""")
@@ -209,6 +203,23 @@ def Test2(securityType: SecurityType) -> None:
    at System.Dynamic.UpdateDelegates.UpdateAndExecuteVoid2[T0,T1](CallSite site, T0 arg0, T1 arg1)
    at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper.OnData(Slice slice) in D:\QuantConnect\MyLean\Lean\AlgorithmFactory\Python\Wrappers\AlgorithmPythonWrapper.cs:line 693
    at QuantConnect.Lean.Engine.AlgorithmManager.Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationToken token) in D:\QuantConnect\MyLean\Lean\Engine\AlgorithmManager.cs:line 526",
+            0)]
+        [TestCase(@"
+  at on_data
+    self.set_holdings(""SPY"", 1 / None)
+                             ~~^~~~~~
+ in BasicTemplateAlgorithm.py: line 46
+",
+            @" File ""C:\Users/user/QuantConnect/Lean/Algorithm.Python\BasicTemplateAlgorithm.py"", line 46, in on_data
+    self.set_holdings(""SPY"", 1 / None)
+                             ~~^~~~~~
+   at Python.Runtime.PythonException.ThrowLastAsClrException()
+   at Python.Runtime.PyObject.Invoke(PyTuple args, PyDict kw)
+   at Python.Runtime.PyObject.TryInvoke(InvokeBinder binder, Object[] args, Object& result)
+   at CallSite.Target(Closure , CallSite , Object , Slice )
+   at System.Dynamic.UpdateDelegates.UpdateAndExecuteVoid2[T0,T1](CallSite site, T0 arg0, T1 arg1)
+   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper.OnData(Slice slice) in C:\Users\user\QuantConnect\Lean\AlgorithmFactory\Python\Wrappers\AlgorithmPythonWrapper.cs:line 759
+   at QuantConnect.Lean.Engine.AlgorithmManager.Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationToken token) in C:\Users\user\QuantConnect\Lean\Engine\AlgorithmManager.cs:line 524",
             0)]
         public void ParsesPythonExceptionStackTrace(string expected, string original, int shift)
         {
