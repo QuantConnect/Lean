@@ -228,7 +228,15 @@ namespace QuantConnect.Util
                     }
 
                     var capture = match.Captures[0] as Match;
-                    var fileName = Path.GetFileName(capture.Groups[1].Value);
+
+                    var filePath = capture.Groups[1].Value;
+                    var lastFileSeparatorIndex = Math.Max(filePath.LastIndexOf('/'), filePath.LastIndexOf('\\'));
+                    if (lastFileSeparatorIndex < 0)
+                    {
+                        return string.Empty;
+                    }
+
+                    var fileName = filePath.Substring(lastFileSeparatorIndex + 1);
                     var lineNumber = int.Parse(capture.Groups[2].Value, CultureInfo.InvariantCulture) + ExceptionLineShift;
                     var locationAndInfo = capture.Groups[3].Value.Trim();
 
