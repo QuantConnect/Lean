@@ -27,6 +27,8 @@ namespace QuantConnect.Util
     /// </summary>
     public class SeriesJsonConverter : JsonConverter
     {
+        private ColorJsonConverter _colorJsonConverter = new ();
+
         /// <summary>
         /// Write Series to Json
         /// </summary>
@@ -43,30 +45,30 @@ namespace QuantConnect.Util
 
             writer.WriteStartObject();
 
-            writer.WritePropertyName("Name");
+            writer.WritePropertyName("name");
             writer.WriteValue(baseSeries.Name);
-            writer.WritePropertyName("Unit");
+            writer.WritePropertyName("unit");
             writer.WriteValue(baseSeries.Unit);
-            writer.WritePropertyName("Index");
+            writer.WritePropertyName("index");
             writer.WriteValue(baseSeries.Index);
-            writer.WritePropertyName("SeriesType");
+            writer.WritePropertyName("seriesType");
             writer.WriteValue(baseSeries.SeriesType);
 
             if (baseSeries.ZIndex.HasValue)
             {
-                writer.WritePropertyName("ZIndex");
+                writer.WritePropertyName("zIndex");
                 writer.WriteValue(baseSeries.ZIndex.Value);
             }
 
             if (baseSeries.IndexName != null)
             {
-                writer.WritePropertyName("IndexName");
+                writer.WritePropertyName("indexName");
                 writer.WriteValue(baseSeries.IndexName);
             }
 
             if (baseSeries.Tooltip != null)
             {
-                writer.WritePropertyName("Tooltip");
+                writer.WritePropertyName("tooltip");
                 writer.WriteValue(baseSeries.Tooltip);
             }
 
@@ -85,18 +87,18 @@ namespace QuantConnect.Util
                     }
 
                     // have to add the converter we want to use, else will use default
-                    serializer.Converters.Add(new ColorJsonConverter());
+                    serializer.Converters.Add(_colorJsonConverter);
 
-                    writer.WritePropertyName("Values");
+                    writer.WritePropertyName("values");
                     serializer.Serialize(writer, values);
-                    writer.WritePropertyName("Color");
+                    writer.WritePropertyName("color");
                     serializer.Serialize(writer, series.Color);
-                    writer.WritePropertyName("ScatterMarkerSymbol");
+                    writer.WritePropertyName("scatterMarkerSymbol");
                     serializer.Serialize(writer, series.ScatterMarkerSymbol);
                     break;
 
                 default:
-                    writer.WritePropertyName("Values");
+                    writer.WritePropertyName("values");
                     serializer.Serialize(writer, (value as BaseSeries).Values);
                     break;
             }
@@ -114,7 +116,7 @@ namespace QuantConnect.Util
             var name = (jObject["Name"] ?? jObject["name"]).Value<string>();
             var unit = (jObject["Unit"] ?? jObject["unit"]).Value<string>();
             var index = (jObject["Index"] ?? jObject["index"]).Value<int>();
-            var seriesType = (SeriesType)((jObject["SeriesType"] ?? jObject["seriesType"]).Value<int>());
+            var seriesType = (SeriesType)(jObject["SeriesType"] ?? jObject["seriesType"]).Value<int>();
             var values = (JArray)(jObject["Values"] ?? jObject["values"]);
 
             var zindex = jObject.TryGetPropertyValue<int?>("ZIndex") ?? jObject.TryGetPropertyValue<int?>("zIndex");

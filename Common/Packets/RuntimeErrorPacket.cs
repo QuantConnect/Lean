@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -27,25 +27,21 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Runtime error message from the exception
         /// </summary>
-        [JsonProperty(PropertyName = "sMessage")]
         public string Message;
 
         /// <summary>
         /// Algorithm id which generated this runtime error
         /// </summary>
-        [JsonProperty(PropertyName = "sAlgorithmID")]
         public string AlgorithmId;
 
         /// <summary>
         /// Error stack trace information string passed through from the Lean exception
         /// </summary>
-        [JsonProperty(PropertyName = "sStackTrace")]
         public string StackTrace;
 
         /// <summary>
         /// User Id associated with the backtest that threw the error
         /// </summary>
-        [JsonProperty(PropertyName = "iUserID")]
         public int UserId = 0;
 
         /// <summary>

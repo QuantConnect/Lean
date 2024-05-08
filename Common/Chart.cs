@@ -18,8 +18,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using QuantConnect.Logging;
-using QuantConnect.Util;
 
 namespace QuantConnect
 {
@@ -28,7 +28,6 @@ namespace QuantConnect
     /// </summary>
     public class Chart
     {
-
         /// <summary>
         /// Name of the Chart
         /// </summary>

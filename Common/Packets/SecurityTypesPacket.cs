@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,7 +27,6 @@ namespace QuantConnect.Packets
         /// <summary>
         /// List of Security Type the user has requested (Equity, Forex, Futures etc).
         /// </summary>
-        [JsonProperty(PropertyName = "aMarkets")]
         public List<SecurityType> Types = new List<SecurityType>();
 
         /// <summary>

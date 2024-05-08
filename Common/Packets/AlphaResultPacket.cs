@@ -29,38 +29,36 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The user's id that deployed the alpha stream
         /// </summary>
-        [JsonProperty("user-id")]
         public int UserId { get; set; }
 
         /// <summary>
         /// The deployed alpha id. This is the id generated upon submssion to the alpha marketplace.
         /// If this is a user backtest or live algo then this will not be specified
         /// </summary>
-        [JsonProperty("alpha-id", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string AlphaId { get; set; }
 
         /// <summary>
         /// The algorithm's unique identifier
         /// </summary>
-        [JsonProperty("algorithm-id")]
         public string AlgorithmId { get; set; }
 
         /// <summary>
         /// The generated insights
         /// </summary>
-        [JsonProperty("insights", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public List<Insight> Insights { get; set; }
 
         /// <summary>
         /// The generated OrderEvents
         /// </summary>
-        [JsonProperty("order-events", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public List<OrderEvent> OrderEvents { get; set; }
 
         /// <summary>
         /// The new or updated Orders
         /// </summary>
-        [JsonProperty("orders", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public List<Order> Orders { get; set; }
 
         /// <summary>

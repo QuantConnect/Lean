@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using QuantConnect.Packets;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
+using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Tests.Common
 {
@@ -41,13 +42,14 @@ namespace QuantConnect.Tests.Common
             var algorithmConfiguration = AlgorithmConfiguration.Create(algorithm, null);
 
             Assert.AreEqual(currency, algorithmConfiguration.AccountCurrency);
-            Assert.AreEqual(brokerageName, algorithmConfiguration.BrokerageName);
+            Assert.AreEqual(brokerageName, algorithmConfiguration.Brokerage);
             Assert.AreEqual(accountType, algorithmConfiguration.AccountType);
             CollectionAssert.AreEquivalent(parameters, algorithmConfiguration.Parameters);
         }
 
-        [Test]
-        public void JsonRoundtrip()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void JsonRoundtrip(bool backwardsCompatible)
         {
             var algorithm = new QCAlgorithm();
             algorithm.SetName("Backtest name");
@@ -64,11 +66,30 @@ namespace QuantConnect.Tests.Common
             };
             var algorithmConfiguration = AlgorithmConfiguration.Create(algorithm, backtestNode);
 
-            var serialized = JsonConvert.SerializeObject(algorithmConfiguration);
-
-            Assert.AreEqual($"{{\"Name\":\"Backtest name\",\"Tags\":[\"tag1\",\"tag2\"],\"AccountCurrency\":\"GBP\",\"Brokerage\":32," +
+            var settings = new JsonSerializerSettings()
+            {
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy
+                    {
+                        ProcessDictionaryKeys = false,
+                        OverrideSpecifiedNames = true
+                    }
+                }
+            };
+            var serialized = JsonConvert.SerializeObject(algorithmConfiguration, settings);
+            if (backwardsCompatible)
+            {
+                serialized = $"{{\"Name\":\"Backtest name\",\"Tags\":[\"tag1\",\"tag2\"],\"AccountCurrency\":\"GBP\",\"Brokerage\":32," +
                 $"\"AccountType\":1,\"Parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"OutOfSampleMaxEndDate\":\"2023-01-01T00:00:00\"," +
-                $"\"OutOfSampleDays\":30,\"StartDate\":\"1998-01-01 00:00:00\",\"EndDate\":\"{algorithm.EndDate.ToString(DateFormat.UI)}\",\"TradingDaysPerYear\":252}}", serialized);
+                $"\"OutOfSampleDays\":30,\"StartDate\":\"1998-01-01 00:00:00\",\"EndDate\":\"{algorithm.EndDate.ToString(DateFormat.UI)}\",\"TradingDaysPerYear\":252}}";
+            }
+            else
+            {
+                Assert.AreEqual($"{{\"name\":\"Backtest name\",\"tags\":[\"tag1\",\"tag2\"],\"accountCurrency\":\"GBP\",\"brokerage\":32," +
+                $"\"accountType\":1,\"parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"outOfSampleMaxEndDate\":\"2023-01-01T00:00:00\"," +
+                $"\"outOfSampleDays\":30,\"startDate\":\"1998-01-01 00:00:00\",\"endDate\":\"{algorithm.EndDate.ToString(DateFormat.UI)}\",\"tradingDaysPerYear\":252}}", serialized);
+            }
 
             var deserialize = JsonConvert.DeserializeObject<AlgorithmConfiguration>(serialized);
 
@@ -76,7 +97,7 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(algorithmConfiguration.Parameters, deserialize.Parameters);
             Assert.AreEqual(algorithmConfiguration.AccountCurrency, deserialize.AccountCurrency);
             Assert.AreEqual(algorithmConfiguration.AccountType, deserialize.AccountType);
-            Assert.AreEqual(algorithmConfiguration.BrokerageName, deserialize.BrokerageName);
+            Assert.AreEqual(algorithmConfiguration.Brokerage, deserialize.Brokerage);
             var expected = new DateTime(algorithm.EndDate.Year, algorithm.EndDate.Month, algorithm.EndDate.Day, algorithm.EndDate.Hour, algorithm.EndDate.Minute, algorithm.EndDate.Second);
             Assert.AreEqual(expected, deserialize.EndDate);
             Assert.AreEqual(algorithmConfiguration.OutOfSampleDays, deserialize.OutOfSampleDays);

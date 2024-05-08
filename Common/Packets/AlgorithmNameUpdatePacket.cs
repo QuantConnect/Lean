@@ -27,13 +27,11 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Algorithm id for this order event
         /// </summary>
-        [JsonProperty(PropertyName = "sAlgorithmID")]
         public string AlgorithmId;
 
         /// <summary>
         /// The new name
         /// </summary>
-        [JsonProperty(PropertyName = "sName")]
         public string Name;
 
         /// <summary>

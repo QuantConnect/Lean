@@ -34,55 +34,46 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Name of the backtest as randomly defined in the IDE.
         /// </summary>
-        [JsonProperty(PropertyName = "sName")]
         public string Name = "";
 
         /// <summary>
         /// BacktestId / Algorithm Id for this task
         /// </summary>
-        [JsonProperty(PropertyName = "sBacktestID")]
         public string BacktestId = DefaultId;
 
         /// <summary>
         /// Optimization Id for this task
         /// </summary>
-        [JsonProperty(PropertyName = "sOptimizationID")]
         public string OptimizationId;
 
         /// <summary>
         /// Backtest start-date as defined in the Initialize() method.
         /// </summary>
-        [JsonProperty(PropertyName = "dtPeriodStart")]
         public DateTime? PeriodStart;
 
         /// <summary>
         /// Backtest end date as defined in the Initialize() method.
         /// </summary>
-        [JsonProperty(PropertyName = "dtPeriodFinish")]
         public DateTime? PeriodFinish;
 
         /// <summary>
         /// Backtest maximum end date
         /// </summary>
-        [JsonProperty(PropertyName = "dtOutOfSampleMaxEndDate")]
         public DateTime? OutOfSampleMaxEndDate;
 
         /// <summary>
         /// The backtest out of sample day count
         /// </summary>
-        [JsonProperty(PropertyName = "iOutOfSampleDays")]
         public int OutOfSampleDays;
 
         /// <summary>
         /// Estimated number of trading days in this backtest task based on the start-end dates.
         /// </summary>
-        [JsonProperty(PropertyName = "iTradeableDates")]
         public int TradeableDates = 0;
 
         /// <summary>
         /// True, if this is a debugging backtest
         /// </summary>
-        [JsonProperty(PropertyName = "bDebugging")]
         public bool IsDebugging;
 
         /// <summary>
