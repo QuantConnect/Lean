@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from Alphas.PearsonCorrelationPairsTradingAlphaModel import PearsonCorrelationPairsTradingAlphaModel
 
 ### <summary>
 ### Framework algorithm that uses the PearsonCorrelationPairsTradingAlphaModel.

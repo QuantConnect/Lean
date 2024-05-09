@@ -36,7 +36,6 @@ using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Packets;
-using QuantConnect.Python;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
@@ -1435,56 +1434,6 @@ actualDictionary.update({'IBM': 5})
             }
         }
 
-        public class TestGenericClass<T>
-        {
-            public T Value { get; set; }
-        }
-
-        public static TestGenericClass<int> GetGenericClassObject()
-        {
-            return new TestGenericClass<int>();
-        }
-
-        [Test]
-        public void PyObjectConvertFromGenericCSharpType()
-        {
-            using (Py.GIL())
-            {
-                var module = PyModule.FromString(
-                    "PyObjectConvertFromGenericCSharpType",
-                    @"
-from QuantConnect.Tests.Common.Util import ExtensionsTests
-
-def GetGenericClassObject():
-    return ExtensionsTests.GetGenericClassObject()
-");
-
-                var genericObject = module.GetAttr("GetGenericClassObject").Invoke();
-                var result = genericObject.TryConvert<TestGenericClass<int>>(out var _);
-                Assert.IsTrue(result);
-            }
-        }
-
-        [Test]
-        public void PyObjectConvertPythonTypeDerivedFromCSharpType([Values] bool allowPythonDerivative)
-        {
-            using (Py.GIL())
-            {
-                var module = PyModule.FromString(
-                    "PyObjectConvertPythonTypeDerivedFromCSharpType",
-                    @"
-from AlgorithmImports import *
-
-class TestPythonDerivedClass(PythonData):
-    pass
-");
-
-                var obj = module.GetAttr("TestPythonDerivedClass").Invoke();
-                var result = obj.TryConvert<PythonData>(out var _, allowPythonDerivative);
-
-                Assert.AreEqual(allowPythonDerivative, result);
-            }
-        }
 
         [Test]
         public void BatchByDoesNotDropItems()
@@ -1805,7 +1754,7 @@ def select_symbol(fundamental):
 
         [TestCase("GOOGL", "2004/08/19", "2024/03/01", 2, "GOOG,GOOGL")] // IPO: August 19, 2004
         [TestCase("GOOGL", "2010/02/01", "2012/03/01", 1, "GOOG")]
-        [TestCase("GOOGL", "2014/04/02", "2024/03/01", 2, "GOOG,GOOGL")] // The restructuring: "GOOG" to "GOOGL"
+        [TestCase("GOOGL", "2014/04/02", "2024/03/01", 2, "GOOG,GOOGL")] // The restructuring: "GOOG" to "GOOGL" 
         [TestCase("GOOGL", "2014/02/01", "2024/03/01", 2, "GOOG,GOOGL")]
         [TestCase("GOOGL", "2020/02/01", "2024/03/01", 1, "GOOGL")]
         [TestCase("GOOGL", "2023/02/01", "2024/03/01", 1, "GOOGL")]

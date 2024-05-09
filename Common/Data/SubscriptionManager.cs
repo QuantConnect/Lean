@@ -153,6 +153,7 @@ namespace QuantConnect.Data
                 dataNormalizationMode).First();
         }
 
+
         /// <summary>
         /// Add a consolidator for the symbol
         /// </summary>
@@ -227,7 +228,6 @@ namespace QuantConnect.Data
             foreach (var subscription in _subscriptionManager.GetSubscriptionDataConfigs(symbol))
             {
                 subscription.Consolidators.Remove(consolidator);
-
                 if (_consolidators.Remove(consolidator, out var consolidatorsToScan))
                 {
                     consolidatorsToScan.Dispose();
@@ -236,21 +236,6 @@ namespace QuantConnect.Data
 
             // dispose of the consolidator to remove any remaining event handlers
             consolidator.DisposeSafely();
-        }
-
-        /// <summary>
-        /// Removes the specified python consolidator for the symbol
-        /// </summary>
-        /// <param name="symbol">The symbol the consolidator is receiving data from</param>
-        /// <param name="pyConsolidator">The python consolidator instance to be removed</param>
-        public void RemoveConsolidator(Symbol symbol, PyObject pyConsolidator)
-        {
-            if (!pyConsolidator.TryConvert(out IDataConsolidator consolidator))
-            {
-                consolidator = new DataConsolidatorPythonWrapper(pyConsolidator);
-            }
-
-            RemoveConsolidator(symbol, consolidator);
         }
 
         /// <summary>
