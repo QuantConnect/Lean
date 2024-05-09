@@ -156,7 +156,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 19623;
+        public long DataPoints => 19908;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -171,30 +171,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "-54.58%"},
-            {"Compounding Annual Return", "101.333%"},
+            {"Compounding Annual Return", "99.378%"},
             {"Drawdown", "7.600%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "105044"},
-            {"Net Profit", "5.044%"},
-            {"Sharpe Ratio", "5.248"},
+            {"End Equity", "104974"},
+            {"Net Profit", "4.974%"},
+            {"Sharpe Ratio", "5.19"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "89.867%"},
+            {"Probabilistic Sharpe Ratio", "89.439%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.692"},
+            {"Alpha", "1.674"},
             {"Beta", "-0.205"},
             {"Annual Standard Deviation", "0.321"},
             {"Annual Variance", "0.103"},
-            {"Information Ratio", "4.556"},
+            {"Information Ratio", "4.505"},
             {"Tracking Error", "0.36"},
-            {"Treynor Ratio", "-8.226"},
+            {"Treynor Ratio", "-8.141"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$59000000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
             {"Portfolio Turnover", "2.19%"},
-            {"OrderListHash", "d85202934d9c1ecad55b8ecc0176116d"}
+            {"OrderListHash", "025b99be4e9008421548aa498fece11e"}
         };
     }
 }

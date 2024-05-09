@@ -8,7 +8,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateIndexHourlyAlgorithm : BasicTemplateIndexDailyAlgorithm
     {
         protected override Resolution Resolution => Resolution.Hour;
-        protected override int ExpectedBarCount => base.ExpectedBarCount * 7;
+        protected override int ExpectedBarCount => base.ExpectedBarCount * 8;
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 391;
+        public override long DataPoints => 401;
 
         /// <summary>
         /// Data Points count of the algorithm history
