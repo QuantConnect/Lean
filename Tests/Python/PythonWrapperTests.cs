@@ -19,7 +19,6 @@ using Python.Runtime;
 using QuantConnect.Python;
 using System.Collections.Generic;
 using QuantConnect.Statistics;
-using System.Reflection;
 
 namespace QuantConnect.Tests.Python
 {
@@ -28,31 +27,47 @@ namespace QuantConnect.Tests.Python
         [TestFixture]
         public class ValidateImplementationOf
         {
-            [TestCase(nameof(MissingMethodOne), "ModelMissingMethodOne", "MethodOne")]
-            [TestCase(nameof(MissingProperty), "ModelMissingProperty", "PropertyOne")]
-            public void ThrowsOnMissingMember(string moduleName, string className, string missingMemberName)
+            [Test]
+            public void ThrowsOnMissingMember()
             {
                 using (Py.GIL())
                 {
-                    var moduleStr = GetFieldValue(moduleName);
-                    var module = PyModule.FromString(nameof(ValidateImplementationOf), moduleStr);
-                    var model = module.GetAttr(className).Invoke();
+                    var module = PyModule.FromString(nameof(ValidateImplementationOf), MissingMethodOne);
+                    var model = module.GetAttr("ModelMissingMethodOne");
                     Assert.That(() => model.ValidateImplementationOf<IModel>(), Throws
-                        .Exception.InstanceOf<NotImplementedException>().With.Message.Contains(missingMemberName));
+                        .Exception.InstanceOf<NotImplementedException>().With.Message.Contains("MethodOne"));
                 }
             }
 
-            [TestCase(nameof(FullyImplemented), "FullyImplementedModel")]
-            [TestCase(nameof(FullyImplementedSnakeCase), "FullyImplementedSnakeCaseModel")]
-            [TestCase(nameof(FullyImplementedWithPropertyAsField), "FullyImplementedModelWithPropertyAsField")]
-            [TestCase(nameof(DerivedFromCsharp), "DerivedFromCSharpModel")]
-            public void DoesNotThrowWhenInterfaceFullyImplemented(string moduleName, string className)
+            [Test]
+            public void DoesNotThrowWhenInterfaceFullyImplemented()
             {
                 using (Py.GIL())
                 {
-                    var moduleStr = GetFieldValue(moduleName);
-                    var module = PyModule.FromString(nameof(ValidateImplementationOf), moduleStr);
-                    var model = module.GetAttr(className).Invoke();
+                    var module = PyModule.FromString(nameof(ValidateImplementationOf), FullyImplemented);
+                    var model = module.GetAttr("FullyImplementedModel");
+                    Assert.That(() => model.ValidateImplementationOf<IModel>(), Throws.Nothing);
+                }
+            }
+
+            [Test]
+            public void DoesNotThrowWhenInterfaceFullyImplementedSnakeCaseStyle()
+            {
+                using (Py.GIL())
+                {
+                    var module = PyModule.FromString(nameof(ValidateImplementationOf), FullyImplementedSnakeCase);
+                    var model = module.GetAttr("FullyImplementedSnakeCaseModel");
+                    Assert.That(() => model.ValidateImplementationOf<IModel>(), Throws.Nothing);
+                }
+            }
+
+            [Test]
+            public void DoesNotThrowWhenDerivedFromCSharpModel()
+            {
+                using (Py.GIL())
+                {
+                    var module = PyModule.FromString(nameof(ValidateImplementationOf), DerivedFromCsharp);
+                    var model = module.GetAttr("DerivedFromCSharpModel");
                     Assert.That(() => model.ValidateImplementationOf<IModel>(), Throws.Nothing);
                 }
             }
@@ -213,11 +228,6 @@ namespace QuantConnect.Tests.Python
                 );
             }
 
-            private static string GetFieldValue(string name)
-            {
-                return typeof(ValidateImplementationOf).GetField(name, BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as string;
-            }
-
             private const string FullyImplemented =
                 @"
 from clr import AddReference
@@ -230,9 +240,6 @@ class FullyImplementedModel:
         pass
     def MethodTwo():
         pass
-    @property
-    def PropertyOne(self):
-        return 'value'
 
 ";
 
@@ -248,26 +255,7 @@ class FullyImplementedSnakeCaseModel:
         pass
     def method_two():
         pass
-    @property
-    def property_one(self):
-        pass
 
-";
-
-            private const string FullyImplementedWithPropertyAsField =
-                @"
-from clr import AddReference
-AddReference('QuantConnect.Tests')
-
-from QuantConnect.Tests.Python import *
-
-class FullyImplementedModelWithPropertyAsField:
-    def method_one():
-        pass
-    def method_two():
-        pass
-    def __init__(self):
-        self.property_one = 'value'
 ";
 
             private const string DerivedFromCsharp =
@@ -280,9 +268,6 @@ from QuantConnect.Tests.Python import *
 class DerivedFromCSharpModel(PythonWrapperTests.ValidateImplementationOf.Model):
     def MethodOne():
         pass
-    @property
-    def PropertyOne(self):
-        return 'value'
 
 ";
 
@@ -296,36 +281,17 @@ from QuantConnect.Tests.Python import *
 class ModelMissingMethodOne:
     def MethodTwo():
         pass
-    @property
-    def PropertyOne(self):
-        return 'value'
-";
 
-            private const string MissingProperty =
-                @"
-from clr import AddReference
-AddReference('QuantConnect.Tests')
-
-from QuantConnect.Tests.Python import *
-
-class ModelMissingProperty:
-    def MethodOne():
-        pass
-    def MethodTwo():
-        pass
 ";
 
             interface IModel
             {
-                string PropertyOne { get; set; }
                 void MethodOne();
                 void MethodTwo();
             }
 
             public class Model : IModel
             {
-                public string PropertyOne { get; set; }
-
                 public void MethodOne()
                 {
                 }

@@ -46,8 +46,7 @@ namespace QuantConnect.Python
             {
                 foreach (var member in members)
                 {
-                    if ((member is not MethodInfo method || !method.IsSpecialName) &&
-                        !model.HasAttr(member.Name) && !model.HasAttr(member.Name.ToSnakeCase()))
+                    if (!model.HasAttr(member.Name) && !model.HasAttr(member.Name.ToSnakeCase()))
                     {
                         missingMembers.Add(member.Name);
                     }
