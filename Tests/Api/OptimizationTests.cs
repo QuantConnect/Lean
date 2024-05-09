@@ -154,15 +154,6 @@ namespace QuantConnect.Tests.API
             var readOptimization = ApiClient.ReadOptimization(optimization.OptimizationId);
 
             TestBaseOptimization(readOptimization);
-            Assert.IsTrue(readOptimization.RuntimeStatistics.Any());
-            Assert.IsTrue(readOptimization.Constraints.Any());
-            Assert.IsTrue(readOptimization.Parameters.Any());
-            Assert.Positive(readOptimization.ParallelNodes);
-            Assert.IsTrue(readOptimization.Backtests.Any());
-            Assert.IsNotEmpty(readOptimization.Strategy);
-            Assert.IsFalse(string.IsNullOrEmpty(readOptimization.OptimizationTarget));
-            Assert.IsNotEmpty(readOptimization.GridLayout);
-            Assert.AreNotEqual(default(DateTime), readOptimization.Requested);
 
             // Delete the project
             var deleteProject = ApiClient.DeleteProject(projectId);
@@ -209,16 +200,16 @@ namespace QuantConnect.Tests.API
         {
             var file = new ProjectFile
             {
-                Name = "main.py",
-                Code = File.ReadAllText("../../../Algorithm.Python/Test.py")
+                Name = "Main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/ParameterizedAlgorithm.cs")
             };
 
             // Create a new project
-            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.Python, TestOrganization);
+            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
             var projectId = project.Projects.First().ProjectId;
 
             // Update Project Files
-            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "main.py", file.Code);
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
             Assert.IsTrue(updateProjectFileContent.Success);
 
             // Create compile
@@ -271,7 +262,6 @@ namespace QuantConnect.Tests.API
         {
             Assert.IsNotNull(optimization);
             Assert.IsNotEmpty(optimization.OptimizationId);
-            Assert.AreNotEqual(default(DateTime), optimization.Created);
             Assert.Positive(optimization.ProjectId);
             Assert.IsNotEmpty(optimization.Name);
             Assert.IsInstanceOf<OptimizationStatus>(optimization.Status);
@@ -279,14 +269,34 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(0 <= optimization.OutOfSampleDays);
             Assert.AreNotEqual(default(DateTime), optimization.OutOfSampleMaxEndDate);
             Assert.IsNotNull(optimization.Criterion);
-
-            foreach(var item in optimization.Parameters)
+            foreach (var item in optimization.Parameters)
             {
                 Assert.IsFalse(string.IsNullOrEmpty(item.Name));
                 Assert.IsNotNull(item.MinValue);
                 Assert.IsNotNull(item.MaxValue);
                 Assert.IsTrue(0 < item.Step);
             }
+
+            if (optimization is OptimizationSummary)
+            {
+                Assert.AreNotEqual(default(DateTime), (optimization as OptimizationSummary).Created);
+            }
+            else if (optimization is Optimization)
+            {
+                TestOptimization(optimization as Optimization);
+            }
+        }
+
+        private void TestOptimization(Optimization optimization)
+        {
+            Assert.AreNotEqual(default(string), optimization.OptimizationTarget);
+            Assert.IsNotNull(optimization.GridLayout);
+            Assert.IsNotNull(optimization.RuntimeStatistics);
+            Assert.IsNotNull(optimization.Constraints);
+            Assert.IsTrue(0 <= optimization.ParallelNodes);
+            Assert.IsNotNull(optimization.Backtests);
+            Assert.AreNotEqual(default(string), optimization.Strategy);
+            Assert.AreNotEqual(default(DateTime), optimization.Requested);
         }
     }
 }

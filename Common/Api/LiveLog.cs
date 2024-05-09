@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,19 +26,19 @@ namespace QuantConnect.Api
         /// <summary>
         /// List of logs from the live algorithm
         /// </summary>
-        [JsonProperty(PropertyName = "LiveLogs")]
+        [JsonProperty(PropertyName = "logs")]
         public List<string> Logs { get; set; }
 
         /// <summary>
-        /// Epoch time in seconds when the first log was generated
+        /// Total amount of rows in the logs
         /// </summary>
-        [JsonProperty(PropertyName = "start")]
-        public int Start { get; set; }
+        [JsonProperty(PropertyName = "length")]
+        public int Lenght { get; set; }
 
         /// <summary>
-        /// Epoch time in seconds when the last log retrieved
+        /// Amount of log rows before the current deployment
         /// </summary>
-        [JsonProperty(PropertyName = "end")]
-        public int End { get; set; }
+        [JsonProperty(PropertyName = "deploymentOffset")]
+        public int DeploymentOffset { get; set; }
     }
 }

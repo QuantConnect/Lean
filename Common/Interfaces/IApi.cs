@@ -230,7 +230,7 @@ namespace QuantConnect.Interfaces
         /// <param name="nodeType">Optimization node type</param>
         /// <param name="parallelNodes">Number of parallel nodes for optimization</param>
         /// <returns>BaseOptimization object from the API.</returns>
-        public BaseOptimization CreateOptimization(
+        public OptimizationSummary CreateOptimization(
             int projectId,
             string name,
             string target,
@@ -249,7 +249,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project id we'd like to get a list of optimizations for</param>
         /// <returns>A list of BaseOptimization objects, <see cref="BaseOptimization"/></returns>
-        public List<BaseOptimization> ListOptimizations(int projectId);
+        public List<OptimizationSummary> ListOptimizations(int projectId);
 
         /// <summary>
         /// Read an optimization
@@ -285,10 +285,10 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project Id of the live running algorithm</param>
         /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
-        /// <param name="startTime">No logs will be returned before this time. Should be in UTC</param>
-        /// <param name="endTime">No logs will be returned after this time. Should be in UTC</param>
+        /// <param name="startLine">Start line of logs to read</param>
+        /// <param name="endLine">End line of logs to read</param>
         /// <returns>List of strings that represent the logs of the algorithm</returns>
-        LiveLog ReadLiveLogs(int projectId, string algorithmId, DateTime? startTime = null, DateTime? endTime = null);
+        LiveLog ReadLiveLogs(int projectId, string algorithmId, int startLine, int endLine);
 
         /// <summary>
         /// Returns a chart object from a live algorithm
@@ -300,6 +300,13 @@ namespace QuantConnect.Interfaces
         /// <param name="count">The number of data points to request</param>
         /// <returns></returns>
         public ReadChartResponse ReadLiveChart(int projectId, string name, int start, int end, uint count);
+
+        /// <summary>
+        /// Read out the portfolio state of a live algorithm
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <returns><see cref="PortfolioResponse"/></returns>
+        public PortfolioResponse ReadLivePortfolio(int projectId);
 
         /// <summary>
         /// Gets the link to the downloadable data.

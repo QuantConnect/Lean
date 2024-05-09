@@ -35,6 +35,34 @@ namespace QuantConnect.Tests.API
     [TestFixture, Explicit("Requires configured api access and available backtest node to run on")]
     public class ProjectTests : ApiTestBase
     {
+        private readonly Dictionary<string, object> _defaultSettings = new Dictionary<string, object>()
+            {
+                { "id", "QuantConnectBrokerage" },
+                { "environment", "paper" },
+                { "cash", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "currency" , "USD"},
+                            { "amount", 300000}
+                        }
+                    }
+                    }
+                },
+                { "holdings", new List<Dictionary<object, object>>()
+                    {
+                    {new Dictionary<object, object>
+                        {
+                            { "symbolId" , Symbols.AAPL.ID.ToString()},
+                            { "symbol", Symbols.AAPL.Value},
+                            { "quantity", 1 },
+                            { "averagePrice", 1}
+                        }
+                    }
+                    }
+                },
+            };
+
         [Test]
         public void ReadProject()
         {
@@ -403,36 +431,6 @@ namespace QuantConnect.Tests.API
         [Test]
         public void CreatesLiveAlgorithm()
         {
-            // Create default algorithm settings
-            var settings = new Dictionary<string, object>()
-            {
-                { "id", "QuantConnectBrokerage" },
-                { "environment", "paper" },
-                { "cash", new List<Dictionary<object, object>>()
-                    {
-                    {new Dictionary<object, object>
-                        {
-                            { "currency" , "USD"},
-                            { "amount", 300000}
-                        }
-                    }
-                    }
-                },
-                { "holdings", new List<Dictionary<object, object>>()
-                    {
-                    {new Dictionary<object, object>
-                        {
-                            { "symbolId" , "SPY R735QTJ8XC9X"},
-                            { "symbol", "SPY"},
-                            { "underlying", null },
-                            { "quantity", 1 },
-                            { "averagePrice", 10}
-                        }
-                    }
-                    }
-                },
-            };
-
             var quantConnectDataProvider = new Dictionary<string, object>
             {
                 { "id", "QuantConnectBrokerage" },
@@ -473,7 +471,7 @@ namespace QuantConnect.Tests.API
             Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
 
             // Create live default algorithm
-            var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings, dataProviders: dataProviders);
+            var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
             var createLiveAlgorithmWorkedCorrectly = createLiveAlgorithm.Success;
 
             // Read live algorithm
@@ -487,6 +485,9 @@ namespace QuantConnect.Tests.API
             var readChart = ApiClient.ReadLiveChart(projectId, "Strategy Equity", new DateTime(2013, 10, 07).Second, new DateTime(2013, 10, 11).Second, 1000);
             var readChartWorkedCorrectly = readChart.Success;
 
+            var readLivePortfolio = ApiClient.ReadLivePortfolio(projectId);
+            var readLivePortfolioWorkedCorrectly = readLivePortfolio.Success;
+
             // Delete the project
             var deleteProject = ApiClient.DeleteProject(projectId);
             Assert.IsTrue(deleteProject.Success);
@@ -499,6 +500,10 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(stopLiveWorkedCorrectly);
             Assert.IsTrue(readChartWorkedCorrectly);
             Assert.IsNotNull(readChart.Chart);
+            Assert.IsTrue(readLivePortfolioWorkedCorrectly);
+            Assert.IsNotNull(readLivePortfolio.Portfolio);
+            Assert.IsNotNull(readLivePortfolio.Portfolio.Cash);
+            Assert.IsNotNull(readLivePortfolio.Portfolio.Holdings);
         }
 
         [Test]
