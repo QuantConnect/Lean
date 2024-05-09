@@ -437,6 +437,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Creates a new benchmark security
+        /// </summary>
+        public Security CreateBenchmarkSecurity(Symbol symbol)
+        {
+            return _securityService.CreateBenchmarkSecurity(symbol);
+        }
+
+        /// <summary>
         /// Set live mode state of the algorithm
         /// </summary>
         /// <param name="isLiveMode">True, live mode is enabled</param>

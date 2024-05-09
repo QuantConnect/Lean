@@ -26,6 +26,8 @@ using QuantConnect.Benchmarks;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Statistics;
+using QuantConnect.Securities;
+using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -98,7 +100,7 @@ namespace QuantConnect.Tests.Algorithm
                 algorithm.AddEquity("AAPL", resolution);
             }
 
-            // Default benchmark is SPY which is NY TimeZone, 
+            // Default benchmark is SPY which is NY TimeZone,
             // Set timezone to UTC.
             algorithm.SetTimeZone(DateTimeZone.Utc);
             algorithm.PostInitialize();
@@ -120,6 +122,50 @@ namespace QuantConnect.Tests.Algorithm
                     Assert.AreEqual(0, algorithm.LogMessages.Count);
                     break;
             }
+        }
+
+        [Test]
+        public void BenchmarkIsNotInitializeWithCustomSecurityInitializer()
+        {
+            var algorithm = new QCAlgorithm();
+            var dataManager = new DataManagerStub(algorithm, new MockDataFeed());
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+
+            var securityInitializer = new CustomSecurityInitializer();
+            algorithm.SetSecurityInitializer(securityInitializer);
+
+            var spy = algorithm.AddEquity("SPY");
+
+            algorithm.SetBenchmark("AAPL");
+            var aapl = (algorithm.Benchmark as SecurityBenchmark).Security;
+
+            algorithm.PostInitialize();
+
+            Assert.IsTrue(securityInitializer.InitializedSecurities.Contains(spy));
+            Assert.IsFalse(securityInitializer.InitializedSecurities.Contains(aapl));
+        }
+
+        [Test]
+        public void BenchmarkIsNotAffectedBySecuritySeederDataNormalizationMode()
+        {
+            var algorithm = new TestBenchmarkDataNormalizationModeAlgorithm();
+            BenchmarkTestSetupHandler.TestAlgorithm = algorithm;
+            algorithm.StartDateToUse = new DateTime(2013, 10, 07);
+            algorithm.EndDateToUse = new DateTime(2013, 10, 11);
+
+            var results = AlgorithmRunner.RunLocalBacktest(nameof(TestBenchmarkAlgorithm),
+                new Dictionary<string, string> { { PerformanceMetrics.TotalOrders, "0" } },
+                Language.CSharp,
+                AlgorithmStatus.Completed,
+                setupHandler: nameof(BenchmarkTestSetupHandler));
+
+            var benchmark = algorithm.Benchmark as SecurityBenchmark;
+            Assert.IsNotNull(benchmark);
+            Assert.AreEqual(Symbols.SPY, benchmark.Security.Symbol);
+
+            // All values must be between 142 and 148 (expected adjusted data for the time range) for the benchmark
+            Assert.IsTrue(algorithm.BenchmarkValues.All(x => x >= 142m && x <= 148m),
+                $"Benchmark values are:\n{string.Join('\n', algorithm.BenchmarkValues)}");
         }
 
         public class BenchmarkTestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
@@ -158,6 +204,46 @@ namespace QuantConnect.Tests.Algorithm
                 _symbol = Symbols.GetBySecurityType(SecurityType);
                 AddSecurity(_symbol);
                 SetBenchmark(_symbol);
+            }
+        }
+
+        public class TestBenchmarkDataNormalizationModeAlgorithm : TestBenchmarkAlgorithm
+        {
+            public List<decimal> BenchmarkValues { get; } = new();
+
+            public TestBenchmarkDataNormalizationModeAlgorithm()
+                : base(SecurityType.Equity)
+            {
+            }
+
+            public override void Initialize()
+            {
+                SetStartDate(StartDateToUse);
+                SetEndDate(EndDateToUse);
+
+                UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
+                // If the benchmark is initialized using this security initializer, the security seeder would source data
+                // for using the data normalization mode from the UniverseSettings, which is set to Raw
+                SetSecurityInitializer(new BrokerageModelSecurityInitializer(BrokerageModel, new FuncSecuritySeeder(GetLastKnownPrices)));
+
+                SetBenchmark("SPY");
+
+                Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(1)), () =>
+                {
+                    var value = (Benchmark as SecurityBenchmark).Evaluate(UtcTime);
+                    BenchmarkValues.Add(value);
+                    Log($"Benchmark: {value}");
+                });
+            }
+        }
+
+        public class CustomSecurityInitializer : ISecurityInitializer
+        {
+            public HashSet<Security> InitializedSecurities { get; } = new();
+
+            public void Initialize(Security security)
+            {
+                InitializedSecurities.Add(security);
             }
         }
     }

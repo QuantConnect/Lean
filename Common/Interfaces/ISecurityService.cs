@@ -46,5 +46,10 @@ namespace QuantConnect.Interfaces
             decimal leverage = 0,
             bool addToSymbolCache = true,
             Security underlying = null);
+
+        /// <summary>
+        /// Creates a new benchmark security
+        /// </summary>
+        Security CreateBenchmarkSecurity(Symbol symbol);
     }
 }
