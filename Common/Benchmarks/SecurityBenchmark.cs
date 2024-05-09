@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -58,13 +58,7 @@ namespace QuantConnect.Benchmarks
         /// <returns>The new SecurityBenchmark</returns>
         public static SecurityBenchmark CreateInstance(SecurityManager securities, Symbol symbol)
         {
-            // Create the security from this symbol
-            var security = securities.CreateSecurity(symbol,
-                new List<SubscriptionDataConfig>(),
-                leverage: 1,
-                addToSymbolCache: false);
-
-            return new SecurityBenchmark(security);
+            return new SecurityBenchmark(securities.CreateBenchmarkSecurity(symbol));
         }
     }
 }

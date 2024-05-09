@@ -66,11 +66,12 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Following the obsoletion of Security.Subscriptions,
         /// both overloads will be merged removing <see cref="SubscriptionDataConfig"/> arguments</remarks>
-        public Security CreateSecurity(Symbol symbol,
+        private Security CreateSecurity(Symbol symbol,
             List<SubscriptionDataConfig> subscriptionDataConfigList,
-            decimal leverage = 0,
-            bool addToSymbolCache = true,
-            Security underlying = null)
+            decimal leverage,
+            bool addToSymbolCache,
+            Security underlying,
+            bool initializeSecurity)
         {
             var configList = new SubscriptionDataConfigList(symbol);
             configList.AddRange(subscriptionDataConfigList);
@@ -198,7 +199,10 @@ namespace QuantConnect.Securities
             security.AddData(configList);
 
             // invoke the security initializer
-            _securityInitializerProvider.SecurityInitializer.Initialize(security);
+            if (initializeSecurity)
+            {
+                _securityInitializerProvider.SecurityInitializer.Initialize(security);
+            }
 
             CheckCanonicalSecurityModels(security);
 
@@ -225,9 +229,38 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Following the obsoletion of Security.Subscriptions,
         /// both overloads will be merged removing <see cref="SubscriptionDataConfig"/> arguments</remarks>
+        public Security CreateSecurity(Symbol symbol,
+            List<SubscriptionDataConfig> subscriptionDataConfigList,
+            decimal leverage = 0,
+            bool addToSymbolCache = true,
+            Security underlying = null)
+        {
+            return CreateSecurity(symbol, subscriptionDataConfigList, leverage, addToSymbolCache, underlying, initializeSecurity: true);
+        }
+
+        /// <summary>
+        /// Creates a new security
+        /// </summary>
+        /// <remarks>Following the obsoletion of Security.Subscriptions,
+        /// both overloads will be merged removing <see cref="SubscriptionDataConfig"/> arguments</remarks>
         public Security CreateSecurity(Symbol symbol, SubscriptionDataConfig subscriptionDataConfig, decimal leverage = 0, bool addToSymbolCache = true, Security underlying = null)
         {
             return CreateSecurity(symbol, new List<SubscriptionDataConfig> { subscriptionDataConfig }, leverage, addToSymbolCache, underlying);
+        }
+
+        /// <summary>
+        /// Creates a new security
+        /// </summary>
+        /// <remarks>Following the obsoletion of Security.Subscriptions,
+        /// both overloads will be merged removing <see cref="SubscriptionDataConfig"/> arguments</remarks>
+        public Security CreateBenchmarkSecurity(Symbol symbol)
+        {
+            return CreateSecurity(symbol,
+                new List<SubscriptionDataConfig>(),
+                leverage: 1,
+                addToSymbolCache: false,
+                underlying: null,
+                initializeSecurity: false);
         }
 
         /// <summary>

@@ -99,7 +99,7 @@ namespace QuantConnect.DataLibrary.Tests
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 519;
+        public int AlgorithmHistoryDataPoints => 514;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
