@@ -20,11 +20,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using NodaTime;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Python;
+using QuantConnect.Statistics;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Data
@@ -404,6 +407,133 @@ namespace QuantConnect.Tests.Common.Data
 
             var consolidator = new TestConsolidator(subscriptionDataType, consolidatorOutputType);
             Assert.AreEqual(expected, SubscriptionManager.IsSubscriptionValidForConsolidator(subscription, consolidator, desiredTickType));
+        }
+
+        [Test]
+        public void CanAddAndRemoveCSharpConsolidatorFromPython()
+        {
+            // NOTE: we use the IdentityDataConsolidator here because it's a generic class, which reproduces the bug.
+            // pyConsolidator.TryConvert(out IDataConsolidator consolidator) will return false, because the python type name
+            // and the C# type name don't match for generic types (e.g. IdentityDataConsolidator[TradeBar] != IdentityDataConsolidator`1)
+
+            using var _ = Py.GIL();
+            var module = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def get_consolidator():
+    return IdentityDataConsolidator[TradeBar]()
+");
+
+            var algorithm = new AlgorithmStub();
+            var symbol = algorithm.AddEquity("SPY").Symbol;
+
+            var consolidator = module.GetAttr("get_consolidator").Invoke();
+
+            algorithm.SubscriptionManager.AddConsolidator(symbol, consolidator);
+            Assert.AreEqual(1, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+
+            algorithm.SubscriptionManager.RemoveConsolidator(symbol, consolidator);
+            Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+        }
+
+        [Test]
+        public void CanAddAndRemoveCSharpConsolidatorFromPythonWithWrapper()
+        {
+            using var _ = Py.GIL();
+            var module = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def get_consolidator():
+    return IdentityDataConsolidator[TradeBar]()
+");
+
+            var algorithm = new AlgorithmStub();
+            var symbol = algorithm.AddEquity("SPY").Symbol;
+
+            var pyConsolidator = module.GetAttr("get_consolidator").Invoke();
+
+            algorithm.SubscriptionManager.AddConsolidator(Symbols.SPY, pyConsolidator);
+            Assert.AreEqual(1, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+
+            algorithm.SubscriptionManager.RemoveConsolidator(Symbols.SPY, pyConsolidator);
+            Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+        }
+
+        [Test]
+        public void CanAddAndRemovePythonConsolidator()
+        {
+            using var _ = Py.GIL();
+            var module = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+class CustomQuoteBarConsolidator(PythonConsolidator):
+
+    def __init__(self):
+
+        #IDataConsolidator required vars for all consolidators
+        self.consolidated = None
+        self.working_data = None
+        self.input_type = QuoteBar
+        self.output_type = QuoteBar
+
+    def update(self, data):
+        pass
+
+    def scan(self, time):
+        pass
+
+def get_consolidator():
+    return CustomQuoteBarConsolidator()
+");
+
+            var algorithm = new AlgorithmStub();
+            var symbol = algorithm.AddEquity("SPY").Symbol;
+
+            var pyConsolidator = module.GetAttr("get_consolidator").Invoke();
+
+            algorithm.SubscriptionManager.AddConsolidator(Symbols.SPY, pyConsolidator);
+            Assert.AreEqual(1, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+
+            algorithm.SubscriptionManager.RemoveConsolidator(Symbols.SPY, pyConsolidator);
+            Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+        }
+
+        [Test]
+        public void RunRemoveConsolidatorsRegressionAlgorithm()
+        {
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("ManuallyRemovedConsolidatorsAlgorithm",
+                new Dictionary<string, string> {
+                    {PerformanceMetrics.TotalOrders, "0"},
+                    {"Average Win", "0%"},
+                    {"Average Loss", "0%"},
+                    {"Compounding Annual Return", "0%"},
+                    {"Drawdown", "0%"},
+                    {"Expectancy", "0"},
+                    {"Net Profit", "0%"},
+                    {"Sharpe Ratio", "0"},
+                    {"Probabilistic Sharpe Ratio", "0%"},
+                    {"Loss Rate", "0%"},
+                    {"Win Rate", "0%"},
+                    {"Profit-Loss Ratio", "0"},
+                    {"Alpha", "0"},
+                    {"Beta", "0"},
+                    {"Annual Standard Deviation", "0"},
+                    {"Annual Variance", "0"},
+                    {"Information Ratio", "-8.91"},
+                    {"Tracking Error", "0.223"},
+                    {"Treynor Ratio", "0"},
+                    {"Total Fees", "$0.00"}
+                },
+                Language.Python,
+                AlgorithmStatus.Completed);
+
+            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus);
         }
 
         private class TestConsolidator : IDataConsolidator
