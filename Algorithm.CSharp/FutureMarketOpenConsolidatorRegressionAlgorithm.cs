@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -64,33 +65,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             Consolidate<BaseData>(es.Symbol, dataTime =>
             {
-                var start = es.Exchange.Hours.GetPreviousMarketOpen(dataTime, ExtendedMarketHours);
-                var end = es.Exchange.Hours.GetNextMarketClose(start, ExtendedMarketHours);
-
-                if (ExtendedMarketHours)
-                {
-                    // market might open at 16:30 and close again at 17:00 but we are not interested in using the close so we skip it here
-                    while (end.Date == start.Date)
-                    {
-                        end = es.Exchange.Hours.GetNextMarketClose(end, ExtendedMarketHours);
-                    }
-                } else
-                {
-                    // Let's not consider regular market gaps like when market closes at 16:15 and opens again at 16:30
-                    while (true)
-                    {
-                        var potentialEnd = es.Exchange.Hours.GetNextMarketClose(end, ExtendedMarketHours);
-                        if (potentialEnd.Date != end.Date)
-                        {
-                            break;
-                        }
-                        end = potentialEnd;
-                    }
-                }
-
-                var period = end - start;
                 // based on the given data time we return the start time of it's bar and the expected period size
-                return new CalendarInfo(start, period);
+                return LeanData.GetDailyCalendar(dataTime, es.Exchange, ExtendedMarketHours);
             }, bar => Assert(bar));
         }
 

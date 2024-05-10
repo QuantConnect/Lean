@@ -37,7 +37,7 @@ using QuantConnect.Lean.Engine.Storage;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class CustomLiveDataFeedTests
     {
         private LiveSynchronizer _synchronizer;

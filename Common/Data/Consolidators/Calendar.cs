@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -91,7 +91,7 @@ namespace QuantConnect.Data.Consolidators
     /// <summary>
     /// Calendar Info for storing information related to the start and period of a consolidator
     /// </summary>
-    public struct CalendarInfo
+    public readonly struct CalendarInfo
     {
         /// <summary>
         /// Calendar Start
@@ -104,6 +104,11 @@ namespace QuantConnect.Data.Consolidators
         public readonly TimeSpan Period;
 
         /// <summary>
+        /// Calendar End
+        /// </summary>
+        public readonly DateTime End => Start + Period;
+
+        /// <summary>
         /// Constructor for CalendarInfo; used for consolidation calendar
         /// </summary>
         /// <param name="start">Calendar Start</param>
@@ -112,6 +117,39 @@ namespace QuantConnect.Data.Consolidators
         {
             Start = start;
             Period = period;
+        }
+
+        public override string ToString()
+        {
+            return $"{Start} {Period}";
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is not CalendarInfo other)
+            {
+                return false;
+            }
+            return Start == other.Start && Period == other.Period;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Start.GetHashCode();
+                return (hashCode * 397) ^ Period.GetHashCode();
+            }
+        }
+
+        public static bool operator ==(CalendarInfo left, CalendarInfo right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(CalendarInfo left, CalendarInfo right)
+        {
+            return !(left == right);
         }
     }
 }

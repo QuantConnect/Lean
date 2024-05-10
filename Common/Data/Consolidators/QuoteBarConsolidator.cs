@@ -15,8 +15,8 @@
 */
 
 using System;
-using QuantConnect.Data.Market;
 using Python.Runtime;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Consolidators
     public class QuoteBarConsolidator : PeriodCountConsolidatorBase<QuoteBar, QuoteBar>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class
+        /// Initializes a new instance of the <see cref="QuoteBarConsolidator"/> class
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public QuoteBarConsolidator(TimeSpan period)
@@ -35,7 +35,7 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class
+        /// Initializes a new instance of the <see cref="QuoteBarConsolidator"/> class
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
         public QuoteBarConsolidator(int maxCount)
@@ -44,7 +44,7 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class
+        /// Initializes a new instance of the <see cref="QuoteBarConsolidator"/> class
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>

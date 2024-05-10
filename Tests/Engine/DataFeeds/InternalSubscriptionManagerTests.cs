@@ -76,7 +76,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 if (!added)
                 {
-                    added = true;
                     _algorithm.AddSecurity(subscriptionRequest.Security.Symbol, subscriptionRequest.Configuration.Resolution);
                 }
                 else if (!timeSlice.IsTimePulse)
@@ -112,9 +111,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }
                 _algorithm.OnEndOfTimeStep();
-                // give time for the base exchange to pick up the data point that will trigger the universe selection
-                // so next step we assert the internal config is there
-                Thread.Sleep(100);
+                if (!added)
+                {
+                    added = true;
+                    // give time for the base exchange to pick up the data point that will trigger the universe selection
+                    // so next step we assert the internal config is there
+                    Thread.Sleep(100);
+                }
+                else
+                {
+                    Thread.Sleep(10);
+                }
             }
             Assert.IsFalse(tokenSource.IsCancellationRequested);
             tokenSource.DisposeSafely();
@@ -142,7 +149,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 if (!added)
                 {
-                    added = true;
                     _algorithm.AddSecurity(subscriptionRequest.Security.Symbol, subscriptionRequest.Configuration.Resolution);
                 }
                 else if (!timeSlice.IsTimePulse && !shouldRemoved)
@@ -165,9 +171,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     break;
                 }
                 _algorithm.OnEndOfTimeStep();
-                // give time for the base exchange to pick up the data point that will trigger the universe selection
-                // so next step we assert the internal config is there
-                Thread.Sleep(100);
+                if (!added)
+                {
+                    added = true;
+                    // give time for the base exchange to pick up the data point that will trigger the universe selection
+                    // so next step we assert the internal config is there
+                    Thread.Sleep(100);
+                }
+                else
+                {
+                    Thread.Sleep(10);
+                }
             }
             Assert.IsFalse(tokenSource.IsCancellationRequested);
         }
@@ -199,7 +213,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 if (!added)
                 {
-                    added = true;
                     _algorithm.AddEquity("IBM", Resolution.Minute);
                     _algorithm.AddEquity("AAPL", Resolution.Hour);
                 }
@@ -237,7 +250,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }
                 _algorithm.OnEndOfTimeStep();
-                Thread.Sleep(50);
+                if (!added)
+                {
+                    added = true;
+                    Thread.Sleep(100);
+                }
+                else
+                {
+                    Thread.Sleep(10);
+                }
             }
             Assert.IsFalse(tokenSource.IsCancellationRequested);
             Assert.AreNotEqual(0, internalDataCount);
@@ -257,7 +278,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 if (!added)
                 {
-                    added = true;
                     _algorithm.AddUniverse(SecurityType.Equity,
                             "AUniverse",
                             Resolution.Second,
@@ -291,8 +311,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }
                 _algorithm.OnEndOfTimeStep();
-                // we need to give time for the base data exchange to pick up the new data point which will trigger the selection
-                Thread.Sleep(100);
+                if (!added)
+                {
+                    added = true;
+                    // we need to give time for the base data exchange to pick up the new data point which will trigger the selection
+                    Thread.Sleep(100);
+                }
+                else
+                {
+                    Thread.Sleep(10);
+                }
             }
             Assert.IsFalse(tokenSource.IsCancellationRequested, "Test timed out");
         }

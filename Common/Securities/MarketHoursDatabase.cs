@@ -181,8 +181,11 @@ namespace QuantConnect.Securities
             dataTimeZone = dataTimeZone ?? exchangeHours.TimeZone;
             var key = new SecurityDatabaseKey(market, symbol, securityType);
             var entry = new Entry(dataTimeZone, exchangeHours);
-            _entries[key] = entry;
-            _customEntries[key] = entry;
+            lock (DataFolderMarketHoursDatabaseLock)
+            {
+                _entries[key] = entry;
+                _customEntries[key] = entry;
+            }
             return entry;
         }
 

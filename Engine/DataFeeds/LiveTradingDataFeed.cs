@@ -370,7 +370,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours, localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone);
                 };
 
-                var symbolUniverse = GetUniverseProvider(SecurityType.Option);
+                var symbolUniverse = GetUniverseProvider(request.Configuration.SecurityType);
 
                 var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
