@@ -26,19 +26,16 @@ namespace QuantConnect.Api
         /// <summary>
         /// List of logs from the live algorithm
         /// </summary>
-        [JsonProperty(PropertyName = "logs")]
         public List<string> Logs { get; set; }
 
         /// <summary>
         /// Total amount of rows in the logs
         /// </summary>
-        [JsonProperty(PropertyName = "length")]
         public int Lenght { get; set; }
 
         /// <summary>
         /// Amount of log rows before the current deployment
         /// </summary>
-        [JsonProperty(PropertyName = "deploymentOffset")]
         public int DeploymentOffset { get; set; }
     }
 }

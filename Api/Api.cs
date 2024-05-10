@@ -36,6 +36,7 @@ using System.Threading;
 using System.Net.Http.Headers;
 using System.Collections.Concurrent;
 using System.Text;
+using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Api
 {
@@ -46,6 +47,21 @@ namespace QuantConnect.Api
     {
         private readonly BlockingCollection<Lazy<HttpClient>> _clientPool;
         private string _dataFolder;
+
+        /// <summary>
+        /// Serializer settings to use
+        /// </summary>
+        protected JsonSerializerSettings SerializerSettings { get; set; } = new()
+        {
+            ContractResolver = new DefaultContractResolver
+            {
+                NamingStrategy = new CamelCaseNamingStrategy
+                {
+                    ProcessDictionaryKeys = false,
+                    OverrideSpecifiedNames = true
+                }
+            }
+        };
 
         /// <summary>
         /// Returns the underlying API connection
@@ -1511,7 +1527,7 @@ namespace QuantConnect.Api
                 estimatedCost,
                 nodeType,
                 parallelNodes
-            }), ParameterType.RequestBody);
+            }, SerializerSettings), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out OptimizationList result);
             return result.Optimizations.FirstOrDefault();

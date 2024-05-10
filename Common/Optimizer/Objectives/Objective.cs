@@ -36,7 +36,7 @@ namespace QuantConnect.Optimizer.Objectives
             get => _target;
             set
             {
-                _target = string.Join(".", value.Split('.').Select(s => _targetTemplate.Match(s).Success ? s : $"['{s}']"));
+                _target = value != null ? string.Join(".", value.Split('.').Select(s => _targetTemplate.Match(s).Success ? s : $"['{s}']")) : value;
             }
         }
 

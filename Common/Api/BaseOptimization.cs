@@ -57,25 +57,21 @@ namespace QuantConnect.Api
         /// <summary>
         /// Number of days of out of sample days
         /// </summary>
-        [JsonProperty(PropertyName = "outOfSampleDays")]
         public int OutOfSampleDays { get; set; }
 
         /// <summary>
         /// End date of out of sample data
         /// </summary>
-        [JsonProperty(PropertyName = "outOfSampleMaxEndDate")]
         public DateTime OutOfSampleMaxEndDate { get; set; }
 
         /// <summary>
         /// Parameters used in this optimization
         /// </summary>
-        [JsonProperty(PropertyName = "parameters")]
         public List<OptimizationStepParameter> Parameters { get; set; }
 
         /// <summary>
         /// Optimization statistical target
         /// </summary>
-        [JsonProperty(PropertyName = "criterion")]
         public Target Criterion { get; set; }
     }
 
@@ -87,7 +83,6 @@ namespace QuantConnect.Api
         /// <summary>
         /// Date when this optimization was created
         /// </summary>
-        [JsonProperty(PropertyName = "created")]
         public DateTime Created { get; set; }
 
         /// <summary>

@@ -25,7 +25,6 @@ using QuantConnect.Util;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Objectives;
 using System.Threading;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.API
 {
@@ -525,7 +524,7 @@ namespace QuantConnect.Tests.API
 
 
             // Create a new project
-            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            var project = ApiClient.CreateProject($"Test project optimization - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
             var projectId = project.Projects.First().ProjectId;
 
             // Update Project Files

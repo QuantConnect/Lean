@@ -93,7 +93,6 @@ namespace QuantConnect.Api
         /// <summary>
         /// Collection of summarized optimization objects
         /// </summary>
-        [JsonProperty(PropertyName = "optimizations")]
         public List<OptimizationSummary> Optimizations { get; set; }
     }
 }
