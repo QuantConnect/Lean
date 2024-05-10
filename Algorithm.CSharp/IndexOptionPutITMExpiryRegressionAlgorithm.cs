@@ -185,7 +185,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 19605;
+        public long DataPoints => 19890;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -200,30 +200,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "-50.30%"},
-            {"Compounding Annual Return", "-77.379%"},
+            {"Compounding Annual Return", "-77.114%"},
             {"Drawdown", "12.500%"},
             {"Expectancy", "-1"},
             {"Start Equity", "100000"},
-            {"End Equity", "90076"},
-            {"Net Profit", "-9.924%"},
-            {"Sharpe Ratio", "-1.967"},
-            {"Sortino Ratio", "-0.571"},
-            {"Probabilistic Sharpe Ratio", "0.631%"},
+            {"End Equity", "90146"},
+            {"Net Profit", "-9.854%"},
+            {"Sharpe Ratio", "-1.957"},
+            {"Sortino Ratio", "-0.569"},
+            {"Probabilistic Sharpe Ratio", "0.709%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.643"},
+            {"Alpha", "-0.64"},
             {"Beta", "0.196"},
             {"Annual Standard Deviation", "0.323"},
             {"Annual Variance", "0.104"},
-            {"Information Ratio", "-1.992"},
+            {"Information Ratio", "-1.982"},
             {"Tracking Error", "0.34"},
-            {"Treynor Ratio", "-3.23"},
+            {"Treynor Ratio", "-3.216"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "SPX 31KC0UJHC75TA|SPX 31"},
             {"Portfolio Turnover", "1.94%"},
-            {"OrderListHash", "220e81b9d915d1585ea40e91192f0c57"}
+            {"OrderListHash", "57774fcbb602a956f77b17b73fb3665a"}
         };
     }
 }

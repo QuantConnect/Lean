@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 40893;
+        public virtual long DataPoints => 40968;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -124,30 +124,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "10"},
             {"Average Win", "0.47%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "99.729%"},
+            {"Compounding Annual Return", "101.998%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "24.484"},
             {"Start Equity", "1000000"},
-            {"End Equity", "1008904"},
-            {"Net Profit", "0.890%"},
-            {"Sharpe Ratio", "8.078"},
+            {"End Equity", "1009050"},
+            {"Net Profit", "0.905%"},
+            {"Sharpe Ratio", "8.44"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "93.697%"},
+            {"Probabilistic Sharpe Ratio", "95.546%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
             {"Profit-Loss Ratio", "49.97"},
-            {"Alpha", "-1.975"},
-            {"Beta", "0.301"},
+            {"Alpha", "-2.01"},
+            {"Beta", "0.307"},
             {"Annual Standard Deviation", "0.021"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-143.477"},
-            {"Tracking Error", "0.049"},
-            {"Treynor Ratio", "0.566"},
+            {"Information Ratio", "-144.654"},
+            {"Tracking Error", "0.048"},
+            {"Treynor Ratio", "0.589"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$13000000.00"},
             {"Lowest Capacity Asset", "SPXW XKX6S2GM9PGU|SPX 31"},
             {"Portfolio Turnover", "0.28%"},
-            {"OrderListHash", "81422d170870f60348e0eb2076203f78"}
+            {"OrderListHash", "c1a9bc141ae25c9542b93a887e79dafe"}
         };
     }
 }
