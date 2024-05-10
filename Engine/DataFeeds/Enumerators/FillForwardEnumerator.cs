@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
@@ -309,7 +310,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 // next.EndTime sticks to Time TZ,
                 // potentialBarEndTime should be calculated in the same way as bar.EndTime, i.e. Time + resolution
-                var potentialBarEndTime = RoundDown(item.ReferenceDateTime, item.Interval).ConvertToUtc(Exchange.TimeZone) + item.Interval;
+                var potentialBarEndTime = RoundDown(item.Start, item.Period).ConvertToUtc(Exchange.TimeZone) + item.Period;
 
                 var period = _dataResolution;
                 if (next.Time == next.EndTime)
@@ -332,7 +333,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     // bar EndTime into exchange time zone
                     var potentialBarEndTimeInExchangeTZ =
                         potentialBarEndTime.ConvertFromUtc(Exchange.TimeZone);
-                    var nextFillForwardBarStartTime = potentialBarEndTimeInExchangeTZ - item.Interval;
+                    var nextFillForwardBarStartTime = potentialBarEndTimeInExchangeTZ - item.Period;
                     
                     if (Exchange.IsOpenDuringBar(nextFillForwardBarStartTime, potentialBarEndTimeInExchangeTZ, _isExtendedMarketHours))
                     {
@@ -356,7 +357,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             return false;
         }
 
-        private IEnumerable<ReferenceDateInterval> GetSortedReferenceDateIntervals(BaseData previous, TimeSpan fillForwardResolution, TimeSpan dataResolution)
+        private IEnumerable<CalendarInfo> GetSortedReferenceDateIntervals(BaseData previous, TimeSpan fillForwardResolution, TimeSpan dataResolution)
         {
             if (fillForwardResolution < dataResolution)
             {
@@ -375,46 +376,45 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Get potential next fill forward bars.
         /// </summary>
         /// <remarks>Special case where fill forward resolution and data resolution are equal</remarks>
-        private IEnumerable<ReferenceDateInterval> GetReferenceDateIntervals(DateTime previousEndTime, TimeSpan resolution)
+        private IEnumerable<CalendarInfo> GetReferenceDateIntervals(DateTime previousEndTime, TimeSpan resolution)
         {
             if (Exchange.IsOpenDuringBar(previousEndTime, previousEndTime + resolution, _isExtendedMarketHours))
             {
                 // if next in market us it
-                yield return new ReferenceDateInterval(previousEndTime, resolution);
+                yield return new (previousEndTime, resolution);
             }
 
             // now we can try the bar after next market open
             var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
-            yield return new ReferenceDateInterval(marketOpen, resolution);
+            yield return new (marketOpen, resolution);
         }
 
         /// <summary>
         /// Get potential next fill forward bars.
         /// </summary>
-        private IEnumerable<ReferenceDateInterval> GetReferenceDateIntervals(DateTime previousEndTime, TimeSpan smallerResolution, TimeSpan largerResolution)
+        private IEnumerable<CalendarInfo> GetReferenceDateIntervals(DateTime previousEndTime, TimeSpan smallerResolution, TimeSpan largerResolution)
         {
             if (Exchange.IsOpenDuringBar(previousEndTime, previousEndTime + smallerResolution, _isExtendedMarketHours))
             {
-                yield return new ReferenceDateInterval(previousEndTime, smallerResolution);
+                yield return new (previousEndTime, smallerResolution);
             }
 
-            var result = new List<ReferenceDateInterval>(3);
+            var result = new List<CalendarInfo>(2);
             // we need to round down because previous end time could be of the smaller resolution, in data TZ!
             var start = RoundDown(previousEndTime, largerResolution);
             if (Exchange.IsOpenDuringBar(start, start + largerResolution, _isExtendedMarketHours))
             {
-                result.Add(new ReferenceDateInterval(start, largerResolution));
+                result.Add(new (start, largerResolution));
             }
 
             // this is typically daily data being filled forward on a higher resolution
             // since the previous bar was not in market hours then we can just fast forward
             // to the next market open
             var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
-            result.Add(new ReferenceDateInterval(marketOpen, smallerResolution));
-            result.Add(new ReferenceDateInterval(marketOpen, largerResolution));
+            result.Add(new (marketOpen, smallerResolution));
 
             // we need to order them because they might not be in an incremental order and consumer expects them to be
-            foreach (var referenceDateInterval in result.OrderBy(interval => interval.ReferenceDateTime + interval.Interval))
+            foreach (var referenceDateInterval in result.OrderBy(interval => interval.End))
             {
                 yield return referenceDateInterval;
             }
@@ -429,18 +429,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private DateTime RoundDown(DateTime value, TimeSpan interval)
         {
             return value.RoundDownInTimeZone(interval, Exchange.TimeZone, _dataTimeZone);
-        }
-
-        private class ReferenceDateInterval
-        {
-            public readonly DateTime ReferenceDateTime;
-            public readonly TimeSpan Interval;
-
-            public ReferenceDateInterval(DateTime referenceDateTime, TimeSpan interval)
-            {
-                ReferenceDateTime = referenceDateTime;
-                Interval = interval;
-            }
         }
     }
 }

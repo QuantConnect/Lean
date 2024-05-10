@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -1321,6 +1322,54 @@ namespace QuantConnect.Util
         public static IEnumerable<TradeBar> AggregateTicksToTradeBars(IEnumerable<Tick> ticks, Symbol symbol, TimeSpan resolution)
         {
             return Aggregate(new TickConsolidator(resolution), ticks, symbol);
+        }
+
+        /// <summary>
+        /// Helper method to return the start time and period of a bar the given point time should be part of
+        /// </summary>
+        /// <param name="exchangeTimeZoneDate">The point in time we want to get the bar information about</param>
+        /// <param name="exchange">The associated security exchange</param>
+        /// <param name="extendedMarketHours">True if extended market hours should be taken into consideration</param>
+        /// <returns>The calendar information that holds a start time and a period</returns>
+        public static CalendarInfo GetDailyCalendar(DateTime exchangeTimeZoneDate, SecurityExchange exchange, bool extendedMarketHours)
+        {
+            return GetDailyCalendar(exchangeTimeZoneDate, exchange.Hours, extendedMarketHours);
+        }
+
+        /// <summary>
+        /// Helper method to return the start time and period of a bar the given point time should be part of
+        /// </summary>
+        /// <param name="exchangeTimeZoneDate">The point in time we want to get the bar information about</param>
+        /// <param name="exchangeHours">The associated exchange hours</param>
+        /// <param name="extendedMarketHours">True if extended market hours should be taken into consideration</param>
+        /// <returns>The calendar information that holds a start time and a period</returns>
+        public static CalendarInfo GetDailyCalendar(DateTime exchangeTimeZoneDate, SecurityExchangeHours exchangeHours, bool extendedMarketHours)
+        {
+            var startTime = exchangeHours.GetPreviousMarketOpen(exchangeTimeZoneDate, extendedMarketHours);
+            var endTime = exchangeHours.GetNextMarketClose(startTime, extendedMarketHours);
+
+            // Let's not consider regular market gaps like when market closes at 16:15 and opens again at 16:30
+            while (true)
+            {
+                var potentialEnd = exchangeHours.GetNextMarketClose(endTime, extendedMarketHours);
+                if (potentialEnd.Date != endTime.Date)
+                {
+                    break;
+                }
+                endTime = potentialEnd;
+            }
+
+            var period = endTime - startTime;
+            return new CalendarInfo(startTime, period);
+        }
+
+        /// <summary>
+        /// Helper method that defines the types of options that should use scale factor
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool OptionUseScaleFactor(Symbol symbol)
+        {
+            return symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.IndexOption;
         }
 
         /// <summary>
