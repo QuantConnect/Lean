@@ -457,9 +457,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>A new insight containing the information specified</returns>
         public static Insight FromSerializedInsight(SerializedInsight serializedInsight)
         {
+            var sid = SecurityIdentifier.Parse(serializedInsight.Symbol);
             var insight = new Insight(
                 Time.UnixTimeStampToDateTime(serializedInsight.CreatedTime),
-                new Symbol(SecurityIdentifier.Parse(serializedInsight.Symbol), serializedInsight.Ticker),
+                new Symbol(sid, sid.Symbol),
                 TimeSpan.FromSeconds(serializedInsight.Period),
                 serializedInsight.Type,
                 serializedInsight.Direction,

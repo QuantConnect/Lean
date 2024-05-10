@@ -16,6 +16,7 @@
 using Newtonsoft.Json;
 using QuantConnect.Util;
 using System;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
 {
@@ -74,12 +75,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         public string Symbol { get; set; }
 
         /// <summary>
-        /// See <see cref="Insight.Symbol"/>
-        /// The symbol's ticker at the generated time
-        /// </summary>
-        public string Ticker { get; set; }
-
-        /// <summary>
         /// See <see cref="Insight.Type"/>
         /// </summary>
         public InsightType Type { get; set; }
@@ -98,6 +93,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// <summary>
         /// See <see cref="Insight.Direction"/>
         /// </summary>
+        [JsonProperty(PropertyName = "direction")]
         public InsightDirection Direction { get; set; }
 
         /// <summary>
@@ -169,7 +165,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
             CreatedTime = Time.DateTimeToUnixTimeStamp(insight.GeneratedTimeUtc);
             CloseTime = Time.DateTimeToUnixTimeStamp(insight.CloseTimeUtc);
             Symbol = insight.Symbol.ID.ToString();
-            Ticker = insight.Symbol.Value;
             Type = insight.Type;
             ReferenceValue = insight.ReferenceValue;
             ReferenceValueFinal = insight.ReferenceValueFinal;
@@ -186,6 +181,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         }
 
         #region BackwardsCompatibility
+
+        /// <summary>
+        /// See <see cref="Insight.Direction"/>
+        /// </summary>
+        [JsonProperty(PropertyName = "Direction")]
+        public double OldDirection
+        {
+            set
+            {
+                ScoreDirection = value;
+            }
+        }
+
         [JsonProperty("group-id")]
         string OldGroupId
         {

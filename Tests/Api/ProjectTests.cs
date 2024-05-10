@@ -401,6 +401,77 @@ namespace QuantConnect.Tests.API
         }
 
         [Test]
+        public void ReadLiveInsightsWorksAsExpected()
+        {
+            var quantConnectDataProvider = new Dictionary<string, object>
+            {
+                { "id", "QuantConnectBrokerage" },
+            };
+
+            var dataProviders = new Dictionary<string, object>
+            {
+                { "QuantConnectBrokerage", quantConnectDataProvider }
+            };
+
+            var file = new ProjectFile
+            {
+                Name = "Main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/InsightScoringRegressionAlgorithm.cs")
+            };
+
+            // Create a new project
+            var project = ApiClient.CreateProject($"Test project insight - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            var projectId = project.Projects.First().ProjectId;
+
+            // Update Project Files
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
+            Assert.IsTrue(updateProjectFileContent.Success);
+
+            // Create compile
+            var compile = ApiClient.CreateCompile(projectId);
+            Assert.IsTrue(compile.Success);
+
+            // Wait at max 30 seconds for project to compile
+            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId);
+            Assert.IsTrue(compileCheck.Success);
+            Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
+
+            // Get a live node to launch the algorithm on
+            var nodesResponse = ApiClient.ReadProjectNodes(projectId);
+            Assert.IsTrue(nodesResponse.Success);
+            var freeNode = nodesResponse.Nodes.LiveNodes.Where(x => x.Busy == false);
+            Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
+
+            try
+            {
+                // Create live default algorithm
+                var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
+                Assert.IsTrue(createLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
+
+                var readInsights = ApiClient.ReadLiveInsights(5, projectId);
+                Assert.IsTrue(readInsights.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", readInsights.Errors)}");
+                Assert.IsNotNull(readInsights.Insights);
+                Assert.IsTrue(readInsights.Length >= 0);
+                Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(101, projectId));
+                Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(102, projectId, 1));
+
+                // Stop the algorithm
+                var stopLive = ApiClient.StopLiveAlgorithm(projectId);
+                Assert.IsTrue(stopLive.Success, $"ApiClient.StopLiveAlgorithm(): Error: {string.Join(",", stopLive.Errors)}");
+            }
+            catch (Exception ex)
+            {
+                // Delete the project in case of an error
+                Assert.IsTrue(ApiClient.DeleteProject(projectId).Success);
+                throw ex;
+            }
+
+            // Delete the project
+            var deleteProject = ApiClient.DeleteProject(projectId);
+            Assert.IsTrue(deleteProject.Success);
+        }
+
+        [Test]
         public void UpdatesBacktestTags()
         {
             // We will be using the existing TestBacktest for this test
@@ -477,31 +548,31 @@ namespace QuantConnect.Tests.API
 
                 // Read live algorithm
                 var readLiveAlgorithm = ApiClient.ReadLiveAlgorithm(projectId, createLiveAlgorithm.DeployId);
-                Assert.IsTrue(readLiveAlgorithm.Success, $"ApiClient.ReadLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
+                Assert.IsTrue(readLiveAlgorithm.Success, $"ApiClient.ReadLiveAlgorithm(): Error: {string.Join(",", readLiveAlgorithm.Errors)}");
 
                 // Stop the algorithm
                 var stopLive = ApiClient.StopLiveAlgorithm(projectId);
-                Assert.IsTrue(stopLive.Success, $"ApiClient.StopLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
+                Assert.IsTrue(stopLive.Success, $"ApiClient.StopLiveAlgorithm(): Error: {string.Join(",", stopLive.Errors)}");
 
                 var readChart = ApiClient.ReadLiveChart(projectId, "Strategy Equity", new DateTime(2013, 10, 07).Second, new DateTime(2013, 10, 11).Second, 1000);
-                Assert.IsTrue(readChart.Success, $"ApiClient.ReadLiveChart(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
+                Assert.IsTrue(readChart.Success, $"ApiClient.ReadLiveChart(): Error: {string.Join(",", readChart.Errors)}");
                 Assert.IsNotNull(readChart.Chart);
 
                 var readLivePortfolio = ApiClient.ReadLivePortfolio(projectId);
-                Assert.IsTrue(readLivePortfolio.Success, $"ApiClient.ReadLivePortfolio(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
+                Assert.IsTrue(readLivePortfolio.Success, $"ApiClient.ReadLivePortfolio(): Error: {string.Join(",", readLivePortfolio.Errors)}");
                 Assert.IsNotNull(readLivePortfolio.Portfolio, "Portfolio was null!");
                 Assert.IsNotNull(readLivePortfolio.Portfolio.Cash, "Portfolio.Cash was null!");
                 Assert.IsNotNull(readLivePortfolio.Portfolio.Holdings, "Portfolio Holdings was null!");
 
                 var readLiveLogs = ApiClient.ReadLiveLogs(projectId, createLiveAlgorithm.DeployId, 0, 20);
-                Assert.IsTrue(readLiveLogs.Success, $"ApiClient.ReadLiveLogs(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
+                Assert.IsTrue(readLiveLogs.Success, $"ApiClient.ReadLiveLogs(): Error: {string.Join(",", readLiveLogs.Errors)}");
                 Assert.IsNotNull(readLiveLogs.Logs, "Logs was null!");
                 Assert.IsTrue(readLiveLogs.Length >= 0, "The length of the logs was negative!");
                 Assert.IsTrue(readLiveLogs.DeploymentOffset >= 0, "The deploymentOffset");
             }
             catch(Exception ex)
             {
-                // Delete the project
+                // Delete the project in case of an error
                 Assert.IsTrue(ApiClient.DeleteProject(projectId).Success);
                 throw ex;
             }
