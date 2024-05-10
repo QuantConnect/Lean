@@ -272,9 +272,6 @@ namespace QuantConnect.Tests.API
             foreach (var item in optimization.Parameters)
             {
                 Assert.IsFalse(string.IsNullOrEmpty(item.Name));
-                Assert.IsNotNull(item.MinValue);
-                Assert.IsNotNull(item.MaxValue);
-                Assert.IsTrue(0 < item.Step);
             }
 
             if (optimization is OptimizationSummary)

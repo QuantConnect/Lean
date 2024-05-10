@@ -469,40 +469,46 @@ namespace QuantConnect.Tests.API
             var freeNode = nodesResponse.Nodes.LiveNodes.Where(x => x.Busy == false);
             Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
 
-            // Create live default algorithm
-            var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
-            var createLiveAlgorithmWorkedCorrectly = createLiveAlgorithm.Success;
+            try
+            {
+                // Create live default algorithm
+                var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
+                Assert.IsTrue(createLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
 
-            // Read live algorithm
-            var readLiveAlgorithm = ApiClient.ReadLiveAlgorithm(projectId, createLiveAlgorithm.DeployId);
-            var readLiveAlgorithmWorkedCorrectly = readLiveAlgorithm.Success;
+                // Read live algorithm
+                var readLiveAlgorithm = ApiClient.ReadLiveAlgorithm(projectId, createLiveAlgorithm.DeployId);
+                Assert.IsTrue(readLiveAlgorithm.Success, $"ApiClient.ReadLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
 
-            // Stop the algorithm
-            var stopLive = ApiClient.StopLiveAlgorithm(projectId);
-            var stopLiveWorkedCorrectly = stopLive.Success;
+                // Stop the algorithm
+                var stopLive = ApiClient.StopLiveAlgorithm(projectId);
+                Assert.IsTrue(stopLive.Success, $"ApiClient.StopLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
 
-            var readChart = ApiClient.ReadLiveChart(projectId, "Strategy Equity", new DateTime(2013, 10, 07).Second, new DateTime(2013, 10, 11).Second, 1000);
-            var readChartWorkedCorrectly = readChart.Success;
+                var readChart = ApiClient.ReadLiveChart(projectId, "Strategy Equity", new DateTime(2013, 10, 07).Second, new DateTime(2013, 10, 11).Second, 1000);
+                Assert.IsTrue(readChart.Success, $"ApiClient.ReadLiveChart(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
+                Assert.IsNotNull(readChart.Chart);
 
-            var readLivePortfolio = ApiClient.ReadLivePortfolio(projectId);
-            var readLivePortfolioWorkedCorrectly = readLivePortfolio.Success;
+                var readLivePortfolio = ApiClient.ReadLivePortfolio(projectId);
+                Assert.IsTrue(readLivePortfolio.Success, $"ApiClient.ReadLivePortfolio(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
+                Assert.IsNotNull(readLivePortfolio.Portfolio, "Portfolio was null!");
+                Assert.IsNotNull(readLivePortfolio.Portfolio.Cash, "Portfolio.Cash was null!");
+                Assert.IsNotNull(readLivePortfolio.Portfolio.Holdings, "Portfolio Holdings was null!");
+
+                var readLiveLogs = ApiClient.ReadLiveLogs(projectId, createLiveAlgorithm.DeployId, 0, 20);
+                Assert.IsTrue(readLiveLogs.Success, $"ApiClient.ReadLiveLogs(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
+                Assert.IsNotNull(readLiveLogs.Logs, "Logs was null!");
+                Assert.IsTrue(readLiveLogs.Length >= 0, "The length of the logs was negative!");
+                Assert.IsTrue(readLiveLogs.DeploymentOffset >= 0, "The deploymentOffset");
+            }
+            catch(Exception ex)
+            {
+                // Delete the project
+                Assert.IsTrue(ApiClient.DeleteProject(projectId).Success);
+                throw ex;
+            }
 
             // Delete the project
             var deleteProject = ApiClient.DeleteProject(projectId);
             Assert.IsTrue(deleteProject.Success);
-
-            // We assert the algorithm was created and deleted correctly at the end because
-            // even if it fails, we want the project to be deleted and not leave any garbage
-            // around
-            Assert.IsTrue(createLiveAlgorithmWorkedCorrectly);
-            Assert.IsTrue(readLiveAlgorithmWorkedCorrectly);
-            Assert.IsTrue(stopLiveWorkedCorrectly);
-            Assert.IsTrue(readChartWorkedCorrectly);
-            Assert.IsNotNull(readChart.Chart);
-            Assert.IsTrue(readLivePortfolioWorkedCorrectly);
-            Assert.IsNotNull(readLivePortfolio.Portfolio);
-            Assert.IsNotNull(readLivePortfolio.Portfolio.Cash);
-            Assert.IsNotNull(readLivePortfolio.Portfolio.Holdings);
         }
 
         [Test]
@@ -587,14 +593,6 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(0 <= optimization.OutOfSampleDays);
             Assert.AreNotEqual(default(DateTime), optimization.OutOfSampleMaxEndDate);
             Assert.IsNotNull(optimization.Criterion);
-
-            foreach (var item in optimization.Parameters)
-            {
-                Assert.IsFalse(string.IsNullOrEmpty(item.Name));
-                Assert.IsNotNull(item.MinValue);
-                Assert.IsNotNull(item.MaxValue);
-                Assert.IsTrue(0 < item.Step);
-            }
 
             // Delete the project
             var deleteProject = ApiClient.DeleteProject(projectId);

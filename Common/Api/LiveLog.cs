@@ -31,7 +31,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Total amount of rows in the logs
         /// </summary>
-        public int Lenght { get; set; }
+        public int Length { get; set; }
 
         /// <summary>
         /// Amount of log rows before the current deployment

@@ -1472,7 +1472,7 @@ namespace QuantConnect.Api
                 compileId,
                 parameters,
                 constraints
-            }), ParameterType.RequestBody);
+            }, SerializerSettings), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out EstimateResponseWrapper response);
             return response.Estimate;

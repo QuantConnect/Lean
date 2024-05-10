@@ -705,7 +705,7 @@ namespace QuantConnect.Tests.API
 
             Assert.IsTrue(liveLogs.Success);
             Assert.IsTrue(liveLogs.Logs.Any());
-            Assert.IsTrue(liveLogs.Lenght >= 0);
+            Assert.IsTrue(liveLogs.Length >= 0);
             Assert.IsTrue(liveLogs.DeploymentOffset >= 0);
 
             Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId, 0, 251));

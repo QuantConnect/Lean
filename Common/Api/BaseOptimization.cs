@@ -67,7 +67,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Parameters used in this optimization
         /// </summary>
-        public List<OptimizationStepParameter> Parameters { get; set; }
+        public List<OptimizationParameter> Parameters { get; set; }
 
         /// <summary>
         /// Optimization statistical target

@@ -18,6 +18,9 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Api
 {
+    /// <summary>
+    /// Class containing the basic portfolio information of a live algorithm
+    /// </summary>
     public class Portfolio
     {
         /// <summary>
@@ -26,13 +29,19 @@ namespace QuantConnect.Api
         public Dictionary<string, Holding> Holdings { get; set; }
 
         /// <summary>
-        /// Dictionary where each value represents a holding of a currency in cash, which is the key
+        /// Dictionary of algorithm cash currencies information
         /// </summary>
         public Dictionary<string, Cash> Cash { get; set; }
     }
 
+    /// <summary>
+    /// Response class for reading the portfolio of a live algorithm
+    /// </summary>
     public class PortfolioResponse : RestResponse
     {
+        /// <summary>
+        /// Object containing the basic portfolio information of a live algorithm
+        /// </summary>
         public Portfolio Portfolio { get; set; }
     }
 }
