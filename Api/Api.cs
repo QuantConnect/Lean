@@ -36,6 +36,7 @@ using System.Threading;
 using System.Net.Http.Headers;
 using System.Collections.Concurrent;
 using System.Text;
+using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Api
 {
@@ -46,6 +47,21 @@ namespace QuantConnect.Api
     {
         private readonly BlockingCollection<Lazy<HttpClient>> _clientPool;
         private string _dataFolder;
+
+        /// <summary>
+        /// Serializer settings to use
+        /// </summary>
+        protected JsonSerializerSettings SerializerSettings { get; set; } = new()
+        {
+            ContractResolver = new DefaultContractResolver
+            {
+                NamingStrategy = new CamelCaseNamingStrategy
+                {
+                    ProcessDictionaryKeys = false,
+                    OverrideSpecifiedNames = true
+                }
+            }
+        };
 
         /// <summary>
         /// Returns the underlying API connection
@@ -574,7 +590,7 @@ namespace QuantConnect.Api
 
         public List<ApiOrderResponse> ReadBacktestOrders(int projectId, string backtestId, int start = 0, int end = 100)
         {
-            var request = new RestRequest("backtests/read/orders", Method.POST)
+            var request = new RestRequest("backtests/orders/read", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
@@ -844,7 +860,7 @@ namespace QuantConnect.Api
                     "The Api only supports Algorithm Statuses of Running, Stopped, RuntimeError and Liquidated");
             }
 
-            var request = new RestRequest("live/read", Method.POST)
+            var request = new RestRequest("live/list", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
@@ -894,6 +910,27 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Read out the portfolio state of a live algorithm
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <returns><see cref="PortfolioResponse"/></returns>
+        public PortfolioResponse ReadLivePortfolio(int projectId)
+        {
+            var request = new RestRequest("live/portfolio/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out PortfolioResponse result);
+            return result;
+        }
+
+        /// <summary>
         /// Returns the orders of the specified project id live algorithm.
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live orders</param>
@@ -904,7 +941,7 @@ namespace QuantConnect.Api
 
         public List<ApiOrderResponse> ReadLiveOrders(int projectId, int start = 0, int end = 100)
         {
-            var request = new RestRequest("live/read/orders", Method.POST)
+            var request = new RestRequest("live/orders/read", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
@@ -968,16 +1005,18 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project Id of the live running algorithm</param>
         /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
-        /// <param name="startTime">No logs will be returned before this time</param>
-        /// <param name="endTime">No logs will be returned after this time</param>
+        /// <param name="startLine">Start line of logs to read</param>
+        /// <param name="endLine">End line of logs to read</param>
         /// <returns><see cref="LiveLog"/> List of strings that represent the logs of the algorithm</returns>
-
-        public LiveLog ReadLiveLogs(int projectId, string algorithmId, DateTime? startTime = null, DateTime? endTime = null)
+        public LiveLog ReadLiveLogs(int projectId, string algorithmId, int startLine, int endLine)
         {
-            var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
-            var epochEndTime   = endTime   == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
+            var logLinesNumber = endLine - startLine;
+            if (logLinesNumber > 250)
+            {
+                throw new ArgumentException($"The maximum number of log lines allowed is 250. But the number of log lines was {logLinesNumber}.");
+            }
 
-            var request = new RestRequest("live/log/read", Method.POST)
+            var request = new RestRequest("live/logs/read", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
@@ -987,8 +1026,8 @@ namespace QuantConnect.Api
                 format = "json",
                 projectId,
                 algorithmId,
-                start = epochStartTime,
-                end = epochEndTime
+                startLine,
+                endLine,
             }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out LiveLog result);
@@ -1029,6 +1068,44 @@ namespace QuantConnect.Api
                 Thread.Sleep(5000);
                 ApiConnection.TryRequest(request, out result);
             }
+            return result;
+        }
+
+        /// <summary>
+        /// Read out the insights of a live algorithm
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="start">Starting index of the insights to be fetched</param>
+        /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
+        /// <returns><see cref="InsightResponse"/></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0)
+        {
+            var request = new RestRequest("live/insights/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json,
+            };
+
+            var diff = end - start;
+            if (diff > 100)
+            {
+                throw new ArgumentException($"The difference between the start and end index of the insights must be smaller than 100, but it was {diff}.");
+            }
+            else if (end == 0)
+            {
+                end = start + 100;
+            }
+
+            JObject obj = new JObject
+            {
+                { "projectId", projectId },
+                { "start", start },
+                { "end", end },
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out InsightResponse result);
             return result;
         }
 
@@ -1432,7 +1509,7 @@ namespace QuantConnect.Api
                 compileId,
                 parameters,
                 constraints
-            }), ParameterType.RequestBody);
+            }, SerializerSettings), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out EstimateResponseWrapper response);
             return response.Estimate;
@@ -1454,7 +1531,7 @@ namespace QuantConnect.Api
         /// <param name="nodeType">Optimization node type <see cref="OptimizationNodes"/></param>
         /// <param name="parallelNodes">Number of parallel nodes for optimization</param>
         /// <returns>BaseOptimization object from the API.</returns>
-        public BaseOptimization CreateOptimization(
+        public OptimizationSummary CreateOptimization(
             int projectId,
             string name,
             string target,
@@ -1487,7 +1564,7 @@ namespace QuantConnect.Api
                 estimatedCost,
                 nodeType,
                 parallelNodes
-            }), ParameterType.RequestBody);
+            }, SerializerSettings), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out OptimizationList result);
             return result.Optimizations.FirstOrDefault();
@@ -1498,7 +1575,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id we'd like to get a list of optimizations for</param>
         /// <returns>A list of BaseOptimization objects, <see cref="BaseOptimization"/></returns>
-        public List<BaseOptimization> ListOptimizations(int projectId)
+        public List<OptimizationSummary> ListOptimizations(int projectId)
         {
             var request = new RestRequest("optimizations/list", Method.POST)
             {

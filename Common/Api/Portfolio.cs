@@ -14,28 +14,34 @@
 */
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// Logs from a live algorithm
+    /// Class containing the basic portfolio information of a live algorithm
     /// </summary>
-    public class LiveLog : RestResponse
+    public class Portfolio
     {
         /// <summary>
-        /// List of logs from the live algorithm
+        /// Dictionary of algorithm holdings information
         /// </summary>
-        public List<string> Logs { get; set; }
+        public Dictionary<string, Holding> Holdings { get; set; }
 
         /// <summary>
-        /// Total amount of rows in the logs
+        /// Dictionary of algorithm cash currencies information
         /// </summary>
-        public int Length { get; set; }
+        public Dictionary<string, Cash> Cash { get; set; }
+    }
 
+    /// <summary>
+    /// Response class for reading the portfolio of a live algorithm
+    /// </summary>
+    public class PortfolioResponse : RestResponse
+    {
         /// <summary>
-        /// Amount of log rows before the current deployment
+        /// Object containing the basic portfolio information of a live algorithm
         /// </summary>
-        public int DeploymentOffset { get; set; }
+        public Portfolio Portfolio { get; set; }
     }
 }

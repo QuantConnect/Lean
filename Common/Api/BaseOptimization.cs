@@ -43,10 +43,6 @@ namespace QuantConnect.Api
         public string Name { get; set; }
 
         /// <summary>
-        /// Date when this optimization was created
-        /// </summary>
-        public DateTime Created { get; set; }
-
         /// <summary>
         /// Status of the optimization
         /// </summary>
@@ -57,6 +53,37 @@ namespace QuantConnect.Api
         /// </summary>
         /// <remarks><see cref="OptimizationNodes"/></remarks>
         public string NodeType { get; set; }
+
+        /// <summary>
+        /// Number of days of out of sample days
+        /// </summary>
+        public int OutOfSampleDays { get; set; }
+
+        /// <summary>
+        /// End date of out of sample data
+        /// </summary>
+        public DateTime OutOfSampleMaxEndDate { get; set; }
+
+        /// <summary>
+        /// Parameters used in this optimization
+        /// </summary>
+        public List<OptimizationParameter> Parameters { get; set; }
+
+        /// <summary>
+        /// Optimization statistical target
+        /// </summary>
+        public Target Criterion { get; set; }
+    }
+
+    /// <summary>
+    /// Optimization summary response for creating an optimization
+    /// </summary>
+    public class OptimizationSummary: BaseOptimization
+    {
+        /// <summary>
+        /// Date when this optimization was created
+        /// </summary>
+        public DateTime Created { get; set; }
 
         /// <summary>
         /// Price-sales ratio stastic
@@ -77,25 +104,5 @@ namespace QuantConnect.Api
         /// ID of project, were this current project was originally cloned
         /// </summary>
         public int? CloneId { get; set; }
-
-        /// <summary>
-        /// Number of days of out of sample days
-        /// </summary>
-        public int OutOfSampleDays { get; set; }
-
-        /// <summary>
-        /// End date of out of sample data
-        /// </summary>
-        public DateTime OutOfSampleMaxEndDate { get; set; }
-
-        /// <summary>
-        /// Parameters used in this optimization
-        /// </summary>
-        public List<OptimizationStepParameter> Parameters { get; set; }
-
-        /// <summary>
-        /// Optimization statistical target
-        /// </summary>
-        public Target Criterion { get; set; }
     }
 }

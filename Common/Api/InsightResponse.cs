@@ -14,28 +14,23 @@
 */
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// Logs from a live algorithm
+    /// Class containing insights and the number of insights of the live algorithm in the request criteria
     /// </summary>
-    public class LiveLog : RestResponse
+    public class InsightResponse: RestResponse
     {
         /// <summary>
-        /// List of logs from the live algorithm
+        /// Collection of insights
         /// </summary>
-        public List<string> Logs { get; set; }
+        public List<Insight> Insights { get; set; }
 
         /// <summary>
-        /// Total amount of rows in the logs
+        /// Total number of returned insights
         /// </summary>
         public int Length { get; set; }
-
-        /// <summary>
-        /// Amount of log rows before the current deployment
-        /// </summary>
-        public int DeploymentOffset { get; set; }
     }
 }
