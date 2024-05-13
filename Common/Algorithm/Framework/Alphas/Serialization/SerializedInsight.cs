@@ -181,7 +181,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         }
 
         #region BackwardsCompatibility
-
         [JsonProperty("group-id")]
         string OldGroupId
         {
