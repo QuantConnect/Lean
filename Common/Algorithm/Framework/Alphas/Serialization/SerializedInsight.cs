@@ -16,7 +16,6 @@
 using Newtonsoft.Json;
 using QuantConnect.Util;
 using System;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
 {
