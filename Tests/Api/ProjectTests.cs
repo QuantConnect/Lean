@@ -416,7 +416,7 @@ namespace QuantConnect.Tests.API
             var file = new ProjectFile
             {
                 Name = "Main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/InsightScoringRegressionAlgorithm.cs")
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateCryptoFrameworkAlgorithm.cs")
             };
 
             // Create a new project
@@ -448,16 +448,28 @@ namespace QuantConnect.Tests.API
                 var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
                 Assert.IsTrue(createLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
 
-                var readInsights = ApiClient.ReadLiveInsights(5, projectId);
-                Assert.IsTrue(readInsights.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", readInsights.Errors)}");
-                Assert.IsNotNull(readInsights.Insights);
-                Assert.IsTrue(readInsights.Length >= 0);
-                Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(101, projectId));
-                Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(102, projectId, 1));
+                // Wait 2 minutes
+                Thread.Sleep(120000);
 
                 // Stop the algorithm
                 var stopLive = ApiClient.StopLiveAlgorithm(projectId);
                 Assert.IsTrue(stopLive.Success, $"ApiClient.StopLiveAlgorithm(): Error: {string.Join(",", stopLive.Errors)}");
+
+                // Try to read the insights from the algorithm
+                var readInsights = ApiClient.ReadLiveInsights(5, projectId);
+                var finish = DateTime.UtcNow.AddMinutes(2);
+                do
+                {
+                    Thread.Sleep(5000);
+                    readInsights = ApiClient.ReadLiveInsights(5, projectId);
+                }
+                while (finish > DateTime.UtcNow && !readInsights.Insights.Any());
+
+                Assert.IsTrue(readInsights.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", readInsights.Errors)}");
+                Assert.IsNotEmpty(readInsights.Insights);
+                Assert.IsTrue(readInsights.Length >= 0);
+                Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(101, projectId));
+                Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(102, projectId, 1));
             }
             catch (Exception ex)
             {
