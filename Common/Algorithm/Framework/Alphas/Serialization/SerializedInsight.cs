@@ -182,18 +182,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
 
         #region BackwardsCompatibility
 
-        /// <summary>
-        /// See <see cref="Insight.Direction"/>
-        /// </summary>
-        [JsonProperty(PropertyName = "Direction")]
-        public double OldDirection
-        {
-            set
-            {
-                ScoreDirection = value;
-            }
-        }
-
         [JsonProperty("group-id")]
         string OldGroupId
         {
