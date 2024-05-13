@@ -49,6 +49,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             Assert.AreEqual(jObject["created-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.GeneratedTimeUtc), 5e-4);
             Assert.AreEqual(jObject["close-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.CloseTimeUtc), 5e-4);
             Assert.AreEqual(jObject["symbol"].Value<string>(), result.Symbol.ID.ToString());
+            Assert.AreEqual(jObject["ticker"].Value<string>(), result.Symbol.Value);
             Assert.AreEqual(jObject["type"].Value<string>(), result.Type.ToLower());
             Assert.AreEqual(jObject["reference"].Value<decimal>(), result.ReferenceValue);
             Assert.AreEqual(jObject["direction"].Value<string>(), result.Direction.ToLower());
@@ -74,6 +75,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             Assert.AreEqual(jObject["created-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.GeneratedTimeUtc), 5e-4);
             Assert.AreEqual(jObject["close-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.CloseTimeUtc), 5e-4);
             Assert.AreEqual(jObject["symbol"].Value<string>(), result.Symbol.ID.ToString());
+            Assert.AreEqual(jObject["ticker"].Value<string>(), result.Symbol.Value);
             Assert.AreEqual(jObject["type"].Value<string>(), result.Type.ToLower());
             Assert.AreEqual(jObject["reference"].Value<decimal>(), result.ReferenceValue);
             Assert.AreEqual(jObject["direction"].Value<string>(), result.Direction.ToLower());
@@ -154,7 +156,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
         }
 
         private string jsonNoScore2 = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":null,""sourceModel"":""mySourceModel-1"",""generatedTime"":1520711961.00055,
-""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""type"":""price"",""reference"":9143.53,""referenceValueFinal"":0.0,
+""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""ticker"":""BTCUSD"",""type"":""price"",""reference"":9143.53,""referenceValueFinal"":0.0,
 ""direction"":""up"",""period"":5.0,""magnitude"":""0.025"",""confidence"":null,""weight"":null,""scoreIsFinal"":false,""scoreMagnitude"":""0"",""scoreDirection"":""0"",
 ""estimatedValue"":""0"",""tag"":null}".ReplaceLineEndings(string.Empty);
 
@@ -167,6 +169,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"created-time\":1520711961.00055," +
             "\"close-time\":1520711961.00055," +
             "\"symbol\":\"BTCUSD XJ\"," +
+            "\"ticker\":\"BTCUSD\"," +
             "\"type\":\"price\"," +
             "\"reference\":9143.53," +
             "\"reference-final\":0.0," +
@@ -182,7 +185,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"tag\":null}";
 
         private string jsonWithScore = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",""sourceModel"":""mySourceModel-1"",
-""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""type"":""price"",
+""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""ticker"":""BTCUSD"",""type"":""price"",
 ""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":""0.025"",""confidence"":null,""weight"":null,
 ""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":null}".ReplaceLineEndings(string.Empty);
         private const string jsonWithScoreBackwardsCompatible =
@@ -194,6 +197,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"created-time\":1520711961.00055," +
             "\"close-time\":1520711961.00055," +
             "\"symbol\":\"BTCUSD XJ\"," +
+            "\"ticker\":\"BTCUSD\"," +
             "\"type\":\"price\"," +
             "\"reference\":9143.53," +
             "\"reference-final\":9243.53," +
@@ -216,6 +220,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"generated-time\":1520711961.00055," +
             "\"close-time\":1520711961.00055," +
             "\"symbol\":\"BTCUSD XJ\"," +
+            "\"ticker\":\"BTCUSD\"," +
             "\"type\":\"price\"," +
             "\"reference\":9143.53," +
             "\"reference-final\":9243.53," +
@@ -231,11 +236,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"tag\":null}";
 
         private string jsonWithExpectedOutputFromMissingCreatedTimeValue = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",
-""sourceModel"":""mySourceModel-1"",""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""type"":""price"",""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":""0.025"",""confidence"":null,
+""sourceModel"":""mySourceModel-1"",""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""ticker"":
+""BTCUSD"",""type"":""price"",""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":""0.025"",""confidence"":null,
 ""weight"":null,""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":null}".ReplaceLineEndings(string.Empty);
 
         private string jsonWithTag = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",""sourceModel"":""mySourceModel-1"",
-""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""type"":
+""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""ticker"":""BTCUSD"",""type"":
 ""price"",""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":null,""confidence"":null,""weight"":null,
 ""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":""additional information""}".ReplaceLineEndings(string.Empty);
         private const string jsonWithTagBackwardsCompatible =
@@ -247,6 +253,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"created-time\":1520711961.00055," +
             "\"close-time\":1520711961.00055," +
             "\"symbol\":\"BTCUSD XJ\"," +
+            "\"ticker\":\"BTCUSD\"," +
             "\"type\":\"price\"," +
             "\"reference\":9143.53," +
             "\"reference-final\":9243.53," +
@@ -262,7 +269,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"tag\":\"additional information\"}";
 
         private string jsonWithoutTag = @"{""id"":""e02be50f56a8496b9ba995d19a904ada"",""groupId"":""a02be50f56a8496b9ba995d19a904ada"",
-""sourceModel"":""mySourceModel-1"",""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",""type"":""price"",""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":null,
+""sourceModel"":""mySourceModel-1"",""generatedTime"":1520711961.00055,""createdTime"":1520711961.00055,""closeTime"":1520711961.00055,""symbol"":""BTCUSD XJ"",
+""ticker"":""BTCUSD"",""type"":""price"",""reference"":9143.53,""referenceValueFinal"":9243.53,""direction"":""up"",""period"":5.0,""magnitude"":null,
 ""confidence"":null,""weight"":null,""scoreIsFinal"":true,""scoreMagnitude"":""1"",""scoreDirection"":""1"",""estimatedValue"":""1113.2484"",""tag"":null}".ReplaceLineEndings(string.Empty);
 
         private const string jsonWithoutTagBackwardsCompatible =
@@ -274,6 +282,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             "\"created-time\":1520711961.00055," +
             "\"close-time\":1520711961.00055," +
             "\"symbol\":\"BTCUSD XJ\"," +
+            "\"ticker\":\"BTCUSD\"," +
             "\"type\":\"price\"," +
             "\"reference\":9143.53," +
             "\"reference-final\":9243.53," +
