@@ -75,6 +75,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         public string Symbol { get; set; }
 
         /// <summary>
+        /// See <see cref="Insight.Symbol"/>
+        /// The symbol's ticker at the generated time
+        /// </summary>
+        public string Ticker { get; set; }
+
+        /// <summary>
         /// See <see cref="Insight.Type"/>
         /// </summary>
         public InsightType Type { get; set; }
@@ -164,6 +170,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
             GroupId = insight.GroupId?.ToStringInvariant("N");
             CreatedTime = Time.DateTimeToUnixTimeStamp(insight.GeneratedTimeUtc);
             CloseTime = Time.DateTimeToUnixTimeStamp(insight.CloseTimeUtc);
+            Ticker = insight.Symbol.Value;
             Symbol = insight.Symbol.ID.ToString();
             Type = insight.Type;
             ReferenceValue = insight.ReferenceValue;
