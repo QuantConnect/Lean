@@ -311,12 +311,12 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Read out the insights of a live algorithm
         /// </summary>
-        /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
         /// <param name="projectId">Id of the project from which to read the live algorithm</param>
-        /// <param name="start">Starting index of the insights to be fetched. Required if end > 100</param>
+        /// <param name="start">Starting index of the insights to be fetched</param>
+        /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
         /// <returns><see cref="InsightResponse"/></returns>
         /// <exception cref="ArgumentException"></exception>
-        public InsightResponse ReadLiveInsights(int end, int projectId, int? start = null);
+        public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0);
 
         /// <summary>
         /// Gets the link to the downloadable data.

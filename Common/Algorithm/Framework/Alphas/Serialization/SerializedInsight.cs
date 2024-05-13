@@ -98,7 +98,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// <summary>
         /// See <see cref="Insight.Direction"/>
         /// </summary>
-        [JsonProperty(PropertyName = "direction")]
         public InsightDirection Direction { get; set; }
 
         /// <summary>
@@ -169,8 +168,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
             GroupId = insight.GroupId?.ToStringInvariant("N");
             CreatedTime = Time.DateTimeToUnixTimeStamp(insight.GeneratedTimeUtc);
             CloseTime = Time.DateTimeToUnixTimeStamp(insight.CloseTimeUtc);
-            Ticker = insight.Symbol.Value;
             Symbol = insight.Symbol.ID.ToString();
+            Ticker = insight.Symbol.Value;
             Type = insight.Type;
             ReferenceValue = insight.ReferenceValue;
             ReferenceValueFinal = insight.ReferenceValueFinal;

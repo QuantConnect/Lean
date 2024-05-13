@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.API
     {
         private string _validSerialization = "{\"optimizationId\":\"myOptimizationId\",\"name\":\"myOptimizationName\",\"runtimeStatistics\":{\"Completed\":\"1\"},"+
             "\"constraints\":[{\"target\":\"TotalPerformance.PortfolioStatistics.SharpeRatio\",\"operator\":\"GreaterOrEqual\",\"targetValue\":1}],"+
-            "\"parameters\":[{\"name\":\"myParamName\",\"min\":2,\"max\":4,\"step\":1}],\"nodeType\":\"O2-8\",\"parallelNodes\":12,\"projectId\":1234567,\"status\":\"completed\","+
+            "\"parameters\":[{\"name\":\"myParamName\",\"min\":2,\"max\":4,\"step\":1}, {\"name\":\"myStaticParamName\",\"value\":4}],\"nodeType\":\"O2-8\",\"parallelNodes\":12,\"projectId\":1234567,\"status\":\"completed\"," +
             "\"backtests\":{\"myBacktestKey\":{\"name\":\"myBacktestName\",\"id\":\"myBacktestId\",\"progress\":1,\"exitCode\":0,"+
             "\"statistics\":[0.374,0.217,0.047,-4.51,2.86,-0.664,52.602,17.800,6300000.00,0.196,1.571,27.0,123.888,77.188,0.63,1.707,1390.49,180.0,0.233,-0.558,73.0]," +
             "\"parameterSet\":{\"myParamName\":\"2\"},\"equity\":[]}},\"strategy\":\"QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy\"," +
@@ -57,12 +57,15 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual("['TotalPerformance'].['PortfolioStatistics'].['SharpeRatio']", deserialized.Constraints[0].Target);
             Assert.IsTrue(deserialized.Constraints[0].Operator == ComparisonOperatorTypes.GreaterOrEqual);
             Assert.IsTrue(deserialized.Constraints[0].TargetValue == 1);
-            Assert.IsTrue(deserialized.Parameters.Count == 1);
+            Assert.IsTrue(deserialized.Parameters.Count == 2);
             var stepParam = deserialized.Parameters.First().ConvertInvariant<OptimizationStepParameter>();
             Assert.IsTrue(stepParam.Name == "myParamName");
             Assert.IsTrue(stepParam.MinValue == 2);
             Assert.IsTrue(stepParam.MaxValue == 4);
             Assert.IsTrue(stepParam.Step == 1);
+            var staticParam = deserialized.Parameters.ElementAt(1).ConvertInvariant<StaticOptimizationParameter>();
+            Assert.IsTrue(staticParam.Name == "myStaticParamName");
+            Assert.IsTrue(staticParam.Value == "4");
             Assert.AreEqual(OptimizationNodes.O2_8, deserialized.NodeType);
             Assert.AreEqual(12, deserialized.ParallelNodes);
             Assert.AreEqual(1234567, deserialized.ProjectId);

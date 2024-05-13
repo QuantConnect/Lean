@@ -1008,7 +1008,6 @@ namespace QuantConnect.Api
         /// <param name="startLine">Start line of logs to read</param>
         /// <param name="endLine">End line of logs to read</param>
         /// <returns><see cref="LiveLog"/> List of strings that represent the logs of the algorithm</returns>
-
         public LiveLog ReadLiveLogs(int projectId, string algorithmId, int startLine, int endLine)
         {
             var logLinesNumber = endLine - startLine;
@@ -1075,38 +1074,34 @@ namespace QuantConnect.Api
         /// <summary>
         /// Read out the insights of a live algorithm
         /// </summary>
-        /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
         /// <param name="projectId">Id of the project from which to read the live algorithm</param>
-        /// <param name="start">Starting index of the insights to be fetched. Required if end > 100</param>
+        /// <param name="start">Starting index of the insights to be fetched</param>
+        /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
         /// <returns><see cref="InsightResponse"/></returns>
         /// <exception cref="ArgumentException"></exception>
-        public InsightResponse ReadLiveInsights(int end, int projectId, int? start = null)
+        public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0)
         {
             var request = new RestRequest("live/insights/read", Method.POST)
             {
                 RequestFormat = DataFormat.Json,
             };
 
+            var diff = end - start;
+            if (diff > 100)
+            {
+                throw new ArgumentException($"The difference between the start and end index of the insights must be smaller than 100, but it was {diff}.");
+            }
+            else if (end == 0)
+            {
+                end = start + 100;
+            }
+
             JObject obj = new JObject
             {
+                { "projectId", projectId },
+                { "start", start },
                 { "end", end },
-                { "projectId", projectId }
             };
-
-            if (end > 100)
-            {
-                if (start == null)
-                {
-                    throw new ArgumentException($"Start index is missing. If the last index (end) of the insights to be fetched is greater than 100, a start index must be provided. End index was {end}");
-                }
-                var diff = end - start;
-                if (diff > 100)
-                {
-                    throw new ArgumentException($"The difference between the start and end index of the insights must be smaller than 100, but it was {diff}.");
-                }
-
-                obj.Add("start", (int)start);
-            }
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
 
