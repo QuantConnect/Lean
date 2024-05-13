@@ -173,7 +173,7 @@ namespace QuantConnect.Orders
         Invalid = 7,
 
         /// <summary>
-        /// Order waiting for confirmation of cancellation (6)
+        /// Order waiting for confirmation of cancellation (8)
         /// </summary>
         CancelPending = 8,
 
