@@ -349,7 +349,28 @@ namespace QuantConnect.Statistics
         /// <returns>Double annual performance percentage</returns>
         private static decimal GetAnnualPerformance(List<double> performance, int tradingDaysPerYear)
         {
-            return Statistics.AnnualPerformance(performance, tradingDaysPerYear).SafeDecimalCast();
+            try
+            {
+                return Statistics.AnnualPerformance(performance, tradingDaysPerYear).SafeDecimalCast();
+            }catch (Exception ex)
+            {
+                var partialSums = 0.0;
+                var points = 0;
+                double troublePoint = default;
+                foreach(var point in performance)
+                {
+                    points++;
+                    partialSums += point;
+                    if (Math.Pow(partialSums / points, tradingDaysPerYear).IsNaNOrInfinity())
+                    {
+                        troublePoint = point;
+                        break;
+                    }
+                }
+
+                throw new Exception($"An exception was thrown when trying to cast the annual performance value due to the following performance point: {troublePoint}." +
+                    $"The exception thrown was the following {ex.Message}.");
+            }
         }
 
         private static decimal GetValueAtRisk(
