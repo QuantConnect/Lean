@@ -49,7 +49,8 @@ namespace QuantConnect.Tests.Engine.Setup
                 null,
                 false,
                 new DataPermissionManager(),
-                algorithm.ObjectStore));
+                algorithm.ObjectStore,
+                algorithm.Settings));
             algorithm.SetHistoryProvider(historyProvider);
 
             // Pick a date range where we do NOT have BTCUSD minute data

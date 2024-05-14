@@ -55,6 +55,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             }
             _initialized = true;
             _brokerage.Connect();
+            AlgorithmSettings = parameters.AlgorithmSettings;
             _dataPermissionManager = parameters.DataPermissionManager;
         }
 

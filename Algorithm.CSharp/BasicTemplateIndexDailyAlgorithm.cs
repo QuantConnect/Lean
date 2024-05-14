@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using QuantConnect.Data;
 using System.Collections.Generic;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -67,6 +68,12 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
+            var openInterest = Securities[SpxOption].Cache.GetAll<OpenInterest>();
+            if (openInterest.Single().EndTime != new DateTime(2021, 1, 15, 23, 0, 0))
+            {
+                throw new ArgumentException($"Unexpected open interest time: {openInterest.Single().EndTime}");
+            }
+
             foreach (var symbol in new[] { SpxOption, Spx })
             {
                 var history = History(symbol, 10).ToList();
@@ -98,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 122;
+        public override long DataPoints => 121;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -113,7 +120,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "11"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "653.545%"},
+            {"Compounding Annual Return", "621.484%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "1000000"},

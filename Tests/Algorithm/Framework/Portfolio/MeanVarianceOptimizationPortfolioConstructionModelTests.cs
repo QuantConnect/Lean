@@ -59,7 +59,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 i => { },
                 true,
                 new DataPermissionManager(),
-                _algorithm.ObjectStore));
+                _algorithm.ObjectStore,
+                _algorithm.Settings));
         }
 
         private void Clear() => _algorithm.Insights.Clear(_algorithm.Securities.Keys.ToArray());

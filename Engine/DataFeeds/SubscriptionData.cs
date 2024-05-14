@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -61,7 +62,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="normalizationMode">Specifies how data is normalized</param>
         /// <param name="factor">price scale factor</param>
         /// <returns>A new <see cref="SubscriptionData"/> containing the specified data</returns>
-        public static SubscriptionData Create(SubscriptionDataConfig configuration, SecurityExchangeHours exchangeHours, TimeZoneOffsetProvider offsetProvider, BaseData data, DataNormalizationMode normalizationMode, decimal? factor = null)
+        public static SubscriptionData Create(bool dailyStrictEndTimeEnabled, SubscriptionDataConfig configuration, SecurityExchangeHours exchangeHours, TimeZoneOffsetProvider offsetProvider, BaseData data, DataNormalizationMode normalizationMode, decimal? factor = null)
         {
             if (data == null)
             {
@@ -71,7 +72,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             data = data.Clone(data.IsFillForward);
             var emitTimeUtc = offsetProvider.ConvertToUtc(data.EndTime);
             // rounding down does not make sense for daily increments using strict end times
-            if (!LeanData.UseStrictEndTime(configuration.SecurityType, configuration.Increment))
+            if (!LeanData.UseStrictEndTime(dailyStrictEndTimeEnabled, configuration.Symbol, configuration.Increment))
             {
                 // Let's round down for any data source that implements a time delta between
                 // the start of the data and end of the data (usually used with Bars).

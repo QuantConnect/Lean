@@ -193,7 +193,8 @@ namespace QuantConnect.Research
                         null,
                         true,
                         algorithmHandlers.DataPermissionsManager,
-                        ObjectStore
+                        ObjectStore,
+                        Settings
                     )
                 );
 

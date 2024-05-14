@@ -42,6 +42,8 @@ class BasicTemplateIndexDailyAlgorithm(QCAlgorithm):
         self.ExpectedBarCount = 10
         self.BarCounter = 0
 
+        self.settings.daily_strict_end_time_enabled = True
+
     def on_data(self, data: Slice):
         if not self.Portfolio.Invested:
             # SPX Index is not tradable, but we can trade an option

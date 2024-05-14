@@ -647,7 +647,6 @@ namespace QuantConnect.Data.Market
             {
                 tradeBar.Volume = csv[5].ToDecimal();
             }
-            LeanData.TrySetStrictEndTimes(tradeBar, config.Increment);
             return tradeBar;
         }
 
@@ -680,7 +679,6 @@ namespace QuantConnect.Data.Market
             {
                 tradeBar.Volume = streamReader.GetDecimal();
             }
-            LeanData.TrySetStrictEndTimes(tradeBar, config.Increment);
             return tradeBar;
         }
 

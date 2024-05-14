@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,6 +23,12 @@ namespace QuantConnect.Data
     /// </summary>
     public interface IDataAggregator : IDisposable
     {
+        /// <summary>
+        /// Initialize this instance
+        /// </summary>
+        /// <param name="parameters">The parameters dto instance</param>
+        void Initialize(DataAggregatorInitializeParameters parameters);
+
         /// <summary>
         /// Add new subscription to current <see cref="IDataAggregator"/> instance
         /// </summary>

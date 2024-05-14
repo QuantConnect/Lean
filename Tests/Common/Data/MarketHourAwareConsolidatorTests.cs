@@ -24,12 +24,56 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class MarketHourAwareConsolidatorTests
     {
+        [Test]
+        public void MarketAlwaysOpen()
+        {
+            var symbol = Symbols.BTCUSD;
+            using var consolidator = new MarketHourAwareConsolidator(true, Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
+            var consolidatedBarsCount = 0;
+            TradeBar latestBar = null;
+
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                latestBar = (TradeBar)bar;
+                consolidatedBarsCount++;
+            };
+
+            var time = new DateTime(2015, 04, 13, 5, 0, 0);
+            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 100 });
+
+            time = new DateTime(2015, 04, 13, 10, 0, 0);
+            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 1 });
+
+            Assert.IsNull(latestBar);
+
+            time = time.AddHours(2);
+            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 2 });
+
+            Assert.IsNull(latestBar);
+
+            time = new DateTime(2015, 04, 13, 15, 15, 0);
+            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 3 });
+
+            Assert.IsNull(latestBar);
+
+            time = new DateTime(2015, 04, 14, 0, 0, 0);
+            consolidator.Scan(time);
+
+            // Assert that the bar emitted
+            Assert.IsNotNull(latestBar);
+            Assert.AreEqual(time, latestBar.EndTime);
+            Assert.AreEqual(time.AddDays(-1), latestBar.Time);
+            Assert.AreEqual(1, consolidatedBarsCount);
+            Assert.AreEqual(100, latestBar.High);
+            Assert.AreEqual(1, latestBar.Low);
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void Daily(bool strictEndTime)
         {
             var symbol = strictEndTime ? Symbols.SPX : Symbols.SPY;
-            using var consolidator = new MarketHourAwareConsolidator(Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
+            using var consolidator = new MarketHourAwareConsolidator(strictEndTime, Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
             var consolidatedBarsCount = 0;
             TradeBar latestBar = null;
 
@@ -58,7 +102,7 @@ namespace QuantConnect.Tests.Common.Data
 
             Assert.IsNull(latestBar);
 
-            time = new DateTime(2015, 04, 14, 0, 0, 0);
+            time = strictEndTime ? time : new DateTime(2015, 04, 14, 0, 0, 0);
             consolidator.Scan(time);
 
             // Assert that the bar emitted
@@ -116,7 +160,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void MarketHoursRespected()
         {
-            using var consolidator = new MarketHourAwareConsolidator(Resolution.Hour, typeof(TradeBar), TickType.Trade, false);
+            using var consolidator = new MarketHourAwareConsolidator(true, Resolution.Hour, typeof(TradeBar), TickType.Trade, false);
             var consolidatedBarsCount = 0;
             TradeBar latestBar = null;
 
@@ -160,11 +204,11 @@ namespace QuantConnect.Tests.Common.Data
         private class MarketHourAwareConsolidatorTest : MarketHourAwareConsolidator
         {
             public MarketHourAwareConsolidatorTest(Resolution resolution, Type dataType, TickType tickType, bool extendedMarketHours)
-                : base(resolution, dataType, tickType, extendedMarketHours)
+                : base(true, resolution, dataType, tickType, extendedMarketHours)
             {
             }
 
-            protected override bool UseStrictEndTime(SecurityType securityType)
+            protected override bool UseStrictEndTime(Symbol symbol)
             {
                 return true;
             }

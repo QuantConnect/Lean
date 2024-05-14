@@ -233,7 +233,7 @@ namespace QuantConnect.Tests.Common.Data.Market
             var expectedEndTime = new DateTime(2020, 9, 22, 12, 0, 0);
             if (resolution == Resolution.Daily)
             {
-                expectedEndTime = new DateTime(2020, 9, 21, 15, 15, 0);
+                expectedEndTime = new DateTime(2020, 9, 22, 0, 0, 0);
             }
             Assert.AreEqual(expectedEndTime, fromLine.EndTime);
             Assert.AreEqual(symbol, fromLine.Symbol);

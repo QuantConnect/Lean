@@ -22,6 +22,7 @@ using Fasterflect;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -311,6 +312,9 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 // after algorithm was initialized, should set trading days per year for our great portfolio statistics
                 BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
+
+                var dataAggregator = Composer.Instance.GetPart<IDataAggregator>();
+                dataAggregator?.Initialize(new () { AlgorithmSettings = algorithm.Settings });
 
                 //Finalize Initialization
                 algorithm.PostInitialize();

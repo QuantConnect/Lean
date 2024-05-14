@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null,
                 TestGlobals.DataProvider, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
-                null, true, new DataPermissionManager(), _algorithm.ObjectStore));
+                null, true, new DataPermissionManager(), _algorithm.ObjectStore, _algorithm.Settings));
             _algorithm.SetHistoryProvider(historyProvider);
 
             FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(), false);

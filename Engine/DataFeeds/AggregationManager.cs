@@ -34,11 +34,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly ConcurrentDictionary<SecurityIdentifier, List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>>> _enumerators
             = new ConcurrentDictionary<SecurityIdentifier, List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>>>();
+        private bool _dailyStrictEndTimeEnabled;
 
         /// <summary>
         /// Continuous UTC time provider
         /// </summary>
         protected ITimeProvider TimeProvider { get; set; } = RealTimeProvider.Instance;
+
+        /// <summary>
+        /// Initialize this instance
+        /// </summary>
+        /// <param name="parameters">The parameters dto instance</param>
+        public void Initialize(DataAggregatorInitializeParameters parameters)
+        {
+            _dailyStrictEndTimeEnabled = parameters.AlgorithmSettings.DailyStrictEndTimeEnabled;
+            Log.Trace($"AggregationManager.Initialize(): daily strict end times: {_dailyStrictEndTimeEnabled}");
+        }
 
         /// <summary>
         /// Add new subscription to current <see cref="IDataAggregator"/> instance
@@ -140,7 +151,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // let's build daily bars that respect market hours data as requested by 'ExtendedMarketHours',
                 // also this allows us to enable the daily strict end times if required
-                return new MarketHourAwareConsolidator(config.Resolution, typeof(Tick), config.TickType, config.ExtendedMarketHours);
+                return new MarketHourAwareConsolidator(_dailyStrictEndTimeEnabled, config.Resolution, typeof(Tick), config.TickType, config.ExtendedMarketHours);
             }
             if (config.Type == typeof(QuoteBar))
             {
