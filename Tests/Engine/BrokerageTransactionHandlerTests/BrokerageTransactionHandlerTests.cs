@@ -468,6 +468,105 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
+        public void ComboLimitOrderPriceIsRounded()
+        {
+            var algorithm = new TestAlgorithm { HistoryProvider = new EmptyHistoryProvider() };
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetBrokerageModel(BrokerageName.Default);
+            algorithm.SetCash(100000);
+            var symbol = algorithm.AddForex(Ticker).Symbol;
+            algorithm.SetFinishedWarmingUp();
+
+            //Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new BacktestingResultHandler());
+
+            // Creates the order
+            var dateTime = new DateTime(2024, 05, 14, 12, 0, 0);
+            var security = algorithm.Securities[symbol];
+            var price = 1.12129m;
+            security.SetMarketPrice(new Tick(dateTime, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.ComboLimit, security.Type, security.Symbol, 1600, 1.12121212m, 1.12121212m, dateTime,
+                "", groupOrderManager: new GroupOrderManager(1, 1, 1600, 1.12121212m));
+
+            // Mock the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(algorithm.Transactions, orderRequest));
+            algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act
+            var orderTicket = transactionHandler.Process(orderRequest);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.New);
+            transactionHandler.HandleOrderRequest(orderRequest);
+
+            // Assert
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            Assert.AreEqual(OrderStatus.Submitted, orderTicket.Status);
+            // 1.12121212 after round becomes 1.12121
+            Assert.AreEqual(1.12121m, orderTicket.Get(OrderField.LimitPrice));
+        }
+
+        [Test]
+        public void ComboLegLimitOrderPriceIsRounded()
+        {
+            var algorithm = new TestAlgorithm { HistoryProvider = new EmptyHistoryProvider() };
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetBrokerageModel(BrokerageName.Default);
+            algorithm.SetCash(100000);
+            var symbol1 = algorithm.AddForex("EURUSD").Symbol;
+            var symbol2 = algorithm.AddForex("USDJPY").Symbol;
+            algorithm.SetFinishedWarmingUp();
+
+            //Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new BacktestingResultHandler());
+
+            // Creates the order
+            var dateTime = new DateTime(2024, 05, 14, 12, 0, 0);
+            var security = algorithm.Securities[symbol1];
+            var price = 1.12129m;
+            security.SetMarketPrice(new Tick(dateTime, security.Symbol, price, price, price));
+
+            var groupOrderManager = new GroupOrderManager(1, 2, 1600);
+            var leg1OrderRequest = new SubmitOrderRequest(OrderType.ComboLegLimit, security.Type, security.Symbol, 1600, 1.12121212m, 1.12121212m,
+                dateTime, "", groupOrderManager: groupOrderManager);
+            var leg2OrderRequest = new SubmitOrderRequest(OrderType.ComboLegLimit, security.Type, security.Symbol, 2800, 1.13131313m, 1.13131313m,
+                dateTime, "", groupOrderManager: groupOrderManager);
+
+            leg1OrderRequest.SetOrderId(1);
+            leg2OrderRequest.SetOrderId(2);
+
+            // Mock the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(1)).Returns(new OrderTicket(algorithm.Transactions, leg1OrderRequest));
+            orderProcessorMock.Setup(m => m.GetOrderTicket(2)).Returns(new OrderTicket(algorithm.Transactions, leg2OrderRequest));
+            algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act
+            var leg1OrderTicket = transactionHandler.Process(leg1OrderRequest);
+            Assert.IsTrue(leg1OrderTicket.Status == OrderStatus.New);
+            transactionHandler.HandleOrderRequest(leg1OrderRequest);
+
+            var leg2OrderTicket = transactionHandler.Process(leg2OrderRequest);
+            Assert.IsTrue(leg2OrderTicket.Status == OrderStatus.New);
+            transactionHandler.HandleOrderRequest(leg2OrderRequest);
+
+            // Assert
+            Assert.IsTrue(leg1OrderRequest.Response.IsProcessed);
+            Assert.IsTrue(leg1OrderRequest.Response.IsSuccess);
+            Assert.AreEqual(OrderStatus.Submitted, leg1OrderTicket.Status);
+            // 1.12121212 after round becomes 1.12121
+            Assert.AreEqual(1.12121m, leg1OrderTicket.Get(OrderField.LimitPrice));
+
+            Assert.IsTrue(leg2OrderRequest.Response.IsProcessed);
+            Assert.IsTrue(leg2OrderRequest.Response.IsSuccess);
+            Assert.AreEqual(OrderStatus.Submitted, leg2OrderTicket.Status);
+            // 1.13131313 after round becomes 1.13131
+            Assert.AreEqual(1.13131m, leg2OrderTicket.Get(OrderField.LimitPrice));
+        }
+
+        [Test]
         public void OrderCancellationTransitionsThroughCancelPendingStatus()
         {
             // Initializes the transaction handler

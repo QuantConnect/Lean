@@ -1624,14 +1624,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         protected void RoundOrderPrices(Order order, Security security)
         {
-            // Do not need to round market orders
-            if (order.Type == OrderType.Market ||
-                order.Type == OrderType.MarketOnOpen ||
-                order.Type == OrderType.MarketOnClose)
-            {
-                return;
-            }
-
             switch (order.Type)
             {
                 case OrderType.Limit:
@@ -1677,6 +1669,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             (roundedPrice) => limitIfTouchedOrder.LimitPrice = roundedPrice);
                         RoundOrderPrice(security, limitIfTouchedOrder.TriggerPrice, "TriggerPrice",
                             (roundedPrice) => limitIfTouchedOrder.TriggerPrice = roundedPrice);
+                    }
+                    break;
+
+                case OrderType.ComboLegLimit:
+                    {
+                        var comboLegOrder = (ComboLegLimitOrder)order;
+                        RoundOrderPrice(security, comboLegOrder.LimitPrice, "LimitPrice",
+                            (roundedPrice) => comboLegOrder.LimitPrice = roundedPrice);
+                    }
+                    break;
+
+                case OrderType.ComboLimit:
+                    {
+                        var groupOrderManager = order.GroupOrderManager;
+                        RoundOrderPrice(security, groupOrderManager.LimitPrice, "LimitPrice",
+                            (roundedPrice) => groupOrderManager.LimitPrice = roundedPrice);
                     }
                     break;
             }
