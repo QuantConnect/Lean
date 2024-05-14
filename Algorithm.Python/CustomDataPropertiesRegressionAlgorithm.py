@@ -27,14 +27,14 @@ class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
         self.set_start_date(2011,9,13)   # Set Start Date
         self.set_end_date(2015,12,1)     # Set End Date
         self.set_cash(100000)           # Set Strategy Cash
-        
+
         # Define our custom data properties and exchange hours
         self.ticker = 'BTC'
         properties = SymbolProperties("Bitcoin", "USD", 1, 0.01, 0.01, self.ticker)
         exchange_hours = SecurityExchangeHours.always_open(TimeZones.NEW_YORK)
 
         # Add the custom data to our algorithm with our custom properties and exchange hours
-        self.bitcoin = self.add_data(Bitcoin, self.ticker, properties, exchange_hours)
+        self.bitcoin = self.add_data(Bitcoin, self.ticker, properties, exchange_hours, leverage=1, fill_forward=False)
 
         # Verify our symbol properties were changed and loaded into this security
         if self.bitcoin.symbol_properties != properties :
