@@ -60,7 +60,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 i => { },
                 true,
                 new DataPermissionManager(),
-                _algorithm.ObjectStore));
+                _algorithm.ObjectStore,
+                _algorithm.Settings));
         }
 
         [TestCase(Language.CSharp)]

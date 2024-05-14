@@ -1639,7 +1639,8 @@ class TestPythonDerivedClass(PythonData):
                     (_) => {},
                     false,
                     new DataPermissionManager(),
-                    algo.ObjectStore));
+                    algo.ObjectStore,
+                    algo.Settings));
 
             algo.SetStartDate(DateTime.UtcNow.AddDays(-1));
 

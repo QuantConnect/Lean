@@ -27,9 +27,14 @@ namespace QuantConnect.Data.Common
     /// </summary>
     public class MarketHourAwareConsolidator : IDataConsolidator
     {
+        private readonly bool _dailyStrictEndTimeEnabled;
         private readonly bool _extendedMarketHours;
-        private readonly TimeSpan _period;
-        private bool _strictEndTime;
+        private bool _useStrictEndTime;
+
+        /// <summary>
+        /// The consolidation period requested
+        /// </summary>
+        protected TimeSpan Period { get; }
 
         /// <summary>
         /// The consolidator instance
@@ -74,9 +79,10 @@ namespace QuantConnect.Data.Common
         /// <param name="dataType">The target data type</param>
         /// <param name="tickType">The target tick type</param>
         /// <param name="extendedMarketHours">True if extended market hours should be consolidated</param>
-        public MarketHourAwareConsolidator(Resolution resolution, Type dataType, TickType tickType, bool extendedMarketHours)
+        public MarketHourAwareConsolidator(bool dailyStrictEndTimeEnabled, Resolution resolution, Type dataType, TickType tickType, bool extendedMarketHours)
         {
-            _period = resolution.ToTimeSpan();
+            _dailyStrictEndTimeEnabled = dailyStrictEndTimeEnabled;
+            Period = resolution.ToTimeSpan();
             _extendedMarketHours = extendedMarketHours;
 
             if (dataType == typeof(Tick))
@@ -85,41 +91,38 @@ namespace QuantConnect.Data.Common
                 {
                     Consolidator = resolution == Resolution.Daily
                         ? new TickConsolidator(DailyStrictEndTime)
-                        : new TickConsolidator(_period);
+                        : new TickConsolidator(Period);
                 }
                 else
                 {
                     Consolidator = resolution == Resolution.Daily
                         ? new TickQuoteBarConsolidator(DailyStrictEndTime)
-                        : new TickQuoteBarConsolidator(_period);
+                        : new TickQuoteBarConsolidator(Period);
                 }
             }
             else if (dataType == typeof(TradeBar))
             {
                 Consolidator = resolution == Resolution.Daily
                     ? new TradeBarConsolidator(DailyStrictEndTime)
-                    : new TradeBarConsolidator(_period);
+                    : new TradeBarConsolidator(Period);
             }
             else if (dataType == typeof(QuoteBar))
             {
                 Consolidator = resolution == Resolution.Daily
                     ? new QuoteBarConsolidator(DailyStrictEndTime)
-                    : new QuoteBarConsolidator(_period);
+                    : new QuoteBarConsolidator(Period);
             }
             else
             {
                 throw new ArgumentNullException(nameof(dataType), $"{dataType.Name} not supported");
             }
+            Consolidator.DataConsolidated += ForwardConsolidatedBar;
         }
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
-        public event DataConsolidatedHandler DataConsolidated
-        {
-            add => Consolidator.DataConsolidated += value;
-            remove => Consolidator.DataConsolidated -= value;
-        }
+        public event DataConsolidatedHandler DataConsolidated;
 
         /// <summary>
         /// Updates this consolidator with the specified data
@@ -149,6 +152,7 @@ namespace QuantConnect.Data.Common
         /// </summary>
         public void Dispose()
         {
+            Consolidator.DataConsolidated -= ForwardConsolidatedBar;
             Consolidator.Dispose();
         }
 
@@ -164,7 +168,7 @@ namespace QuantConnect.Data.Common
                 ExchangeHours = marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
                 DataTimeZone = marketHoursDatabase.GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
 
-                _strictEndTime = UseStrictEndTime(data.Symbol.SecurityType);
+                _useStrictEndTime = !ExchangeHours.IsMarketAlwaysOpen && UseStrictEndTime(data.Symbol);
             }
         }
 
@@ -173,9 +177,9 @@ namespace QuantConnect.Data.Common
         /// </summary>
         protected virtual CalendarInfo DailyStrictEndTime(DateTime dateTime)
         {
-            if (!_strictEndTime)
+            if (!_useStrictEndTime)
             {
-                return new (_period > Time.OneDay ? dateTime : dateTime.RoundDown(_period), _period);
+                return new (Period > Time.OneDay ? dateTime : dateTime.RoundDown(Period), Period);
             }
             return LeanData.GetDailyCalendar(dateTime, ExchangeHours, _extendedMarketHours);
         }
@@ -183,9 +187,17 @@ namespace QuantConnect.Data.Common
         /// <summary>
         /// Useful for testing
         /// </summary>
-        protected virtual bool UseStrictEndTime(SecurityType securityType)
+        protected virtual bool UseStrictEndTime(Symbol symbol)
         {
-            return LeanData.UseStrictEndTime(securityType, _period);
+            return LeanData.UseStrictEndTime(_dailyStrictEndTimeEnabled, symbol, Period);
+        }
+
+        /// <summary>
+        /// Will forward the underlying consolidated bar to consumers on this object
+        /// </summary>
+        protected virtual void ForwardConsolidatedBar(object sender, IBaseData consolidated)
+        {
+            DataConsolidated?.Invoke(this, consolidated);
         }
     }
 }

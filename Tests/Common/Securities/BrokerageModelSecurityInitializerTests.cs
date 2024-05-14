@@ -78,7 +78,8 @@ namespace QuantConnect.Tests.Common.Securities
                     null,
                     true,
                     new DataPermissionManager(),
-                    _algo.ObjectStore
+                    _algo.ObjectStore,
+                    _algo.Settings
                 )
             );
 

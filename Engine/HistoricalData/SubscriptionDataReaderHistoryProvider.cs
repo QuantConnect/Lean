@@ -70,6 +70,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             _dataCacheProvider = parameters.DataCacheProvider;
             _factorFileProvider = parameters.FactorFileProvider;
             _objectStore = parameters.ObjectStore;
+            AlgorithmSettings = parameters.AlgorithmSettings;
             DataPermissionManager = parameters.DataPermissionManager;
             _parallelHistoryRequestsEnabled = parameters.ParallelHistoryRequestsEnabled;
 
@@ -148,6 +149,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.StartTimeLocal,
                 request.EndTimeLocal);
 
+            var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(AlgorithmSettings, request, config.Symbol, config.Increment);
+            if (useDailyStrictEndTimes)
+            {
+                reader = new StrictDailyEndTimesEnumerator(reader, request.ExchangeHours);
+            }
+
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)
             {
@@ -158,7 +165,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
-                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, request.IncludeExtendedMarketHours, request.EndTimeLocal, config.Increment, config.DataTimeZone, config.Symbol);
+                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, request.IncludeExtendedMarketHours, request.EndTimeLocal, config.Increment, config.DataTimeZone, useDailyStrictEndTimes);
             }
 
             // since the SubscriptionDataReader performs an any overlap condition on the trade bar's entire
@@ -178,9 +185,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
             if (_parallelHistoryRequestsEnabled)
             {
-                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader, _factorFileProvider, false);
+                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader, _factorFileProvider, false, AlgorithmSettings.DailyStrictEndTimeEnabled);
             }
-            return SubscriptionUtils.Create(subscriptionRequest, reader);
+            return SubscriptionUtils.Create(subscriptionRequest, reader, AlgorithmSettings.DailyStrictEndTimeEnabled);
         }
 
         /// <summary>

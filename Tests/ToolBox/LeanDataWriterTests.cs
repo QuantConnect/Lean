@@ -506,7 +506,8 @@ namespace QuantConnect.Tests.ToolBox
                         null,
                         true,
                         dataPermissionManager,
-                        null
+                        null,
+                        new AlgorithmSettings()
                     )
                 );
             }

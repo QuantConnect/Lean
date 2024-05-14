@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ),
                 enumerator,
                 _factorFileProvider,
-                false);
+                false, false);
 
             var count = 0;
             while (enumerator.MoveNextTrueCount > 8)
@@ -110,7 +110,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ),
                 enumerator,
                 _factorFileProvider,
-                false);
+                false, false);
 
             var count = 0;
             while (enumerator.MoveNextTrueCount != 9)
@@ -158,7 +158,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     ),
                     enumerator,
                     _factorFileProvider,
-                    false);
+                    false, false);
 
                 for (var j = 0; j < dataPoints; j++)
                 {
@@ -201,7 +201,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ),
                 enumerator,
                 factorFileProfider.Object,
-                true);
+                true, false);
 
             Assert.IsTrue(subscription.MoveNext());
             // we do expect it to pick up the prev factor file scale
@@ -247,7 +247,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ),
                 enumerator,
                 factorFileProfider.Object,
-                true);
+                true, false);
 
             Assert.IsTrue(subscription.MoveNext());
             Assert.AreEqual(1, (subscription.Current.Data as Tick).AskPrice);
@@ -285,7 +285,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ),
                 enumerator,
                 _factorFileProvider,
-                false);
+                false, false);
 
             // Test our subscription stream to see if it emits the aux data it should be filtered
             // by the SubscriptionUtils produce function if the config isn't for a TradeBar

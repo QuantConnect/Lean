@@ -259,12 +259,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     liveMode: true);
             }
 
+            var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
+            if (useDailyStrictEndTimes)
+            {
+                enumerator = new StrictDailyEndTimesEnumerator(enumerator, request.ExchangeHours);
+            }
+
             if (request.Configuration.FillDataForward)
             {
                 var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
 
                 enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours,
-                    localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone, request.Configuration.Symbol);
+                    localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone, useDailyStrictEndTimes);
             }
 
             // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
@@ -278,7 +284,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             enumerator = GetWarmupEnumerator(request, enumerator);
 
-            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider, enumerator, request.IsUniverseSubscription);
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider,
+                enumerator, request.IsUniverseSubscription, _algorithm.Settings.DailyStrictEndTimeEnabled);
             subscription = new Subscription(request, subscriptionDataEnumerator, timeZoneOffsetProvider);
 
             return subscription;
@@ -364,12 +371,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating option chain universe: " + config.Symbol.ID);
 
+                var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
                 Func<SubscriptionRequest, IEnumerator<BaseData>> configure = (subRequest) =>
                 {
                     var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
                     var input = Subscribe(subRequest.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), (_) => false);
                     return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours,
-                        localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone, request.Configuration.Symbol);
+                        localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone, useDailyStrictEndTimes);
                 };
 
                 var symbolUniverse = GetUniverseProvider(request.Configuration.SecurityType);
@@ -409,7 +417,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             enumerator = GetWarmupEnumerator(request, enumerator);
 
             // create the subscription
-            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, tzOffsetProvider, enumerator, request.IsUniverseSubscription);
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, tzOffsetProvider,
+                enumerator, request.IsUniverseSubscription, _algorithm.Settings.DailyStrictEndTimeEnabled);
             subscription = new Subscription(request, subscriptionDataEnumerator, tzOffsetProvider);
 
             return subscription;

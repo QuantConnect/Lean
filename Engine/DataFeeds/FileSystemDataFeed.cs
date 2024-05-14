@@ -171,9 +171,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // for user defined universe we do not use a worker task, since calls to AddData can happen in any moment
                 // and we have to be able to inject selection data points into the enumerator
-                return SubscriptionUtils.Create(request, enumerator);
+                return SubscriptionUtils.Create(request, enumerator, _algorithm.Settings.DailyStrictEndTimeEnabled);
             }
-            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true);
+            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true, _algorithm.Settings.DailyStrictEndTimeEnabled);
         }
 
         /// <summary>
@@ -288,6 +288,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         protected IEnumerator<BaseData> ConfigureEnumerator(SubscriptionRequest request, bool aggregate, IEnumerator<BaseData> enumerator, Resolution? fillForwardResolution)
         {
+            if (LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment))
+            {
+                enumerator = new StrictDailyEndTimesEnumerator(enumerator, request.ExchangeHours);
+            }
+
             if (aggregate)
             {
                 enumerator = new BaseDataCollectionAggregatorEnumerator(enumerator, request.Configuration.Symbol);
@@ -326,8 +331,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     fillForwardSpan = Ref.Create(fillForwardResolution.Value.ToTimeSpan());
                 }
 
+                var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardSpan, request.Configuration.ExtendedMarketHours, request.EndTimeLocal,
-                    request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone, request.Security.Symbol);
+                    request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone, useDailyStrictEndTimes);
             }
 
             return enumerator;

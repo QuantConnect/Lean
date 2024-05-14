@@ -24,6 +24,12 @@ namespace QuantConnect.Algorithm.CSharp
     {
         protected override Resolution Resolution => Resolution.Daily;
 
+        public override void Initialize()
+        {
+            Settings.DailyStrictEndTimeEnabled = true;
+            base.Initialize();
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
@@ -32,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 195;
+        public override long DataPoints => 194;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

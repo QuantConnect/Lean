@@ -74,6 +74,11 @@ namespace QuantConnect.Interfaces
         bool LiquidateEnabled { get; set; }
 
         /// <summary>
+        /// True if daily strict end times are enabled
+        /// </summary>
+        bool DailyStrictEndTimeEnabled { get; set; }
+
+        /// <summary>
         /// Gets/sets the maximum number of concurrent market data subscriptions available
         /// </summary>
         /// <remarks>

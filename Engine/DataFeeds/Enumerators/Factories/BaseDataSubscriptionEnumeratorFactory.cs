@@ -16,12 +16,10 @@
 
 using System;
 using QuantConnect.Data;
-using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -79,15 +77,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 // we are going to use these symbols to create a collection that for options will also have the underlying that will be emitted in exchange time zone
                 // note the merging of the data will happen based on their end time so time zones are important to respect
                 var exchangeTimeZoneDate = date.ConvertTo(request.Configuration.DataTimeZone, request.ExchangeHours.TimeZone);
-                var dailyCalendar = new CalendarInfo(exchangeTimeZoneDate, TimeSpan.Zero);
-                if (LeanData.UseStrictEndTime(request.Configuration.Symbol.SecurityType, request.Configuration.Increment))
-                {
-                    dailyCalendar = LeanData.GetDailyCalendar(exchangeTimeZoneDate, request.ExchangeHours, extendedMarketHours: false);
-                }
-
                 foreach (var symbol in symbols)
                 {
-                    yield return new ZipEntryName { Symbol = symbol, Time = dailyCalendar.Start, EndTime = dailyCalendar.End };
+                    yield return new ZipEntryName { Symbol = symbol, Time = exchangeTimeZoneDate };
                 }
             }
         }

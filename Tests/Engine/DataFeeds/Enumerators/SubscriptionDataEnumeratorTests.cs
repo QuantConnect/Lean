@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // Make a aux data stream; for this testing case we will just use delisting data points
             var totalPoints = 8;
             var stream = Enumerable.Range(0, totalPoints).Select(x => new Delisting { Time = time.AddHours(x) }).GetEnumerator();
-            var enumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, tzOffsetProvider, stream, false);
+            var enumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, tzOffsetProvider, stream, false, false);
 
             // Test our SubscriptionDataEnumerator to see if it emits the aux data
             int dataReceivedCount = 0;

@@ -63,26 +63,23 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(expected, result);
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void TrySetStrictEndTime(bool useStrictEndTime)
+        [TestCase(1, "20240506 16:00")] // market closed
+        [TestCase(5, "20240506 16:00")] // pre market
+        [TestCase(10, "20240506 16:00")] // market hours
+        [TestCase(16, "20240507 16:00")] // at the close
+        [TestCase(18, "20240507 16:00")] // post market hours
+        [TestCase(20, "20240507 16:00")] // market closed
+        [TestCase(24 * 5, "20240513 16:00")] // saturday
+        public void GetNextDailyEndTime(int hours, string expectedTime)
         {
-            var dailyBar = new TradeBar(new DateTime(2024, 05, 13), useStrictEndTime ? Symbols.SPX : Symbols.SPY, 5, 10, 2, 7, 1000, Time.OneDay);
+            var symbol = Symbols.SPY;
+            var targetTime = new DateTime(2024, 5, 6).AddHours(hours);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            var result = LeanData.GetNextDailyEndTime(symbol, targetTime, exchangeHours);
 
-            LeanData.TrySetStrictEndTimes(dailyBar, dailyBar.Period);
+            var expected = DateTime.ParseExact(expectedTime, DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
 
-            if (useStrictEndTime)
-            {
-                Assert.AreEqual(new DateTime(2024, 05, 13, 8, 30, 0), dailyBar.Time);
-                Assert.AreEqual(new DateTime(2024, 05, 13, 15, 15, 0), dailyBar.EndTime);
-                Assert.AreEqual(new TimeSpan(6, 45, 0), dailyBar.Period);
-            }
-            else
-            {
-                Assert.AreEqual(new DateTime(2024, 05, 13, 0, 0, 0), dailyBar.Time);
-                Assert.AreEqual(new DateTime(2024, 05, 14, 0, 0, 0), dailyBar.EndTime);
-                Assert.AreEqual(Time.OneDay, dailyBar.Period);
-            }
+            Assert.AreEqual(expected, result);
         }
 
         [Test, TestCaseSource(nameof(GetLeanDataTestParameters))]

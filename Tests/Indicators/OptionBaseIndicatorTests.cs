@@ -269,7 +269,7 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null,
                 TestGlobals.DataProvider, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
-                null, true, new DataPermissionManager(), algorithm.ObjectStore));
+                null, true, new DataPermissionManager(), algorithm.ObjectStore, algorithm.Settings));
             algorithm.SetHistoryProvider(historyProvider);
 
             algorithm.SetDateTime(_reference);

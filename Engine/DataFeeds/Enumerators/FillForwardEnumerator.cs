@@ -66,7 +66,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="dataResolution">The source enumerator's data resolution</param>
         /// <param name="dataTimeZone">The time zone of the underlying source data. This is used for rounding calculations and
         /// is NOT the time zone on the BaseData instances (unless of course data time zone equals the exchange time zone)</param>
-        /// <param name="symbol">The associated symbol</param>
+        /// <param name="dailyStrictEndTimeEnabled">True if daily strict end times are enabled</param>
         public FillForwardEnumerator(IEnumerator<BaseData> enumerator,
             SecurityExchange exchange,
             IReadOnlyRef<TimeSpan> fillForwardResolution,
@@ -74,7 +74,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             DateTime subscriptionEndTime,
             TimeSpan dataResolution,
             DateTimeZone dataTimeZone,
-            Symbol symbol
+            bool dailyStrictEndTimeEnabled
             )
         {
             _subscriptionEndTime = subscriptionEndTime;
@@ -84,7 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _dataTimeZone = dataTimeZone;
             _fillForwardResolution = fillForwardResolution;
             _isExtendedMarketHours = isExtendedMarketHours;
-            _useStrictEndTime = LeanData.UseStrictEndTime(symbol.SecurityType, _dataResolution) && !Exchange.Hours.IsMarketAlwaysOpen;
+            _useStrictEndTime = dailyStrictEndTimeEnabled;
 
             // '_dataResolution' and '_subscriptionEndTime' are readonly they won't change, so lets calculate this once here since it's expensive
             if (_useStrictEndTime)

@@ -48,7 +48,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 null,
                 false,
                 new DataPermissionManager(),
-                null));
+                null,
+                new AlgorithmSettings()));
             var symbol = Symbol.CreateOption(
                 "FOXA",
                 Market.USA,
@@ -101,7 +102,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 null,
                 false,
                 new DataPermissionManager(),
-                null));
+                null,
+                new AlgorithmSettings()));
             var symbol = Symbol.Create("WM",SecurityType.Equity,Market.USA);
 
             var result = historyProvider.GetHistory(
