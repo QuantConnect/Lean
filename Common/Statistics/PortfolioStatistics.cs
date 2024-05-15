@@ -19,7 +19,6 @@ using System.Linq;
 using MathNet.Numerics.Distributions;
 using MathNet.Numerics.Statistics;
 using Newtonsoft.Json;
-using QLNet;
 using QuantConnect.Data;
 using QuantConnect.Util;
 
@@ -352,7 +351,8 @@ namespace QuantConnect.Statistics
             try
             {
                 return Statistics.AnnualPerformance(performance, tradingDaysPerYear).SafeDecimalCast();
-            }catch (Exception ex)
+            }
+            catch (ArgumentException ex)
             {
                 var partialSums = 0.0;
                 var points = 0;
@@ -368,8 +368,8 @@ namespace QuantConnect.Statistics
                     }
                 }
 
-                throw new Exception($"An exception was thrown when trying to cast the annual performance value due to the following performance point: {troublePoint}." +
-                    $"The exception thrown was the following {ex.Message}.");
+                throw new ArgumentException($"PortfolioStatistics.GetAnnualPerformance(): An exception was thrown when trying to cast the annual performance value due to the following performance point: {troublePoint}. " +
+                    $"The exception thrown was the following: {ex.Message}.");
             }
         }
 
