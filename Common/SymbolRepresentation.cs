@@ -462,24 +462,31 @@ namespace QuantConnect
 
                         };
 
+        /// <summary>
+        /// Provides a lookup dictionary for mapping futures month codes to their corresponding numeric values.
+        /// </summary>
+#pragma warning disable CA2211 // Non-constant fields should not be visible
+        public static IReadOnlyDictionary<string, int> _futuresMonthCodeLookup = new Dictionary<string, int>
+        {
+            { "F", 1 }, // January
+            { "G", 2 }, // February
+            { "H", 3 }, // March
+            { "J", 4 }, // April
+            { "K", 5 }, // May
+            { "M", 6 }, // June
+            { "N", 7 }, // July
+            { "Q", 8 }, // August
+            { "U", 9 }, // September
+            { "V", 10 }, // October
+            { "X", 11 }, // November
+            { "Z", 12 } // December
+        };
 
-        private static IReadOnlyDictionary<string, int> _futuresMonthCodeLookup = new Dictionary<string, int>
-                        {
-                            { "F", 1 },
-                            { "G", 2 },
-                            { "H", 3 },
-                            { "J", 4 },
-                            { "K", 5 },
-                            { "M", 6 },
-                            { "N", 7 },
-                            { "Q", 8 },
-                            { "U", 9 },
-                            { "V", 10 },
-                            { "X", 11 },
-                            { "Z", 12 }
-                        };
-
-        private static IReadOnlyDictionary<int, string> _futuresMonthLookup = _futuresMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
+        /// <summary>
+        /// Provides a lookup dictionary for mapping numeric values to their corresponding futures month codes.
+        /// </summary>
+        public static IReadOnlyDictionary<int, string> _futuresMonthLookup = _futuresMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
+#pragma warning restore CA2211 // Non-constant fields should not be visible
 
         /// <summary>
         /// Get the expiration year from short year (two-digit integer).
