@@ -136,6 +136,35 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Creates a Protective Put strategy that consists of buying 1 put contract and 1 lot of the underlying.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="callStrike">The strike price for the call option contract</param>
+        /// <param name="putStrike">The strike price for the put option contract</param>
+        /// <param name="expiration">The expiration date for the put option contract</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ProtectiveCollar(Symbol canonicalOption, decimal callStrike, decimal putStrike, DateTime expiration)
+        {
+            if (callStrike <= putStrike)
+            {
+                throw new ArgumentException("ProtectiveCollar: callStrike must be greater than putStrike", $"{nameof(callStrike)}, {nameof(putStrike)}");
+            }
+
+            // Since a protective collar is a combination of protective put and covered call
+            var coveredCall = CoveredCall(canonicalOption, callStrike, expiration);
+            var protectivePut = ProtectivePut(canonicalOption, putStrike, expiration);
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.ProtectiveCollar.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = coveredCall.OptionLegs.Concat(protectivePut.OptionLegs).ToList(),
+                UnderlyingLegs = coveredCall.UnderlyingLegs     // only 1 lot of long stock position
+            };
+        }
+
+        /// <summary>
         /// Creates a Naked Call strategy that consists of selling 1 call contract.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
