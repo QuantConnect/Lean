@@ -148,13 +148,13 @@ namespace QuantConnect.Brokerages
             else if (order.Type == OrderType.MarketOnClose && security.Type != SecurityType.Future && security.Type != SecurityType.Equity)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, $"Unsupported order type for {security.Type} security type",
-                    "InteractiveBrokers does not support Market-on-Close orders for other security types different than: Futures and Equity.");
+                    "InteractiveBrokers does not support Market-on-Close orders for other security types different than Future and Equity.");
                 return false;
             }
             else if (order.Type == OrderType.MarketOnOpen && security.Type != SecurityType.Equity && !security.Type.IsOption())
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, $"Unsupported order type for {security.Type} security type",
-                    "InteractiveBrokers does not support Market-on-Open orders for other security types different than: Equity and Options.");
+                    "InteractiveBrokers does not support Market-on-Open orders for other security types different than Option and Equity.");
                 return false;
             }
 
