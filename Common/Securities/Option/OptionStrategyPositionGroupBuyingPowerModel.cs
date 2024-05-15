@@ -119,6 +119,28 @@ namespace QuantConnect.Securities.Option
 
                 return new MaintenanceMargin(inAccountCurrency);
             }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCollar.Name)
+            {
+                // Minimum (((10% * Put Strike Price) + Put Out of the Money Amount), (25% * Call Strike Price))
+                var putPosition = parameters.PositionGroup.Positions.Single(position =>
+                    position.Symbol.SecurityType.IsOption() && position.Symbol.ID.OptionRight == OptionRight.Put);
+                var callPosition = parameters.PositionGroup.Positions.Single(position =>
+                    position.Symbol.SecurityType.IsOption() && position.Symbol.ID.OptionRight == OptionRight.Call);
+                var underlyingPosition = parameters.PositionGroup.Positions.FirstOrDefault(position => !position.Symbol.SecurityType.IsOption());
+                var putSecurity = (Option)parameters.Portfolio.Securities[putPosition.Symbol];
+                var callSecurity = (Option)parameters.Portfolio.Securities[callPosition.Symbol];
+                var underlyingSecurity = parameters.Portfolio.Securities[underlyingPosition.Symbol];
+
+                var putMarginRequirement = 0.1m * putSecurity.StrikePrice + putSecurity.OutOfTheMoneyAmount(underlyingSecurity.Price);
+                var callMarginRequirement = 0.25m * callSecurity.StrikePrice;
+
+                // call and put has the exact same number of contracts
+                var contractUnits = Math.Abs(putPosition.Quantity) * putSecurity.ContractUnitOfTrade;
+                var result = Math.Min(putMarginRequirement, callMarginRequirement) * contractUnits;
+                var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, underlyingSecurity.QuoteCurrency.Symbol);
+
+                return new MaintenanceMargin(inAccountCurrency);
+            }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedCall.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.NakedPut.Name)
             {
@@ -227,6 +249,23 @@ namespace QuantConnect.Securities.Option
             {
                 // Initial Stock Margin Requirement + In the Money Amount
                 result = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCollar.Name)
+            {
+                // Initial Stock Margin Requirement + In the Money Call Amount
+                var callPosition = parameters.PositionGroup.Positions.Single(position => 
+                    position.Symbol.SecurityType.IsOption() && position.Symbol.ID.OptionRight == OptionRight.Call);
+                var underlyingPosition = parameters.PositionGroup.Positions.Single(position => !position.Symbol.SecurityType.IsOption());
+                var callSecurity = (Option)parameters.Portfolio.Securities[callPosition.Symbol];
+                var underlyingSecurity = parameters.Portfolio.Securities[underlyingPosition.Symbol];
+
+                var intrinsicValue = callSecurity.GetIntrinsicValue(underlyingSecurity.Price);
+                var inTheMoneyAmount = intrinsicValue * callSecurity.ContractUnitOfTrade * Math.Abs(callPosition.Quantity);
+
+                var initialMarginRequirement = underlyingSecurity.BuyingPowerModel.GetInitialMarginRequirement(underlyingSecurity, underlyingPosition.Quantity);
+
+                result = Math.Abs(initialMarginRequirement) + inTheMoneyAmount;
+                result = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, callSecurity.QuoteCurrency.Symbol);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedCall.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.NakedPut.Name)
