@@ -467,8 +467,12 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(trailingAsPercentage ? 20.12121212m : 20.12, orderTicket.Get(OrderField.TrailingAmount));
         }
 
-        [Test]
-        public void ComboLimitOrderPriceIsRounded()
+        // 331.12121212m after round becomes 331.12m, the smallest price variation is 0.01 - index. For index options it is 0.1
+        [TestCase(OrderType.ComboLimit, 300.12121212, 0, 0, 300.12, 300.12)]
+        [TestCase(OrderType.ComboLegLimit, 0, 1.12121212, 300.13131313, 1.12, 300.1)]
+        [TestCase(OrderType.ComboLegLimit, 0, 1.12121212, 300.15151515, 1.12, 300.2)]
+        public void ComboLimitOrderPriceIsRounded(OrderType orderType, decimal groupOrderLimitPrice, decimal leg1LimitPrice, decimal leg2LimitPrice,
+            decimal expectedLeg1LimitPrice, decimal expectedLeg2LimitPrice)
         {
             var algorithm = new TestAlgorithm { HistoryProvider = new EmptyHistoryProvider() };
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
@@ -481,22 +485,38 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             //Initializes the transaction handler
             var transactionHandler = new TestBrokerageTransactionHandler();
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new BacktestingResultHandler());
+            using var brokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
 
-            // Creates the order
+            var expectedGroupOrderLimitPrice = 0m;
+            if (orderType == OrderType.ComboLimit)
+            {
+                // legs have the same global limit price
+                leg1LimitPrice = groupOrderLimitPrice;
+                leg2LimitPrice = groupOrderLimitPrice;
+                expectedGroupOrderLimitPrice = expectedLeg2LimitPrice = expectedLeg1LimitPrice;
+            }
+            else if (orderType == OrderType.ComboLegLimit)
+            {
+                // Each leg has its own limit price
+                groupOrderLimitPrice = 0m;
+                expectedGroupOrderLimitPrice = 0m;
+            }
+
+            // Creates the orders
             var dateTime = new DateTime(2024, 05, 14, 12, 0, 0);
-            var groupOrderManager = new GroupOrderManager(1, 2, 10, 331.12121212m);
+            var groupOrderManager = new GroupOrderManager(1, 2, 10, groupOrderLimitPrice);
 
             var security1 = algorithm.Securities[symbol1];
             var price1 = 1.12129m;
             security1.SetMarketPrice(new Tick(dateTime, security1.Symbol, price1, price1, price1));
-            var orderRequest1 = new SubmitOrderRequest(OrderType.ComboLimit, security1.Type, security1.Symbol, 20, 331.12121212m, 331.12121212m,
+            var orderRequest1 = new SubmitOrderRequest(orderType, security1.Type, security1.Symbol, 20, leg1LimitPrice, leg1LimitPrice,
                 dateTime, "", groupOrderManager: groupOrderManager);
 
             var security2 = algorithm.Securities[symbol2];
             var price2 = 330.12129m;
             security2.SetMarketPrice(new Tick(dateTime, security2.Symbol, price2, price2, price2));
-            var orderRequest2 = new SubmitOrderRequest(OrderType.ComboLimit, security2.Type, security2.Symbol, 10, 331.12121212m, 331.12121212m,
+            var orderRequest2 = new SubmitOrderRequest(orderType, security2.Type, security2.Symbol, 10, leg2LimitPrice, leg2LimitPrice,
                 dateTime, "", groupOrderManager: groupOrderManager);
 
             orderRequest1.SetOrderId(1);
@@ -523,77 +543,14 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(orderRequest1.Response.IsProcessed);
             Assert.IsTrue(orderRequest1.Response.IsSuccess);
             Assert.AreEqual(OrderStatus.Submitted, orderTicket1.Status);
-            // 331.12121212m after round becomes 331.12m (the smallest price variation is 0.01 - index. For index options it is 0.05)
-            var expectedLimitPrice = 331.12m;
-            Assert.AreEqual(expectedLimitPrice, orderTicket1.Get(OrderField.LimitPrice));
+            Assert.AreEqual(expectedLeg1LimitPrice, orderTicket1.Get(OrderField.LimitPrice));
 
             Assert.IsTrue(orderRequest2.Response.IsProcessed);
             Assert.IsTrue(orderRequest2.Response.IsSuccess);
             Assert.AreEqual(OrderStatus.Submitted, orderTicket2.Status);
-            Assert.AreEqual(expectedLimitPrice, orderTicket2.Get(OrderField.LimitPrice));
+            Assert.AreEqual(expectedLeg2LimitPrice, orderTicket2.Get(OrderField.LimitPrice));
 
-            Assert.AreEqual(expectedLimitPrice, groupOrderManager.LimitPrice);
-        }
-
-        [Test]
-        public void ComboLegLimitOrderPriceIsRounded()
-        {
-            var algorithm = new TestAlgorithm { HistoryProvider = new EmptyHistoryProvider() };
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-            algorithm.SetBrokerageModel(BrokerageName.Default);
-            algorithm.SetCash(100000);
-            var symbol1 = algorithm.AddForex("EURUSD").Symbol;
-            var symbol2 = algorithm.AddForex("USDJPY").Symbol;
-            algorithm.SetFinishedWarmingUp();
-
-            //Initializes the transaction handler
-            var transactionHandler = new TestBrokerageTransactionHandler();
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new BacktestingResultHandler());
-
-            // Creates the order
-            var dateTime = new DateTime(2024, 05, 14, 12, 0, 0);
-            var security = algorithm.Securities[symbol1];
-            var price = 1.12129m;
-            security.SetMarketPrice(new Tick(dateTime, security.Symbol, price, price, price));
-
-            var groupOrderManager = new GroupOrderManager(1, 2, 1600);
-            var leg1OrderRequest = new SubmitOrderRequest(OrderType.ComboLegLimit, security.Type, security.Symbol, 1600, 1.12121212m, 1.12121212m,
-                dateTime, "", groupOrderManager: groupOrderManager);
-            var leg2OrderRequest = new SubmitOrderRequest(OrderType.ComboLegLimit, security.Type, security.Symbol, 2800, 1.13131313m, 1.13131313m,
-                dateTime, "", groupOrderManager: groupOrderManager);
-
-            leg1OrderRequest.SetOrderId(1);
-            leg2OrderRequest.SetOrderId(2);
-            groupOrderManager.OrderIds.Add(1);
-            groupOrderManager.OrderIds.Add(2);
-
-            // Mock the order processor
-            var orderProcessorMock = new Mock<IOrderProcessor>();
-            orderProcessorMock.Setup(m => m.GetOrderTicket(1)).Returns(new OrderTicket(algorithm.Transactions, leg1OrderRequest));
-            orderProcessorMock.Setup(m => m.GetOrderTicket(2)).Returns(new OrderTicket(algorithm.Transactions, leg2OrderRequest));
-            algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
-
-            // Act
-            var leg1OrderTicket = transactionHandler.Process(leg1OrderRequest);
-            Assert.IsTrue(leg1OrderTicket.Status == OrderStatus.New);
-            transactionHandler.HandleOrderRequest(leg1OrderRequest);
-
-            var leg2OrderTicket = transactionHandler.Process(leg2OrderRequest);
-            Assert.IsTrue(leg2OrderTicket.Status == OrderStatus.New);
-            transactionHandler.HandleOrderRequest(leg2OrderRequest);
-
-            // Assert
-            Assert.IsTrue(leg1OrderRequest.Response.IsProcessed);
-            Assert.IsTrue(leg1OrderRequest.Response.IsSuccess);
-            Assert.AreEqual(OrderStatus.Submitted, leg1OrderTicket.Status);
-            // 1.12121212 after round becomes 1.12121
-            Assert.AreEqual(1.12121m, leg1OrderTicket.Get(OrderField.LimitPrice));
-
-            Assert.IsTrue(leg2OrderRequest.Response.IsProcessed);
-            Assert.IsTrue(leg2OrderRequest.Response.IsSuccess);
-            Assert.AreEqual(OrderStatus.Submitted, leg2OrderTicket.Status);
-            // 1.13131313 after round becomes 1.13131
-            Assert.AreEqual(1.13131m, leg2OrderTicket.Get(OrderField.LimitPrice));
+            Assert.AreEqual(expectedGroupOrderLimitPrice, groupOrderManager.LimitPrice);
         }
 
         [Test]

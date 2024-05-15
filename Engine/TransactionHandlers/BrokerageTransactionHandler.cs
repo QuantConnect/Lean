@@ -798,9 +798,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             var comboIsReady = order.TryGetGroupOrders(TryGetOrder, out var orders);
+            var comboSecuritiesFound = orders.TryGetGroupOrdersSecurities(_algorithm.Portfolio, out var securities);
 
             // rounds the order prices
-            RoundOrderPrices(order, security, comboIsReady, orders);
+            RoundOrderPrices(order, security, comboIsReady, securities);
 
             // save current security prices
             order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
@@ -826,7 +827,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return response;
             }
 
-            if (!orders.TryGetGroupOrdersSecurities(_algorithm.Portfolio, out var securities))
+            if (!comboSecuritiesFound)
             {
                 var response = OrderResponse.MissingSecurity(request);
                 _algorithm.Error(response.ErrorMessage);
@@ -1627,7 +1628,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         protected void RoundOrderPrices(Order order, Security security)
         {
-            RoundOrderPrices(order, security, false, null);
+            var comboIsReady = order.TryGetGroupOrders(TryGetOrder, out var orders);
+            orders.TryGetGroupOrdersSecurities(_algorithm.Portfolio, out var securities);
+
+            RoundOrderPrices(order, security, comboIsReady, securities);
         }
 
         /// <summary>
@@ -1636,7 +1640,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// This procedure is needed to meet brokerage precision requirements.
         /// </remarks>
         /// </summary>
-        protected void RoundOrderPrices(Order order, Security security, bool comboIsReady, List<Order> orders)
+        protected void RoundOrderPrices(Order order, Security security, bool comboIsReady, Dictionary<Order, Security> orders)
         {
             switch (order.Type)
             {
@@ -1703,9 +1707,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             // for which we need to find the smallest price variation from each leg security
                             var groupOrderManager = order.GroupOrderManager;
                             var increment = 0m;
-                            foreach (var legOrder in orders)
+                            foreach (var (legOrder, legSecurity) in orders)
                             {
-                                var legSecurity = _algorithm.Securities[legOrder.Symbol];
                                 var legIncrement = legSecurity.PriceVariationModel.GetMinimumPriceVariation(
                                     new GetMinimumPriceVariationParameters(legSecurity, legOrder.Price));
                                 if (legIncrement > 0 && (increment == 0 || legIncrement < increment))
