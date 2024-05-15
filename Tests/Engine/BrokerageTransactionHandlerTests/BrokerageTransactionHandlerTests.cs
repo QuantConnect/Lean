@@ -473,9 +473,10 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var algorithm = new TestAlgorithm { HistoryProvider = new EmptyHistoryProvider() };
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.SetBrokerageModel(BrokerageName.Default);
-            algorithm.SetCash(100000);
-            var symbol1 = algorithm.AddForex(Ticker).Symbol;
-            var symbol2 = algorithm.AddEquity("SPY").Symbol;
+            algorithm.SetCash(1000000);
+            var symbol1 = algorithm.AddIndex("SPX").Symbol;
+            var symbol2 = Symbol.CreateOption(symbol1, Market.USA, OptionStyle.European, OptionRight.Put, 300m, new DateTime(2024, 05, 16));
+            algorithm.AddIndexOptionContract(symbol2);
             algorithm.SetFinishedWarmingUp();
 
             //Initializes the transaction handler
@@ -522,8 +523,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(orderRequest1.Response.IsProcessed);
             Assert.IsTrue(orderRequest1.Response.IsSuccess);
             Assert.AreEqual(OrderStatus.Submitted, orderTicket1.Status);
-            // 331.12121212m after round becomes 331.12121m
-            var expectedLimitPrice = 331.12121m;
+            // 331.12121212m after round becomes 331.12m (the smallest price variation is 0.01 - index. For index options it is 0.05)
+            var expectedLimitPrice = 331.12m;
             Assert.AreEqual(expectedLimitPrice, orderTicket1.Get(OrderField.LimitPrice));
 
             Assert.IsTrue(orderRequest2.Response.IsProcessed);
