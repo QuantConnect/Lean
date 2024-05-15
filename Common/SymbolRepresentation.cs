@@ -41,7 +41,7 @@ namespace QuantConnect
             /// <summary>
             /// Underlying name
             /// </summary>
-            public string Underlying { get; set;  }
+            public string Underlying { get; set; }
 
             /// <summary>
             /// Short expiration year
@@ -127,12 +127,12 @@ namespace QuantConnect
                 return null;
             }
 
-            if (!_futuresMonthCodeLookup.ContainsKey(expirationMonthString))
+            if (!FuturesMonthCodeLookup.ContainsKey(expirationMonthString))
             {
                 return null;
             }
 
-            var expirationMonth = _futuresMonthCodeLookup[expirationMonthString];
+            var expirationMonth = FuturesMonthCodeLookup[expirationMonthString];
 
             return new FutureTickerProperties
             {
@@ -164,8 +164,7 @@ namespace QuantConnect
 
             if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(underlying, SecurityType.Future, out var market))
             {
-                Log.Debug($@"SymbolRepresentation.ParseFutureSymbol(): {
-                    Messages.SymbolRepresentation.FailedToGetMarketForTickerAndUnderlying(ticker, underlying)}");
+                Log.Debug($@"SymbolRepresentation.ParseFutureSymbol(): {Messages.SymbolRepresentation.FailedToGetMarketForTickerAndUnderlying(ticker, underlying)}");
                 return null;
             }
 
@@ -283,7 +282,7 @@ namespace QuantConnect
 
             var expirationDay = includeExpirationDate ? $"{expiration.Day:00}" : string.Empty;
 
-            return $"{underlying}{expirationDay}{_futuresMonthLookup[month]}{year}";
+            return $"{underlying}{expirationDay}{FuturesMonthLookup[month]}{year}";
         }
 
         /// <summary>
@@ -363,7 +362,7 @@ namespace QuantConnect
                 // let it fallback to it's default handling, which include mapping
                 optionTicker = null;
             }
-            else if(securityType == SecurityType.IndexOption)
+            else if (securityType == SecurityType.IndexOption)
             {
                 underlyingSid = SecurityIdentifier.GenerateIndex(OptionSymbol.MapToUnderlying(optionTicker, securityType), market);
             }
@@ -466,7 +465,7 @@ namespace QuantConnect
         /// Provides a lookup dictionary for mapping futures month codes to their corresponding numeric values.
         /// </summary>
 #pragma warning disable CA2211 // Non-constant fields should not be visible
-        public static IReadOnlyDictionary<string, int> _futuresMonthCodeLookup = new Dictionary<string, int>
+        public static IReadOnlyDictionary<string, int> FuturesMonthCodeLookup { get; } = new Dictionary<string, int>
         {
             { "F", 1 }, // January
             { "G", 2 }, // February
@@ -485,7 +484,7 @@ namespace QuantConnect
         /// <summary>
         /// Provides a lookup dictionary for mapping numeric values to their corresponding futures month codes.
         /// </summary>
-        public static IReadOnlyDictionary<int, string> _futuresMonthLookup = _futuresMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
+        public static IReadOnlyDictionary<int, string> FuturesMonthLookup { get; } = FuturesMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
 #pragma warning restore CA2211 // Non-constant fields should not be visible
 
         /// <summary>
