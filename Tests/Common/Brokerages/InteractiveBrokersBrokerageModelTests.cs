@@ -108,8 +108,61 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = new MarketOnCloseOrder(security.Symbol, 1, DateTime.UtcNow);
             var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
             Assert.IsFalse(result);
-            var expectedMessage = "The InteractiveBrokersBrokerageModel does not support MarketOnClose order type. Only supports [Market,MarketOnOpen,Limit,StopMarket,StopLimit,TrailingStop,LimitIfTouched,ComboMarket,ComboLimit,ComboLegLimit,OptionExercise]";
+            var expectedMessage = "InteractiveBrokers does not support Market-on-Close orders for other security types different than: Futures and Equity.";
             Assert.AreEqual(expectedMessage, message.Message);
+        }
+
+        [TestCase("EURGBP", SecurityType.Forex)]
+        [TestCase("DE10YBEUR", SecurityType.Cfd)]
+        public void CannotSubmitMOCOrdersForForexAndCfd(string ticker, SecurityType securityType)
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddSecurity(securityType, ticker);
+
+            var order = new MarketOnCloseOrder(security.Symbol, 1, DateTime.UtcNow);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            Assert.IsFalse(result);
+            var expectedMessage = "InteractiveBrokers does not support Market-on-Close orders for other security types different than: Futures and Equity.";
+            Assert.AreEqual(expectedMessage, message.Message);
+        }
+
+        [TestCase("EURGBP", SecurityType.Forex)]
+        [TestCase("DE10YBEUR", SecurityType.Cfd)]
+        [TestCase("ES", SecurityType.Future)]
+        public void CannotSubmitMOOOrdersForForexCfdAndFutureOrders(string ticker, SecurityType securityType)
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddSecurity(securityType, ticker);
+
+            var order = new MarketOnOpenOrder(security.Symbol, 1, DateTime.UtcNow);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            Assert.IsFalse(result);
+            var expectedMessage = "InteractiveBrokers does not support Market-on-Open orders for other security types different than: Equity and Options.";
+            Assert.AreEqual(expectedMessage, message.Message);
+        }
+
+        [TestCase("SPY", SecurityType.Option)]
+        [TestCase("SPY", SecurityType.Equity)]
+        public void CanSubmitMOOOrdersForOptionAndEquity(string ticker, SecurityType securityType)
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddSecurity(securityType, ticker);
+
+            var order = new MarketOnOpenOrder(security.Symbol, 1, DateTime.UtcNow);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            Assert.IsTrue(result);
+        }
+
+        [TestCase("ES", SecurityType.Future)]
+        [TestCase("SPY", SecurityType.Equity)]
+        public void CanSubmitMOCOrdersForFutureAndEquity(string ticker, SecurityType securityType)
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddSecurity(securityType, ticker);
+
+            var order = new MarketOnCloseOrder(security.Symbol, 1, DateTime.UtcNow);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            Assert.IsTrue(result);
         }
 
         [TestCase(AccountType.Cash, 1)]
