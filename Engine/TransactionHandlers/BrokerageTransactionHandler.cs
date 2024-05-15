@@ -17,6 +17,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
@@ -367,7 +368,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     shortable = _algorithm.Shortable(ticket.Symbol, orderQuantity, order.Id);
 
-                    if(_algorithm.LiveMode && !shortable)
+                    if (_algorithm.LiveMode && !shortable)
                     {
                         // let's override and just send warning
                         shortable = true;
@@ -796,8 +797,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderResponse.UnableToFindOrder(request);
             }
 
+            var comboIsReady = order.TryGetGroupOrders(TryGetOrder, out var orders);
+
             // rounds the order prices
-            RoundOrderPrices(order, security);
+            RoundOrderPrices(order, security, comboIsReady, orders);
 
             // save current security prices
             order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
@@ -808,7 +811,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // update the ticket's internal storage with this new order reference
             ticket.SetOrder(order);
 
-            if (!order.TryGetGroupOrders(TryGetOrder, out var orders))
+            if (!comboIsReady)
             {
                 // an Order of the group is missing
                 return OrderResponse.Success(request);
@@ -1369,7 +1372,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             var originalOrder = GetOrderByIdInternal(brokerageOrderIdChangedEvent.OrderId);
 
-            if(originalOrder == null)
+            if (originalOrder == null)
             {
                 // shouldn't happen but let's be careful
                 Log.Error($"BrokerageTransactionHandler.HandlerBrokerageOrderIdChangedEvent(): Lean order id {brokerageOrderIdChangedEvent.OrderId} not found");
@@ -1624,6 +1627,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         protected void RoundOrderPrices(Order order, Security security)
         {
+            RoundOrderPrices(order, security, false, null);
+        }
+
+        /// <summary>
+        /// Rounds the order prices to its security minimum price variation.
+        /// <remarks>
+        /// This procedure is needed to meet brokerage precision requirements.
+        /// </remarks>
+        /// </summary>
+        protected void RoundOrderPrices(Order order, Security security, bool comboIsReady, List<Order> orders)
+        {
             switch (order.Type)
             {
                 case OrderType.Limit:
@@ -1682,9 +1696,28 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 case OrderType.ComboLimit:
                     {
-                        var groupOrderManager = order.GroupOrderManager;
-                        RoundOrderPrice(security, groupOrderManager.LimitPrice, "LimitPrice",
-                            (roundedPrice) => groupOrderManager.LimitPrice = roundedPrice);
+                        if (comboIsReady)
+                        {
+                            // all orders in the combo have been received.
+                            // we can now round the limit price of the group order,
+                            // for which we need to find the smallest price variation from each leg security
+                            var groupOrderManager = order.GroupOrderManager;
+                            var increment = 0m;
+                            foreach (var legOrder in orders)
+                            {
+                                var legSecurity = _algorithm.Securities[legOrder.Symbol];
+                                var legIncrement = legSecurity.PriceVariationModel.GetMinimumPriceVariation(
+                                    new GetMinimumPriceVariationParameters(legSecurity, legOrder.Price));
+                                if (legIncrement > 0 && (increment == 0 || legIncrement < increment))
+                                {
+                                    increment = legIncrement;
+                                }
+                            }
+
+                            RoundOrderPrice(groupOrderManager.LimitPrice, increment, "LimitPrice",
+                                (roundedPrice) => groupOrderManager.LimitPrice = roundedPrice);
+                        }
+
                     }
                     break;
             }
@@ -1693,6 +1726,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private void RoundOrderPrice(Security security, decimal price, string priceType, Action<decimal> setPrice)
         {
             var increment = security.PriceVariationModel.GetMinimumPriceVariation(new GetMinimumPriceVariationParameters(security, price));
+            RoundOrderPrice(price, increment, priceType, setPrice);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void RoundOrderPrice(decimal price, decimal increment, string priceType, Action<decimal> setPrice)
+        {
             if (increment > 0)
             {
                 var roundedPrice = Math.Round(price / increment) * increment;

@@ -474,7 +474,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.SetBrokerageModel(BrokerageName.Default);
             algorithm.SetCash(100000);
-            var symbol = algorithm.AddForex(Ticker).Symbol;
+            var symbol1 = algorithm.AddForex(Ticker).Symbol;
+            var symbol2 = algorithm.AddEquity("SPY").Symbol;
             algorithm.SetFinishedWarmingUp();
 
             //Initializes the transaction handler
@@ -483,28 +484,54 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             // Creates the order
             var dateTime = new DateTime(2024, 05, 14, 12, 0, 0);
-            var security = algorithm.Securities[symbol];
-            var price = 1.12129m;
-            security.SetMarketPrice(new Tick(dateTime, security.Symbol, price, price, price));
-            var orderRequest = new SubmitOrderRequest(OrderType.ComboLimit, security.Type, security.Symbol, 1600, 1.12121212m, 1.12121212m, dateTime,
-                "", groupOrderManager: new GroupOrderManager(1, 1, 1600, 1.12121212m));
+            var groupOrderManager = new GroupOrderManager(1, 2, 10, 331.12121212m);
+
+            var security1 = algorithm.Securities[symbol1];
+            var price1 = 1.12129m;
+            security1.SetMarketPrice(new Tick(dateTime, security1.Symbol, price1, price1, price1));
+            var orderRequest1 = new SubmitOrderRequest(OrderType.ComboLimit, security1.Type, security1.Symbol, 20, 331.12121212m, 331.12121212m,
+                dateTime, "", groupOrderManager: groupOrderManager);
+
+            var security2 = algorithm.Securities[symbol2];
+            var price2 = 330.12129m;
+            security2.SetMarketPrice(new Tick(dateTime, security2.Symbol, price2, price2, price2));
+            var orderRequest2 = new SubmitOrderRequest(OrderType.ComboLimit, security2.Type, security2.Symbol, 10, 331.12121212m, 331.12121212m,
+                dateTime, "", groupOrderManager: groupOrderManager);
+
+            orderRequest1.SetOrderId(1);
+            orderRequest2.SetOrderId(2);
+            groupOrderManager.OrderIds.Add(1);
+            groupOrderManager.OrderIds.Add(2);
 
             // Mock the order processor
             var orderProcessorMock = new Mock<IOrderProcessor>();
-            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(algorithm.Transactions, orderRequest));
+            orderProcessorMock.Setup(m => m.GetOrderTicket(1)).Returns(new OrderTicket(algorithm.Transactions, orderRequest1));
+            orderProcessorMock.Setup(m => m.GetOrderTicket(2)).Returns(new OrderTicket(algorithm.Transactions, orderRequest2));
             algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
 
             // Act
-            var orderTicket = transactionHandler.Process(orderRequest);
-            Assert.IsTrue(orderTicket.Status == OrderStatus.New);
-            transactionHandler.HandleOrderRequest(orderRequest);
+            var orderTicket1 = transactionHandler.Process(orderRequest1);
+            Assert.AreEqual(OrderStatus.New, orderTicket1.Status);
+            transactionHandler.HandleOrderRequest(orderRequest1);
+
+            var orderTicket2 = transactionHandler.Process(orderRequest2);
+            Assert.AreEqual(OrderStatus.New, orderTicket2.Status);
+            transactionHandler.HandleOrderRequest(orderRequest2);
 
             // Assert
-            Assert.IsTrue(orderRequest.Response.IsProcessed);
-            Assert.IsTrue(orderRequest.Response.IsSuccess);
-            Assert.AreEqual(OrderStatus.Submitted, orderTicket.Status);
-            // 1.12121212 after round becomes 1.12121
-            Assert.AreEqual(1.12121m, orderTicket.Get(OrderField.LimitPrice));
+            Assert.IsTrue(orderRequest1.Response.IsProcessed);
+            Assert.IsTrue(orderRequest1.Response.IsSuccess);
+            Assert.AreEqual(OrderStatus.Submitted, orderTicket1.Status);
+            // 331.12121212m after round becomes 331.12121m
+            var expectedLimitPrice = 331.12121m;
+            Assert.AreEqual(expectedLimitPrice, orderTicket1.Get(OrderField.LimitPrice));
+
+            Assert.IsTrue(orderRequest2.Response.IsProcessed);
+            Assert.IsTrue(orderRequest2.Response.IsSuccess);
+            Assert.AreEqual(OrderStatus.Submitted, orderTicket2.Status);
+            Assert.AreEqual(expectedLimitPrice, orderTicket2.Get(OrderField.LimitPrice));
+
+            Assert.AreEqual(expectedLimitPrice, groupOrderManager.LimitPrice);
         }
 
         [Test]
@@ -536,6 +563,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             leg1OrderRequest.SetOrderId(1);
             leg2OrderRequest.SetOrderId(2);
+            groupOrderManager.OrderIds.Add(1);
+            groupOrderManager.OrderIds.Add(2);
 
             // Mock the order processor
             var orderProcessorMock = new Mock<IOrderProcessor>();
