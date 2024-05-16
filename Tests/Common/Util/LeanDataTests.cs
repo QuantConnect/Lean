@@ -46,6 +46,7 @@ namespace QuantConnect.Tests.Common.Util
             SymbolCache.Clear();
         }
 
+        [TestCase(16, false, "20240506 09:30", "06:30")]
         [TestCase(10, false, "20240506 09:30", "06:30")]
         [TestCase(10, true, "20240506 04:00", "16:00")]
         [TestCase(5, true, "20240506 04:00", "16:00")]

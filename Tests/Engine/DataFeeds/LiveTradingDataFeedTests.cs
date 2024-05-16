@@ -86,43 +86,85 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler?.DisposeSafely();
         }
 
-        [TestCase(SecurityType.Option, Resolution.Daily, 0)]
-        [TestCase(SecurityType.Future, Resolution.Daily, 0)]
-        [TestCase(SecurityType.IndexOption, Resolution.Daily, 0)]
-        [TestCase(SecurityType.Option, Resolution.Hour, 0)]
-        [TestCase(SecurityType.Future, Resolution.Hour, 0)]
-        [TestCase(SecurityType.IndexOption, Resolution.Hour, 0)]
-        [TestCase(SecurityType.Option, Resolution.Minute, 0)]
-        [TestCase(SecurityType.Future, Resolution.Minute, 0)]
-        [TestCase(SecurityType.IndexOption, Resolution.Minute, 0)]
-        [TestCase(SecurityType.Option, Resolution.Second, 0)]
-        [TestCase(SecurityType.Future, Resolution.Second, 0)]
-        [TestCase(SecurityType.IndexOption, Resolution.Second, 0)]
-        [TestCase(SecurityType.Option, Resolution.Tick, 0)]
-        [TestCase(SecurityType.Future, Resolution.Tick, 0)]
-        [TestCase(SecurityType.IndexOption, Resolution.Tick, 0)]
-        [TestCase(SecurityType.Option, Resolution.Daily, 1)]
-        [TestCase(SecurityType.Future, Resolution.Daily, 1)]
-        [TestCase(SecurityType.IndexOption, Resolution.Daily, 1)]
-        [TestCase(SecurityType.Option, Resolution.Hour, 1)]
-        [TestCase(SecurityType.Future, Resolution.Hour, 1)]
-        [TestCase(SecurityType.IndexOption, Resolution.Hour, 1)]
-        [TestCase(SecurityType.Option, Resolution.Minute, 1)]
-        [TestCase(SecurityType.Future, Resolution.Minute, 1)]
-        [TestCase(SecurityType.IndexOption, Resolution.Minute, 1)]
-        [TestCase(SecurityType.Option, Resolution.Second, 1)]
-        [TestCase(SecurityType.Future, Resolution.Second, 1)]
-        [TestCase(SecurityType.IndexOption, Resolution.Second, 1)]
-        [TestCase(SecurityType.Option, Resolution.Tick, 1)]
-        [TestCase(SecurityType.Future, Resolution.Tick, 1)]
-        [TestCase(SecurityType.IndexOption, Resolution.Tick, 1)]
-        public void LiveChainSelection(SecurityType securityType, Resolution resolution, int expirationDatesFilter)
+        [TestCase(false)]
+        [TestCase(true)]
+        public void StreamsDailyData(bool strictEndTimes)
+        {
+            _algorithm.Settings.DailyStrictEndTimeEnabled = strictEndTimes;
+
+            _startDate = new DateTime(2024, 5, 15, 14, 0, 0);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate.ConvertToUtc(TimeZones.NewYork));
+            var endDate = _startDate.AddDays(1);
+
+            var feed = RunDataFeed();
+            _algorithm.AddEquity("SPY", Resolution.Daily);
+            _algorithm.OnEndOfTimeStep();
+
+            DateTime _emissionTime = default;
+            var emittedData = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(500), true, ts =>
+            {
+                if (ts.Slice.HasData)
+                {
+                    _emissionTime = _manualTimeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
+                    emittedData = true;
+                    var data = ts.Slice[Symbols.SPY];
+
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            }, endDate: endDate,
+            secondsTimeStep: 60);
+
+            Assert.IsTrue(emittedData);
+            Assert.AreEqual(strictEndTimes ? _startDate.Date.AddHours(16) : _startDate.Date.AddDays(1), _emissionTime);
+        }
+
+        [TestCase(SecurityType.Option, Resolution.Daily, 0, true)]
+        [TestCase(SecurityType.Future, Resolution.Daily, 0, true)]
+        [TestCase(SecurityType.IndexOption, Resolution.Daily, 0, true)]
+        [TestCase(SecurityType.Option, Resolution.Daily, 1, true)]
+        [TestCase(SecurityType.Future, Resolution.Daily, 1, true)]
+        [TestCase(SecurityType.IndexOption, Resolution.Daily, 1, true)]
+
+        [TestCase(SecurityType.Option, Resolution.Daily, 0, false)]
+        [TestCase(SecurityType.Future, Resolution.Daily, 0, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Daily, 0, false)]
+        [TestCase(SecurityType.Option, Resolution.Hour, 0, false)]
+        [TestCase(SecurityType.Future, Resolution.Hour, 0, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Hour, 0, false)]
+        [TestCase(SecurityType.Option, Resolution.Minute, 0, false)]
+        [TestCase(SecurityType.Future, Resolution.Minute, 0, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Minute, 0, false)]
+        [TestCase(SecurityType.Option, Resolution.Second, 0, false)]
+        [TestCase(SecurityType.Future, Resolution.Second, 0, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Second, 0, false)]
+        [TestCase(SecurityType.Option, Resolution.Tick, 0, false)]
+        [TestCase(SecurityType.Future, Resolution.Tick, 0, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Tick, 0, false)]
+        [TestCase(SecurityType.Option, Resolution.Daily, 1, false)]
+        [TestCase(SecurityType.Future, Resolution.Daily, 1, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Daily, 1, false)]
+        [TestCase(SecurityType.Option, Resolution.Hour, 1, false)]
+        [TestCase(SecurityType.Future, Resolution.Hour, 1, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Hour, 1, false)]
+        [TestCase(SecurityType.Option, Resolution.Minute, 1, false)]
+        [TestCase(SecurityType.Future, Resolution.Minute, 1, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Minute, 1, false)]
+        [TestCase(SecurityType.Option, Resolution.Second, 1, false)]
+        [TestCase(SecurityType.Future, Resolution.Second, 1, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Second, 1, false)]
+        [TestCase(SecurityType.Option, Resolution.Tick, 1, false)]
+        [TestCase(SecurityType.Future, Resolution.Tick, 1, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Tick, 1, false)]
+        public void LiveChainSelection(SecurityType securityType, Resolution resolution, int expirationDatesFilter, bool strictEndTimes)
         {
             _startDate = new DateTime(2014, 6, 9);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
             var endDate = _startDate.AddDays(5);
 
             _algorithm.SetBenchmark(x => 1);
+            _algorithm.Settings.DailyStrictEndTimeEnabled = strictEndTimes;
 
             var feed = RunDataFeed();
 
@@ -691,15 +733,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             CollectionAssert.AreEquivalent(constituents, _algorithm.Securities.Keys);
         }
 
-        [TestCase(false, SecurityType.Option, Resolution.Hour)]
-        [TestCase(true, SecurityType.Option, Resolution.Hour)]
-        [TestCase(false, SecurityType.IndexOption, Resolution.Hour)]
-        [TestCase(true, SecurityType.IndexOption, Resolution.Hour)]
-        [TestCase(false, SecurityType.Option, Resolution.Daily)]
-        [TestCase(true, SecurityType.Option, Resolution.Daily)]
-        [TestCase(false, SecurityType.IndexOption, Resolution.Daily)]
-        [TestCase(true, SecurityType.IndexOption, Resolution.Daily)]
-        public void WarmupOptionSelection(bool useWarmupResolution, SecurityType securityType, Resolution resolution)
+        [TestCase(false, SecurityType.Option, Resolution.Hour, false)]
+        [TestCase(true, SecurityType.Option, Resolution.Hour, false)]
+        [TestCase(false, SecurityType.IndexOption, Resolution.Hour, false)]
+        [TestCase(true, SecurityType.IndexOption, Resolution.Hour, false)]
+        [TestCase(false, SecurityType.Option, Resolution.Daily, false)]
+        [TestCase(true, SecurityType.Option, Resolution.Daily, false)]
+        [TestCase(false, SecurityType.IndexOption, Resolution.Daily, false)]
+        [TestCase(true, SecurityType.IndexOption, Resolution.Daily, false)]
+        [TestCase(false, SecurityType.Option, Resolution.Daily, true)]
+        [TestCase(true, SecurityType.Option, Resolution.Daily, true)]
+        [TestCase(false, SecurityType.IndexOption, Resolution.Daily, true)]
+        [TestCase(true, SecurityType.IndexOption, Resolution.Daily, true)]
+        public void WarmupOptionSelection(bool useWarmupResolution, SecurityType securityType, Resolution resolution, bool strictEndTimes)
         {
             _startDate = new DateTime(2014, 6, 9);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
@@ -707,6 +753,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var endDate = _startDate.AddDays(2);
             _algorithm.SetBenchmark(x => 1);
 
+            _algorithm.Settings.DailyStrictEndTimeEnabled = strictEndTimes;
             if (useWarmupResolution)
             {
                 _algorithm.SetWarmup(2, Resolution.Daily);
@@ -2106,11 +2153,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
-        [TestCase(SecurityType.Future)]
-        [TestCase(SecurityType.Option)]
-        [TestCase(SecurityType.IndexOption)]
-        public void AddChainUniverseCanNotAdvanceTime(SecurityType securityType)
+        [TestCase(SecurityType.Future, true)]
+        [TestCase(SecurityType.Option, true)]
+        [TestCase(SecurityType.IndexOption, true)]
+        [TestCase(SecurityType.Future, false)]
+        [TestCase(SecurityType.Option, false)]
+        [TestCase(SecurityType.IndexOption, false)]
+        public void AddChainUniverseCanNotAdvanceTime(SecurityType securityType, bool strictEndTimes)
         {
+            _algorithm.Settings.DailyStrictEndTimeEnabled = strictEndTimes;
             _algorithm.UniverseSettings.Resolution = Resolution.Daily;
             _algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             // this reproduces GH issue #5245 where time can not advance and will keep it's default value
@@ -2257,7 +2308,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _synchronizer.Initialize(algorithm, dataManager);
             algorithm.AddSecurities(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToStringInvariant()).ToList());
             var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToStringInvariant()) }).ToList();
-            _feed.DataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction, new RealTimeProvider());
+            _feed.DataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction, new RealTimeProvider(), _algorithm.Settings);
 
             _feed.Initialize(
                 algorithm,
@@ -2682,7 +2733,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     return symbols;
                 }),
-                canPerformSelection ?? (() => true), _manualTimeProvider);
+                canPerformSelection ?? (() => true), _manualTimeProvider, _algorithm.Settings);
 
             _feed = new TestableLiveTradingDataFeed(dataQueueHandler ?? _dataQueueHandler);
             var fileProvider = TestGlobals.DataProvider;
@@ -2908,6 +2959,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var lastTime = DateTime.MinValue;
             var emittedData = new ManualResetEvent(false);
 
+            var algorithm = new QCAlgorithm();
             var dataQueueStarted = new ManualResetEvent(false);
             _dataQueueHandler = new FuncDataQueueHandler(fdqh =>
             {
@@ -2990,11 +3042,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                 emittedData.Set();
                 return dataPoints;
-            }, timeProvider);
+            }, timeProvider, algorithm.Settings);
 
             _feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
 
-            var algorithm = new QCAlgorithm();
             algorithm.SetDateTime(timeProvider.GetUtcNow());
 
             var historyProvider = new Mock<IHistoryProvider>();
@@ -3382,6 +3433,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var futureSymbols = new HashSet<Symbol>();
             var optionSymbols = new HashSet<Symbol>();
 
+            var algorithm = new QCAlgorithm();
             _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(
                 fdqh =>
                 {
@@ -3511,11 +3563,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     return result;
                 },
-                timeProvider);
+                timeProvider, algorithm.Settings);
 
             _feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
 
-            var algorithm = new QCAlgorithm();
             algorithm.SetDateTime(timeProvider.GetUtcNow());
             algorithm.SetBenchmark(t => 0);
 

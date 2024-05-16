@@ -720,7 +720,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             var exchange = new SecurityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType));
             bool isExtendedMarketHours = false;
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromDays(1)), isExtendedMarketHours, data.Last().EndTime.AddDays(1), dataResolution, exchange.TimeZone, strictEndTimes);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromDays(1)), isExtendedMarketHours,
+                // we add a tenth of a day to reproduce a bug where we would fill forward beyoned the expected end time
+                data.Last().EndTime.AddDays(1.10), dataResolution, exchange.TimeZone, strictEndTimes);
 
             var dataReferenceTime = reference.AddDays(1);
             if (strictEndTimes)

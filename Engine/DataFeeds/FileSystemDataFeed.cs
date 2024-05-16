@@ -81,7 +81,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _mapFileProvider,
                 _factorFileProvider,
                 _cacheProvider,
-                algorithm.ObjectStore,
+                algorithm,
                 enablePriceScaling: false);
 
             IsActive = true;
@@ -212,6 +212,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var result = new BaseDataSubscriptionEnumeratorFactory(_algorithm.OptionChainProvider, _algorithm.FutureChainProvider)
                     .CreateEnumerator(request, _dataProvider);
+
+                if (LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment))
+                {
+                    result = new StrictDailyEndTimesEnumerator(result, request.ExchangeHours);
+                }
                 result = ConfigureEnumerator(request, true, result, fillForwardResolution);
                 return TryAppendUnderlyingEnumerator(request, result, createUnderlyingEnumerator, fillForwardResolution);
             }
@@ -288,11 +293,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         protected IEnumerator<BaseData> ConfigureEnumerator(SubscriptionRequest request, bool aggregate, IEnumerator<BaseData> enumerator, Resolution? fillForwardResolution)
         {
-            if (LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment))
-            {
-                enumerator = new StrictDailyEndTimesEnumerator(enumerator, request.ExchangeHours);
-            }
-
             if (aggregate)
             {
                 enumerator = new BaseDataCollectionAggregatorEnumerator(enumerator, request.Configuration.Symbol);

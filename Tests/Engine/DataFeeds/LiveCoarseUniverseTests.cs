@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var coarseSymbols = new List<Symbol> { Symbols.SPY, Symbols.AAPL, Symbols.MSFT };
 
             var emitted = new AutoResetEvent(false);
-            var dataQueueHandler = new FuncDataQueueHandler(fdqh => Enumerable.Empty<BaseData>(), timeProvider);
+            var dataQueueHandler = new FuncDataQueueHandler(fdqh => Enumerable.Empty<BaseData>(), timeProvider, new AlgorithmSettings());
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler);
 

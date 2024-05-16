@@ -90,7 +90,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (_useStrictEndTime)
             {
                 var lastDayCalendar = LeanData.GetDailyCalendar(_subscriptionEndTime, Exchange.Hours, _isExtendedMarketHours);
-                _subscriptionEndDataCalendar = new (_subscriptionEndTime - lastDayCalendar.Period, lastDayCalendar.Period);
+                while (lastDayCalendar.End > _subscriptionEndTime)
+                {
+                    lastDayCalendar = LeanData.GetDailyCalendar(lastDayCalendar.Start.AddDays(-1), Exchange.Hours, _isExtendedMarketHours);
+                }
+                _subscriptionEndDataCalendar = lastDayCalendar;
             }
             else
             {
@@ -183,6 +187,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         return false;
                     }
 
+                    if (Current != null && Current.EndTime == endOfSubscription.EndTime || endOfSubscription.EndTime > _subscriptionEndTime)
+                    {
+                        return false;
+                    }
                     Current = endOfSubscription;
                     return true;
                 }

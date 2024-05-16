@@ -41,7 +41,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly int _startDateLimitedWarningsMaxCount = 10;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly bool _enablePriceScaling;
-        private readonly IObjectStore _objectStore;
+        private readonly IAlgorithm _algorithm;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataReaderSubscriptionEnumeratorFactory"/> class
@@ -50,16 +50,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="mapFileProvider">The map file provider</param>
         /// <param name="factorFileProvider">The factor file provider</param>
         /// <param name="cacheProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="objectStore">The object store to use</param>
+        /// <param name="algorithm">The algorithm instance to use</param>
         /// <param name="enablePriceScaling">Applies price factor</param>
         public SubscriptionDataReaderSubscriptionEnumeratorFactory(IResultHandler resultHandler,
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IDataCacheProvider cacheProvider,
-            IObjectStore objectStore,
+            IAlgorithm algorithm,
             bool enablePriceScaling = true
             )
         {
+            _algorithm = algorithm;
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
@@ -67,7 +68,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _numericalPrecisionLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
             _startDateLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
             _enablePriceScaling = enablePriceScaling;
-            _objectStore = objectStore;
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 _factorFileProvider,
                 _dataCacheProvider,
                 dataProvider,
-                _objectStore);
+                _algorithm.ObjectStore);
 
             dataReader.InvalidConfigurationDetected += (sender, args) => { _resultHandler.ErrorMessage(args.Message); };
             dataReader.StartDateLimited += (sender, args) =>
@@ -106,8 +106,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 }
             };
 
-            var result = CorporateEventEnumeratorFactory.CreateEnumerators(
-                dataReader,
+            IEnumerator<BaseData> enumerator = dataReader;
+            if (LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment))
+            {
+                // before corporate events which might yield data and we synchronize both feeds
+                enumerator = new StrictDailyEndTimesEnumerator(enumerator, request.ExchangeHours);
+            }
+
+            enumerator = CorporateEventEnumeratorFactory.CreateEnumerators(
+                enumerator,
                 request.Configuration,
                 _factorFileProvider,
                 dataReader,
@@ -116,7 +123,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 request.EndTimeLocal,
                 _enablePriceScaling);
 
-            return result;
+            return enumerator;
         }
 
         /// <summary>

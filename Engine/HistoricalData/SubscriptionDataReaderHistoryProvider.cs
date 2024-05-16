@@ -140,6 +140,13 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 reader = new ConcatEnumerator(true, reader, intraday);
             }
 
+            var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(AlgorithmSettings, request, config.Symbol, config.Increment);
+            if (useDailyStrictEndTimes)
+            {
+                // before corporate events which might yield data and we synchronize both feeds
+                reader = new StrictDailyEndTimesEnumerator(reader, request.ExchangeHours);
+            }
+
             reader = CorporateEventEnumeratorFactory.CreateEnumerators(
                 reader,
                 config,
@@ -148,12 +155,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _mapFileProvider,
                 request.StartTimeLocal,
                 request.EndTimeLocal);
-
-            var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(AlgorithmSettings, request, config.Symbol, config.Increment);
-            if (useDailyStrictEndTimes)
-            {
-                reader = new StrictDailyEndTimesEnumerator(reader, request.ExchangeHours);
-            }
 
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)

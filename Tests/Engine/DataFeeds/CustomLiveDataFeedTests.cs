@@ -224,7 +224,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     TickType = TickType.Trade
                 };
                 return new[] { tick, tick2 };
-            }, timeProvider);
+            }, timeProvider, algorithm.Settings);
             CreateDataFeed(dataQueueHandler);
             var dataManager = new DataManagerStub(algorithm, _feed);
 
@@ -377,7 +377,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private void CreateDataFeed(
             FuncDataQueueHandler funcDataQueueHandler = null)
         {
-            _feed = new TestableLiveTradingDataFeed(funcDataQueueHandler ?? new FuncDataQueueHandler(x => Enumerable.Empty<BaseData>(), new RealTimeProvider()));
+            _feed = new TestableLiveTradingDataFeed(funcDataQueueHandler ?? new FuncDataQueueHandler(x => Enumerable.Empty<BaseData>(), RealTimeProvider.Instance, new AlgorithmSettings()));
         }
 
         private void RunLiveDataFeed(

@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             typeof(TradeBar), typeof(QuoteBar), typeof(ZipEntryName), typeof(BaseDataCollection)
         };
 
-        private SecurityExchangeHours _securityExchange;
+        private readonly SecurityExchangeHours _securityExchange;
         private readonly IEnumerator<BaseData> _underlying;
 
         public BaseData Current => _underlying.Current;
