@@ -207,6 +207,19 @@
   "tt-order-routing-port": "",
   "tt-log-fix-messages": false,
 
+  // Trade Station configuration
+  "trade-station-api-key": "",
+  "trade-station-api-secret": "",
+  "trade-station-code-from-url": "",
+  "trade-station-refresh-token": "",
+  "trade-station-api-url": "https://sim-api.tradestation.com",
+  "trade-station-account-type": "",
+  // [Optional] Trade Station Proxy Settings
+  "trade-station-use-proxy": false,
+  "trade-station-proxy-address-port": "",
+  "trade-station-proxy-username": "",
+  "trade-station-proxy-password": "",
+
   // Exante trading configuration
   // client-id, application-id, shared-key are required to access Exante REST API
   // Exante generates them at https://exante.eu/clientsarea/dashboard/ after adding an application
