@@ -159,6 +159,21 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -20, -(1000000 - 20 * 10250) / (10250 + 0), true),    // -20 to max short
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -20, -(1000000 - 20 * 10250) / (10250 + 0) - 1, false),  // -20 to max short + 1
+            // Initial margin requirement|premium for ProtectiveCollar with quantities 1 and -1 are 19250|0 and 19250|9198 respectively
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 0, (1000000 - 0 * 19250) / (19250 + 0), true), // 0 to max long
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 0, (1000000 - 0 * 19250) / (19250 + 0) + 1, false), // 0 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 0, -(1000000 + 0 * 19250) / (19250 + 9198), true), // 0 to max short
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 0, -(1000000 + 0 * 19250) / (19250 + 9198) - 1, false),    // 0 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, (1000000 - 20 * 19250) / (19250 + 0), true),    // 20 to max long
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, (1000000 - 20 * 19250) / (19250 + 0) + 1, false),    // 20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, -20, true), // 20 to 0
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, -(1000000 + 20 * 19250) / (19250 + 9198), true), // 20 to max short
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, -(1000000 + 20 * 19250) / (19250 + 9198) - 1, false),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, (1000000 + 20 * 19250) / (19250 + 0), true),   // -20 to max long
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, (1000000 + 20 * 19250) / (19250 + 0) + 1, false),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, 20, true), // -20 to 0
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, -(1000000 - 20 * 19250) / (19250 + 9198), true),    // -20 to max short
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, -(1000000 - 20 * 19250) / (19250 + 9198) - 1, false),  // -20 to max short + 1
             // Initial margin requirement|premium for BearCallSpread with quantities 1 and -1 are 1000|0 and 0|1200 respectively
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 0, (1000000 - 0 * 1000) / (1000 + 0), true), // 0 to max long
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 0, (1000000 - 0 * 1000) / (1000 + 0) + 1, false), // 0 to max long + 1
@@ -618,6 +633,8 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 10000m),                     // IB:  10276.15
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 1, 10000m),                   // IB:  inverted covered put
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -1, 12000m),                  // IB:  covered put
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 1, 19250m),                // IB:  19250
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -1, 19250m),               // IB:  same as long
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 1000m),                   // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                     // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m),                       // IB:  0
@@ -712,6 +729,8 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 10000m),                     // IB:  10276
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 1, 10000m),                   // IB:  inverted covered Put
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -1, 10250m),                  // IB:  covered Put
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 1, 8000m),                 // IB:  8000
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -1, 8000m),                // IB:  same as long
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 1000m),                   // IB:  10000
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                     // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m),                       // IB:  0
@@ -819,6 +838,15 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, -102500m / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, -102500m, -10),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, -102500m - 102520m, -20),
+            // Initial margin requirement (including premium) for ProtectiveCollar with quantity 10 and -10 is 192500 and 284480 respectively
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 192500m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -192500m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -192500m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -192500m - 284480m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 284480m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -284480m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -284480m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -284480m - 192500m, -20),
             // Initial margin requirement (including premium) for BearCallSpread with quantity 10 and -10 is 10000 and 12000 respectively
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 10000m / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -10000m / 10, -1),
@@ -1143,6 +1171,15 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 102500m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 0m, -10),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, -102520m, -20),
+            // Initial margin requirement (including premium) for ProtectiveCollar with quantity 10 and -10 is 192500m and 284880m respectively
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 192500m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 192500m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 0m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -284880m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 284880m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 284880m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 0m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -192500m, -20),
             // Initial margin requirement (including premium) for BearCallSpread with quantity 10 and -10 is 10000 and 12000 respectively
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 10000m * 11 / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 10000m * 9 / 10, -1),
@@ -1417,6 +1454,14 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 1, (1000000m - 102500m) + 102500m + 102500m),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 10, (1000000m - 102500m) + 102500m + 102500m),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 20, (1000000m - 102500m) + 102500m + 102500m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 1, 1000000m - 80000m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -1, (1000000m - 80000m) + 80000m + 192500m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -10, (1000000m - 80000m) + 80000m + 192500m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -20, (1000000m - 80000m) + 80000m + 192500m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -1, 1000000m - 80000m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 1, (1000000m - 80000m) + 80000m + 284480m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 10, (1000000m - 80000m) + 80000m + 284480m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 20, (1000000m - 80000m) + 80000m + 284480m),
             new TestCaseData(OptionStrategyDefinitions.NakedCall, 10, +1, 1000000m - 194000m),
             new TestCaseData(OptionStrategyDefinitions.NakedCall, 10, -1, (1000000m - 194000m) + 194000m + 194000m),
             new TestCaseData(OptionStrategyDefinitions.NakedCall, 10, -10, (1000000m - 194000m) + 194000m + 194000m),
@@ -1850,6 +1895,14 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 1),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 10),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 20),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -10),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -20),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 10),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 20),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 1),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -1),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -10),
@@ -2230,6 +2283,12 @@ namespace QuantConnect.Tests.Common.Securities
                 {
                     expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.CoveredPut.Name;
                 }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ProtectiveCollar.Name)
+            {
+                _equity.Holdings.SetHoldings(_equity.Price, initialHoldingsQuantity * _putOption.ContractMultiplier);
+                spyMay19_320Call.Holdings.SetHoldings(spyMay19_320Call.Price, -initialHoldingsQuantity);
+                spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, initialHoldingsQuantity);
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.BearCallSpread.Name)
             {
