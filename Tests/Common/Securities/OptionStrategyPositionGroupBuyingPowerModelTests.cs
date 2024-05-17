@@ -174,21 +174,36 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, -(1000000 - 20 * 19250) / (19250 + 9198), true),    // -20 to max short
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, -(1000000 - 20 * 19250) / (19250 + 9198) - 1, false),  // -20 to max short + 1
-            // Initial margin requirement|premium for Conversion with quantities 1 and -1 are 21250|0 and 21250|11198 respectively
+            // Initial margin requirement|premium for Conversion with quantities 1 and -1 are 21250|0 and 10250|11198 respectively
             new TestCaseData(OptionStrategyDefinitions.Conversion, 0, (1000000 - 0 * 21250) / (21250 + 0), true), // 0 to max long
             new TestCaseData(OptionStrategyDefinitions.Conversion, 0, (1000000 - 0 * 21250) / (21250 + 0) + 1, false), // 0 to max long + 1
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 0, -(1000000 + 0 * 21250) / (21250 + 11198), true), // 0 to max short
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 0, -(1000000 + 0 * 21250) / (21250 + 11198) - 1, false),    // 0 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 0, -(1000000 + 0 * 10250) / (10250 + 11198), true), // 0 to max short
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 0, -(1000000 + 0 * 10250) / (10250 + 11198) - 1, false),    // 0 to max short + 1
             new TestCaseData(OptionStrategyDefinitions.Conversion, 20, (1000000 - 20 * 21250) / (21250 + 0), true),    // 20 to max long
             new TestCaseData(OptionStrategyDefinitions.Conversion, 20, (1000000 - 20 * 21250) / (21250 + 0) + 1, false),    // 20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.Conversion, 20, -20, true), // 20 to 0
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 20, -(1000000 + 20 * 21250) / (21250 + 11198), true), // 20 to max short
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 20, -(1000000 + 20 * 21250) / (21250 + 11198) - 1, false),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 20, -(1000000 + 20 * 10250) / (10250 + 11198), true), // 20 to max short
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 20, -(1000000 + 20 * 10250) / (10250 + 11198) - 1, false),  // 20 to max short + 1
             new TestCaseData(OptionStrategyDefinitions.Conversion, -20, (1000000 + 20 * 21250) / (21250 + 0), true),   // -20 to max long
             new TestCaseData(OptionStrategyDefinitions.Conversion, -20, (1000000 + 20 * 21250) / (21250 + 0) + 1, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.Conversion, -20, 20, true), // -20 to 0
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -20, -(1000000 - 20 * 21250) / (21250 + 11198), true),    // -20 to max short
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -20, -(1000000 - 20 * 21250) / (21250 + 11198) - 1, false),  // -20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -20, -(1000000 - 20 * 10250) / (10250 + 11198), true),    // -20 to max short
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -20, -(1000000 - 20 * 10250) / (10250 + 11198) - 1, false),  // -20 to max short + 1
+            // Initial margin requirement|premium for ReverseConversion with quantities 1 and -1 are 10250|11198 and 21250|0 respectively
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 0, (1000000 - 0 * 10250) / (10250 + 11198), true), // 0 to max long
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 0, (1000000 - 0 * 10250) / (10250 + 11198) + 1, false), // 0 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 0, -(1000000 + 0 * 21250) / (21250 + 0), true), // 0 to max short
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 0, -(1000000 + 0 * 21250) / (21250 + 0) - 1, false),    // 0 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, (1000000 - 20 * 10250) / (10250 + 11198), true),    // 20 to max long
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, (1000000 - 20 * 10250) / (10250 + 11198) + 1, false),    // 20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, -20, true), // 20 to 0
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, -(1000000 + 20 * 21250) / (21250 + 0), true), // 20 to max short
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, -(1000000 + 20 * 21250) / (21250 + 0) - 1, false),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, (1000000 + 20 * 10250) / (10250 + 11198), true),   // -20 to max long
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, (1000000 + 20 * 10250) / (10250 + 11198) + 1, false),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, 20, true), // -20 to 0
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, -(1000000 - 20 * 21250) / (21250 + 0), true),    // -20 to max short
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, -(1000000 - 20 * 21250) / (21250 + 0) - 1, false),  // -20 to max short + 1
             // Initial margin requirement|premium for BearCallSpread with quantities 1 and -1 are 1000|0 and 0|1200 respectively
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 0, (1000000 - 0 * 1000) / (1000 + 0), true), // 0 to max long
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 0, (1000000 - 0 * 1000) / (1000 + 0) + 1, false), // 0 to max long + 1
@@ -651,7 +666,9 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 1, 19250m),                // IB:  19250
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -1, 19250m),               // IB:  same as long
             new TestCaseData(OptionStrategyDefinitions.Conversion, 1, 21250m),                      // IB:  21250
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -1, 21250m),                     // IB:  same as long
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -1, 10250m),                     // IB:  reverse conversion
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 1, 10250m),               // IB:  10250
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -1, 21250m),              // IB:  conversion
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 1000m),                   // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                     // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m),                       // IB:  0
@@ -749,7 +766,9 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 1, 8000m),                 // IB:  8000
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -1, 8000m),                // IB:  same as long
             new TestCaseData(OptionStrategyDefinitions.Conversion, 1, 14000m),                      // IB:  14000
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -1, 14000m),                     // IB:  same as long
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -1, 3000m),                      // IB:  reverse conversion
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 1, 3000m),                // IB:  14000
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -1, 14000m),              // IB:  conversion
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 1000m),                   // IB:  10000
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                     // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m),                       // IB:  0
@@ -866,15 +885,24 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -284480m / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -284480m, -10),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -284480m - 192500m, -20),
-            // Initial margin requirement (including premium) for Conversion with quantity 10 and -10 is 212500 and 324480 respectively
+            // Initial margin requirement (including premium) for Conversion with quantity 10 and -10 is 212500 and 214480 respectively
             new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 212500m / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -212500m / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -212500m, -10),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -212500m - 324480m, -20),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 324480m / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -324480m / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -324480m, -10),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -324480m - 212500m, -20),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -212500m - 214480m, -20),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 214480m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -214480m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -214480m, -10),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -214480m - 212500m, -20),
+            // Initial margin requirement (including premium) for ReverseConversion with quantity 10 and -10 is 214480 and 212500 respectively
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 214480m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -214480m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -214480m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -214480m - 212500m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 212500m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -212500m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -212500m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -212500m - 214480m, -20),
             // Initial margin requirement (including premium) for BearCallSpread with quantity 10 and -10 is 10000 and 12000 respectively
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 10000m / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -10000m / 10, -1),
@@ -1208,15 +1236,24 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 284480m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 0m, -10),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -192500m, -20),
-            // Initial margin requirement (including premium) for Conversion with quantity 10 and -10 is 212500m and 324480m respectively
+            // Initial margin requirement (including premium) for Conversion with quantity 10 and -10 is 212500m and 214480m respectively
             new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 212500m * 11 / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 212500m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 0m, -10),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -324480m, -20),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 324480m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 324480m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -214480m, -20),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 214480m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 214480m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 0m, -10),
             new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -212500m, -20),
+            // Initial margin requirement (including premium) for ReverseConversion with quantity 10 and -10 is 214480m and 212500m respectively
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 214480m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 214480m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 0m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -212500m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 212500m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 212500m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 0m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -214480m, -20),
             // Initial margin requirement (including premium) for BearCallSpread with quantity 10 and -10 is 10000 and 12000 respectively
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 10000m * 11 / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 10000m * 9 / 10, -1),
@@ -1503,10 +1540,18 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -1, (1000000m - 140000m) + 140000m + 212500m),
             new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -10, (1000000m - 140000m) + 140000m + 212500m),
             new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -20, (1000000m - 140000m) + 140000m + 212500m),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -1, 1000000m - 140000m),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 1, (1000000m - 140000m) + 140000m + 324480m),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 10, (1000000m - 140000m) + 140000m + 324480m),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 20, (1000000m - 140000m) + 140000m + 324480m),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -1, 1000000m - 30000m),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 1, (1000000m - 30000m) + 30000m + 214480m),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 10, (1000000m - 30000m) + 30000m + 214480m),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 20, (1000000m - 30000m) + 30000m + 214480m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 1, 1000000m - 30000m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -1, (1000000m - 30000m) + 30000m + 214480m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -10, (1000000m - 30000m) + 30000m + 214480m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -20, (1000000m - 30000m) + 30000m + 214480m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -1, 1000000m - 140000m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 1, (1000000m - 140000m) + 140000m + 212500m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 10, (1000000m - 140000m) + 140000m + 212500m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 20, (1000000m - 140000m) + 140000m + 212500m),
             new TestCaseData(OptionStrategyDefinitions.NakedCall, 10, +1, 1000000m - 194000m),
             new TestCaseData(OptionStrategyDefinitions.NakedCall, 10, -1, (1000000m - 194000m) + 194000m + 194000m),
             new TestCaseData(OptionStrategyDefinitions.NakedCall, 10, -10, (1000000m - 194000m) + 194000m + 194000m),
@@ -1956,6 +2001,14 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 1),
             new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 10),
             new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 20),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -10),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -20),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 10),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 20),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 1),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -1),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -10),
@@ -2348,6 +2401,12 @@ namespace QuantConnect.Tests.Common.Securities
                 _equity.Holdings.SetHoldings(_equity.Price, initialHoldingsQuantity * _putOption.ContractMultiplier);
                 spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, -initialHoldingsQuantity);
                 spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, initialHoldingsQuantity);
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ReverseConversion.Name)
+            {
+                _equity.Holdings.SetHoldings(_equity.Price, -initialHoldingsQuantity * _putOption.ContractMultiplier);
+                spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, initialHoldingsQuantity);
+                spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, -initialHoldingsQuantity);
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.BearCallSpread.Name)
             {
