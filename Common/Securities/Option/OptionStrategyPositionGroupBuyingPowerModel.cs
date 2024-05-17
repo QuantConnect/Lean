@@ -141,6 +141,21 @@ namespace QuantConnect.Securities.Option
 
                 return new MaintenanceMargin(inAccountCurrency);
             }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.Conversion.Name)
+            {
+                // 10% * Strike Price + Call In the Money Amount
+                var callPosition = parameters.PositionGroup.Positions.Single(position =>
+                    position.Symbol.SecurityType.IsOption() && position.Symbol.ID.OptionRight == OptionRight.Call);
+                var underlyingPosition = parameters.PositionGroup.Positions.FirstOrDefault(position => !position.Symbol.SecurityType.IsOption());
+                var callSecurity = (Option)parameters.Portfolio.Securities[callPosition.Symbol];
+                var underlyingSecurity = parameters.Portfolio.Securities[underlyingPosition.Symbol];
+
+                var marginRequirement = 0.1m * callSecurity.StrikePrice + callSecurity.GetIntrinsicValue(underlyingSecurity.Price);
+                var result = marginRequirement * Math.Abs(callPosition.Quantity) * callSecurity.ContractUnitOfTrade;
+                var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, underlyingSecurity.QuoteCurrency.Symbol);
+
+                return new MaintenanceMargin(inAccountCurrency);
+            }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedCall.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.NakedPut.Name)
             {
@@ -250,7 +265,7 @@ namespace QuantConnect.Securities.Option
                 // Initial Stock Margin Requirement + In the Money Amount
                 result = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
             }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCollar.Name)
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCollar.Name || _optionStrategy.Name == OptionStrategyDefinitions.Conversion.Name)
             {
                 // Initial Stock Margin Requirement + In the Money Call Amount
                 var callPosition = parameters.PositionGroup.Positions.Single(position => 
