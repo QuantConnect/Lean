@@ -143,18 +143,11 @@ namespace QuantConnect.Securities.Option
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.Conversion.Name)
             {
-                // 10% * Strike Price + Call In the Money Amount
-                var callPosition = parameters.PositionGroup.Positions.Single(position =>
-                    position.Symbol.SecurityType.IsOption() && position.Symbol.ID.OptionRight == OptionRight.Call);
-                var underlyingPosition = parameters.PositionGroup.Positions.FirstOrDefault(position => !position.Symbol.SecurityType.IsOption());
-                var callSecurity = (Option)parameters.Portfolio.Securities[callPosition.Symbol];
-                var underlyingSecurity = parameters.Portfolio.Securities[underlyingPosition.Symbol];
-
-                var marginRequirement = 0.1m * callSecurity.StrikePrice + callSecurity.GetIntrinsicValue(underlyingSecurity.Price);
-                var result = marginRequirement * Math.Abs(callPosition.Quantity) * callSecurity.ContractUnitOfTrade;
-                var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, underlyingSecurity.QuoteCurrency.Symbol);
-
-                return new MaintenanceMargin(inAccountCurrency);
+                return GetConversionMaintenanceMargin(parameters.PositionGroup, parameters.Portfolio, OptionRight.Call);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ReverseConversion.Name)
+            {
+                return GetConversionMaintenanceMargin(parameters.PositionGroup, parameters.Portfolio, OptionRight.Put);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedCall.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.NakedPut.Name)
@@ -267,20 +260,11 @@ namespace QuantConnect.Securities.Option
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCollar.Name || _optionStrategy.Name == OptionStrategyDefinitions.Conversion.Name)
             {
-                // Initial Stock Margin Requirement + In the Money Call Amount
-                var callPosition = parameters.PositionGroup.Positions.Single(position => 
-                    position.Symbol.SecurityType.IsOption() && position.Symbol.ID.OptionRight == OptionRight.Call);
-                var underlyingPosition = parameters.PositionGroup.Positions.Single(position => !position.Symbol.SecurityType.IsOption());
-                var callSecurity = (Option)parameters.Portfolio.Securities[callPosition.Symbol];
-                var underlyingSecurity = parameters.Portfolio.Securities[underlyingPosition.Symbol];
-
-                var intrinsicValue = callSecurity.GetIntrinsicValue(underlyingSecurity.Price);
-                var inTheMoneyAmount = intrinsicValue * callSecurity.ContractUnitOfTrade * Math.Abs(callPosition.Quantity);
-
-                var initialMarginRequirement = underlyingSecurity.BuyingPowerModel.GetInitialMarginRequirement(underlyingSecurity, underlyingPosition.Quantity);
-
-                result = Math.Abs(initialMarginRequirement) + inTheMoneyAmount;
-                result = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, callSecurity.QuoteCurrency.Symbol);
+                result = GetCollarConversionInitialMargin(parameters.PositionGroup, parameters.Portfolio, OptionRight.Call);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ReverseConversion.Name)
+            {
+                result = GetCollarConversionInitialMargin(parameters.PositionGroup, parameters.Portfolio, OptionRight.Put);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedCall.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.NakedPut.Name)
@@ -500,6 +484,46 @@ namespace QuantConnect.Securities.Option
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Returns the maintenance margin for a conversion or reverse conversion.
+        /// </summary>
+        private static decimal GetConversionMaintenanceMargin(IPositionGroup positionGroup, SecurityPortfolioManager portfolio, OptionRight optionRight)
+        {
+            // 10% * Strike Price + Call/Put In the Money Amount
+            var optionPosition = positionGroup.Positions.Single(position =>
+                position.Symbol.SecurityType.IsOption() && position.Symbol.ID.OptionRight == optionRight);
+            var underlyingPosition = positionGroup.Positions.FirstOrDefault(position => !position.Symbol.SecurityType.IsOption());
+            var optionSecurity = (Option)portfolio.Securities[optionPosition.Symbol];
+            var underlyingSecurity = portfolio.Securities[underlyingPosition.Symbol];
+
+            var marginRequirement = 0.1m * optionSecurity.StrikePrice + optionSecurity.GetIntrinsicValue(underlyingSecurity.Price);
+            var result = marginRequirement * Math.Abs(optionPosition.Quantity) * optionSecurity.ContractUnitOfTrade;
+            var inAccountCurrency = portfolio.CashBook.ConvertToAccountCurrency(result, underlyingSecurity.QuoteCurrency.Symbol);
+
+            return new MaintenanceMargin(inAccountCurrency);
+        }
+
+        /// <summary>
+        /// Returns the initial margin requirement for a collar, conversion, or reverse conversion.
+        /// </summary>
+        private static decimal GetCollarConversionInitialMargin(IPositionGroup positionGroup, SecurityPortfolioManager portfolio, OptionRight optionRight)
+        {
+            // Initial Stock Margin Requirement + In the Money Call/Put Amount
+            var optionPosition = positionGroup.Positions.Single(position => 
+                position.Symbol.SecurityType.IsOption() && position.Symbol.ID.OptionRight == optionRight);
+            var underlyingPosition = positionGroup.Positions.Single(position => !position.Symbol.SecurityType.IsOption());
+            var optionSecurity = (Option)portfolio.Securities[optionPosition.Symbol];
+            var underlyingSecurity = portfolio.Securities[underlyingPosition.Symbol];
+
+            var intrinsicValue = optionSecurity.GetIntrinsicValue(underlyingSecurity.Price);
+            var inTheMoneyAmount = intrinsicValue * optionSecurity.ContractUnitOfTrade * Math.Abs(optionPosition.Quantity);
+
+            var initialMarginRequirement = underlyingSecurity.BuyingPowerModel.GetInitialMarginRequirement(underlyingSecurity, underlyingPosition.Quantity);
+
+            var result = Math.Abs(initialMarginRequirement) + inTheMoneyAmount;
+            return portfolio.CashBook.ConvertToAccountCurrency(result, optionSecurity.QuoteCurrency.Symbol);
         }
     }
 }
