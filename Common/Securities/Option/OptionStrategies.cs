@@ -165,6 +165,21 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Creates a Conversion strategy that consists of buying 1 put contract, 1 lot of the underlying and selling 1 call contract.
+        /// Put and call must have the same expiration date, underlying (multiplier), and strike price.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price for the call and put option contract</param>
+        /// <param name="expiration">The expiration date for the put option contract</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy Conversion(Symbol canonicalOption, decimal strike, DateTime expiration)
+        {
+            var strategy = ProtectiveCollar(canonicalOption, strike, strike, expiration);
+            strategy.Name = OptionStrategyDefinitions.Conversion.Name;
+            return strategy;
+        }
+
+        /// <summary>
         /// Creates a Naked Call strategy that consists of selling 1 call contract.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>

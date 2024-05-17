@@ -117,6 +117,18 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             );
 
         /// <summary>
+        /// Hold 1 lot of the underlying, sell 1 call contract and buy 1 put contract.
+        /// The strike price of the call and put are the same, with the same expiration.
+        /// </summary>
+        /// <remarks>A special case of <see cref="ProtectiveCollar"/>
+        public static OptionStrategyDefinition Conversion { get; }
+            = OptionStrategyDefinition.Create("Conversion", 1,
+                OptionStrategyDefinition.CallLeg(-1),
+                OptionStrategyDefinition.PutLeg(1, (legs, p) => p.Strike == legs[0].Strike,
+                                                   (legs, p) => p.Expiration == legs[0].Expiration)
+            );
+
+        /// <summary>
         /// Sell 1 call contract without holding the underlying
         /// </summary>
         public static OptionStrategyDefinition NakedCall { get; }
