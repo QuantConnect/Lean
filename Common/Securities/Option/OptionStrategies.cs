@@ -145,7 +145,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy ProtectiveCollar(Symbol canonicalOption, decimal callStrike, decimal putStrike, DateTime expiration)
         {
-            if (callStrike <= putStrike)
+            if (callStrike < putStrike)
             {
                 throw new ArgumentException("ProtectiveCollar: callStrike must be greater than putStrike", $"{nameof(callStrike)}, {nameof(putStrike)}");
             }
