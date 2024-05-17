@@ -2401,12 +2401,22 @@ namespace QuantConnect.Tests.Common.Securities
                 _equity.Holdings.SetHoldings(_equity.Price, initialHoldingsQuantity * _putOption.ContractMultiplier);
                 spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, -initialHoldingsQuantity);
                 spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.ReverseConversion.Name;
+                }
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ReverseConversion.Name)
             {
                 _equity.Holdings.SetHoldings(_equity.Price, -initialHoldingsQuantity * _putOption.ContractMultiplier);
                 spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, initialHoldingsQuantity);
                 spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, -initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.Conversion.Name;
+                }
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.BearCallSpread.Name)
             {
