@@ -20,14 +20,5 @@ namespace QuantConnect.Orders
     /// Represents the properties of an order in TradeStation.
     /// </summary>
     public class TradeStationOrderProperties : OrderProperties
-    {
-        /// <summary>
-        /// Represents the position side in an order direction, specifically for option type trades.
-        /// This allows you to specify whether the order is 'buy-to-open', 'sell-to-close', etc., rather than just 'buy' or 'sell'.
-        /// </summary>
-        /// <remarks>
-        /// Use this property to define the exact position side for <see cref="SecurityType.Option"/> trading.
-        /// </remarks>
-        public OrderPosition? PositionSide { get; set; }
-    }
+    { }
 }
