@@ -180,6 +180,19 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Creates a Reverse Conversion strategy that consists of buying 1 put contract and 1 lot of the underlying.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price for the put option contract</param>
+        /// <param name="expiration">The expiration date for the put option contract</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ReverseConversion(Symbol canonicalOption, decimal strike, DateTime expiration)
+        {
+            // Since a reverse conversion is an inverted conversion, we can just use the Conversion method and invert the legs
+            return InvertStrategy(Conversion(canonicalOption, strike, expiration), OptionStrategyDefinitions.ReverseConversion.Name);
+        }
+
+        /// <summary>
         /// Creates a Naked Call strategy that consists of selling 1 call contract.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
