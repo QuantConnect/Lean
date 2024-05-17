@@ -770,7 +770,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(((TradeBar)fillForwardEnumerator.Current).Period == expectedBarPeriod);
             Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
-            Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(!strictEndTimes, fillForwardEnumerator.MoveNext());
             fillForwardEnumerator.Dispose();
         }
 

@@ -1370,11 +1370,7 @@ namespace QuantConnect.Util
         public static DateTime GetNextDailyEndTime(Symbol symbol, DateTime exchangeTimeZoneDate, SecurityExchangeHours exchangeHours)
         {
             var nextMidnight = exchangeTimeZoneDate.Date.AddDays(1);
-            if (exchangeHours.IsMarketAlwaysOpen
-                // the cases have market hours which cross multiple days
-                || symbol.SecurityType == SecurityType.Cfd && symbol.ID.Market == Market.Oanda
-                || symbol.SecurityType == SecurityType.Forex
-                || symbol.SecurityType == SecurityType.Base)
+            if (!UseStrictEndTime(true, symbol, Time.OneDay, exchangeHours))
             {
                 return nextMidnight;
             }
@@ -1407,9 +1403,10 @@ namespace QuantConnect.Util
         /// <param name="symbol">The associated symbol</param>
         /// <param name="increment">The datas time increment</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool UseStrictEndTime(bool dailyStrictEndTimeEnabled, Symbol symbol, TimeSpan increment)
+        public static bool UseStrictEndTime(bool dailyStrictEndTimeEnabled, Symbol symbol, TimeSpan increment, SecurityExchangeHours exchangeHours)
         {
-            if (increment != Time.OneDay
+            if (exchangeHours.IsMarketAlwaysOpen
+                || increment != Time.OneDay
                 || symbol.SecurityType == SecurityType.Cfd && symbol.ID.Market == Market.Oanda
                 || symbol.SecurityType == SecurityType.Forex
                 || symbol.SecurityType == SecurityType.Base)
@@ -1419,9 +1416,12 @@ namespace QuantConnect.Util
             return dailyStrictEndTimeEnabled;
         }
 
+        /// <summary>
+        /// Helper method to determine if we should use strict end time
+        /// </summary>
         public static bool UseDailyStrictEndTimes(IAlgorithmSettings settings, BaseDataRequest request, Symbol symbol, TimeSpan increment)
         {
-            return !request.ExchangeHours.IsMarketAlwaysOpen && UseStrictEndTime(settings.DailyStrictEndTimeEnabled, symbol, increment);
+            return UseStrictEndTime(settings.DailyStrictEndTimeEnabled, symbol, increment, request.ExchangeHours);
         }
 
         /// <summary>

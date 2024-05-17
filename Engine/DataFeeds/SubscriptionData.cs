@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             data = data.Clone(data.IsFillForward);
             var emitTimeUtc = offsetProvider.ConvertToUtc(data.EndTime);
             // rounding down does not make sense for daily increments using strict end times
-            if (!LeanData.UseStrictEndTime(dailyStrictEndTimeEnabled, configuration.Symbol, configuration.Increment))
+            if (!LeanData.UseStrictEndTime(dailyStrictEndTimeEnabled, configuration.Symbol, configuration.Increment, exchangeHours))
             {
                 // Let's round down for any data source that implements a time delta between
                 // the start of the data and end of the data (usually used with Bars).

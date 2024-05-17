@@ -181,7 +181,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The loaded <see cref="IDataQueueHandler"/></returns>
         protected virtual IDataQueueHandler GetDataQueueHandler()
         {
-            var result = new DataQueueHandlerManager();
+            var result = new DataQueueHandlerManager(_algorithm.Settings);
             result.UnsupportedConfiguration += HandleUnsupportedConfigurationEvent;
             return result;
         }

@@ -15,12 +15,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 
 namespace QuantConnect.Data
 {
     /// <summary>
     /// Aggregates ticks and bars based on given subscriptions.
     /// </summary>
+    [InheritedExport(typeof(IDataAggregator))]
     public interface IDataAggregator : IDisposable
     {
         /// <summary>

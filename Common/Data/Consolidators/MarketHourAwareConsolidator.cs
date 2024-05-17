@@ -168,7 +168,7 @@ namespace QuantConnect.Data.Common
                 ExchangeHours = marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
                 DataTimeZone = marketHoursDatabase.GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
 
-                _useStrictEndTime = !ExchangeHours.IsMarketAlwaysOpen && UseStrictEndTime(data.Symbol);
+                _useStrictEndTime = UseStrictEndTime(data.Symbol);
             }
         }
 
@@ -189,7 +189,7 @@ namespace QuantConnect.Data.Common
         /// </summary>
         protected virtual bool UseStrictEndTime(Symbol symbol)
         {
-            return LeanData.UseStrictEndTime(_dailyStrictEndTimeEnabled, symbol, Period);
+            return LeanData.UseStrictEndTime(_dailyStrictEndTimeEnabled, symbol, Period, ExchangeHours);
         }
 
         /// <summary>

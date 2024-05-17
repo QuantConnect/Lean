@@ -86,38 +86,66 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler?.DisposeSafely();
         }
 
-        [TestCase(false)]
-        [TestCase(true)]
-        public void StreamsDailyData(bool strictEndTimes)
+        [TestCase(false, true)]
+        [TestCase(true, true)]
+        [TestCase(false, false)]
+        [TestCase(true, false)]
+        public void StreamsDailyData(bool strictEndTimes, bool warmup)
         {
+            _startDate = new DateTime(2014, 3, 27, 10, 0, 0);
             _algorithm.Settings.DailyStrictEndTimeEnabled = strictEndTimes;
-
-            _startDate = new DateTime(2024, 5, 15, 14, 0, 0);
+            _algorithm.SetStartDate(_startDate);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate.ConvertToUtc(TimeZones.NewYork));
             var endDate = _startDate.AddDays(1);
 
+            _algorithm.SetBenchmark(x => 1);
+            if (warmup)
+            {
+                _algorithm.SetWarmUp(TimeSpan.FromDays(2));
+            }
             var feed = RunDataFeed();
             _algorithm.AddEquity("SPY", Resolution.Daily);
             _algorithm.OnEndOfTimeStep();
 
-            DateTime _emissionTime = default;
-            var emittedData = false;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(500), true, ts =>
+            List<DateTime> emittedDataTime = new();
+            List<BaseData> emittedData = new();
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
                 if (ts.Slice.HasData)
                 {
-                    _emissionTime = _manualTimeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
-                    emittedData = true;
                     var data = ts.Slice[Symbols.SPY];
+                    if (data == null)
+                    {
+                        return;
+                    }
+                    emittedDataTime.Add(_algorithm.Time);
+                    emittedData.Add(data);
 
-                    // we got what we wanted shortcut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                    if (warmup && emittedData.Count == 3 || !warmup && emittedData.Count == 1)
+                    {
+                        // short cut
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                    }
                 }
             }, endDate: endDate,
-            secondsTimeStep: 60);
+            secondsTimeStep: 60 * 60);
 
-            Assert.IsTrue(emittedData);
-            Assert.AreEqual(strictEndTimes ? _startDate.Date.AddHours(16) : _startDate.Date.AddDays(1), _emissionTime);
+            for (var i = 0; i < emittedDataTime.Count; i++)
+            {
+                Assert.AreEqual(emittedDataTime[i], emittedData[i].EndTime);
+            }
+
+            if (warmup)
+            {
+                Assert.AreEqual(3, emittedData.Count);
+                Assert.AreEqual(strictEndTimes ? _startDate.Date.AddDays(-2).AddHours(16) : _startDate.Date.AddDays(-1), emittedData[0].EndTime);
+                Assert.AreEqual(strictEndTimes ? _startDate.Date.AddDays(-1).AddHours(16) : _startDate.Date, emittedData[1].EndTime);
+            }
+            else
+            {
+                Assert.AreEqual(1, emittedData.Count);
+            }
+            Assert.AreEqual(strictEndTimes ? _startDate.Date.AddHours(16) : _startDate.Date.AddDays(1), emittedData.Last().EndTime);
         }
 
         [TestCase(SecurityType.Option, Resolution.Daily, 0, true)]
@@ -204,9 +232,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     return x;
                 });
             }
+            _algorithm.OnEndOfTimeStep();
 
             // allow time for the exchange to pick up the selection point
-            Thread.Sleep(50);
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts => {
                 if (selectionHappened == 2)
                 {
@@ -215,7 +243,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             },
             endDate: endDate,
-            secondsTimeStep: 60 * 60 * 10);
+            secondsTimeStep: 60 * 60 * 4);
 
             Assert.AreEqual(2, selectionHappened);
         }
@@ -1959,7 +1987,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void CustomUniverseFineFundamentalDataGetsPipedCorrectly()
         {
-            _startDate = new DateTime(2014, 10, 07);
+            _startDate = new DateTime(2014, 10, 07, 15, 0, 0);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
 
             // we use test ConstituentsUniverse, we have daily data for it
@@ -2000,7 +2028,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     // short cut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
-            }, secondsTimeStep: 60 * 60 * 4, // 6 hour time step
+            }, secondsTimeStep: 60 * 60,
                 alwaysInvoke: true,
                 sendUniverseData: true,
                 endDate:_startDate.AddDays(10));
@@ -2685,6 +2713,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return fdqh.SubscriptionDataConfigs.Where(config => !_algorithm.UniverseManager.ContainsKey(config.Symbol)) // its not a universe
                     .SelectMany(config =>
                         {
+                            if (_algorithm.IsWarmingUp)
+                            {
+                                return Enumerable.Empty<Tick>();
+                            }
                             var ticks = new List<Tick>
                             {
                                 new Tick(tickTimeUtc.ConvertFromUtc(config.ExchangeTimeZone), config.Symbol, 1, 2)

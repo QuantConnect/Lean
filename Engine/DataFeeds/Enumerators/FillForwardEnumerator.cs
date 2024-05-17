@@ -187,7 +187,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         return false;
                     }
 
-                    if (Current != null && Current.EndTime == endOfSubscription.EndTime || endOfSubscription.EndTime > _subscriptionEndTime)
+                    if (Current != null && Current.EndTime == endOfSubscription.EndTime
+                        // TODO this changes stats, why would the FF enumerator emit a data point beyoned the end time he was requested
+                        //|| endOfSubscription.EndTime > _subscriptionEndTime
+                        )
                     {
                         return false;
                     }

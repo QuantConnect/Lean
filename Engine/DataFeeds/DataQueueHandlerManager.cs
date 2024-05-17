@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Packets;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -32,7 +33,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class DataQueueHandlerManager : IDataQueueHandler, IDataQueueUniverseProvider
     {
         private ITimeProvider _frontierTimeProvider;
+        private readonly IAlgorithmSettings _algorithmSettings;
         private readonly Dictionary<SubscriptionDataConfig, Queue<IDataQueueHandler>> _dataConfigAndDataHandler = new();
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        public DataQueueHandlerManager(IAlgorithmSettings settings)
+        {
+            _algorithmSettings = settings;
+        }
 
         /// <summary>
         /// Collection of data queue handles being used
@@ -58,6 +68,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(dataConfig.Symbol.ID.Market, dataConfig.Symbol, dataConfig.Symbol.SecurityType);
             foreach (var dataHandler in DataHandlers)
             {
                 // Emit ticks & custom data as soon as we get them, they don't need any kind of batching behavior applied to them
@@ -90,6 +101,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (immediateEmission)
                     {
                         return enumerator;
+                    }
+
+                    if (LeanData.UseStrictEndTime(_algorithmSettings.DailyStrictEndTimeEnabled, dataConfig.Symbol, dataConfig.Increment, exchangeHours))
+                    {
+                        // before the first frontier enumerator we adjust the endtimes if required
+                        enumerator = new StrictDailyEndTimesEnumerator(enumerator, exchangeHours);
                     }
 
                     return new FrontierAwareEnumerator(enumerator, _frontierTimeProvider,

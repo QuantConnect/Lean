@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 DataQueueHandler = dataHandlers
             };
-            var compositeDataQueueHandler = new DataQueueHandlerManager();
+            var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
             compositeDataQueueHandler.SetJob(jobWithArrayIDQH);
             compositeDataQueueHandler.Dispose();
         }
@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void SubscribeReturnsNull()
         {
-            var compositeDataQueueHandler = new DataQueueHandlerManager();
+            var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
             var enumerator = compositeDataQueueHandler.Subscribe(GetConfig(), (_, _) => {});
             Assert.Null(enumerator);
             compositeDataQueueHandler.Dispose();
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 DataQueueHandler = dataHandlers
             };
-            var compositeDataQueueHandler = new DataQueueHandlerManager();
+            var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
             compositeDataQueueHandler.SetJob(job);
             var enumerator = compositeDataQueueHandler.Subscribe(GetConfig(), (_, _) => {});
             Assert.NotNull(enumerator);
@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void Unsubscribe()
         {
-            var compositeDataQueueHandler = new DataQueueHandlerManager();
+            var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
             compositeDataQueueHandler.Unsubscribe(GetConfig());
             compositeDataQueueHandler.Dispose();
         }
@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void IsNotUniverseProvider()
         {
-            var compositeDataQueueHandler = new DataQueueHandlerManager();
+            var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
             Assert.IsFalse(compositeDataQueueHandler.HasUniverseProvider);
             Assert.Throws<NotSupportedException>(() => compositeDataQueueHandler.LookupSymbols(Symbols.ES_Future_Chain, false));
             Assert.Throws<NotSupportedException>(() => compositeDataQueueHandler.CanPerformSelection());
@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void DoubleSubscribe()
         {
-            var compositeDataQueueHandler = new DataQueueHandlerManager();
+            var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
             compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" });
 
             var dataConfig = GetConfig();
@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void SingleSubscribe()
         {
             TestDataHandler.UnsubscribeCounter = 0;
-            var compositeDataQueueHandler = new DataQueueHandlerManager();
+            var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
             compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" });
 
             var dataConfig = GetConfig();
@@ -133,7 +133,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             TestDataHandler.UnsubscribeCounter = 0;
             TestDataHandler.SubscribeCounter = 0;
-            var compositeDataQueueHandler = new DataQueueHandlerManager();
+            var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
             compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" });
 
             var canonicalSymbol = Symbols.ES_Future_Chain.UpdateMappedSymbol(Symbols.Future_ESZ18_Dec2018.ID.ToString());
