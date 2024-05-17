@@ -1171,13 +1171,13 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 102500m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 0m, -10),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, -102520m, -20),
-            // Initial margin requirement (including premium) for ProtectiveCollar with quantity 10 and -10 is 192500m and 284880m respectively
+            // Initial margin requirement (including premium) for ProtectiveCollar with quantity 10 and -10 is 192500m and 284480m respectively
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 192500m * 11 / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 192500m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 0m, -10),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -284880m, -20),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 284880m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 284880m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -284480m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 284480m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 284480m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 0m, -10),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -192500m, -20),
             // Initial margin requirement (including premium) for BearCallSpread with quantity 10 and -10 is 10000 and 12000 respectively
