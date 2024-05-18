@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             var algorithm = new QCAlgorithm();
-            CreateDataFeed();
+            CreateDataFeed(algorithm.Settings);
             var dataManager = new DataManagerStub(algorithm, _feed);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
 
@@ -225,7 +225,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 };
                 return new[] { tick, tick2 };
             }, timeProvider, algorithm.Settings);
-            CreateDataFeed(dataQueueHandler);
+            CreateDataFeed(algorithm.Settings, dataQueueHandler);
             var dataManager = new DataManagerStub(algorithm, _feed);
 
             algorithm.SubscriptionManager.SetDataManager(dataManager);
@@ -309,7 +309,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
             timeProvider.SetCurrentTime(startDate);
 
-            CreateDataFeed();
+            CreateDataFeed(algorithm.Settings);
             var dataManager = new DataManagerStub(algorithm, _feed);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
 
@@ -374,10 +374,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(slicesEmitted, dataPointsEmitted);
         }
 
-        private void CreateDataFeed(
+        private void CreateDataFeed(IAlgorithmSettings settings,
             FuncDataQueueHandler funcDataQueueHandler = null)
         {
-            _feed = new TestableLiveTradingDataFeed(funcDataQueueHandler ?? new FuncDataQueueHandler(x => Enumerable.Empty<BaseData>(), RealTimeProvider.Instance, new AlgorithmSettings()));
+            _feed = new TestableLiveTradingDataFeed(settings, funcDataQueueHandler ?? new FuncDataQueueHandler(x => Enumerable.Empty<BaseData>(), RealTimeProvider.Instance, new AlgorithmSettings()));
         }
 
         private void RunLiveDataFeed(

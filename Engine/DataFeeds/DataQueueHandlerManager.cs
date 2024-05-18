@@ -48,7 +48,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Collection of data queue handles being used
         /// </summary>
         /// <remarks>Protected for testing purposes</remarks>
-        protected List<IDataQueueHandler> DataHandlers { get; } = new();
+        protected List<IDataQueueHandler> DataHandlers { get; set; } = new();
 
         /// <summary>
         /// True if the composite queue handler has any <see cref="IDataQueueUniverseProvider"/> instance
@@ -159,7 +159,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 DataHandlers.Add(dataHandler);
             }
 
-            InitializeFrontierTimeProvider();
+            _frontierTimeProvider = InitializeFrontierTimeProvider();
         }
 
         /// <summary>
@@ -214,14 +214,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Creates the frontier time provider instance
         /// </summary>
         /// <remarks>Protected for testing purposes</remarks>
-        protected void InitializeFrontierTimeProvider()
+        protected virtual ITimeProvider InitializeFrontierTimeProvider()
         {
             var timeProviders = DataHandlers.OfType<ITimeProvider>().ToList();
             if (timeProviders.Any())
             {
                 Log.Trace($"DataQueueHandlerManager.InitializeFrontierTimeProvider(): will use the following IDQH frontier time providers: [{string.Join(",", timeProviders.Select(x => x.GetType()))}]");
-                _frontierTimeProvider = new CompositeTimeProvider(timeProviders);
+                return new CompositeTimeProvider(timeProviders);
             }
+            return null;
         }
 
         private IEnumerable<IDataQueueUniverseProvider> GetUniverseProviders()

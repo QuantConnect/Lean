@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             compositeDataQueueHandler.Dispose();
         }
 
-        private class TestDataQueueHandler : IDataQueueHandler
+        internal class TestDataQueueHandler : IDataQueueHandler
         {
             public bool IsConnected => true;
 

@@ -40,6 +40,7 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Util;
+using static QuantConnect.Tests.Engine.DataFeeds.Enumerators.LiveSubscriptionEnumeratorTests;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -86,11 +87,55 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler?.DisposeSafely();
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void EmitsStreamedDailyData(bool strictEndTimes)
+        {
+            _startDate = new DateTime(2014, 3, 27, 14, 0, 0);
+            _algorithm.SetStartDate(_startDate);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate.ConvertToUtc(TimeZones.NewYork));
+
+            var symbol = Symbols.SPY;
+            _algorithm.Settings.DailyStrictEndTimeEnabled = strictEndTimes;
+            _algorithm.SetBenchmark(x => 1);
+
+            var dqh = new TestDataQueueHandler
+            {
+                DataPerSymbol =  new Dictionary<Symbol, List<BaseData>>
+                {
+                    {
+                        symbol, new List<BaseData> { new TradeBar(_algorithm.StartDate, symbol, 1, 5, 1, 3, 100, Time.OneDay) }
+                    }
+                }
+            };
+            var feed = RunDataFeed(Resolution.Daily, dataQueueHandler: dqh, equities: new() { "SPY" });
+            _algorithm.OnEndOfTimeStep();
+
+            DateTime emittedDataTime = default;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                if (ts.Slice.HasData)
+                {
+                    var data = ts.Slice[Symbols.SPY];
+                    if (data == null)
+                    {
+                        return;
+                    }
+                    emittedDataTime = _algorithm.Time;
+                    // short cut
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            }, endDate: _startDate.AddDays(1),
+            secondsTimeStep: 60 * 10);
+
+            Assert.AreEqual(strictEndTimes ? _startDate.Date.AddHours(16) : _startDate.Date.AddDays(1), emittedDataTime);
+        }
+
         [TestCase(false, true)]
         [TestCase(true, true)]
         [TestCase(false, false)]
         [TestCase(true, false)]
-        public void StreamsDailyData(bool strictEndTimes, bool warmup)
+        public void EmitsLeanAggregatedDailyData(bool strictEndTimes, bool warmup)
         {
             _startDate = new DateTime(2014, 3, 27, 10, 0, 0);
             _algorithm.Settings.DailyStrictEndTimeEnabled = strictEndTimes;
@@ -235,6 +280,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.OnEndOfTimeStep();
 
             // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts => {
                 if (selectionHappened == 2)
                 {
@@ -243,7 +289,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             },
             endDate: endDate,
-            secondsTimeStep: 60 * 60 * 4);
+            secondsTimeStep: 60 * 60 * 2);
 
             Assert.AreEqual(2, selectionHappened);
         }
@@ -2310,7 +2356,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // result handler is used due to dependency in SubscriptionDataReader
             var resultHandler = new BacktestingResultHandler();
 
-            _feed = new TestableLiveTradingDataFeed();
+            _feed = new TestableLiveTradingDataFeed(algorithm.Settings);
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
 
@@ -2736,38 +2782,42 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // result handler is used due to dependency in SubscriptionDataReader
             var resultHandler = new BacktestingResultHandler();
 
-            _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction,
-                lookupSymbolsFunction ?? ((symbol, _, _) =>
-                {
-                    var date = _manualTimeProvider.GetUtcNow()
-                        .ConvertFromUtc(MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone)
-                        .Date;
-
-                    var symbols = new List<Symbol>();
-                    for (var i = 0; i < 4; i++)
+            if (dataQueueHandler == null)
+            {
+                _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction,
+                    lookupSymbolsFunction ?? ((symbol, _, _) =>
                     {
-                        if (symbol.SecurityType.IsOption())
+                        var date = _manualTimeProvider.GetUtcNow()
+                            .ConvertFromUtc(MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone)
+                            .Date;
+
+                        var symbols = new List<Symbol>();
+                        for (var i = 0; i < 4; i++)
                         {
-                            foreach (var optionRight in new[] { OptionRight.Call, OptionRight.Put })
+                            if (symbol.SecurityType.IsOption())
                             {
-                                symbols.Add(Symbol.CreateOption(symbol.Underlying ?? symbol,
-                                    symbol.ID.Market,
-                                    symbol.SecurityType.DefaultOptionStyle(),
-                                    optionRight,
-                                    i,
-                                    date.AddDays(i)));
+                                foreach (var optionRight in new[] { OptionRight.Call, OptionRight.Put })
+                                {
+                                    symbols.Add(Symbol.CreateOption(symbol.Underlying ?? symbol,
+                                        symbol.ID.Market,
+                                        symbol.SecurityType.DefaultOptionStyle(),
+                                        optionRight,
+                                        i,
+                                        date.AddDays(i)));
+                                }
+                            }
+                            else
+                            {
+                                symbols.Add(Symbol.CreateFuture(symbol.ID.Symbol, symbol.ID.Market, date.AddDays(i)));
                             }
                         }
-                        else
-                        {
-                            symbols.Add(Symbol.CreateFuture(symbol.ID.Symbol, symbol.ID.Market, date.AddDays(i)));
-                        }
-                    }
-                    return symbols;
-                }),
-                canPerformSelection ?? (() => true), _manualTimeProvider, _algorithm.Settings);
+                        return symbols;
+                    }),
+                    canPerformSelection ?? (() => true), _manualTimeProvider, _algorithm.Settings);
+            }
 
-            _feed = new TestableLiveTradingDataFeed(dataQueueHandler ?? _dataQueueHandler);
+            _feed = new TestableLiveTradingDataFeed(_algorithm.Settings, dataQueueHandler ?? _dataQueueHandler);
+            _feed.TestDataQueueHandlerManager.TimeProvider = _manualTimeProvider;
             var fileProvider = TestGlobals.DataProvider;
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
@@ -2789,7 +2839,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             _feed.Initialize(_algorithm, job, resultHandler, TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider, fileProvider, _dataManager, _synchronizer, new TestDataChannelProvider());
-
             if (runPostInitialize)
             {
                 _algorithm.PostInitialize();
@@ -3076,7 +3125,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return dataPoints;
             }, timeProvider, algorithm.Settings);
 
-            _feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
+            _feed = new TestableLiveTradingDataFeed(algorithm.Settings, _dataQueueHandler);
 
             algorithm.SetDateTime(timeProvider.GetUtcNow());
 
@@ -3597,7 +3646,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 },
                 timeProvider, algorithm.Settings);
 
-            _feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
+            _feed = new TestableLiveTradingDataFeed(_algorithm.Settings, _dataQueueHandler);
 
             algorithm.SetDateTime(timeProvider.GetUtcNow());
             algorithm.SetBenchmark(t => 0);
@@ -3896,10 +3945,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     internal class TestableLiveTradingDataFeed : LiveTradingDataFeed
     {
         public IDataQueueHandler DataQueueHandler;
+        public TestDataQueueHandlerManager TestDataQueueHandlerManager;
 
-        public TestableLiveTradingDataFeed(IDataQueueHandler dataQueueHandler = null)
+        public TestableLiveTradingDataFeed(IAlgorithmSettings settings, IDataQueueHandler dataQueueHandler = null)
         {
             DataQueueHandler = dataQueueHandler;
+            TestDataQueueHandlerManager = new (new[] { DataQueueHandler }, settings);
         }
 
         protected override BaseDataExchange GetBaseDataExchange()
@@ -3911,13 +3962,28 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         protected override IDataQueueHandler GetDataQueueHandler()
         {
-            return DataQueueHandler;
+            return TestDataQueueHandlerManager;
         }
 
         public override void Exit()
         {
             base.Exit();
             DataQueueHandler.DisposeSafely();
+        }
+    }
+
+    internal class TestDataQueueHandlerManager : DataQueueHandlerManager
+    {
+        public ITimeProvider TimeProvider { get; set; }
+
+        public TestDataQueueHandlerManager(IEnumerable<IDataQueueHandler> dataQueueHandlers, IAlgorithmSettings settings)
+            : base(settings)
+        {
+            DataHandlers = dataQueueHandlers.ToList();
+        }
+        protected override ITimeProvider InitializeFrontierTimeProvider()
+        {
+            return TimeProvider;
         }
     }
 

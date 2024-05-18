@@ -206,7 +206,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
-            var useDailyStrictEndTimes = false;
 
             IEnumerator<BaseData> enumerator = null;
             if (!_channelProvider.ShouldStreamSubscription(request.Configuration))
@@ -243,14 +242,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 EventHandler handler = (_, _) => subscription?.OnNewDataAvailable();
                 enumerator = Subscribe(request.Configuration, handler, IsExpired);
 
-                useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
-                if (useDailyStrictEndTimes)
-                {
-                    // before the 'FrontierAwareEnumerator' so we can adjust the end times if appropriate,
-                    // also before 'LiveAuxiliaryDataSynchronizingEnumerator' which has an internal frontier check which it uses to emit aux when required without blocking the feed
-                    enumerator = new StrictDailyEndTimesEnumerator(enumerator, request.ExchangeHours);
-                }
-
                 if (auxEnumerators.Count > 0)
                 {
                     enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators);
@@ -271,6 +262,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (request.Configuration.FillDataForward)
             {
                 var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
+                var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
 
                 enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours,
                     localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone, useDailyStrictEndTimes);
@@ -374,15 +366,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating option chain universe: " + config.Symbol.ID);
 
-                var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
                 Func<SubscriptionRequest, IEnumerator<BaseData>> configure = (subRequest) =>
                 {
+                    var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
                     var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
                     var input = Subscribe(subRequest.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), (_) => false);
-                    if (LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment))
-                    {
-                        input = new StrictDailyEndTimesEnumerator(input, request.ExchangeHours);
-                    }
                     return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours,
                         localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone, useDailyStrictEndTimes);
                 };
