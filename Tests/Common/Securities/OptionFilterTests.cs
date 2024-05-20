@@ -447,7 +447,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 02, 26) };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.FrontMonth();
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.IncludeWeeklys().FrontMonth();
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
@@ -481,7 +481,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 02, 26) };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.BackMonth();
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.IncludeWeeklys().BackMonth();
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
                 universe => universeFunc(universe as OptionFilterUniverse);
