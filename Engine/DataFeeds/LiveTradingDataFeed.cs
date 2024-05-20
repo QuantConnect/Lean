@@ -265,7 +265,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
 
                 enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours,
-                    localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone, useDailyStrictEndTimes);
+                    localEndTime, request.Configuration.Resolution, request.Configuration.DataTimeZone, useDailyStrictEndTimes);
             }
 
             // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
@@ -372,7 +372,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
                     var input = Subscribe(subRequest.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), (_) => false);
                     return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours,
-                        localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone, useDailyStrictEndTimes);
+                        localEndTime, subRequest.Configuration.Resolution, subRequest.Configuration.DataTimeZone, useDailyStrictEndTimes);
                 };
 
                 var symbolUniverse = GetUniverseProvider(request.Configuration.SecurityType);

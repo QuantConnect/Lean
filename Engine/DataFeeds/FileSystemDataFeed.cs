@@ -333,7 +333,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardSpan, request.Configuration.ExtendedMarketHours, request.EndTimeLocal,
-                    request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone, useDailyStrictEndTimes);
+                    request.Configuration.Increment, request.Configuration.DataTimeZone, useDailyStrictEndTimes);
             }
 
             return enumerator;
