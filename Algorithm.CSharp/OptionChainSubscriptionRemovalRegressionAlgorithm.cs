@@ -50,9 +50,9 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (_optionCount != 30)
+            if (_optionCount != 45)
             {
-                throw new Exception($"Unexpected option count {_optionCount}, expected 30");
+                throw new Exception($"Unexpected option count {_optionCount}, expected 45");
             }
         }
 
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 112057601;
+        public long DataPoints => 112808126;
 
         /// <summary>
         /// Data Points count of the algorithm history
