@@ -53,7 +53,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 null,
                 false,
                 new DataPermissionManager(),
-                null));
+                null,
+                new AlgorithmSettings()));
         }
 
         [TearDown]

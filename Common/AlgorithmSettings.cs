@@ -133,6 +133,11 @@ namespace QuantConnect
         public int? TradingDaysPerYear { get; set; }
 
         /// <summary>
+        /// True if daily strict end times are enabled
+        /// </summary>
+        public bool DailyStrictEndTimeEnabled { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
         /// </summary>
         public AlgorithmSettings()

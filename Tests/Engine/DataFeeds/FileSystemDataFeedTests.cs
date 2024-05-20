@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var resultHandler = new BacktestingResultHandler();
             using var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider, TestGlobals.DataCacheProvider, algorithm.ObjectStore, enablePriceScaling: false);
+                TestGlobals.FactorFileProvider, TestGlobals.DataCacheProvider, algorithm, enablePriceScaling: false);
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.Securities.Single().Value;
@@ -142,7 +142,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var resultHandler = new TestResultHandler();
             using var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider, TestGlobals.DataCacheProvider, algorithm.ObjectStore, enablePriceScaling: false);
+                TestGlobals.FactorFileProvider, TestGlobals.DataCacheProvider, algorithm, enablePriceScaling: false);
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.AddEquity("AAA", Resolution.Daily);

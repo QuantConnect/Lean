@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -64,11 +64,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// </summary>
         /// <param name="getNextTicksFunction">The functional implementation to get ticks function</param>
         /// <param name="timeProvider">The time provider to use</param>
-        public FuncDataQueueHandler(Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction, ITimeProvider timeProvider)
+        public FuncDataQueueHandler(Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction, ITimeProvider timeProvider, IAlgorithmSettings algorithmSettings)
         {
             _subscriptions = new HashSet<SubscriptionDataConfig>();
             _cancellationTokenSource = new CancellationTokenSource();
             _aggregationManager = new TestAggregationManager(timeProvider);
+            _aggregationManager.Initialize(new DataAggregatorInitializeParameters() { AlgorithmSettings = algorithmSettings });
             _subscriptionManager = new FakeDataQueuehandlerSubscriptionManager((t) => "quote-trade");
 
             Task.Factory.StartNew(() =>

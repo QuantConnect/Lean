@@ -217,6 +217,10 @@ namespace QuantConnect
             List<string> result = new();
             try
             {
+                if (string.IsNullOrEmpty(jsonArray))
+                {
+                    return result;
+                }
                 result = JsonConvert.DeserializeObject<List<string>>(jsonArray);
             }
             catch(JsonReaderException)

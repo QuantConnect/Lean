@@ -25,6 +25,7 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
@@ -1364,12 +1365,75 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Helper method to get the next daily end time, taking into account strict end times if appropriate
+        /// </summary>
+        public static DateTime GetNextDailyEndTime(Symbol symbol, DateTime exchangeTimeZoneDate, SecurityExchangeHours exchangeHours)
+        {
+            var nextMidnight = exchangeTimeZoneDate.Date.AddDays(1);
+            if (!UseStrictEndTime(true, symbol, Time.OneDay, exchangeHours))
+            {
+                return nextMidnight;
+            }
+
+            var nextMarketClose = exchangeHours.GetNextMarketClose(exchangeTimeZoneDate, extendedMarketHours: false);
+            if (nextMarketClose > nextMidnight)
+            {
+                // if exchangeTimeZoneDate is after the previous close, the next close might be tomorrow
+                if (!exchangeHours.IsOpen(exchangeTimeZoneDate, extendedMarketHours: false))
+                {
+                    return nextMarketClose;
+                }
+                return nextMidnight;
+            }
+            return nextMarketClose;
+        }
+
+        /// <summary>
         /// Helper method that defines the types of options that should use scale factor
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool OptionUseScaleFactor(Symbol symbol)
         {
             return symbol.SecurityType == SecurityType.Option || symbol.SecurityType == SecurityType.IndexOption;
+        }
+
+        /// <summary>
+        /// Helper method to determine if we should use strict end time
+        /// </summary>
+        /// <param name="symbol">The associated symbol</param>
+        /// <param name="increment">The datas time increment</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool UseStrictEndTime(bool dailyStrictEndTimeEnabled, Symbol symbol, TimeSpan increment, SecurityExchangeHours exchangeHours)
+        {
+            if (exchangeHours.IsMarketAlwaysOpen
+                || increment != Time.OneDay
+                || symbol.SecurityType == SecurityType.Cfd && symbol.ID.Market == Market.Oanda
+                || symbol.SecurityType == SecurityType.Forex
+                || symbol.SecurityType == SecurityType.Base)
+            {
+                return false;
+            }
+            return dailyStrictEndTimeEnabled;
+        }
+
+        /// <summary>
+        /// Helper method to determine if we should use strict end time
+        /// </summary>
+        public static bool UseDailyStrictEndTimes(IAlgorithmSettings settings, BaseDataRequest request, Symbol symbol, TimeSpan increment)
+        {
+            return UseStrictEndTime(settings.DailyStrictEndTimeEnabled, symbol, increment, request.ExchangeHours);
+        }
+
+        /// <summary>
+        /// Helper method that if appropiate, will set the Time and EndTime of the given data point to it's daily strict times
+        /// </summary>
+        /// <param name="baseData">The target data point</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void SetStrictEndTimes(IBaseData baseData, SecurityExchangeHours exchange)
+        {
+            var dailyCalendar = GetDailyCalendar(baseData.EndTime, exchange, extendedMarketHours: false);
+            baseData.Time = dailyCalendar.Start;
+            baseData.EndTime = dailyCalendar.End;
         }
 
         /// <summary>

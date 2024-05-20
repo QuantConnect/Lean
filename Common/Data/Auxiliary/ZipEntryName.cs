@@ -23,12 +23,34 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class ZipEntryName : BaseData
     {
+        private DateTime _endTime;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ZipEntryName"/> class
         /// </summary>
         public ZipEntryName()
         {
             DataType = MarketDataType.Auxiliary;
+        }
+
+        /// <summary>
+        /// Gets or sets the end time of this data
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get
+            {
+                if (_endTime == default)
+                {
+                    // to be user friendly let's return Time if not set, like BaseData does
+                    return Time;
+                }
+                return _endTime;
+            }
+            set
+            {
+                _endTime = value;
+            }
         }
 
         /// <summary>

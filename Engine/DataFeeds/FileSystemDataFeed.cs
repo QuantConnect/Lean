@@ -81,7 +81,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _mapFileProvider,
                 _factorFileProvider,
                 _cacheProvider,
-                algorithm.ObjectStore,
+                algorithm,
                 enablePriceScaling: false);
 
             IsActive = true;
@@ -171,9 +171,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // for user defined universe we do not use a worker task, since calls to AddData can happen in any moment
                 // and we have to be able to inject selection data points into the enumerator
-                return SubscriptionUtils.Create(request, enumerator);
+                return SubscriptionUtils.Create(request, enumerator, _algorithm.Settings.DailyStrictEndTimeEnabled);
             }
-            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true);
+            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true, _algorithm.Settings.DailyStrictEndTimeEnabled);
         }
 
         /// <summary>
@@ -212,6 +212,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var result = new BaseDataSubscriptionEnumeratorFactory(_algorithm.OptionChainProvider, _algorithm.FutureChainProvider)
                     .CreateEnumerator(request, _dataProvider);
+
+                if (LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment))
+                {
+                    result = new StrictDailyEndTimesEnumerator(result, request.ExchangeHours);
+                }
                 result = ConfigureEnumerator(request, true, result, fillForwardResolution);
                 return TryAppendUnderlyingEnumerator(request, result, createUnderlyingEnumerator, fillForwardResolution);
             }
@@ -326,8 +331,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     fillForwardSpan = Ref.Create(fillForwardResolution.Value.ToTimeSpan());
                 }
 
-                enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardSpan,
-                    request.Configuration.ExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone);
+                var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
+                enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardSpan, request.Configuration.ExtendedMarketHours, request.EndTimeLocal,
+                    request.Configuration.Increment, request.Configuration.DataTimeZone, useDailyStrictEndTimes);
             }
 
             return enumerator;

@@ -84,8 +84,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                         fillForwardResolution,
                         false,
                         Time.EndOfTime,
-                        Resolution.Minute.ToTimeSpan(),
-                        TimeZones.Utc);
+                        Resolution.Minute,
+                        TimeZones.Utc, false);
                 };
             var factory = new OptionChainUniverseSubscriptionEnumeratorFactory(underlyingEnumeratorFunc, symbolUniverse, timeProvider);
 

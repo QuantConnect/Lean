@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Algorithm
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null,
                 TestGlobals.DataProvider, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
-                null, true, new DataPermissionManager(), _algorithm.ObjectStore));
+                null, true, new DataPermissionManager(), _algorithm.ObjectStore, _algorithm.Settings));
             _algorithm.SetHistoryProvider(historyProvider);
 
             _algorithm.SetDateTime(new DateTime(2013, 10, 11, 15, 0, 0));

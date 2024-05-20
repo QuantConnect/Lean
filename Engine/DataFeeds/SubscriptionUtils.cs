@@ -40,7 +40,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A new subscription instance ready to consume</returns>
         public static Subscription Create(
             SubscriptionRequest request,
-            IEnumerator<BaseData> enumerator)
+            IEnumerator<BaseData> enumerator,
+            bool dailyStrictEndTimeEnabled)
         {
             if (enumerator == null)
             {
@@ -53,7 +54,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 exchangeHours,
                 timeZoneOffsetProvider,
                 enumerator,
-                request.IsUniverseSubscription
+                request.IsUniverseSubscription,
+                dailyStrictEndTimeEnabled
             );
             return new Subscription(request, dataEnumerator, timeZoneOffsetProvider);
         }
@@ -71,7 +73,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             SubscriptionRequest request,
             IEnumerator<BaseData> enumerator,
             IFactorFileProvider factorFileProvider,
-            bool enablePriceScale)
+            bool enablePriceScale,
+            bool dailyStrictEndTimeEnabled)
         {
             if(enumerator == null)
             {
@@ -129,7 +132,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             request.Configuration.PriceScaleFactor = factorFile.GetPriceScale(lastTradableDate, requestMode, config.ContractDepthOffset, config.DataMappingMode);
                         }
 
-                        SubscriptionData subscriptionData = SubscriptionData.Create(
+                        SubscriptionData subscriptionData = SubscriptionData.Create(dailyStrictEndTimeEnabled,
                             config,
                             exchangeHours,
                             subscription.OffsetProvider,

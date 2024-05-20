@@ -562,7 +562,6 @@ namespace QuantConnect.Data.Market
             }
 
             quoteBar.Value = quoteBar.Close;
-
             return quoteBar;
         }
 
@@ -630,7 +629,6 @@ namespace QuantConnect.Data.Market
             }
 
             quoteBar.Value = quoteBar.Close;
-
             return quoteBar;
         }
 

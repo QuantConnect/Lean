@@ -165,7 +165,8 @@ namespace QuantConnect.Tests.Algorithm
                 null,
                 false,
                 new DataPermissionManager(),
-                algo.ObjectStore));
+                algo.ObjectStore,
+                algo.Settings));
             algo.SetStartDate(2013, 10, 08);
             algo.AddEquity("SPY", Resolution.Minute);
 

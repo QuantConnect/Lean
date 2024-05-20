@@ -15,11 +15,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -29,6 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class LiveFillForwardEnumerator : FillForwardEnumerator
     {
+        private readonly TimeSpan _underlyingTimeout;
         private readonly ITimeProvider _timeProvider;
 
         /// <summary>
@@ -45,10 +46,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="subscriptionEndTime">The end time of the subscription, once passing this date the enumerator will stop</param>
         /// <param name="dataResolution">The source enumerator's data resolution</param>
         /// <param name="dataTimeZone">Time zone of the underlying source data</param>
-        public LiveFillForwardEnumerator(ITimeProvider timeProvider, IEnumerator<BaseData> enumerator, SecurityExchange exchange, IReadOnlyRef<TimeSpan> fillForwardResolution, bool isExtendedMarketHours, DateTime subscriptionEndTime, TimeSpan dataResolution, DateTimeZone dataTimeZone)
-            : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution, dataTimeZone)
+        /// <param name="dailyStrictEndTimeEnabled">True if daily strict end times are enabled</param>
+        public LiveFillForwardEnumerator(ITimeProvider timeProvider, IEnumerator<BaseData> enumerator, SecurityExchange exchange, IReadOnlyRef<TimeSpan> fillForwardResolution,
+            bool isExtendedMarketHours, DateTime subscriptionEndTime, Resolution dataResolution, DateTimeZone dataTimeZone, bool dailyStrictEndTimeEnabled)
+            : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution.ToTimeSpan(), dataTimeZone, dailyStrictEndTimeEnabled)
         {
             _timeProvider = timeProvider;
+            _underlyingTimeout = GetMaximumDataTimeout(dataResolution);
         }
 
         /// <summary>
@@ -80,7 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             // the underlying enumerator returned null, check to see if time has passed for fill forwarding
-            if (nextExpectedDataPointTimeUtc <= _timeProvider.GetUtcNow())
+            if ((nextExpectedDataPointTimeUtc + _underlyingTimeout) <= _timeProvider.GetUtcNow())
             {
                 var clone = previous.Clone(true);
                 clone.Time = previous.Time + fillForwardResolution;
@@ -89,6 +93,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Helper method to know how much we should wait before fill forwarding a bar in live trading
+        /// </summary>
+        /// <remarks>This allows us to create bars taking into account the market auction close and open official prices. Also it will
+        /// allow data providers which might have some delay on creating the bars on their end, to be consumed correctly, when available, by Lean</remarks>
+        public static TimeSpan GetMaximumDataTimeout(Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Tick:
+                    return TimeSpan.Zero;
+                case Resolution.Second:
+                    return TimeSpan.FromSeconds(0.9);
+                case Resolution.Minute:
+                    return TimeSpan.FromMinutes(0.9);
+                case Resolution.Hour:
+                    return TimeSpan.FromMinutes(10);
+                case Resolution.Daily:
+                    return TimeSpan.FromMinutes(10);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
+            }
         }
     }
 }

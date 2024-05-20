@@ -181,7 +181,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The loaded <see cref="IDataQueueHandler"/></returns>
         protected virtual IDataQueueHandler GetDataQueueHandler()
         {
-            var result = new DataQueueHandlerManager();
+            var result = new DataQueueHandlerManager(_algorithm.Settings);
             result.UnsupportedConfiguration += HandleUnsupportedConfigurationEvent;
             return result;
         }
@@ -262,8 +262,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (request.Configuration.FillDataForward)
             {
                 var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
+                var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
 
-                enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone);
+                enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours,
+                    localEndTime, request.Configuration.Resolution, request.Configuration.DataTimeZone, useDailyStrictEndTimes);
             }
 
             // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
@@ -277,7 +279,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             enumerator = GetWarmupEnumerator(request, enumerator);
 
-            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider, enumerator, request.IsUniverseSubscription);
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider,
+                enumerator, request.IsUniverseSubscription, _algorithm.Settings.DailyStrictEndTimeEnabled);
             subscription = new Subscription(request, subscriptionDataEnumerator, timeZoneOffsetProvider);
 
             return subscription;
@@ -365,9 +368,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 Func<SubscriptionRequest, IEnumerator<BaseData>> configure = (subRequest) =>
                 {
+                    var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
                     var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
                     var input = Subscribe(subRequest.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), (_) => false);
-                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours, localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone);
+                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours,
+                        localEndTime, subRequest.Configuration.Resolution, subRequest.Configuration.DataTimeZone, useDailyStrictEndTimes);
                 };
 
                 var symbolUniverse = GetUniverseProvider(request.Configuration.SecurityType);
@@ -407,7 +412,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             enumerator = GetWarmupEnumerator(request, enumerator);
 
             // create the subscription
-            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, tzOffsetProvider, enumerator, request.IsUniverseSubscription);
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, tzOffsetProvider,
+                enumerator, request.IsUniverseSubscription, _algorithm.Settings.DailyStrictEndTimeEnabled);
             subscription = new Subscription(request, subscriptionDataEnumerator, tzOffsetProvider);
 
             return subscription;
@@ -512,7 +518,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var startTimeUtc = warmup.StartTimeUtc;
                     if (lastPointTracker != null && lastPointTracker.LastDataPoint != null)
                     {
-                        var utcLastPointTime = lastPointTracker.LastDataPoint.Time.ConvertToUtc(warmup.ExchangeHours.TimeZone);
+                        var lastPointExchangeTime = lastPointTracker.LastDataPoint.Time;
+                        if (warmup.Configuration.Resolution == Resolution.Daily)
+                        {
+                            // time could be 9.30 for example using strict daily end times, but we just want the date in this case
+                            lastPointExchangeTime = lastPointExchangeTime.Date;
+                        }
+
+                        var utcLastPointTime = lastPointExchangeTime.ConvertToUtc(warmup.ExchangeHours.TimeZone);
                         if (utcLastPointTime > startTimeUtc)
                         {
                             if (Log.DebuggingEnabled)

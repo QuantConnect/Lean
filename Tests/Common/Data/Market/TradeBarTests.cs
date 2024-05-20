@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -233,7 +233,7 @@ namespace QuantConnect.Tests.Common.Data.Market
             var expectedEndTime = new DateTime(2020, 9, 22, 12, 0, 0);
             if (resolution == Resolution.Daily)
             {
-                expectedEndTime = expectedEndTime.AddHours(-expectedEndTime.Hour);
+                expectedEndTime = new DateTime(2020, 9, 22, 0, 0, 0);
             }
             Assert.AreEqual(expectedEndTime, fromLine.EndTime);
             Assert.AreEqual(symbol, fromLine.Symbol);

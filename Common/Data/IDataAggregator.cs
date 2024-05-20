@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,14 +15,22 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 
 namespace QuantConnect.Data
 {
     /// <summary>
     /// Aggregates ticks and bars based on given subscriptions.
     /// </summary>
+    [InheritedExport(typeof(IDataAggregator))]
     public interface IDataAggregator : IDisposable
     {
+        /// <summary>
+        /// Initialize this instance
+        /// </summary>
+        /// <param name="parameters">The parameters dto instance</param>
+        void Initialize(DataAggregatorInitializeParameters parameters);
+
         /// <summary>
         /// Add new subscription to current <see cref="IDataAggregator"/> instance
         /// </summary>

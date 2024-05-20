@@ -55,7 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
         /// </summary>
         public FakeDataQueue()
-            : this(new AggregationManager())
+            : this(Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(nameof(AggregationManager)))
         {
 
         }

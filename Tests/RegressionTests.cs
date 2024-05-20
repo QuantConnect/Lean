@@ -91,7 +91,6 @@ namespace QuantConnect.Tests
                 { "OnOrderEventExceptionRegression", AlgorithmStatus.RuntimeError },
                 { "WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError },
                 { "CoarseFineAsyncUniverseRegressionAlgorithm", AlgorithmStatus.Running },
-                { "BasicTemplateIndexOptionsDailyAlgorithm", AlgorithmStatus.RuntimeError },    // daily index options supported but no data
                 { "ScaledRawDataNormalizationModeNotAllowedSecuritiesAlgorithm", AlgorithmStatus.Running }
             };
 

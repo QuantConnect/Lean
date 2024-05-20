@@ -38,6 +38,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private int _dataPointCount;
 
         /// <summary>
+        /// The algorithm settings instance to use
+        /// </summary>
+        public IAlgorithmSettings AlgorithmSettings { get; set; } = new AlgorithmSettings();
+
+        /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
         public override int DataPointCount => _dataPointCount;
@@ -129,6 +134,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
             var reader = history.GetEnumerator();
 
+            var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(AlgorithmSettings, request, config.Symbol, config.Increment);
+            if (useDailyStrictEndTimes)
+            {
+                reader = new StrictDailyEndTimesEnumerator(reader, request.ExchangeHours);
+            }
+
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)
             {
@@ -143,12 +154,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
-                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, request.IncludeExtendedMarketHours, end, config.Increment, config.DataTimeZone);
+                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, request.IncludeExtendedMarketHours, end, config.Increment, config.DataTimeZone, useDailyStrictEndTimes);
             }
 
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
 
-            return SubscriptionUtils.Create(subscriptionRequest, reader);
+            return SubscriptionUtils.Create(subscriptionRequest, reader, AlgorithmSettings.DailyStrictEndTimeEnabled);
         }
     }
 }

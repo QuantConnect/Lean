@@ -332,7 +332,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 null,
                 false,
                 new DataPermissionManager(),
-                Algorithm.ObjectStore));
+                Algorithm.ObjectStore,
+                Algorithm.Settings));
         }
 
         /// <summary>

@@ -15,7 +15,9 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -60,7 +62,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="normalizationMode">Specifies how data is normalized</param>
         /// <param name="factor">price scale factor</param>
         /// <returns>A new <see cref="SubscriptionData"/> containing the specified data</returns>
-        public static SubscriptionData Create(SubscriptionDataConfig configuration, SecurityExchangeHours exchangeHours, TimeZoneOffsetProvider offsetProvider, BaseData data, DataNormalizationMode normalizationMode, decimal? factor = null)
+        public static SubscriptionData Create(bool dailyStrictEndTimeEnabled, SubscriptionDataConfig configuration, SecurityExchangeHours exchangeHours, TimeZoneOffsetProvider offsetProvider, BaseData data, DataNormalizationMode normalizationMode, decimal? factor = null)
         {
             if (data == null)
             {
@@ -69,25 +71,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             data = data.Clone(data.IsFillForward);
             var emitTimeUtc = offsetProvider.ConvertToUtc(data.EndTime);
-
-            // Let's round down for any data source that implements a time delta between
-            // the start of the data and end of the data (usually used with Bars).
-            // The time delta ensures that the time collected from `EndTime` has
-            // no look-ahead bias, and is point-in-time.
-            // When fill forwarding time and endtime might not respect the original ends times, here we will enforce it
-            // note we do this after fetching the 'emitTimeUtc' which should use the end time set by the fill forward enumerator
-            var barSpan = data.EndTime - data.Time;
-            if (barSpan != TimeSpan.Zero)
+            // rounding down does not make sense for daily increments using strict end times
+            if (!LeanData.UseStrictEndTime(dailyStrictEndTimeEnabled, configuration.Symbol, configuration.Increment, exchangeHours))
             {
-                if (barSpan != configuration.Increment)
+                // Let's round down for any data source that implements a time delta between
+                // the start of the data and end of the data (usually used with Bars).
+                // The time delta ensures that the time collected from `EndTime` has
+                // no look-ahead bias, and is point-in-time.
+                // When fill forwarding time and endtime might not respect the original ends times, here we will enforce it
+                // note we do this after fetching the 'emitTimeUtc' which should use the end time set by the fill forward enumerator
+                var barSpan = data.EndTime - data.Time;
+                if (barSpan != TimeSpan.Zero)
                 {
-                    // when we detect a difference let's refetch the span in utc using noda time 'ConvertToUtc' that will not take into account day light savings difference
-                    // we don't do this always above because it's expensive, only do it if we need to.
-                    // Behavior asserted by tests 'FillsForwardBarsAroundDaylightMovementForDifferentResolutions_Algorithm' && 'ConvertToUtcAndDayLightSavings'.
-                    // Note: we don't use 'configuration.Increment' because during warmup, if the warmup resolution is set, we will emit data respecting it instead of the 'configuration'
-                    barSpan = data.EndTime.ConvertToUtc(configuration.ExchangeTimeZone) - data.Time.ConvertToUtc(configuration.ExchangeTimeZone);
+                    if (barSpan != configuration.Increment)
+                    {
+                        // when we detect a difference let's refetch the span in utc using noda time 'ConvertToUtc' that will not take into account day light savings difference
+                        // we don't do this always above because it's expensive, only do it if we need to.
+                        // Behavior asserted by tests 'FillsForwardBarsAroundDaylightMovementForDifferentResolutions_Algorithm' && 'ConvertToUtcAndDayLightSavings'.
+                        // Note: we don't use 'configuration.Increment' because during warmup, if the warmup resolution is set, we will emit data respecting it instead of the 'configuration'
+                        barSpan = data.EndTime.ConvertToUtc(configuration.ExchangeTimeZone) - data.Time.ConvertToUtc(configuration.ExchangeTimeZone);
+                    }
+                    data.Time = data.Time.ExchangeRoundDownInTimeZone(barSpan, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
                 }
-                data.Time = data.Time.ExchangeRoundDownInTimeZone(barSpan, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
             }
 
             if (factor.HasValue && (configuration.SecurityType != SecurityType.Equity || (factor.Value != 1 || configuration.SumOfDividends != 0)))

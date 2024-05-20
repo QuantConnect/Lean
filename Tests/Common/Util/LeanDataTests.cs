@@ -46,6 +46,7 @@ namespace QuantConnect.Tests.Common.Util
             SymbolCache.Clear();
         }
 
+        [TestCase(16, false, "20240506 09:30", "06:30")]
         [TestCase(10, false, "20240506 09:30", "06:30")]
         [TestCase(10, true, "20240506 04:00", "16:00")]
         [TestCase(5, true, "20240506 04:00", "16:00")]
@@ -59,6 +60,25 @@ namespace QuantConnect.Tests.Common.Util
 
             var expected = new CalendarInfo(DateTime.ParseExact(startTime, DateFormat.TwelveCharacter, CultureInfo.InvariantCulture),
                 TimeSpan.Parse(timeSpan, CultureInfo.InvariantCulture));
+
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestCase(1, "20240506 16:00")] // market closed
+        [TestCase(5, "20240506 16:00")] // pre market
+        [TestCase(10, "20240506 16:00")] // market hours
+        [TestCase(16, "20240507 16:00")] // at the close
+        [TestCase(18, "20240507 16:00")] // post market hours
+        [TestCase(20, "20240507 16:00")] // market closed
+        [TestCase(24 * 5, "20240513 16:00")] // saturday
+        public void GetNextDailyEndTime(int hours, string expectedTime)
+        {
+            var symbol = Symbols.SPY;
+            var targetTime = new DateTime(2024, 5, 6).AddHours(hours);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            var result = LeanData.GetNextDailyEndTime(symbol, targetTime, exchangeHours);
+
+            var expected = DateTime.ParseExact(expectedTime, DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
 
             Assert.AreEqual(expected, result);
         }

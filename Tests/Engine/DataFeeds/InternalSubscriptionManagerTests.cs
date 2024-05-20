@@ -377,8 +377,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private void SetupImpl(IDataQueueHandler dataQueueHandler, Synchronizer synchronizer, IDataAggregator dataAggregator)
         {
-            _dataFeed = new TestableLiveTradingDataFeed(dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? new AggregationManager()));
             _algorithm = new AlgorithmStub(createDataManager: false);
+            _dataFeed = new TestableLiveTradingDataFeed(_algorithm.Settings, dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? new AggregationManager()));
             _synchronizer = synchronizer ?? new LiveSynchronizer();
             _algorithm.SetStartDate(new DateTime(2022, 04, 13));
 

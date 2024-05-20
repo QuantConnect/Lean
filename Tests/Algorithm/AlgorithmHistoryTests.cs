@@ -3112,7 +3112,8 @@ def getHistory(algorithm, symbol, period):
                 null,
                 false,
                 new DataPermissionManager(),
-                algorithm.ObjectStore));
+                algorithm.ObjectStore,
+                algorithm.Settings));
             return algorithm;
         }
 

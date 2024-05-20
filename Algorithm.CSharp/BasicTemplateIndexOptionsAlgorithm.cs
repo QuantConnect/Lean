@@ -50,6 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             _emaSlow = EMA(_spx, 80);
             _emaFast = EMA(_spx, 200);
+
+            Settings.DailyStrictEndTimeEnabled = true;
         }
 
         /// <summary>
