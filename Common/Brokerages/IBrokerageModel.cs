@@ -272,6 +272,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Eze:
                     return new EzeBrokerageModel(accountType);
 
+                case BrokerageName.TradeStation:
+                    return new TradeStationBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }
@@ -362,6 +365,9 @@ namespace QuantConnect.Brokerages
 
                 case EzeBrokerageModel _:
                     return BrokerageName.Eze;
+
+                case TradeStationBrokerageModel _:
+                    return BrokerageName.TradeStation;
 
                 case DefaultBrokerageModel _:
                     return BrokerageName.Default;
