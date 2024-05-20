@@ -130,6 +130,7 @@ namespace QuantConnect.Securities
                 }
             }).ToList();
 
+            _alreadyAppliedTypeFilters = true;
             return (T) this;
         }
 
@@ -155,8 +156,8 @@ namespace QuantConnect.Securities
         {
             if (_alreadyAppliedTypeFilters)
             {
-                throw new InvalidOperationException("The type filters have already been applied, so no changes to the type are allowed now. " +
-                    "Please, apply this filter before applying other filters such as FrontMonth() or BackMonths()");
+                throw new InvalidOperationException("Type filters have already been applied, " +
+                    "please call StandardsOnly() before applying other filters such as FrontMonth() or BackMonths()");
             }
 
             Type = ContractExpirationType.Standard;
@@ -171,8 +172,8 @@ namespace QuantConnect.Securities
         {
             if (_alreadyAppliedTypeFilters)
             {
-                throw new InvalidOperationException("The type filters have already been applied, so no changes to the type are allowed now. " +
-                    "Please, apply this filter before applying other filters such as FrontMonth() or BackMonths()");
+                throw new InvalidOperationException("Type filters have already been applied, " +
+                    "please call IncludeWeeklys() before applying other filters such as FrontMonth() or BackMonths()");
             }
 
             Type |= ContractExpirationType.Weekly;
@@ -196,7 +197,6 @@ namespace QuantConnect.Securities
         public virtual T FrontMonth()
         {
             ApplyTypesFilter();
-            _alreadyAppliedTypeFilters = true;
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
             if (ordered.Count == 0) return (T) this;
             var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
@@ -212,7 +212,6 @@ namespace QuantConnect.Securities
         public virtual T BackMonths()
         {
             ApplyTypesFilter();
-            _alreadyAppliedTypeFilters = true;
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
             if (ordered.Count == 0) return (T) this;
             var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
