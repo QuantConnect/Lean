@@ -466,7 +466,6 @@ namespace QuantConnect
         /// <summary>
         /// Provides a lookup dictionary for mapping futures month codes to their corresponding numeric values.
         /// </summary>
-#pragma warning disable CA2211 // Non-constant fields should not be visible
         public static IReadOnlyDictionary<string, int> FuturesMonthCodeLookup { get; } = new Dictionary<string, int>
         {
             { "F", 1 }, // January
@@ -487,7 +486,6 @@ namespace QuantConnect
         /// Provides a lookup dictionary for mapping numeric values to their corresponding futures month codes.
         /// </summary>
         public static IReadOnlyDictionary<int, string> FuturesMonthLookup { get; } = FuturesMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
-#pragma warning restore CA2211 // Non-constant fields should not be visible
 
         /// <summary>
         /// Get the expiration year from short year (two-digit integer).
