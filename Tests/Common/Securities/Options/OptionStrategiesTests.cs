@@ -210,7 +210,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             var strategy = OptionStrategies.ReverseConversion(canonicalOptionSymbol, strike, expiration);
 
-            Assert.AreEqual(OptionStrategyDefinitions.Conversion.Name, strategy.Name);
+            Assert.AreEqual(OptionStrategyDefinitions.ReverseConversion.Name, strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
             Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
             Assert.AreEqual(2, strategy.OptionLegs.Count);

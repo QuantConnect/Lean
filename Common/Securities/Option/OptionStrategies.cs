@@ -136,12 +136,12 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Creates a Protective Put strategy that consists of buying 1 put contract and 1 lot of the underlying.
+        /// Creates a Protective Collar strategy that consists of buying 1 put contract and 1 lot of the underlying.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="callStrike">The strike price for the call option contract</param>
         /// <param name="putStrike">The strike price for the put option contract</param>
-        /// <param name="expiration">The expiration date for the put option contract</param>
+        /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy ProtectiveCollar(Symbol canonicalOption, decimal callStrike, decimal putStrike, DateTime expiration)
         {
@@ -170,7 +170,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="strike">The strike price for the call and put option contract</param>
-        /// <param name="expiration">The expiration date for the put option contract</param>
+        /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy Conversion(Symbol canonicalOption, decimal strike, DateTime expiration)
         {
@@ -184,7 +184,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="strike">The strike price for the put option contract</param>
-        /// <param name="expiration">The expiration date for the put option contract</param>
+        /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy ReverseConversion(Symbol canonicalOption, decimal strike, DateTime expiration)
         {
