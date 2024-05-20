@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_optionCount != 45)
             {
-                throw new Exception($"Unexpected option count {_optionCount}, expected 30");
+                throw new Exception($"Unexpected option count {_optionCount}, expected 45");
             }
         }
 

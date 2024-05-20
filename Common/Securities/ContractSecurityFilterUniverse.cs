@@ -155,7 +155,8 @@ namespace QuantConnect.Securities
         {
             if (_alreadyAppliedTypeFilters)
             {
-                throw new Exception("The type filters have already been applied, so no changes to the type are allowed now.");
+                throw new InvalidOperationException("The type filters have already been applied, so no changes to the type are allowed now. " +
+                    "Please, apply this filter before applying other filters such as FrontMonth() or BackMonths()");
             }
 
             Type = ContractExpirationType.Standard;
@@ -170,7 +171,8 @@ namespace QuantConnect.Securities
         {
             if (_alreadyAppliedTypeFilters)
             {
-                throw new Exception("The type filters have already been applied, so no changes to the type are allowed now.");
+                throw new InvalidOperationException("The type filters have already been applied, so no changes to the type are allowed now. " +
+                    "Please, apply this filter before applying other filters such as FrontMonth() or BackMonths()");
             }
 
             Type |= ContractExpirationType.Weekly;
