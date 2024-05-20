@@ -414,6 +414,36 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -20, -(1000000 - 20 * 0) / (0 + 1001), true),    // -20 to max short
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -20, -(1000000 - 20 * 0) / (0 + 1001) - 1, false),  // -20 to max short + 1
+            // Initial margin requirement|premium for BoxSpread with quantities 1 and -1 are 0|2003 and 2000|0 respectively
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 0, (1000000 - 0 * 0) / (0 + 2003), true), // 0 to max long
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 0, (1000000 - 0 * 0) / (0 + 2003) + 1, false), // 0 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 0, -(1000000 + 0 * 2000) / (2000 + 0), true), // 0 to max short
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 0, -(1000000 + 0 * 2000) / (2000 + 0) - 1, false),    // 0 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 20, (1000000 - 20 * 0) / (0 + 2003), true),    // 20 to max long
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 20, (1000000 - 20 * 0) / (0 + 2003) + 1, false),    // 20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 20, -20, true), // 20 to 0
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 20, -(1000000 + 20 * 2000) / (2000 + 0), true), // 20 to max short
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 20, -(1000000 + 20 * 2000) / (2000 + 0) - 1, false),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -20, (1000000 + 20 * 0) / (0 + 2003), true),   // -20 to max long
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -20, (1000000 + 20 * 0) / (0 + 2003) + 1, false),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -20, 20, true), // -20 to 0
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -20, -(1000000 - 20 * 2000) / (2000 + 0), true),    // -20 to max short
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -20, -(1000000 - 20 * 2000) / (2000 + 0) - 1, false),  // -20 to max short + 1
+            // Initial margin requirement|premium for ShortBoxSpread with quantities 1 and -1 are 2000|0 and 0|2003 respectively
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 0, (1000000 - 0 * 2000) / (2000 + 0), true), // 0 to max long
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 0, (1000000 - 0 * 2000) / (2000 + 0) + 1, false), // 0 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 0, -(1000000 + 0 * 0) / (0 + 2003), true), // 0 to max short
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 0, -(1000000 + 0 * 0) / (0 + 2003) - 1, false),    // 0 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 20, (1000000 - 20 * 2000) / (2000 + 0), true),    // 20 to max long
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 20, (1000000 - 20 * 2000) / (2000 + 0) + 1, false),    // 20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 20, -20, true), // 20 to 0
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 20, -(1000000 + 20 * 0) / (0 + 2003), true), // 20 to max short
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 20, -(1000000 + 20 * 0) / (0 + 2003) - 1, false),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -20, (1000000 + 20 * 2000) / (2000 + 0), true),   // -20 to max long
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -20, (1000000 + 20 * 2000) / (2000 + 0) + 1, false),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -20, 20, true), // -20 to 0
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -20, -(1000000 - 20 * 0) / (0 + 2003), true),    // -20 to max short
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -20, -(1000000 - 20 * 0) / (0 + 2003) - 1, false),  // -20 to max short + 1
         };
 
         [TestCaseSource(nameof(HasSufficientBuyingPowerForOrderTestCases))]
@@ -652,6 +682,10 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortPutCalendarSpread, -1, 0m),             // IB:  0
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m),                       // IB:  1001
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -1, 0m),                         // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 1, 0m),                           // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -1, 2000m),                       // IB:  short box spread
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 1, 2000m),                   // IB:  2000
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -1, 0m),                     // IB:  box spread
         };
 
         [TestCaseSource(nameof(InitialMarginRequirementsTestCases))]
@@ -746,6 +780,10 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortPutCalendarSpread, -1, 0m),             // IB:  0
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m),                       // IB:  1017.62
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -1, 0m),                         // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 1, 0m),                           // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -1, 2000m),                       // IB:  short box spread
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 1, 2000m),                   // IB:  2000
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -1, 0m),                     // IB:  box spread
         };
 
         [TestCaseSource(nameof(MaintenanceMarginTestCases))]
@@ -972,6 +1010,24 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, -10010m / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, -10010m, -10),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, -10010m - 10000m, -20),
+            // Initial margin requirement (including premium) for BoxSpread with quantity 10 and -10 is 20030 and 20000 respectively
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, 20030m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, -20030m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, -20030m, -10),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, -20030m - 20000m, -20),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, 20000m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, -20000m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, -20000m, -10),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, -20000m - 20030m, -20),
+            // Initial margin requirement (including premium) for ShortBoxSpread with quantity 10 and -10 is 20000 and 20030 respectively
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, 20000m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, -20000m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, -20000m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, -20000m - 20030m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 20030m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, -20030m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, -20030m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, -20030m - 20000m, -20),
         };
 
         [TestCaseSource(nameof(OrderQuantityForDeltaBuyingPowerTestCases))]
@@ -1296,6 +1352,24 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 10010m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 0m, -10),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, -10000m, -20),
+            // Initial margin requirement (including premium) for BoxSpread with quantity 10 and -10 is 20030 and 20000 respectively
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, 20030m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, 20030m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, 0m, -10),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, -20000m, -20),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, 20000m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, 20000m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, 0m, -10),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, -20030m, -20),
+            // Initial margin requirement (including premium) for ShortBoxSpread with quantity 10 and -10 is 20000 and 20030 respectively
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, 20000m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, 20000m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, 0m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, -20030m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 20030m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 20030m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 0m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, -20000m, -20),
         };
 
         [TestCaseSource(nameof(OrderQuantityForTargetBuyingPowerTestCases))]
@@ -1569,6 +1643,22 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 1, (1000000m - 0) + 0 + 10010m),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 10, (1000000m - 0) + 0 + 10010m),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 20, (1000000m - 0) + 0 + 10010m),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, 1, 1000000m - 0m),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, -1, (1000000m - 0m) + 0m + 20030m),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, -10, (1000000m - 0m) + 0m + 20030m),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, -20, (1000000m - 0m) + 0m + 20030m),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, -1, 1000000m - 20000m),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, 1, (1000000m - 20000m) + 20000m + 20000m),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, 10, (1000000m - 20000m) + 20000m + 20000m),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, 20, (1000000m - 20000m) + 20000m + 20000m),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, 1, 1000000m - 20000m),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, -1, (1000000m - 20000m) + 20000m + 20000m),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, -10, (1000000m - 20000m) + 20000m + 20000m),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, -20, (1000000m - 20000m) + 20000m + 20000m),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, -1, 1000000m - 0),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 1, (1000000m - 0) + 0 + 20030m),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 10, (1000000m - 0) + 0 + 20030m),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 20, (1000000m - 0) + 0 + 20030m),
         };
 
         [TestCaseSource(nameof(PositionGroupBuyingPowerTestCases))]
@@ -1986,6 +2076,22 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 1),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 10),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 20),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, 1),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, -10),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, 10, -20),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, -1),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, 1),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, 10),
+            new TestCaseData(OptionStrategyDefinitions.BoxSpread, -10, 20),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 10, -20),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 10),
+            new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 20),
         };
 
         [TestCaseSource(nameof(ReservedBuyingPowerImpactTestCases))]
@@ -2446,6 +2552,40 @@ namespace QuantConnect.Tests.Common.Securities
                 shortPutOption.Holdings.SetHoldings(shortPutOption.Price, -initialHoldingsQuantity);
                 shortCallOption.Holdings.SetHoldings(shortCallOption.Price, -initialHoldingsQuantity);
                 longCallOption.Holdings.SetHoldings(longCallOption.Price, initialHoldingsQuantity);
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.BoxSpread.Name)
+            {
+                var longPutOption = spyMay19_320Put;
+                var shortPutOption = spyMay19_300Put;
+                var shortCallOption = spyMay19_320Call;
+                var longCallOption = spyMay19_300Call;
+
+                longPutOption.Holdings.SetHoldings(longPutOption.Price, initialHoldingsQuantity);
+                shortPutOption.Holdings.SetHoldings(shortPutOption.Price, -initialHoldingsQuantity);
+                shortCallOption.Holdings.SetHoldings(shortCallOption.Price, -initialHoldingsQuantity);
+                longCallOption.Holdings.SetHoldings(longCallOption.Price, initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.ShortBoxSpread.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ShortBoxSpread.Name)
+            {
+                var longPutOption = spyMay19_300Put;
+                var shortPutOption = spyMay19_320Put;
+                var shortCallOption = spyMay19_300Call;
+                var longCallOption = spyMay19_320Call;
+
+                longPutOption.Holdings.SetHoldings(longPutOption.Price, initialHoldingsQuantity);
+                shortPutOption.Holdings.SetHoldings(shortPutOption.Price, -initialHoldingsQuantity);
+                shortCallOption.Holdings.SetHoldings(shortCallOption.Price, -initialHoldingsQuantity);
+                longCallOption.Holdings.SetHoldings(longCallOption.Price, initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.BoxSpread.Name;
+                }
             }
 
             var positionGroup = _portfolio.Positions.Groups.Single();
