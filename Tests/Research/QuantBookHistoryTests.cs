@@ -496,5 +496,57 @@ def getHistoryCount(history):
                 }
             });
         }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void GetOptionContractsWithFrontMonthFilter(Language language)
+        {
+            var qb = new QuantBook();
+            var start = new DateTime(2015, 12, 24);
+            var end = new DateTime(2015, 12, 24);
+
+            var goog = qb.AddEquity("GOOG");
+            var option = qb.AddOption(goog.Symbol);
+            option.SetFilter(universe => universe.Strikes(-5, 5).FrontMonth());
+            using (Py.GIL())
+            {
+                var history = qb.GetOptionHistory(goog.Symbol, start, end, Resolution.Minute, fillForward: false, extendedMarketHours: false);
+
+                Assert.DoesNotThrow(() =>
+                {
+                    if (language == Language.CSharp)
+                    {
+                        Assert.NotZero(history.Count());
+                        using (Py.GIL())
+                        {
+                            dynamic data = history.GetAllData();
+                            var labels = data.axes[0].names;
+                            Assert.AreEqual("expiry", (labels[0] as PyObject).As<string>());
+                        }
+                    }
+                    else
+                    {
+                        using (Py.GIL())
+                        {
+                            var testModule = PyModule.FromString("testModule",
+                            @"
+from AlgorithmImports import *
+def getAllData():
+    qb = QuantBook()
+    underlying_symbol = qb.AddEquity(""GOOG"").Symbol
+    option = qb.AddOption(underlying_symbol)
+    option.SetFilter(lambda option_filter_universe: option_filter_universe.Strikes(-5, 5).FrontMonth())
+    option_history = qb.OptionHistory(underlying_symbol, datetime(2015, 12, 24), datetime(2015, 12, 24), Resolution.Minute, fillForward=False, extendedMarketHours=False)
+    data = option_history.GetAllData()
+    return data.axes[0].names[0]");
+
+                            dynamic getAllData = testModule.GetAttr("getAllData");
+                            var data = getAllData();
+                            Assert.AreEqual("expiry", data.AsManagedObject(typeof(string)));
+                        }
+                    }
+                });
+            }
+        }
     }
 }

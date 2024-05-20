@@ -29,6 +29,8 @@ namespace QuantConnect.Securities
     public abstract class ContractSecurityFilterUniverse<T> : IDerivativeSecurityFilterUniverse
         where T: ContractSecurityFilterUniverse<T>
     {
+        private bool _alreadyAppliedTypeFilters;
+
         /// <summary>
         /// Defines listed contract types with Flags attribute
         /// </summary>
@@ -92,6 +94,11 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         internal T ApplyTypesFilter()
         {
+            if (_alreadyAppliedTypeFilters)
+            {
+                return (T) this;
+            }
+
             // memoization map for ApplyTypesFilter()
             var memoizedMap = new Dictionary<DateTime, bool>();
 
@@ -136,6 +143,7 @@ namespace QuantConnect.Securities
             AllSymbols = allSymbols;
             LocalTime = localTime;
             Type = ContractExpirationType.Standard;
+            _alreadyAppliedTypeFilters = false;
         }
 
         /// <summary>
@@ -145,6 +153,11 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public T StandardsOnly()
         {
+            if (_alreadyAppliedTypeFilters)
+            {
+                throw new Exception("The type filters have already been applied, so no changes to the type are allowed now.");
+            }
+
             Type = ContractExpirationType.Standard;
             return (T)this;
         }
@@ -155,6 +168,11 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public T IncludeWeeklys()
         {
+            if (_alreadyAppliedTypeFilters)
+            {
+                throw new Exception("The type filters have already been applied, so no changes to the type are allowed now.");
+            }
+
             Type |= ContractExpirationType.Weekly;
             return (T)this;
         }
@@ -175,6 +193,8 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public virtual T FrontMonth()
         {
+            ApplyTypesFilter();
+            _alreadyAppliedTypeFilters = true;
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
             if (ordered.Count == 0) return (T) this;
             var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
@@ -189,6 +209,8 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public virtual T BackMonths()
         {
+            ApplyTypesFilter();
+            _alreadyAppliedTypeFilters = true;
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
             if (ordered.Count == 0) return (T) this;
             var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
