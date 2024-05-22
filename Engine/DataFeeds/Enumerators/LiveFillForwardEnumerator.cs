@@ -29,6 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class LiveFillForwardEnumerator : FillForwardEnumerator
     {
+        private readonly TimeSpan _dataResolution;
         private readonly TimeSpan _underlyingTimeout;
         private readonly ITimeProvider _timeProvider;
 
@@ -52,6 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution.ToTimeSpan(), dataTimeZone, dailyStrictEndTimeEnabled)
         {
             _timeProvider = timeProvider;
+            _dataResolution = dataResolution.ToTimeSpan();
             _underlyingTimeout = GetMaximumDataTimeout(dataResolution);
         }
 
@@ -65,33 +67,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>True when a new fill forward piece of data was produced and should be emitted by this enumerator</returns>
         protected override bool RequiresFillForwardData(TimeSpan fillForwardResolution, BaseData previous, BaseData next, out BaseData fillForward)
         {
-            // convert times to UTC for accurate comparisons and differences across DST changes
-            fillForward = null;
-            // Add a delay to the time we expect a data point if we've configured a delay for batching
-            var nextExpectedDataPointTimeUtc = previous.EndTime.ConvertToUtc(Exchange.TimeZone) + fillForwardResolution;
-            if (next != null)
+            if (base.RequiresFillForwardData(fillForwardResolution, previous, next, out fillForward))
             {
-                // if not future data, just return the 'next'
-                if (next.EndTime.ConvertToUtc(Exchange.TimeZone) <= nextExpectedDataPointTimeUtc)
+                var underlyingTimeout = TimeSpan.Zero;
+                if (fillForwardResolution >= _dataResolution)
                 {
-                    return false;
+                    // we enforece the underlying FF timeout when the FF resolution matches it or is bigger, not the other way round, for example:
+                    // this is a daily enumerator and FF resolution is second, we are expected to emit a bar every second, we can't wait until the timeout each time
+                    underlyingTimeout = _underlyingTimeout;
                 }
-                // next is future data, fill forward in between
-                var clone = previous.Clone(true);
-                clone.Time = previous.Time + fillForwardResolution;
-                fillForward = clone;
-                return true;
-            }
 
-            // the underlying enumerator returned null, check to see if time has passed for fill forwarding
-            if ((nextExpectedDataPointTimeUtc + _underlyingTimeout) <= _timeProvider.GetUtcNow())
-            {
-                var clone = previous.Clone(true);
-                clone.Time = previous.Time + fillForwardResolution;
-                fillForward = clone;
-                return true;
+                var nextEndTimeUtc = (fillForward.EndTime + underlyingTimeout).ConvertToUtc(Exchange.TimeZone);
+                if (next != null || nextEndTimeUtc <= _timeProvider.GetUtcNow())
+                {
+                    // we FF if next is here but in the future or next has not come yet and we've wait enough time
+                    return true;
+                }
             }
-
             return false;
         }
 
