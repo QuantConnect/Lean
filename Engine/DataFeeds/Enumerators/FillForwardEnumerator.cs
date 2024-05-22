@@ -270,24 +270,43 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>True when a new fill forward piece of data was produced and should be emitted by this enumerator</returns>
         protected virtual bool RequiresFillForwardData(TimeSpan fillForwardResolution, BaseData previous, BaseData next, out BaseData fillForward)
         {
-            // convert times to UTC for accurate comparisons and differences across DST changes
-            var previousTimeUtc = previous.Time.ConvertToUtc(Exchange.TimeZone);
-            var nextTimeUtc = next.Time.ConvertToUtc(Exchange.TimeZone);
-            var nextEndTimeUtc = next.EndTime.ConvertToUtc(Exchange.TimeZone);
-
-            if (nextEndTimeUtc < previousTimeUtc)
+            // in live trading next can be null, in which case we create a potential FF bar and the live FF enumerator will decide what to do
+            var nextCalculatedEndTimeUtc = DateTime.MaxValue;
+            if (next != null)
             {
-                Log.Error("FillForwardEnumerator received data out of order. Symbol: " + previous.Symbol.ID);
-                fillForward = null;
-                return false;
-            }
+                // convert times to UTC for accurate comparisons and differences across DST changes
+                var previousTimeUtc = previous.Time.ConvertToUtc(Exchange.TimeZone);
+                var nextTimeUtc = next.Time.ConvertToUtc(Exchange.TimeZone);
+                var nextEndTimeUtc = next.EndTime.ConvertToUtc(Exchange.TimeZone);
 
-            // check to see if the gap between previous and next warrants fill forward behavior
-            var nextPreviousTimeUtcDelta = nextTimeUtc - previousTimeUtc;
-            if (nextPreviousTimeUtcDelta <= fillForwardResolution && nextPreviousTimeUtcDelta <= _dataResolution)
-            {
-                fillForward = null;
-                return false;
+                if (nextEndTimeUtc < previousTimeUtc)
+                {
+                    Log.Error("FillForwardEnumerator received data out of order. Symbol: " + previous.Symbol.ID);
+                    fillForward = null;
+                    return false;
+                }
+
+                // check to see if the gap between previous and next warrants fill forward behavior
+                var nextPreviousTimeUtcDelta = nextTimeUtc - previousTimeUtc;
+                if (nextPreviousTimeUtcDelta <= fillForwardResolution && nextPreviousTimeUtcDelta <= _dataResolution)
+                {
+                    fillForward = null;
+                    return false;
+                }
+
+                var period = _dataResolution;
+                if (_useStrictEndTime)
+                {
+                    // the period is not the data resolution (1 day) and can actually change dynamically, for example early close/late open
+                    period = next.EndTime - next.Time;
+                }
+                else if (next.Time == next.EndTime)
+                {
+                    // we merge corporate event data points (mapping, delisting, splits, dividend) which do not have
+                    // a period or resolution
+                    period = TimeSpan.Zero;
+                }
+                nextCalculatedEndTimeUtc = nextTimeUtc + period;
             }
 
             // every bar emitted MUST be of the data resolution.
@@ -338,27 +357,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var startTime = (_useStrictEndTime && item.Period > Time.OneHour) ? item.Start : RoundDown(item.Start, item.Period);
                 var potentialBarEndTime = startTime.ConvertToUtc(Exchange.TimeZone) + item.Period;
 
-                var period = _dataResolution;
-                if (_useStrictEndTime)
-                {
-                    // the period is not the data resolution (1 day) and can actually change dynamically, for example early close/late open
-                    period = next.EndTime - next.Time;
-                }
-                else if (next.Time == next.EndTime)
-                {
-                    // we merge corporate event data points (mapping, delisting, splits, dividend) which do not have
-                    // a period or resolution
-                    period = TimeSpan.Zero;
-                }
 
                 // to avoid duality it's necessary to compare potentialBarEndTime with
                 // next.EndTime calculated as Time + resolution,
                 // and both should be based on the same TZ (for example UTC)
-                var nextEndTimeUTC = next.Time.ConvertToUtc(Exchange.TimeZone) + period;
-                if (potentialBarEndTime < nextEndTimeUTC
+                if (potentialBarEndTime < nextCalculatedEndTimeUtc
                     // let's fill forward based on previous (which isn't auxiliary) if next is auxiliary and they share the end time
                     // we do allow emitting both an auxiliary data point and a Filled Forwared data for the same end time
-                    || next.DataType == MarketDataType.Auxiliary && potentialBarEndTime == nextEndTimeUTC)
+                    || next != null && next.DataType == MarketDataType.Auxiliary && potentialBarEndTime == nextCalculatedEndTimeUtc)
                 {
                     // to check open hours we need to convert potential
                     // bar EndTime into exchange time zone
