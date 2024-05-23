@@ -210,7 +210,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // remove
                         foreach (var request in requests)
                         {
-                            RemoveSubscription(request.Configuration, request.Universe);
+                            // universe null because we want them actually removed even if still a member of the universe, because the FF res changed
+                            // which means we will drop any data points that could be in the next potential slice being created
+                            RemoveSubscription(request.Configuration, universe: null);
                         }
 
                         // re add
