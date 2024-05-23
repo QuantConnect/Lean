@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Brokerages
 {
@@ -565,5 +566,178 @@ namespace QuantConnect.Brokerages
 
         #endregion
 
+        /// <summary>
+        /// Determines if executing the specified order will cross the zero holdings threshold.
+        /// </summary>
+        /// <param name="securityProvider">The security provider to get holdings information.</param>
+        /// <param name="order">The order to be evaluated.</param>
+        /// <returns>
+        /// <c>true</c> if the order will change the holdings from positive to negative or vice versa; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="order"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// This method checks if the order will result in a position change from positive to negative holdings or from negative to positive holdings.
+        /// </remarks>
+        protected bool OrderCrossesZero(ISecurityProvider securityProvider, Order order)
+        {
+            if (order == null)
+            {
+                throw new ArgumentNullException(nameof(order), "Order cannot be null.");
+            }
+
+            var holdingQuantity = securityProvider.GetHoldingsQuantity(order.Symbol);
+
+            //We're reducing position or flipping:
+            if (holdingQuantity > 0 && order.Quantity < 0)
+            {
+                if ((holdingQuantity + order.Quantity) < 0)
+                {
+                    //We dont have enough holdings so will cross through zero:
+                    return true;
+                }
+            }
+            else if (holdingQuantity < 0 && order.Quantity > 0)
+            {
+                if ((holdingQuantity + order.Quantity) > 0)
+                {
+                    //Crossed zero: need to split into 2 orders:
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Calculates the quantities needed to close the current position and establish a new position based on the provided order.
+        /// </summary>
+        /// <param name="holdingQuantity">The quantity currently held in the position that needs to be closed.</param>
+        /// <param name="order">The order that defines the new position to be established.</param>
+        /// <returns>
+        /// A tuple containing:
+        /// <list type="bullet">
+        /// <item>
+        /// <description>The quantity needed to close the current position (negative value).</description>
+        /// </item>
+        /// <item>
+        /// <description>The quantity needed to establish the new position.</description>
+        /// </item>
+        /// </list>
+        /// </returns>
+        protected (decimal closePostionQunatity, decimal newPositionQuantity) GetQuantityOnCrossposition(decimal holdingQuantity, Order order)
+        {
+            // first we need an order to close out the current position
+            var firstOrderQuantity = -holdingQuantity;
+            var secondOrderQuantity = order.Quantity - firstOrderQuantity;
+
+            return (firstOrderQuantity, secondOrderQuantity);
+        }
+
+        private class ContingentOrderQueue<T> where T : class
+        {
+            /// <summary>
+            /// The original order produced by the algorithm
+            /// </summary>
+            public readonly Order QCOrder;
+
+            /// <summary>
+            /// A queue of contingent orders to be placed after fills
+            /// </summary>
+            public readonly Queue<T> Contingents;
+
+            public ContingentOrderQueue(Order qcOrder, params T[] contingents)
+            {
+                QCOrder = qcOrder;
+                Contingents = new Queue<T>(contingents);
+            }
+
+            /// <summary>
+            /// Dequeues the next contingent order, or null if there are none left
+            /// </summary>
+            public T Next()
+            {
+                if (Contingents.Count == 0)
+                {
+                    return null;
+                }
+                return Contingents.Dequeue();
+            }
+        }
+
+        private readonly ConcurrentDictionary<string, ContingentOrderQueue<object>> _contingentOrdersByQCOrderID = new ConcurrentDictionary<string, ContingentOrderQueue<object>>();
+
+        private readonly ConcurrentDictionary<string, Order> _zeroCrossingOrdersByTradierClosingOrderId = new ConcurrentDictionary<string, Order>();
+
+        public bool TryCrossPositionOrder<T>(ISecurityProvider securityProvider, Order order,
+            Func<Order, decimal, decimal, T> createBrokerageOrderRequestCallback,
+            Action<T> convertStopOrderTypesHandler,
+            Func<T, (bool isOrderSubmitted, string brokerageOrderId)> placeOrderCallback)
+        {
+            if (order == null)
+            {
+                throw new ArgumentNullException(nameof(order), "The order parameter cannot be null.");
+            }
+            if (convertStopOrderTypesHandler == null)
+            {
+                throw new ArgumentNullException(nameof(convertStopOrderTypesHandler), "The ConvertStopOrderTypes parameter cannot be null.");
+            }
+            if (placeOrderCallback == null)
+            {
+                throw new ArgumentNullException(nameof(placeOrderCallback), "The PlaceOrder parameter cannot be null.");
+            }
+            if (createBrokerageOrderRequestCallback == null)
+            {
+                throw new ArgumentNullException(nameof(createBrokerageOrderRequestCallback), "The createBrokerageOrderRequest parameter cannot be null.");
+            }
+
+            var holdingQuantity = securityProvider.GetHoldingsQuantity(order.Symbol);
+
+            var orderRequest = createBrokerageOrderRequestCallback(order, order.Quantity, holdingQuantity);
+
+            // do we need to split the order into two pieces?
+            bool crossesZero = OrderCrossesZero(securityProvider, order);
+            if (crossesZero)
+            {
+                // first we need an order to close out the current position
+                var (firstOrderQuantity, secondOrderQuantity) = GetQuantityOnCrossposition(holdingQuantity, order);
+
+                orderRequest = createBrokerageOrderRequestCallback(order, firstOrderQuantity, holdingQuantity);
+
+                // we actually can't place this order until the closingOrder is filled
+                // create another order for the rest, but we'll convert the order type to not be a stop
+                // but a market or a limit order
+                var restOfOrder = createBrokerageOrderRequestCallback(order, secondOrderQuantity, 0);
+
+                convertStopOrderTypesHandler(restOfOrder);
+
+                _contingentOrdersByQCOrderID.AddOrUpdate(order.Id.ToStringInvariant(), new ContingentOrderQueue<object>(order, restOfOrder));
+
+                // issue the first order to close the position
+                var response = placeOrderCallback(orderRequest);
+                if (!response.isOrderSubmitted)
+                {
+                    // remove the contingent order if we weren't succesful in placing the first
+                    //ContingentOrderQueue contingent;
+                    _contingentOrdersByQCOrderID.TryRemove(order.Id.ToStringInvariant(), out var contingent);
+                    return false;
+                }
+
+                var closingOrderID = response.brokerageOrderId;
+                order.BrokerId.Add(closingOrderID.ToStringInvariant());
+
+                _zeroCrossingOrdersByTradierClosingOrderId.AddOrUpdate(closingOrderID, order);
+
+                return true;
+            }
+            else
+            {
+                var response = placeOrderCallback(orderRequest);
+                if (response.isOrderSubmitted)
+                {
+                    order.BrokerId.Add(response.brokerageOrderId.ToStringInvariant());
+                    return true;
+                }
+                return false;
+            }
+        }
     }
 }
