@@ -72,7 +72,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 universe.CollectionChanged += (sender, args) =>
                 {
                     // If it is an add we will set time 1 tick ahead to properly sync data
-                    // with next timeslice, if it is a remove then we will set time to now
+                    // with next timeslice, avoid emitting now twice, if it is a remove then we will set time to now
+                    // we do the same in the 'DataManager' when handling FF resolution changes
                     IList items;
                     DateTime time;
                     if (args.Action == NotifyCollectionChangedAction.Add)

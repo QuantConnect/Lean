@@ -30,6 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
             new DateTime(2013, 10, 7, 9, 31, 0),
             new DateTime(2013, 10, 8, 0, 0, 0),
             new DateTime(2013, 10, 9, 0, 0, 0),
+            new DateTime(2013, 10, 9, 0, 0, 0), // TODO
+            new DateTime(2013, 10, 9, 9, 31, 0),
             new DateTime(2013, 10, 10, 0, 0, 0),
             new DateTime(2013, 10, 11, 0, 0, 0)
         });
@@ -56,7 +58,15 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (ActiveSecurities.ContainsKey("/ES"))
             {
-                RemoveSecurity("/ES");
+                if (data.ContainsKey("/ES"))
+                {
+                    RemoveSecurity("/ES");
+                }
+            }
+            else if (Time == new DateTime(2013, 10, 9, 0, 0, 0))
+            {
+                // let's re add it
+                AddFuture("ES", Resolution.Minute);
             }
         }
 
@@ -81,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 70;
+        public long DataPoints => 96;
 
         /// <summary>
         /// Data Points count of the algorithm history
