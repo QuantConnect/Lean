@@ -688,18 +688,29 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [Test]
-        public void GetFilePathMethodWorksProperly()
+        [TestCase("/test/", "test")]
+        [TestCase("test\\", "test")]
+        [TestCase("test", "LocalObjectStoreTests")]
+        [TestCase("abc/12 3/test", "12 3")]
+        [TestCase("abc\\1 23\\test", "1 23")]
+        [TestCase("/abc\\1 23\\test", "1 23")]
+        [TestCase("\\abc\\1 23\\test", "1 23")]
+        public void GetFilePathMethodWorksProperly(string key, string expectedParentName)
         {
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
 
-                var key = "test";
                 var path = store.GetFilePath(key);
+                // paths are always under the object store root path
+                Assert.IsTrue(path.Contains("LocalObjectStoreTests", StringComparison.InvariantCultureIgnoreCase));
                 Assert.IsFalse(File.Exists(path));
                 Assert.IsNull(store.Read(key));
+                // the parent of the path requested will be created
+                var parent = Directory.GetParent(path);
+                Assert.AreEqual(expectedParentName, parent.Name);
+                Assert.IsTrue(parent.Exists);
             }
         }
 
