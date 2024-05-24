@@ -566,72 +566,6 @@ namespace QuantConnect.Brokerages
 
         #endregion
 
-        /// <summary>
-        /// Determines if executing the specified order will cross the zero holdings threshold.
-        /// </summary>
-        /// <param name="securityProvider">The security provider to get holdings information.</param>
-        /// <param name="order">The order to be evaluated.</param>
-        /// <returns>
-        /// <c>true</c> if the order will change the holdings from positive to negative or vice versa; otherwise, <c>false</c>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="order"/> is <c>null</c>.</exception>
-        /// <remarks>
-        /// This method checks if the order will result in a position change from positive to negative holdings or from negative to positive holdings.
-        /// </remarks>
-        protected bool OrderCrossesZero(ISecurityProvider securityProvider, Order order)
-        {
-            if (order == null)
-            {
-                throw new ArgumentNullException(nameof(order), "Order cannot be null.");
-            }
-
-            var holdingQuantity = securityProvider.GetHoldingsQuantity(order.Symbol);
-
-            //We're reducing position or flipping:
-            if (holdingQuantity > 0 && order.Quantity < 0)
-            {
-                if ((holdingQuantity + order.Quantity) < 0)
-                {
-                    //We dont have enough holdings so will cross through zero:
-                    return true;
-                }
-            }
-            else if (holdingQuantity < 0 && order.Quantity > 0)
-            {
-                if ((holdingQuantity + order.Quantity) > 0)
-                {
-                    //Crossed zero: need to split into 2 orders:
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Calculates the quantities needed to close the current position and establish a new position based on the provided order.
-        /// </summary>
-        /// <param name="holdingQuantity">The quantity currently held in the position that needs to be closed.</param>
-        /// <param name="order">The order that defines the new position to be established.</param>
-        /// <returns>
-        /// A tuple containing:
-        /// <list type="bullet">
-        /// <item>
-        /// <description>The quantity needed to close the current position (negative value).</description>
-        /// </item>
-        /// <item>
-        /// <description>The quantity needed to establish the new position.</description>
-        /// </item>
-        /// </list>
-        /// </returns>
-        protected (decimal closePostionQunatity, decimal newPositionQuantity) GetQuantityOnCrossposition(decimal holdingQuantity, Order order)
-        {
-            // first we need an order to close out the current position
-            var firstOrderQuantity = -holdingQuantity;
-            var secondOrderQuantity = order.Quantity - firstOrderQuantity;
-
-            return (firstOrderQuantity, secondOrderQuantity);
-        }
-
         private class ContingentOrderQueue<T> where T : class
         {
             /// <summary>
@@ -694,11 +628,11 @@ namespace QuantConnect.Brokerages
             var orderRequest = createBrokerageOrderRequestCallback(order, order.Quantity, holdingQuantity);
 
             // do we need to split the order into two pieces?
-            bool crossesZero = OrderCrossesZero(securityProvider, order);
+            bool crossesZero = BrokerageHelpers.OrderCrossesZero(holdingQuantity, order.Quantity);
             if (crossesZero)
             {
                 // first we need an order to close out the current position
-                var (firstOrderQuantity, secondOrderQuantity) = GetQuantityOnCrossposition(holdingQuantity, order);
+                var (firstOrderQuantity, secondOrderQuantity) = BrokerageHelpers.GetQuantityOnCrossPosition(holdingQuantity, order.Quantity);
 
                 orderRequest = createBrokerageOrderRequestCallback(order, firstOrderQuantity, holdingQuantity);
 
@@ -715,7 +649,7 @@ namespace QuantConnect.Brokerages
                 var response = placeOrderCallback(orderRequest);
                 if (!response.isOrderSubmitted)
                 {
-                    // remove the contingent order if we weren't succesful in placing the first
+                    // remove the contingent order if we weren't successful in placing the first
                     //ContingentOrderQueue contingent;
                     _contingentOrdersByQCOrderID.TryRemove(order.Id.ToStringInvariant(), out var contingent);
                     return false;

@@ -14,11 +14,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using NUnit.Framework;
-using QuantConnect.Brokerages;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Brokerages;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Brokerages
 {
