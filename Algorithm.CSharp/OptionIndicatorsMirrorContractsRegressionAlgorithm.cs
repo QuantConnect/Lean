@@ -100,7 +100,7 @@ Rho: {_rho}");
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 35;
+        public long DataPoints => 34;
 
         /// <summary>
         /// Data Points count of the algorithm history

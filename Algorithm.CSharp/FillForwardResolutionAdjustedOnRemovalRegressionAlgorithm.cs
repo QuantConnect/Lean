@@ -30,7 +30,6 @@ namespace QuantConnect.Algorithm.CSharp
             new DateTime(2013, 10, 7, 9, 31, 0),
             new DateTime(2013, 10, 8, 0, 0, 0),
             new DateTime(2013, 10, 9, 0, 0, 0),
-            new DateTime(2013, 10, 9, 0, 0, 0), // TODO
             new DateTime(2013, 10, 9, 9, 31, 0),
             new DateTime(2013, 10, 10, 0, 0, 0),
             new DateTime(2013, 10, 11, 0, 0, 0)
@@ -91,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 96;
+        public long DataPoints => 94;
 
         /// <summary>
         /// Data Points count of the algorithm history
