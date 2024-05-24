@@ -94,6 +94,8 @@ namespace QuantConnect.Lean.Engine.Storage
 
             // create the root path if it does not exist
             var directoryInfo = FileHandler.CreateDirectory(AlgorithmStorageRoot);
+            // full name will return a normalized path which is later easier to compare
+            AlgorithmStorageRoot = directoryInfo.FullName;
 
             Controls = controls;
 
@@ -417,7 +419,18 @@ namespace QuantConnect.Lean.Engine.Storage
             }
 
             // Fetch the path to file and return it
-            return PathForKey(path);
+            var normalizedPathKey = PathForKey(path);
+
+            var parent = Directory.GetParent(normalizedPathKey);
+            if (parent != null && parent.FullName != AlgorithmStorageRoot)
+            {
+                // let's create the parent folder if it's not the root storage and it does not exist
+                if (!FileHandler.DirectoryExists(parent.FullName))
+                {
+                    FileHandler.CreateDirectory(parent.FullName);
+                }
+            }
+            return normalizedPathKey;
         }
 
         /// <summary>
