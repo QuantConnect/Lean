@@ -200,7 +200,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // determine which data subscriptions need to be removed from this universe
-            foreach (var member in universe.Securities.Values.OrderBy(member => member.Security.Symbol.SecurityType))
+            foreach (var member in universe.Securities.Values.OrderBy(member => member.Security.Symbol.SecurityType).ThenBy(x => x.Security.Symbol.ID))
             {
                 var security = member.Security;
                 // if we've selected this subscription again, keep it

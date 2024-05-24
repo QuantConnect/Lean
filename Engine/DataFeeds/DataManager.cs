@@ -210,13 +210,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // remove
                         foreach (var request in requests)
                         {
-                            RemoveSubscription(request.Configuration, request.Universe);
+                            // force because we want them actually removed even if still a member of the universe, because the FF res changed
+                            // which means we will drop any data points that could be in the next potential slice being created
+                            RemoveSubscriptionInternal(request.Configuration, universe: request.Universe, forceSubscriptionRemoval: true);
                         }
 
                         // re add
                         foreach (var request in requests)
                         {
-                            AddSubscription(new SubscriptionRequest(request, startTimeUtc: algorithm.UtcTime));
+                            // TODO: If it is an add we will set time 1 tick ahead to properly sync data
+                            // with next timeslice, avoid emitting now twice.
+                            // We do the same in the 'TimeTriggeredUniverseSubscriptionEnumeratorFactory' when handling changes
+                            AddSubscription(new SubscriptionRequest(request, startTimeUtc: algorithm.UtcTime
+                                //.AddTicks(1) TODO
+                                ));
                         }
 
                         DataFeedSubscriptions.FreezeFillForwardResolution(false);
@@ -322,6 +329,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
         public bool RemoveSubscription(SubscriptionDataConfig configuration, Universe universe = null)
         {
+            return RemoveSubscriptionInternal(configuration, universe, forceSubscriptionRemoval: false);
+        }
+
+        /// <summary>
+        /// Removes the <see cref="Subscription"/>, if it exists
+        /// </summary>
+        /// <param name="configuration">The <see cref="SubscriptionDataConfig"/> of the subscription to remove</param>
+        /// <param name="universe">Universe requesting to remove <see cref="Subscription"/>.
+        /// Default value, null, will remove all universes</param>
+        /// <param name="forceSubscriptionRemoval">We force the subscription removal by marking it as removed from universe, so that all it's data is dropped</param>
+        /// <returns>True if the subscription was successfully removed, false otherwise</returns>
+        private bool RemoveSubscriptionInternal(SubscriptionDataConfig configuration, Universe universe, bool forceSubscriptionRemoval)
+        {
             // remove the subscription from our collection, if it exists
             Subscription subscription;
 
@@ -346,6 +366,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     subscription.Dispose();
 
                     RemoveSubscriptionDataConfig(subscription);
+
+                    if (forceSubscriptionRemoval)
+                    {
+                        subscription.MarkAsRemovedFromUniverse();
+                    }
 
                     if (_liveMode)
                     {
