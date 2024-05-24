@@ -218,12 +218,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // re add
                         foreach (var request in requests)
                         {
-                            // TODO: If it is an add we will set time 1 tick ahead to properly sync data
+                            // If it is an add we will set time 1 tick ahead to properly sync data
                             // with next timeslice, avoid emitting now twice.
                             // We do the same in the 'TimeTriggeredUniverseSubscriptionEnumeratorFactory' when handling changes
-                            AddSubscription(new SubscriptionRequest(request, startTimeUtc: algorithm.UtcTime
-                                //.AddTicks(1) TODO
-                                ));
+                            AddSubscription(new SubscriptionRequest(request, startTimeUtc: algorithm.UtcTime.AddTicks(1)));
                         }
 
                         DataFeedSubscriptions.FreezeFillForwardResolution(false);
