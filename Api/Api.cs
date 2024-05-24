@@ -1369,7 +1369,7 @@ namespace QuantConnect.Api
                 {
                     foreach (var header in headers)
                     {
-                        client.Value.DefaultRequestHeaders.Add(header.Key, header.Value);
+                        client.Value.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value);
                     }
                 }
 

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using QuantConnect.Api;
@@ -43,7 +44,7 @@ namespace QuantConnect.Tests.API
         [Test, Explicit("Requires configured api access")]
         public void ApiWillAuthenticate_ValidCredentials_Successfully()
         {
-            var api = new Api.Api();
+            using var api = new Api.Api();
             api.Initialize(TestAccount, TestToken, DataFolder);
             Assert.IsTrue(api.Connected);
         }
@@ -64,7 +65,7 @@ namespace QuantConnect.Tests.API
         [Test]
         public void ApiWillAuthenticate_InvalidCredentials_Unsuccessfully()
         {
-            var api = new Api.Api();
+            using var api = new Api.Api();
             api.Initialize(TestAccount, "", DataFolder);
             Assert.IsFalse(api.Connected);
         }
@@ -72,7 +73,7 @@ namespace QuantConnect.Tests.API
         [Test]
         public void NullDataFolder()
         {
-            var api = new Api.Api();
+            using var api = new Api.Api();
             Assert.DoesNotThrow(() => api.Initialize(TestAccount, "", null));
         }
 
@@ -90,6 +91,16 @@ namespace QuantConnect.Tests.API
 
             var result = Api.Api.FormatPathForDataRequest(path, dataFolder);
             Assert.AreEqual(dataToDownload.Replace("\\", "/", StringComparison.InvariantCulture), result);
+        }
+
+        [TestCase("Authorization", "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;range;x-amz-date,Signature=EXAMPLE_SIGNATURE")]
+        [TestCase("Custom-Header", "Custom header value")]
+        public void DownloadBytesAllowsUserDefinedHeaders(string headerKey, string headerValue)
+        {
+            using var api = new Api.Api();
+
+            var headers = new List<KeyValuePair<string, string>>() { new(headerKey, headerValue) };
+            Assert.DoesNotThrow(() => api.Download("https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1", headers, "", ""));
         }
     }
 }
