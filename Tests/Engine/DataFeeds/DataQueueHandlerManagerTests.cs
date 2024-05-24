@@ -159,11 +159,38 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             compositeDataQueueHandler.Dispose();
         }
 
+        [Test]
+        public void HandleExplodingDataQueueHandler()
+        {
+            using var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
+            // first exploding
+            compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"ExplodingDataHandler\", \"TestDataHandler\" ]" });
+            IEnumerator<BaseData> enumerator = null;
+            Assert.DoesNotThrow(() =>
+            {
+                enumerator = compositeDataQueueHandler.Subscribe(GetConfig(), (_, _) => { });
+            });
+            Assert.IsNotNull(enumerator);
+            enumerator.Dispose();
+        }
+
+        [Test]
+        public void ExplodingDataQueueHandler()
+        {
+            using var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
+            compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"ExplodingDataHandler\" ]" });
+            Assert.Throws<Exception>(() =>
+            {
+                using var enumerator = compositeDataQueueHandler.Subscribe(GetConfig(), (_, _) => { });
+            });
+        }
+
         private static SubscriptionDataConfig GetConfig(Symbol symbol = null)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol ?? Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork,
                 false, false, false, false, TickType.Trade, false);
         }
+
 
         private class TestDataHandler : IDataQueueHandler
         {
@@ -174,7 +201,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
             }
 
-            public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+            public virtual IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
             {
                 SubscribeCounter++;
                 return Enumerable.Empty<BaseData>().GetEnumerator();
@@ -190,6 +217,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             public bool IsConnected { get; }
+        }
+
+        private class ExplodingDataHandler : TestDataHandler
+        {
+            public override IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
+            {
+                throw new Exception("ExplodingDataHandler exception!");
+            }
         }
     }
 }
