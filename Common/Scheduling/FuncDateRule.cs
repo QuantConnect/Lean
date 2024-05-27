@@ -14,6 +14,7 @@
  *
 */
 
+using Python.Runtime;
 using System;
 using System.Collections.Generic;
 
@@ -35,6 +36,20 @@ namespace QuantConnect.Scheduling
         {
             Name = name;
             _getDatesFunction = getDatesFunction;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FuncDateRule"/> class using a Python function
+        /// </summary>
+        /// <param name="name">The name of this rule</param>
+        /// <param name="getDatesFunction">The time applicator function in Python</param>
+        public FuncDateRule(string name, PyObject getDatesFunction)
+        {
+            Name = name;
+            if (!getDatesFunction.TryConvertToDelegate(out _getDatesFunction))
+            {
+                throw new ArgumentException("Python DateRule provided is not a function");
+            }
         }
 
         /// <summary>

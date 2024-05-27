@@ -14,6 +14,7 @@
  *
 */
 
+using Python.Runtime;
 using System;
 using System.Collections.Generic;
 
@@ -35,6 +36,20 @@ namespace QuantConnect.Scheduling
         {
             Name = name;
             _createUtcEventTimesFunction = createUtcEventTimesFunction;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FuncTimeRule"/> class using a Python function
+        /// </summary>
+        /// <param name="name">The name of the time rule</param>
+        /// <param name="createUtcEventTimesFunction">Function used to transform dates into event date times in Python</param>
+        public FuncTimeRule(string name, PyObject createUtcEventTimesFunction)
+        {
+            Name = name;
+            if (!createUtcEventTimesFunction.TryConvertToDelegate(out _createUtcEventTimesFunction))
+            {
+                throw new ArgumentException("Python TimeRule provided is not a function");
+            }
         }
 
         /// <summary>

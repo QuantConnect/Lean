@@ -20,6 +20,7 @@ using System.Globalization;
 using System.Linq;
 using NodaTime;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -600,6 +601,39 @@ namespace QuantConnect.Tests.Common.Scheduling
 
             Assert.AreEqual(_utcNow.Date, nowUtc);
             Assert.AreEqual(nowUtc.Date, nowNewYork.AddDays(1));
+        }
+
+        [Test]
+        public void SetFuncDateRuleInPythonWorksAsExpected()
+        {
+            using (Py.GIL())
+            {
+                var pythonModule = PyModule.FromString("testModule", @"
+from AlgorithmImports import *
+
+def CustomDateRule(start, end):
+    return [start + (end - start)/2]
+");
+                dynamic pythonCustomDateRule = pythonModule.GetAttr("CustomDateRule");
+                var funcDateRule = new FuncDateRule("PythonFuncDateRule", pythonCustomDateRule);
+                Assert.AreEqual("PythonFuncDateRule", funcDateRule.Name);
+                Assert.AreEqual(new DateTime(2023, 1, 16, 12, 0, 0), funcDateRule.GetDates(new DateTime(2023, 1, 1), new DateTime(2023, 2, 1)).First());
+            }
+        }
+
+        [Test]
+        public void SetFuncDateRuleInPythonFailsWhenDateRuleIsInvalid()
+        {
+            using (Py.GIL())
+            {
+                var pythonModule = PyModule.FromString("testModule", @"
+from AlgorithmImports import *
+
+wrongCustomDateRule = 1
+");
+                dynamic pythonCustomDateRule = pythonModule.GetAttr("wrongCustomDateRule");
+                Assert.Throws<ArgumentException>(() => new FuncDateRule("PythonFuncDateRule", pythonCustomDateRule));
+            }
         }
 
         private static DateRules GetDateRules()

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Scheduling;
@@ -326,6 +327,39 @@ namespace QuantConnect.Tests.Common.Scheduling
 
             Assert.AreEqual(_utcNow, nowUtc);
             Assert.AreEqual(nowUtc, nowNewYork);
+        }
+
+        [Test]
+        public void SetFuncTimeRuleInPythonWorksAsExpected()
+        {
+            using (Py.GIL())
+            {
+                var pythonModule = PyModule.FromString("testModule", @"
+from AlgorithmImports import *
+
+def CustomTimeRule(dates):
+    return [dates[0] + timedelta(days=1)]
+");
+                dynamic pythonCustomTimeRule = pythonModule.GetAttr("CustomTimeRule");
+                var funcTimeRule = new FuncTimeRule("PythonFuncTimeRule", pythonCustomTimeRule);
+                Assert.AreEqual("PythonFuncTimeRule", funcTimeRule.Name);
+                Assert.AreEqual(new DateTime(2023, 1, 2, 0, 0, 0), funcTimeRule.CreateUtcEventTimes(new List<DateTime>() { new DateTime(2023, 1, 1) }).First());
+            }
+        }
+
+        [Test]
+        public void SetFuncTimeRuleInPythonFailsWhenInvalidTimeRule()
+        {
+            using (Py.GIL())
+            {
+                var pythonModule = PyModule.FromString("testModule", @"
+from AlgorithmImports import *
+
+wrongCustomTimeRule = ""hello""
+");
+                dynamic pythonCustomTimeRule = pythonModule.GetAttr("wrongCustomTimeRule");
+                Assert.Throws<ArgumentException>(() => new FuncTimeRule("PythonFuncTimeRule", pythonCustomTimeRule));
+            }
         }
 
         private static TimeRules GetTimeRules(DateTimeZone dateTimeZone)
