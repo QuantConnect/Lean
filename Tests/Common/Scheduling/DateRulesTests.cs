@@ -622,6 +622,26 @@ def CustomDateRule(start, end):
         }
 
         [Test]
+        public void SetFuncDateRuleInPythonWorksAsExpectedWithCSharpFunc()
+        {
+            using (Py.GIL())
+            {
+                var pythonModule = PyModule.FromString("testModule", @"
+from AlgorithmImports import *
+
+def GetFuncDateRule(csharpFunc):
+    return FuncDateRule(""CSharp"", csharpFunc)
+");
+                dynamic getFuncDateRule = pythonModule.GetAttr("GetFuncDateRule");
+                Func<DateTime, DateTime, IEnumerable<DateTime>> csharpFunc = (start, end) => { return new List<DateTime>() { new DateTime(2001, 3, 18) }; };
+                var funcDateRule = getFuncDateRule(csharpFunc);
+                Assert.AreEqual("CSharp", (funcDateRule.Name as PyObject).GetAndDispose<string>());
+                Assert.AreEqual(new DateTime(2001, 3, 18),
+                    (funcDateRule.GetDates(new DateTime(2023, 1, 1), new DateTime(2023, 2, 1)) as PyObject).GetAndDispose<List<DateTime>>().First());
+            }
+        }
+
+        [Test]
         public void SetFuncDateRuleInPythonFailsWhenDateRuleIsInvalid()
         {
             using (Py.GIL())
