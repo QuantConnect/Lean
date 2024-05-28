@@ -45,9 +45,7 @@ class CustomBrokerageSideOrderHandlingRegressionAlgorithm(QCAlgorithm):
         if len(list(self.portfolio.positions.groups)) != 1:
             raise Exception("Expected only one position")
 
-class CustomBrokerageMessageHandler(IBrokerageMessageHandler):
-    __namespace__ = "CustomBrokerageSideOrderHandlingRegressionAlgorithm"
-
+class CustomBrokerageMessageHandler(DefaultBrokerageMessageHandler):
     def __init__(self, algorithm):
         self._algorithm = algorithm
 
