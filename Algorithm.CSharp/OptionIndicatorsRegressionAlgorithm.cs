@@ -32,6 +32,8 @@ namespace QuantConnect.Algorithm.CSharp
         private Theta _theta;
         private Rho _rho;
 
+        protected virtual string ExpectedGreeks { get; set; } = "Implied Volatility: 0.4284,Delta: -0.00965,Gamma: 0.00027,Vega: 0.02602,Theta: -0.02564,Rho: 0.00033";
+
         public override void Initialize()
         {
             SetStartDate(2014, 6, 5);
@@ -42,6 +44,11 @@ namespace QuantConnect.Algorithm.CSharp
             var option = QuantConnect.Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505m, new DateTime(2014, 6, 27));
             AddOptionContract(option, Resolution.Minute);
 
+            InitializeIndicators(option);
+        }
+
+        protected void InitializeIndicators(Symbol option)
+        {
             _impliedVolatility = IV(option, period: 2);
             _delta = D(option, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
             _gamma = G(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
@@ -56,12 +63,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Expected IV/greeks calculated");
             }
-            Debug(@$"Implied Volatility: {_impliedVolatility},
-Delta: {_delta},
-Gamma: {_gamma},
-Vega: {_vega},
-Theta: {_theta},
-Rho: {_rho}");
+            var result = @$"Implied Volatility: {_impliedVolatility},Delta: {_delta},Gamma: {_gamma},Vega: {_vega},Theta: {_theta},Rho: {_rho}";
+
+            Debug(result);
+            if (result != ExpectedGreeks)
+            {
+                throw new Exception($"Unexpected greek values {result}. Expected {ExpectedGreeks}");
+            }
         }
 
         /// <summary>
@@ -72,12 +80,12 @@ Rho: {_rho}");
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1974;
+        public virtual long DataPoints => 1974;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -87,7 +95,7 @@ Rho: {_rho}");
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
             {"Average Win", "0%"},

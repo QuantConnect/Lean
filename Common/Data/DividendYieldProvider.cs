@@ -29,6 +29,13 @@ namespace QuantConnect.Data
     /// </summary>
     public class DividendYieldProvider : IDividendYieldModel
     {
+        /// <summary>
+        /// The default symbol to use as a dividend yield provider
+        /// </summary>
+        /// <remarks>This is useful for index and future options which do not have an underlying that yields dividends.
+        /// Defaults to SPY</remarks>
+        public static Symbol DefaultSymbol { get; set; } = Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA);
+
         protected static Dictionary<Symbol, Dictionary<DateTime, decimal>> _dividendYieldRateProvider;
         protected static Task _cacheClearTask;
         private static readonly object _lock = new();
@@ -58,6 +65,13 @@ namespace QuantConnect.Data
                 }
                 return dueTime;
             }
+        }
+
+        /// <summary>
+        /// Creates a new instance using the default symbol
+        /// </summary>
+        public DividendYieldProvider() : this(DefaultSymbol)
+        {
         }
 
         /// <summary>
