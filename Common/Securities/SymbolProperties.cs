@@ -28,7 +28,6 @@ namespace QuantConnect.Securities
         public string Description
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -37,7 +36,6 @@ namespace QuantConnect.Securities
         public string QuoteCurrency
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -64,7 +62,6 @@ namespace QuantConnect.Securities
         public decimal LotSize
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -73,7 +70,6 @@ namespace QuantConnect.Securities
         public string MarketTicker
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -85,7 +81,6 @@ namespace QuantConnect.Securities
         public decimal? MinimumOrderSize
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -96,7 +91,6 @@ namespace QuantConnect.Securities
         public decimal PriceMagnifier
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -108,7 +102,6 @@ namespace QuantConnect.Securities
         public decimal StrikeMultiplier
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -159,32 +152,6 @@ namespace QuantConnect.Securities
         public static SymbolProperties GetDefault(string quoteCurrency)
         {
             return new SymbolProperties(string.Empty, quoteCurrency.LazyToUpper(), 1, 0.01m, 1, string.Empty);
-        }
-
-        /// <summary>
-        /// Sets the symbol to be the same as the given ones without changing the reference
-        /// </summary>
-        /// <param name="other">The symbol properties to set</param>
-        /// <remarks>
-        /// This allows to update securities' symbol properties without overriding the reference they hold,
-        /// so consumers don't lose the reference if they have it cached.
-        /// </remarks>
-        internal void Update(SymbolProperties other)
-        {
-            if (other == null)
-            {
-                return;
-            }
-
-            Description = other.Description;
-            QuoteCurrency = other.QuoteCurrency;
-            ContractMultiplier = other.ContractMultiplier;
-            MinimumPriceVariation = other.MinimumPriceVariation;
-            LotSize = other.LotSize;
-            MarketTicker = other.MarketTicker;
-            MinimumOrderSize = other.MinimumOrderSize;
-            PriceMagnifier = other.PriceMagnifier;
-            StrikeMultiplier = other.StrikeMultiplier;
         }
     }
 }

@@ -143,6 +143,29 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreSame(properties, fetchedProperties);
         }
 
+        [Test]
+        public void CustomEntriesAreKeptAfterARefresh()
+        {
+            var database = SymbolPropertiesDatabase.FromDataFolder();
+            var ticker = "BTC";
+            var properties = SymbolProperties.GetDefault("USD");
+
+            // Set the entry
+            Assert.IsTrue(database.SetEntry(Market.USA, ticker, SecurityType.Base, properties));
+
+            // Fetch the custom entry to ensure we can access it with the ticker
+            var symbol = Symbol.Create(ticker, SecurityType.Base, Market.USA);
+            var fetchedProperties = database.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, "USD");
+            Assert.AreSame(properties, fetchedProperties);
+
+            // Refresh the database
+            database.ReloadEntries();
+
+            // Fetch the custom entry again to make sure it was not overridden
+            fetchedProperties = database.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, "USD");
+            Assert.AreSame(properties, fetchedProperties);
+        }
+
         [TestCase(Market.FXCM, SecurityType.Cfd)]
         [TestCase(Market.Oanda, SecurityType.Cfd)]
         [TestCase(Market.CFE, SecurityType.Future)]

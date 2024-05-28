@@ -201,8 +201,11 @@ namespace QuantConnect.Securities
         public bool SetEntry(string market, string symbol, SecurityType securityType, SymbolProperties properties)
         {
             var key = new SecurityDatabaseKey(market, symbol, securityType);
-            _entries[key] = properties;
-            _customEntries[key] = properties;
+            lock (DataFolderSymbolPropertiesDatabaseLock)
+            {
+                _entries[key] = properties;
+                _customEntries[key] = properties;
+            }
             return true;
         }
 

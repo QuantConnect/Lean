@@ -251,7 +251,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(security.Symbol.ID.Market, security.Symbol,
                 security.Symbol.ID.SecurityType, security.QuoteCurrency.Symbol);
-            security.SymbolProperties.Update(symbolProperties);
+            security.SymbolProperties = symbolProperties;
         }
 
         /// <summary>
