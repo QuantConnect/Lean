@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Brokerages
     public class OrderProvider : IOrderProvider
     {
         private int _orderId;
-        private readonly IList<Order> _orders;
+        private protected readonly IList<Order> _orders;
         private readonly object _lock = new object();
 
         public OrderProvider(IList<Order> orders)

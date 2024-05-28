@@ -23,8 +23,10 @@ using QuantConnect.Logging;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using QuantConnect.Orders.CrossZero;
 
 namespace QuantConnect.Brokerages
 {
@@ -566,53 +568,124 @@ namespace QuantConnect.Brokerages
 
         #endregion
 
-        private class ContingentOrderQueue<T> where T : class
+        #region CrossZeroOrder implementation
+
+        /// <summary>
+        /// Determines if executing the specified order will cross the zero holdings threshold.
+        /// </summary>
+        /// <param name="holdingQuantity">The current quantity of holdings.</param>
+        /// <param name="orderQuantity">The quantity of the order to be evaluated.</param>
+        /// <returns>
+        /// <c>true</c> if the order will change the holdings from positive to negative or vice versa; otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        /// This method checks if the order will result in a position change from positive to negative holdings or from negative to positive holdings.
+        /// </remarks>
+        public static bool OrderCrossesZero(decimal holdingQuantity, decimal orderQuantity)
         {
-            /// <summary>
-            /// The original order produced by the algorithm
-            /// </summary>
-            public readonly Order QCOrder;
-
-            /// <summary>
-            /// A queue of contingent orders to be placed after fills
-            /// </summary>
-            public readonly Queue<T> Contingents;
-
-            public ContingentOrderQueue(Order qcOrder, params T[] contingents)
+            //We're reducing position or flipping:
+            if (holdingQuantity > 0 && orderQuantity < 0)
             {
-                QCOrder = qcOrder;
-                Contingents = new Queue<T>(contingents);
-            }
-
-            /// <summary>
-            /// Dequeues the next contingent order, or null if there are none left
-            /// </summary>
-            public T Next()
-            {
-                if (Contingents.Count == 0)
+                if ((holdingQuantity + orderQuantity) < 0)
                 {
-                    return null;
+                    //We don't have enough holdings so will cross through zero:
+                    return true;
                 }
-                return Contingents.Dequeue();
             }
+            else if (holdingQuantity < 0 && orderQuantity > 0)
+            {
+                if ((holdingQuantity + orderQuantity) > 0)
+                {
+                    //Crossed zero: need to split into 2 orders:
+                    return true;
+                }
+            }
+            return false;
         }
 
-        private readonly ConcurrentDictionary<string, ContingentOrderQueue<object>> _contingentOrdersByQCOrderID = new ConcurrentDictionary<string, ContingentOrderQueue<object>>();
+        /// <summary>
+        /// Calculates the quantities needed to close the current position and establish a new position based on the provided order.
+        /// </summary>
+        /// <param name="holdingQuantity">The quantity currently held in the position that needs to be closed.</param>
+        /// <param name="orderQuantity">The quantity defined in the new order to be established.</param>
+        /// <returns>
+        /// A tuple containing:
+        /// <list type="bullet">
+        /// <item>
+        /// <description>The quantity needed to close the current position (negative value).</description>
+        /// </item>
+        /// <item>
+        /// <description>The quantity needed to establish the new position.</description>
+        /// </item>
+        /// </list>
+        /// </returns>
+        public static (decimal closePostionQunatity, decimal newPositionQuantity) GetQuantityOnCrossPosition(decimal holdingQuantity, decimal orderQuantity)
+        {
+            // first we need an order to close out the current position
+            var firstOrderQuantity = -holdingQuantity;
+            var secondOrderQuantity = orderQuantity - firstOrderQuantity;
 
-        private readonly ConcurrentDictionary<string, Order> _zeroCrossingOrdersByTradierClosingOrderId = new ConcurrentDictionary<string, Order>();
+            return (firstOrderQuantity, secondOrderQuantity);
+        }
 
-        public bool TryCrossPositionOrder<T>(ISecurityProvider securityProvider, Order order,
-            Func<Order, decimal, decimal, T> createBrokerageOrderRequestCallback,
-            Action<T> convertStopOrderTypesHandler,
+        /// <summary>
+        /// Converts a stop order type to its corresponding market or limit order type.
+        /// </summary>
+        /// <param name="orderType">The original order type to be converted.</param>
+        /// <returns>
+        /// The converted order type. If the original order type is <see cref="OrderType.StopMarket"/>, 
+        /// it returns <see cref="OrderType.Market"/>. If the original order type is <see cref="OrderType.StopLimit"/>,
+        /// it returns <see cref="OrderType.Limit"/>. Otherwise, it returns the original order type.
+        /// </returns>
+        public static OrderType ConvertStopCrossingOrderType(OrderType orderType) => orderType switch
+        {
+            OrderType.StopMarket => OrderType.Market,
+            OrderType.StopLimit => OrderType.Limit,
+            _ => orderType
+        };
+
+        /// <summary>
+        /// A dictionary to store the relationship between brokerage crossing orders and Lean orer id.
+        /// </summary>
+        private readonly ConcurrentDictionary<int, CrossZeroOrderRequest> _leanOrderByBrokerageCrossingOrders = new ConcurrentDictionary<int, CrossZeroOrderRequest>();
+
+        /// <summary>
+        /// Places a cross zero order and returns the response.
+        /// </summary>
+        /// <param name="crossZeroOrderRequest">The request containing order details.</param>
+        /// <returns>
+        /// A <see cref="CrossZeroOrderResponse"/> indicating the result of the order placement.
+        /// </returns>
+        public virtual CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroOrderRequest crossZeroOrderRequest)
+        {
+            return new CrossZeroOrderResponse();
+        }
+
+        /// <summary>
+        /// Attempts to place an order that may cross the zero position, handling the need to split the order
+        /// into two parts if necessary.
+        /// </summary>
+        /// <typeparam name="T">The type of the brokerage order request.</typeparam>
+        /// <param name="securityProvider">The security provider used to get holdings quantity.</param>
+        /// <param name="order">The order to be placed.</param>
+        /// <param name="createBrokerageOrderRequestCallback">The callback to create a brokerage order request.</param>
+        /// <param name="placeOrderCallback">The callback to place the order.</param>
+        /// <returns>
+        /// <c>true</c> if the order crosses zero and the first part of the order was successfully placed; 
+        /// <c>false</c> if the first part of the order could not be placed; 
+        /// <c>null</c> if the order does not cross zero.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="order"/>, <paramref name="createBrokerageOrderRequestCallback"/>, 
+        /// or <paramref name="placeOrderCallback"/> is <c>null</c>.
+        /// </exception>
+        public bool? TryCrossPositionOrder<T>(ISecurityProvider securityProvider, Order order,
+            Func<Order, decimal, decimal, OrderType, T> createBrokerageOrderRequestCallback,
             Func<T, (bool isOrderSubmitted, string brokerageOrderId)> placeOrderCallback)
         {
             if (order == null)
             {
                 throw new ArgumentNullException(nameof(order), "The order parameter cannot be null.");
-            }
-            if (convertStopOrderTypesHandler == null)
-            {
-                throw new ArgumentNullException(nameof(convertStopOrderTypesHandler), "The ConvertStopOrderTypes parameter cannot be null.");
             }
             if (placeOrderCallback == null)
             {
@@ -625,53 +698,86 @@ namespace QuantConnect.Brokerages
 
             var holdingQuantity = securityProvider.GetHoldingsQuantity(order.Symbol);
 
-            var orderRequest = createBrokerageOrderRequestCallback(order, order.Quantity, holdingQuantity);
-
             // do we need to split the order into two pieces?
-            bool crossesZero = BrokerageHelpers.OrderCrossesZero(holdingQuantity, order.Quantity);
+            bool crossesZero = OrderCrossesZero(holdingQuantity, order.Quantity);
             if (crossesZero)
             {
                 // first we need an order to close out the current position
-                var (firstOrderQuantity, secondOrderQuantity) = BrokerageHelpers.GetQuantityOnCrossPosition(holdingQuantity, order.Quantity);
+                var (firstOrderQuantity, secondOrderQuantity) = GetQuantityOnCrossPosition(holdingQuantity, order.Quantity);
 
-                orderRequest = createBrokerageOrderRequestCallback(order, firstOrderQuantity, holdingQuantity);
+                // Note: original quantity - already sell
+                var firstOrderPartRequest = createBrokerageOrderRequestCallback(order, firstOrderQuantity, holdingQuantity, order.Type);
 
                 // we actually can't place this order until the closingOrder is filled
                 // create another order for the rest, but we'll convert the order type to not be a stop
-                // but a market or a limit order
-                var restOfOrder = createBrokerageOrderRequestCallback(order, secondOrderQuantity, 0);
+                // but a market or a limit order                
+                var secondOrderPartRequest = new CrossZeroOrderRequest(order, ConvertStopCrossingOrderType(order.Type), secondOrderQuantity);
 
-                convertStopOrderTypesHandler(restOfOrder);
-
-                _contingentOrdersByQCOrderID.AddOrUpdate(order.Id.ToStringInvariant(), new ContingentOrderQueue<object>(order, restOfOrder));
+                _leanOrderByBrokerageCrossingOrders.AddOrUpdate(order.Id, secondOrderPartRequest);
 
                 // issue the first order to close the position
-                var response = placeOrderCallback(orderRequest);
+                var response = placeOrderCallback(firstOrderPartRequest);
                 if (!response.isOrderSubmitted)
                 {
                     // remove the contingent order if we weren't successful in placing the first
                     //ContingentOrderQueue contingent;
-                    _contingentOrdersByQCOrderID.TryRemove(order.Id.ToStringInvariant(), out var contingent);
+                    _leanOrderByBrokerageCrossingOrders.TryRemove(order.Id, out _);
                     return false;
                 }
 
                 var closingOrderID = response.brokerageOrderId;
                 order.BrokerId.Add(closingOrderID.ToStringInvariant());
 
-                _zeroCrossingOrdersByTradierClosingOrderId.AddOrUpdate(closingOrderID, order);
-
                 return true;
             }
-            else
+
+            return null;
+        }
+
+        protected void TryHandleRemainingCrossZeroOrder(Order leanOrder, OrderEvent orderEvent)
+        {
+            if (leanOrder != null && orderEvent != null
+                && orderEvent.Status == OrderStatus.Filled && _leanOrderByBrokerageCrossingOrders.TryGetValue(leanOrder.Id, out var brokerageOrder))
             {
-                var response = placeOrderCallback(orderRequest);
-                if (response.isOrderSubmitted)
+
+                // if we have a contingent that needs to be submitted then we can't respect the 'Filled' state from the order
+                // because the Lean order hasn't been technically filled yet, so mark it as 'PartiallyFilled'
+                leanOrder.Status = OrderStatus.PartiallyFilled;
+
+                Task.Run(() =>
                 {
-                    order.BrokerId.Add(response.brokerageOrderId.ToStringInvariant());
-                    return true;
-                }
-                return false;
+                    try
+                    {
+                        Log.Trace("TradierBrokerage.SubmitContingentOrder(): Submitting contingent order for QC id: " + leanOrder.Id);
+                        var response = PlaceCrossZeroOrder(brokerageOrder);
+
+                        if (response.IsOrderPlacedSuccessfully)
+                        {
+                            // add the new brokerage id for retrieval later
+                            leanOrder.BrokerId.Add(response.BrokerageOrderId);
+                        }
+                        else
+                        {
+                            // if we failed to place this order I don't know what to do, we've filled the first part
+                            // and failed to place the second... strange. Should we invalidate the rest of the order??
+                            Log.Error($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Failed to submit contingent order.");
+                            var message = $"{leanOrder.Symbol} Failed submitting contingent order for " +
+                                $"LeanOrderId: {leanOrder.Id.ToStringInvariant()} Filled - BrokerageOrderId: {response.BrokerageOrderId}";
+                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "ContingentOrderFailed", message));
+                            OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
+                        }
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
+                        //OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "ContingentOrderError", "An error occurred while trying to submit an Tradier contingent order: " + err));
+                        //OnOrderEvent(new OrderEvent(qcOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Canceled });
+                    }
+                });
+                OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero));
             }
         }
+
+        #endregion
     }
 }
