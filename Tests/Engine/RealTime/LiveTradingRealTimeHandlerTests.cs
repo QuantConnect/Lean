@@ -35,19 +35,12 @@ using System.Reflection;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Util;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Engine.RealTime
 {
     [TestFixture]
     public class LiveTradingRealTimeHandlerTests
     {
-        [TearDown]
-        public void TearDown()
-        {
-            Config.Reset();
-        }
-
         [Test]
         public void ThreadSafety()
         {
@@ -166,7 +159,6 @@ namespace QuantConnect.Tests.Engine.RealTime
         [TestCase("6:30:00")]
         public void RefreshesSymbolProperties(string refreshPeriodStr)
         {
-            Config.Set("databases-refresh-period", refreshPeriodStr);
             var refreshPeriod = string.IsNullOrEmpty(refreshPeriodStr) ? TimeSpan.FromDays(1) : TimeSpan.Parse(refreshPeriodStr);
             var step = refreshPeriod / 2;
 
@@ -176,6 +168,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             timeProvider.SetCurrentTimeUtc(new DateTime(2023, 5, 30));
 
             var algorithm = new AlgorithmStub();
+            algorithm.Settings.DatabasesRefreshPeriod = refreshPeriod;
             algorithm.AddEquity("SPY");
             algorithm.AddForex("EURUSD");
 

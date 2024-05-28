@@ -75,11 +75,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             RefreshSymbolProperties();
 
             // set up an scheduled event to refresh market hours and symbol properties every certain period of time
-            if (!TimeSpan.TryParse(Config.Get("databases-refresh-period", "1.00:00:00"), out var refreshPeriod))
-            {
-                refreshPeriod = TimeSpan.FromDays(1);
-            }
-            var times = Time.DateTimeRange(utcNow.Date, Time.EndOfTime, refreshPeriod).Where(date => date > utcNow);
+            var times = Time.DateTimeRange(utcNow.Date, Time.EndOfTime, Algorithm.Settings.DatabasesRefreshPeriod).Where(date => date > utcNow);
 
             Add(new ScheduledEvent("RefreshMarketHoursAndSymbolProperties", times, (name, triggerTime) =>
             {
