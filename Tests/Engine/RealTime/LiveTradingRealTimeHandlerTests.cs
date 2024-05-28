@@ -35,12 +35,19 @@ using System.Reflection;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Util;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Engine.RealTime
 {
     [TestFixture]
     public class LiveTradingRealTimeHandlerTests
     {
+        [TearDown]
+        public void TearDown()
+        {
+            Config.Reset();
+        }
+
         [Test]
         public void ThreadSafety()
         {
@@ -149,9 +156,20 @@ namespace QuantConnect.Tests.Engine.RealTime
             realTimeHandler.Exit();
         }
 
-        [Test]
-        public void RefreshesSymbolProperties()
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("1.00:00:00")]
+        [TestCase("2.00:00:00")]
+        [TestCase("1.12:00:00")]
+        [TestCase("12:00:00")]
+        [TestCase("6:00:00")]
+        [TestCase("6:30:00")]
+        public void RefreshesSymbolProperties(string refreshPeriodStr)
         {
+            Config.Set("databases-refresh-period", refreshPeriodStr);
+            var refreshPeriod = string.IsNullOrEmpty(refreshPeriodStr) ? TimeSpan.FromDays(1) : TimeSpan.Parse(refreshPeriodStr);
+            var step = refreshPeriod / 2;
+
             using var realTimeHandler = new SPDBTestLiveTradingRealTimeHandler();
 
             var timeProvider = realTimeHandler.PublicTimeProvider;
@@ -172,12 +190,22 @@ namespace QuantConnect.Tests.Engine.RealTime
             algorithm.SetFinishedWarmingUp();
             realTimeHandler.SetTime(timeProvider.GetUtcNow());
 
+            var events = new[] { realTimeHandler.SpdbRefreshed, realTimeHandler.SecuritySymbolPropertiesUpdated };
             for (var i = 0; i < 10; i++)
             {
-                timeProvider.Advance(TimeSpan.FromDays(1));
-                Assert.IsTrue(WaitHandle.WaitAll(new[] { realTimeHandler.SecuritySymbolPropertiesUpdated }, 1000), $"Iteration {i}");
-                realTimeHandler.SpdbRefreshed.Reset();
-                realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
+                timeProvider.Advance(step);
+
+                // We only advanced half the time, so we should not have refreshed yet
+                if (i % 2 == 0)
+                {
+                    Assert.IsFalse(WaitHandle.WaitAll(events, 500));
+                }
+                else
+                {
+                    Assert.IsTrue(WaitHandle.WaitAll(events, 2000));
+                    realTimeHandler.SpdbRefreshed.Reset();
+                    realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
+                }
             }
         }
 
@@ -220,7 +248,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             public void TestRefreshMarketHoursToday(Security security, DateTime time, MarketHoursSegment expectedSegment)
             {
                 OnSecurityUpdated.Reset();
-                RefreshMarketHoursToday(time);
+                RefreshMarketHours(time);
                 OnSecurityUpdated.WaitOne();
                 AssertMarketHours(security, time, expectedSegment);
             }
@@ -265,7 +293,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 Add(new ScheduledEvent("RefreshHours", new[] { new DateTime(2023, 6, 29) }, (name, triggerTime) =>
                 {
                     // refresh market hours from api every day
-                    RefreshMarketHoursToday((new DateTime(2023, 5, 30)).Date);
+                    RefreshMarketHours((new DateTime(2023, 5, 30)).Date);
                 }));
                 OnSecurityUpdated.Reset();
                 SetTime(DateTime.UtcNow);
@@ -299,9 +327,9 @@ namespace QuantConnect.Tests.Engine.RealTime
             public ManualResetEvent SpdbRefreshed { get; } = new ManualResetEvent(false);
             public ManualResetEvent SecuritySymbolPropertiesUpdated = new ManualResetEvent(false);
 
-            protected override void RefreshSymbolPropertiesToday()
+            protected override void RefreshSymbolProperties()
             {
-                base.RefreshSymbolPropertiesToday();
+                base.RefreshSymbolProperties();
                 SpdbRefreshed.Set();
             }
 
