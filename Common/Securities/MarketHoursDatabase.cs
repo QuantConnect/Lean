@@ -120,7 +120,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Reload entries dictionary from MHDB file and merge them with previous custom ones
         /// </summary>
-        public void ReloadEntries()
+        internal void ReloadEntries()
         {
             lock (DataFolderMarketHoursDatabaseLock)
             {

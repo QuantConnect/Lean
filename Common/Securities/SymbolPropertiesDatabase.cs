@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-using System;
+using QuantConnect.Util;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -29,7 +29,8 @@ namespace QuantConnect.Securities
         private static SymbolPropertiesDatabase _dataFolderSymbolPropertiesDatabase;
         private static readonly object DataFolderSymbolPropertiesDatabaseLock = new object();
 
-        private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
+        private Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
+        private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _customEntries;
         private readonly IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
 
         /// <summary>
@@ -58,6 +59,7 @@ namespace QuantConnect.Securities
             }
 
             _entries = allEntries;
+            _customEntries = new();
             _keyBySecurityType = entriesBySecurityType;
         }
 
@@ -200,6 +202,7 @@ namespace QuantConnect.Securities
         {
             var key = new SecurityDatabaseKey(market, symbol, securityType);
             _entries[key] = properties;
+            _customEntries[key] = properties;
             return true;
         }
 
@@ -283,6 +286,20 @@ namespace QuantConnect.Securities
         private static bool HasValidValue(string[] array, uint position)
         {
             return array.Length > position && !string.IsNullOrEmpty(array[position]);
+        }
+
+        /// <summary>
+        /// Reload entries dictionary from SPDB file and merge them with previous custom ones
+        /// </summary>
+        internal void ReloadEntries()
+        {
+            lock (DataFolderSymbolPropertiesDatabaseLock)
+            {
+                _dataFolderSymbolPropertiesDatabase = null;
+                var fileEntries = FromDataFolder()._entries.Where(x => !_customEntries.ContainsKey(x.Key));
+                var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
+                _entries = newEntries;
+            }
         }
     }
 }

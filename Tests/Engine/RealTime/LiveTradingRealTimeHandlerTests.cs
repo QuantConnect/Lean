@@ -33,6 +33,8 @@ using static QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests.Brokerag
 using QuantConnect.Orders;
 using System.Reflection;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.RealTime
 {
@@ -147,6 +149,38 @@ namespace QuantConnect.Tests.Engine.RealTime
             realTimeHandler.Exit();
         }
 
+        [Test]
+        public void RefreshesSymbolProperties()
+        {
+            using var realTimeHandler = new SPDBTestLiveTradingRealTimeHandler();
+
+            var timeProvider = realTimeHandler.PublicTimeProvider;
+            timeProvider.SetCurrentTimeUtc(new DateTime(2023, 5, 30));
+
+            var algorithm = new AlgorithmStub();
+            algorithm.AddEquity("SPY");
+            algorithm.AddForex("EURUSD");
+
+            realTimeHandler.Setup(algorithm,
+                new AlgorithmNodePacket(PacketType.AlgorithmNode),
+                new BacktestingResultHandler(),
+                null,
+                new TestTimeLimitManager());
+            realTimeHandler.SpdbRefreshed.Reset();
+            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
+
+            algorithm.SetFinishedWarmingUp();
+            realTimeHandler.SetTime(timeProvider.GetUtcNow());
+
+            for (var i = 0; i < 10; i++)
+            {
+                timeProvider.Advance(TimeSpan.FromDays(1));
+                Assert.IsTrue(WaitHandle.WaitAll(new[] { realTimeHandler.SecuritySymbolPropertiesUpdated }, 1000), $"Iteration {i}");
+                realTimeHandler.SpdbRefreshed.Reset();
+                realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
+            }
+        }
+
         private class TestTimeLimitManager : IIsolatorLimitResultProvider
         {
             public IsolatorLimitResult IsWithinLimit()
@@ -251,6 +285,42 @@ namespace QuantConnect.Tests.Engine.RealTime
                 var key = new SecurityDatabaseKey(Market.USA, null, SecurityType.Equity);
                 var mhdb = new MarketHoursDatabase(new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>() { { key, entry } });
                 MarketHoursDatabase = mhdb;
+            }
+        }
+
+        private class SPDBTestLiveTradingRealTimeHandler : LiveTradingRealTimeHandler, IDisposable
+        {
+            private int _securitiesUpdated;
+
+            public ManualTimeProvider PublicTimeProvider = new ManualTimeProvider();
+
+            protected override ITimeProvider TimeProvider { get { return PublicTimeProvider; } }
+
+            public ManualResetEvent SpdbRefreshed { get; } = new ManualResetEvent(false);
+            public ManualResetEvent SecuritySymbolPropertiesUpdated = new ManualResetEvent(false);
+
+            protected override void RefreshSymbolPropertiesToday()
+            {
+                base.RefreshSymbolPropertiesToday();
+                SpdbRefreshed.Set();
+            }
+
+            protected override void UpdateSymbolProperties(Security security)
+            {
+                base.UpdateSymbolProperties(security);
+                Algorithm.Log($"{Algorithm.Securities.Count}");
+
+                if (++_securitiesUpdated == Algorithm.Securities.Count)
+                {
+                    SecuritySymbolPropertiesUpdated.Set();
+                    _securitiesUpdated = 0;
+                }
+            }
+
+            public void Dispose()
+            {
+                SpdbRefreshed.Dispose();
+                SecuritySymbolPropertiesUpdated.Dispose();
             }
         }
 
