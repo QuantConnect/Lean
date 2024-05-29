@@ -650,6 +650,18 @@ namespace QuantConnect.Brokerages
         private readonly ConcurrentDictionary<int, CrossZeroOrderRequest> _leanOrderByBrokerageCrossingOrders = new ConcurrentDictionary<int, CrossZeroOrderRequest>();
 
         /// <summary>
+        /// A thread-safe dictionary that maps brokerage order IDs to their corresponding Order objects.
+        /// </summary>
+        /// <remarks>
+        /// This ConcurrentDictionary is used to maintain a mapping between Zero Cross brokerage order IDs and Lean Order objects. 
+        /// The dictionary is protected and read-only, ensuring that it can only be modified by the class that declares it and cannot 
+        /// be assigned a new instance after initialization.
+        /// </remarks>
+#pragma warning disable CA1051 // Do not declare visible instance fields
+        protected readonly ConcurrentDictionary<string, Order> _leanOrderByZeroCrossBrokerageOrderId = new();
+#pragma warning restore CA1051 // Do not declare visible instance fields
+
+        /// <summary>
         /// Places a cross zero order and returns the response.
         /// </summary>
         /// <param name="crossZeroOrderRequest">The request containing order details.</param>
@@ -724,7 +736,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="leanOrder">The order object that needs to be processed.</param>
         /// <param name="orderEvent">The event object containing order event details.</param>
-        protected void TryHandleRemainingCrossZeroOrder(Order leanOrder, OrderEvent orderEvent)
+        protected bool TryHandleRemainingCrossZeroOrder(Order leanOrder, OrderEvent orderEvent)
         {
             if (leanOrder != null && orderEvent != null
                 && orderEvent.Status == OrderStatus.Filled && _leanOrderByBrokerageCrossingOrders.TryRemove(leanOrder.Id, out var brokerageOrder))
@@ -745,6 +757,7 @@ namespace QuantConnect.Brokerages
                         {
                             // add the new brokerage id for retrieval later
                             leanOrder.BrokerId.Add(response.BrokerageOrderId);
+                            _leanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(response.BrokerageOrderId, leanOrder);
                         }
                         else
                         {
@@ -765,7 +778,9 @@ namespace QuantConnect.Brokerages
                     }
 #pragma warning restore CA1031 // Do not catch general exception types
                 });
+                return true;
             }
+            return false;
         }
 
         #endregion
