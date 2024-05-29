@@ -658,45 +658,30 @@ namespace QuantConnect.Brokerages
         /// </returns>
         public virtual CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroOrderRequest crossZeroOrderRequest)
         {
-            return new CrossZeroOrderResponse();
+            throw new NotImplementedException($"{nameof(PlaceCrossZeroOrder)} method should be overridden in the derived class to handle brokerage-specific logic.");
         }
 
         /// <summary>
-        /// Attempts to place an order that may cross the zero position, handling the need to split the order
-        /// into two parts if necessary.
+        /// Attempts to place an order that may cross the zero position. 
+        /// If the order needs to be split into two parts due to crossing zero, 
+        /// this method handles the split and placement accordingly.
         /// </summary>
-        /// <typeparam name="T">The type of the brokerage order request.</typeparam>
-        /// <param name="securityProvider">The security provider used to get holdings quantity.</param>
-        /// <param name="order">The order to be placed.</param>
-        /// <param name="createBrokerageOrderRequestCallback">The callback to create a brokerage order request.</param>
-        /// <param name="placeOrderCallback">The callback to place the order.</param>
+        /// <param name="order">The order to be placed. Must not be <c>null</c>.</param>
+        /// <param name="holdingQuantity">The current holding quantity of the order's symbol.</param>
         /// <returns>
-        /// <c>true</c> if the order crosses zero and the first part of the order was successfully placed; 
-        /// <c>false</c> if the first part of the order could not be placed; 
-        /// <c>null</c> if the order does not cross zero.
+        /// <para><c>true</c> if the order crosses zero and the first part was successfully placed;</para>
+        /// <para><c>false</c> if the first part of the order could not be placed;</para>
+        /// <para><c>null</c> if the order does not cross zero.</para>
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="order"/>, <paramref name="createBrokerageOrderRequestCallback"/>, 
-        /// or <paramref name="placeOrderCallback"/> is <c>null</c>.
+        /// Thrown if <paramref name="order"/> is <c>null</c>.
         /// </exception>
-        public bool? TryCrossPositionOrder<T>(ISecurityProvider securityProvider, Order order,
-            Func<Order, decimal, decimal, OrderType, T> createBrokerageOrderRequestCallback,
-            Func<T, (bool isOrderSubmitted, string brokerageOrderId)> placeOrderCallback)
+        public bool? TryCrossZeroPositionOrder(Order order, decimal holdingQuantity)
         {
             if (order == null)
             {
                 throw new ArgumentNullException(nameof(order), "The order parameter cannot be null.");
             }
-            if (placeOrderCallback == null)
-            {
-                throw new ArgumentNullException(nameof(placeOrderCallback), "The PlaceOrder parameter cannot be null.");
-            }
-            if (createBrokerageOrderRequestCallback == null)
-            {
-                throw new ArgumentNullException(nameof(createBrokerageOrderRequestCallback), "The createBrokerageOrderRequest parameter cannot be null.");
-            }
-
-            var holdingQuantity = securityProvider.GetHoldingsQuantity(order.Symbol);
 
             // do we need to split the order into two pieces?
             bool crossesZero = OrderCrossesZero(holdingQuantity, order.Quantity);
@@ -706,18 +691,18 @@ namespace QuantConnect.Brokerages
                 var (firstOrderQuantity, secondOrderQuantity) = GetQuantityOnCrossPosition(holdingQuantity, order.Quantity);
 
                 // Note: original quantity - already sell
-                var firstOrderPartRequest = createBrokerageOrderRequestCallback(order, firstOrderQuantity, holdingQuantity, order.Type);
+                var firstOrderPartRequest = new CrossZeroOrderRequest(order, order.Type, firstOrderQuantity, holdingQuantity);
 
                 // we actually can't place this order until the closingOrder is filled
                 // create another order for the rest, but we'll convert the order type to not be a stop
                 // but a market or a limit order                
-                var secondOrderPartRequest = new CrossZeroOrderRequest(order, ConvertStopCrossingOrderType(order.Type), secondOrderQuantity);
+                var secondOrderPartRequest = new CrossZeroOrderRequest(order, ConvertStopCrossingOrderType(order.Type), secondOrderQuantity, 0m);
 
                 _leanOrderByBrokerageCrossingOrders.AddOrUpdate(order.Id, secondOrderPartRequest);
 
                 // issue the first order to close the position
-                var response = placeOrderCallback(firstOrderPartRequest);
-                if (!response.isOrderSubmitted)
+                var response = PlaceCrossZeroOrder(firstOrderPartRequest);
+                if (!response.IsOrderPlacedSuccessfully)
                 {
                     // remove the contingent order if we weren't successful in placing the first
                     //ContingentOrderQueue contingent;
@@ -725,7 +710,7 @@ namespace QuantConnect.Brokerages
                     return false;
                 }
 
-                var closingOrderID = response.brokerageOrderId;
+                var closingOrderID = response.BrokerageOrderId;
                 order.BrokerId.Add(closingOrderID.ToStringInvariant());
 
                 return true;
@@ -734,21 +719,26 @@ namespace QuantConnect.Brokerages
             return null;
         }
 
+        /// <summary>
+        /// Attempts to handle any remaining orders that cross the zero boundary.
+        /// </summary>
+        /// <param name="leanOrder">The order object that needs to be processed.</param>
+        /// <param name="orderEvent">The event object containing order event details.</param>
         protected void TryHandleRemainingCrossZeroOrder(Order leanOrder, OrderEvent orderEvent)
         {
             if (leanOrder != null && orderEvent != null
-                && orderEvent.Status == OrderStatus.Filled && _leanOrderByBrokerageCrossingOrders.TryGetValue(leanOrder.Id, out var brokerageOrder))
+                && orderEvent.Status == OrderStatus.Filled && _leanOrderByBrokerageCrossingOrders.TryRemove(leanOrder.Id, out var brokerageOrder))
             {
-
                 // if we have a contingent that needs to be submitted then we can't respect the 'Filled' state from the order
                 // because the Lean order hasn't been technically filled yet, so mark it as 'PartiallyFilled'
-                leanOrder.Status = OrderStatus.PartiallyFilled;
+                OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.PartiallyFilled });
 
                 Task.Run(() =>
                 {
+#pragma warning disable CA1031 // Do not catch general exception types
                     try
                     {
-                        Log.Trace("TradierBrokerage.SubmitContingentOrder(): Submitting contingent order for QC id: " + leanOrder.Id);
+                        Log.Trace($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Submit the second part of cross order by Id:{leanOrder.Id}");
                         var response = PlaceCrossZeroOrder(brokerageOrder);
 
                         if (response.IsOrderPlacedSuccessfully)
@@ -761,20 +751,20 @@ namespace QuantConnect.Brokerages
                             // if we failed to place this order I don't know what to do, we've filled the first part
                             // and failed to place the second... strange. Should we invalidate the rest of the order??
                             Log.Error($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Failed to submit contingent order.");
-                            var message = $"{leanOrder.Symbol} Failed submitting contingent order for " +
+                            var message = $"{leanOrder.Symbol} Failed submitting the second part of cross order for " +
                                 $"LeanOrderId: {leanOrder.Id.ToStringInvariant()} Filled - BrokerageOrderId: {response.BrokerageOrderId}";
-                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "ContingentOrderFailed", message));
+                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroFailed", message));
                             OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
                         }
                     }
                     catch (Exception err)
                     {
                         Log.Error(err);
-                        //OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "ContingentOrderError", "An error occurred while trying to submit an Tradier contingent order: " + err));
-                        //OnOrderEvent(new OrderEvent(qcOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Canceled });
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroOrderError", "An error occurred while trying to submit an cross zero order: " + err));
+                        OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
                     }
+#pragma warning restore CA1031 // Do not catch general exception types
                 });
-                OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero));
             }
         }
 

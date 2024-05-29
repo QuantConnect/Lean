@@ -66,15 +66,30 @@ namespace QuantConnect.Tests.Brokerages
         [Test]
         public void PlaceCrossOrder()
         {
+            var expectedOrderStatusChangedOrdering = new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.Filled };
+            var actualCrossZeroOrderStatusOrdering = new Queue<OrderStatus>();
+            using var autoResetEventPartialFilledStatus = new AutoResetEvent(false);
+
             var algorithm = new AlgorithmStub();
             var security = algorithm.AddEquity("AAPL");
             security.Holdings.SetHoldings(180m, 10);
 
             using var brokerage = new PhonyBrokerage("phony", algorithm);
 
-            //brokerage.OrdersStatusChanged += Brokerage_OrdersStatusChanged;
+            brokerage.OrdersStatusChanged += (_, orderEvents) =>
+            {
+                var orderEvent = orderEvents[0];
 
-            //var marketOrder = new MarketOrder(Symbols.AAPL, -20, DateTime.UtcNow);
+                actualCrossZeroOrderStatusOrdering.Enqueue(orderEvent.Status);
+
+                Log.Trace($"{nameof(PlaceCrossOrder)}.OrdersStatusChangedEvent.Status: {orderEvent.Status}");
+
+                if (orderEvent.Status == OrderStatus.PartiallyFilled)
+                {
+                    autoResetEventPartialFilledStatus.Set();
+                }
+            };
+
             var stopMarket = new StopMarketOrder(Symbols.AAPL, -20, 180m, DateTime.UtcNow);
 
             var holdings = brokerage.GetAccountHoldings();
@@ -86,17 +101,19 @@ namespace QuantConnect.Tests.Brokerages
 
             Assert.IsTrue(response);
 
-            Thread.Sleep(-1);
+            autoResetEventPartialFilledStatus.WaitOne(TimeSpan.FromSeconds(5));
+            var partialFilledOrder = brokerage.GetAllOrders(o => o.Status == OrderStatus.PartiallyFilled).Single();
+            Assert.IsTrue(partialFilledOrder.Status == OrderStatus.PartiallyFilled);
+
+            CollectionAssert.AreEquivalent(expectedOrderStatusChangedOrdering, actualCrossZeroOrderStatusOrdering);
         }
 
         private class PhonyBrokerage : Brokerage
         {
             private readonly IAlgorithm _algorithm;
-            private ISecurityProvider _securityProvider;
-
+            private readonly ISecurityProvider _securityProvider;
             private readonly CustomOrderProvider _orderProvider;
-
-            private CancellationTokenSource _cancellationTokenSource = new();
+            private readonly CancellationTokenSource _cancellationTokenSource = new();
 
             public override bool IsConnected => throw new NotImplementedException();
 
@@ -106,11 +123,11 @@ namespace QuantConnect.Tests.Brokerages
                 _orderProvider = new CustomOrderProvider();
                 _securityProvider = algorithm.Portfolio;
 
-                OrdersStatusChanged += PhonyBrokerage_OrdersStatusChanged;
+                OrdersStatusChanged += OrdersStatusChangedEventHandler;
                 ImitationBrokerageOrderUpdates();
             }
 
-            private void PhonyBrokerage_OrdersStatusChanged(object sender, List<OrderEvent> orderEvents)
+            private void OrdersStatusChangedEventHandler(object _, List<OrderEvent> orderEvents)
             {
                 var orderEvent = orderEvents[0];
                 
@@ -124,6 +141,12 @@ namespace QuantConnect.Tests.Brokerages
                     _orderProvider.UpdateOrderStatusById(orderEvent.OrderId, orderEvent.Status);
                 }
             }
+
+            public IEnumerable<Order> GetAllOrders(Func<Order, bool> filter)
+            {
+                return _orderProvider.GetOrders(filter);
+            }
+
 
             public override bool CancelOrder(Order order)
             {
@@ -159,13 +182,9 @@ namespace QuantConnect.Tests.Brokerages
             {
                 _orderProvider.Add(order);
 
-                var isPlaceCrossOrder = TryCrossPositionOrder(_securityProvider, order,
-                    (order, orderQuantity, holdingQuantity, leanOrderType) => new PhonyPlaceOrderRequest(order.Symbol.Value, orderQuantity, order.Direction, holdingQuantity, leanOrderType),
-                    (orderRequest) =>
-                    {
-                        var response = PlaceOrder(orderRequest);
-                        return (response.IsOrderPlacedSuccessfully, response.OrderId);
-                    });
+                var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
+
+                var isPlaceCrossOrder = TryCrossZeroPositionOrder(order, holdingQuantity);
 
                 // Place simple order 
                 if (isPlaceCrossOrder == null)
@@ -194,7 +213,7 @@ namespace QuantConnect.Tests.Brokerages
 
             public override void Dispose()
             {
-                _cancellationTokenSource.DisposeSafely();
+                _cancellationTokenSource.Dispose();
                 base.Dispose();
             }
 
@@ -221,7 +240,7 @@ namespace QuantConnect.Tests.Brokerages
                             }
                         }
 
-                        _cancellationTokenSource.Token.WaitHandle.WaitOne(TimeSpan.FromSeconds(1));
+                        _cancellationTokenSource.Token.WaitHandle.WaitOne(TimeSpan.FromSeconds(3));
                     }
                 }, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             }

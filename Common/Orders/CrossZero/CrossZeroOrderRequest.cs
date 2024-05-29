@@ -36,16 +36,23 @@ namespace QuantConnect.Orders.CrossZero
         public decimal OrderQuantity { get; }
 
         /// <summary>
+        /// Gets the current holding quantity of the order's symbol.
+        /// </summary>
+        public decimal OrderQuantityHolding { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CrossZeroOrderRequest"/> struct.
         /// </summary>
         /// <param name="leanOrder">The lean order.</param>
         /// <param name="orderType">The type of the order.</param>
         /// <param name="orderQuantity">The quantity of the order.</param>
-        public CrossZeroOrderRequest(Order leanOrder, OrderType orderType, decimal orderQuantity)
+        /// <param name="orderQuantityHolding">The current holding quantity of the order's symbol.</param>
+        public CrossZeroOrderRequest(Order leanOrder, OrderType orderType, decimal orderQuantity, decimal orderQuantityHolding)
         {
             LeanOrder = leanOrder;
             OrderType = orderType;
             OrderQuantity = orderQuantity;
+            OrderQuantityHolding = orderQuantityHolding;
         }
     }
 }
