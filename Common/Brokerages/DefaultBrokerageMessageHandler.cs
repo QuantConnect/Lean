@@ -166,7 +166,7 @@ namespace QuantConnect.Brokerages
         /// <returns>Whether the order should be added to the transaction handler</returns>
         public bool HandleOrder(NewBrokerageOrderNotificationEventArgs eventArgs)
         {
-            return true;
+            return false;
         }
 
         private void StartCheckReconnected(TimeSpan delay, BrokerageMessageEvent message)
