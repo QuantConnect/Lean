@@ -328,5 +328,37 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 OptionStrategyDefinition.CallLeg(1, (legs, p) => p.Strike > legs[2].Strike,
                     (legs, p) => p.Expiration == legs[0].Expiration)
             );
+
+        /// <summary>
+        /// Long Box Spread strategy is long 1 call and short 1 put with the same strike,
+        /// while short 1 call and long 1 put with a higher, same strike. All options have the same expiry.
+        /// expiration.
+        /// </summary>
+        public static OptionStrategyDefinition BoxSpread { get; }
+            = OptionStrategyDefinition.Create("Box Spread",
+                OptionStrategyDefinition.PutLeg(+1),
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike < legs[0].Strike,
+                                                    (legs, p) => p.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(+1, (legs, c) => c.Strike == legs[1].Strike,
+                                                    (legs, c) => c.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(-1, (legs, c) => c.Strike == legs[0].Strike,
+                                                    (legs, c) => c.Expiration == legs[0].Expiration)
+            );
+
+        /// <summary>
+        /// Short Box Spread strategy is short 1 call and long 1 put with the same strike,
+        /// while long 1 call and short 1 put with a higher, same strike. All options have the same expiry.
+        /// expiration.
+        /// </summary>
+        public static OptionStrategyDefinition ShortBoxSpread { get; }
+            = OptionStrategyDefinition.Create("Short Box Spread",
+                OptionStrategyDefinition.PutLeg(-1),
+                OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike < legs[0].Strike,
+                                                    (legs, p) => p.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(-1, (legs, c) => c.Strike == legs[1].Strike,
+                                                    (legs, c) => c.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(+1, (legs, c) => c.Strike == legs[0].Strike,
+                                                    (legs, c) => c.Expiration == legs[0].Expiration)
+            );
     }
 }

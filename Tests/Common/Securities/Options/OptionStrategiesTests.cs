@@ -747,5 +747,92 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(expiration, longCallLeg.Expiration);
             Assert.AreEqual(1, longCallLeg.Quantity);
         }
+
+        [Test]
+        public void FailsBuildingBoxSpreadStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var expiration = new DateTime(2023, 08, 18);
+
+            var strike1 = 300m;
+            var strike2 = 325m;
+
+            // Unordered and repeated strikes
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.BoxSpread(canonicalOptionSymbol, strike1, strike2, expiration));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.BoxSpread(canonicalOptionSymbol, strike1, strike1, expiration));
+        }
+
+        [Test]
+        public void BuildsBoxSpreadStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var higherStrike = 320m;
+            var lowerStrike = 300m;
+            var expiration = new DateTime(2023, 08, 18);
+
+            var strategy = OptionStrategies.BoxSpread(canonicalOptionSymbol, higherStrike, lowerStrike, expiration);
+
+            Assert.AreEqual(OptionStrategyDefinitions.BoxSpread.Name, strategy.Name);
+            Assert.AreEqual(underlying, strategy.Underlying);
+            Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
+
+            Assert.AreEqual(4, strategy.OptionLegs.Count);
+            Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
+
+            var longPutLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Put && x.Strike == higherStrike);
+            Assert.AreEqual(expiration, longPutLeg.Expiration);
+            Assert.AreEqual(1, longPutLeg.Quantity);
+
+            var shortPutLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Put && x.Strike == lowerStrike);
+            Assert.AreEqual(expiration, shortPutLeg.Expiration);
+            Assert.AreEqual(-1, shortPutLeg.Quantity);
+
+            var shortCallLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Call && x.Strike == higherStrike);
+            Assert.AreEqual(expiration, shortCallLeg.Expiration);
+            Assert.AreEqual(-1, shortCallLeg.Quantity);
+
+            var longCallLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Call && x.Strike == lowerStrike);
+            Assert.AreEqual(expiration, longCallLeg.Expiration);
+            Assert.AreEqual(1, longCallLeg.Quantity);
+        }
+
+        [Test]
+        public void BuildsShortBoxSpreadStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var higherStrike = 320m;
+            var lowerStrike = 300m;
+            var expiration = new DateTime(2023, 08, 18);
+
+            var strategy = OptionStrategies.ShortBoxSpread(canonicalOptionSymbol, higherStrike, lowerStrike, expiration);
+
+            Assert.AreEqual(OptionStrategyDefinitions.ShortBoxSpread.Name, strategy.Name);
+            Assert.AreEqual(underlying, strategy.Underlying);
+            Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
+
+            Assert.AreEqual(4, strategy.OptionLegs.Count);
+            Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
+
+            var longPutLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Put && x.Strike == lowerStrike);
+            Assert.AreEqual(expiration, longPutLeg.Expiration);
+            Assert.AreEqual(1, longPutLeg.Quantity);
+
+            var shortPutLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Put && x.Strike == higherStrike);
+            Assert.AreEqual(expiration, shortPutLeg.Expiration);
+            Assert.AreEqual(-1, shortPutLeg.Quantity);
+
+            var shortCallLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Call && x.Strike == lowerStrike);
+            Assert.AreEqual(expiration, shortCallLeg.Expiration);
+            Assert.AreEqual(-1, shortCallLeg.Quantity);
+
+            var longCallLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Call && x.Strike == higherStrike);
+            Assert.AreEqual(expiration, longCallLeg.Expiration);
+            Assert.AreEqual(1, longCallLeg.Quantity);
+        }
     }
 }

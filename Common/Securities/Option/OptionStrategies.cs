@@ -812,6 +812,50 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Creates a Box Spread strategy which consists of a long call and a short put (buy side) of the same strikes,
+        /// coupled with a short call and a long put (sell side) of higher but same strikes. All options have the same expiry.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="higherStrike">The strike price of the sell side legs</param>
+        /// <param name="lowerStrike">The strike price of the buy side legs</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy BoxSpread(Symbol canonicalOption, decimal higherStrike, decimal lowerStrike, DateTime expiration)
+        {
+            if (higherStrike <= lowerStrike)
+            {
+                throw new ArgumentException($"BoxSpread: strike prices must be in descending order, {nameof(higherStrike)}, {nameof(lowerStrike)}");
+            }
+
+            // It is a combination of a BearPutSpread and a BullCallSpread with the same expiry and strikes
+            var bearPutSpread = BearPutSpread(canonicalOption, higherStrike, lowerStrike, expiration);
+            var bullCallSpread = BullCallSpread(canonicalOption, lowerStrike, higherStrike, expiration);
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.BoxSpread.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = bearPutSpread.OptionLegs.Concat(bullCallSpread.OptionLegs).ToList()
+            };
+        }
+
+        /// <summary>
+        /// Creates a Short Box Spread strategy which consists of a long call and a short put (buy side) of the same strikes,
+        /// coupled with a short call and a long put (sell side) of lower but same strikes. All options have the same expiry.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="higherStrike">The strike price of the buy side</param>
+        /// <param name="lowerStrike">The strike price of the sell side</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ShortBoxSpread(Symbol canonicalOption, decimal higherStrike, decimal lowerStrike, DateTime expiration)
+        {
+            // Since a short box spread is an inverted box spread, we can just use the BoxSpread method and invert the legs
+            return InvertStrategy(BoxSpread(canonicalOption, higherStrike, lowerStrike, expiration), OptionStrategyDefinitions.ShortBoxSpread.Name);
+        }
+
+        /// <summary>
         /// Checks that canonical option symbol is valid
         /// </summary>
         private static void CheckCanonicalOptionSymbol(Symbol canonicalOption, string strategyName)

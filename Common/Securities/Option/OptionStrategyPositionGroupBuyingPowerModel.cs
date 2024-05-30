@@ -19,6 +19,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Securities.Option.StrategyMatcher;
 using System.Collections.Generic;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Securities.Option
 {
@@ -182,6 +183,39 @@ namespace QuantConnect.Securities.Option
                 var result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
                 return new MaintenanceMargin(result);
             }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.BoxSpread.Name)
+            {
+                return new MaintenanceMargin(0);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortBoxSpread.Name)
+            {
+                // MAX(1.02 x cost to close, Long Call Strike – Short Call Strike)
+                var longCallPosition = parameters.PositionGroup.Positions.Single(
+                    position => position.Quantity > 0 && position.Symbol.ID.OptionRight == OptionRight.Call);
+                var shortCallPosition = parameters.PositionGroup.Positions.Single(
+                    position => position.Quantity < 0 && position.Symbol.ID.OptionRight == OptionRight.Call);
+                var longPutPosition = parameters.PositionGroup.Positions.Single(
+                    position => position.Quantity > 0 && position.Symbol.ID.OptionRight == OptionRight.Put);
+                var shortPutPosition = parameters.PositionGroup.Positions.Single(
+                    position => position.Quantity < 0 && position.Symbol.ID.OptionRight == OptionRight.Put);
+                var longCallSecurity = (Option)parameters.Portfolio.Securities[longCallPosition.Symbol];
+                var shortCallSecurity = (Option)parameters.Portfolio.Securities[shortCallPosition.Symbol];
+                var longPutSecurity = (Option)parameters.Portfolio.Securities[longPutPosition.Symbol];
+                var shortPutSecurity = (Option)parameters.Portfolio.Securities[shortPutPosition.Symbol];
+
+                // commission cost: MAX($1, $0.65/contract * quantity) + bid/ask price
+                var commissionFees = Math.Max(Math.Abs(longCallPosition.Quantity) * 0.65m, 1m) * 4m;    // 4 contracts in total
+                var orderCosts = shortCallSecurity.AskPrice - longCallSecurity.BidPrice + shortPutSecurity.AskPrice - longPutSecurity.BidPrice;
+                var multiplier = Math.Abs(longCallPosition.Quantity) * longCallSecurity.ContractUnitOfTrade;
+                var closeCost = commissionFees + orderCosts * multiplier;
+                
+                var strikeDifference = longCallPosition.Symbol.ID.StrikePrice - shortCallPosition.Symbol.ID.StrikePrice;
+
+                var result = Math.Max(1.02m * closeCost, strikeDifference * multiplier);
+                var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, longCallSecurity.QuoteCurrency.Symbol);
+
+                return new MaintenanceMargin(inAccountCurrency);
+            }
 
             throw new NotImplementedException($"Option strategy {_optionStrategy.Name} margin modeling has yet to be implemented");
         }
@@ -286,6 +320,14 @@ namespace QuantConnect.Securities.Option
             else if (_optionStrategy.Name == OptionStrategyDefinitions.IronCondor.Name)
             {
                 result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.BoxSpread.Name)
+            {
+                result = 0m;
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortBoxSpread.Name)
+            {
+                result = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
             }
             else
             {
