@@ -159,51 +159,51 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -20, -(1000000 - 20 * 10250) / (10250 + 0), true),    // -20 to max short
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -20, -(1000000 - 20 * 10250) / (10250 + 0) - 1, false),  // -20 to max short + 1
-            // Initial margin requirement|premium for ProtectiveCollar with quantities 1 and -1 are 19250|0 and 19250|9198 respectively
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 0, (1000000 - 0 * 19250) / (19250 + 0), true), // 0 to max long
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 0, (1000000 - 0 * 19250) / (19250 + 0) + 1, false), // 0 to max long + 1
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 0, -(1000000 + 0 * 19250) / (19250 + 9198), true), // 0 to max short
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 0, -(1000000 + 0 * 19250) / (19250 + 9198) - 1, false),    // 0 to max short + 1
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, (1000000 - 20 * 19250) / (19250 + 0), true),    // 20 to max long
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, (1000000 - 20 * 19250) / (19250 + 0) + 1, false),    // 20 to max long + 1
+            // Initial margin requirement|premium for ProtectiveCollar with quantities 1 and -1 are 26231|0 and 26231|1 respectively
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 0, (1000000 - 0 * 26231) / (26231 + 0), true), // 0 to max long
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 0, (1000000 - 0 * 26231) / (26231 + 0) + 1, false), // 0 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 0, -(1000000 + 0 * 26231) / (26231 + 1), true), // 0 to max short
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 0, -(1000000 + 0 * 26231) / (26231 + 1) - 1, false),    // 0 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, (1000000 - 20 * 26231) / (26231 + 0), true),    // 20 to max long
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, (1000000 - 20 * 26231) / (26231 + 0) + 1, false),    // 20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, -20, true), // 20 to 0
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, -(1000000 + 20 * 19250) / (19250 + 9198), true), // 20 to max short
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, -(1000000 + 20 * 19250) / (19250 + 9198) - 1, false),  // 20 to max short + 1
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, (1000000 + 20 * 19250) / (19250 + 0), true),   // -20 to max long
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, (1000000 + 20 * 19250) / (19250 + 0) + 1, false),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, -(1000000 + 20 * 26231) / (26231 + 1), true), // 20 to max short
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 20, -(1000000 + 20 * 26231) / (26231 + 1) - 1, false),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, (1000000 + 20 * 26231) / (26231 + 0), true),   // -20 to max long
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, (1000000 + 20 * 26231) / (26231 + 0) + 1, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, 20, true), // -20 to 0
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, -(1000000 - 20 * 19250) / (19250 + 9198), true),    // -20 to max short
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, -(1000000 - 20 * 19250) / (19250 + 9198) - 1, false),  // -20 to max short + 1
-            // Initial margin requirement|premium for Conversion with quantities 1 and -1 are 21250|0 and 10250|11198 respectively
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 0, (1000000 - 0 * 21250) / (21250 + 0), true), // 0 to max long
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 0, (1000000 - 0 * 21250) / (21250 + 0) + 1, false), // 0 to max long + 1
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 0, -(1000000 + 0 * 10250) / (10250 + 11198), true), // 0 to max short
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 0, -(1000000 + 0 * 10250) / (10250 + 11198) - 1, false),    // 0 to max short + 1
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 20, (1000000 - 20 * 21250) / (21250 + 0), true),    // 20 to max long
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 20, (1000000 - 20 * 21250) / (21250 + 0) + 1, false),    // 20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, -(1000000 - 20 * 26231) / (26231 + 1), true),    // -20 to max short
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -20, -(1000000 - 20 * 26231) / (26231 + 1) - 1, false),  // -20 to max short + 1
+            // Initial margin requirement|premium for Conversion with quantities 1 and -1 are 26295|0 and 26231|146 respectively
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 0, (1000000 - 0 * 26295) / (26295 + 0), true), // 0 to max long
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 0, (1000000 - 0 * 26295) / (26295 + 0) + 1, false), // 0 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 0, -(1000000 + 0 * 26231) / (26231 + 146), true), // 0 to max short
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 0, -(1000000 + 0 * 26231) / (26231 + 146) - 1, false),    // 0 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 20, (1000000 - 20 * 26295) / (26295 + 0), true),    // 20 to max long
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 20, (1000000 - 20 * 26295) / (26295 + 0) + 1, false),    // 20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.Conversion, 20, -20, true), // 20 to 0
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 20, -(1000000 + 20 * 10250) / (10250 + 11198), true), // 20 to max short
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 20, -(1000000 + 20 * 10250) / (10250 + 11198) - 1, false),  // 20 to max short + 1
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -20, (1000000 + 20 * 21250) / (21250 + 0), true),   // -20 to max long
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -20, (1000000 + 20 * 21250) / (21250 + 0) + 1, false),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 20, -(1000000 + 20 * 26231) / (26231 + 146), true), // 20 to max short
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 20, -(1000000 + 20 * 26231) / (26231 + 146) - 1, false),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -20, (1000000 + 20 * 26295) / (26295 + 0), true),   // -20 to max long
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -20, (1000000 + 20 * 26295) / (26295 + 0) + 1, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.Conversion, -20, 20, true), // -20 to 0
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -20, -(1000000 - 20 * 10250) / (10250 + 11198), true),    // -20 to max short
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -20, -(1000000 - 20 * 10250) / (10250 + 11198) - 1, false),  // -20 to max short + 1
-            // Initial margin requirement|premium for ReverseConversion with quantities 1 and -1 are 10250|11198 and 21250|0 respectively
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 0, (1000000 - 0 * 10250) / (10250 + 11198), true), // 0 to max long
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 0, (1000000 - 0 * 10250) / (10250 + 11198) + 1, false), // 0 to max long + 1
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 0, -(1000000 + 0 * 21250) / (21250 + 0), true), // 0 to max short
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 0, -(1000000 + 0 * 21250) / (21250 + 0) - 1, false),    // 0 to max short + 1
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, (1000000 - 20 * 10250) / (10250 + 11198), true),    // 20 to max long
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, (1000000 - 20 * 10250) / (10250 + 11198) + 1, false),    // 20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -20, -(1000000 - 20 * 26231) / (26231 + 146), true),    // -20 to max short
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -20, -(1000000 - 20 * 26231) / (26231 + 146) - 1, false),  // -20 to max short + 1
+            // Initial margin requirement|premium for ReverseConversion with quantities 1 and -1 are 26231|146 and 26295|0 respectively
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 0, (1000000 - 0 * 26231) / (26231 + 146), true), // 0 to max long
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 0, (1000000 - 0 * 26231) / (26231 + 146) + 1, false), // 0 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 0, -(1000000 + 0 * 26295) / (26295 + 0), true), // 0 to max short
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 0, -(1000000 + 0 * 26295) / (26295 + 0) - 1, false),    // 0 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, (1000000 - 20 * 26231) / (26231 + 146), true),    // 20 to max long
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, (1000000 - 20 * 26231) / (26231 + 146) + 1, false),    // 20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, -20, true), // 20 to 0
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, -(1000000 + 20 * 21250) / (21250 + 0), true), // 20 to max short
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, -(1000000 + 20 * 21250) / (21250 + 0) - 1, false),  // 20 to max short + 1
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, (1000000 + 20 * 10250) / (10250 + 11198), true),   // -20 to max long
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, (1000000 + 20 * 10250) / (10250 + 11198) + 1, false),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, -(1000000 + 20 * 26295) / (26295 + 0), true), // 20 to max short
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 20, -(1000000 + 20 * 26295) / (26295 + 0) - 1, false),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, (1000000 + 20 * 26231) / (26231 + 146), true),   // -20 to max long
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, (1000000 + 20 * 26231) / (26231 + 146) + 1, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, 20, true), // -20 to 0
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, -(1000000 - 20 * 21250) / (21250 + 0), true),    // -20 to max short
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, -(1000000 - 20 * 21250) / (21250 + 0) - 1, false),  // -20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, -(1000000 - 20 * 26295) / (26295 + 0), true),    // -20 to max short
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -20, -(1000000 - 20 * 26295) / (26295 + 0) - 1, false),  // -20 to max short + 1
             // Initial margin requirement|premium for BearCallSpread with quantities 1 and -1 are 1000|0 and 0|1200 respectively
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 0, (1000000 - 0 * 1000) / (1000 + 0), true), // 0 to max long
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 0, (1000000 - 0 * 1000) / (1000 + 0) + 1, false), // 0 to max long + 1
@@ -663,12 +663,12 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 10000m),                     // IB:  10276.15
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 1, 10000m),                   // IB:  inverted covered put
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -1, 12000m),                  // IB:  covered put
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 1, 19250m),                // IB:  19250
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -1, 19250m),               // IB:  same as long
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 1, 21250m),                      // IB:  21250
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -1, 10250m),                     // IB:  reverse conversion
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 1, 10250m),               // IB:  10250
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -1, 21250m),              // IB:  conversion
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 1, 26231m),                // IB:  26231
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -1, 26231m),               // IB:  same as long
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 1, 26295m),                      // IB:  26295
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -1, 26230m),                     // IB:  reverse conversion
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 1, 26231m),               // IB:  26231
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -1, 26295m),              // IB:  conversion
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 1000m),                   // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                     // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m),                       // IB:  0
@@ -763,12 +763,12 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 10000m),                     // IB:  10276
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 1, 10000m),                   // IB:  inverted covered Put
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -1, 10250m),                  // IB:  covered Put
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 1, 8000m),                 // IB:  8000
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -1, 8000m),                // IB:  same as long
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 1, 14000m),                      // IB:  14000
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -1, 3000m),                      // IB:  reverse conversion
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 1, 3000m),                // IB:  14000
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -1, 14000m),              // IB:  conversion
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 1, 6202m),                 // IB:  6202
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -1, 6202m),                // IB:  same as long
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 1, 5303m),                       // IB:  5303
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -1, 5240m),                      // IB:  reverse conversion
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 1, 5240m),                // IB:  5240
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -1, 5303m),               // IB:  conversion
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 1000m),                   // IB:  10000
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                     // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m),                       // IB:  0
@@ -876,33 +876,32 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, -102500m / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, -102500m, -10),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, -102500m - 102520m, -20),
-            // Initial margin requirement (including premium) for ProtectiveCollar with quantity 10 and -10 is 192500 and 284480 respectively
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 192500m / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -192500m / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -192500m, -10),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -192500m - 284480m, -20),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 284480m / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -284480m / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -284480m, -10),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -284480m - 192500m, -20),
-            // Initial margin requirement (including premium) for Conversion with quantity 10 and -10 is 212500 and 214480 respectively
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 212500m / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -212500m / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -212500m, -10),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -212500m - 214480m, -20),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 214480m / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -214480m / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -214480m, -10),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -214480m - 212500m, -20),
-            // Initial margin requirement (including premium) for ReverseConversion with quantity 10 and -10 is 214480 and 212500 respectively
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 214480m / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -214480m / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -214480m, -10),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -214480m - 212500m, -20),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 212500m / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -212500m / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -212500m, -10),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -212500m - 214480m, -20),
+            // Initial margin requirement (including premium) for ProtectiveCollar with quantity 10 and -10 is 262310 and 262318 respectively
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 262310m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -262310m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -262310m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -262310m - 262318m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 262318m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -262318m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -262318m - 262310m, -20),
+            // Initial margin requirement (including premium) for Conversion with quantity 10 and -10 is 262945 and 263778 respectively
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 262945m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -262945m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -262945m, -10),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -262945m - 263778m, -20),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 263778m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -263778m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -263778m, -10),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -263778m - 262945m, -20),
+            // Initial margin requirement (including premium) for ReverseConversion with quantity 10 and -10 is 263768 and 262915 respectively
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 263768m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -263768m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -263768m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -263768m - 262915m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 262915m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -262915m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -262915m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -262915m - 263768m, -20),
             // Initial margin requirement (including premium) for BearCallSpread with quantity 10 and -10 is 10000 and 12000 respectively
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 10000m / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -10000m / 10, -1),
@@ -1227,33 +1226,33 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 102500m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 0m, -10),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, -102520m, -20),
-            // Initial margin requirement (including premium) for ProtectiveCollar with quantity 10 and -10 is 192500m and 284480m respectively
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 192500m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 192500m * 9 / 10, -1),
+            // Initial margin requirement (including premium) for ProtectiveCollar with quantity 10 and -10 is 262310m and 262318m respectively
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 262310m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 262310m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 0m, -10),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -284480m, -20),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 284480m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 284480m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -262318m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 262318m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 262318m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 0m, -10),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -192500m, -20),
-            // Initial margin requirement (including premium) for Conversion with quantity 10 and -10 is 212500m and 214480m respectively
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 212500m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 212500m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -262310m, -20),
+            // Initial margin requirement (including premium) for Conversion with quantity 10 and -10 is 262945m and 263778m respectively
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 262945m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 262945m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 0m, -10),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -214480m, -20),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 214480m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 214480m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -263778m, -20),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 263778m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 263778m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 0m, -10),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -212500m, -20),
-            // Initial margin requirement (including premium) for ReverseConversion with quantity 10 and -10 is 214480m and 212500m respectively
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 214480m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 214480m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -262945m, -20),
+            // Initial margin requirement (including premium) for ReverseConversion with quantity 10 and -10 is 263768m and 262915m respectively
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 263768m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 263768m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 0m, -10),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -212500m, -20),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 212500m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 212500m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -262915m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 262915m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 262915m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 0m, -10),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -214480m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -263768m, -20),
             // Initial margin requirement (including premium) for BearCallSpread with quantity 10 and -10 is 10000 and 12000 respectively
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 10000m * 11 / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 10000m * 9 / 10, -1),
@@ -1528,30 +1527,30 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 1, (1000000m - 102500m) + 102500m + 102500m),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 10, (1000000m - 102500m) + 102500m + 102500m),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, 20, (1000000m - 102500m) + 102500m + 102500m),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 1, 1000000m - 80000m),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -1, (1000000m - 80000m) + 80000m + 192500m),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -10, (1000000m - 80000m) + 80000m + 192500m),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -20, (1000000m - 80000m) + 80000m + 192500m),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -1, 1000000m - 80000m),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 1, (1000000m - 80000m) + 80000m + 284480m),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 10, (1000000m - 80000m) + 80000m + 284480m),
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 20, (1000000m - 80000m) + 80000m + 284480m),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 1, 1000000m - 140000m),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -1, (1000000m - 140000m) + 140000m + 212500m),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -10, (1000000m - 140000m) + 140000m + 212500m),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -20, (1000000m - 140000m) + 140000m + 212500m),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -1, 1000000m - 30000m),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 1, (1000000m - 30000m) + 30000m + 214480m),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 10, (1000000m - 30000m) + 30000m + 214480m),
-            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 20, (1000000m - 30000m) + 30000m + 214480m),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 1, 1000000m - 30000m),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -1, (1000000m - 30000m) + 30000m + 214480m),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -10, (1000000m - 30000m) + 30000m + 214480m),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -20, (1000000m - 30000m) + 30000m + 214480m),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -1, 1000000m - 140000m),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 1, (1000000m - 140000m) + 140000m + 212500m),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 10, (1000000m - 140000m) + 140000m + 212500m),
-            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 20, (1000000m - 140000m) + 140000m + 212500m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, 1, 1000000m - 62020m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -1, (1000000m - 62020m) + 62020m + 262318m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -10, (1000000m - 62020m) + 62020m + 262318m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, 10, -20, (1000000m - 62020m) + 62020m + 262318m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, -1, 1000000m - 62020m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 1, (1000000m - 62020m) + 62020m + 262310m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 10, (1000000m - 62020m) + 62020m + 262310m),
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCollar, -10, 20, (1000000m - 62020m) + 62020m + 262310m),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, 1, 1000000m - 53030m),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -1, (1000000m - 53030m) + 53030m + 262945m),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -10, (1000000m - 53030m) + 53030m + 262945m),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, 10, -20, (1000000m - 53030m) + 53030m + 262945m),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, -1, 1000000m - 52400m),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 1, (1000000m - 52400m) + 52400m + 263778m),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 10, (1000000m - 52400m) + 52400m + 263778m),
+            new TestCaseData(OptionStrategyDefinitions.Conversion, -10, 20, (1000000m - 52400m) + 52400m + 263778m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, 1, 1000000m - 52400m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -1, (1000000m - 52400m) + 52400m + 263768m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -10, (1000000m - 52400m) + 52400m + 263768m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, 10, -20, (1000000m - 52400m) + 52400m + 263768m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, -1, 1000000m - 53010m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 1, (1000000m - 53010m) + 53010m + 262915m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 10, (1000000m - 53010m) + 53010m + 262915m),
+            new TestCaseData(OptionStrategyDefinitions.ReverseConversion, -10, 20, (1000000m - 53010m) + 53010m + 262915m),
             new TestCaseData(OptionStrategyDefinitions.NakedCall, 10, +1, 1000000m - 194000m),
             new TestCaseData(OptionStrategyDefinitions.NakedCall, 10, -1, (1000000m - 194000m) + 194000m + 194000m),
             new TestCaseData(OptionStrategyDefinitions.NakedCall, 10, -10, (1000000m - 194000m) + 194000m + 194000m),
@@ -2314,6 +2313,18 @@ namespace QuantConnect.Tests.Common.Securities
             var spyMay17_300Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 300, may172023));
             spyMay17_300Put.SetMarketPrice(new Tick { Value = 0.01m });
 
+            var jun212024 = new DateTime(2024, 06, 21);
+
+            var spyJun21_534Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 534, jun212024));
+            spyJun21_534Call.SetMarketPrice(new Tick { Value = 0.01m });
+            var spyJun21_524Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 524, jun212024));
+            spyJun21_524Call.SetMarketPrice(new Tick { Value = 2.29m });
+
+            var spyJun21_524Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 524, jun212024));
+            spyJun21_524Put.SetMarketPrice(new Tick { Value = 0.827m });
+            var spyJun21_514Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 514, jun212024));
+            spyJun21_514Put.SetMarketPrice(new Tick { Value = 0.018m });
+
             _equity.SetMarketPrice(new Tick { Value = 410m });
             _equity.SetLeverage(4);
 
@@ -2392,15 +2403,21 @@ namespace QuantConnect.Tests.Common.Securities
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ProtectiveCollar.Name)
             {
+                _equity.SetMarketPrice(new Tick { Value = 524.62m });
+                _equity.SetLeverage(2);
+
                 _equity.Holdings.SetHoldings(_equity.Price, initialHoldingsQuantity * _putOption.ContractMultiplier);
-                spyMay19_320Call.Holdings.SetHoldings(spyMay19_320Call.Price, -initialHoldingsQuantity);
-                spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, initialHoldingsQuantity);
+                spyJun21_534Call.Holdings.SetHoldings(spyJun21_534Call.Price, -initialHoldingsQuantity);
+                spyJun21_514Put.Holdings.SetHoldings(spyJun21_514Put.Price, initialHoldingsQuantity);
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.Conversion.Name)
             {
+                _equity.SetMarketPrice(new Tick { Value = 524.63m });
+                _equity.SetLeverage(2);
+
                 _equity.Holdings.SetHoldings(_equity.Price, initialHoldingsQuantity * _putOption.ContractMultiplier);
-                spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, -initialHoldingsQuantity);
-                spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, initialHoldingsQuantity);
+                spyJun21_524Call.Holdings.SetHoldings(spyJun21_524Call.Price, -initialHoldingsQuantity);
+                spyJun21_524Put.Holdings.SetHoldings(spyJun21_524Put.Price, initialHoldingsQuantity);
 
                 if (initialHoldingsQuantity < 0)
                 {
@@ -2409,9 +2426,12 @@ namespace QuantConnect.Tests.Common.Securities
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ReverseConversion.Name)
             {
+                _equity.SetMarketPrice(new Tick { Value = 524.61m });
+                _equity.SetLeverage(2);
+
                 _equity.Holdings.SetHoldings(_equity.Price, -initialHoldingsQuantity * _putOption.ContractMultiplier);
-                spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, initialHoldingsQuantity);
-                spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, -initialHoldingsQuantity);
+                spyJun21_524Call.Holdings.SetHoldings(spyJun21_524Call.Price, initialHoldingsQuantity);
+                spyJun21_524Put.Holdings.SetHoldings(spyJun21_524Put.Price, -initialHoldingsQuantity);
 
                 if (initialHoldingsQuantity < 0)
                 {
