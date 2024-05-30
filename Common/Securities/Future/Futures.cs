@@ -323,9 +323,9 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Energies group
+        /// Energy group
         /// </summary>
-        public static class Energies
+        public static class Energy
         {
             /// <summary>
             /// Propane Non LDH Mont Belvieu (OPIS) BALMO Futures
