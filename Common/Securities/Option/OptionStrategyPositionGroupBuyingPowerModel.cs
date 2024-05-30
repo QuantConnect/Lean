@@ -204,7 +204,7 @@ namespace QuantConnect.Securities.Option
                 var shortPutSecurity = (Option)parameters.Portfolio.Securities[shortPutPosition.Symbol];
 
                 // commission cost: MAX($1, $0.65/contract * quantity) + bid/ask price
-                var commissionFees = Math.Max(Math.Abs(longCallPosition.Quantity) * 0.65m, 1m) * 4m;
+                var commissionFees = Math.Max(Math.Abs(longCallPosition.Quantity) * 0.65m, 1m) * 4m;    // 4 contracts in total
                 var orderCosts = shortCallSecurity.AskPrice - longCallSecurity.BidPrice + shortPutSecurity.AskPrice - longPutSecurity.BidPrice;
                 var multiplier = Math.Abs(longCallPosition.Quantity) * longCallSecurity.ContractUnitOfTrade;
                 var closeCost = commissionFees + orderCosts * multiplier;

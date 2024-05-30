@@ -783,21 +783,21 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(4, strategy.OptionLegs.Count);
             Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
 
-            var longPutLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Put && x.Strike == lowerStrike);
+            var longPutLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Put && x.Strike == higherStrike);
             Assert.AreEqual(expiration, longPutLeg.Expiration);
-            Assert.AreEqual(-1, longPutLeg.Quantity);
+            Assert.AreEqual(1, longPutLeg.Quantity);
 
-            var shortPutLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Put && x.Strike == higherStrike);
+            var shortPutLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Put && x.Strike == lowerStrike);
             Assert.AreEqual(expiration, shortPutLeg.Expiration);
-            Assert.AreEqual(1, shortPutLeg.Quantity);
+            Assert.AreEqual(-1, shortPutLeg.Quantity);
 
-            var shortCallLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Call && x.Strike == lowerStrike);
+            var shortCallLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Call && x.Strike == higherStrike);
             Assert.AreEqual(expiration, shortCallLeg.Expiration);
-            Assert.AreEqual(1, shortCallLeg.Quantity);
+            Assert.AreEqual(-1, shortCallLeg.Quantity);
 
-            var longCallLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Call && x.Strike == higherStrike);
+            var longCallLeg = strategy.OptionLegs.Single(x => x.Right == OptionRight.Call && x.Strike == lowerStrike);
             Assert.AreEqual(expiration, longCallLeg.Expiration);
-            Assert.AreEqual(-1, longCallLeg.Quantity);
+            Assert.AreEqual(1, longCallLeg.Quantity);
         }
 
         [Test]
