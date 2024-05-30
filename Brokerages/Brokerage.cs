@@ -662,13 +662,21 @@ namespace QuantConnect.Brokerages
 #pragma warning restore CA1051 // Do not declare visible instance fields
 
         /// <summary>
-        /// Places a cross zero order and returns the response.
+        /// Places an order that crosses zero (transitions from a short position to a long position or vice versa) and returns the response.
+        /// This method should be overridden in a derived class to implement brokerage-specific logic for placing such orders.
         /// </summary>
-        /// <param name="crossZeroOrderRequest">The request containing order details.</param>
+        /// <param name="crossZeroOrderRequest">The request object containing details of the cross zero order to be placed.</param>
+        /// <param name="isPlaceOrderWithLeanEvent">
+        /// A boolean indicating whether the order should be placed with triggering a Lean event. 
+        /// Default is <c>true</c>, meaning Lean events will be triggered.
+        /// </param>
         /// <returns>
-        /// A <see cref="CrossZeroOrderResponse"/> indicating the result of the order placement.
+        /// A <see cref="CrossZeroOrderResponse"/> object indicating the result of the order placement.
         /// </returns>
-        public virtual CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroOrderRequest crossZeroOrderRequest)
+        /// <exception cref="NotImplementedException">
+        /// Thrown if the method is not overridden in a derived class.
+        /// </exception>
+        public virtual CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithLeanEvent = true)
         {
             throw new NotImplementedException($"{nameof(PlaceCrossZeroOrder)} method should be overridden in the derived class to handle brokerage-specific logic.");
         }
@@ -743,7 +751,7 @@ namespace QuantConnect.Brokerages
             {
                 // if we have a contingent that needs to be submitted then we can't respect the 'Filled' state from the order
                 // because the Lean order hasn't been technically filled yet, so mark it as 'PartiallyFilled'
-                OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.PartiallyFilled });
+                OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.PartiallyFilled, FillQuantity = orderEvent.FillQuantity });
 
                 Task.Run(() =>
                 {
@@ -751,7 +759,7 @@ namespace QuantConnect.Brokerages
                     try
                     {
                         Log.Trace($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Submit the second part of cross order by Id:{leanOrder.Id}");
-                        var response = PlaceCrossZeroOrder(brokerageOrder);
+                        var response = PlaceCrossZeroOrder(brokerageOrder, false);
 
                         if (response.IsOrderPlacedSuccessfully)
                         {
