@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             using (var reader = XmlReader.Create(path))
             {
                 var serializer = new XmlSerializer(typeof(Item[]));
-                _data = ((Item[])serializer.Deserialize(reader)).ToDictionary(i=>i.Symbol,i=>i.SymbolDates);
+                _data = ((Item[])serializer.Deserialize(reader)).ToDictionary(i => i.Symbol, i => i.SymbolDates);
             }
         }
 
@@ -177,78 +177,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
-        [TestCase(QuantConnect.Securities.Futures.Energy.PropaneNonLDHMontBelvieu, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.ArgusPropaneFarEastIndexBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.MiniEuropeanThreePointPercentFiveFuelOilBargesPlatts, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.MiniSingaporeFuelOil180CstPlatts, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.GulfCoastULSDPlattsUpDownBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.GulfCoastJetPlattsUpDownBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.PropaneNonLDHMontBelvieuOPIS, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.EuropeanPropaneCIFARAArgusBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.PremiumUnleadedGasoline10ppmFOBMEDPlatts, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.ArgusPropaneFarEastIndex, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.GasolineEurobobOxyNWEBargesArgusCrackSpreadBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.MontBelvieuNaturalGasolineOPIS, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.MontBelvieuNormalButaneOPISBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.ConwayPropaneOPIS, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.MontBelvieuLDHPropaneOPISBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.ArgusPropaneFarEastIndexVsEuropeanPropaneCIFARAArgus, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.ArgusPropaneSaudiAramco, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.GroupThreeULSDPlattsVsNYHarborULSD, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.GroupThreeSuboctaneGasolinePlattsVsRBOB, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.SingaporeFuelOil180cstPlattsBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.SingaporeFuelOil380cstPlattsBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.MontBelvieuEthaneOPIS, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.MontBelvieuNormalButaneOPIS, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.BrentCrudeOilVsDubaiCrudeOilPlatts, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.ArgusLLSvsWTIArgusTradeMonth, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.SingaporeGasoilPlattsVsLowSulphurGasoilFutures, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.LosAngelesCARBOBGasolineOPISvsRBOBGasoline, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.LosAngelesJetOPISvsNYHarborULSD, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.LosAngelesCARBDieselOPISvsNYHarborULSD, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.EuropeanNaphthaPlattsBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.EuropeanPropaneCIFARAArgus, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.MontBelvieuNaturalGasolineOPISBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.RBOBGasolineCrackSpread, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.GulfCoastHSFOPlattsBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.MarsArgusVsWTITradeMonth, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.MarsArgusVsWTIFinancial, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.EthanolT2FOBRdamIncludingDutyPlatts, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.MontBelvieuLDHPropaneOPIS, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.GasolineEurobobOxyNWEBargesArgus, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.WTIBrentFinancial, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.GasolineEurobobOxyNWEBargesArgusBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.BrentLastDayFinancial, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.CrudeOilWTI, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.GulfCoastCBOBGasolineA2PlattsVsRBOBGasoline, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.ClearbrookBakkenSweetCrudeOilMonthlyIndexNetEnergy, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.WTIFinancial, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.ChicagoEthanolPlatts, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.SingaporeMogas92UnleadedPlattsBrentCrackSpread, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.DubaiCrudeOilPlattsFinancial, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.JapanCnFNaphthaPlattsBALMO, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.Ethanol, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.EuropeanNaphthaPlattsCrackSpread, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.EuropeanPropaneCIFARAArgusVsNaphthaCargoesCIFNWEPlatts, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.EastWestGasolineSpreadPlattsArgus, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.EastWestNaphthaJapanCFvsCargoesCIFNWESpreadPlatts, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.FreightRouteTC14Baltic, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.WTIHoustonCrudeOil, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.NaturalGasHenryHubLastDayFinancial, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.HeatingOil, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.NaturalGasHenryHubPenultimateFinancial, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.WTIHoustonArgusVsWTITradeMonth, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.Gasoline, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.NaturalGas, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.BrentCrude, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.LowSulfurGasoil, TwelveOclock)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.MicroCrudeOilWTI, Zero)]
+        [TestCaseSource(nameof(EnergyExpiryDateFunction_WithDifferentDates_ShouldFollowContractTestCases))]
         public void EnergyExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
@@ -267,15 +196,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
-        // 25th is a sunday
-        [TestCase(QuantConnect.Securities.Futures.Energy.MicroCrudeOilWTI, "20221001", "20220919")]
-        [TestCase(QuantConnect.Securities.Futures.Energy.CrudeOilWTI, "20221001", "20220920")]
-        // 25th is a tuesday
-        [TestCase(QuantConnect.Securities.Futures.Energy.MicroCrudeOilWTI, "20221101", "20221019")]
-        [TestCase(QuantConnect.Securities.Futures.Energy.CrudeOilWTI, "20221101", "20221020")]
-        // 25th is a friday but includes thanks giving
-        [TestCase(QuantConnect.Securities.Futures.Energy.MicroCrudeOilWTI, "20221201", "20221118")]
-        [TestCase(QuantConnect.Securities.Futures.Energy.CrudeOilWTI, "20221201", "20221121")]
+        [TestCaseSource(nameof(MicroCrudeOilExpirationTestCases))]
         public void MicroCrudeOilExpiration(string symbol, string dateStr, string expectedDate)
         {
             var date = Time.ParseDate(dateStr);
@@ -478,6 +399,95 @@ namespace QuantConnect.Tests.Common.Securities.Futures
                 Assert.AreEqual(expected, actual, "Failed for symbol: " + symbol);
             }
         }
+
+        public static object[] EnergyExpiryDateFunction_WithDifferentDates_ShouldFollowContractTestCases =
+        {
+            new object[] { QuantConnect.Securities.Futures.Energy.PropaneNonLDHMontBelvieu, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.ArgusPropaneFarEastIndexBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.MiniEuropeanThreePointPercentFiveFuelOilBargesPlatts, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.MiniSingaporeFuelOil180CstPlatts, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.GulfCoastULSDPlattsUpDownBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.GulfCoastJetPlattsUpDownBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.PropaneNonLDHMontBelvieuOPIS, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.EuropeanPropaneCIFARAArgusBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.PremiumUnleadedGasoline10ppmFOBMEDPlatts, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.ArgusPropaneFarEastIndex, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.GasolineEurobobOxyNWEBargesArgusCrackSpreadBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.MontBelvieuNaturalGasolineOPIS, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.MontBelvieuNormalButaneOPISBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.ConwayPropaneOPIS, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.MontBelvieuLDHPropaneOPISBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.ArgusPropaneFarEastIndexVsEuropeanPropaneCIFARAArgus, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.ArgusPropaneSaudiAramco, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.GroupThreeULSDPlattsVsNYHarborULSD, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.GroupThreeSuboctaneGasolinePlattsVsRBOB, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.SingaporeFuelOil180cstPlattsBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.SingaporeFuelOil380cstPlattsBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.MontBelvieuEthaneOPIS, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.MontBelvieuNormalButaneOPIS, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.BrentCrudeOilVsDubaiCrudeOilPlatts, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.ArgusLLSvsWTIArgusTradeMonth, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.SingaporeGasoilPlattsVsLowSulphurGasoilFutures, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.LosAngelesCARBOBGasolineOPISvsRBOBGasoline, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.LosAngelesJetOPISvsNYHarborULSD, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.LosAngelesCARBDieselOPISvsNYHarborULSD, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.EuropeanNaphthaPlattsBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.EuropeanPropaneCIFARAArgus, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.MontBelvieuNaturalGasolineOPISBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.RBOBGasolineCrackSpread, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.GulfCoastHSFOPlattsBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.MarsArgusVsWTITradeMonth, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.MarsArgusVsWTIFinancial, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.EthanolT2FOBRdamIncludingDutyPlatts, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.MontBelvieuLDHPropaneOPIS, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.GasolineEurobobOxyNWEBargesArgus, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.WTIBrentFinancial, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.GasolineEurobobOxyNWEBargesArgusBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.BrentLastDayFinancial, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.CrudeOilWTI, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.GulfCoastCBOBGasolineA2PlattsVsRBOBGasoline, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.ClearbrookBakkenSweetCrudeOilMonthlyIndexNetEnergy, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.WTIFinancial, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.ChicagoEthanolPlatts, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.SingaporeMogas92UnleadedPlattsBrentCrackSpread, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.DubaiCrudeOilPlattsFinancial, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.JapanCnFNaphthaPlattsBALMO, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.Ethanol, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.EuropeanNaphthaPlattsCrackSpread, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.EuropeanPropaneCIFARAArgusVsNaphthaCargoesCIFNWEPlatts, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.EastWestGasolineSpreadPlattsArgus, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.EastWestNaphthaJapanCFvsCargoesCIFNWESpreadPlatts, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.FreightRouteTC14Baltic, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.WTIHoustonCrudeOil, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.NaturalGasHenryHubLastDayFinancial, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.HeatingOil, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.NaturalGasHenryHubPenultimateFinancial, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.WTIHoustonArgusVsWTITradeMonth, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.Gasoline, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.NaturalGas, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.BrentCrude, Zero },
+            new object[] { QuantConnect.Securities.Futures.Energy.LowSulfurGasoil, TwelveOclock },
+            new object[] { QuantConnect.Securities.Futures.Energy.MicroCrudeOilWTI, Zero }
+        };
+
+        public static object[] MicroCrudeOilExpirationTestCases =
+        {
+            // 25th is a sunday
+            new object[] { QuantConnect.Securities.Futures.Energy.MicroCrudeOilWTI, "20221001", "20220919"},
+            new object[] { QuantConnect.Securities.Futures.Energy.CrudeOilWTI, "20221001", "20220920" },
+            // 25th is a tuesday
+            new object[] { QuantConnect.Securities.Futures.Energy.MicroCrudeOilWTI, "20221101", "20221019" },
+            new object[] { QuantConnect.Securities.Futures.Energy.CrudeOilWTI, "20221101", "20221020" },
+            // 25th is a friday but includes thanks giving
+            new object[] { QuantConnect.Securities.Futures.Energy.MicroCrudeOilWTI, "20221201", "20221118" },
+            new object[] { QuantConnect.Securities.Futures.Energy.CrudeOilWTI, "20221201", "20221121" }
+        };
 
         /// <summary>
         /// Dates for Termination Conditions of futures
