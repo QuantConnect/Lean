@@ -581,7 +581,7 @@ namespace QuantConnect.Brokerages
         /// <remarks>
         /// This method checks if the order will result in a position change from positive to negative holdings or from negative to positive holdings.
         /// </remarks>
-        public static bool OrderCrossesZero(decimal holdingQuantity, decimal orderQuantity)
+        protected static bool OrderCrossesZero(decimal holdingQuantity, decimal orderQuantity)
         {
             //We're reducing position or flipping:
             if (holdingQuantity > 0 && orderQuantity < 0)
@@ -619,7 +619,7 @@ namespace QuantConnect.Brokerages
         /// </item>
         /// </list>
         /// </returns>
-        public static (decimal closePostionQunatity, decimal newPositionQuantity) GetQuantityOnCrossPosition(decimal holdingQuantity, decimal orderQuantity)
+        protected static (decimal closePostionQunatity, decimal newPositionQuantity) GetQuantityOnCrossPosition(decimal holdingQuantity, decimal orderQuantity)
         {
             // first we need an order to close out the current position
             var firstOrderQuantity = -holdingQuantity;
@@ -637,7 +637,7 @@ namespace QuantConnect.Brokerages
         /// it returns <see cref="OrderType.Market"/>. If the original order type is <see cref="OrderType.StopLimit"/>,
         /// it returns <see cref="OrderType.Limit"/>. Otherwise, it returns the original order type.
         /// </returns>
-        public static OrderType ConvertStopCrossingOrderType(OrderType orderType) => orderType switch
+        protected static OrderType ConvertStopCrossingOrderType(OrderType orderType) => orderType switch
         {
             OrderType.StopMarket => OrderType.Market,
             OrderType.StopLimit => OrderType.Limit,
@@ -676,7 +676,7 @@ namespace QuantConnect.Brokerages
         /// <exception cref="NotImplementedException">
         /// Thrown if the method is not overridden in a derived class.
         /// </exception>
-        public virtual CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithLeanEvent = true)
+        protected virtual CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithLeanEvent = true)
         {
             throw new NotImplementedException($"{nameof(PlaceCrossZeroOrder)} method should be overridden in the derived class to handle brokerage-specific logic.");
         }
@@ -696,7 +696,7 @@ namespace QuantConnect.Brokerages
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="order"/> is <c>null</c>.
         /// </exception>
-        public bool? TryCrossZeroPositionOrder(Order order, decimal holdingQuantity)
+        protected bool? TryCrossZeroPositionOrder(Order order, decimal holdingQuantity)
         {
             if (order == null)
             {

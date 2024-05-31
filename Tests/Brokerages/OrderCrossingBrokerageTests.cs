@@ -197,7 +197,7 @@ namespace QuantConnect.Tests.Brokerages
                 return isPlaceCrossOrder.Value;
             }
 
-            public override CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithoutLeanEvent)
+            protected override CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithoutLeanEvent)
             {
                 Log.Trace($"{nameof(PhonyBrokerage)}.{nameof(PlaceCrossZeroOrder)}");
                 var response = PlaceOrder(new PhonyPlaceOrderRequest(crossZeroOrderRequest.LeanOrder.Symbol.Value, crossZeroOrderRequest.OrderQuantity,
