@@ -41,7 +41,8 @@ namespace QuantConnect.Tests.Brokerages
         [TestCase(1, -2, true)]
         public void ShouldOrderCrossesZero(decimal holdingQuantity, decimal orderQuantity, bool expectedCrossResult)
         {
-            var isOrderCrosses = Brokerage.OrderCrossesZero(holdingQuantity, orderQuantity);
+            using var brokerage = new PhonyBrokerage("phony", new AlgorithmStub());
+            var isOrderCrosses = brokerage.GetOrderCrossesZero(holdingQuantity, orderQuantity);
             Assert.That(isOrderCrosses, Is.EqualTo(expectedCrossResult));
         }
 
@@ -51,9 +52,10 @@ namespace QuantConnect.Tests.Brokerages
         [TestCase(10, -20, -10, -10, Description = "long to short")]
         public void GetQuantityOnCrossPosition(decimal holdingQuantity, decimal orderQuantity, decimal expectedFirstOrderQuantity, decimal expectedSecondOrderQuantity)
         {
-            if (Brokerage.OrderCrossesZero(holdingQuantity, orderQuantity))
+            using var brokerage = new PhonyBrokerage("phony", new AlgorithmStub());
+            if (brokerage.GetOrderCrossesZero(holdingQuantity, orderQuantity))
             {
-                var (firstOrderQuantity, secondOrderQuantity) = Brokerage.GetQuantityOnCrossPosition(holdingQuantity, orderQuantity);
+                var (firstOrderQuantity, secondOrderQuantity) = brokerage.GetQuantityOnCrossPosition(holdingQuantity, orderQuantity);
                 Assert.That(expectedFirstOrderQuantity, Is.EqualTo(firstOrderQuantity));
                 Assert.That(expectedSecondOrderQuantity, Is.EqualTo(secondOrderQuantity));
             }
@@ -195,6 +197,16 @@ namespace QuantConnect.Tests.Brokerages
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Submitted });
 
                 return isPlaceCrossOrder.Value;
+            }
+
+            public bool GetOrderCrossesZero(decimal holdingQuantity, decimal orderQuantity)
+            {
+                return OrderCrossesZero(holdingQuantity, orderQuantity);
+            }
+
+            public (decimal closePostionQunatity, decimal newPositionQuantity) GetQuantityOnCrossPosition(decimal holdingQuantity, decimal orderQuantity)
+            {
+                return GetQuantityOnCrossPosition(holdingQuantity, orderQuantity);
             }
 
             protected override CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithoutLeanEvent)
