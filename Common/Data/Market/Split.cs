@@ -44,7 +44,7 @@ namespace QuantConnect.Data.Market
         [ProtoMember(11)]
         public decimal SplitFactor
         {
-            get; private set;
+            get; set;
         }
 
         /// <summary>
