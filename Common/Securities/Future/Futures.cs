@@ -325,7 +325,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Energy group
         /// </summary>
-        public class BaseEnergy
+        public class EnergyFutures
         {
             /// <summary>
             /// Propane Non LDH Mont Belvieu (OPIS) BALMO Futures
@@ -804,12 +804,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Old property. Energy isn't countable
         /// </summary>
-        public static BaseEnergy Energies = new BaseEnergy();
+        public static EnergyFutures Energies { get => new(); }
 
         /// <summary>
         /// New property. Energy isn't countable
         /// </summary>
-        public static BaseEnergy Energy = new BaseEnergy();
+        public static EnergyFutures Energy { get => new(); }
 
         /// <summary>
         /// Financials group
