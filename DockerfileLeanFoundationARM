@@ -115,7 +115,7 @@ RUN pip install --no-cache-dir      \
     seaborn==0.13.2                 \
     optuna==3.5.0                   \
     findiff==0.10.0                 \
-    sktime==0.29.0                  \
+    sktime==0.26.0                  \
     hyperopt==0.2.7                 \
     bayesian-optimization==1.4.3    \
     matplotlib==3.7.5               \
@@ -163,7 +163,7 @@ RUN pip install --no-cache-dir      \
     bokeh==3.3.4                    \
     river==0.21.0                   \
     stumpy==1.12.0                  \
-    pyvinecopulib==0.6.4            \
+    pyvinecopulib==0.6.5            \
     ijson==3.2.3                    \
     jupyter-resource-usage==1.0.2   \
     injector==0.21.0                \

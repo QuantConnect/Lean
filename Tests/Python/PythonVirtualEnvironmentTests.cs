@@ -63,7 +63,7 @@ def assertLeanVersion():
                 var module = PyModule.FromString(Guid.NewGuid().ToString(), code);
                 dynamic assertVersion = module.GetAttr("assertLeanVersion");
 
-                Assert.AreEqual("1.0.99", (string)assertVersion());
+                Assert.AreEqual("1.0.185", (string)assertVersion());
             }
         }
     }

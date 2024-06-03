@@ -120,7 +120,7 @@ RUN pip install --no-cache-dir      \
     seaborn==0.13.2                 \
     optuna==3.5.0                   \
     findiff==0.10.0                 \
-    sktime==0.29.0                  \
+    sktime==0.26.0                  \
     hyperopt==0.2.7                 \
     bayesian-optimization==1.4.3    \
     pingouin==0.5.4                 \
@@ -174,7 +174,7 @@ RUN pip install --no-cache-dir      \
     tensorflow-decision-forests==1.9.0 \
     river==0.21.0                   \
     stumpy==1.12.0                  \
-    pyvinecopulib==0.6.4            \
+    pyvinecopulib==0.6.5            \
     ijson==3.2.3                    \
     jupyter-resource-usage==1.0.2   \
     injector==0.21.0                \
@@ -225,7 +225,7 @@ RUN pip install --no-cache-dir      \
     llama-index==0.10.19            \
     mlflow==2.11.1                  \
     ngboost==0.5.1                  \
-    pycaret==3.3.0                  \
+    pycaret==3.3.2                  \
     control==0.9.4                  \
     pgmpy==0.1.25                   \
     mgarch==0.3.0                   \
