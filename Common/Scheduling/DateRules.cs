@@ -130,6 +130,63 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
+        /// Specifies an event should fire on the first of each year + offset
+        /// </summary>
+        /// <param name="daysOffset"> The amount of days to offset the schedule by; must be between 0 and 365.</param>
+        /// <returns>A date rule that fires on the first of each year + offset</returns>
+        public IDateRule YearStart(int daysOffset = 0)
+        {
+            return new FuncDateRule(GetName(null, "YearStart", daysOffset), (start, end) => YearIterator(null, start, end, daysOffset, true));
+        }
+
+        /// <summary>
+        /// Specifies an event should fire on the first tradable date + offset for the specified symbol of each year
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the first tradable date of the year</param>
+        /// <param name="daysOffset"> The amount of tradable days to offset the schedule by; must be between 0 and 365</param>
+        /// <returns>A date rule that fires on the first tradable date + offset for the
+        /// specified security each year</returns>
+        public IDateRule YearStart(Symbol symbol, int daysOffset = 0)
+        {
+            // Check that our offset is allowed
+            if (daysOffset < 0 || 365 < daysOffset)
+            {
+                throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.YearStart() : Offset must be between 0 and 365");
+            }
+
+            // Create the new DateRule and return it
+            return new FuncDateRule(GetName(symbol, "YearStart", daysOffset), (start, end) => YearIterator(GetSecurityExchangeHours(symbol), start, end, daysOffset, true));
+        }
+
+        /// <summary>
+        /// Specifies an event should fire on the last of each year
+        /// </summary>
+        /// <param name="daysOffset"> The amount of days to offset the schedule by; must be between 0 and 365</param>
+        /// <returns>A date rule that fires on the last of each year - offset</returns>
+        public IDateRule YearEnd(int daysOffset = 0)
+        {
+            return new FuncDateRule(GetName(null, "YearEnd", -daysOffset), (start, end) => YearIterator(null, start, end, daysOffset, false));
+        }
+
+        /// <summary>
+        /// Specifies an event should fire on the last tradable date - offset for the specified symbol of each year
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the last tradable date of the year</param>
+        /// <param name="daysOffset">The amount of tradable days to offset the schedule by; must be between 0 and 365.</param>
+        /// <returns>A date rule that fires on the last tradable date - offset for the specified security each year</returns>
+        public IDateRule YearEnd(Symbol symbol, int daysOffset = 0)
+        {
+            // Check that our offset is allowed
+            if (daysOffset < 0 || 365 < daysOffset)
+            {
+                throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.YearEnd() : Offset must be between 0 and 365");
+            }
+
+            // Create the new DateRule and return it
+            return new FuncDateRule(GetName(symbol, "YearEnd", -daysOffset), (start, end) => YearIterator(GetSecurityExchangeHours(symbol), start, end, daysOffset, false));
+        }
+
+        /// <summary>
         /// Specifies an event should fire on the first of each month + offset
         /// </summary>
         /// <param name="daysOffset"> The amount of days to offset the schedule by; must be between 0 and 30.</param>
@@ -362,6 +419,42 @@ namespace QuantConnect.Scheduling
                 var boundaryDate = searchForward ? new DateTime(date.Year, date.Month, daysInMonth) : new DateTime(date.Year, date.Month, 1);
 
                 // Determine the scheduled day for this month
+                if (date == baseDate)
+                {
+                    var scheduledDay = GetScheduledDay(securitySchedule, baseDate, offset, searchForward, boundaryDate);
+
+                    // Ensure the date is within our schedules range
+                    if (scheduledDay >= start && scheduledDay <= end)
+                    {
+                        yield return scheduledDay;
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<DateTime> YearIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward)
+        {
+            // No schedule means no security, set to open everyday
+            if (securitySchedule == null)
+            {
+                securitySchedule = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
+            }
+
+            // Iterate all days between the beginning of "start" year, through end of "end" year
+            // Necessary to ensure we schedule events in the year we start and end.
+            var beginningOfStartOfYear = new DateTime(start.Year, start.Month, 1);
+            var endOfEndYear = new DateTime(end.Year, end.Month, DateTime.DaysInMonth(end.Year, end.Month));
+
+            foreach (var date in Time.EachDay(beginningOfStartOfYear, endOfEndYear))
+            {
+                var daysInYear = DateTime.IsLeapYear(date.Year) ? 366 : 365;
+
+                // Searching forward the first day of the year is baseDay, with boundary being the last
+                // Searching backward the last day of the year is baseDay, with boundary being the first
+                var baseDate = searchForward ? new DateTime(date.Year, 1, 1) : new DateTime(date.Year, 12, 31);
+                var boundaryDate = searchForward ? new DateTime(date.Year, 12, 31) : new DateTime(date.Year, 1, 1);
+
+                // Determine the scheduled day for this year
                 if (date == baseDate)
                 {
                     var scheduledDay = GetScheduledDay(securitySchedule, baseDate, offset, searchForward, boundaryDate);
