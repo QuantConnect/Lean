@@ -136,6 +136,63 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Creates a Protective Collar strategy that consists of buying 1 put contract and 1 lot of the underlying.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="callStrike">The strike price for the call option contract</param>
+        /// <param name="putStrike">The strike price for the put option contract</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ProtectiveCollar(Symbol canonicalOption, decimal callStrike, decimal putStrike, DateTime expiration)
+        {
+            if (callStrike < putStrike)
+            {
+                throw new ArgumentException("ProtectiveCollar: callStrike must be greater than putStrike", $"{nameof(callStrike)}, {nameof(putStrike)}");
+            }
+
+            // Since a protective collar is a combination of protective put and covered call
+            var coveredCall = CoveredCall(canonicalOption, callStrike, expiration);
+            var protectivePut = ProtectivePut(canonicalOption, putStrike, expiration);
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.ProtectiveCollar.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = coveredCall.OptionLegs.Concat(protectivePut.OptionLegs).ToList(),
+                UnderlyingLegs = coveredCall.UnderlyingLegs     // only 1 lot of long stock position
+            };
+        }
+
+        /// <summary>
+        /// Creates a Conversion strategy that consists of buying 1 put contract, 1 lot of the underlying and selling 1 call contract.
+        /// Put and call must have the same expiration date, underlying (multiplier), and strike price.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price for the call and put option contract</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy Conversion(Symbol canonicalOption, decimal strike, DateTime expiration)
+        {
+            var strategy = ProtectiveCollar(canonicalOption, strike, strike, expiration);
+            strategy.Name = OptionStrategyDefinitions.Conversion.Name;
+            return strategy;
+        }
+
+        /// <summary>
+        /// Creates a Reverse Conversion strategy that consists of buying 1 put contract and 1 lot of the underlying.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price for the put option contract</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ReverseConversion(Symbol canonicalOption, decimal strike, DateTime expiration)
+        {
+            // Since a reverse conversion is an inverted conversion, we can just use the Conversion method and invert the legs
+            return InvertStrategy(Conversion(canonicalOption, strike, expiration), OptionStrategyDefinitions.ReverseConversion.Name);
+        }
+
+        /// <summary>
         /// Creates a Naked Call strategy that consists of selling 1 call contract.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
