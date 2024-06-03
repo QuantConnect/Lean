@@ -738,6 +738,49 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// An object used to lock the critical section in the <see cref="TryGetOrRemoveCrossZeroOrder"/> method,
+        /// ensuring thread safety when accessing the order collection.
+        /// </summary>
+        private object _lockCrossZeroObject = new();
+
+        /// <summary>
+        /// Attempts to retrieve or remove a cross-zero order based on the brokerage order ID and its filled status.
+        /// </summary>
+        /// <param name="brokerageOrderId">The unique identifier of the brokerage order.</param>
+        /// <param name="isBrokerageStatusFilled">A boolean indicating whether the brokerage status is filled.</param>
+        /// <param name="leanOrder">
+        /// When this method returns, contains the <see cref="Order"/> object associated with the given brokerage order ID,
+        /// if the operation was successful; otherwise, null.
+        /// This parameter is passed uninitialized.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if the method successfully retrieves or removes the order; otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        /// The method locks on a private object to ensure thread safety while accessing the collection of orders.
+        /// If the order is filled, it is removed from the collection. If the order is partially filled,
+        /// it is retrieved but not removed. If the order is not found, the method returns <c>false</c>.
+        /// </remarks>
+        protected bool TryGetOrRemoveCrossZeroOrder(string brokerageOrderId, bool isBrokerageStatusFilled, out Order leanOrder)
+        {
+            lock (_lockCrossZeroObject)
+            {
+                // Remove the order if it has already been filled
+                if (isBrokerageStatusFilled && LeanOrderByZeroCrossBrokerageOrderId.TryRemove(brokerageOrderId, out leanOrder))
+                {
+                    return true;
+                }
+                // If the order is partially filled, retrieve it from the collection
+                else if (LeanOrderByZeroCrossBrokerageOrderId.TryGetValue(brokerageOrderId, out leanOrder))
+                {
+                    return true;
+                }
+                // Return false if the brokerage order ID does not correspond to a cross-zero order
+                return false; 
+            }
+        }
+
+        /// <summary>
         /// Attempts to handle any remaining orders that cross the zero boundary.
         /// </summary>
         /// <param name="leanOrder">The order object that needs to be processed.</param>
@@ -756,6 +799,8 @@ namespace QuantConnect.Brokerages
 #pragma warning disable CA1031 // Do not catch general exception types
                     try
                     {
+                        lock (_lockCrossZeroObject)
+                        {
                         Log.Trace($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Submit the second part of cross order by Id:{leanOrder.Id}");
                         var response = PlaceCrossZeroOrder(brokerageOrder, false);
 
@@ -763,7 +808,7 @@ namespace QuantConnect.Brokerages
                         {
                             // add the new brokerage id for retrieval later
                             leanOrder.BrokerId.Add(response.BrokerageOrderId);
-                            _leanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(response.BrokerageOrderId, leanOrder);
+                                LeanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(response.BrokerageOrderId, leanOrder);
                         }
                         else
                         {
@@ -775,6 +820,7 @@ namespace QuantConnect.Brokerages
                             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroFailed", message));
                             OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
                         }
+                    }
                     }
                     catch (Exception err)
                     {
