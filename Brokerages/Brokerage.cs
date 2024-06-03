@@ -657,9 +657,7 @@ namespace QuantConnect.Brokerages
         /// The dictionary is protected and read-only, ensuring that it can only be modified by the class that declares it and cannot 
         /// be assigned a new instance after initialization.
         /// </remarks>
-#pragma warning disable CA1051 // Do not declare visible instance fields
-        protected readonly ConcurrentDictionary<string, Order> _leanOrderByZeroCrossBrokerageOrderId = new();
-#pragma warning restore CA1051 // Do not declare visible instance fields
+        protected ConcurrentDictionary<string, Order> LeanOrderByZeroCrossBrokerageOrderId { get; } = new();
 
         /// <summary>
         /// Places an order that crosses zero (transitions from a short position to a long position or vice versa) and returns the response.
