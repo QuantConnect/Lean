@@ -303,7 +303,7 @@ namespace QuantConnect.Tests.Common.Securities
             var tz = TimeZones.NewYork;
             var expDate = new DateTime(2021, 3, 19);
             // For this symbol we dont have any history, but only one date and margins line
-            var ticker = QuantConnect.Securities.Futures.Energies.CrudeOilWTI;
+            var ticker = QuantConnect.Securities.Futures.Energy.CrudeOilWTI;
             var future = Symbol.CreateFuture(ticker, Market.NYMEX, expDate);
             var symbol = Symbol.CreateOption(future, Market.NYMEX, OptionStyle.American, optionRight, strike,
                 new DateTime(2021, 3, 19));

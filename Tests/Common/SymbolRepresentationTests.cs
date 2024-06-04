@@ -115,21 +115,7 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(result, null);
         }
 
-        [TestCase(Futures.Energies.ArgusLLSvsWTIArgusTradeMonth, 2017, 1, 29, "AE529G7", false)] // Previous month
-        [TestCase(Futures.Energies.ArgusPropaneSaudiAramco, 2017, 1, 29, "A9N29G7", false)] // Previous month
-        [TestCase(Futures.Energies.BrentCrude, 2017, 1, 29, "B29H7", false)] // Second prior month
-        [TestCase(Futures.Energies.BrentLastDayFinancial, 2017, 1, 29, "BZ29H7", false)] // Second prior month
-        [TestCase(Futures.Energies.CrudeOilWTI, 2017, 11, 20, "CL20Z17", true)] // Prior month
-        [TestCase(Futures.Energies.Gasoline, 2017, 11, 20, "RB20Z17", true)] // Prior month
-        [TestCase(Futures.Energies.HeatingOil, 2017, 11, 20, "HO20Z17", true)] // Prior month
-        [TestCase(Futures.Energies.MarsArgusVsWTITradeMonth, 2017, 11, 20, "AYV20Z17", true)] // Prior month
-        [TestCase(Futures.Energies.NaturalGas, 2017, 11, 20, "NG20Z17", true)] // Prior month
-        [TestCase(Futures.Energies.NaturalGasHenryHubLastDayFinancial, 2017, 11, 20, "HH20Z17", true)] // Prior month
-        [TestCase(Futures.Energies.NaturalGasHenryHubPenultimateFinancial, 2017, 11, 20, "HP20Z17", true)] // Prior month
-        [TestCase(Futures.Energies.WTIHoustonArgusVsWTITradeMonth, 2017, 11, 20, "HTT20Z17", true)] // Prior month
-        [TestCase(Futures.Energies.WTIHoustonCrudeOil, 2017, 11, 20, "HCL20Z17", true)] // Prior month
-        [TestCase(Futures.Softs.Sugar11, 2017, 11, 20, "SB20Z17", true)] // Prior month
-        [TestCase(Futures.Softs.Sugar11CME, 2017, 11, 20, "YO20Z17", true)] // Prior month
+        [TestCaseSource(nameof(GenerateFutureTickerExpiringInPreviousMonthTestCases))]
         public void GenerateFutureTickerExpiringInPreviousMonth(string underlying, int year, int month, int day, string ticker, bool doubleDigitsYear)
         {
             // CL Dec17 expires in Nov17
@@ -138,26 +124,7 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(ticker, result);
         }
 
-        [TestCase(Futures.Energies.ArgusLLSvsWTIArgusTradeMonth, 2016, 12, 29, "AE529F7", false, true)] // Previous month
-        [TestCase(Futures.Energies.ArgusPropaneSaudiAramco, 2016, 12, 29, "A9N29F7", false, true)] // Previous month
-        [TestCase(Futures.Energies.BrentCrude, 2016, 11, 29, "B29F7", false, true)] // Second prior month
-        [TestCase(Futures.Energies.BrentCrude, 2016, 12, 29, "B29G7", false, true)] // Second prior month
-        [TestCase(Futures.Energies.BrentLastDayFinancial, 2016, 11, 29, "BZ29F7", false, true)] // Second prior month
-        [TestCase(Futures.Energies.BrentLastDayFinancial, 2016, 12, 29, "BZ29G7", false, true)] // Second prior month
-        [TestCase(Futures.Energies.CrudeOilWTI, 2016, 12, 20, "CL20F17", true, true)] // Prior month
-        [TestCase(Futures.Energies.Gasoline, 2016, 12, 20, "RB20F17", true, true)] // Prior month
-        [TestCase(Futures.Energies.HeatingOil, 2016, 12, 20, "HO20F17", true, true)] // Prior month
-        [TestCase(Futures.Energies.MarsArgusVsWTITradeMonth, 2016, 12, 20, "AYV20F17", true, true)] // Prior month
-        [TestCase(Futures.Energies.NaturalGas, 2016, 12, 20, "NG20F17", true, true)] // Prior month
-        [TestCase(Futures.Energies.NaturalGasHenryHubLastDayFinancial, 2016, 12, 20, "HH20F17", true, true)] // Prior month
-        [TestCase(Futures.Energies.NaturalGasHenryHubPenultimateFinancial, 2016, 12, 20, "HP20F17", true, true)] // Prior month
-        [TestCase(Futures.Energies.WTIHoustonArgusVsWTITradeMonth, 2016, 12, 20, "HTT20F17", true, true)] // Prior month
-        [TestCase(Futures.Energies.WTIHoustonCrudeOil, 2016, 12, 20, "HCL20F17", true, true)] // Prior month
-        [TestCase(Futures.Softs.Sugar11, 2016, 12, 20, "SB20F17", true, true)] // Prior month
-        [TestCase(Futures.Softs.Sugar11CME, 2016, 12, 20, "YO20F17", true, true)] // Prior month
-        [TestCase(Futures.Softs.Sugar11CME, 2016, 12, 20, "YOF17", true, false)] // Prior month
-        [TestCase(Futures.Softs.Sugar11CME, 2016, 12, 20, "YOF7", false, false)] // Prior month
-        [TestCase(Futures.Indices.SP500EMini, 2010, 3, 1, "ESH0", false, false)]
+        [TestCaseSource(nameof(GenerateFutureTickerExpiringInPreviousMonthOverYearBoundaryTestCases))]
         public void GenerateFutureTickerExpiringInPreviousMonthOverYearBoundary(string underlying, int year, int month, int day, string ticker, bool doubleDigitsYear, bool includeExpirationDate)
         {
             // CL Dec17 expires in Nov17
@@ -243,5 +210,48 @@ namespace QuantConnect.Tests.Common
             var result = SymbolRepresentation.ParseFutureSymbol(ticker, 1999);
             Assert.AreEqual(new DateTime(1999, 12, 17), result.ID.Date.Date);
         }
+
+        public static object[] GenerateFutureTickerExpiringInPreviousMonthTestCases =
+        {
+            new object[] { Futures.Energy.ArgusLLSvsWTIArgusTradeMonth, 2017, 1, 29, "AE529G7", false }, // Previous month
+            new object[] { Futures.Energy.ArgusPropaneSaudiAramco, 2017, 1, 29, "A9N29G7", false }, // Previous month
+            new object[] { Futures.Energy.BrentCrude, 2017, 1, 29, "B29H7", false }, // Second prior month
+            new object[] { Futures.Energy.BrentLastDayFinancial, 2017, 1, 29, "BZ29H7", false }, // Second prior month
+            new object[] { Futures.Energy.CrudeOilWTI, 2017, 11, 20, "CL20Z17", true }, // Prior month
+            new object[] { Futures.Energy.Gasoline, 2017, 11, 20, "RB20Z17", true }, // Prior month
+            new object[] { Futures.Energy.HeatingOil, 2017, 11, 20, "HO20Z17", true }, // Prior month
+            new object[] { Futures.Energy.MarsArgusVsWTITradeMonth, 2017, 11, 20, "AYV20Z17", true }, // Prior month
+            new object[] { Futures.Energy.NaturalGas, 2017, 11, 20, "NG20Z17", true }, // Prior month
+            new object[] { Futures.Energy.NaturalGasHenryHubLastDayFinancial, 2017, 11, 20, "HH20Z17", true }, // Prior month
+            new object[] { Futures.Energy.NaturalGasHenryHubPenultimateFinancial, 2017, 11, 20, "HP20Z17", true }, // Prior month
+            new object[] { Futures.Energy.WTIHoustonArgusVsWTITradeMonth, 2017, 11, 20, "HTT20Z17", true }, // Prior month
+            new object[] { Futures.Energy.WTIHoustonCrudeOil, 2017, 11, 20, "HCL20Z17", true }, // Prior month
+            new object[] { Futures.Softs.Sugar11, 2017, 11, 20, "SB20Z17", true }, // Prior month
+            new object[] { Futures.Softs.Sugar11CME, 2017, 11, 20, "YO20Z17", true } // Prior month
+        };
+
+        public static object[] GenerateFutureTickerExpiringInPreviousMonthOverYearBoundaryTestCases =
+        {
+            new object[] { Futures.Energy.ArgusLLSvsWTIArgusTradeMonth, 2016, 12, 29, "AE529F7", false, true }, // Previous month
+            new object[] { Futures.Energy.ArgusPropaneSaudiAramco, 2016, 12, 29, "A9N29F7", false, true }, // Previous month
+            new object[] { Futures.Energy.BrentCrude, 2016, 11, 29, "B29F7", false, true }, // Second prior month
+            new object[] { Futures.Energy.BrentCrude, 2016, 12, 29, "B29G7", false, true }, // Second prior month
+            new object[] { Futures.Energy.BrentLastDayFinancial, 2016, 11, 29, "BZ29F7", false, true }, // Second prior month
+            new object[] { Futures.Energy.BrentLastDayFinancial, 2016, 12, 29, "BZ29G7", false, true }, // Second prior month
+            new object[] { Futures.Energy.CrudeOilWTI, 2016, 12, 20, "CL20F17", true, true }, // Prior month
+            new object[] { Futures.Energy.Gasoline, 2016, 12, 20, "RB20F17", true, true }, // Prior month
+            new object[] { Futures.Energy.HeatingOil, 2016, 12, 20, "HO20F17", true, true }, // Prior month
+            new object[] { Futures.Energy.MarsArgusVsWTITradeMonth, 2016, 12, 20, "AYV20F17", true, true }, // Prior month
+            new object[] { Futures.Energy.NaturalGas, 2016, 12, 20, "NG20F17", true, true }, // Prior month
+            new object[] { Futures.Energy.NaturalGasHenryHubLastDayFinancial, 2016, 12, 20, "HH20F17", true, true }, // Prior month
+            new object[] { Futures.Energy.NaturalGasHenryHubPenultimateFinancial, 2016, 12, 20, "HP20F17", true, true }, // Prior month
+            new object[] { Futures.Energy.WTIHoustonArgusVsWTITradeMonth, 2016, 12, 20, "HTT20F17", true, true }, // Prior month
+            new object[] { Futures.Energy.WTIHoustonCrudeOil, 2016, 12, 20, "HCL20F17", true, true }, // Prior month
+            new object[] { Futures.Softs.Sugar11, 2016, 12, 20, "SB20F17", true, true }, // Prior month
+            new object[] { Futures.Softs.Sugar11CME, 2016, 12, 20, "YO20F17", true, true }, // Prior month
+            new object[] { Futures.Softs.Sugar11CME, 2016, 12, 20, "YOF17", true, false }, // Prior month
+            new object[] { Futures.Softs.Sugar11CME, 2016, 12, 20, "YOF7", false, false }, // Prior month
+            new object[] { Futures.Indices.SP500EMini, 2010, 3, 1, "ESH0", false, false },
+        };
     }
 }
