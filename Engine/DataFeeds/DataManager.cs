@@ -679,6 +679,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (isCanonical)
             {
+                if (symbolSecurityType.IsOption())
+                {
+                    return new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(typeof(OptionsUniverse), TickType.Quote) };
+                }
+
                 return new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(typeof(ZipEntryName), TickType.Quote) };
             }
 
