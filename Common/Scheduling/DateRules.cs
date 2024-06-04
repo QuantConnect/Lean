@@ -136,7 +136,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the first of each year + offset</returns>
         public IDateRule YearStart(int daysOffset = 0)
         {
-            return new FuncDateRule(GetName(null, "YearStart", daysOffset), (start, end) => YearIterator(null, start, end, daysOffset, true));
+            return YearStart(null, daysOffset);
         }
 
         /// <summary>
@@ -154,8 +154,14 @@ namespace QuantConnect.Scheduling
                 throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.YearStart() : Offset must be between 0 and 365");
             }
 
+            SecurityExchangeHours securityExchangeHours = null;
+            if (symbol != null)
+            {
+                securityExchangeHours = GetSecurityExchangeHours(symbol);
+            }
+
             // Create the new DateRule and return it
-            return new FuncDateRule(GetName(symbol, "YearStart", daysOffset), (start, end) => YearIterator(GetSecurityExchangeHours(symbol), start, end, daysOffset, true));
+            return new FuncDateRule(GetName(symbol, "YearStart", daysOffset), (start, end) => YearIterator(securityExchangeHours, start, end, daysOffset, true));
         }
 
         /// <summary>
@@ -165,7 +171,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the last of each year - offset</returns>
         public IDateRule YearEnd(int daysOffset = 0)
         {
-            return new FuncDateRule(GetName(null, "YearEnd", -daysOffset), (start, end) => YearIterator(null, start, end, daysOffset, false));
+            return YearEnd(null, daysOffset);
         }
 
         /// <summary>
@@ -182,8 +188,14 @@ namespace QuantConnect.Scheduling
                 throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.YearEnd() : Offset must be between 0 and 365");
             }
 
+            SecurityExchangeHours securityExchangeHours = null;
+            if (symbol != null)
+            {
+                securityExchangeHours = GetSecurityExchangeHours(symbol);
+            }
+
             // Create the new DateRule and return it
-            return new FuncDateRule(GetName(symbol, "YearEnd", -daysOffset), (start, end) => YearIterator(GetSecurityExchangeHours(symbol), start, end, daysOffset, false));
+            return new FuncDateRule(GetName(symbol, "YearEnd", -daysOffset), (start, end) => YearIterator(securityExchangeHours, start, end, daysOffset, false));
         }
 
         /// <summary>
@@ -396,7 +408,16 @@ namespace QuantConnect.Scheduling
             return scheduledDate;
         }
 
-        private static IEnumerable<DateTime> MonthIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward)
+        private static IEnumerable<DateTime> BaseIterator(
+            SecurityExchangeHours securitySchedule,
+            DateTime start,
+            DateTime end,
+            int offset,
+            bool searchForward,
+            DateTime periodBegin,
+            DateTime periodEnd,
+            Func<DateTime, DateTime> baseDateFunc,
+            Func<DateTime, DateTime> boundaryDateFunc)
         {
             // No schedule means no security, set to open everyday
             if (securitySchedule == null)
@@ -404,55 +425,10 @@ namespace QuantConnect.Scheduling
                 securitySchedule = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
             }
 
-            // Iterate all days between the beginning of "start" month, through end of "end" month.
-            // Necessary to ensure we schedule events in the month we start and end.
-            var beginningOfStartMonth = new DateTime(start.Year, start.Month, 1);
-            var endOfEndMonth = new DateTime(end.Year, end.Month, DateTime.DaysInMonth(end.Year, end.Month));
-
-            foreach (var date in Time.EachDay(beginningOfStartMonth, endOfEndMonth))
+            foreach (var date in Time.EachDay(periodBegin, periodEnd))
             {
-                var daysInMonth = DateTime.DaysInMonth(date.Year, date.Month);
-
-                // Searching forward the first of the month is baseDay, with boundary being the last
-                // Searching backward the last of the month is baseDay, with boundary being the first
-                var baseDate = searchForward? new DateTime(date.Year, date.Month, 1) : new DateTime(date.Year, date.Month, daysInMonth);
-                var boundaryDate = searchForward ? new DateTime(date.Year, date.Month, daysInMonth) : new DateTime(date.Year, date.Month, 1);
-
-                // Determine the scheduled day for this month
-                if (date == baseDate)
-                {
-                    var scheduledDay = GetScheduledDay(securitySchedule, baseDate, offset, searchForward, boundaryDate);
-
-                    // Ensure the date is within our schedules range
-                    if (scheduledDay >= start && scheduledDay <= end)
-                    {
-                        yield return scheduledDay;
-                    }
-                }
-            }
-        }
-
-        private static IEnumerable<DateTime> YearIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward)
-        {
-            // No schedule means no security, set to open everyday
-            if (securitySchedule == null)
-            {
-                securitySchedule = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
-            }
-
-            // Iterate all days between the beginning of "start" year, through end of "end" year
-            // Necessary to ensure we schedule events in the year we start and end.
-            var beginningOfStartOfYear = new DateTime(start.Year, start.Month, 1);
-            var endOfEndYear = new DateTime(end.Year, end.Month, DateTime.DaysInMonth(end.Year, end.Month));
-
-            foreach (var date in Time.EachDay(beginningOfStartOfYear, endOfEndYear))
-            {
-                var daysInYear = DateTime.IsLeapYear(date.Year) ? 366 : 365;
-
-                // Searching forward the first day of the year is baseDay, with boundary being the last
-                // Searching backward the last day of the year is baseDay, with boundary being the first
-                var baseDate = searchForward ? new DateTime(date.Year, 1, 1) : new DateTime(date.Year, 12, 31);
-                var boundaryDate = searchForward ? new DateTime(date.Year, 12, 31) : new DateTime(date.Year, 1, 1);
+                var baseDate = baseDateFunc(date);
+                var boundaryDate = boundaryDateFunc(date);
 
                 // Determine the scheduled day for this year
                 if (date == baseDate)
@@ -466,6 +442,36 @@ namespace QuantConnect.Scheduling
                     }
                 }
             }
+        }
+
+        private static IEnumerable<DateTime> MonthIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward)
+        {
+            // Iterate all days between the beginning of "start" month, through end of "end" month.
+            // Necessary to ensure we schedule events in the month we start and end.
+            var beginningOfStartMonth = new DateTime(start.Year, start.Month, 1);
+            var endOfEndMonth = new DateTime(end.Year, end.Month, DateTime.DaysInMonth(end.Year, end.Month));
+
+            // Searching forward the first of the month is baseDay, with boundary being the last
+            // Searching backward the last of the month is baseDay, with boundary being the first
+            Func<DateTime, DateTime> baseDateFunc = date => searchForward ? new DateTime(date.Year, date.Month, 1) : new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
+            Func<DateTime, DateTime> boundaryDateFunc = date => searchForward ? new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month)) : new DateTime(date.Year, date.Month, 1);
+
+            return BaseIterator(securitySchedule, start, end, offset, searchForward, beginningOfStartMonth, endOfEndMonth, baseDateFunc, boundaryDateFunc);
+        }
+
+        private static IEnumerable<DateTime> YearIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward)
+        {
+            // Iterate all days between the beginning of "start" year, through end of "end" year
+            // Necessary to ensure we schedule events in the year we start and end.
+            var beginningOfStartOfYear = new DateTime(start.Year, start.Month, 1);
+            var endOfEndYear = new DateTime(end.Year, end.Month, DateTime.DaysInMonth(end.Year, end.Month));
+
+            // Searching forward the first of the month is baseDay, with boundary being the last
+            // Searching backward the last of the month is baseDay, with boundary being the first
+            Func<DateTime, DateTime> baseDateFunc = date => searchForward ? new DateTime(date.Year, 1, 1) : new DateTime(date.Year, 12, 31);
+            Func<DateTime, DateTime> boundaryDateFunc = date => searchForward ? new DateTime(date.Year, 12, 31) : new DateTime(date.Year, 1, 1);
+
+            return BaseIterator(securitySchedule, start, end, offset, searchForward, beginningOfStartOfYear, endOfEndYear, baseDateFunc, boundaryDateFunc);
         }
 
         private static IEnumerable<DateTime> WeekIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward)
