@@ -430,7 +430,7 @@ namespace QuantConnect.Scheduling
                 var baseDate = baseDateFunc(date);
                 var boundaryDate = boundaryDateFunc(date);
 
-                // Determine the scheduled day for this year
+                // Determine the scheduled day for this period
                 if (date == baseDate)
                 {
                     var scheduledDay = GetScheduledDay(securitySchedule, baseDate, offset, searchForward, boundaryDate);
@@ -466,8 +466,8 @@ namespace QuantConnect.Scheduling
             var beginningOfStartOfYear = new DateTime(start.Year, start.Month, 1);
             var endOfEndYear = new DateTime(end.Year, end.Month, DateTime.DaysInMonth(end.Year, end.Month));
 
-            // Searching forward the first of the month is baseDay, with boundary being the last
-            // Searching backward the last of the month is baseDay, with boundary being the first
+            // Searching forward the first of the year is baseDay, with boundary being the last
+            // Searching backward the last of the year is baseDay, with boundary being the first
             Func<DateTime, DateTime> baseDateFunc = date => searchForward ? new DateTime(date.Year, 1, 1) : new DateTime(date.Year, 12, 31);
             Func<DateTime, DateTime> boundaryDateFunc = date => searchForward ? new DateTime(date.Year, 12, 31) : new DateTime(date.Year, 1, 1);
 
