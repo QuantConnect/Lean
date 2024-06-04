@@ -24,6 +24,88 @@ namespace QuantConnect.Tests.Python
     public class PythonPackagesTests
     {
         [Test]
+        public void Peft()
+        {
+            AssertCode(@"
+def RunTest():
+    from transformers import AutoModelForSeq2SeqLM
+    from peft import get_peft_config, get_peft_model, LoraConfig, TaskType
+    model_name_or_path = ""bigscience/mt0-large""
+    tokenizer_name_or_path = ""bigscience/mt0-large""
+
+    peft_config = LoraConfig(
+        task_type=TaskType.SEQ_2_SEQ_LM, inference_mode=False, r=8, lora_alpha=32, lora_dropout=0.1
+    )");
+        }
+
+        [Test]
+        public void Accelerator()
+        {
+            AssertCode(@"
+def RunTest():
+	import torch
+	import torch.nn.functional as F
+	from datasets import load_dataset
+	from accelerate import Accelerator
+
+	accelerator = Accelerator()
+	device = accelerator.device
+
+	model = torch.nn.Transformer().to(device)
+	optimizer = torch.optim.Adam(model.parameters())
+");
+        }
+
+        [Test, Explicit("ASD")]
+        public void alibi_detect()
+        {
+            AssertCode(@"
+def RunTest():
+	from alibi_detect.datasets import fetch_cifar10c
+
+	corruption = ['gaussian_noise', 'motion_blur', 'brightness', 'pixelate']
+	X, y = fetch_cifar10c(corruption=corruption, severity=5, return_X_y=True)");
+        }
+
+        [Test]
+        public void PytorchTabnet()
+        {
+            AssertCode(@"
+def RunTest():
+    from pytorch_tabnet.tab_model import TabNetClassifier, TabNetRegressor
+
+    clf = TabNetClassifier()");
+        }
+
+        [Test]
+        public void FeatureEngine()
+        {
+            AssertCode(@"
+def RunTest():
+	import pandas as pd
+	from feature_engine.encoding import RareLabelEncoder
+
+	data = {'var_A': ['A'] * 10 + ['B'] * 10 + ['C'] * 2 + ['D'] * 1}
+	data = pd.DataFrame(data)
+	data['var_A'].value_counts()
+	rare_encoder = RareLabelEncoder(tol=0.10, n_categories=3)
+	data_encoded = rare_encoder.fit_transform(data)
+	data_encoded['var_A'].value_counts()");
+        }
+
+        [Test]
+        public void Nolds()
+        {
+            AssertCode(@"
+def RunTest():
+    import nolds
+    import numpy as np
+
+    rwalk = np.cumsum(np.random.random(1000))
+    h = nolds.dfa(rwalk)");
+        }
+
+        [Test]
         public void Pgmpy()
         {
             AssertCode(@"
@@ -69,32 +151,17 @@ def RunTest():
         {
             AssertCode(@"
 def RunTest():
-    from ngboost import NGBRegressor
+	from ngboost import NGBClassifier
+	from ngboost.distns import k_categorical, Bernoulli
+	from sklearn.datasets import load_breast_cancer
+	from sklearn.model_selection import train_test_split
 
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import mean_squared_error
-    import pandas as pd
-    import numpy as np
+	X, y = load_breast_cancer(return_X_y=True)
+	y[0:15] = 2 # artificially make this a 3-class problem instead of a 2-class problem
+	X_cls_train, X_cls_test, Y_cls_train, Y_cls_test = train_test_split(X, y, test_size=0.2)
 
-    #Load Boston housing dataset
-    data_url = ""http://lib.stat.cmu.edu/datasets/boston""
-    raw_df = pd.read_csv(data_url, sep=""\s+"", skiprows=22, header=None)
-    X = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])
-    Y = raw_df.values[1::2, 2]
-
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
-
-    ngb = NGBRegressor().fit(X_train, Y_train)
-    Y_preds = ngb.predict(X_test)
-    Y_dists = ngb.pred_dist(X_test)
-
-    # test Mean Squared Error
-    test_MSE = mean_squared_error(Y_preds, Y_test)
-    print('Test MSE', test_MSE)
-
-    # test Negative Log Likelihood
-    test_NLL = -Y_dists.logpdf(Y_test).mean()
-    print('Test NLL', test_NLL)");
+	ngb_cat = NGBClassifier(Dist=k_categorical(3), verbose=False) # tell ngboost that there are 3 possible outcomes
+	_ = ngb_cat.fit(X_cls_train, Y_cls_train) # Y should have only 3 values: {0,1,2}");
         }
 
         [Test]
@@ -2265,6 +2332,9 @@ def RunTest():
         [TestCase("pyheat", "pyheat", "__name__")]
         [TestCase("tensorflow_decision_forests", "1.9.0", "__version__")]
         [TestCase("pomegranate", "1.0.4", "__version__")]
+        [TestCase("cv2", "4.9.0", "__version__")]
+        [TestCase("ot", "0.9.3", "__version__")]
+        [TestCase("datasets", "2.17.1", "__version__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssertCode(
