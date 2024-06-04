@@ -571,6 +571,17 @@ namespace QuantConnect.Brokerages
         #region CrossZeroOrder implementation
 
         /// <summary>
+        /// A dictionary to store the relationship between brokerage crossing orders and Lean orer id.
+        /// </summary>
+        private readonly ConcurrentDictionary<int, CrossZeroOrderRequest> _leanOrderByBrokerageCrossingOrders = new ConcurrentDictionary<int, CrossZeroOrderRequest>();
+
+        /// <summary>
+        /// An object used to lock the critical section in the <see cref="TryGetOrRemoveCrossZeroOrder"/> method,
+        /// ensuring thread safety when accessing the order collection.
+        /// </summary>
+        private object _lockCrossZeroObject = new();
+
+        /// <summary>
         /// Determines if executing the specified order will cross the zero holdings threshold.
         /// </summary>
         /// <param name="holdingQuantity">The current quantity of holdings.</param>
@@ -602,52 +613,6 @@ namespace QuantConnect.Brokerages
             }
             return false;
         }
-
-        /// <summary>
-        /// Calculates the quantities needed to close the current position and establish a new position based on the provided order.
-        /// </summary>
-        /// <param name="holdingQuantity">The quantity currently held in the position that needs to be closed.</param>
-        /// <param name="orderQuantity">The quantity defined in the new order to be established.</param>
-        /// <returns>
-        /// A tuple containing:
-        /// <list type="bullet">
-        /// <item>
-        /// <description>The quantity needed to close the current position (negative value).</description>
-        /// </item>
-        /// <item>
-        /// <description>The quantity needed to establish the new position.</description>
-        /// </item>
-        /// </list>
-        /// </returns>
-        protected static (decimal closePostionQunatity, decimal newPositionQuantity) GetQuantityOnCrossPosition(decimal holdingQuantity, decimal orderQuantity)
-        {
-            // first we need an order to close out the current position
-            var firstOrderQuantity = -holdingQuantity;
-            var secondOrderQuantity = orderQuantity - firstOrderQuantity;
-
-            return (firstOrderQuantity, secondOrderQuantity);
-        }
-
-        /// <summary>
-        /// Converts a stop order type to its corresponding market or limit order type.
-        /// </summary>
-        /// <param name="orderType">The original order type to be converted.</param>
-        /// <returns>
-        /// The converted order type. If the original order type is <see cref="OrderType.StopMarket"/>, 
-        /// it returns <see cref="OrderType.Market"/>. If the original order type is <see cref="OrderType.StopLimit"/>,
-        /// it returns <see cref="OrderType.Limit"/>. Otherwise, it returns the original order type.
-        /// </returns>
-        protected static OrderType ConvertStopCrossingOrderType(OrderType orderType) => orderType switch
-        {
-            OrderType.StopMarket => OrderType.Market,
-            OrderType.StopLimit => OrderType.Limit,
-            _ => orderType
-        };
-
-        /// <summary>
-        /// A dictionary to store the relationship between brokerage crossing orders and Lean orer id.
-        /// </summary>
-        private readonly ConcurrentDictionary<int, CrossZeroOrderRequest> _leanOrderByBrokerageCrossingOrders = new ConcurrentDictionary<int, CrossZeroOrderRequest>();
 
         /// <summary>
         /// A thread-safe dictionary that maps brokerage order IDs to their corresponding Order objects.
@@ -738,12 +703,6 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// An object used to lock the critical section in the <see cref="TryGetOrRemoveCrossZeroOrder"/> method,
-        /// ensuring thread safety when accessing the order collection.
-        /// </summary>
-        private object _lockCrossZeroObject = new();
-
-        /// <summary>
         /// Attempts to retrieve or remove a cross-zero order based on the brokerage order ID and its filled status.
         /// </summary>
         /// <param name="brokerageOrderId">The unique identifier of the brokerage order.</param>
@@ -776,7 +735,7 @@ namespace QuantConnect.Brokerages
                     return true;
                 }
                 // Return false if the brokerage order ID does not correspond to a cross-zero order
-                return false; 
+                return false;
             }
         }
 
@@ -799,16 +758,18 @@ namespace QuantConnect.Brokerages
 #pragma warning disable CA1031 // Do not catch general exception types
                     try
                     {
+                        var response = default(CrossZeroOrderResponse);
                         lock (_lockCrossZeroObject)
                         {
-                        Log.Trace($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Submit the second part of cross order by Id:{leanOrder.Id}");
-                        var response = PlaceCrossZeroOrder(brokerageOrder, false);
+                            Log.Trace($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Submit the second part of cross order by Id:{leanOrder.Id}");
+                            response = PlaceCrossZeroOrder(brokerageOrder, false);
+                        }
 
                         if (response.IsOrderPlacedSuccessfully)
                         {
                             // add the new brokerage id for retrieval later
                             leanOrder.BrokerId.Add(response.BrokerageOrderId);
-                                LeanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(response.BrokerageOrderId, leanOrder);
+                            LeanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(response.BrokerageOrderId, leanOrder);
                         }
                         else
                         {
@@ -820,7 +781,6 @@ namespace QuantConnect.Brokerages
                             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroFailed", message));
                             OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
                         }
-                    }
                     }
                     catch (Exception err)
                     {
@@ -834,6 +794,48 @@ namespace QuantConnect.Brokerages
             }
             return false;
         }
+
+
+        /// <summary>
+        /// Calculates the quantities needed to close the current position and establish a new position based on the provided order.
+        /// </summary>
+        /// <param name="holdingQuantity">The quantity currently held in the position that needs to be closed.</param>
+        /// <param name="orderQuantity">The quantity defined in the new order to be established.</param>
+        /// <returns>
+        /// A tuple containing:
+        /// <list type="bullet">
+        /// <item>
+        /// <description>The quantity needed to close the current position (negative value).</description>
+        /// </item>
+        /// <item>
+        /// <description>The quantity needed to establish the new position.</description>
+        /// </item>
+        /// </list>
+        /// </returns>
+        private static (decimal closePostionQunatity, decimal newPositionQuantity) GetQuantityOnCrossPosition(decimal holdingQuantity, decimal orderQuantity)
+        {
+            // first we need an order to close out the current position
+            var firstOrderQuantity = -holdingQuantity;
+            var secondOrderQuantity = orderQuantity - firstOrderQuantity;
+
+            return (firstOrderQuantity, secondOrderQuantity);
+        }
+
+        /// <summary>
+        /// Converts a stop order type to its corresponding market or limit order type.
+        /// </summary>
+        /// <param name="orderType">The original order type to be converted.</param>
+        /// <returns>
+        /// The converted order type. If the original order type is <see cref="OrderType.StopMarket"/>, 
+        /// it returns <see cref="OrderType.Market"/>. If the original order type is <see cref="OrderType.StopLimit"/>,
+        /// it returns <see cref="OrderType.Limit"/>. Otherwise, it returns the original order type.
+        /// </returns>
+        private static OrderType ConvertStopCrossingOrderType(OrderType orderType) => orderType switch
+        {
+            OrderType.StopMarket => OrderType.Market,
+            OrderType.StopLimit => OrderType.Limit,
+            _ => orderType
+        };
 
         #endregion
     }
