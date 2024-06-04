@@ -783,6 +783,71 @@ namespace QuantConnect.Tests.Common.Securities.Options
         }
 
         [Test]
+        public void FailsBuildingIronButterflyStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var expiration = new DateTime(2023, 08, 18);
+
+            var strike1 = 300m;
+            var strike2 = 325m;
+            var strike3 = 326m;
+            var strike4 = 350m;
+
+            // Unordered and non-equal interval strikes
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.IronButterfly(canonicalOptionSymbol, strike1, strike4, strike2, expiration));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.IronButterfly(canonicalOptionSymbol, strike2, strike1, strike4, expiration));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.IronButterfly(canonicalOptionSymbol, strike2, strike4, strike1, expiration));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.IronButterfly(canonicalOptionSymbol, strike4, strike1, strike2, expiration));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.IronButterfly(canonicalOptionSymbol, strike4, strike2, strike1, expiration));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.IronButterfly(canonicalOptionSymbol, strike1, strike3, strike4, expiration));
+        }
+
+        [Test]
+        public void BuildsIronButterflyStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var strike1 = 300m;
+            var strike2 = 325m;
+            var strike3 = 350m;
+            var expiration = new DateTime(2023, 08, 18);
+
+            var strategy = OptionStrategies.IronButterfly(canonicalOptionSymbol, strike1, strike2, strike3, expiration);
+
+            Assert.AreEqual(OptionStrategyDefinitions.IronButterfly.Name, strategy.Name);
+            Assert.AreEqual(underlying, strategy.Underlying);
+            Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
+
+            Assert.AreEqual(4, strategy.OptionLegs.Count);
+            Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
+
+            var shortPutLeg = strategy.OptionLegs.Single(x => x.Strike == strike1);
+            Assert.AreEqual(OptionRight.Put, shortPutLeg.Right);
+            Assert.AreEqual(expiration, shortPutLeg.Expiration);
+            Assert.AreEqual(-1, shortPutLeg.Quantity);
+
+            var longPutLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Put);
+            Assert.AreEqual(expiration, longPutLeg.Expiration);
+            Assert.AreEqual(1, longPutLeg.Quantity);
+
+            var longCallLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Call);
+            Assert.AreEqual(expiration, longCallLeg.Expiration);
+            Assert.AreEqual(1, longCallLeg.Quantity);
+
+            var shortCallLeg = strategy.OptionLegs.Single(x => x.Strike == strike3);
+            Assert.AreEqual(OptionRight.Call, shortCallLeg.Right);
+            Assert.AreEqual(expiration, shortCallLeg.Expiration);
+            Assert.AreEqual(-1, shortCallLeg.Quantity);
+        }
+
+        [Test]
         public void FailsBuildingIronCondorStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;

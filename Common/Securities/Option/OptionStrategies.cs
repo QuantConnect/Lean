@@ -836,8 +836,8 @@ namespace QuantConnect.Securities.Option
                 throw new ArgumentException("IronButterfly: intervals between exercise prices must be equal");
             }
 
-            var strategy = IronCondor(canonicalOption, otmPutStrike, atmStrike, atmStrike, otmCallStrike, expiration);
-            strategy.Name = OptionStrategyDefinitions.IronButterfly.Name;
+            var strategy = InvertStrategy(IronCondor(canonicalOption, otmPutStrike, atmStrike, atmStrike, otmCallStrike, expiration),
+                OptionStrategyDefinitions.IronButterfly.Name);
             return strategy;
         }
 
