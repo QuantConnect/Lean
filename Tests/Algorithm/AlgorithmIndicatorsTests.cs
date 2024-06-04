@@ -17,14 +17,16 @@ using System;
 
 using Moq;
 using NUnit.Framework;
-
+using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Tests.Research;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -32,14 +34,13 @@ namespace QuantConnect.Tests.Algorithm
     public class AlgorithmIndicatorsTests
     {
         private QCAlgorithm _algorithm;
+        private Symbol _equity;
         private Symbol _option;
 
         [SetUp]
         public void Setup()
         {
-            _algorithm = new QCAlgorithm();
-            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
-
+            _algorithm = new AlgorithmStub();
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null,
                 TestGlobals.DataProvider, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
@@ -47,7 +48,7 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.SetHistoryProvider(historyProvider);
 
             _algorithm.SetDateTime(new DateTime(2013, 10, 11, 15, 0, 0));
-            _algorithm.AddEquity("SPY");
+            _equity = _algorithm.AddEquity("SPY").Symbol;
             _option = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2023, 9, 1));
             _algorithm.AddOptionContract(_option);
             _algorithm.Settings.AutomaticIndicatorWarmUp = true;
@@ -90,6 +91,81 @@ namespace QuantConnect.Tests.Algorithm
 
             // Our interest rate provider should have been called once
             interestRateProviderMock.Verify(x => x.GetInterestRate(reference), Times.Once);
+        }
+
+        [TestCase("Span")]
+        [TestCase("Count")]
+        [TestCase("StartAndEndDate")]
+        public void IndicatorsDataPoint(string testCase)
+        {
+            var indicator = new BollingerBands(10, 2);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+
+            using (Py.GIL())
+            {
+                PyObject pandasFrame = null;
+                if (testCase == "StartAndEndDate")
+                {
+                    pandasFrame = _algorithm.Indicator(indicator, _equity, new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
+                }
+                else if (testCase == "Span")
+                {
+                    pandasFrame = _algorithm.Indicator(indicator, _equity, TimeSpan.FromDays(5), Resolution.Minute);
+                }
+                else if (testCase == "Count")
+                {
+                    pandasFrame = _algorithm.Indicator(indicator, _equity, (int)(4 * 60 * 6.5), Resolution.Minute);
+                }
+
+                Assert.IsTrue(indicator.IsReady);
+                Assert.AreEqual(1551, QuantBookIndicatorsTests.GetDataFrameLength(pandasFrame));
+            }
+        }
+
+        [TestCase("Span")]
+        [TestCase("Count")]
+        [TestCase("StartAndEndDate")]
+        public void IndicatorsBar(string testCase)
+        {
+            var indicator = new AverageTrueRange(10);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+
+            using (Py.GIL())
+            {
+                PyObject pandasFrame = null;
+                if (testCase == "StartAndEndDate")
+                {
+                    pandasFrame = _algorithm.Indicator(indicator, _equity, new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
+                }
+                else if (testCase == "Span")
+                {
+                    pandasFrame = _algorithm.Indicator(indicator, _equity, TimeSpan.FromDays(5), Resolution.Minute);
+                }
+                else if (testCase == "Count")
+                {
+                    pandasFrame = _algorithm.Indicator(indicator, _equity, (int)(4 * 60 * 6.5), Resolution.Minute);
+                }
+
+                Assert.IsTrue(indicator.IsReady);
+                Assert.AreEqual(1551, QuantBookIndicatorsTests.GetDataFrameLength(pandasFrame));
+            }
+        }
+
+        [Test]
+        public void IndicatorsPassingHistory()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var indicator = new Beta(_equity, referenceSymbol, 10);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+
+            using (Py.GIL())
+            {
+                var history = _algorithm.History(new[] { _equity, referenceSymbol }, TimeSpan.FromDays(5), Resolution.Minute);
+                PyObject pandasFrame = _algorithm.Indicator(indicator, history);
+
+                Assert.IsTrue(indicator.IsReady);
+                Assert.AreEqual(3099, QuantBookIndicatorsTests.GetDataFrameLength(pandasFrame));
+            }
         }
     }
 }

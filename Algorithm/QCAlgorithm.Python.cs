@@ -29,6 +29,7 @@ using System.Linq;
 using QuantConnect.Brokerages;
 using QuantConnect.Scheduling;
 using QuantConnect.Util;
+using System.Reflection;
 
 namespace QuantConnect.Algorithm
 {
@@ -1480,6 +1481,180 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets the historical data of an indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="period">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of an indicator</returns>
+        public PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var history = History(new[] { symbol }, period, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="period">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public PyObject Indicator(IndicatorBase<IBaseDataBar> indicator, Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var history = History(new[] { symbol }, period, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="period">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public PyObject Indicator(IndicatorBase<TradeBar> indicator, Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var history = History(new[] { symbol }, period, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of an indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of an indicator</returns>
+        public PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, Symbol symbol, TimeSpan span, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var history = History(new[] { symbol }, span, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public PyObject Indicator(IndicatorBase<IBaseDataBar> indicator, Symbol symbol, TimeSpan span, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var history = History(new[] { symbol }, span, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public PyObject Indicator(IndicatorBase<TradeBar> indicator, Symbol symbol, TimeSpan span, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var history = History(new[] { symbol }, span, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of an indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of an indicator</returns>
+        public PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var history = History(new[] { symbol }, start, end, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public PyObject Indicator(IndicatorBase<IBaseDataBar> indicator, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var history = History(new[] { symbol }, start, end, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public PyObject Indicator(IndicatorBase<TradeBar> indicator, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var history = History(new[] { symbol }, start, end, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of an indicator and convert it into pandas.DataFrame
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="history">Historical data used to calculate the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame containing the historical data of <paramref name="indicator"/></returns>
+        public PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Slice> history, Func<IBaseData, decimal> selector = null)
+        {
+            selector ??= (x => x.Value);
+            return Indicator(indicator, history, (bar) => indicator.Update(bar.EndTime, selector(bar)));
+        }
+
+        /// <summary>
+        /// Gets the historical data of an bar indicator and convert it into pandas.DataFrame
+        /// </summary>
+        /// <param name="indicator">Bar indicator</param>
+        /// <param name="history">Historical data used to calculate the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame containing the historical data of <paramref name="indicator"/></returns>
+        public PyObject Indicator<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Func<IBaseData, T> selector = null)
+            where T : IBaseData
+        {
+            selector ??= (x => (T)x);
+            return Indicator(indicator, history, (bar) => indicator.Update(selector(bar)));
+        }
+
+        /// <summary>
         /// Gets indicator base type
         /// </summary>
         /// <param name="type">Indicator type</param>
@@ -1622,6 +1797,80 @@ namespace QuantConnect.Algorithm
             }
 
             return null;
+        }
+
+        private PyObject Indicator(IndicatorBase indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator)
+        {
+            // Reset the indicator
+            indicator.Reset();
+
+            var indicatorType = indicator.GetType();
+            // Create a dictionary of the indicator properties & the indicator value itself
+            var name = indicatorType.Name;
+            var indicatorValues = indicatorType.GetProperties()
+                .Where(x => x.PropertyType.IsGenericType && x.Name != "Consolidators" && x.Name != "Window")
+                .Select(x => (IndicatorValues)new IndicatorPropertyValues(indicator, x))
+                .Concat(new[] { new IndicatorValues(indicator, name) })
+                .ToList();
+
+            IndicatorUpdatedHandler callback = (object sender, IndicatorDataPoint point) =>
+            {
+                if (!indicator.IsReady)
+                {
+                    return;
+                }
+                for (var i = 0; i < indicatorValues.Count; i++)
+                {
+                    indicatorValues[i].UpdateValue(point);
+                }
+            };
+            // register the callback, update the indicator and unregister finally
+            indicator.Updated += callback;
+            history.PushThrough(bar => updateIndicator(bar));
+            indicator.Updated -= callback;
+
+            if (!PythonEngine.IsInitialized)
+            {
+                // C# algorithms can call these methods without it blowing up on them
+                return null;
+            }
+            return PandasConverter.GetIndicatorDataFrame(indicatorValues.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values)));
+        }
+
+        private class IndicatorValues
+        {
+            public string Name { get; }
+            protected IndicatorBase Indicator { get; }
+            public List<IndicatorDataPoint> Values { get; }
+            public IndicatorValues(IndicatorBase indicator, string name)
+            {
+                Name = name;
+                Values = new();
+                Indicator = indicator;
+            }
+            public virtual void UpdateValue(IndicatorDataPoint point)
+            {
+                Values.Add(point);
+            }
+        }
+        private class IndicatorPropertyValues : IndicatorValues
+        {
+            private readonly PropertyInfo _currentInfo;
+            private readonly PropertyInfo _propertyInfo;
+            public IndicatorPropertyValues(IndicatorBase indicator, PropertyInfo propertyInfo) : base(indicator, propertyInfo.Name)
+            {
+                _propertyInfo = propertyInfo;
+                _currentInfo = _propertyInfo.PropertyType.GetProperty("Current");
+            }
+            public override void UpdateValue(IndicatorDataPoint point)
+            {
+                var value = _propertyInfo.GetValue(Indicator);
+                if (_currentInfo != null)
+                {
+                    value = _currentInfo.GetValue(value);
+                }
+                Values.Add(value as IndicatorDataPoint);
+            }
         }
     }
 }
