@@ -351,6 +351,21 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             );
 
         /// <summary>
+        /// Iron Butterfly strategy consists of a long ATM call, a long ATM put, a short OTM call, and a short OTM put.
+        /// The strike spread between ATM & OTM call and put are the same. All at the same expiration date.
+        /// </summary>
+        public static OptionStrategyDefinition IronButterfly { get; }
+            = OptionStrategyDefinition.Create("Iron Butterfly",
+                OptionStrategyDefinition.PutLeg(+1),
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike < legs[0].Strike,
+                    (legs, p) => p.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(1, (legs, c) => c.Strike == legs[0].Strike,
+                    (legs, c) => c.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(-1, (legs, c) => c.Strike == legs[0].Strike * 2 - legs[1].Strike,
+                    (legs, c) => c.Expiration == legs[0].Expiration)
+            );
+
+        /// <summary>
         /// Iron Condor strategy is buying a put, selling a put with a higher strike price, selling a call and buying a call with a higher strike price.
         /// All at the same expiration date
         /// </summary>

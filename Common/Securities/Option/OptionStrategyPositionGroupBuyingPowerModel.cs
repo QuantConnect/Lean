@@ -208,7 +208,7 @@ namespace QuantConnect.Securities.Option
                 var result = GetMiddleAndLowStrikeDifference(parameters.PositionGroup, parameters.Portfolio);
                 return new MaintenanceMargin(result);
             }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.IronCondor.Name)
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.IronCondor.Name || _optionStrategy.Name == OptionStrategyDefinitions.IronButterfly.Name)
             {
                 var result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
                 return new MaintenanceMargin(result);
@@ -355,7 +355,7 @@ namespace QuantConnect.Securities.Option
             {
                 result = GetMiddleAndLowStrikeDifference(parameters.PositionGroup, parameters.Portfolio);
             }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.IronCondor.Name)
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.IronCondor.Name || _optionStrategy.Name == OptionStrategyDefinitions.IronButterfly.Name)
             {
                 result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
             }

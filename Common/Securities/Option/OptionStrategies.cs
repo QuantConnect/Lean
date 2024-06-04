@@ -819,6 +819,29 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Creates a new Iron Butterfly strategy which consists of a ATM call, a ATM put, a OTM call, and a OTM put,
+        /// all with the same expiration date and with increasing strikes prices in the mentioned order.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="otmCallStrike">OTM call option strike price</param>
+        /// <param name="atmStrike">2 ATM options strike price</param>
+        /// <param name="otmPutStrike">OTM put option strike price</param>
+        /// <param name="expiration">Expiration date for all the options</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy IronButterfly(Symbol canonicalOption, decimal otmPutStrike, decimal atmStrike, decimal otmCallStrike,
+            DateTime expiration)
+        {
+            if (atmStrike - otmPutStrike != otmCallStrike - atmStrike)
+            {
+                throw new ArgumentException("IronButterfly: intervals between exercise prices must be equal");
+            }
+
+            var strategy = IronCondor(canonicalOption, otmPutStrike, atmStrike, atmStrike, otmCallStrike, expiration);
+            strategy.Name = OptionStrategyDefinitions.IronButterfly.Name;
+            return strategy;
+        }
+
+        /// <summary>
         /// Creates a new Iron Condor strategy which consists of a long put, a short put, a short call and a long option,
         /// all with the same expiration date and with increasing strikes prices in the mentioned order.
         /// </summary>
@@ -835,7 +858,7 @@ namespace QuantConnect.Securities.Option
             CheckCanonicalOptionSymbol(canonicalOption, "IronCondor");
             CheckExpirationDate(expiration, "IronCondor", nameof(expiration));
 
-            if (longPutStrike >= shortPutStrike || shortPutStrike >= shortCallStrike || shortCallStrike >= longCallStrike)
+            if (longPutStrike >= shortPutStrike || shortPutStrike > shortCallStrike || shortCallStrike >= longCallStrike)
             {
                 throw new ArgumentException("IronCondor: strike prices must be in ascending order",
                     $"{nameof(longPutStrike)}, {nameof(shortPutStrike)}, {nameof(shortCallStrike)}, {nameof(longCallStrike)}");
