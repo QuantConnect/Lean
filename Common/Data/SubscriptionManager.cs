@@ -31,7 +31,7 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionManager
     {
-        private readonly PriorityQueue<ConsolidatorWrapper, DateTime> _consolidatorsSortedByScanTime;
+        private readonly PriorityQueue<ConsolidatorWrapper, ConsolidatorScanPriority> _consolidatorsSortedByScanTime;
         private readonly Dictionary<IDataConsolidator, ConsolidatorWrapper> _consolidators;
         private readonly ITimeKeeper _timeKeeper;
         private IAlgorithmSubscriptionManager _subscriptionManager;
@@ -181,7 +181,7 @@ namespace QuantConnect.Data
                     var wrapper = _consolidators[consolidator] =
                         new ConsolidatorWrapper(consolidator, subscription.Increment, _timeKeeper, _timeKeeper.GetLocalTimeKeeper(subscription.ExchangeTimeZone));
 
-                    _consolidatorsSortedByScanTime.Enqueue(wrapper, wrapper.UtcScanTime);
+                    _consolidatorsSortedByScanTime.Enqueue(wrapper, wrapper.Priority);
                     return;
                 }
             }
@@ -260,7 +260,7 @@ namespace QuantConnect.Data
         /// <param name="algorithm">The algorithm instance</param>
         public void ScanPastConsolidators(DateTime newUtcTime, IAlgorithm algorithm)
         {
-            while (_consolidatorsSortedByScanTime.TryPeek(out _, out var utcScanTime) && utcScanTime < newUtcTime)
+            while (_consolidatorsSortedByScanTime.TryPeek(out _, out var priority) && priority.UtcScanTime < newUtcTime)
             {
                 var consolidatorToScan = _consolidatorsSortedByScanTime.Dequeue();
                 if (consolidatorToScan.Disposed)
@@ -269,19 +269,19 @@ namespace QuantConnect.Data
                     continue;
                 }
 
-                if (utcScanTime != algorithm.UtcTime)
+                if (priority.UtcScanTime != algorithm.UtcTime)
                 {
                     // only update the algorithm time once, it's not cheap because of TZ conversions
-                    algorithm.SetDateTime(utcScanTime);
+                    algorithm.SetDateTime(priority.UtcScanTime);
                 }
 
-                if (consolidatorToScan.UtcScanTime <= utcScanTime)
+                if (consolidatorToScan.UtcScanTime <= priority.UtcScanTime)
                 {
                     // only scan if we still need to
                     consolidatorToScan.Scan();
                 }
 
-                _consolidatorsSortedByScanTime.Enqueue(consolidatorToScan, consolidatorToScan.UtcScanTime);
+                _consolidatorsSortedByScanTime.Enqueue(consolidatorToScan, consolidatorToScan.Priority);
             }
         }
 
