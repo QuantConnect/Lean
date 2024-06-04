@@ -174,6 +174,84 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         }
 
         [TestFixture]
+        public class WhenCreatingEnumeratorForRemoteCollectionData
+        {
+            private const int DataPerTimeStep = 3;
+            private readonly DateTime _referenceLocal = new DateTime(2017, 10, 12);
+            private readonly DateTime _referenceUtc = new DateTime(2017, 10, 12).ConvertToUtc(TimeZones.NewYork);
+
+            private ManualTimeProvider _timeProvider;
+            private IEnumerator<BaseData> _enumerator;
+
+            [SetUp]
+            public void Given()
+            {
+                _timeProvider = new ManualTimeProvider(_referenceUtc);
+                var dataSourceReader = new TestISubscriptionDataSourceReader
+                {
+                    TimeProvider = _timeProvider
+                };
+
+                var config = new SubscriptionDataConfig(typeof(RemoteCollectionData), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+                var request = GetSubscriptionRequest(config, _referenceUtc.AddSeconds(-4), _referenceUtc.AddDays(1));
+
+                var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, dataSourceReader);
+                _enumerator = factory.CreateEnumerator(request, null);
+            }
+
+            private class TestISubscriptionDataSourceReader : ISubscriptionDataSourceReader
+            {
+                public ManualTimeProvider TimeProvider;
+                public event EventHandler<InvalidSourceEventArgs> InvalidSource;
+
+                public IEnumerable<BaseData> Read(SubscriptionDataSource source)
+                {
+                    var currentLocalTime = TimeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
+                    var data = Enumerable.Range(0, DataPerTimeStep).Select(_ => new RemoteCollectionData { EndTime = currentLocalTime });
+
+                    // let's add some old data which should be ignored
+                    data = data.Concat(Enumerable.Range(0, DataPerTimeStep).Select(_ => new RemoteCollectionData { EndTime = currentLocalTime.AddSeconds(-1) }));
+                    return new BaseDataCollection(currentLocalTime, Symbols.SPY, data);
+                }
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                _enumerator?.DisposeSafely();
+            }
+
+            [Test]
+            public void YieldsGroupOfDataEachSecond()
+            {
+                for (int i = 0; i < DataPerTimeStep; i++)
+                {
+                    Assert.IsTrue(_enumerator.MoveNext());
+                    Assert.IsNotNull(_enumerator.Current, $"Index {i} is null.");
+                    Assert.AreEqual(_referenceLocal, _enumerator.Current.EndTime);
+                }
+
+                Assert.IsTrue(_enumerator.MoveNext());
+                Assert.IsNull(_enumerator.Current);
+
+                Assert.IsTrue(_enumerator.MoveNext());
+                Assert.IsNull(_enumerator.Current);
+
+                _timeProvider.AdvanceSeconds(1);
+
+                for (int i = 0; i < DataPerTimeStep; i++)
+                {
+                    Assert.IsTrue(_enumerator.MoveNext());
+                    Assert.IsNotNull(_enumerator.Current);
+                    Assert.AreEqual(_referenceLocal.AddSeconds(1), _enumerator.Current.EndTime);
+                }
+
+                Assert.IsTrue(_enumerator.MoveNext());
+                Assert.IsNull(_enumerator.Current);
+            }
+        }
+
+        [TestFixture]
         public class WhenCreatingEnumeratorForSecondRemoteFileData
         {
             private readonly DateTime _referenceLocal = new DateTime(2017, 10, 12);
@@ -470,6 +548,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 return new SubscriptionDataSource("rest.source", SubscriptionTransportMedium.Rest);
+            }
+        }
+
+        class RemoteCollectionData : BaseData
+        {
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                return new SubscriptionDataSource("remote.collection.source", SubscriptionTransportMedium.RemoteFile, FileFormat.UnfoldingCollection);
             }
         }
 
