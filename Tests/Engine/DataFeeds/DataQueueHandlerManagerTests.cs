@@ -185,6 +185,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
         }
 
+        [Test]
+        public void HandlesCustomData()
+        {
+            var customSymbol = Symbol.CreateBase(typeof(AlgorithmSettings), Symbols.SPY);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), customSymbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork,
+                false, false, false, false, TickType.Trade, false);
+            var dataHandlers = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
+            var job = new LiveNodePacket
+            {
+                DataQueueHandler = dataHandlers
+            };
+            var compositeDataQueueHandler = new DataQueueHandlerManager(new AlgorithmSettings());
+            compositeDataQueueHandler.SetJob(job);
+            var enumerator = compositeDataQueueHandler.Subscribe(config, (_, _) => { });
+            Assert.NotNull(enumerator);
+            compositeDataQueueHandler.Dispose();
+            enumerator.Dispose();
+        }
+
         private static SubscriptionDataConfig GetConfig(Symbol symbol = null)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol ?? Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork,
