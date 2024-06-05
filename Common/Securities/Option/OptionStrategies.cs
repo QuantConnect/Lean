@@ -819,7 +819,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Creates a new Iron Butterfly strategy which consists of a ATM call, a ATM put, a OTM call, and a OTM put,
+        /// Creates a new Iron Butterfly strategy which consists of a long ATM call, a long ATM put, a short OTM call, and a short OTM put,
         /// all with the same expiration date and with increasing strikes prices in the mentioned order.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>

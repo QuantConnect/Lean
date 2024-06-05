@@ -352,7 +352,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
 
         /// <summary>
         /// Iron Butterfly strategy consists of a long ATM call, a long ATM put, a short OTM call, and a short OTM put.
-        /// The strike spread between ATM & OTM call and put are the same. All at the same expiration date.
+        /// The strike spread between ATM and OTM call and put are the same. All at the same expiration date.
         /// </summary>
         public static OptionStrategyDefinition IronButterfly { get; }
             = OptionStrategyDefinition.Create("Iron Butterfly",
