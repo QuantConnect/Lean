@@ -836,9 +836,25 @@ namespace QuantConnect.Securities.Option
                 throw new ArgumentException("IronButterfly: intervals between exercise prices must be equal");
             }
 
-            var strategy = InvertStrategy(IronCondor(canonicalOption, otmPutStrike, atmStrike, atmStrike, otmCallStrike, expiration),
+            return InvertStrategy(IronCondor(canonicalOption, otmPutStrike, atmStrike, atmStrike, otmCallStrike, expiration),
                 OptionStrategyDefinitions.IronButterfly.Name);
-            return strategy;
+        }
+
+        /// <summary>
+        /// Creates a new Short Iron Butterfly strategy which consists of a short ATM call, a short ATM put, a long OTM call, and a long OTM put.
+        /// It is the inverse of an Iron Butterfly.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="otmCallStrike">OTM call option strike price</param>
+        /// <param name="atmStrike">2 ATM options strike price</param>
+        /// <param name="otmPutStrike">OTM put option strike price</param>
+        /// <param name="expiration">Expiration date for all the options</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ShortIronButterfly(Symbol canonicalOption, decimal otmPutStrike, decimal atmStrike, decimal otmCallStrike,
+            DateTime expiration)
+        {
+            return InvertStrategy(IronButterfly(canonicalOption, otmPutStrike, atmStrike, otmCallStrike, expiration),
+                OptionStrategyDefinitions.ShortIronButterfly.Name);
         }
 
         /// <summary>
@@ -889,6 +905,24 @@ namespace QuantConnect.Securities.Option
                     }
                 }
             };
+        }
+
+        /// <summary>
+        /// Creates a new Short Iron Condor strategy which consists of a short put, a long put, a long call and a short call,
+        /// all with the same expiration date and with increasing strikes prices in the mentioned order.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="shortPutStrike">Short put option strike price</param>
+        /// <param name="longPutStrike">Long put option strike price</param>
+        /// <param name="longCallStrike">Long call option strike price</param>
+        /// <param name="shortCallStrike">Short call option strike price</param>
+        /// <param name="expiration">Expiration date for all the options</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ShortIronCondor(Symbol canonicalOption, decimal shortPutStrike, decimal longPutStrike, decimal longCallStrike,
+            decimal shortCallStrike, DateTime expiration)
+        {
+            return InvertStrategy(IronCondor(canonicalOption, shortPutStrike, longPutStrike, longCallStrike, shortCallStrike, expiration),
+                OptionStrategyDefinitions.ShortIronCondor.Name);
         }
 
         /// <summary>
