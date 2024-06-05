@@ -69,7 +69,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
             Exception failureException = null;
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(dataConfig.Symbol.ID.Market, dataConfig.Symbol, dataConfig.Symbol.SecurityType);
             foreach (var dataHandler in DataHandlers)
             {
                 // Emit ticks & custom data as soon as we get them, they don't need any kind of batching behavior applied to them
@@ -114,6 +113,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         return enumerator;
                     }
 
+                    var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(dataConfig.Symbol.ID.Market, dataConfig.Symbol, dataConfig.Symbol.SecurityType);
                     if (LeanData.UseStrictEndTime(_algorithmSettings.DailyStrictEndTimeEnabled, dataConfig.Symbol, dataConfig.Increment, exchangeHours))
                     {
                         // before the first frontier enumerator we adjust the endtimes if required
