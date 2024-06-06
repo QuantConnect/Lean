@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Common.Data.Market
             const string line = "86399572,52.62,5,usa,,0,False";
 
             var baseDate = new DateTime(2013, 10, 08);
-            var symbol = Symbol.CreateFuture(Futures.Energies.CrudeOilWTI, QuantConnect.Market.NYMEX, new DateTime(2017, 2, 28));
+            var symbol = Symbol.CreateFuture(Futures.Energy.CrudeOilWTI, QuantConnect.Market.NYMEX, new DateTime(2017, 2, 28));
             var config = new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
             var tick = new Tick(config, line, baseDate);
 
