@@ -17,6 +17,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Securities;
+using Python.Runtime;
 
 namespace QuantConnect.Tests.Common
 {
@@ -243,5 +244,26 @@ namespace QuantConnect.Tests.Common
             var result = SymbolRepresentation.ParseFutureSymbol(ticker, 1999);
             Assert.AreEqual(new DateTime(1999, 12, 17), result.ID.Date.Date);
         }
+
+        [TestCase("PROPANE_NON_LDH_MONT_BELVIEU", QuantConnect.Securities.Futures.Energy.PropaneNonLDHMontBelvieu)]
+        [TestCase("ARGUS_PROPANE_FAR_EAST_INDEX_BALMO", QuantConnect.Securities.Futures.Energy.ArgusPropaneFarEastIndexBALMO)]
+        [TestCase("GASOLINE", QuantConnect.Securities.Futures.Energy.Gasoline)]
+        [TestCase("NATURAL_GAS",QuantConnect.Securities.Futures.Energy.NaturalGas)]
+        public void FutureEnergySymbolsWorkInPythonWithPEP8(string FutureEnergyName, string expectedFutureEnergyValue)
+        {
+            using (Py.GIL())
+            {
+                var pythonModule = PyModule.FromString("testModule", @$"
+from AlgorithmImports import *
+
+def return_futures_energy():
+    return Futures.Energy.{FutureEnergyName};
+");
+                dynamic pythonFunction = pythonModule.GetAttr("return_futures_energy");
+                var futureEnergyValue = pythonFunction();
+                Assert.AreEqual(expectedFutureEnergyValue, (futureEnergyValue as PyObject).GetAndDispose<string>());
+            }
+        }
+
     }
 }
