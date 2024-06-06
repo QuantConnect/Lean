@@ -31,14 +31,21 @@ namespace QuantConnect.Orders.CrossZero
         public bool IsOrderPlacedSuccessfully { get; }
 
         /// <summary>
+        /// Gets the message of the order.
+        /// </summary>
+        public string Message { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CrossZeroOrderResponse"/> struct.
         /// </summary>
         /// <param name="brokerageOrderId">The brokerage order ID.</param>
         /// <param name="isOrderPlacedSuccessfully">if set to <c>true</c> [is order placed successfully].</param>
-        public CrossZeroOrderResponse(string brokerageOrderId, bool isOrderPlacedSuccessfully)
+        /// <param name="message">The message of the order. This parameter is optional and defaults to <c>null</c>.</param>
+        public CrossZeroOrderResponse(string brokerageOrderId, bool isOrderPlacedSuccessfully, string message = "")
         {
             BrokerageOrderId = brokerageOrderId;
             IsOrderPlacedSuccessfully = isOrderPlacedSuccessfully;
+            Message = message;
         }
     }
 }

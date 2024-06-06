@@ -687,6 +687,10 @@ namespace QuantConnect.Brokerages
                 var response = PlaceCrossZeroOrder(firstOrderPartRequest);
                 if (!response.IsOrderPlacedSuccessfully)
                 {
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, $"{nameof(Brokerage)}: {response.Message}")
+                    {
+                        Status = OrderStatus.Invalid
+                    });
                     // remove the contingent order if we weren't successful in placing the first
                     //ContingentOrderQueue contingent;
                     _leanOrderByBrokerageCrossingOrders.TryRemove(order.Id, out _);
@@ -778,7 +782,8 @@ namespace QuantConnect.Brokerages
                             // and failed to place the second... strange. Should we invalidate the rest of the order??
                             Log.Error($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Failed to submit contingent order.");
                             var message = $"{leanOrder.Symbol} Failed submitting the second part of cross order for " +
-                                $"LeanOrderId: {leanOrder.Id.ToStringInvariant()} Filled - BrokerageOrderId: {response.BrokerageOrderId}";
+                                $"LeanOrderId: {leanOrder.Id.ToStringInvariant()} Filled - BrokerageOrderId: {response.BrokerageOrderId}. " +
+                                $"{response.Message}";
                             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroFailed", message));
                             OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
                         }

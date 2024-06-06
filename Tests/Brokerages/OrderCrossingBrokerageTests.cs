@@ -495,7 +495,7 @@ namespace QuantConnect.Tests.Brokerages
                 var response = PlaceOrderPhonyBrokerage(crossZeroOrderRequest.LeanOrder, isPlaceOrderWithoutLeanEvent, brokeragePhonyParameterRequest);
 
                 // Step 3: Return the result of placing the order
-                return new CrossZeroOrderResponse(response.OrderId, response.IsOrderPlacedSuccessfully);
+                return new CrossZeroOrderResponse(response.OrderId, response.IsOrderPlacedSuccessfully, response.Message);
             }
 
             /// <summary>
@@ -529,7 +529,7 @@ namespace QuantConnect.Tests.Brokerages
                     return new PhonyPlaceOrderResponse(newOrderId, true);
                 }
 
-                return new PhonyPlaceOrderResponse(newOrderId, false);
+                return new PhonyPlaceOrderResponse(newOrderId, false, "Something was wrong");
             }
 
             public override void Dispose()
@@ -643,14 +643,21 @@ namespace QuantConnect.Tests.Brokerages
                 public bool IsOrderPlacedSuccessfully { get; }
 
                 /// <summary>
+                /// Gets the message associated with the order response.
+                /// </summary>
+                public string Message { get; }
+
+                /// <summary>
                 /// Initializes a new instance of the <see cref="PhonyPlaceOrderResponse"/> struct.
                 /// </summary>
                 /// <param name="orderId">The unique identifier for the placed order.</param>
                 /// <param name="isOrderPlacedSuccessfully">A value indicating whether the order was placed successfully.</param>
-                public PhonyPlaceOrderResponse(string orderId, bool isOrderPlacedSuccessfully)
+                /// <param name="message">The message associated with the order response. This parameter is optional and defaults to <c>null</c>.</param>
+                public PhonyPlaceOrderResponse(string orderId, bool isOrderPlacedSuccessfully, string message = null)
                 {
                     OrderId = orderId;
                     IsOrderPlacedSuccessfully = isOrderPlacedSuccessfully;
+                    Message = message;
                 }
             }
         }
