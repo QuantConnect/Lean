@@ -35,11 +35,6 @@ namespace QuantConnect.Tests.Brokerages
     public class OrderCrossingBrokerageTests
     {
         /// <summary>
-        /// Represents a timeout interval of 5 seconds.
-        /// </summary>
-        private TimeSpan _timeout5seconds = TimeSpan.FromSeconds(5);
-
-        /// <summary>
         /// Provides a collection of test case data for order scenarios.
         /// </summary>
         /// <remarks>
@@ -103,13 +98,9 @@ namespace QuantConnect.Tests.Brokerages
 
             Assert.IsTrue(response);
 
-            autoResetEventPartialFilledStatus.WaitOne(_timeout5seconds);
-            var partialFilledOrder = brokerage.GetAllOrders(o => o.Status == OrderStatus.PartiallyFilled).Single();
-            Assert.IsNotNull(partialFilledOrder);
+            AssertComingOrderStatusByEvent(autoResetEventPartialFilledStatus, brokerage, OrderStatus.PartiallyFilled);
 
-            autoResetEventFilledStatus.WaitOne(_timeout5seconds);
-            var filledEventCount = brokerage.GetAllOrders(o => o.Status == OrderStatus.Filled).Single();
-            Assert.IsNotNull(filledEventCount);
+            AssertComingOrderStatusByEvent(autoResetEventFilledStatus, brokerage, OrderStatus.Filled);
 
             CollectionAssert.AreEquivalent(expectedOrderStatusChangedOrdering, actualCrossZeroOrderStatusOrdering);
             Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
@@ -184,20 +175,100 @@ namespace QuantConnect.Tests.Brokerages
             var response = brokerage.PlaceOrder(leanOrder);
             Assert.IsTrue(response);
 
-            autoResetEventPartialFilledStatus.WaitOne(_timeout5seconds);
-            var partialFilledOrder = brokerage.GetAllOrders(o => o.Status == OrderStatus.PartiallyFilled).Single();
-            Assert.IsNotNull(partialFilledOrder);
+            AssertComingOrderStatusByEvent(autoResetEventPartialFilledStatus, brokerage, OrderStatus.PartiallyFilled);
 
             var updateResponse = brokerage.UpdateOrder(leanOrder);
             Assert.IsTrue(updateResponse);
 
-            autoResetEventUpdateSubmittedStatus.WaitOne(_timeout5seconds);
-            var updateSubmittedOrder = brokerage.GetAllOrders(o => o.Status == OrderStatus.UpdateSubmitted).Single();
-            Assert.IsNotNull(updateSubmittedOrder);
+            AssertComingOrderStatusByEvent(autoResetEventUpdateSubmittedStatus, brokerage, OrderStatus.UpdateSubmitted);
 
-            autoResetEventFilledStatus.WaitOne(_timeout5seconds);
-            var filledEventCount = brokerage.GetAllOrders(o => o.Status == OrderStatus.Filled).Single();
-            Assert.IsNotNull(filledEventCount);
+            AssertComingOrderStatusByEvent(autoResetEventFilledStatus, brokerage, OrderStatus.Filled);
+
+            CollectionAssert.AreEquivalent(expectedOrderStatusChangedOrdering, actualCrossZeroOrderStatusOrdering);
+            Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
+        }
+
+        private static IEnumerable<TestCaseData> CrossZeroInvalidFirstPartParameters
+        {
+            get
+            {
+                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, DateTime.UtcNow);
+                yield return new TestCaseData(stopMarketOrder, new[] { OrderStatus.Submitted, OrderStatus.Invalid });
+            }
+        }
+
+        [Test, TestCaseSource(nameof(CrossZeroInvalidFirstPartParameters))]
+        public void PlaceCrossOrderInvalid(Order leanOrder, OrderStatus[] expectedOrderStatusChangedOrdering)
+        {
+            var actualCrossZeroOrderStatusOrdering = new Queue<OrderStatus>();
+            using var autoResetEventInvalidStatus = new AutoResetEvent(false);
+
+            using var brokerage = InitializeBrokerage((leanOrder?.Symbol.Value, 180m, 10));
+
+            brokerage.OrdersStatusChanged += (_, orderEvents) =>
+            {
+                var orderEventStatus = orderEvents[0].Status;
+
+                actualCrossZeroOrderStatusOrdering.Enqueue(orderEventStatus);
+
+                Log.Trace($"{nameof(PlaceCrossOrder)}.OrdersStatusChangedEvent.Status: {orderEventStatus}");
+
+                if (orderEventStatus == OrderStatus.Invalid)
+                {
+                    autoResetEventInvalidStatus.Set();
+                }
+            };
+
+            brokerage.IsPlaceOrderPhonyBrokerageFirstPartSuccessfully = false;
+            brokerage.IsPlaceOrderPhonyBrokerageSecondPartSuccessfully = false;
+
+            var response = brokerage.PlaceOrder(leanOrder);
+            Assert.IsFalse(response);
+
+            AssertComingOrderStatusByEvent(autoResetEventInvalidStatus, brokerage, OrderStatus.Invalid);
+
+            CollectionAssert.AreEquivalent(expectedOrderStatusChangedOrdering, actualCrossZeroOrderStatusOrdering);
+            Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
+        }
+
+        private static IEnumerable<TestCaseData> OrderCrossZeroSecondPartParameters
+        {
+            get
+            {
+                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, DateTime.UtcNow);
+                yield return new TestCaseData(stopMarketOrder, new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.Filled, OrderStatus.Canceled });
+            }
+        }
+
+        [Test, TestCaseSource(nameof(OrderCrossZeroSecondPartParameters))]
+        public void PlaceCrossZeroSecondPartInvalid(Order leanOrder, OrderStatus[] expectedOrderStatusChangedOrdering)
+        {
+            var actualCrossZeroOrderStatusOrdering = new Queue<OrderStatus>();
+            using var autoResetEventInvalidStatus = new AutoResetEvent(false);
+
+            using var brokerage = InitializeBrokerage((leanOrder?.Symbol.Value, 180m, 10));
+
+            brokerage.OrdersStatusChanged += (_, orderEvents) =>
+            {
+                var orderEventStatus = orderEvents[0].Status;
+
+                actualCrossZeroOrderStatusOrdering.Enqueue(orderEventStatus);
+
+                Log.Trace($"{nameof(PlaceCrossOrder)}.OrdersStatusChangedEvent.Status: {orderEventStatus}");
+
+                if (orderEventStatus == OrderStatus.Canceled)
+                {
+                    autoResetEventInvalidStatus.Set();
+                }
+            };
+
+            brokerage.IsPlaceOrderPhonyBrokerageFirstPartSuccessfully = true;
+            brokerage.IsPlaceOrderPhonyBrokerageSecondPartSuccessfully = false;
+
+            var response = brokerage.PlaceOrder(leanOrder);
+            Assert.IsTrue(response);
+
+            AssertComingOrderStatusByEvent(autoResetEventInvalidStatus, brokerage, OrderStatus.Canceled);
 
             CollectionAssert.AreEquivalent(expectedOrderStatusChangedOrdering, actualCrossZeroOrderStatusOrdering);
             Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
@@ -223,11 +294,34 @@ namespace QuantConnect.Tests.Brokerages
             return brokerage;
         }
 
+        /// <summary>
+        /// Asserts that the brokerage account holdings are not empty and that the first holding has a positive quantity.
+        /// </summary>
+        /// <param name="brokerage">The brokerage instance to check the account holdings.</param>
+        /// <exception cref="AssertionException">
+        /// Thrown if the account holdings are empty or the first holding has a non-positive quantity.
+        /// </exception>
         private static void AssertThatHoldingIsNotEmpty(IBrokerage brokerage)
         {
             var holdings = brokerage.GetAccountHoldings();
             Assert.Greater(holdings.Count, 0);
             Assert.Greater(holdings[0].Quantity, 0);
+        }
+
+        /// <summary>
+        /// Asserts that an order with the specified status has arrived by waiting for an event signal.
+        /// </summary>
+        /// <param name="resetEvent">The event to wait on, which signals that an order status update has occurred.</param>
+        /// <param name="brokerage">The phony brokerage instance used to check the order status.</param>
+        /// <param name="comingOrderStatus">The expected status of the coming order to assert.</param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if there is not exactly one order with the specified status.
+        /// </exception>
+        private static void AssertComingOrderStatusByEvent(AutoResetEvent resetEvent, PhonyBrokerage brokerage, OrderStatus comingOrderStatus)
+        {
+            resetEvent.WaitOne();
+            var partialFilledOrder = brokerage.GetAllOrders(o => o.Status == comingOrderStatus).Single();
+            Assert.IsNotNull(partialFilledOrder);
         }
 
         private class PhonyBrokerage : Brokerage
@@ -255,6 +349,22 @@ namespace QuantConnect.Tests.Brokerages
             /// Temporarily stores the IDs of brokerage orders for testing purposes.
             /// </summary>
             private List<string> _tempBrokerageOrderIds = new();
+
+            /// <summary>
+            /// This field indicates whether the order has been placed successfully with a phony brokerage during testing.
+            /// </summary>
+            /// <remarks>
+            /// The default value is <c>true</c>. This is used specifically for testing purposes to simulate the successful placement of an order.
+            /// </remarks>
+            public bool IsPlaceOrderPhonyBrokerageFirstPartSuccessfully { get; set; } = true;
+
+            /// <summary>
+            /// This field indicates whether the second part of the order has been placed successfully with a phony brokerage during testing.
+            /// </summary>
+            /// <remarks>
+            /// The default value is <c>true</c>. This is used specifically for testing purposes to simulate the successful placement of the second part of an order.
+            /// </remarks>
+            public bool IsPlaceOrderPhonyBrokerageSecondPartSuccessfully { get; set; } = true;
 
             public override bool IsConnected => true;
 
@@ -407,7 +517,19 @@ namespace QuantConnect.Tests.Brokerages
                     OnOrderEvent(new OrderEvent(originalLeanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Submitted });
                 }
 
-                return new PhonyPlaceOrderResponse(newOrderId, true);
+                if (IsPlaceOrderPhonyBrokerageFirstPartSuccessfully)
+                {
+                    IsPlaceOrderPhonyBrokerageFirstPartSuccessfully = false;
+
+                    return new PhonyPlaceOrderResponse(newOrderId, true);
+                }
+
+                if (IsPlaceOrderPhonyBrokerageSecondPartSuccessfully)
+                {
+                    return new PhonyPlaceOrderResponse(newOrderId, true);
+                }
+
+                return new PhonyPlaceOrderResponse(newOrderId, false);
             }
 
             public override void Dispose()
