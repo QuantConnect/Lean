@@ -324,7 +324,8 @@ namespace QuantConnect.Tests.Common.Scheduling
             foreach (var date in dates)
             {
                 count++;
-                Assert.IsTrue(date.Day <= 4);
+                Assert.AreEqual(1, date.Day);
+                Assert.AreEqual(1, date.Month);
             }
 
             Assert.AreEqual(11, count);
@@ -341,6 +342,8 @@ namespace QuantConnect.Tests.Common.Scheduling
             foreach (var date in dates)
             {
                 count++;
+                Assert.AreNotEqual(2000, date.Year);
+                Assert.AreEqual(1, date.Month);
                 Assert.AreEqual(1, date.Day);
             }
 
@@ -358,18 +361,19 @@ namespace QuantConnect.Tests.Common.Scheduling
             foreach (var date in dates)
             {
                 count++;
+                Assert.AreEqual(1, date.Month);
                 Assert.AreEqual(6, date.Day);
             }
             Assert.AreEqual(11, count);
         }
 
-        [TestCase(2, false)]       // Before 11th
-        [TestCase(4, false)]
-        [TestCase(8, false)]
-        [TestCase(12, true)]      // After 11th
-        [TestCase(16, true)]
-        [TestCase(20, true)]
-        public void StartOfYearSameYearSchedule(int startingDateDay, bool expectNone)
+        [TestCase(2)]       // Before 11th
+        [TestCase(4)]
+        [TestCase(8)]
+        [TestCase(12)]      // After 11th
+        [TestCase(16)]
+        [TestCase(20)]
+        public void StartOfYearSameYearSchedule(int startingDateDay)
         {
             var startingDate = new DateTime(2000, 1, startingDateDay);
             var endingDate = new DateTime(2000, 12, 31);
@@ -378,11 +382,11 @@ namespace QuantConnect.Tests.Common.Scheduling
             var rule = rules.YearStart(10); // 11/1/2000
             var dates = rule.GetDates(startingDate, endingDate);
 
-            Assert.AreEqual(expectNone, dates.IsNullOrEmpty());
+            Assert.AreEqual(startingDateDay > 11, dates.IsNullOrEmpty());
 
-            if (!expectNone)
+            if (startingDateDay <= 11)
             {
-                Assert.AreEqual(new DateTime(2000, 1, 11), dates.First());
+                Assert.AreEqual(new DateTime(2000, 1, 11), dates.Single());
             }
         }
 
@@ -400,7 +404,7 @@ namespace QuantConnect.Tests.Common.Scheduling
                 Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
                 Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
                 Assert.IsTrue(date.Day <= 4);
-                Log.Trace(date.Day.ToString(CultureInfo.InvariantCulture));
+                Log.Debug(date.Day.ToString(CultureInfo.InvariantCulture));
             }
 
             Assert.AreEqual(11, count);
@@ -417,10 +421,12 @@ namespace QuantConnect.Tests.Common.Scheduling
             foreach (var date in dates)
             {
                 count++;
+                Assert.AreNotEqual(2000, date.Year);
                 Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
                 Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
+                Assert.AreEqual(1, date.Month);
                 Assert.IsTrue(date.Day <= 4);
-                Log.Trace(date.Day.ToString(CultureInfo.InvariantCulture));
+                Log.Debug(date.Day.ToString(CultureInfo.InvariantCulture));
             }
 
             Assert.AreEqual(10, count);
@@ -459,6 +465,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             foreach (var date in dates)
             {
                 count++;
+                Assert.AreEqual(12, date.Month);
                 Assert.AreEqual(DateTime.DaysInMonth(date.Year, date.Month), date.Day);
             }
 
@@ -476,18 +483,19 @@ namespace QuantConnect.Tests.Common.Scheduling
             foreach (var date in dates)
             {
                 count++;
+                Assert.AreEqual(12, date.Month);
                 Assert.AreEqual(DateTime.DaysInMonth(date.Year, date.Month) - 5, date.Day);
             }
             Assert.AreEqual(11, count);
         }
 
-        [TestCase(5, true)]       // Before 21th
-        [TestCase(10, true)]
-        [TestCase(15, true)]
-        [TestCase(21, false)]      // After 21th
-        [TestCase(25, false)]
-        [TestCase(30, false)]
-        public void EndOfYearSameMonthSchedule(int endingDateDay, bool expectNone)
+        [TestCase(5)]       // Before 21th
+        [TestCase(10)]
+        [TestCase(15)]
+        [TestCase(21)]      // After 21th
+        [TestCase(25)]
+        [TestCase(30)]
+        public void EndOfYearSameMonthSchedule(int endingDateDay)
         {
             var startingDate = new DateTime(2000, 1, 1);
             var endingDate = new DateTime(2000, 12, endingDateDay);
@@ -496,11 +504,11 @@ namespace QuantConnect.Tests.Common.Scheduling
             var rule = rules.YearEnd(10); // 12/21/2000
             var dates = rule.GetDates(startingDate, endingDate);
 
-            Assert.AreEqual(expectNone, dates.IsNullOrEmpty());
+            Assert.AreEqual(endingDateDay < 21, dates.IsNullOrEmpty());
 
-            if (!expectNone)
+            if (endingDateDay >= 21)
             {
-                Assert.AreEqual(new DateTime(2000, 12, 21), dates.First());
+                Assert.AreEqual(new DateTime(2000, 12, 21), dates.Single());
             }
         }
 
@@ -517,8 +525,9 @@ namespace QuantConnect.Tests.Common.Scheduling
                 count++;
                 Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
                 Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
+                Assert.AreEqual(12, date.Month);
                 Assert.IsTrue(date.Day >= 28);
-                Log.Trace(date + " " + date.DayOfWeek);
+                Log.Debug(date + " " + date.DayOfWeek);
             }
 
             Assert.AreEqual(11, count);
