@@ -323,493 +323,483 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Energy group
+        /// Energies group
         /// </summary>
-        public class EnergyFutures
+        public static class Energies
         {
             /// <summary>
             /// Propane Non LDH Mont Belvieu (OPIS) BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string PropaneNonLDHMontBelvieu => "1S";
+            public const string PropaneNonLDHMontBelvieu = "1S";
 
             /// <summary>
             /// Argus Propane Far East Index BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string ArgusPropaneFarEastIndexBALMO => "22";
+            public const string ArgusPropaneFarEastIndexBALMO = "22";
 
             /// <summary>
             /// Mini European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MiniEuropeanThreePointPercentFiveFuelOilBargesPlatts => "A0D";
+            public const string MiniEuropeanThreePointPercentFiveFuelOilBargesPlatts = "A0D";
 
             /// <summary>
             /// Mini Singapore Fuel Oil 180 cst (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MiniSingaporeFuelOil180CstPlatts => "A0F";
+            public const string MiniSingaporeFuelOil180CstPlatts = "A0F";
 
             /// <summary>
             /// Gulf Coast ULSD (Platts) Up-Down BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string GulfCoastULSDPlattsUpDownBALMO => "A1L";
+            public const string GulfCoastULSDPlattsUpDownBALMO = "A1L";
 
             /// <summary>
             /// Gulf Coast Jet (Platts) Up-Down BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string GulfCoastJetPlattsUpDownBALMO => "A1M";
+            public const string GulfCoastJetPlattsUpDownBALMO = "A1M";
 
             /// <summary>
             /// Propane Non-LDH Mont Belvieu (OPIS) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string PropaneNonLDHMontBelvieuOPIS => "A1R";
+            public const string PropaneNonLDHMontBelvieuOPIS = "A1R";
 
             /// <summary>
             /// European Propane CIF ARA (Argus) BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string EuropeanPropaneCIFARAArgusBALMO => "A32";
+            public const string EuropeanPropaneCIFARAArgusBALMO = "A32";
 
             /// <summary>
             /// Premium Unleaded Gasoline 10 ppm FOB MED (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string PremiumUnleadedGasoline10ppmFOBMEDPlatts => "A3G";
+            public const string PremiumUnleadedGasoline10ppmFOBMEDPlatts = "A3G";
 
             /// <summary>
             /// Argus Propane Far East Index Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string ArgusPropaneFarEastIndex => "A7E";
+            public const string ArgusPropaneFarEastIndex = "A7E";
 
             /// <summary>
             /// Gasoline Euro-bob Oxy NWE Barges (Argus) Crack Spread BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string GasolineEurobobOxyNWEBargesArgusCrackSpreadBALMO => "A7I";
+            public const string GasolineEurobobOxyNWEBargesArgusCrackSpreadBALMO = "A7I";
 
             /// <summary>
             /// Mont Belvieu Natural Gasoline (OPIS) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MontBelvieuNaturalGasolineOPIS => "A7Q";
+            public const string MontBelvieuNaturalGasolineOPIS = "A7Q";
 
             /// <summary>
             /// Mont Belvieu Normal Butane (OPIS) BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MontBelvieuNormalButaneOPISBALMO => "A8J";
+            public const string MontBelvieuNormalButaneOPISBALMO = "A8J";
 
             /// <summary>
             /// Conway Propane (OPIS) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string ConwayPropaneOPIS => "A8K";
+            public const string ConwayPropaneOPIS = "A8K";
 
             /// <summary>
             /// Mont Belvieu LDH Propane (OPIS) BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MontBelvieuLDHPropaneOPISBALMO => "A8O";
+            public const string MontBelvieuLDHPropaneOPISBALMO = "A8O";
 
             /// <summary>
             /// Argus Propane Far East Index vs. European Propane CIF ARA (Argus) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string ArgusPropaneFarEastIndexVsEuropeanPropaneCIFARAArgus => "A91";
+            public const string ArgusPropaneFarEastIndexVsEuropeanPropaneCIFARAArgus = "A91";
 
             /// <summary>
             /// Argus Propane (Saudi Aramco) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string ArgusPropaneSaudiAramco => "A9N";
+            public const string ArgusPropaneSaudiAramco = "A9N";
 
             /// <summary>
             /// Group Three ULSD (Platts) vs. NY Harbor ULSD Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string GroupThreeULSDPlattsVsNYHarborULSD => "AA6";
+            public const string GroupThreeULSDPlattsVsNYHarborULSD = "AA6";
 
             /// <summary>
             /// Group Three Sub-octane Gasoliine (Platts) vs. RBOB Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string GroupThreeSuboctaneGasolinePlattsVsRBOB => "AA8";
+            public const string GroupThreeSuboctaneGasolinePlattsVsRBOB = "AA8";
 
             /// <summary>
             /// Singapore Fuel Oil 180 cst (Platts) BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string SingaporeFuelOil180cstPlattsBALMO => "ABS";
+            public const string SingaporeFuelOil180cstPlattsBALMO = "ABS";
 
             /// <summary>
             /// Singapore Fuel Oil 380 cst (Platts) BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string SingaporeFuelOil380cstPlattsBALMO => "ABT";
+            public const string SingaporeFuelOil380cstPlattsBALMO = "ABT";
 
             /// <summary>
             /// Mont Belvieu Ethane (OPIS) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MontBelvieuEthaneOPIS => "AC0";
+            public const string MontBelvieuEthaneOPIS = "AC0";
 
             /// <summary>
             /// Mont Belvieu Normal Butane (OPIS) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MontBelvieuNormalButaneOPIS => "AD0";
+            public const string MontBelvieuNormalButaneOPIS = "AD0";
 
             /// <summary>
             /// Brent Crude Oil vs. Dubai Crude Oil (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string BrentCrudeOilVsDubaiCrudeOilPlatts => "ADB";
+            public const string BrentCrudeOilVsDubaiCrudeOilPlatts = "ADB";
 
             /// <summary>
             /// Argus LLS vs. WTI (Argus) Trade Month Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string ArgusLLSvsWTIArgusTradeMonth => "AE5";
+            public const string ArgusLLSvsWTIArgusTradeMonth = "AE5";
 
             /// <summary>
             /// Singapore Gasoil (Platts) vs. Low Sulphur Gasoil Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string SingaporeGasoilPlattsVsLowSulphurGasoilFutures => "AGA";
+            public const string SingaporeGasoilPlattsVsLowSulphurGasoilFutures = "AGA";
 
             /// <summary>
             /// Los Angeles CARBOB Gasoline (OPIS) vs. RBOB Gasoline Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string LosAngelesCARBOBGasolineOPISvsRBOBGasoline => "AJL";
+            public const string LosAngelesCARBOBGasolineOPISvsRBOBGasoline = "AJL";
 
             /// <summary>
             /// Los Angeles Jet (OPIS) vs. NY Harbor ULSD Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string LosAngelesJetOPISvsNYHarborULSD => "AJS";
+            public const string LosAngelesJetOPISvsNYHarborULSD = "AJS";
 
             /// <summary>
             /// Los Angeles CARB Diesel (OPIS) vs. NY Harbor ULSD Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string LosAngelesCARBDieselOPISvsNYHarborULSD => "AKL";
+            public const string LosAngelesCARBDieselOPISvsNYHarborULSD = "AKL";
 
             /// <summary>
             /// European Naphtha (Platts) BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string EuropeanNaphthaPlattsBALMO => "AKZ";
+            public const string EuropeanNaphthaPlattsBALMO = "AKZ";
 
             /// <summary>
             /// European Propane CIF ARA (Argus) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string EuropeanPropaneCIFARAArgus => "APS";
+            public const string EuropeanPropaneCIFARAArgus = "APS";
 
             /// <summary>
             /// Mont Belvieu Natural Gasoline (OPIS) BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MontBelvieuNaturalGasolineOPISBALMO => "AR0";
+            public const string MontBelvieuNaturalGasolineOPISBALMO = "AR0";
 
             /// <summary>
             /// RBOB Gasoline Crack Spread Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string RBOBGasolineCrackSpread => "ARE";
+            public const string RBOBGasolineCrackSpread = "ARE";
 
             /// <summary>
             /// Gulf Coast HSFO (Platts) BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string GulfCoastHSFOPlattsBALMO => "AVZ";
+            public const string GulfCoastHSFOPlattsBALMO = "AVZ";
 
             /// <summary>
             /// Mars (Argus) vs. WTI Trade Month Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MarsArgusVsWTITradeMonth => "AYV";
+            public const string MarsArgusVsWTITradeMonth = "AYV";
 
             /// <summary>
             /// Mars (Argus) vs. WTI Financial Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MarsArgusVsWTIFinancial => "AYX";
+            public const string MarsArgusVsWTIFinancial = "AYX";
 
             /// <summary>
             /// Ethanol T2 FOB Rdam Including Duty (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string EthanolT2FOBRdamIncludingDutyPlatts => "AZ1";
+            public const string EthanolT2FOBRdamIncludingDutyPlatts = "AZ1";
 
             /// <summary>
             /// Mont Belvieu LDH Propane (OPIS) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MontBelvieuLDHPropaneOPIS => "B0";
+            public const string MontBelvieuLDHPropaneOPIS = "B0";
 
             /// <summary>
             /// Gasoline Euro-bob Oxy NWE Barges (Argus) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string GasolineEurobobOxyNWEBargesArgus => "B7H";
+            public const string GasolineEurobobOxyNWEBargesArgus = "B7H";
 
             /// <summary>
             /// WTI-Brent Financial Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string WTIBrentFinancial => "BK";
+            public const string WTIBrentFinancial = "BK";
 
             /// <summary>
             /// 3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread (1000mt) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt => "BOO";
+            public const string ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt = "BOO";
 
             /// <summary>
             /// Gasoline Euro-bob Oxy NWE Barges (Argus) BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string GasolineEurobobOxyNWEBargesArgusBALMO => "BR7";
+            public const string GasolineEurobobOxyNWEBargesArgusBALMO = "BR7";
 
             /// <summary>
             /// Brent Last Day Financial Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string BrentLastDayFinancial => "BZ";
+            public const string BrentLastDayFinancial = "BZ";
 
             /// <summary>
             /// Crude Oil WTI Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string CrudeOilWTI => "CL";
+            public const string CrudeOilWTI = "CL";
 
             /// <summary>
             /// Gulf Coast CBOB Gasoline A2 (Platts) vs. RBOB Gasoline Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string GulfCoastCBOBGasolineA2PlattsVsRBOBGasoline => "CRB";
+            public const string GulfCoastCBOBGasolineA2PlattsVsRBOBGasoline = "CRB";
 
             /// <summary>
             /// Clearbrook Bakken Sweet Crude Oil Monthly Index (Net Energy) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string ClearbrookBakkenSweetCrudeOilMonthlyIndexNetEnergy => "CSW";
+            public const string ClearbrookBakkenSweetCrudeOilMonthlyIndexNetEnergy = "CSW";
 
             /// <summary>
             /// WTI Financial Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string WTIFinancial => "CSX";
+            public const string WTIFinancial = "CSX";
 
             /// <summary>
             /// Chicago Ethaanol (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string ChicagoEthanolPlatts => "CU";
+            public const string ChicagoEthanolPlatts = "CU";
 
             /// <summary>
             /// Singapore Mogas 92 Unleaded (Platts) Brent Crack Spread Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string SingaporeMogas92UnleadedPlattsBrentCrackSpread => "D1N";
+            public const string SingaporeMogas92UnleadedPlattsBrentCrackSpread = "D1N";
 
             /// <summary>
             /// Dubai Crude Oil (Platts) Financial Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string DubaiCrudeOilPlattsFinancial => "DCB";
+            public const string DubaiCrudeOilPlattsFinancial = "DCB";
 
             /// <summary>
             /// Japan C&amp;F Naphtha (Platts) BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string JapanCnFNaphthaPlattsBALMO => "E6";
+            public const string JapanCnFNaphthaPlattsBALMO = "E6";
 
             /// <summary>
             /// Ethanol Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string Ethanol => "EH";
+            public const string Ethanol = "EH";
 
             /// <summary>
             /// European Naphtha (Platts) Crack Spread Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string EuropeanNaphthaPlattsCrackSpread => "EN";
+            public const string EuropeanNaphthaPlattsCrackSpread = "EN";
 
             /// <summary>
             /// European Propane CIF ARA (Argus) vs. Naphtha Cargoes CIF NWE (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string EuropeanPropaneCIFARAArgusVsNaphthaCargoesCIFNWEPlatts => "EPN";
+            public const string EuropeanPropaneCIFARAArgusVsNaphthaCargoesCIFNWEPlatts = "EPN";
 
             /// <summary>
             /// Singapore Fuel Oil 380 cst (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts => "EVC";
+            public const string SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts = "EVC";
 
             /// <summary>
             /// East-West Gasoline Spread (Platts-Argus) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string EastWestGasolineSpreadPlattsArgus => "EWG";
+            public const string EastWestGasolineSpreadPlattsArgus = "EWG";
 
             /// <summary>
             /// East-West Naphtha: Japan C&amp;F vs. Cargoes CIF NWE Spread (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string EastWestNaphthaJapanCFvsCargoesCIFNWESpreadPlatts => "EWN";
+            public const string EastWestNaphthaJapanCFvsCargoesCIFNWESpreadPlatts = "EWN";
 
             /// <summary>
             /// RBOB Gasoline vs. Euro-bob Oxy NWE Barges (Argus) (350,000 gallons) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons => "EXR";
+            public const string RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons = "EXR";
 
             /// <summary>
             /// 3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread => "FO";
+            public const string ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread = "FO";
 
             /// <summary>
             /// Freight Route TC14 (Baltic) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string FreightRouteTC14Baltic => "FRC";
+            public const string FreightRouteTC14Baltic = "FRC";
 
             /// <summary>
             /// 1% Fuel Oil Cargoes FOB NWE (Platts) vs. 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts => "FSS";
+            public const string OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts = "FSS";
 
             /// <summary>
             /// Gulf Coast HSFO (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
             /// </summary>
-            public string GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts => "GCU";
+            public const string GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts = "GCU";
 
             /// <summary>
             /// WTI Houston Crude Oil Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string WTIHoustonCrudeOil => "HCL";
+            public const string WTIHoustonCrudeOil = "HCL";
 
             /// <summary>
             /// Natural Gas (Henry Hub) Last-day Financial Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string NaturalGasHenryHubLastDayFinancial => "HH";
+            public const string NaturalGasHenryHubLastDayFinancial = "HH";
 
             /// <summary>
             /// Heating Oil Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string HeatingOil => "HO";
+            public const string HeatingOil = "HO";
 
             /// <summary>
             /// Natural Gas (Henry Hub) Penultimate Financial Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string NaturalGasHenryHubPenultimateFinancial => "HP";
+            public const string NaturalGasHenryHubPenultimateFinancial = "HP";
 
             /// <summary>
             /// WTI Houston (Argus) vs. WTI Trade Month Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string WTIHoustonArgusVsWTITradeMonth => "HTT";
+            public const string WTIHoustonArgusVsWTITradeMonth = "HTT";
 
             /// <summary>
             /// Gasoline RBOB Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string Gasoline => "RB";
+            public const string Gasoline = "RB";
 
             /// <summary>
             /// Natural Gas Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string NaturalGas => "NG";
+            public const string NaturalGas = "NG";
 
             /// <summary>
             /// Brent Crude Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string BrentCrude => "B";
+            public const string BrentCrude = "B";
 
             /// <summary>
             /// Low Sulfur Gasoil
             /// </summary>
             /// <returns>The symbol</returns>
-            public string LowSulfurGasoil => "G";
+            public const string LowSulfurGasoil = "G";
 
             /// <summary>
             /// Micro WTI Crude Oil Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MicroCrudeOilWTI => "MCL";
+            public const string MicroCrudeOilWTI = "MCL";
 
             /// <summary>
             /// Micro Singapore FOB Marine Fuel 0.5% (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts => "S5O";
+            public const string MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts = "S5O";
 
             /// <summary>
             /// Micro Gasoil 0.1% Barges FOB ARA (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MicroGasoilZeroPointOnePercentBargesFOBARAPlatts => "M1B";
+            public const string MicroGasoilZeroPointOnePercentBargesFOBARAPlatts = "M1B";
 
             /// <summary>
             /// Micro European FOB Rdam Marine Fuel 0.5% Barges (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts => "R5O";
+            public const string MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts = "R5O";
 
             /// <summary>
             /// Micro European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts => "MEF";
+            public const string MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts = "MEF";
 
             /// <summary>
             /// Micro Singapore Fuel Oil 380CST (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MicroSingaporeFuelOil380CSTPlatts => "MAF";
+            public const string MicroSingaporeFuelOil380CSTPlatts = "MAF";
 
             /// <summary>
             /// Micro Coal (API 5) fob Newcastle (Argus/McCloskey) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MicroCoalAPIFivefobNewcastleArgusMcCloskey => "M5F";
+            public const string MicroCoalAPIFivefobNewcastleArgusMcCloskey = "M5F";
 
             /// <summary>
             /// Micro European 3.5% Fuel Oil Cargoes FOB Med (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public string MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts => "M35";
+            public const string MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts = "M35";
         }
-
-        /// <summary>
-        /// Old property. Energy isn't countable
-        /// </summary>
-        public static EnergyFutures Energies { get => new(); }
-
-        /// <summary>
-        /// New property. Energy isn't countable
-        /// </summary>
-        public static EnergyFutures Energy { get => new(); }
 
         /// <summary>
         /// Financials group

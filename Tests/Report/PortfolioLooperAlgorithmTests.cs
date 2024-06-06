@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.Report
                 Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 120m, new DateTime(2020, 5, 21)),
                 Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
                 Symbol.Create("XAUUSD", SecurityType.Cfd, Market.Oanda),
-                Symbol.CreateFuture(Futures.Energy.CrudeOilWTI, Market.NYMEX, new DateTime(2020, 5, 21)),
+                Symbol.CreateFuture(Futures.Energies.CrudeOilWTI, Market.NYMEX, new DateTime(2020, 5, 21)),
                 Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Coinbase)
             }.Select(s => new MarketOrder(s, 1m, new DateTime(2020, 1, 1))).ToList();
 
@@ -95,7 +95,7 @@ namespace QuantConnect.Tests.Report
                 Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 120m, new DateTime(2020, 5, 21)),
                 Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
                 Symbol.Create("XAUUSD", SecurityType.Cfd, Market.Oanda),
-                Symbol.CreateFuture(Futures.Energy.CrudeOilWTI, Market.NYMEX, new DateTime(2020, 5, 21)),
+                Symbol.CreateFuture(Futures.Energies.CrudeOilWTI, Market.NYMEX, new DateTime(2020, 5, 21)),
                 Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Coinbase)
             }.Select(s => new MarketOrder(s, 1m, new DateTime(2020, 1, 1)));
 
