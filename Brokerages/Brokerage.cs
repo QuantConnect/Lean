@@ -764,12 +764,12 @@ namespace QuantConnect.Brokerages
                             Log.Trace($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Submit the second part of cross order by Id:{leanOrder.Id}");
                             response = PlaceCrossZeroOrder(brokerageOrder, false);
 
-                        if (response.IsOrderPlacedSuccessfully)
-                        {
-                            // add the new brokerage id for retrieval later
-                            leanOrder.BrokerId.Add(response.BrokerageOrderId);
-                            LeanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(response.BrokerageOrderId, leanOrder);
-                        }
+                            if (response.IsOrderPlacedSuccessfully)
+                            {
+                                // add the new brokerage id for retrieval later
+                                leanOrder.BrokerId.Add(response.BrokerageOrderId);
+                                LeanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(response.BrokerageOrderId, leanOrder);
+                            }
                         }
 
                         if (!response.IsOrderPlacedSuccessfully)
