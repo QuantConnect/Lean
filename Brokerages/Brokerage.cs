@@ -505,6 +505,7 @@ namespace QuantConnect.Brokerages
                     }
                 }
 
+                var totalPorfolioValueThreshold = algorithm.Portfolio.TotalPortfolioValue * 0.02m;
                 // if we were returned our balances, update everything and flip our flag as having performed sync today
                 foreach (var kvp in algorithm.Portfolio.CashBook)
                 {
@@ -516,7 +517,7 @@ namespace QuantConnect.Brokerages
                     {
                         // compare in account currency
                         var delta = cash.Amount - balanceCash.Amount;
-                        if (Math.Abs(algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol)) > 5)
+                        if (Math.Abs(algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol)) > totalPorfolioValueThreshold)
                         {
                             // log the delta between
                             Log.Trace($"Brokerage.PerformCashSync(): {balanceCash.Currency} Delta: {delta:0.00}", true);
