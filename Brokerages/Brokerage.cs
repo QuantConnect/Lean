@@ -763,7 +763,6 @@ namespace QuantConnect.Brokerages
                         {
                             Log.Trace($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Submit the second part of cross order by Id:{leanOrder.Id}");
                             response = PlaceCrossZeroOrder(brokerageOrder, false);
-                        }
 
                         if (response.IsOrderPlacedSuccessfully)
                         {
@@ -771,7 +770,9 @@ namespace QuantConnect.Brokerages
                             leanOrder.BrokerId.Add(response.BrokerageOrderId);
                             LeanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(response.BrokerageOrderId, leanOrder);
                         }
-                        else
+                        }
+
+                        if (!response.IsOrderPlacedSuccessfully)
                         {
                             // if we failed to place this order I don't know what to do, we've filled the first part
                             // and failed to place the second... strange. Should we invalidate the rest of the order??
