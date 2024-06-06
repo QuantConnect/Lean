@@ -1751,12 +1751,12 @@ namespace QuantConnect.Securities.Future
                     return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 8, holidays);
                 })
             },
-            // Energies group
+            // Energy group
             // Propane Non LDH Mont Belvieu (1S): https://www.cmegroup.com/trading/energy/petrochemicals/propane-non-ldh-mt-belvieu-opis-balmo-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.PropaneNonLDHMontBelvieu, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.PropaneNonLDHMontBelvieu, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.PropaneNonLDHMontBelvieu;
+                    var symbol = Futures.Energy.PropaneNonLDHMontBelvieu;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 
                     // Monthly BALMO contracts listed for the current month and the following month listed 10 business days prior to the start of the contract month
@@ -1765,10 +1765,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Argus Propane Far East Index BALMO (22): https://www.cmegroup.com/trading/energy/petrochemicals/argus-propane-far-east-index-balmo-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.ArgusPropaneFarEastIndexBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.ArgusPropaneFarEastIndexBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.ArgusPropaneFarEastIndexBALMO;
+                    var symbol = Futures.Energy.ArgusPropaneFarEastIndexBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly BALMO contracts listed for three cconsecutive months
@@ -1778,10 +1778,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Mini European 3.5% Fuel Oil Barges FOB Rdam (Platts) (A0D): https://www.cmegroup.com/trading/energy/refined-products/mini-european-35pct-fuel-oil-platts-barges-fob-rdam-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.MiniEuropeanThreePointPercentFiveFuelOilBargesPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MiniEuropeanThreePointPercentFiveFuelOilBargesPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MiniEuropeanThreePointPercentFiveFuelOilBargesPlatts;
+                    var symbol = Futures.Energy.MiniEuropeanThreePointPercentFiveFuelOilBargesPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly contracts listed for the current year and the next 4 calendar years.
@@ -1793,10 +1793,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Mini Singapore Fuel Oil 180 cst (Platts) (A0F): https://www.cmegroup.com/trading/energy/refined-products/mini-singapore-fuel-oil-180-cst-platts-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.MiniSingaporeFuelOil180CstPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MiniSingaporeFuelOil180CstPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MiniSingaporeFuelOil180CstPlatts;
+                    var symbol = Futures.Energy.MiniSingaporeFuelOil180CstPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly contracts listed for the current year and the next 5 calendar years.
@@ -1814,10 +1814,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Gulf Coast ULSD (Platts) Up-Down BALMO Futures (A1L): https://www.cmegroup.com/trading/energy/refined-products/ulsd-up-down-balmo-calendar-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.GulfCoastULSDPlattsUpDownBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.GulfCoastULSDPlattsUpDownBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.GulfCoastULSDPlattsUpDownBALMO;
+                    var symbol = Futures.Energy.GulfCoastULSDPlattsUpDownBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly BALMO contracts listed for the current month and the following month listed 10 business days prior to the start of the contract month
                     // Trading shall cease on the last business day of the contract month.
@@ -1825,10 +1825,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Gulf Coast Jet (Platts) Up-Down BALMO Futures (A1M): https://www.cmegroup.com/trading/energy/refined-products/jet-fuel-up-down-balmo-calendar-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.GulfCoastJetPlattsUpDownBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.GulfCoastJetPlattsUpDownBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.GulfCoastJetPlattsUpDownBALMO;
+                    var symbol = Futures.Energy.GulfCoastJetPlattsUpDownBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly BALMO contracts listed for the current month and the following month listed 10 business days prior to the start of the contract month
                     // Trading shall cease on the last business day of the contract month.
@@ -1836,10 +1836,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Propane Non-LDH Mont Belvieu (OPIS) Futures (A1R): https://www.cmegroup.com/trading/energy/petrochemicals/propane-non-ldh-mt-belvieu-opis-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.PropaneNonLDHMontBelvieuOPIS, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.PropaneNonLDHMontBelvieuOPIS, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.PropaneNonLDHMontBelvieuOPIS;
+                    var symbol = Futures.Energy.PropaneNonLDHMontBelvieuOPIS;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly contracts listed for 48 consecutive months
@@ -1848,10 +1848,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // European Propane CIF ARA (Argus) BALMO Futures (A32): https://www.cmegroup.com/trading/energy/petrochemicals/european-propane-cif-ara-argus-balmo-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.EuropeanPropaneCIFARAArgusBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.EuropeanPropaneCIFARAArgusBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.EuropeanPropaneCIFARAArgusBALMO;
+                    var symbol = Futures.Energy.EuropeanPropaneCIFARAArgusBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly BALMO contracts listed for 3 consecutive months
                     // Trading shall cease on the last business day of the contract month.
@@ -1859,10 +1859,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Premium Unleaded Gasoline 10 ppm FOB MED (Platts) Futures (A3G): https://www.cmegroup.com/trading/energy/refined-products/premium-unleaded-10-ppm-platts-fob-med-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.PremiumUnleadedGasoline10ppmFOBMEDPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.PremiumUnleadedGasoline10ppmFOBMEDPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.PremiumUnleadedGasoline10ppmFOBMEDPlatts;
+                    var symbol = Futures.Energy.PremiumUnleadedGasoline10ppmFOBMEDPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // 48 consecutive months
@@ -1873,10 +1873,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Argus Propane Far East Index Futures (A7E): https://www.cmegroup.com/trading/energy/petrochemicals/argus-propane-far-east-index-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.ArgusPropaneFarEastIndex, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.ArgusPropaneFarEastIndex, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.ArgusPropaneFarEastIndex;
+                    var symbol = Futures.Energy.ArgusPropaneFarEastIndex;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly contracts listed for 48 consecutive months
@@ -1885,10 +1885,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Gasoline Euro-bob Oxy NWE Barges (Argus) Crack Spread BALMO Futures (A7I): https://www.cmegroup.com/trading/energy/refined-products/gasoline-euro-bob-oxy-new-barges-crack-spread-balmo-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.GasolineEurobobOxyNWEBargesArgusCrackSpreadBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.GasolineEurobobOxyNWEBargesArgusCrackSpreadBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.GasolineEurobobOxyNWEBargesArgusCrackSpreadBALMO;
+                    var symbol = Futures.Energy.GasolineEurobobOxyNWEBargesArgusCrackSpreadBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly BALMO contracts listed for 3 consecutive months
@@ -1897,10 +1897,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Mont Belvieu Natural Gasoline (OPIS) Futures (A7Q): https://www.cmegroup.com/trading/energy/petrochemicals/mont-belvieu-natural-gasoline-5-decimal-opis-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.MontBelvieuNaturalGasolineOPIS, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MontBelvieuNaturalGasolineOPIS, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MontBelvieuNaturalGasolineOPIS;
+                    var symbol = Futures.Energy.MontBelvieuNaturalGasolineOPIS;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly contracts listed for 56 consecutive months
@@ -1909,10 +1909,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Mont Belvieu Normal Butane (OPIS) BALMO Futures (A8J): https://www.cmegroup.com/trading/energy/petrochemicals/mont-belvieu-normal-butane-opis-balmo-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.MontBelvieuNormalButaneOPISBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MontBelvieuNormalButaneOPISBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MontBelvieuNormalButaneOPISBALMO;
+                    var symbol = Futures.Energy.MontBelvieuNormalButaneOPISBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly BALMO contracts listed for the current month and the following month listed 10 business days prior to the start of the contract month
@@ -1921,10 +1921,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Conway Propane (OPIS) Futures (A8K): https://www.cmegroup.com/trading/energy/petrochemicals/conway-propane-opis-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.ConwayPropaneOPIS, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.ConwayPropaneOPIS, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.ConwayPropaneOPIS;
+                    var symbol = Futures.Energy.ConwayPropaneOPIS;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly contracts listed for the current year and the next 4 calendar years.
@@ -1933,10 +1933,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Mont Belvieu LDH Propane (OPIS) BALMO Futures (A8O): https://www.cmegroup.com/trading/energy/petrochemicals/mont-belvieu-ldh-propane-opis-balmo-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.MontBelvieuLDHPropaneOPISBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MontBelvieuLDHPropaneOPISBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MontBelvieuLDHPropaneOPISBALMO;
+                    var symbol = Futures.Energy.MontBelvieuLDHPropaneOPISBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly BALMO contracts listed for the current month and the following month listed 10 business days prior to the start of the contract month
@@ -1945,10 +1945,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Argus Propane Far East Index vs. European Propane CIF ARA (Argus) Futures (A91): https://www.cmegroup.com/trading/energy/petrochemicals/argus-propane-far-east-index-vs-european-propane-cif-ara-argus-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.ArgusPropaneFarEastIndexVsEuropeanPropaneCIFARAArgus, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.ArgusPropaneFarEastIndexVsEuropeanPropaneCIFARAArgus, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.ArgusPropaneFarEastIndexVsEuropeanPropaneCIFARAArgus;
+                    var symbol = Futures.Energy.ArgusPropaneFarEastIndexVsEuropeanPropaneCIFARAArgus;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly contracts listed for 36 consecutive months
@@ -1960,10 +1960,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Argus Propane (Saudi Aramco) Futures (A9N): https://www.cmegroup.com/trading/energy/petrochemicals/argus-propane-saudi-aramco-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.ArgusPropaneSaudiAramco, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.ArgusPropaneSaudiAramco, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.ArgusPropaneSaudiAramco;
+                    var symbol = Futures.Energy.ArgusPropaneSaudiAramco;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly contracts listed for 48 consecutive months
@@ -1982,10 +1982,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Group Three ULSD (Platts) vs. NY Harbor ULSD Futures (AA6): https://www.cmegroup.com/trading/energy/refined-products/group-three-ultra-low-sulfur-diesel-ulsd-platts-vs-heating-oil-spread-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.GroupThreeULSDPlattsVsNYHarborULSD, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.GroupThreeULSDPlattsVsNYHarborULSD, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.GroupThreeULSDPlattsVsNYHarborULSD;
+                    var symbol = Futures.Energy.GroupThreeULSDPlattsVsNYHarborULSD;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 
                     // Trading shall cease on the last business day of the contract month.
@@ -1993,10 +1993,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Group Three Sub-octane Gasoline (Platts) vs. RBOB Futures (AA8): https://www.cmegroup.com/trading/energy/refined-products/group-three-unleaded-gasoline-platts-vs-rbob-spread-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.GroupThreeSuboctaneGasolinePlattsVsRBOB, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.GroupThreeSuboctaneGasolinePlattsVsRBOB, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.GroupThreeSuboctaneGasolinePlattsVsRBOB;
+                    var symbol = Futures.Energy.GroupThreeSuboctaneGasolinePlattsVsRBOB;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // 36 consecutive months
@@ -2005,10 +2005,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Singapore Fuel Oil 180 cst (Platts) BALMO Futures (ABS): https://www.cmegroup.com/trading/energy/refined-products/singapore-180cst-fuel-oil-balmo-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.SingaporeFuelOil180cstPlattsBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.SingaporeFuelOil180cstPlattsBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.SingaporeFuelOil180cstPlattsBALMO;
+                    var symbol = Futures.Energy.SingaporeFuelOil180cstPlattsBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly BALMO contracts listed for 3 consecutive months
@@ -2017,10 +2017,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Singapore Fuel Oil 380 cst (Platts) BALMO Futures (ABT): https://www.cmegroup.com/trading/energy/refined-products/singapore-380cst-fuel-oil-balmo-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.SingaporeFuelOil380cstPlattsBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.SingaporeFuelOil380cstPlattsBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.SingaporeFuelOil380cstPlattsBALMO;
+                    var symbol = Futures.Energy.SingaporeFuelOil380cstPlattsBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly BALMO contracts listed for 3 consecutive months
@@ -2029,10 +2029,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Mont Belvieu Ethane (OPIS) Futures (AC0): https://www.cmegroup.com/trading/energy/petrochemicals/mont-belvieu-ethane-opis-5-decimals-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.MontBelvieuEthaneOPIS, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MontBelvieuEthaneOPIS, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MontBelvieuEthaneOPIS;
+                    var symbol = Futures.Energy.MontBelvieuEthaneOPIS;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly contracts listed for the current year and the next 4 calendar years.
@@ -2041,10 +2041,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Mont Belvieu Normal Butane (OPIS) Futures (AD0): https://www.cmegroup.com/trading/energy/petrochemicals/mont-belvieu-normal-butane-5-decimals-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.MontBelvieuNormalButaneOPIS, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MontBelvieuNormalButaneOPIS, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MontBelvieuNormalButaneOPIS;
+                    var symbol = Futures.Energy.MontBelvieuNormalButaneOPIS;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly contracts listed for the current year and next 4 calendar years.
@@ -2053,10 +2053,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Brent Crude Oil vs. Dubai Crude Oil (Platts) Futures (ADB): https://www.cmegroup.com/trading/energy/crude-oil/brent-dubai-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.BrentCrudeOilVsDubaiCrudeOilPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.BrentCrudeOilVsDubaiCrudeOilPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.BrentCrudeOilVsDubaiCrudeOilPlatts;
+                    var symbol = Futures.Energy.BrentCrudeOilVsDubaiCrudeOilPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Trading shall cease on the last London and Singapore business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidays);
@@ -2066,10 +2066,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Argus LLS vs. WTI (Argus) Trade Month Futures (AE5): https://www.cmegroup.com/trading/energy/crude-oil/argus-lls-vs-wti-argus-trade-month-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.ArgusLLSvsWTIArgusTradeMonth, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.ArgusLLSvsWTIArgusTradeMonth, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.ArgusLLSvsWTIArgusTradeMonth;
+                    var symbol = Futures.Energy.ArgusLLSvsWTIArgusTradeMonth;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Trading shall cease at the close of trading on the last business day that falls on or before the 25th calendar day of the month prior to the contract month. If the 25th calendar day is a weekend or holiday, trading shall cease on the first business day prior to the 25th calendar day.
@@ -2084,10 +2084,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Singapore Gasoil (Platts) vs. Low Sulphur Gasoil (AGA): https://www.cmegroup.com/trading/energy/refined-products/gasoil-arb-singapore-gasoil-platts-vs-ice-rdam-gasoil-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.SingaporeGasoilPlattsVsLowSulphurGasoilFutures, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.SingaporeGasoilPlattsVsLowSulphurGasoilFutures, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.SingaporeGasoilPlattsVsLowSulphurGasoilFutures;
+                    var symbol = Futures.Energy.SingaporeGasoilPlattsVsLowSulphurGasoilFutures;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // Monthly contracts listed for the current year and the next 2 calendar years.
@@ -2099,10 +2099,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Los Angeles CARBOB Gasoline (OPIS) vs. RBOB Gasoline (AJL): https://www.cmegroup.com/trading/energy/refined-products/los-angeles-carbob-gasoline-opis-spread-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.LosAngelesCARBOBGasolineOPISvsRBOBGasoline, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.LosAngelesCARBOBGasolineOPISvsRBOBGasoline, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.LosAngelesCARBOBGasolineOPISvsRBOBGasoline;
+                    var symbol = Futures.Energy.LosAngelesCARBOBGasolineOPISvsRBOBGasoline;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
 					
                     // 36 consecutive months
@@ -2111,10 +2111,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Los Angeles Jet (OPIS) vs. NY Harbor ULSD (AJS): https://www.cmegroup.com/trading/energy/refined-products/los-angeles-carbob-gasoline-opis-spread-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.LosAngelesJetOPISvsNYHarborULSD, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.LosAngelesJetOPISvsNYHarborULSD, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.LosAngelesJetOPISvsNYHarborULSD;
+                    var symbol = Futures.Energy.LosAngelesJetOPISvsNYHarborULSD;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // 36 consecutive months
                     // Trading shall cease on the last business day of the contract month
@@ -2122,10 +2122,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Los Angeles CARB Diesel (OPIS) vs. NY Harbor ULSD (AKL): https://www.cmegroup.com/trading/energy/refined-products/los-angeles-carbob-diesel-opis-spread-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.LosAngelesCARBDieselOPISvsNYHarborULSD, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.LosAngelesCARBDieselOPISvsNYHarborULSD, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.LosAngelesCARBDieselOPISvsNYHarborULSD;
+                    var symbol = Futures.Energy.LosAngelesCARBDieselOPISvsNYHarborULSD;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // 3 consecutive years
                     // Trading shall cease on the last business day of the contract month
@@ -2133,10 +2133,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // European Naphtha (Platts) BALMO (AKZ): https://www.cmegroup.com/trading/energy/refined-products/european-naphtha-balmo-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.EuropeanNaphthaPlattsBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.EuropeanNaphthaPlattsBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.EuropeanNaphthaPlattsBALMO;
+                    var symbol = Futures.Energy.EuropeanNaphthaPlattsBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly BALMO contracts listed for 3 consecutive months
                     // Trading shall cease on the last business day of the contract month
@@ -2144,10 +2144,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // European Propane CIF ARA (Argus) (APS): https://www.cmegroup.com/trading/energy/petrochemicals/european-propane-cif-ara-argus-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.EuropeanPropaneCIFARAArgus, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.EuropeanPropaneCIFARAArgus, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.EuropeanPropaneCIFARAArgus;
+                    var symbol = Futures.Energy.EuropeanPropaneCIFARAArgus;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 3 calendar years.
                     // Trading shall cease on the last business day of the contract month
@@ -2158,10 +2158,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Mont Belvieu Natural Gasoline (OPIS) BALMO (AR0): https://www.cmegroup.com/trading/energy/petrochemicals/mt-belvieu-natural-gasoline-balmo-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.MontBelvieuNaturalGasolineOPISBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MontBelvieuNaturalGasolineOPISBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MontBelvieuNaturalGasolineOPISBALMO;
+                    var symbol = Futures.Energy.MontBelvieuNaturalGasolineOPISBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly BALMO contracts listed for the current month and the following month listed 10 business days prior to the start of the contract month
                     // Trading shall cease on the last business day of the contract month
@@ -2169,10 +2169,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // RBOB Gasoline Crack Spread (ARE): https://www.cmegroup.com/trading/energy/refined-products/rbob-crack-spread-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.RBOBGasolineCrackSpread, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.RBOBGasolineCrackSpread, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.RBOBGasolineCrackSpread;
+                    var symbol = Futures.Energy.RBOBGasolineCrackSpread;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // The current year plus the next three calendar years
                     // Trading shall cease on the last business day of the contract month
@@ -2180,10 +2180,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Gulf Coast HSFO (Platts) BALMO (AVZ): https://www.cmegroup.com/trading/energy/refined-products/gulf-coast-3pct-fuel-oil-balmo-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.GulfCoastHSFOPlattsBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.GulfCoastHSFOPlattsBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.GulfCoastHSFOPlattsBALMO;
+                    var symbol = Futures.Energy.GulfCoastHSFOPlattsBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly BALMO contracts listed for the current month and the following month listed 10 business days prior to the start of the contract month
                     // Trading shall cease on the last business day of the contract month
@@ -2191,10 +2191,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Mars (Argus) vs. WTI Trade Month (AYV): https://www.cmegroup.com/trading/energy/crude-oil/mars-crude-oil-argus-vs-wti-trade-month-spread-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.MarsArgusVsWTITradeMonth, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MarsArgusVsWTITradeMonth, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MarsArgusVsWTITradeMonth;
+                    var symbol = Futures.Energy.MarsArgusVsWTITradeMonth;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 5 calendar years.
                     // Trading shall cease at the close of trading on the last business day that falls on or before the 25th calendar day of the
@@ -2210,10 +2210,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Mars (Argus) vs. WTI Financial (AYX): https://www.cmegroup.com/trading/energy/crude-oil/mars-crude-oil-argus-vs-wti-calendar-spread-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.MarsArgusVsWTIFinancial, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MarsArgusVsWTIFinancial, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MarsArgusVsWTIFinancial;
+                    var symbol = Futures.Energy.MarsArgusVsWTIFinancial;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // The current year and the next five (5) consecutive calendar years.
                     // Trading shall cease on the last business day of the contract month
@@ -2224,10 +2224,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Ethanol T2 FOB Rdam Including Duty (Platts) (AZ1): https://www.cmegroup.com/trading/energy/ethanol/ethanol-platts-t2-fob-rotterdam-including-duty-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.EthanolT2FOBRdamIncludingDutyPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.EthanolT2FOBRdamIncludingDutyPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.EthanolT2FOBRdamIncludingDutyPlatts;
+                    var symbol = Futures.Energy.EthanolT2FOBRdamIncludingDutyPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for 36 consecutive months
                     // Trading terminates on the last business day of the contract month
@@ -2238,10 +2238,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Mont Belvieu LDH Propane (OPIS) (B0): https://www.cmegroup.com/trading/energy/petrochemicals/mont-belvieu-propane-5-decimals-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.MontBelvieuLDHPropaneOPIS, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MontBelvieuLDHPropaneOPIS, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MontBelvieuLDHPropaneOPIS;
+                    var symbol = Futures.Energy.MontBelvieuLDHPropaneOPIS;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 4 calendar years.
                     // Trading shall cease on the last business day of the contract month
@@ -2249,10 +2249,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Gasoline Euro-bob Oxy NWE Barges (Argus) (B7H): https://www.cmegroup.com/trading/energy/refined-products/gasoline-euro-bob-oxy-new-barges-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.GasolineEurobobOxyNWEBargesArgus, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.GasolineEurobobOxyNWEBargesArgus, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.GasolineEurobobOxyNWEBargesArgus;
+                    var symbol = Futures.Energy.GasolineEurobobOxyNWEBargesArgus;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for 36 consecutive months
                     // Trading shall cease on the last business day of the contract month
@@ -2263,10 +2263,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // WTI-Brent Financial (BK): https://www.cmegroup.com/trading/energy/crude-oil/wti-brent-ice-calendar-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.WTIBrentFinancial, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.WTIBrentFinancial, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.WTIBrentFinancial;
+                    var symbol = Futures.Energy.WTIBrentFinancial;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 8 calendar years.
                     // Trading shall cease on the last business day of the contract month
@@ -2277,10 +2277,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // 3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread (1000mt) (BOO): https://www.cmegroup.com/trading/energy/refined-products/35pct-fuel-oil-platts-barges-fob-rdam-crack-spread-1000mt-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt;
+                    var symbol = Futures.Energy.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 4 calendar years.
                     // Trading shall cease on the last business day of the contract month
@@ -2291,10 +2291,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Gasoline Euro-bob Oxy NWE Barges (Argus) BALMO (BR7): https://www.cmegroup.com/trading/energy/refined-products/gasoline-euro-bob-oxy-new-barges-balmo-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.GasolineEurobobOxyNWEBargesArgusBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.GasolineEurobobOxyNWEBargesArgusBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.GasolineEurobobOxyNWEBargesArgusBALMO;
+                    var symbol = Futures.Energy.GasolineEurobobOxyNWEBargesArgusBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly BALMO contracts listed for 3 consecutive months
                     // Trading shall cease on the last business day of the contract month
@@ -2302,10 +2302,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Brent Last Day Financial (BZ): https://www.cmegroup.com/trading/energy/crude-oil/brent-crude-oil-last-day_contract_specifications.html
-            {Symbol.Create(Futures.Energies.BrentLastDayFinancial, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.BrentLastDayFinancial, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.BrentLastDayFinancial;
+                    var symbol = Futures.Energy.BrentLastDayFinancial;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 7 calendar years and 3 additional contract months.
                     // Trading terminates the last London business day of the month, 2 months prior to the contract month except for the February contract month which terminates the 2nd last London business day of the month, 2 months prior to the contract month.
@@ -2328,10 +2328,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // CrudeOilWTI (CL): http://www.cmegroup.com/trading/energy/crude-oil/light-sweet-crude_contract_specifications.html
-            {Symbol.Create(Futures.Energies.CrudeOilWTI, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.CrudeOilWTI, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.CrudeOilWTI;
+                    var symbol = Futures.Energy.CrudeOilWTI;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 10 calendar years and 2 additional contract months.
                     // Trading in the current delivery month shall cease on the third business day prior to the twenty-fifth calendar day of the month preceding the delivery month. If the twenty-fifth calendar day of the month is a non-business day, trading shall cease on the third business day prior to the last business day preceding the twenty-fifth calendar day. In the event that the official Exchange holiday schedule changes subsequent to the listing of a Crude Oil futures, the originally listed expiration date shall remain in effect.In the event that the originally listed expiration day is declared a holiday, expiration will move to the business day immediately prior.
@@ -2348,10 +2348,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Gulf Coast CBOB Gasoline A2 (Platts) vs. RBOB Gasoline (CRB): https://www.cmegroup.com/trading/energy/refined-products/gulf-coast-cbob-gasoline-a2-platts-vs-rbob-spread-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.GulfCoastCBOBGasolineA2PlattsVsRBOBGasoline, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.GulfCoastCBOBGasolineA2PlattsVsRBOBGasoline, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.GulfCoastCBOBGasolineA2PlattsVsRBOBGasoline;
+                    var symbol = Futures.Energy.GulfCoastCBOBGasolineA2PlattsVsRBOBGasoline;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // 36 consecutive months
                     // Trading shall cease on the last business day of the contract month.
@@ -2359,7 +2359,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Clearbrook Bakken Sweet Crude Oil Monthly Index (Net Energy) (CSW): https://www.cmegroup.com/trading/energy/crude-oil/clearbrook-bakken-crude-oil-index-net-energy_contract_specifications.html
-            {Symbol.Create(Futures.Energies.ClearbrookBakkenSweetCrudeOilMonthlyIndexNetEnergy, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.ClearbrookBakkenSweetCrudeOilMonthlyIndexNetEnergy, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     // Monthly contracts listed for the current year and the next 3 calendar years.
                     // Trading terminates one Canadian business day prior to the Notice of Shipments (NOS) date on the Enbridge Pipeline. The NOS date occurs on or about the 20th calendar day of the month, subject to confirmation by Enbridge Pipeline. The official schedule for the NOS dates will be made publicly available by Enbridge.
@@ -2382,10 +2382,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // WTI Financial (CSX): https://www.cmegroup.com/trading/energy/crude-oil/west-texas-intermediate-wti-crude-oil-calendar-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.WTIFinancial, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.WTIFinancial, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.WTIFinancial;
+                    var symbol = Futures.Energy.WTIFinancial;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 8 calendar years.
                     // Trading shall cease on the last business day of the contract month
@@ -2396,10 +2396,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Chicago Ethanol (Platts) (CU): https://www.cmegroup.com/trading/energy/ethanol/chicago-ethanol-platts-swap_contract_specifications.html a
-            {Symbol.Create(Futures.Energies.ChicagoEthanolPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.ChicagoEthanolPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.ChicagoEthanolPlatts;
+                    var symbol = Futures.Energy.ChicagoEthanolPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for 36 consecutive months
                     // Trading terminates on the last business day of the contract month
@@ -2407,10 +2407,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Singapore Mogas 92 Unleaded (Platts) Brent Crack Spread (D1N): https://www.cmegroup.com/trading/energy/refined-products/singapore-mogas-92-unleaded-platts-brent-crack-spread-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.SingaporeMogas92UnleadedPlattsBrentCrackSpread, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.SingaporeMogas92UnleadedPlattsBrentCrackSpread, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.SingaporeMogas92UnleadedPlattsBrentCrackSpread;
+                    var symbol = Futures.Energy.SingaporeMogas92UnleadedPlattsBrentCrackSpread;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next calendar year.
                     // Trading shall cease on the last business day of the contract month
@@ -2421,10 +2421,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Dubai Crude Oil (Platts) Financial (DCB): https://www.cmegroup.com/trading/energy/crude-oil/dubai-crude-oil-calendar-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.DubaiCrudeOilPlattsFinancial, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.DubaiCrudeOilPlattsFinancial, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.DubaiCrudeOilPlattsFinancial;
+                    var symbol = Futures.Energy.DubaiCrudeOilPlattsFinancial;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next five calendar years.
                     // Trading shall cease on the last London and Singapore business day of the contract month
@@ -2435,10 +2435,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Japan C&amp;F Naphtha (Platts) BALMO (E6): https://www.cmegroup.com/trading/energy/refined-products/japan-naphtha-balmo-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.JapanCnFNaphthaPlattsBALMO, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.JapanCnFNaphthaPlattsBALMO, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.JapanCnFNaphthaPlattsBALMO;
+                    var symbol = Futures.Energy.JapanCnFNaphthaPlattsBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly BALMO contracts listed for 3 consecutive months
                     // Trading shall cease on the last business day of the contract month.
@@ -2446,10 +2446,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Ethanol (EH): https://www.cmegroup.com/trading/energy/ethanol/cbot-ethanol_contract_specifications.html
-            {Symbol.Create(Futures.Energies.Ethanol, SecurityType.Future, Market.CBOT), (time =>
+            {Symbol.Create(Futures.Energy.Ethanol, SecurityType.Future, Market.CBOT), (time =>
                 {
                     var market = Market.CBOT;
-                    var symbol = Futures.Energies.Ethanol;
+                    var symbol = Futures.Energy.Ethanol;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for 36 consecutive months
                     // Trading terminates on 3rd business day of the contract month in "ctm"
@@ -2458,12 +2458,12 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // European Naphtha (Platts) Crack Spread (EN): https://www.cmegroup.com/trading/energy/refined-products/european-naphtha-crack-spread-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.EuropeanNaphthaPlattsCrackSpread, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.EuropeanNaphthaPlattsCrackSpread, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     // Monthly contracts listed for the current year and the next 3 calendar years
                     // Trading ceases on the last business day of the contract month.
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.EuropeanNaphthaPlattsCrackSpread;
+                    var symbol = Futures.Energy.EuropeanNaphthaPlattsCrackSpread;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidays);
 
@@ -2476,12 +2476,12 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // European Propane CIF ARA (Argus) vs. Naphtha Cargoes CIF NWE (Platts) (EPN): https://www.cmegroup.com/trading/energy/refined-products/european-propane-cif-ara-argus-vs-naphtha-cif-nwe-platts-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.EuropeanPropaneCIFARAArgusVsNaphthaCargoesCIFNWEPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.EuropeanPropaneCIFARAArgusVsNaphthaCargoesCIFNWEPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     // Monthly contracts listed for the current year and the next 3 calendar years.
                     // Trading shall cease on the last business day of the contract month.
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.EuropeanPropaneCIFARAArgusVsNaphthaCargoesCIFNWEPlatts;
+                    var symbol = Futures.Energy.EuropeanPropaneCIFARAArgusVsNaphthaCargoesCIFNWEPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidays);
 
@@ -2494,10 +2494,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Singapore Fuel Oil 380 cst (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) (EVC): https://www.cmegroup.com/trading/energy/refined-products/singapore-fuel-oil-380-cst-platts-vs-european-35-fuel-oil-barges-fob-rdam-platts_contract_specifications.html
-            {Symbol.Create(Futures.Energies.SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts;
+                    var symbol = Futures.Energy.SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 5 calendar years.
                     // Trading terminates on the last business day of the contract month.
@@ -2512,10 +2512,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // East-West Gasoline Spread (Platts-Argus) (EWG): https://www.cmegroup.com/trading/energy/refined-products/east-west-gasoline-spread-platts-argus-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.EastWestGasolineSpreadPlattsArgus, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.EastWestGasolineSpreadPlattsArgus, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.EastWestGasolineSpreadPlattsArgus;
+                    var symbol = Futures.Energy.EastWestGasolineSpreadPlattsArgus;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for 12 consecutive months
                     // Trading shall cease on the last business day of the contract month.
@@ -2523,12 +2523,12 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // East-West Naphtha: Japan C&amp;F vs. Cargoes CIF NWE Spread (Platts) (EWN): https://www.cmegroup.com/trading/energy/refined-products/east-west-naphtha-japan-cf-vs-cargoes-cif-nwe-spread-platts-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.EastWestNaphthaJapanCFvsCargoesCIFNWESpreadPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.EastWestNaphthaJapanCFvsCargoesCIFNWESpreadPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     // Monthly contracts listed for 36 consecutive months
                     // Trading terminates on the last business day of the contract month.
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.EastWestNaphthaJapanCFvsCargoesCIFNWESpreadPlatts;
+                    var symbol = Futures.Energy.EastWestNaphthaJapanCFvsCargoesCIFNWESpreadPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidays);
 
@@ -2541,10 +2541,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // RBOB Gasoline vs. Euro-bob Oxy NWE Barges (Argus) (350,000 gallons) (EXR): https://www.cmegroup.com/trading/energy/refined-products/rbob-gasoline-vs-euro-bob-oxy-argus-nwe-barges-1000mt-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons;
+                    var symbol = Futures.Energy.RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for 36 consecutive months
                     // Trading shall cease on the last business day of the contract month.
@@ -2552,10 +2552,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // 3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread Futures (FO): https://www.cmegroup.com/trading/energy/refined-products/northwest-europe-nwe-35pct-fuel-oil-rottderdam-crack-spread-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread;
+                    var symbol = Futures.Energy.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 4 calendar years.
                     // Trading ceases on the last business day of the contract month.
@@ -2570,10 +2570,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Freight Route TC14 (Baltic) (FRC): https://www.cmegroup.com/trading/energy/freight/freight-route-tc14-baltic-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.FreightRouteTC14Baltic, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.FreightRouteTC14Baltic, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.FreightRouteTC14Baltic;
+                    var symbol = Futures.Energy.FreightRouteTC14Baltic;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 5 consecutive years.
                     // Trading terminates on the last business day of the contract month
@@ -2588,12 +2588,12 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // 1% Fuel Oil Cargoes FOB NWE (Platts) vs. 3.5% Fuel Oil Barges FOB Rdam (Platts) (FSS):  https://www.cmegroup.com/trading/energy/refined-products/fuel-oil-diff-1pct-nwe-cargoes-vs-35pct-barges-swap_contract_specifications.html
-            {Symbol.Create(Futures.Energies.OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     // Monthly contracts listed for 52 consecutive months
                     // Trading ceases on the last business day of the contract month.
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts;
+                    var symbol = Futures.Energy.OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidays);
 
@@ -2606,10 +2606,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Gulf Coast HSFO (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) (GCU): https://www.cmegroup.com/trading/energy/refined-products/gulf-coast-no6-fuel-oil-3pct-vs-european-3point5pct-fuel-oil-barges-fob-rdam-platts-swap-futures_contract_specifications.html
-            {Symbol.Create(Futures.Energies.GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts;
+                    var symbol = Futures.Energy.GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for 36 consecutive months
                     // Trading shall cease on the last business day of the contract month.
@@ -2624,10 +2624,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // WTI Houston Crude Oil (HCL): https://www.cmegroup.com/trading/energy/crude-oil/wti-houston-crude-oil_contract_specifications.html
-            {Symbol.Create(Futures.Energies.WTIHoustonCrudeOil, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.WTIHoustonCrudeOil, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.WTIHoustonCrudeOil;
+                    var symbol = Futures.Energy.WTIHoustonCrudeOil;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed through and including Dec-21
                     // Trading terminates 3 business days prior to the twenty-fifth calendar day of the month prior to the contract month.  If the twenty-fifth calendar day is not a business day, trading terminates 3 business days prior to the business day preceding the twenty-fifth calendar day of the month prior to the contract month.
@@ -2648,10 +2648,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Natural Gas (Henry Hub) Last-day Financial (HH): https://www.cmegroup.com/trading/energy/natural-gas/natural-gas-last-day_contract_specifications.html
-            {Symbol.Create(Futures.Energies.NaturalGasHenryHubLastDayFinancial, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.NaturalGasHenryHubLastDayFinancial, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.NaturalGasHenryHubLastDayFinancial;
+                    var symbol = Futures.Energy.NaturalGasHenryHubLastDayFinancial;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 12 calendar years.
                     // Trading terminates on the third last business day of the month prior to the contract month.
@@ -2662,10 +2662,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // HeatingOil (HO): http://www.cmegroup.com/trading/energy/refined-products/heating-oil_contract_specifications.html
-            {Symbol.Create(Futures.Energies.HeatingOil, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.HeatingOil, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.HeatingOil;
+                    var symbol = Futures.Energy.HeatingOil;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 3 calendar years and 1 additional month.
                     // Trading in a current month shall cease on the last business day of the month preceding the delivery month.
@@ -2674,10 +2674,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Natural Gas (Henry Hub) Penultimate Financial (HP): https://www.cmegroup.com/trading/energy/natural-gas/natural-gas-penultimate_contract_specifications.html
-            {Symbol.Create(Futures.Energies.NaturalGasHenryHubPenultimateFinancial, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.NaturalGasHenryHubPenultimateFinancial, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.NaturalGasHenryHubPenultimateFinancial;
+                    var symbol = Futures.Energy.NaturalGasHenryHubPenultimateFinancial;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 5 calendar years.
                     // Trading terminates on the 4th last business day of the month prior to the contract month.
@@ -2687,10 +2687,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // WTI Houston (Argus) vs. WTI Trade Month (HTT): https://www.cmegroup.com/trading/energy/crude-oil/wti-houston-argus-vs-wti-trade-month_contract_specifications.html
-            {Symbol.Create(Futures.Energies.WTIHoustonArgusVsWTITradeMonth, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.WTIHoustonArgusVsWTITradeMonth, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.WTIHoustonArgusVsWTITradeMonth;
+                    var symbol = Futures.Energy.WTIHoustonArgusVsWTITradeMonth;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 3 calendar years.
                     // Trading terminates on the last business day that falls on or before the 25th calendar day of the month prior to the contract month. If the 25th calendar day is a weekend or holiday, trading shall cease on the first business day prior to the 25th calendar day.
@@ -2704,10 +2704,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Gasoline (RB): http://www.cmegroup.com/trading/energy/refined-products/rbob-gasoline_contract_specifications.html
-            {Symbol.Create(Futures.Energies.Gasoline, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.Gasoline, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.Gasoline;
+                    var symbol = Futures.Energy.Gasoline;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 3 calendar years and 1 additional month.
                     // Trading in a current delivery month shall cease on the last business day of the month preceding the delivery month.
@@ -2716,10 +2716,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Natural Gas (NG) : http://www.cmegroup.com/trading/energy/natural-gas/natural-gas_contract_specifications.html
-            {Symbol.Create(Futures.Energies.NaturalGas, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.NaturalGas, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.NaturalGas;
+                    var symbol = Futures.Energy.NaturalGas;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 12 calendar years.
                     //Trading of any delivery month shall cease three (3) business days prior to the first day of the delivery month. In the event that the official Exchange holiday schedule changes subsequent to the listing of a Natural Gas futures, the originally listed expiration date shall remain in effect.In the event that the originally listed expiration day is declared a holiday, expiration will move to the business day immediately prior.
@@ -2728,10 +2728,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Brent Crude (B) : https://www.theice.com/products/219/Brent-Crude-Futures
-            {Symbol.Create(Futures.Energies.BrentCrude, SecurityType.Future, Market.ICE), (time =>
+            {Symbol.Create(Futures.Energy.BrentCrude, SecurityType.Future, Market.ICE), (time =>
                 {
                     var market = Market.ICE;
-                    var symbol = Futures.Energies.BrentCrude;
+                    var symbol = Futures.Energy.BrentCrude;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Up to 96 consecutive months
                     //Trading shall cease at the end of the designated settlement period on the last Business Day of the second month
@@ -2744,10 +2744,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Low Sulphur Gasoil Futures (G): https://www.theice.com/products/34361119/Low-Sulphur-Gasoil-Futures
-            {Symbol.Create(Futures.Energies.LowSulfurGasoil, SecurityType.Future, Market.ICE), (time =>
+            {Symbol.Create(Futures.Energy.LowSulfurGasoil, SecurityType.Future, Market.ICE), (time =>
                 {
                     var market = Market.ICE;
-                    var symbol = Futures.Energies.LowSulfurGasoil;
+                    var symbol = Futures.Energy.LowSulfurGasoil;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Up to 96 consecutive months
                     //Trading shall cease at 12:00 hours London Time, 2 business days prior to the 14th calendar day of the delivery month.
@@ -3466,10 +3466,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro WTI Crude Oil Futures (MCL): https://www.cmegroup.com/markets/energy/crude-oil/micro-wti-crude-oil.contractSpecs.html
-            {Symbol.Create(Futures.Energies.MicroCrudeOilWTI, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MicroCrudeOilWTI, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MicroCrudeOilWTI;
+                    var symbol = Futures.Energy.MicroCrudeOilWTI;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for 12 consecutive months and additional Jun and Dec contract months
 
@@ -3490,10 +3490,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro Singapore FOB Marine Fuel 0.5% (Platts) Futures (S50): https://www.cmegroup.com/markets/energy/refined-products/micro-singapore-fob-marine-fuel-05-platts.contractSpecs.html
-            {Symbol.Create(Futures.Energies.MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts;
+                    var symbol = Futures.Energy.MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and next 3 calendar years
                     // Add monthly contracts for a new calendar year following the termination of trading in the
@@ -3507,10 +3507,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro Gasoil 0.1% Barges FOB ARA (Platts) Futures (M1B): https://www.cmegroup.com/markets/energy/refined-products/micro-gasoil-01-barges-fob-rdam-platts.contractSpecs.html
-            {Symbol.Create(Futures.Energies.MicroGasoilZeroPointOnePercentBargesFOBARAPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MicroGasoilZeroPointOnePercentBargesFOBARAPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MicroGasoilZeroPointOnePercentBargesFOBARAPlatts;
+                    var symbol = Futures.Energy.MicroGasoilZeroPointOnePercentBargesFOBARAPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for 36 consecutive months
 
@@ -3522,10 +3522,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro European FOB Rdam Marine Fuel 0.5% Barges (Platts) Futures (R50): https://www.cmegroup.com/markets/energy/refined-products/micro-european-fob-rdam-marine-fuel-05-barges-platts.contractSpecs.html
-            {Symbol.Create(Futures.Energies.MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts;
+                    var symbol = Futures.Energy.MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and next 3 calendar years.
                     // Add monthly contracts for a new calendar year following the termination of trading
@@ -3539,10 +3539,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures (MEF): https://www.cmegroup.com/markets/energy/refined-products/micro-european-35-fuel-oil-barges-fob-rdam-platts.contractSpecs.html
-            {Symbol.Create(Futures.Energies.MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts;
+                    var symbol = Futures.Energy.MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and 5 calendar years.Monthly contracts for a new calendar
                     // year will be added following the termination of trading in  the December contract of the current year.
@@ -3555,10 +3555,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro Singapore Fuel Oil 380CST (Platts) Futures (MAF): https://www.cmegroup.com/markets/energy/refined-products/micro-singapore-fuel-oil-380cst-platts.contractSpecs.html
-            {Symbol.Create(Futures.Energies.MicroSingaporeFuelOil380CSTPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MicroSingaporeFuelOil380CSTPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts;
+                    var symbol = Futures.Energy.MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and 5 calendar years.Monthly contracts for a new calendar
                     // year will be added following the termination of trading in  the December contract of the current year.
@@ -3571,10 +3571,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro Coal (API 5) fob Newcastle (Argus/McCloskey) Futures (M5F): https://www.cmegroup.com/markets/energy/coal/micro-coal-api-5-fob-newcastle-argus-mccloskey.contractSpecs.html
-            {Symbol.Create(Futures.Energies.MicroCoalAPIFivefobNewcastleArgusMcCloskey, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MicroCoalAPIFivefobNewcastleArgusMcCloskey, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MicroCoalAPIFivefobNewcastleArgusMcCloskey;
+                    var symbol = Futures.Energy.MicroCoalAPIFivefobNewcastleArgusMcCloskey;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next calendar year. Monthly contracts
                     // for a new calendar year will be added following the termination of trading in the December
@@ -3600,10 +3600,10 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro European 3.5% Fuel Oil Cargoes FOB Med (Platts) Futures (M35): https://www.cmegroup.com/markets/energy/refined-products/micro-european-35-fuel-oil-cargoes-fob-med-platts.contractSpecs.html
-            {Symbol.Create(Futures.Energies.MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts, SecurityType.Future, Market.NYMEX), (time =>
+            {Symbol.Create(Futures.Energy.MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts, SecurityType.Future, Market.NYMEX), (time =>
                 {
                     var market = Market.NYMEX;
-                    var symbol = Futures.Energies.MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts;
+                    var symbol = Futures.Energy.MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
                     // Monthly contracts listed for 36 consecutive months
 
