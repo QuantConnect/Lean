@@ -46,6 +46,82 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [TestCase(true)]
+        [TestCase(false)]
+        public void ConvertPythonSymbolEnumerableSingle(bool useSymbol)
+        {
+            using (Py.GIL())
+            {
+                PyObject source = null;
+                if (useSymbol)
+                {
+                    source = Symbols.SPY.ToPython();
+                }
+                else
+                {
+                    SymbolCache.Set("SPY", Symbols.SPY);
+                    source = "SPY".ToPython();
+                }
+                var enumerable = source.ConvertToSymbolEnumerable();
+                for (var i = 0; i < 2; i++)
+                {
+                    var symbols = enumerable.ToList();
+                    Assert.AreEqual(1, symbols.Count);
+                    Assert.AreEqual(Symbols.SPY, symbols[0]);
+                }
+                source.Dispose();
+            }
+        }
+
+        [TestCase("pylist")]
+        [TestCase("pyiterable")]
+        [TestCase("csharp")]
+        public void ConvertPythonSymbolEnumerablePyList(string testCase)
+        {
+            using (Py.GIL())
+            {
+                PyObject source = null;
+                if (testCase == "csharp")
+                {
+                    source = (new[] { Symbols.SPY, Symbols.AAPL }).ToPython();
+                }
+                else if (testCase == "pylist")
+                {
+                    source = new PyList((new[] { Symbols.SPY.ToPython(), Symbols.AAPL.ToPython() }));
+                }
+                else
+                {
+                    source = new PyIterable((new[] { Symbols.SPY, Symbols.AAPL }).ToPython());
+                }
+                var enumerable = source.ConvertToSymbolEnumerable();
+                for (var i = 0; i < 2; i++)
+                {
+                    var symbols = enumerable.ToList();
+                    Assert.AreEqual(2, symbols.Count);
+                    Assert.AreEqual(Symbols.SPY, symbols[0]);
+                    Assert.AreEqual(Symbols.AAPL, symbols[1]);
+                }
+                source.Dispose();
+            }
+        }
+
+        [Test]
+        public void ConvertPythonSymbolEnumerableCSharp()
+        {
+            using (Py.GIL())
+            {
+                using var source = (new[] { Symbols.SPY, Symbols.AAPL }).ToPython();
+                var enumerable = source.ConvertToSymbolEnumerable();
+                for (var i = 0; i < 2; i++)
+                {
+                    var symbols = enumerable.ToList();
+                    Assert.AreEqual(2, symbols.Count);
+                    Assert.AreEqual(Symbols.SPY, symbols[0]);
+                    Assert.AreEqual(Symbols.AAPL, symbols[1]);
+                }
+            }
+        }
+
         [Test]
         public void NonExistingEmptyDirectory()
         {

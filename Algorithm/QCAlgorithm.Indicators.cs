@@ -20,6 +20,7 @@ using QuantConnect.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
@@ -3284,6 +3285,229 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets the historical data of an indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="period">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of an indicator</returns>
+        public DataHistory<IndicatorValues> Indicator(IndicatorBase<IndicatorDataPoint> indicator, Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            return Indicator(indicator, new[] { symbol }, period, resolution, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of an indicator for the specified symbols. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="period">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of an indicator</returns>
+        public DataHistory<IndicatorValues> Indicator(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var history = History(symbols, period, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="period">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public DataHistory<IndicatorValues> Indicator<T>(IndicatorBase<T> indicator, Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, T> selector = null)
+            where T : IBaseData
+        {
+            return Indicator(indicator, new[] { symbol }, period, resolution, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbols. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="period">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public DataHistory<IndicatorValues> Indicator<T>(IndicatorBase<T> indicator, IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, T> selector = null)
+            where T : IBaseData
+        {
+            var history = History(symbols, period, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of an indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of an indicator</returns>
+        public DataHistory<IndicatorValues> Indicator(IndicatorBase<IndicatorDataPoint> indicator, Symbol symbol, TimeSpan span, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            return Indicator(indicator, new[] { symbol }, span, resolution, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of an indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of an indicator</returns>
+        public DataHistory<IndicatorValues> Indicator(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var history = History(symbols, span, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public DataHistory<IndicatorValues> Indicator<T>(IndicatorBase<T> indicator, IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null, Func<IBaseData, T> selector = null)
+            where T : IBaseData
+        {
+            var history = History(symbols, span, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public DataHistory<IndicatorValues> Indicator<T>(IndicatorBase<T> indicator, Symbol symbol, TimeSpan span, Resolution? resolution = null, Func<IBaseData, T> selector = null)
+            where T : IBaseData
+        {
+            return Indicator(indicator, new[] { symbol }, span, resolution, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of an indicator for the specified symbols. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of an indicator</returns>
+        public DataHistory<IndicatorValues> Indicator(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var history = History(symbols, start, end, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of an indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of an indicator</returns>
+        public DataHistory<IndicatorValues> Indicator(IndicatorBase<IndicatorDataPoint> indicator, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            return Indicator(indicator, new[] { symbol }, start, end, resolution, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public DataHistory<IndicatorValues> Indicator<T>(IndicatorBase<T> indicator, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, T> selector = null)
+            where T : IBaseData
+        {
+            return Indicator(indicator, new[] { symbol }, start, end, resolution, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbols. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public DataHistory<IndicatorValues> Indicator<T>(IndicatorBase<T> indicator, IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, T> selector = null)
+            where T : IBaseData
+        {
+            var history = History(symbols, start, end, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of an indicator and convert it into pandas.DataFrame
+        /// </summary>
+        /// <param name="indicator">The target indicator</param>
+        /// <param name="history">Historical data used to calculate the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame containing the historical data of <paramref name="indicator"/></returns>
+        public DataHistory<IndicatorValues> Indicator(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Slice> history, Func<IBaseData, decimal> selector = null)
+        {
+            selector ??= (x => x.Value);
+            return Indicator(indicator, history, (bar) => indicator.Update(bar.EndTime, selector(bar)));
+        }
+
+        /// <summary>
+        /// Gets the historical data of an bar indicator and convert it into pandas.DataFrame
+        /// </summary>
+        /// <param name="indicator">Bar indicator</param>
+        /// <param name="history">Historical data used to calculate the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame containing the historical data of <paramref name="indicator"/></returns>
+        public DataHistory<IndicatorValues> Indicator<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Func<IBaseData, T> selector = null)
+            where T : IBaseData
+        {
+            selector ??= (x => (T)x);
+            return Indicator(indicator, history, (bar) => indicator.Update(selector(bar)));
+        }
+
+        /// <summary>
         /// Adds the provided consolidator and asserts the handler T type is assignable from the consolidator output,
         /// if not will throw <see cref="ArgumentException"/>
         /// </summary>
@@ -3409,6 +3633,62 @@ namespace QuantConnect.Algorithm
 
             // register the consolidator for automatic updates via SubscriptionManager
             SubscriptionManager.AddConsolidator(symbol, consolidator);
+        }
+
+        private DataHistory<IndicatorValues> Indicator(IndicatorBase indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator)
+        {
+            // Reset the indicator
+            indicator.Reset();
+
+            var indicatorType = indicator.GetType();
+            // Create a dictionary of the indicator properties & the indicator value itself
+            var name = indicatorType.Name;
+            var indicatorValues = indicatorType.GetProperties()
+                .Where(x => x.PropertyType.IsGenericType && x.Name != "Consolidators" && x.Name != "Window")
+                .Select(x => IndicatorValues.Create(indicator, x))
+                .Concat(new[] { IndicatorValues.Create(indicator, name) })
+                .ToList();
+
+            IndicatorDataPoint lastPoint = null;
+            void consumeLastPoint()
+            {
+                if (lastPoint == null)
+                {
+                    return;
+                }
+
+                for (var i = 0; i < indicatorValues.Count; i++)
+                {
+                    indicatorValues[i].UpdateValue(lastPoint);
+                }
+                lastPoint = null;
+            }
+
+            IndicatorUpdatedHandler callback = (object _, IndicatorDataPoint point) =>
+            {
+                if (!indicator.IsReady)
+                {
+                    return;
+                }
+
+                if (lastPoint != null && lastPoint.Time != point.Time)
+                {
+                    // when the time changes we let through the previous point, some indicators which consume data from multiple symbols might trigger the Updated event
+                    // even if their value has not changed yet
+                    consumeLastPoint();
+                }
+                lastPoint = point;
+            };
+            // flush the last point
+            consumeLastPoint();
+
+            // register the callback, update the indicator and unregister finally
+            indicator.Updated += callback;
+            history.PushThrough(bar => updateIndicator(bar));
+            indicator.Updated -= callback;
+
+            return new DataHistory<IndicatorValues>(indicatorValues,
+                new Lazy<PyObject>(() => PandasConverter.GetIndicatorDataFrame(indicatorValues.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values)))));
         }
     }
 }

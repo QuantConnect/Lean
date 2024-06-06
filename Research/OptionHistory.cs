@@ -13,43 +13,33 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Python;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Research
 {
     /// <summary>
     /// Class to manage information from History Request of Options
     /// </summary>
-    public class OptionHistory : IEnumerable<Slice>
+    public class OptionHistory : DataHistory<Slice>
     {
-        private IEnumerable<Slice> _data;
-        private PandasConverter _converter;
-        private PyObject _dataframe;
-
         /// <summary>
         /// Create a new instance of <see cref="OptionHistory"/>.
         /// </summary>
         /// <param name="data"></param>
-        public OptionHistory(IEnumerable<Slice> data)
+        public OptionHistory(IEnumerable<Slice> data) : base(data, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(data)))
         {
-            _data = data;
-            _converter = new PandasConverter();
-            _dataframe = _converter.GetDataFrame(_data);
         }
 
         /// <summary>
         /// Gets all data from the History Request that are written in a pandas.DataFrame
         /// </summary>
-        /// <returns></returns>
-        public PyObject GetAllData()
-        {
-            return _dataframe;
-        }
+        [Obsolete("Please use the 'DataFrame' property")]
+        public PyObject GetAllData() => DataFrame;
 
         /// <summary>
         /// Gets all strikes in the option history
@@ -57,7 +47,7 @@ namespace QuantConnect.Research
         /// <returns></returns>
         public PyObject GetStrikes()
         {
-            var strikes = _data.SelectMany(x => x.OptionChains.SelectMany(y => y.Value.Contracts.Keys.Select(z => (double)z.ID.StrikePrice).Distinct()));
+            var strikes = Data.SelectMany(x => x.OptionChains.SelectMany(y => y.Value.Contracts.Keys.Select(z => (double)z.ID.StrikePrice).Distinct()));
             using (Py.GIL())
             {
                 return strikes.Distinct().ToList().ToPython();
@@ -70,34 +60,11 @@ namespace QuantConnect.Research
         /// <returns></returns>
         public PyObject GetExpiryDates()
         {
-            var expiry = _data.SelectMany(x => x.OptionChains.SelectMany(y => y.Value.Contracts.Keys.Select(z => z.ID.Date).Distinct()));
+            var expiry = Data.SelectMany(x => x.OptionChains.SelectMany(y => y.Value.Contracts.Keys.Select(z => z.ID.Date).Distinct()));
             using (Py.GIL())
             {
                 return expiry.Distinct().ToList().ToPython();
             }
         }
-
-        /// <summary>
-        /// Returns a string that represent the current object
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            return _converter.ToString();
-        }
-
-        #region IEnumerable implementation
-
-        public IEnumerator<Slice> GetEnumerator()
-        {
-            return _data.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        #endregion
     }
 }
