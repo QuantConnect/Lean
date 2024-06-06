@@ -327,7 +327,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Energy group
         /// </summary>
-        [Obsolete]
+        [Obsolete("Futures.Energies is obsolete, please use Futures.Energy instead.")]
         public static class Energies
         {
             /// <summary>
