@@ -481,6 +481,18 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Define an enumerable date time range using the given time step
+        /// </summary>
+        /// <param name="from">DateTime start date time</param>
+        /// <param name="thru">DateTime end date time</param>
+        /// <returns>Enumerable date time range</returns>
+        public static IEnumerable<DateTime> DateTimeRange(DateTime from, DateTime thru, TimeSpan step)
+        {
+            for (var dateTime = from; dateTime <= thru; dateTime = dateTime.Add(step))
+                yield return dateTime;
+        }
+
+        /// <summary>
         /// Define an enumerable date range and return each date as a datetime object in the date range
         /// </summary>
         /// <param name="from">DateTime start date</param>
@@ -488,8 +500,7 @@ namespace QuantConnect
         /// <returns>Enumerable date range</returns>
         public static IEnumerable<DateTime> EachDay(DateTime from, DateTime thru)
         {
-            for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
-                yield return day;
+            return DateTimeRange(from.Date, thru.Date, TimeSpan.FromDays(1));
         }
 
 

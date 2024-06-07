@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-using System;
+using QuantConnect.Util;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -29,8 +29,9 @@ namespace QuantConnect.Securities
         private static SymbolPropertiesDatabase _dataFolderSymbolPropertiesDatabase;
         private static readonly object DataFolderSymbolPropertiesDatabaseLock = new object();
 
-        private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
-        private readonly IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
+        private Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
+        private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _customEntries;
+        private IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
 
         /// <summary>
         /// Initialize a new instance of <see cref="SymbolPropertiesDatabase"/> using the given file
@@ -58,6 +59,7 @@ namespace QuantConnect.Securities
             }
 
             _entries = allEntries;
+            _customEntries = new();
             _keyBySecurityType = entriesBySecurityType;
         }
 
@@ -199,7 +201,11 @@ namespace QuantConnect.Securities
         public bool SetEntry(string market, string symbol, SecurityType securityType, SymbolProperties properties)
         {
             var key = new SecurityDatabaseKey(market, symbol, securityType);
-            _entries[key] = properties;
+            lock (DataFolderSymbolPropertiesDatabaseLock)
+            {
+                _entries[key] = properties;
+                _customEntries[key] = properties;
+            }
             return true;
         }
 
@@ -283,6 +289,22 @@ namespace QuantConnect.Securities
         private static bool HasValidValue(string[] array, uint position)
         {
             return array.Length > position && !string.IsNullOrEmpty(array[position]);
+        }
+
+        /// <summary>
+        /// Reload entries dictionary from SPDB file and merge them with previous custom ones
+        /// </summary>
+        internal void ReloadEntries()
+        {
+            lock (DataFolderSymbolPropertiesDatabaseLock)
+            {
+                _dataFolderSymbolPropertiesDatabase = null;
+                var newInstance = FromDataFolder();
+                var fileEntries = newInstance._entries.Where(x => !_customEntries.ContainsKey(x.Key));
+                var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
+                _entries = newEntries;
+                _keyBySecurityType = newInstance._keyBySecurityType.ToReadOnlyDictionary();
+            }
         }
     }
 }

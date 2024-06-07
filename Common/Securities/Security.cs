@@ -100,6 +100,7 @@ namespace QuantConnect.Securities
         public SymbolProperties SymbolProperties
         {
             get;
+            internal set;
         }
 
         /// <summary>

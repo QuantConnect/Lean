@@ -43,6 +43,11 @@ namespace QuantConnect.Lean.Engine.RealTime
         protected MarketHoursDatabase MarketHoursDatabase { get; set; } = MarketHoursDatabase.FromDataFolder();
 
         /// <summary>
+        /// Gets the current symbol properties database instance
+        /// </summary>
+        protected SymbolPropertiesDatabase SymbolPropertiesDatabase { get; set; } = SymbolPropertiesDatabase.FromDataFolder();
+
+        /// <summary>
         /// Gets the time provider
         /// </summary>
         /// <remarks>
@@ -62,20 +67,20 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             base.Setup(algorithm, job, resultHandler, api, isolatorLimitProvider);
 
-            var todayInAlgorithmTimeZone = TimeProvider.GetUtcNow().ConvertFromUtc(Algorithm.TimeZone).Date;
+            var utcNow = TimeProvider.GetUtcNow();
+            var todayInAlgorithmTimeZone = utcNow.ConvertFromUtc(Algorithm.TimeZone).Date;
 
-            // refresh the market hours for today explicitly, and then set up an event to refresh them each day at midnight
-            RefreshMarketHoursToday(todayInAlgorithmTimeZone);
+            // refresh the market hours and symbol properties for today explicitly
+            RefreshMarketHours(todayInAlgorithmTimeZone);
+            RefreshSymbolProperties();
 
-            // every day at midnight from tomorrow until the end of time
-            var times =
-                from date in Time.EachDay(todayInAlgorithmTimeZone.AddDays(1), Time.EndOfTime)
-                select date.ConvertToUtc(Algorithm.TimeZone);
+            // set up an scheduled event to refresh market hours and symbol properties every certain period of time
+            var times = Time.DateTimeRange(utcNow.Date, Time.EndOfTime, Algorithm.Settings.DatabasesRefreshPeriod).Where(date => date > utcNow);
 
-            Add(new ScheduledEvent("RefreshMarketHours", times, (name, triggerTime) =>
+            Add(new ScheduledEvent("RefreshMarketHoursAndSymbolProperties", times, (name, triggerTime) =>
             {
-                // refresh market hours from api every day
-                RefreshMarketHoursToday(triggerTime.ConvertFromUtc(Algorithm.TimeZone).Date);
+                RefreshMarketHours(triggerTime.ConvertFromUtc(Algorithm.TimeZone).Date);
+                RefreshSymbolProperties();
             }));
         }
 
@@ -128,7 +133,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// Refresh the market hours for each security in the given date
         /// </summary>
         /// <remarks>Each time this method is called, the MarketHoursDatabase is reset</remarks>
-        protected void RefreshMarketHoursToday(DateTime date)
+        protected virtual void RefreshMarketHours(DateTime date)
         {
             date = date.Date;
             ResetMarketHoursDatabase();
@@ -141,6 +146,28 @@ namespace QuantConnect.Lean.Engine.RealTime
 
                 var localMarketHours = security.Exchange.Hours.GetMarketHours(date);
                 Log.Trace($"LiveTradingRealTimeHandler.RefreshMarketHoursToday({security.Type}): Market hours set: Symbol: {security.Symbol} {localMarketHours} ({security.Exchange.Hours.TimeZone})");
+            }
+        }
+
+        /// <summary>
+        /// Refresh the symbol properties for each security
+        /// </summary>
+        /// <remarks>
+        /// - Each time this method is called, the SymbolPropertiesDatabase is reset
+        /// - Made protected virtual for testing purposes
+        /// </remarks>
+        protected virtual void RefreshSymbolProperties()
+        {
+            ResetSymbolPropertiesDatabase();
+
+            // update market hours for each security
+            foreach (var kvp in Algorithm.Securities)
+            {
+                var security = kvp.Value;
+                UpdateSymbolProperties(security);
+
+                Log.Trace($"LiveTradingRealTimeHandler.RefreshSymbolPropertiesToday(): Symbol properties set: " +
+                    $"Symbol: {security.Symbol} {security.SymbolProperties}");
             }
         }
 
@@ -190,7 +217,10 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Updates the market hours for the specified security.
         /// </summary>
-        /// <remarks>This is done after a MHDB refresh</remarks>
+        /// <remarks>
+        /// - This is done after a MHDB refresh
+        /// - Made protected virtual for testing purposes
+        /// </remarks>
         protected virtual void UpdateMarketHours(Security security)
         {
             var hours = _forceExchangeAlwaysOpen
@@ -202,6 +232,20 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
+        /// Updates the symbol properties for the specified security.
+        /// </summary>
+        /// <remarks>
+        /// - This is done after a SPDB refresh
+        /// - Made protected virtual for testing purposes
+        /// </remarks>
+        protected virtual void UpdateSymbolProperties(Security security)
+        {
+            var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(security.Symbol.ID.Market, security.Symbol,
+                security.Symbol.ID.SecurityType, security.QuoteCurrency.Symbol);
+            security.SymbolProperties = symbolProperties;
+        }
+
+        /// <summary>
         /// Resets the market hours database, forcing a reload when reused.
         /// Called in tests where multiple algorithms are run sequentially,
         /// and we need to guarantee that every test starts with the same environment.
@@ -209,6 +253,14 @@ namespace QuantConnect.Lean.Engine.RealTime
         protected virtual void ResetMarketHoursDatabase()
         {
             MarketHoursDatabase.ReloadEntries();
+        }
+
+        /// <summary>
+        /// Resets the symbol properties database, forcing a reload when reused.
+        /// </summary>
+        private void ResetSymbolPropertiesDatabase()
+        {
+            SymbolPropertiesDatabase.ReloadEntries();
         }
     }
 }

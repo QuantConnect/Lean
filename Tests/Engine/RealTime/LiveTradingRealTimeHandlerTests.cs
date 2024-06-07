@@ -33,6 +33,8 @@ using static QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests.Brokerag
 using QuantConnect.Orders;
 using System.Reflection;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.RealTime
 {
@@ -147,6 +149,59 @@ namespace QuantConnect.Tests.Engine.RealTime
             realTimeHandler.Exit();
         }
 
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("1.00:00:00")]
+        [TestCase("2.00:00:00")]
+        [TestCase("1.12:00:00")]
+        [TestCase("12:00:00")]
+        [TestCase("6:00:00")]
+        [TestCase("6:30:00")]
+        public void RefreshesSymbolProperties(string refreshPeriodStr)
+        {
+            var refreshPeriod = string.IsNullOrEmpty(refreshPeriodStr) ? TimeSpan.FromDays(1) : TimeSpan.Parse(refreshPeriodStr);
+            var step = refreshPeriod / 2;
+
+            using var realTimeHandler = new SPDBTestLiveTradingRealTimeHandler();
+
+            var timeProvider = realTimeHandler.PublicTimeProvider;
+            timeProvider.SetCurrentTimeUtc(new DateTime(2023, 5, 30));
+
+            var algorithm = new AlgorithmStub();
+            algorithm.Settings.DatabasesRefreshPeriod = refreshPeriod;
+            algorithm.AddEquity("SPY");
+            algorithm.AddForex("EURUSD");
+
+            realTimeHandler.Setup(algorithm,
+                new AlgorithmNodePacket(PacketType.AlgorithmNode),
+                new BacktestingResultHandler(),
+                null,
+                new TestTimeLimitManager());
+            realTimeHandler.SpdbRefreshed.Reset();
+            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
+
+            algorithm.SetFinishedWarmingUp();
+            realTimeHandler.SetTime(timeProvider.GetUtcNow());
+
+            var events = new[] { realTimeHandler.SpdbRefreshed, realTimeHandler.SecuritySymbolPropertiesUpdated };
+            for (var i = 0; i < 10; i++)
+            {
+                timeProvider.Advance(step);
+
+                // We only advanced half the time, so we should not have refreshed yet
+                if (i % 2 == 0)
+                {
+                    Assert.IsFalse(WaitHandle.WaitAll(events, 500));
+                }
+                else
+                {
+                    Assert.IsTrue(WaitHandle.WaitAll(events, 2000));
+                    realTimeHandler.SpdbRefreshed.Reset();
+                    realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
+                }
+            }
+        }
+
         private class TestTimeLimitManager : IIsolatorLimitResultProvider
         {
             public IsolatorLimitResult IsWithinLimit()
@@ -186,7 +241,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             public void TestRefreshMarketHoursToday(Security security, DateTime time, MarketHoursSegment expectedSegment)
             {
                 OnSecurityUpdated.Reset();
-                RefreshMarketHoursToday(time);
+                RefreshMarketHours(time);
                 OnSecurityUpdated.WaitOne();
                 AssertMarketHours(security, time, expectedSegment);
             }
@@ -231,7 +286,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 Add(new ScheduledEvent("RefreshHours", new[] { new DateTime(2023, 6, 29) }, (name, triggerTime) =>
                 {
                     // refresh market hours from api every day
-                    RefreshMarketHoursToday((new DateTime(2023, 5, 30)).Date);
+                    RefreshMarketHours((new DateTime(2023, 5, 30)).Date);
                 }));
                 OnSecurityUpdated.Reset();
                 SetTime(DateTime.UtcNow);
@@ -251,6 +306,42 @@ namespace QuantConnect.Tests.Engine.RealTime
                 var key = new SecurityDatabaseKey(Market.USA, null, SecurityType.Equity);
                 var mhdb = new MarketHoursDatabase(new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>() { { key, entry } });
                 MarketHoursDatabase = mhdb;
+            }
+        }
+
+        private class SPDBTestLiveTradingRealTimeHandler : LiveTradingRealTimeHandler, IDisposable
+        {
+            private int _securitiesUpdated;
+
+            public ManualTimeProvider PublicTimeProvider = new ManualTimeProvider();
+
+            protected override ITimeProvider TimeProvider { get { return PublicTimeProvider; } }
+
+            public ManualResetEvent SpdbRefreshed { get; } = new ManualResetEvent(false);
+            public ManualResetEvent SecuritySymbolPropertiesUpdated = new ManualResetEvent(false);
+
+            protected override void RefreshSymbolProperties()
+            {
+                base.RefreshSymbolProperties();
+                SpdbRefreshed.Set();
+            }
+
+            protected override void UpdateSymbolProperties(Security security)
+            {
+                base.UpdateSymbolProperties(security);
+                Algorithm.Log($"{Algorithm.Securities.Count}");
+
+                if (++_securitiesUpdated == Algorithm.Securities.Count)
+                {
+                    SecuritySymbolPropertiesUpdated.Set();
+                    _securitiesUpdated = 0;
+                }
+            }
+
+            public void Dispose()
+            {
+                SpdbRefreshed.Dispose();
+                SecuritySymbolPropertiesUpdated.Dispose();
             }
         }
 
