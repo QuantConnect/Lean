@@ -674,12 +674,12 @@ namespace QuantConnect.Brokerages
                 var (firstOrderQuantity, secondOrderQuantity) = GetQuantityOnCrossPosition(holdingQuantity, order.Quantity);
 
                 // Note: original quantity - already sell
-                var firstOrderPartRequest = new CrossZeroOrderRequest(order, order.Quantity, order.Type, firstOrderQuantity, holdingQuantity);
+                var firstOrderPartRequest = new CrossZeroOrderRequest(order, 0m, order.Type, firstOrderQuantity, holdingQuantity);
 
                 // we actually can't place this order until the closingOrder is filled
                 // create another order for the rest, but we'll convert the order type to not be a stop
                 // but a market or a limit order                
-                var secondOrderPartRequest = new CrossZeroOrderRequest(order, order.Quantity, ConvertStopCrossingOrderType(order.Type), secondOrderQuantity, 0m);
+                var secondOrderPartRequest = new CrossZeroOrderRequest(order, firstOrderQuantity, ConvertStopCrossingOrderType(order.Type), secondOrderQuantity, 0m);
 
                 _leanOrderByBrokerageCrossingOrders.AddOrUpdate(order.Id, secondOrderPartRequest);
 
@@ -697,8 +697,7 @@ namespace QuantConnect.Brokerages
                     return false;
                 }
 
-                var closingOrderID = response.BrokerageOrderId;
-                order.BrokerId.Add(closingOrderID.ToStringInvariant());
+                order.BrokerId.Add(response.BrokerageOrderId.ToStringInvariant());
 
                 return true;
             }
@@ -710,22 +709,34 @@ namespace QuantConnect.Brokerages
         /// Determines whether the given Lean order crosses zero quantity based on the initial order quantity.
         /// </summary>
         /// <param name="leanOrder">The Lean order to check.</param>
+        /// <param name="quantity">The quantity to be updated based on whether the order crosses zero.</param>
         /// <returns>
         /// <c>true</c> if the Lean order does not cross zero quantity; otherwise, <c>false</c>.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="leanOrder"/> is null.</exception>
-        protected bool IsPossibleUpdateCrossZeroOrder(Order leanOrder)
+        protected bool IsPossibleUpdateCrossZeroOrder(Order leanOrder, out decimal quantity)
         {
             if (leanOrder == null)
             {
                 throw new ArgumentNullException(nameof(leanOrder), "The provided leanOrder cannot be null.");
             }
 
-            if (_leanOrderByBrokerageCrossingOrders.TryGetValue(leanOrder.Id, out var crossZeroOrderRequest) 
-                && crossZeroOrderRequest.InitialLeanOrderQuantity != leanOrder.Quantity)
+            // Check if the order is a CrossZeroOrder.
+            if (_leanOrderByBrokerageCrossingOrders.TryGetValue(leanOrder.Id, out var crossZeroOrderRequest))
+            {
+                // If it is a CrossZeroOrder, use the first part of the quantity for the update.
+                quantity = crossZeroOrderRequest.FirstPartQuantity;
+                // If the quantities of the LeanOrder do not match, return false. Don't support.
+                if (crossZeroOrderRequest.LeanOrder.Quantity != leanOrder.Quantity)
             {
                 return false;
             }
+            }
+            else
+            {
+                // If it is not a CrossZeroOrder, use the original order quantity.
+                quantity = leanOrder.Quantity;
+            } 
             return true;
         }
 

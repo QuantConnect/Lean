@@ -26,9 +26,9 @@ namespace QuantConnect.Orders.CrossZero
         public Order LeanOrder { get; }
 
         /// <summary>
-        /// The initial absolute quantity of the lean order.
+        /// The first part of quantity of CrossZeroOrder.
         /// </summary>
-        public decimal InitialLeanOrderQuantity { get; }
+        public decimal FirstPartQuantity { get; }
 
         /// <summary>
         /// Gets the type of the order.
@@ -49,14 +49,14 @@ namespace QuantConnect.Orders.CrossZero
         /// Initializes a new instance of the <see cref="CrossZeroOrderRequest"/> struct.
         /// </summary>
         /// <param name="leanOrder">The lean order.</param>
-        /// <param name="initialLeanOrderQuantity">The initial absolute quantity of the lean order.</param>
+        /// <param name="firstPartQuantity">The first part of quantity of CrossZeroOrder.</param>
         /// <param name="orderType">The type of the order.</param>
         /// <param name="orderQuantity">The quantity of the order.</param>
         /// <param name="orderQuantityHolding">The current holding quantity of the order's symbol.</param>
-        public CrossZeroOrderRequest(Order leanOrder, decimal initialLeanOrderQuantity, OrderType orderType, decimal orderQuantity, decimal orderQuantityHolding)
+        public CrossZeroOrderRequest(Order leanOrder, decimal firstPartQuantity, OrderType orderType, decimal orderQuantity, decimal orderQuantityHolding)
         {
             LeanOrder = leanOrder;
-            InitialLeanOrderQuantity = initialLeanOrderQuantity;
+            FirstPartQuantity = firstPartQuantity;
             OrderType = orderType;
             OrderQuantity = orderQuantity;
             OrderQuantityHolding = orderQuantityHolding;
