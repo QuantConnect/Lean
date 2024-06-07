@@ -674,12 +674,12 @@ namespace QuantConnect.Brokerages
                 var (firstOrderQuantity, secondOrderQuantity) = GetQuantityOnCrossPosition(holdingQuantity, order.Quantity);
 
                 // Note: original quantity - already sell
-                var firstOrderPartRequest = new CrossZeroOrderRequest(order, order.Type, firstOrderQuantity, holdingQuantity);
+                var firstOrderPartRequest = new CrossZeroOrderRequest(order, order.Quantity, order.Type, firstOrderQuantity, holdingQuantity);
 
                 // we actually can't place this order until the closingOrder is filled
                 // create another order for the rest, but we'll convert the order type to not be a stop
                 // but a market or a limit order                
-                var secondOrderPartRequest = new CrossZeroOrderRequest(order, ConvertStopCrossingOrderType(order.Type), secondOrderQuantity, 0m);
+                var secondOrderPartRequest = new CrossZeroOrderRequest(order, order.Quantity, ConvertStopCrossingOrderType(order.Type), secondOrderQuantity, 0m);
 
                 _leanOrderByBrokerageCrossingOrders.AddOrUpdate(order.Id, secondOrderPartRequest);
 
@@ -704,6 +704,29 @@ namespace QuantConnect.Brokerages
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Determines whether the given Lean order crosses zero quantity based on the initial order quantity.
+        /// </summary>
+        /// <param name="leanOrder">The Lean order to check.</param>
+        /// <returns>
+        /// <c>true</c> if the Lean order does not cross zero quantity; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="leanOrder"/> is null.</exception>
+        protected bool IsPossibleUpdateCrossZeroOrder(Order leanOrder)
+        {
+            if (leanOrder == null)
+            {
+                throw new ArgumentNullException(nameof(leanOrder), "The provided leanOrder cannot be null.");
+            }
+
+            if (_leanOrderByBrokerageCrossingOrders.TryGetValue(leanOrder.Id, out var crossZeroOrderRequest) 
+                && crossZeroOrderRequest.InitialLeanOrderQuantity != leanOrder.Quantity)
+            {
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
