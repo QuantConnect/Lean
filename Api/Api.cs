@@ -775,7 +775,7 @@ namespace QuantConnect.Api
                 end = start + 100;
             }
 
-            JObject obj = new JObject
+            JObject obj = new()
             {
                 { "projectId", projectId },
                 { "backtestId", backtestId },

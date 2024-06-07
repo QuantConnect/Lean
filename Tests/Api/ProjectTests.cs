@@ -556,7 +556,14 @@ namespace QuantConnect.Tests.API
                 Thread.Sleep(120000);
 
                 // Try to read the insights from the algorithm
-                var readInsights = ApiClient.ReadBacktestInsights(projectId, backtest.BacktestId);
+                var readInsights = ApiClient.ReadBacktestInsights(projectId, backtest.BacktestId, 0, 5);
+                var finish = DateTime.UtcNow.AddMinutes(2);
+                do
+                {
+                    Thread.Sleep(5000);
+                    readInsights = ApiClient.ReadBacktestInsights(projectId, backtest.BacktestId, 0, 5);
+                }
+                while (finish > DateTime.UtcNow && !readInsights.Insights.Any());
 
                 Assert.IsTrue(readInsights.Success, $"ApiClient.ReadBacktestInsights(): Error: {string.Join(",", readInsights.Errors)}");
                 Assert.IsNotEmpty(readInsights.Insights);
