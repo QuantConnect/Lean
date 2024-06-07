@@ -511,6 +511,72 @@ namespace QuantConnect.Tests.API
         }
 
         [Test]
+        public void ReadBacktestInsightsWorksAsExpected()
+        {
+            var quantConnectDataProvider = new Dictionary<string, object>
+            {
+                { "id", "QuantConnectBrokerage" },
+            };
+
+            var dataProviders = new Dictionary<string, object>
+            {
+                { "QuantConnectBrokerage", quantConnectDataProvider }
+            };
+
+            var file = new ProjectFile
+            {
+                Name = "Main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateCryptoFrameworkAlgorithm.cs")
+            };
+
+            // Create a new project
+            var project = ApiClient.CreateProject($"Test project insight - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            var projectId = project.Projects.First().ProjectId;
+
+            // Update Project Files
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
+            Assert.IsTrue(updateProjectFileContent.Success);
+
+            // Create compile
+            var compile = ApiClient.CreateCompile(projectId);
+            Assert.IsTrue(compile.Success);
+
+            // Wait at max 30 seconds for project to compile
+            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId);
+            Assert.IsTrue(compileCheck.Success);
+            Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
+
+            try
+            {
+                // Create backtest
+                var backtestName = $"ReadBacktestOrders Backtest {GetTimestamp()}";
+                var backtest = ApiClient.CreateBacktest(projectId, compile.CompileId, backtestName);
+
+                // Wait 2 minutes
+                Thread.Sleep(120000);
+
+                // Try to read the insights from the algorithm
+                var readInsights = ApiClient.ReadBacktestInsights(projectId, backtest.BacktestId);
+
+                Assert.IsTrue(readInsights.Success, $"ApiClient.ReadBacktestInsights(): Error: {string.Join(",", readInsights.Errors)}");
+                Assert.IsNotEmpty(readInsights.Insights);
+                Assert.IsTrue(readInsights.Length >= 0);
+                Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestInsights(projectId, backtest.BacktestId, 0, 101));
+                Assert.DoesNotThrow(() => ApiClient.ReadBacktestInsights(projectId, backtest.BacktestId));
+            }
+            catch (Exception ex)
+            {
+                // Delete the project in case of an error
+                Assert.IsTrue(ApiClient.DeleteProject(projectId).Success);
+                throw ex;
+            }
+
+            // Delete the project
+            var deleteProject = ApiClient.DeleteProject(projectId);
+            Assert.IsTrue(deleteProject.Success);
+        }
+
+        [Test]
         public void CreatesLiveAlgorithm()
         {
             var quantConnectDataProvider = new Dictionary<string, object>
