@@ -20,6 +20,7 @@ using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 
@@ -164,6 +165,34 @@ namespace QuantConnect.Tests.Common.Securities
             // Fetch the custom entry again to make sure it was not overridden
             fetchedProperties = database.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, "USD");
             Assert.AreSame(properties, fetchedProperties);
+        }
+
+        [Test]
+        public void CanQueryMarketAfterRefresh()
+        {
+            var database = SymbolPropertiesDatabase.FromDataFolder();
+
+            // Get market
+            var result = database.TryGetMarket("AU200AUD", SecurityType.Cfd, out var market);
+            Assert.IsTrue(result);
+            Assert.AreEqual(Market.FXCM, market);
+
+            // Change the data folder so another symbol properties file is used
+            var originalDataFolder = Config.Get("data-folder");
+            Config.Set("data-folder", "./TestData");
+            Globals.Reset();
+
+            // Refresh the database
+            database.ReloadEntries();
+
+            // Get market again
+            result = database.TryGetMarket("AU200AUD", SecurityType.Cfd, out market);
+            Assert.IsTrue(result);
+            Assert.AreEqual(Market.Oanda, market);
+
+            // Restore the original data folder
+            Config.Set("data-folder", originalDataFolder);
+            Globals.Reset();
         }
 
         [TestCase(Market.FXCM, SecurityType.Cfd)]

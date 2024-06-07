@@ -26,6 +26,9 @@ namespace QuantConnect
     /// </summary>
     public class AlgorithmSettings : IAlgorithmSettings
     {
+        private static TimeSpan _defaultDatabasesRefreshPeriod =
+            TimeSpan.TryParse(Config.Get("databases-refresh-period", "1.00:00:00"), out var refreshPeriod) ? refreshPeriod : Time.OneDay;
+
         /// <summary>
         /// True if should rebalance portfolio on security changes. True by default
         /// </summary>
@@ -156,12 +159,7 @@ namespace QuantConnect
             StalePriceTimeSpan = Time.OneHour;
             MaxAbsolutePortfolioTargetPercentage = 1000000000;
             MinAbsolutePortfolioTargetPercentage = 0.0000000001m;
-
-            if (!TimeSpan.TryParse(Config.Get("databases-refresh-period", "1.00:00:00"), out var refreshPeriod))
-            {
-                refreshPeriod = TimeSpan.FromDays(1);
-            }
-            DatabasesRefreshPeriod = refreshPeriod;
+            DatabasesRefreshPeriod = _defaultDatabasesRefreshPeriod;
         }
     }
 }

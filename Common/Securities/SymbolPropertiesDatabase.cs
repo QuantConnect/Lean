@@ -31,7 +31,7 @@ namespace QuantConnect.Securities
 
         private Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
         private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _customEntries;
-        private readonly IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
+        private IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
 
         /// <summary>
         /// Initialize a new instance of <see cref="SymbolPropertiesDatabase"/> using the given file
@@ -299,9 +299,11 @@ namespace QuantConnect.Securities
             lock (DataFolderSymbolPropertiesDatabaseLock)
             {
                 _dataFolderSymbolPropertiesDatabase = null;
-                var fileEntries = FromDataFolder()._entries.Where(x => !_customEntries.ContainsKey(x.Key));
+                var newInstance = FromDataFolder();
+                var fileEntries = newInstance._entries.Where(x => !_customEntries.ContainsKey(x.Key));
                 var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
                 _entries = newEntries;
+                _keyBySecurityType = newInstance._keyBySecurityType.ToReadOnlyDictionary();
             }
         }
     }
