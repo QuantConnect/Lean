@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, DateTime.UtcNow);
+                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10));
                 yield return new TestCaseData(stopMarketOrder, new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.Filled });
             }
         }
@@ -120,7 +120,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, DateTime.UtcNow);
+                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10));
                 yield return new TestCaseData(stopMarketOrder, new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.UpdateSubmitted, OrderStatus.Filled });
             }
         }
@@ -192,7 +192,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, DateTime.UtcNow);
+                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10));
                 yield return new TestCaseData(stopMarketOrder, new[] { OrderStatus.Submitted, OrderStatus.Invalid });
             }
         }
@@ -235,8 +235,8 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, DateTime.UtcNow);
-                yield return new TestCaseData(stopMarketOrder, new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.Filled, OrderStatus.Canceled });
+                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10));
+                yield return new TestCaseData(stopMarketOrder, new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.Canceled });
             }
         }
 
@@ -248,9 +248,17 @@ namespace QuantConnect.Tests.Brokerages
 
             using var brokerage = InitializeBrokerage((leanOrder?.Symbol.Value, 180m, 10));
 
+            var skipFirstFilledEvent = default(bool);
             brokerage.OrdersStatusChanged += (_, orderEvents) =>
             {
                 var orderEventStatus = orderEvents[0].Status;
+
+                // Skip processing the first occurrence of the Filled event, The First Part of CrossZeroOrder was filled.
+                if (!skipFirstFilledEvent && orderEventStatus == OrderStatus.Filled)
+                {
+                    skipFirstFilledEvent = true;
+                    return;
+                }
 
                 actualCrossZeroOrderStatusOrdering.Enqueue(orderEventStatus);
 
@@ -409,7 +417,7 @@ namespace QuantConnect.Tests.Brokerages
 
             public override bool CancelOrder(Order order)
             {
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "CancelOrder") { Status = OrderStatus.Canceled });
+                OnOrderEvent(new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero, "CancelOrder") { Status = OrderStatus.Canceled });
                 return true;
             }
 
@@ -514,7 +522,7 @@ namespace QuantConnect.Tests.Brokerages
 
                 if (isSubmittedEvent)
                 {
-                    OnOrderEvent(new OrderEvent(originalLeanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Submitted });
+                    OnOrderEvent(new OrderEvent(originalLeanOrder, new DateTime(2024, 6, 10), OrderFee.Zero) { Status = OrderStatus.Submitted });
                 }
 
                 if (IsPlaceOrderPhonyBrokerageFirstPartSuccessfully)
@@ -540,7 +548,7 @@ namespace QuantConnect.Tests.Brokerages
 
             public override bool UpdateOrder(Order order)
             {
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, $"{nameof(PhonyBrokerage)} Order Event")
+                OnOrderEvent(new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero, $"{nameof(PhonyBrokerage)} Order Event")
                 {
                     Status = OrderStatus.UpdateSubmitted
                 });
@@ -578,7 +586,7 @@ namespace QuantConnect.Tests.Brokerages
                         {
                             if (order.Status == OrderStatus.Submitted || order.Status == OrderStatus.PartiallyFilled || order.Status == OrderStatus.UpdateSubmitted)
                             {
-                                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Filled });
+                                OnOrderEvent(new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero) { Status = OrderStatus.Filled });
                             }
                         }
                     }
