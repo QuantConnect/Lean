@@ -319,7 +319,7 @@ namespace QuantConnect.Tests.Brokerages
         /// </exception>
         private static void AssertComingOrderStatusByEvent(AutoResetEvent resetEvent, PhonyBrokerage brokerage, OrderStatus comingOrderStatus)
         {
-            resetEvent.WaitOne();
+            Assert.True(resetEvent.WaitOne(TimeSpan.FromSeconds(5)));
             var partialFilledOrder = brokerage.GetAllOrders(o => o.Status == comingOrderStatus).Single();
             Assert.IsNotNull(partialFilledOrder);
         }
