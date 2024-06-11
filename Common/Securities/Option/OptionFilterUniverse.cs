@@ -486,6 +486,59 @@ namespace QuantConnect.Securities
             // Select the contracts
             return this.WhereContains( new List<Symbol> { call, put } );
         }
+
+        /// <summary>
+        /// Sets universe of an ITM call, an ATM call, and an OTM call with the same expiry and equal strike price distance, with closest match to the criteria given
+        /// </summary>
+        /// <param name="daysTillExpiry">The desire strike price distance from the current underlying price</param>
+        /// <param name="strikeSpread">The desire strike price distance of the ITM call and the OTM call from the current underlying price</param>
+        /// <remarks>Applicable to Long and Short Call Butterfly Option Strategy</remarks>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse CallButterfly(int daysTillExpiry = 30, decimal strikeSpread = 5)
+        {
+            return Butterfly(OptionRight.Call, daysTillExpiry, strikeSpread);
+        }
+
+        /// <summary>
+        /// Sets universe of an ITM put, an ATM put, and an OTM put with the same expiry and equal strike price distance, with closest match to the criteria given
+        /// </summary>
+        /// <param name="daysTillExpiry">The desire strike price distance from the current underlying price</param>
+        /// <param name="strikeSpread">The desire strike price distance of the ITM put and the OTM put from the current underlying price</param>
+        /// <remarks>Applicable to Long and Short Put Butterfly Option Strategy</remarks>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse PutButterfly(int daysTillExpiry = 30, decimal strikeSpread = 5)
+        {
+            return Butterfly(OptionRight.Put, daysTillExpiry, strikeSpread);
+        }
+
+        private OptionFilterUniverse Butterfly(OptionRight right, int daysTillExpiry, decimal strikeSpread)
+        {
+            if (strikeSpread <= 0)
+            {
+                throw new ArgumentException("ProtectiveCollar(): strikeSpread arguments must be positive");
+            }
+
+            // Select the expiry as the nearest to set days later
+            var expiry = AllSymbols.OrderBy(x => Math.Abs((x.ID.Date - _lastExchangeDate.AddDays(daysTillExpiry)).Days))
+                .First().ID.Date;
+            var contracts = AllSymbols.Where(x => x.ID.Date == expiry && x.ID.OptionRight == right);
+
+            // Select the strike prices with the set spread range
+            var atmContract = contracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice)).First();
+            var lowerStrikeContract = contracts.Where(x => x.ID.StrikePrice < Underlying.Price)
+                .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice - strikeSpread)).First();
+            var upperStrike = atmContract.ID.StrikePrice * 2 - lowerStrikeContract.ID.StrikePrice;
+            var upperStrikeContract = contracts.SingleOrDefault(x => x.ID.StrikePrice == upperStrike);
+
+            // Select the contracts
+            var filtered = this.WhereContains( new List<Symbol> { atmContract, lowerStrikeContract, upperStrikeContract } );
+            if (filtered.Count() < 3)
+            {
+                Log.Trace("Butterfly(): less than 3 contracts fulfilled conditions, returning empty universe.");
+                return this.WhereContains( new List<Symbol> () );
+            }
+            return filtered;
+        }
     }
 
     /// <summary>

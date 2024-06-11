@@ -468,6 +468,104 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expectedStrike, put.ID.StrikePrice);
         }
 
+        [TestCase(100, 0)]          // zero strike distance from ATM
+        [TestCase(105, -5)]         // negative strike distance from ATM
+        public void FailsCallButterfly(decimal underlyingPrice, decimal strikeFromAtm)
+        {
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                                .CallButterfly(10, strikeFromAtm);
+
+            FailsFiltering(underlyingPrice, universeFunc);
+        }
+
+        [TestCase(100, 5, 3, 95, 100, 105, 10, false)]
+        [TestCase(105, 10, 3, 95, 105, 115, 10, false)]
+        [TestCase(99.5, 5.25, 3, 95, 100, 105, 10, false)]
+        [TestCase(1000, 5, 0, 0, 0, 0, 10, false)]              // extreme strike -> no match OTM
+        [TestCase(1, 5, 0, 0, 0, 0, 10, false)]                 // extreme strike -> no match ITM
+        [TestCase(100, 5, 3, 95, 100, 105, 90, true)]
+        public void FiltersCallButterfly(decimal underlyingPrice, decimal strikeFromAtm, int expectedCount, decimal expectedItmStrike,
+            decimal expectedAtmStrike, decimal expectedOtmStrike, int daysTillExpiry, bool far = false)
+        {
+            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                                .CallButterfly(daysTillExpiry, strikeFromAtm);
+            var filtered = Filtering(underlyingPrice, universeFunc);
+
+            Assert.AreEqual(expectedCount, filtered.Count);
+            if (expectedCount == 0)
+            {
+                return;
+            }
+
+            filtered = filtered.OrderBy(x => x.ID.StrikePrice).ToList();
+            var itm = filtered[0];
+            var atm = filtered[1];
+            var otm = filtered[2];
+
+            Assert.AreEqual(expectedExpiry, itm.ID.Date);
+            Assert.AreEqual(OptionRight.Call, itm.ID.OptionRight);
+            Assert.AreEqual(expectedItmStrike, itm.ID.StrikePrice);
+
+            Assert.AreEqual(expectedExpiry, atm.ID.Date);
+            Assert.AreEqual(OptionRight.Call, atm.ID.OptionRight);
+            Assert.AreEqual(expectedAtmStrike, atm.ID.StrikePrice);
+
+            Assert.AreEqual(expectedExpiry, otm.ID.Date);
+            Assert.AreEqual(OptionRight.Call, otm.ID.OptionRight);
+            Assert.AreEqual(expectedOtmStrike, otm.ID.StrikePrice);
+        }
+
+        [TestCase(100, 0)]          // zero strike distance from ATM
+        [TestCase(105, -5)]         // negative strike distance from ATM
+        public void FailsPutButterfly(decimal underlyingPrice, decimal strikeFromAtm)
+        {
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                                .PutButterfly(10, strikeFromAtm);
+
+            FailsFiltering(underlyingPrice, universeFunc);
+        }
+
+        [TestCase(100, 5, 3, 95, 100, 105, 10, false)]
+        [TestCase(105, 10, 3, 95, 105, 115, 10, false)]
+        [TestCase(99.5, 5.25, 3, 95, 100, 105, 10, false)]
+        [TestCase(1000, 5, 0, 0, 0, 0, 10, false)]              // extreme strike -> no match ITM
+        [TestCase(1, 5, 0, 0, 0, 0, 10, false)]                 // extreme strike -> no match OTM
+        [TestCase(100, 5, 3, 95, 100, 105, 90, true)]
+        public void FiltersPutButterfly(decimal underlyingPrice, decimal strikeFromAtm, int expectedCount, decimal expectedOtmStrike,
+            decimal expectedAtmStrike, decimal expectedItmStrike, int daysTillExpiry, bool far = false)
+        {
+            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                                .PutButterfly(daysTillExpiry, strikeFromAtm);
+            var filtered = Filtering(underlyingPrice, universeFunc);
+
+            Assert.AreEqual(expectedCount, filtered.Count);
+            if (expectedCount == 0)
+            {
+                return;
+            }
+
+            filtered = filtered.OrderByDescending(x => x.ID.StrikePrice).ToList();
+            var itm = filtered[0];
+            var atm = filtered[1];
+            var otm = filtered[2];
+
+            Assert.AreEqual(expectedExpiry, itm.ID.Date);
+            Assert.AreEqual(OptionRight.Call, itm.ID.OptionRight);
+            Assert.AreEqual(expectedItmStrike, itm.ID.StrikePrice);
+
+            Assert.AreEqual(expectedExpiry, atm.ID.Date);
+            Assert.AreEqual(OptionRight.Call, atm.ID.OptionRight);
+            Assert.AreEqual(expectedAtmStrike, atm.ID.StrikePrice);
+
+            Assert.AreEqual(expectedExpiry, otm.ID.Date);
+            Assert.AreEqual(OptionRight.Call, otm.ID.OptionRight);
+            Assert.AreEqual(expectedOtmStrike, otm.ID.StrikePrice);
+        }
+
         private List<Symbol> Filtering(decimal underlyingPrice, Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc)
         {
             return BaseFiltering(underlyingPrice, universeFunc, false);
