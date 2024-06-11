@@ -3871,13 +3871,9 @@ namespace QuantConnect.Algorithm
             {
                 dividendYieldModel = new ConstantDividendYieldModel(dividendYield.Value);
             }
-            else if (symbol.ID.SecurityType == SecurityType.FutureOption || symbol.ID.SecurityType == SecurityType.IndexOption)
-            {
-                dividendYieldModel = new DividendYieldProvider();
-            }
             else
             {
-                dividendYieldModel = new DividendYieldProvider(symbol.Underlying);
+                dividendYieldModel = DividendYieldProvider.CreateForOption(symbol);
             }
 
             return name;
