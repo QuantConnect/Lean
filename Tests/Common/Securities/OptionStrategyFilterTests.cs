@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
@@ -181,7 +180,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(1000, 10, 0, 0, 0, 10, false)]            // extreme strike will have no matching pair, returning no contract
         [TestCase(1, 5, 2, 85, 90, 10, false)]
         [TestCase(100, 5, 2, 95, 105, 90, true)]
-        public void FiltersPutSpread(decimal underlyingPrice, decimal strikeFromAtm, decimal lowerExpectedStrike, int expectedCount,
+        public void FiltersPutSpread(decimal underlyingPrice, decimal strikeFromAtm, int expectedCount, decimal lowerExpectedStrike,
             decimal higherExpectedStrike, int daysTillExpiry, bool far = false)
         {
             var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
@@ -663,7 +662,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(100, 1, 6, 4, 90, 95, 105, 110, 10, false)]
         [TestCase(1000, 5, 10, 0, 0, 0, 0, 0, 10, false)]              // extreme strike
         [TestCase(1, 5, 10, 0, 0, 0, 0, 0, 10, false)]                 // extreme strike
-        [TestCase(100, 5, 4, 95, 100, 105, 90, true)]
+        [TestCase(100, 5, 10, 4, 95, 100, 105, 110, 90, true)]
         public void FiltersIronCondor(decimal underlyingPrice, decimal nearStrikeFromAtm, decimal farStrikeFromAtm, int expectedCount, decimal expectedFarPutStrike,
             decimal expectedNearPutStrike, decimal expectedNearCallStrike, decimal expectedFarCallStrike, int daysTillExpiry, bool far = false)
         {

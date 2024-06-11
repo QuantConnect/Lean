@@ -304,7 +304,7 @@ namespace QuantConnect.Securities
             // Select the expiry as the nearest to set days later
             var expiry = AllSymbols.OrderBy(x => Math.Abs((x.ID.Date - _lastExchangeDate.AddDays(daysTillExpiry)).Days))
                 .First().ID.Date;
-            var contracts = Contracts(contract => contract.Where(x => x.ID.Date == expiry && x.ID.OptionRight == right));
+            var contracts = AllSymbols.Where(x => x.ID.Date == expiry && x.ID.OptionRight == right);
             
             // Select the strike prices with the set spread range
             var lowerStrikeContract = contracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + (decimal)lowerStrikeFromAtm)).First();
@@ -316,9 +316,9 @@ namespace QuantConnect.Securities
                 return this.WhereContains( new List<Symbol>() );
             }
             
-            var higherStrikeContract = contracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + higherStrikeFromAtm)).First();
+            var higherStrikeContract = higherStrikeContracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + higherStrikeFromAtm)).First();
 
-            return contracts.WhereContains(new List<Symbol> { lowerStrikeContract, higherStrikeContract });
+            return this.WhereContains(new List<Symbol> { lowerStrikeContract, higherStrikeContract });
         }
 
         /// <summary>
@@ -471,7 +471,7 @@ namespace QuantConnect.Securities
                 puts = puts.Where(x => x.ID.StrikePrice < Underlying.Price);
             }
 
-            if (calls.Any() || puts.Any())
+            if (!calls.Any() || !puts.Any())
             {
                 Log.Trace("CallPutSpread(): Insufficient contracts fulfilled conditions, returning empty universe");
                 return this.WhereContains( new List<Symbol> () );
@@ -526,9 +526,13 @@ namespace QuantConnect.Securities
             // Select the strike prices with the set spread range
             var atmContract = contracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice)).First();
             var lowerStrikeContract = contracts.Where(x => x.ID.StrikePrice < Underlying.Price)
-                .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice - strikeSpread)).First();
-            var upperStrike = atmContract.ID.StrikePrice * 2 - lowerStrikeContract.ID.StrikePrice;
-            var upperStrikeContract = contracts.SingleOrDefault(x => x.ID.StrikePrice == upperStrike);
+                .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice - strikeSpread)).FirstOrDefault();
+            Symbol upperStrikeContract = null;
+            if (lowerStrikeContract != null)
+            {
+                var upperStrike = atmContract.ID.StrikePrice * 2 - lowerStrikeContract.ID.StrikePrice;
+                upperStrikeContract = contracts.SingleOrDefault(x => x.ID.StrikePrice == upperStrike);
+            }
 
             // Select the contracts
             var filtered = this.WhereContains( new List<Symbol> { atmContract, lowerStrikeContract, upperStrikeContract } );
@@ -560,18 +564,30 @@ namespace QuantConnect.Securities
             var contracts = AllSymbols.Where(x => x.ID.Date == expiry);
             var calls = contracts.Where(x => x.ID.OptionRight == OptionRight.Call);
             var puts = contracts.Where(x => x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice < Underlying.Price);
-            
-            // Select the strike prices with the set spread range
-            var atmStrike = contracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice)).First().ID.StrikePrice;
-            var otmCallStrike = calls.Where(x => x.ID.StrikePrice > atmStrike)
-                .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + strikeSpread)).First().ID.StrikePrice;
-            var otmPutStrike = atmStrike * 2 - otmCallStrike;
 
-            var filtered = Contracts(contract => contract.Where(x => 
+            // Select the strike prices with the set spread range
+            var atm = contracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice)).FirstOrDefault();
+            var atmStrike = -1m;
+            var otmCallStrike = -1m;
+            var otmPutStrike = -1m;
+            if (atm != null)
+            {
+                atmStrike = atm.ID.StrikePrice;
+                var otmCall = calls.Where(x => x.ID.StrikePrice > atmStrike)
+                    .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + strikeSpread)).FirstOrDefault();
+                if (otmCall != null)
+                {
+                    otmCallStrike = otmCall.ID.StrikePrice;
+                    otmPutStrike = atmStrike * 2 - otmCallStrike;
+                }
+            }
+
+            var filtered = Contracts(contract => contract.Where(x =>
+                x.ID.Date == expiry && (
                 x.ID.StrikePrice == atmStrike ||
                 (x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice == otmCallStrike) ||
                 (x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice == otmPutStrike)
-            ));
+            )));
             if (filtered.Count() < 4)
             {
                 Log.Trace("IronButterfly(): unable to find equidistance contracts with condition given, returning empty universe.");
@@ -609,13 +625,23 @@ namespace QuantConnect.Securities
             var contracts = AllSymbols.Where(x => x.ID.Date == expiry);
             var calls = contracts.Where(x => x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice > Underlying.Price);
             var puts = contracts.Where(x => x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice < Underlying.Price);
+
+            if (!calls.Any() || !puts.Any())
+            {
+                Log.Trace("IronCondor(): unable to find OTM contracts, returning empty universe.");
+                return this.WhereContains(new List<Symbol>());
+            }
             
             // Select the strike prices with the set spread range
             var nearCall = calls.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + nearStrikeSpread)).First();
             var nearPut = puts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice - nearStrikeSpread)).First();
             var farCall = calls.Where(x => x.ID.StrikePrice > nearCall.ID.StrikePrice)
-                .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + farStrikeSpread)).First();
-            var farPut = puts.SingleOrDefault(x => x.ID.StrikePrice == nearPut.ID.StrikePrice - farCall.ID.StrikePrice + nearCall.ID.StrikePrice);
+                .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + farStrikeSpread)).FirstOrDefault();
+            Symbol farPut = null;
+            if (farCall != null)
+            {
+                farPut = puts.SingleOrDefault(x => x.ID.StrikePrice == nearPut.ID.StrikePrice - farCall.ID.StrikePrice + nearCall.ID.StrikePrice);
+            } 
 
             // Select the contracts
             var filtered = this.WhereContains( new List<Symbol> { nearCall, nearPut, farCall, farPut } );
@@ -645,22 +671,34 @@ namespace QuantConnect.Securities
             // Select the expiry as the nearest to set days later
             var expiry = AllSymbols.OrderBy(x => Math.Abs((x.ID.Date - _lastExchangeDate.AddDays(daysTillExpiry)).Days))
                 .First().ID.Date;
-            var contracts = Contracts(contract => contract.Where(x => x.ID.Date == expiry));
-            
+            var contracts = AllSymbols.Where(x => x.ID.Date == expiry);
+
             // Select the strike prices with the set spread range
-            var higherStrike = contracts.Where(x => x.ID.StrikePrice > Underlying.Price)
+            var higherStrikeContract = contracts.Where(x => x.ID.StrikePrice > Underlying.Price)
                 .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + strikeSpread))
-                .First().ID.StrikePrice;
-            var lowerStrike = contracts.Where(x => x.ID.StrikePrice < higherStrike && x.ID.StrikePrice < Underlying.Price)
-                .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice - strikeSpread))
-                .First().ID.StrikePrice;
+                .FirstOrDefault();
+            var higherStrike = -1m;
+            var lowerStrike = -1m;
+            if (higherStrikeContract != null)
+            {
+                higherStrike = higherStrikeContract.ID.StrikePrice;
+                var lowerStrikeContract = contracts.Where(x => x.ID.StrikePrice < higherStrike && x.ID.StrikePrice < Underlying.Price)
+                    .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice - strikeSpread))
+                    .FirstOrDefault();
+                if (lowerStrikeContract != null)
+                {
+                    lowerStrike = lowerStrikeContract.ID.StrikePrice;
+                }
+            }
 
             // Select the contracts
-            var filtered = contracts.Where(x => x.ID.StrikePrice == higherStrike || x.ID.StrikePrice == lowerStrike);
+            var filtered = Contracts(contract => contract.Where(x => 
+                (x.ID.StrikePrice == higherStrike || x.ID.StrikePrice == lowerStrike) &&
+                x.ID.Date == expiry));
             if (filtered.Count() < 4)
             {
                 Log.Trace("BoxSpread(): Insufficient contracts fulfilled conditions, returning empty universe");
-                return filtered.WhereContains( new List<Symbol> () );
+                return filtered.WhereContains(new List<Symbol>());
             }
             return filtered;
         }
