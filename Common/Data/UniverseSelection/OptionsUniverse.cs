@@ -210,6 +210,23 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Creates a new instance of the <see cref="OptionsUniverse"/> class
+        /// </summary>
+        public OptionsUniverse(DateTime date, Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume,
+            decimal? openInterest, decimal? impliedVolatility, Greeks? greeks)
+            : base(date, symbol)
+        {
+            _open = open;
+            _high = high;
+            _low = low;
+            _close = close;
+            _volume = volume;
+            _openInterest = openInterest;
+            _impliedVolatility = impliedVolatility;
+            _greeks = greeks;
+        }
+
+        /// <summary>
         /// Creates a new instance of the <see cref="OptionsUniverse"/> class as a copy of the given instance
         /// </summary>
         public OptionsUniverse(OptionsUniverse other)
@@ -313,7 +330,7 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             return $"{sid},{Symbol.Value},{Open},{High},{Low},{Close},{Volume}," +
-                $"{OpenInterest},{ImpliedVolatility},{Greeks?.Delta},{Greeks?.Gamma},{Greeks?.Vega},{Greeks?.Theta},{Greeks?.Rho}";
+                $"{_openInterest},{_impliedVolatility},{_greeks?.Delta},{_greeks?.Gamma},{_greeks?.Vega},{_greeks?.Theta},{_greeks?.Rho}";
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
