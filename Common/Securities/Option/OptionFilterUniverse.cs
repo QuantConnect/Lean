@@ -307,10 +307,18 @@ namespace QuantConnect.Securities
             var contracts = Contracts(contract => contract.Where(x => x.ID.Date == expiry && x.ID.OptionRight == right));
             
             // Select the strike prices with the set spread range
-            var higherStrikeContract = contracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + higherStrikeFromAtm)).First();
             var lowerStrikeContract = contracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + (decimal)lowerStrikeFromAtm)).First();
+            var higherStrikeContracts = contracts.Where(x => x.ID.StrikePrice > lowerStrikeContract.ID.StrikePrice).ToList();
+            
+            if (higherStrikeContracts.Count == 0)
+            {
+                Log.Trace("Spread(): insufficient depth in strike prices, returning empty universe.");
+                return this.WhereContains( new List<Symbol>() );
+            }
+            
+            var higherStrikeContract = contracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + higherStrikeFromAtm)).First();
 
-            return contracts.WhereContains(new List<Symbol> { higherStrikeContract, lowerStrikeContract });
+            return contracts.WhereContains(new List<Symbol> { lowerStrikeContract, higherStrikeContract });
         }
 
         /// <summary>
@@ -363,6 +371,7 @@ namespace QuantConnect.Securities
             
             if (furtherContracts.Count == 0)
             {
+                Log.Trace("CalendarSpread(): insufficient depth in expiries, returning empty universe.");
                 return this.WhereContains( new List<Symbol>() );
             }
 
@@ -381,21 +390,21 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse Strangle(int daysTillExpiry = 30, decimal callStrikeFromAtm = 5, decimal putStrikeFromAtm = -5)
         {
-            if (callStrikeFromAtm < 0)
+            if (callStrikeFromAtm <= 0)
             {
                 throw new ArgumentException($"Strangle(): {nameof(callStrikeFromAtm)} must be positive");
             }
 
-            if (putStrikeFromAtm > 0)
+            if (putStrikeFromAtm >= 0)
             {
                 throw new ArgumentException($"Strangle(): {nameof(putStrikeFromAtm)} must be negative");
             }
 
-            return CallPutSpread(daysTillExpiry, callStrikeFromAtm, putStrikeFromAtm);
+            return CallPutSpread(daysTillExpiry, callStrikeFromAtm, putStrikeFromAtm, true);
         }
 
         /// <summary>
-        /// Sets universe of a an ATM call contract and an ATM put contract with the same expiry, with closest match to the criteria given
+        /// Sets universe of an ATM call contract and an ATM put contract with the same expiry, with closest match to the criteria given
         /// </summary>
         /// <param name="daysTillExpiry">The desire strike price distance from the current underlying price</param>
         /// <remarks>Applicable to Long and Short Straddle Option Strategy</remarks>
@@ -406,7 +415,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Sets universe of an call contract and an put contract with the same expiry but lower strike price, with closest match to the criteria given
+        /// Sets universe of a call contract and a put contract with the same expiry but lower strike price, with closest match to the criteria given
         /// </summary>
         /// <param name="daysTillExpiry">The desire strike price distance from the current underlying price</param>
         /// <param name="callStrikeFromAtm">The desire strike price distance from the current underlying price of the call.</param>
@@ -421,11 +430,21 @@ namespace QuantConnect.Securities
                     $"{nameof(callStrikeFromAtm)}, {nameof(putStrikeFromAtm)}");
             }
 
-            return CallPutSpread(daysTillExpiry, callStrikeFromAtm, putStrikeFromAtm);
+            var filtered = CallPutSpread(daysTillExpiry, callStrikeFromAtm, putStrikeFromAtm);
+
+            var callStrike = filtered.Single(x => x.ID.OptionRight == OptionRight.Call).ID.StrikePrice;
+            var putStrike = filtered.Single(x => x.ID.OptionRight == OptionRight.Put).ID.StrikePrice;
+            if (callStrike <= putStrike)
+            {
+                Log.Trace("ProtectiveCollar(): put selected does not have a lower strike price than call selected, please adjust the strike from ATM, returning empty universe");
+                return filtered.WhereContains( new List<Symbol> () );
+            }
+
+            return filtered;
         }
 
         /// <summary>
-        /// Sets universe of a an ATM call contract and an ATM put contract with the same expiry, with closest match to the criteria given
+        /// Sets universe of a call contract and a put contract with the same expiry and strike price, with closest match to the criteria given
         /// </summary>
         /// <param name="daysTillExpiry">The desire strike price distance from the current underlying price</param>
         /// <param name="strikeFromAtm">The desire strike price distance from the current underlying price</param>
@@ -436,19 +455,32 @@ namespace QuantConnect.Securities
             return CallPutSpread(daysTillExpiry, strikeFromAtm, strikeFromAtm);
         }
 
-        private OptionFilterUniverse CallPutSpread(int daysTillExpiry, decimal callStrikeFromAtm, decimal putStrikeFromAtm)
+        private OptionFilterUniverse CallPutSpread(int daysTillExpiry, decimal callStrikeFromAtm, decimal putStrikeFromAtm, bool otm = false)
         {
             // Select the expiry as the nearest to set days later
             var expiry = AllSymbols.OrderBy(x => Math.Abs((x.ID.Date - _lastExchangeDate.AddDays(daysTillExpiry)).Days))
                 .First().ID.Date;
             var contracts = AllSymbols.Where(x => x.ID.Date == expiry);
 
+            var calls = contracts.Where(x => x.ID.OptionRight == OptionRight.Call);
+            var puts = contracts.Where(x => x.ID.OptionRight == OptionRight.Put);
+            
+            if (otm)
+            {
+                calls = calls.Where(x => x.ID.StrikePrice > Underlying.Price);
+                puts = puts.Where(x => x.ID.StrikePrice < Underlying.Price);
+            }
+
+            if (calls.Count() == 0 || puts.Count() == 0)
+            {
+                Log.Trace("CallPutSpread(): Insufficient contracts fulfilled conditions, returning empty universe");
+                return this.WhereContains( new List<Symbol> () );
+            }
+
             // Select the strike prices with the set spread range
-            var call = contracts.Where(x => x.ID.OptionRight == OptionRight.Call)
-                .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + callStrikeFromAtm))
+            var call = calls.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + callStrikeFromAtm))
                 .FirstOrDefault();
-            var put = contracts.Where(x => x.ID.OptionRight == OptionRight.Put)
-                .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + putStrikeFromAtm))
+            var put = puts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + putStrikeFromAtm))
                 .FirstOrDefault();
 
             // Select the contracts
