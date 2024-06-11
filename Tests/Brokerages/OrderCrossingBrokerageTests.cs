@@ -392,7 +392,7 @@ namespace QuantConnect.Tests.Brokerages
 
                 var brokerageOrderId = _tempBrokerageOrderIds.Last();
 
-                if (!TryGetOrRemoveCrossZeroOrder(brokerageOrderId, orderEvent.Status == OrderStatus.Filled, out var leanOrder))
+                if (!TryGetOrRemoveCrossZeroOrder(brokerageOrderId, orderEvent.Status, out var leanOrder))
                 {
                     leanOrder = _orderProvider.GetOrderById(orderEvent.OrderId);
                 }

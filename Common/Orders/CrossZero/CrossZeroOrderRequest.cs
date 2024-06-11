@@ -18,17 +18,12 @@ namespace QuantConnect.Orders.CrossZero
     /// <summary>
     /// Represents a request to cross zero order.
     /// </summary>
-    public readonly struct CrossZeroOrderRequest
+    public class CrossZeroOrderRequest
     {
         /// <summary>
         /// Gets the lean order.
         /// </summary>
         public Order LeanOrder { get; }
-
-        /// <summary>
-        /// The first part of quantity of CrossZeroOrder.
-        /// </summary>
-        public decimal FirstPartQuantity { get; }
 
         /// <summary>
         /// Gets the type of the order.
@@ -41,6 +36,11 @@ namespace QuantConnect.Orders.CrossZero
         public decimal OrderQuantity { get; }
 
         /// <summary>
+        /// Gets or sets the first part of CrossZeroOrder. (optional)
+        /// </summary>
+        public CrossZeroOrderRequest FirstPartCrossZeroOrder { get; set; }
+
+        /// <summary>
         /// Gets the current holding quantity of the order's symbol.
         /// </summary>
         public decimal OrderQuantityHolding { get; }
@@ -49,14 +49,12 @@ namespace QuantConnect.Orders.CrossZero
         /// Initializes a new instance of the <see cref="CrossZeroOrderRequest"/> struct.
         /// </summary>
         /// <param name="leanOrder">The lean order.</param>
-        /// <param name="firstPartQuantity">The first part of quantity of CrossZeroOrder.</param>
         /// <param name="orderType">The type of the order.</param>
         /// <param name="orderQuantity">The quantity of the order.</param>
         /// <param name="orderQuantityHolding">The current holding quantity of the order's symbol.</param>
-        public CrossZeroOrderRequest(Order leanOrder, decimal firstPartQuantity, OrderType orderType, decimal orderQuantity, decimal orderQuantityHolding)
+        public CrossZeroOrderRequest(Order leanOrder, OrderType orderType, decimal orderQuantity, decimal orderQuantityHolding)
         {
             LeanOrder = leanOrder;
-            FirstPartQuantity = firstPartQuantity;
             OrderType = orderType;
             OrderQuantity = orderQuantity;
             OrderQuantityHolding = orderQuantityHolding;

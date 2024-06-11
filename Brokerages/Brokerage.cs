@@ -674,12 +674,13 @@ namespace QuantConnect.Brokerages
                 var (firstOrderQuantity, secondOrderQuantity) = GetQuantityOnCrossPosition(holdingQuantity, order.Quantity);
 
                 // Note: original quantity - already sell
-                var firstOrderPartRequest = new CrossZeroOrderRequest(order, 0m, order.Type, firstOrderQuantity, holdingQuantity);
+                var firstOrderPartRequest = new CrossZeroOrderRequest(order, order.Type, firstOrderQuantity, holdingQuantity);
 
                 // we actually can't place this order until the closingOrder is filled
                 // create another order for the rest, but we'll convert the order type to not be a stop
                 // but a market or a limit order                
-                var secondOrderPartRequest = new CrossZeroOrderRequest(order, firstOrderQuantity, ConvertStopCrossingOrderType(order.Type), secondOrderQuantity, 0m);
+                var secondOrderPartRequest = new CrossZeroOrderRequest(order, ConvertStopCrossingOrderType(order.Type), secondOrderQuantity, 0m)
+                { FirstPartCrossZeroOrder = firstOrderPartRequest };
 
                 _leanOrderByBrokerageCrossingOrders.AddOrUpdate(order.Id, secondOrderPartRequest);
 
@@ -725,7 +726,7 @@ namespace QuantConnect.Brokerages
             if (_leanOrderByBrokerageCrossingOrders.TryGetValue(leanOrder.Id, out var crossZeroOrderRequest))
             {
                 // If it is a CrossZeroOrder, use the first part of the quantity for the update.
-                quantity = crossZeroOrderRequest.FirstPartQuantity;
+                quantity = crossZeroOrderRequest.FirstPartCrossZeroOrder.OrderQuantity;
                 // If the quantities of the LeanOrder do not match, return false. Don't support.
                 if (crossZeroOrderRequest.LeanOrder.Quantity != leanOrder.Quantity)
             {
@@ -744,7 +745,7 @@ namespace QuantConnect.Brokerages
         /// Attempts to retrieve or remove a cross-zero order based on the brokerage order ID and its filled status.
         /// </summary>
         /// <param name="brokerageOrderId">The unique identifier of the brokerage order.</param>
-        /// <param name="isBrokerageStatusFilled">A boolean indicating whether the brokerage status is filled.</param>
+        /// <param name="leanOrderStatus">The updated status of the order received from the brokerage</param>
         /// <param name="leanOrder">
         /// When this method returns, contains the <see cref="Order"/> object associated with the given brokerage order ID,
         /// if the operation was successful; otherwise, null.
@@ -758,12 +759,12 @@ namespace QuantConnect.Brokerages
         /// If the order is filled, it is removed from the collection. If the order is partially filled,
         /// it is retrieved but not removed. If the order is not found, the method returns <c>false</c>.
         /// </remarks>
-        protected bool TryGetOrRemoveCrossZeroOrder(string brokerageOrderId, bool isBrokerageStatusFilled, out Order leanOrder)
+        protected bool TryGetOrRemoveCrossZeroOrder(string brokerageOrderId, OrderStatus leanOrderStatus, out Order leanOrder)
         {
             lock (_lockCrossZeroObject)
             {
                 // Remove the order if it has already been filled
-                if (isBrokerageStatusFilled && LeanOrderByZeroCrossBrokerageOrderId.TryRemove(brokerageOrderId, out leanOrder))
+                if (leanOrderStatus == OrderStatus.Filled && LeanOrderByZeroCrossBrokerageOrderId.TryRemove(brokerageOrderId, out leanOrder))
                 {
                     return true;
                 }
