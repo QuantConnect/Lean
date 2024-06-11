@@ -83,5 +83,16 @@ namespace QuantConnect.Securities.IndexOption
             base.UpdateConsumersMarketPrice(data);
             ((IndexOptionSymbolProperties)SymbolProperties).UpdateMarketPrice(data);
         }
+
+        /// <summary>
+        /// Updates the symbol properties of this security
+        /// </summary>
+        internal override void UpdateSymbolProperties(SymbolProperties symbolProperties)
+        {
+            if (symbolProperties != null)
+            {
+                SymbolProperties = new IndexOptionSymbolProperties(symbolProperties);
+            }
+        }
     }
 }
