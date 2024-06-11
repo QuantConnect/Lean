@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
@@ -121,6 +122,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OptionRight.Call, higherStrikeCall.ID.OptionRight);
             Assert.AreEqual(expectedExpiry, higherStrikeCall.ID.Date);
             Assert.AreEqual(higherExpectedStrike, higherStrikeCall.ID.StrikePrice);
+            Assert.Greater(higherStrikeCall.ID.StrikePrice, lowerStrikeCall.ID.StrikePrice);
         }
 
         [TestCase(100, -5, 5, 2, 95, 105, 10, false)]
@@ -156,6 +158,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OptionRight.Call, higherStrikeCall.ID.OptionRight);
             Assert.AreEqual(expectedExpiry, higherStrikeCall.ID.Date);
             Assert.AreEqual(higherExpectedStrike, higherStrikeCall.ID.StrikePrice);
+            Assert.Greater(higherStrikeCall.ID.StrikePrice, lowerStrikeCall.ID.StrikePrice);
         }
 
         [TestCase(100, 0, null)]    // equal strikes
@@ -204,6 +207,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OptionRight.Put, higherStrikePut.ID.OptionRight);
             Assert.AreEqual(expectedExpiry, higherStrikePut.ID.Date);
             Assert.AreEqual(higherExpectedStrike, higherStrikePut.ID.StrikePrice);
+            Assert.Greater(higherStrikePut.ID.StrikePrice, lowerStrikePut.ID.StrikePrice);
         }
 
         [TestCase(100, -5, 5, 2, 95, 105, 10, false)]
@@ -239,6 +243,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OptionRight.Put, higherStrikePut.ID.OptionRight);
             Assert.AreEqual(expectedExpiry, higherStrikePut.ID.Date);
             Assert.AreEqual(higherExpectedStrike, higherStrikePut.ID.StrikePrice);
+            Assert.Greater(higherStrikePut.ID.StrikePrice, lowerStrikePut.ID.StrikePrice);
         }
 
         [TestCase(100, 0, 10, 10)]      // equal expiry
@@ -284,6 +289,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OptionRight.Call, farCall.ID.OptionRight);
             Assert.AreEqual(_expiries[expectedFarExpiryCase], farCall.ID.Date);
             Assert.AreEqual(underlyingPrice + strikeFromAtm, farCall.ID.StrikePrice);
+            Assert.Greater(farCall.ID.Date, nearCall.ID.Date);
         }
 
         [TestCase(100, 0, 10, 10)]      // equal expiry
@@ -318,17 +324,18 @@ namespace QuantConnect.Tests.Common.Securities
                 return;
             }
 
-            var orderedCalls = filtered.OrderBy(x => x.ID.Date);
-            var nearCall = orderedCalls.First();
-            var farCall = orderedCalls.Last();
+            var orderedPuts = filtered.OrderBy(x => x.ID.Date);
+            var nearPut = orderedPuts.First();
+            var farPut = orderedPuts.Last();
 
-            Assert.AreEqual(OptionRight.Put, nearCall.ID.OptionRight);
-            Assert.AreEqual(_expiries[expectedNearExpiryCase], nearCall.ID.Date);
-            Assert.AreEqual(underlyingPrice + strikeFromAtm, nearCall.ID.StrikePrice);
+            Assert.AreEqual(OptionRight.Put, nearPut.ID.OptionRight);
+            Assert.AreEqual(_expiries[expectedNearExpiryCase], nearPut.ID.Date);
+            Assert.AreEqual(underlyingPrice + strikeFromAtm, nearPut.ID.StrikePrice);
 
-            Assert.AreEqual(OptionRight.Put, farCall.ID.OptionRight);
-            Assert.AreEqual(_expiries[expectedFarExpiryCase], farCall.ID.Date);
-            Assert.AreEqual(underlyingPrice + strikeFromAtm, farCall.ID.StrikePrice);
+            Assert.AreEqual(OptionRight.Put, farPut.ID.OptionRight);
+            Assert.AreEqual(_expiries[expectedFarExpiryCase], farPut.ID.Date);
+            Assert.AreEqual(underlyingPrice + strikeFromAtm, farPut.ID.StrikePrice);
+            Assert.Greater(farPut.ID.Date, nearPut.ID.Date);
         }
 
         [TestCase(100, 0, -5)]      // 0 call
@@ -371,9 +378,12 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(expectedExpiry, call.ID.Date);
             Assert.AreEqual(expectedCallStrike, call.ID.StrikePrice);
+            Assert.Greater(call.ID.StrikePrice, underlyingPrice);
 
             Assert.AreEqual(expectedExpiry, put.ID.Date);
             Assert.AreEqual(expectedPutStrike, put.ID.StrikePrice);
+            Assert.Greater(call.ID.StrikePrice, put.ID.StrikePrice);
+            Assert.Greater(underlyingPrice, put.ID.StrikePrice);
         }
 
         [TestCase(100, 100, 10, false)]
@@ -440,6 +450,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(expectedExpiry, put.ID.Date);
             Assert.AreEqual(expectedPutStrike, put.ID.StrikePrice);
+            Assert.Greater(call.ID.StrikePrice, put.ID.StrikePrice);
         }
 
         [TestCase(100, 0, 100, 10, false)]
@@ -511,10 +522,12 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expectedExpiry, atm.ID.Date);
             Assert.AreEqual(OptionRight.Call, atm.ID.OptionRight);
             Assert.AreEqual(expectedAtmStrike, atm.ID.StrikePrice);
+            Assert.Greater(atm.ID.StrikePrice, itm.ID.StrikePrice);
 
             Assert.AreEqual(expectedExpiry, otm.ID.Date);
             Assert.AreEqual(OptionRight.Call, otm.ID.OptionRight);
             Assert.AreEqual(expectedOtmStrike, otm.ID.StrikePrice);
+            Assert.Greater(otm.ID.StrikePrice, atm.ID.StrikePrice);
         }
 
         [TestCase(100, 0)]          // zero strike distance from ATM
@@ -554,16 +567,208 @@ namespace QuantConnect.Tests.Common.Securities
             var otm = filtered[2];
 
             Assert.AreEqual(expectedExpiry, itm.ID.Date);
-            Assert.AreEqual(OptionRight.Call, itm.ID.OptionRight);
+            Assert.AreEqual(OptionRight.Put, itm.ID.OptionRight);
             Assert.AreEqual(expectedItmStrike, itm.ID.StrikePrice);
 
             Assert.AreEqual(expectedExpiry, atm.ID.Date);
-            Assert.AreEqual(OptionRight.Call, atm.ID.OptionRight);
+            Assert.AreEqual(OptionRight.Put, atm.ID.OptionRight);
             Assert.AreEqual(expectedAtmStrike, atm.ID.StrikePrice);
+            Assert.Greater(itm.ID.StrikePrice, atm.ID.StrikePrice);
 
             Assert.AreEqual(expectedExpiry, otm.ID.Date);
-            Assert.AreEqual(OptionRight.Call, otm.ID.OptionRight);
+            Assert.AreEqual(OptionRight.Put, otm.ID.OptionRight);
             Assert.AreEqual(expectedOtmStrike, otm.ID.StrikePrice);
+            Assert.Greater(atm.ID.StrikePrice, otm.ID.StrikePrice);
+        }
+
+        [TestCase(100, 0)]          // zero strike distance from ATM
+        [TestCase(105, -5)]         // negative strike distance from ATM
+        public void FailsIronButterfly(decimal underlyingPrice, decimal strikeFromAtm)
+        {
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                                .IronButterfly(10, strikeFromAtm);
+
+            FailsFiltering(underlyingPrice, universeFunc);
+        }
+
+        [TestCase(100, 5, 4, 95, 100, 105, 10, false)]
+        [TestCase(105, 10, 4, 95, 105, 115, 10, false)]
+        [TestCase(99.5, 5.25, 4, 95, 100, 105, 10, false)]
+        [TestCase(100, 1, 4, 95, 100, 105, 10, false)]
+        [TestCase(1000, 5, 0, 0, 0, 0, 10, false)]              // extreme strike
+        [TestCase(1, 5, 0, 0, 0, 0, 10, false)]                 // extreme strike
+        [TestCase(100, 5, 4, 95, 100, 105, 90, true)]
+        public void FiltersIronButterfly(decimal underlyingPrice, decimal strikeFromAtm, int expectedCount, decimal expectedLowerStrike,
+            decimal expectedAtmStrike, decimal expectedHigherStrike, int daysTillExpiry, bool far = false)
+        {
+            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                                .IronButterfly(daysTillExpiry, strikeFromAtm);
+            var filtered = Filtering(underlyingPrice, universeFunc);
+
+            Assert.AreEqual(expectedCount, filtered.Count);
+            if (expectedCount == 0)
+            {
+                return;
+            }
+
+            var filteredCall = filtered.Where(x => x.ID.OptionRight == OptionRight.Call)
+                .OrderBy(x => x.ID.StrikePrice).ToList();
+            var atmCall = filteredCall[0];
+            var otmCall = filteredCall[1];
+
+            Assert.AreEqual(expectedExpiry, atmCall.ID.Date);
+            Assert.AreEqual(OptionRight.Call, atmCall.ID.OptionRight);
+            Assert.AreEqual(expectedAtmStrike, atmCall.ID.StrikePrice);
+
+            Assert.AreEqual(expectedExpiry, otmCall.ID.Date);
+            Assert.AreEqual(OptionRight.Call, otmCall.ID.OptionRight);
+            Assert.AreEqual(expectedHigherStrike, otmCall.ID.StrikePrice);
+            Assert.Greater(otmCall.ID.StrikePrice, atmCall.ID.StrikePrice);
+
+            var filteredPut = filtered.Where(x => x.ID.OptionRight == OptionRight.Put)
+                .OrderBy(x => x.ID.StrikePrice).ToList();
+            var otmPut = filteredPut[0];
+            var atmPut = filteredPut[1];
+            
+            Assert.AreEqual(expectedExpiry, otmPut.ID.Date);
+            Assert.AreEqual(OptionRight.Put, otmPut.ID.OptionRight);
+            Assert.AreEqual(expectedLowerStrike, otmPut.ID.StrikePrice);
+
+            Assert.AreEqual(expectedExpiry, atmPut.ID.Date);
+            Assert.AreEqual(OptionRight.Put, atmPut.ID.OptionRight);
+            Assert.AreEqual(expectedAtmStrike, atmPut.ID.StrikePrice);
+            Assert.Greater(atmPut.ID.StrikePrice, otmPut.ID.StrikePrice);
+        }
+
+        [TestCase(100, 0, 5)]           // zero strike distance from ATM
+        [TestCase(105, -5, 5)]          // negative strike distance from ATM
+        [TestCase(100, 1, -10)]         // negative strike distance from ATM
+        [TestCase(105, 1, 0)]           // zero strike distance from ATM
+        [TestCase(105, 5, 5)]           // far strike distance = near strike
+        [TestCase(105, 10, 5)]          // far strike distance < near strike
+        public void FailsIronCondor(decimal underlyingPrice, decimal nearStrikeFromAtm, decimal farStrikeFromAtm)
+        {
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                                .IronCondor(10, nearStrikeFromAtm, farStrikeFromAtm);
+
+            FailsFiltering(underlyingPrice, universeFunc);
+        }
+
+        [TestCase(100, 5, 10, 4, 90, 95, 105, 110, 10, false)]
+        [TestCase(105, 5, 10, 4, 95, 100, 110, 115, 10, false)]
+        [TestCase(99.5, 5.25, 10.1, 4, 90, 95, 105, 110, 10, false)]
+        [TestCase(100, 5, 6, 4, 90, 95, 105, 110, 10, false)]
+        [TestCase(100, 1, 6, 4, 90, 95, 105, 110, 10, false)]
+        [TestCase(1000, 5, 10, 0, 0, 0, 0, 0, 10, false)]              // extreme strike
+        [TestCase(1, 5, 10, 0, 0, 0, 0, 0, 10, false)]                 // extreme strike
+        [TestCase(100, 5, 4, 95, 100, 105, 90, true)]
+        public void FiltersIronCondor(decimal underlyingPrice, decimal nearStrikeFromAtm, decimal farStrikeFromAtm, int expectedCount, decimal expectedFarPutStrike,
+            decimal expectedNearPutStrike, decimal expectedNearCallStrike, decimal expectedFarCallStrike, int daysTillExpiry, bool far = false)
+        {
+            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                                .IronCondor(daysTillExpiry, nearStrikeFromAtm, farStrikeFromAtm);
+            var filtered = Filtering(underlyingPrice, universeFunc);
+
+            Assert.AreEqual(expectedCount, filtered.Count);
+            if (expectedCount == 0)
+            {
+                return;
+            }
+
+            var filteredCall = filtered.Where(x => x.ID.OptionRight == OptionRight.Call)
+                .OrderBy(x => x.ID.StrikePrice).ToList();
+            var nearCall = filteredCall[0];
+            var farCall = filteredCall[1];
+
+            Assert.AreEqual(expectedExpiry, nearCall.ID.Date);
+            Assert.AreEqual(OptionRight.Call, nearCall.ID.OptionRight);
+            Assert.AreEqual(expectedNearCallStrike, nearCall.ID.StrikePrice);
+
+            Assert.AreEqual(expectedExpiry, farCall.ID.Date);
+            Assert.AreEqual(OptionRight.Call, farCall.ID.OptionRight);
+            Assert.AreEqual(expectedFarCallStrike, farCall.ID.StrikePrice);
+            Assert.Greater(farCall.ID.StrikePrice, nearCall.ID.StrikePrice);
+
+            var filteredPut = filtered.Where(x => x.ID.OptionRight == OptionRight.Put)
+                .OrderBy(x => x.ID.StrikePrice).ToList();
+            var farPut = filteredPut[0];
+            var nearPut = filteredPut[1];
+            
+            Assert.AreEqual(expectedExpiry, farPut.ID.Date);
+            Assert.AreEqual(OptionRight.Put, farPut.ID.OptionRight);
+            Assert.AreEqual(expectedFarPutStrike, farPut.ID.StrikePrice);
+
+            Assert.AreEqual(expectedExpiry, nearPut.ID.Date);
+            Assert.AreEqual(OptionRight.Put, nearPut.ID.OptionRight);
+            Assert.AreEqual(expectedNearPutStrike, nearPut.ID.StrikePrice);
+            Assert.Greater(nearPut.ID.StrikePrice, farPut.ID.StrikePrice);
+        }
+
+        [TestCase(100, 0)]           // zero strike distance from ATM
+        [TestCase(105, -5)]          // negative strike distance from ATM
+        public void FailsBoxSpread(decimal underlyingPrice, decimal strikeFromAtm)
+        {
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                                .BoxSpread(10, strikeFromAtm);
+
+            FailsFiltering(underlyingPrice, universeFunc);
+        }
+
+        [TestCase(100, 5, 4, 95, 105, 10, false)]
+        [TestCase(105, 10, 4, 95, 115, 10, false)]
+        [TestCase(99.5, 5.25, 4, 95, 105, 10, false)]
+        [TestCase(100, 1, 4, 95, 105, 10, false)]
+        [TestCase(1000, 5, 0, 0, 0, 10, false)]                 // extreme strike
+        [TestCase(1, 5, 0, 0, 0, 10, false)]                    // extreme strike
+        [TestCase(100, 5, 4, 95, 105, 90, true)]
+        public void FiltersBoxSpread(decimal underlyingPrice, decimal strikeFromAtm, int expectedCount, decimal expectedLowerStrike,
+            decimal expectedHigherStrike, int daysTillExpiry, bool far = false)
+        {
+            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                                .BoxSpread(daysTillExpiry, strikeFromAtm);
+            var filtered = Filtering(underlyingPrice, universeFunc);
+
+            Assert.AreEqual(expectedCount, filtered.Count);
+            if (expectedCount == 0)
+            {
+                return;
+            }
+
+            var filteredCall = filtered.Where(x => x.ID.OptionRight == OptionRight.Call)
+                .OrderBy(x => x.ID.StrikePrice).ToList();
+            var itmCall = filteredCall[0];
+            var otmCall = filteredCall[1];
+
+            Assert.AreEqual(expectedExpiry, itmCall.ID.Date);
+            Assert.AreEqual(OptionRight.Call, itmCall.ID.OptionRight);
+            Assert.AreEqual(expectedLowerStrike, itmCall.ID.StrikePrice);
+
+            Assert.AreEqual(expectedExpiry, otmCall.ID.Date);
+            Assert.AreEqual(OptionRight.Call, otmCall.ID.OptionRight);
+            Assert.AreEqual(expectedHigherStrike, otmCall.ID.StrikePrice);
+            Assert.Greater(otmCall.ID.StrikePrice, itmCall.ID.StrikePrice);
+
+            var filteredPut = filtered.Where(x => x.ID.OptionRight == OptionRight.Put)
+                .OrderBy(x => x.ID.StrikePrice).ToList();
+            var otmPut = filteredPut[0];
+            var itmPut = filteredPut[1];
+            
+            Assert.AreEqual(expectedExpiry, otmPut.ID.Date);
+            Assert.AreEqual(OptionRight.Put, otmPut.ID.OptionRight);
+            Assert.AreEqual(expectedLowerStrike, otmPut.ID.StrikePrice);
+            Assert.AreEqual(itmCall.ID.StrikePrice, otmPut.ID.StrikePrice);
+
+            Assert.AreEqual(expectedExpiry, itmPut.ID.Date);
+            Assert.AreEqual(OptionRight.Put, itmPut.ID.OptionRight);
+            Assert.AreEqual(expectedHigherStrike, itmPut.ID.StrikePrice);
+            Assert.Greater(itmPut.ID.StrikePrice, otmPut.ID.StrikePrice);
+            Assert.AreEqual(otmCall.ID.StrikePrice, itmPut.ID.StrikePrice);
         }
 
         private List<Symbol> Filtering(decimal underlyingPrice, Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc)
