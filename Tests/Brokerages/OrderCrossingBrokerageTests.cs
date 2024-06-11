@@ -48,8 +48,11 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10));
-                yield return new TestCaseData(stopMarketOrder, new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.Filled });
+                var expectedOrderStatusChangedOrdering = new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.Filled };
+                yield return new TestCaseData(new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                yield return new TestCaseData(new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                yield return new TestCaseData(new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                yield return new TestCaseData(new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
             }
         }
 
@@ -120,8 +123,11 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10));
-                yield return new TestCaseData(stopMarketOrder, new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.UpdateSubmitted, OrderStatus.Filled });
+                var expectedOrderStatusChangedOrdering = new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.UpdateSubmitted, OrderStatus.Filled };
+                yield return new TestCaseData(new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                yield return new TestCaseData(new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                yield return new TestCaseData(new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                yield return new TestCaseData(new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
             }
         }
 
@@ -192,8 +198,11 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10));
-                yield return new TestCaseData(stopMarketOrder, new[] { OrderStatus.Submitted, OrderStatus.Invalid });
+                var expectedOrderStatusChangedOrdering = new[] { OrderStatus.Submitted, OrderStatus.Invalid };
+                yield return new TestCaseData(new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                yield return new TestCaseData(new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                yield return new TestCaseData(new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                yield return new TestCaseData(new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
             }
         }
 
@@ -235,8 +244,11 @@ namespace QuantConnect.Tests.Brokerages
         {
             get
             {
-                var stopMarketOrder = new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10));
-                yield return new TestCaseData(stopMarketOrder, new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.Canceled });
+                var expectedOrderStatusChangedOrdering = new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.Canceled };
+                yield return new TestCaseData(new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                yield return new TestCaseData(new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                yield return new TestCaseData(new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
+                yield return new TestCaseData(new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
             }
         }
 
