@@ -116,7 +116,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 // We exclude the OptionChainUniverse because their selection in live trading is based on having a full bar
                                 // of the underlying. In the future, option chain universe file-based selection will be improved
                                 // in order to avoid this.
-                                universeType != typeof(OptionChainUniverse) &&
+                                (universeType != typeof(OptionChainUniverse) || config.Symbol.SecurityType != SecurityType.FutureOption) &&
                                 // We exclude the UserDefinedUniverse because their selection already happens at the algorithm start time.
                                 // For instance, ETFs universe selection depends its first trigger time to be before the equity universe
                                 // (the UserDefinedUniverse), because the ETFs are EndTime-indexed and that would make their first selection
