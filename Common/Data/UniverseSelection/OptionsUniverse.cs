@@ -54,7 +54,7 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 if (!_open.HasValue)
                 {
-                    _open = GetDecimalFromCsvLine(1);
+                    _open = GetDecimalFromCsvLine(2);
                 }
 
                 return _open.Value;
@@ -70,7 +70,7 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 if (!_high.HasValue)
                 {
-                    _high = GetDecimalFromCsvLine(2);
+                    _high = GetDecimalFromCsvLine(3);
                 }
 
                 return _high.Value;
@@ -86,7 +86,7 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 if (!_low.HasValue)
                 {
-                    _low = GetDecimalFromCsvLine(3);
+                    _low = GetDecimalFromCsvLine(4);
                 }
 
                 return _low.Value;
@@ -102,7 +102,7 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 if (!_close.HasValue)
                 {
-                    _close = GetDecimalFromCsvLine(4);
+                    _close = GetDecimalFromCsvLine(5);
                 }
 
                 return _close.Value;
@@ -118,7 +118,7 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 if (!_volume.HasValue)
                 {
-                    _volume = GetDecimalFromCsvLine(5);
+                    _volume = GetDecimalFromCsvLine(6);
                 }
 
                 return _volume.Value;
@@ -128,7 +128,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Open interest value of the option
         /// </summary>
-        public decimal OpenInterest
+        public decimal? OpenInterest
         {
             get
             {
@@ -136,7 +136,7 @@ namespace QuantConnect.Data.UniverseSelection
 
                 if (!_openInterest.HasValue)
                 {
-                    _openInterest = GetDecimalFromCsvLine(6);
+                    _openInterest = GetDecimalFromCsvLine(7);
                 }
 
                 return _openInterest.Value;
@@ -146,7 +146,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Implied volatility value of the option
         /// </summary>
-        public decimal ImpliedVolatility
+        public decimal? ImpliedVolatility
         {
             get
             {
@@ -154,7 +154,7 @@ namespace QuantConnect.Data.UniverseSelection
 
                 if (!_impliedVolatility.HasValue)
                 {
-                    _impliedVolatility = GetDecimalFromCsvLine(7);
+                    _impliedVolatility = GetDecimalFromCsvLine(8);
                 }
 
                 return _impliedVolatility.Value;
@@ -164,7 +164,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Greeks values of the option
         /// </summary>
-        public Greeks Greeks
+        public Greeks? Greeks
         {
             get
             {
@@ -172,12 +172,12 @@ namespace QuantConnect.Data.UniverseSelection
 
                 if (_greeks == null)
                 {
-                    _greeks = new Greeks(GetDecimalFromCsvLine(8),
-                        GetDecimalFromCsvLine(9),
+                    _greeks = new Greeks(GetDecimalFromCsvLine(9),
                         GetDecimalFromCsvLine(10),
                         GetDecimalFromCsvLine(11),
                         GetDecimalFromCsvLine(12),
-                        GetDecimalFromCsvLine(13));
+                        GetDecimalFromCsvLine(13),
+                        0m);
                 }
 
                 return _greeks;
@@ -270,75 +270,22 @@ namespace QuantConnect.Data.UniverseSelection
 
             if (!string.IsNullOrEmpty(_underlyingSid))
             {
-                var optionSid = SecurityIdentifier.Parse($"{csv[0]}|{_underlyingSid}");
-                symbol = new Symbol(optionSid, optionSid.Symbol);
+                var optionSid = SecurityIdentifier.Parse($"{csv[0]}");
+                symbol = Symbol.CreateOption(_underlyingSymbol, optionSid.Market, optionSid.OptionStyle, optionSid.OptionRight,
+                    optionSid.StrikePrice, optionSid.Date);
             }
             else
             {
-                _underlyingSymbol = Symbol.Create(csv[0], Symbol.GetUnderlyingFromOptionType(config.SecurityType), config.Market);
-                _underlyingSid = _underlyingSymbol.ID.ToString();
+                _underlyingSid = csv[0];
+                var sid = SecurityIdentifier.Parse(_underlyingSid);
+                var symbolValue = csv[1];
+
+                _underlyingSymbol = new Symbol(sid, symbolValue);
                 symbol = _underlyingSymbol;
             }
 
             return new OptionsUniverse(date, symbol, csv);
         }
-
-        /// <summary>
-        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
-        /// each time it is called. The returned object is assumed to be time stamped in the config.ExchangeTimeZone.
-        /// </summary>
-        /// <param name="config">Subscription data config setup object</param>
-        /// <param name="stream">The data stream</param>
-        /// <param name="date">Date of the requested data</param>
-        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
-        /// <returns>Instance of the T:BaseData object generated by this line of the CSV</returns>
-        //public override BaseData Reader(SubscriptionDataConfig config, StreamReader stream, DateTime date, bool isLiveMode)
-        //{
-        //    if (stream == null)
-        //    {
-        //        return null;
-        //    }
-
-        //    if (string.IsNullOrEmpty(_underlyingSid))
-        //    {
-        //        _underlyingSymbol = Symbol.Create(stream.GetString(), Symbol.GetUnderlyingFromOptionType(config.SecurityType), config.Market);
-        //        _underlyingSid = _underlyingSymbol.ID.ToString();
-
-        //        var result = new OptionsUniverse
-        //        {
-        //            Symbol = _underlyingSymbol,
-        //            Open = stream.GetDecimal(),
-        //            High = stream.GetDecimal(),
-        //            Low = stream.GetDecimal(),
-        //            Close = stream.GetDecimal(),
-        //            Volume = stream.GetDecimal(),
-        //            Time = date,
-        //            EndTime = date.Add(config.Increment)
-        //        };
-
-        //        // Skip the rest of the line
-        //        stream.Skip(8);
-
-        //        return result;
-        //    }
-
-        //    var optionSid = SecurityIdentifier.Parse($"{stream.GetString()}|{_underlyingSid}");
-
-        //    return new OptionsUniverse
-        //    {
-        //        Symbol = new Symbol(optionSid, optionSid.Symbol),
-        //        Open = stream.GetDecimal(),
-        //        High = stream.GetDecimal(),
-        //        Low = stream.GetDecimal(),
-        //        Close = stream.GetDecimal(),
-        //        Volume = stream.GetDecimal(),
-        //        OpenInterest = stream.GetDecimal(),
-        //        ImpliedVolatility = stream.GetDecimal(),
-        //        Greeks = new Greeks(stream.GetDecimal(), stream.GetDecimal(), stream.GetDecimal(), stream.GetDecimal(), stream.GetDecimal(), stream.GetDecimal()),
-        //        Time = date,
-        //        EndTime = date.Add(config.Increment)
-        //    };
-        //}
 
         /// <summary>
         /// Creates a copy of the instance
@@ -347,6 +294,26 @@ namespace QuantConnect.Data.UniverseSelection
         public override BaseData Clone()
         {
             return new OptionsUniverse(this);
+        }
+
+        //public override Resolution DefaultResolution()
+        //{
+        //    return Resolution.Daily;
+        //}
+
+        /// <summary>
+        /// Gets the CSV string representation of this universe entry
+        /// </summary>
+        public string ToCsv()
+        {
+            var sid = Symbol.ID.ToString();
+            if (Symbol.SecurityType.IsOption())
+            {
+                sid = sid.Replace($"|{Symbol.Underlying.ID}", "", StringComparison.InvariantCultureIgnoreCase);
+            }
+
+            return $"{sid},{Symbol.Value},{Open},{High},{Low},{Close},{Volume}," +
+                $"{OpenInterest},{ImpliedVolatility},{Greeks?.Delta},{Greeks?.Gamma},{Greeks?.Vega},{Greeks?.Theta},{Greeks?.Rho}";
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

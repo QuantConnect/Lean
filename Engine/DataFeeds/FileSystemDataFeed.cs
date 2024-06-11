@@ -206,6 +206,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 factory = new BaseDataCollectionSubscriptionEnumeratorFactory(_algorithm.ObjectStore);
             }
+            else if (request.Configuration.Type == typeof(OptionsUniverse))
+            {
+                var result = factory.CreateEnumerator(request, _dataProvider);
+                return TryAddFillForwardEnumerator(request, result, request.Configuration.FillDataForward, fillForwardResolution);
+            }
             else if (request.Configuration.Type == typeof(ZipEntryName))
             {
                 // TODO: subscription should already come in correctly built
