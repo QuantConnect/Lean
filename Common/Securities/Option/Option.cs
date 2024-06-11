@@ -668,5 +668,16 @@ namespace QuantConnect.Securities.Option
                 return result.ApplyTypesFilter();
             });
         }
+
+        /// <summary>
+        /// Updates the symbol properties of this security
+        /// </summary>
+        internal override void UpdateSymbolProperties(SymbolProperties symbolProperties)
+        {
+            if (symbolProperties != null)
+            {
+                SymbolProperties = new OptionSymbolProperties(symbolProperties);
+            }
+        }
     }
 }

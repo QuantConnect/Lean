@@ -35,6 +35,8 @@ using System.Reflection;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Util;
+using QuantConnect.Securities.Option;
+using QuantConnect.Securities.IndexOption;
 
 namespace QuantConnect.Tests.Engine.RealTime
 {
@@ -200,6 +202,80 @@ namespace QuantConnect.Tests.Engine.RealTime
                     realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
                 }
             }
+        }
+
+        [TestCase(SecurityType.Equity, typeof(SymbolProperties))]
+        [TestCase(SecurityType.Forex, typeof(SymbolProperties))]
+        [TestCase(SecurityType.Future, typeof(SymbolProperties))]
+        [TestCase(SecurityType.FutureOption, typeof(SymbolProperties))]
+        [TestCase(SecurityType.Cfd, typeof(SymbolProperties))]
+        [TestCase(SecurityType.Crypto, typeof(SymbolProperties))]
+        [TestCase(SecurityType.CryptoFuture, typeof(SymbolProperties))]
+        [TestCase(SecurityType.Index, typeof(SymbolProperties))]
+        [TestCase(SecurityType.Option, typeof(OptionSymbolProperties))]
+        [TestCase(SecurityType.IndexOption, typeof(IndexOptionSymbolProperties))]
+        public void SecuritySymbolPropertiesTypeIsRespectedAfterRefresh(SecurityType securityType, Type expectedSymbolPropertiesType)
+        {
+            using var realTimeHandler = new SPDBTestLiveTradingRealTimeHandler();
+
+            var timeProvider = realTimeHandler.PublicTimeProvider;
+            timeProvider.SetCurrentTimeUtc(new DateTime(2023, 5, 30));
+
+            var algorithm = new AlgorithmStub();
+            var refreshPeriod = TimeSpan.FromDays(1);
+            algorithm.Settings.DatabasesRefreshPeriod = refreshPeriod;
+
+            var symbol = GetSymbol(securityType);
+            var security = algorithm.AddSecurity(symbol);
+
+            Assert.IsInstanceOf(expectedSymbolPropertiesType, security.SymbolProperties);
+
+            realTimeHandler.Setup(algorithm,
+                new AlgorithmNodePacket(PacketType.AlgorithmNode),
+                new BacktestingResultHandler(),
+                null,
+                new TestTimeLimitManager());
+            realTimeHandler.SpdbRefreshed.Reset();
+            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
+
+            algorithm.SetFinishedWarmingUp();
+            realTimeHandler.SetTime(timeProvider.GetUtcNow());
+
+            var previousSymbolProperties = security.SymbolProperties;
+
+            // Refresh the spdb
+            timeProvider.Advance(refreshPeriod);
+            Assert.IsTrue(realTimeHandler.SpdbRefreshed.WaitOne(1000));
+            Assert.IsTrue(realTimeHandler.SecuritySymbolPropertiesUpdated.WaitOne(1000));
+
+            // Access the symbol properties again
+            // The instance must have been changed
+            Assert.AreNotSame(security.SymbolProperties, previousSymbolProperties);
+            Assert.IsInstanceOf(expectedSymbolPropertiesType, security.SymbolProperties);
+        }
+
+        private static Symbol GetSymbol(SecurityType securityType)
+        {
+            return securityType switch
+            {
+                SecurityType.Equity => Symbols.SPY,
+                SecurityType.Forex => Symbols.USDJPY,
+                SecurityType.Future => Symbols.Future_ESZ18_Dec2018,
+                SecurityType.FutureOption => Symbol.CreateOption(
+                    Symbols.Future_ESZ18_Dec2018,
+                    Market.CME,
+                    OptionStyle.American,
+                    OptionRight.Call,
+                    4000m,
+                    new DateTime(2023, 6, 16)),
+                SecurityType.Cfd => Symbols.DE10YBEUR,
+                SecurityType.Crypto => Symbols.BTCUSD,
+                SecurityType.CryptoFuture => Symbol.Create("BTCUSD", securityType, Market.Binance),
+                SecurityType.Index => Symbols.SPX,
+                SecurityType.Option => Symbols.SPY_C_192_Feb19_2016,
+                SecurityType.IndexOption => Symbol.Create("SPX", securityType, Market.USA),
+                _ => throw new ArgumentOutOfRangeException(nameof(securityType), securityType, null)
+            };
         }
 
         private class TestTimeLimitManager : IIsolatorLimitResultProvider
