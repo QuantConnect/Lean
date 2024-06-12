@@ -311,7 +311,7 @@ namespace QuantConnect.Tests.Brokerages
 
             var order = PlaceOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
 
-            var canceledOrderStatusEvent = new ManualResetEvent(false);
+            using var canceledOrderStatusEvent = new ManualResetEvent(false);
             EventHandler<List<OrderEvent>> orderStatusCallback = (sender, fills) =>
             {
                 if (fills[0].Status == OrderStatus.Canceled)
@@ -470,7 +470,7 @@ namespace QuantConnect.Tests.Brokerages
         [Test, Explicit("This test requires reading the output and selection of a low volume security for the Brokerage")]
         public void PartialFills()
         {
-            var manualResetEvent = new ManualResetEvent(false);
+            using var manualResetEvent = new ManualResetEvent(false);
 
             var qty = 1000000m;
             var remaining = qty;
@@ -581,8 +581,8 @@ namespace QuantConnect.Tests.Brokerages
         protected Order PlaceOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled,
                                                 double secondsTimeout = 30.0, bool allowFailedSubmission = false)
         {
-            var requiredStatusEvent = new ManualResetEvent(false);
-            var desiredStatusEvent = new ManualResetEvent(false);
+            using var requiredStatusEvent = new ManualResetEvent(false);
+            using var desiredStatusEvent = new ManualResetEvent(false);
             EventHandler<List<OrderEvent>> brokerageOnOrdersStatusChanged = (sender, args) =>
             {
                 var orderEvent = args[0];
