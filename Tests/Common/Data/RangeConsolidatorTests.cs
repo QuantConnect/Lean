@@ -23,6 +23,7 @@ using System.Linq;
 
 namespace QuantConnect.Tests.Common.Data
 {
+#pragma warning disable CS0618
     [TestFixture]
     public class RangeConsolidatorTests
     {

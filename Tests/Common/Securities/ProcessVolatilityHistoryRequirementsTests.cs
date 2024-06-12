@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var algorithm = new AlgorithmStub();
             algorithm.HistoryProvider = new TestHistoryProvider();
-            var security = algorithm.AddEquity(Symbols.SPY);
+            var security = algorithm.AddEquity(Symbols.SPY.Value);
             var model = new TestVolatilityModel();
             security.VolatilityModel = model;
 

@@ -263,7 +263,7 @@ namespace QuantConnect.Tests.Common.Data
                 false,
                 subscriptionTickType);
 
-            var consolidator = new TestConsolidator(subscriptionDataType, consolidatorOutputType);
+            using var consolidator = new TestConsolidator(subscriptionDataType, consolidatorOutputType);
 
             Assert.AreEqual(expected, SubscriptionManager.IsSubscriptionValidForConsolidator(subscription, consolidator));
         }
@@ -405,7 +405,7 @@ namespace QuantConnect.Tests.Common.Data
                 false,
                 subscriptionTickType);
 
-            var consolidator = new TestConsolidator(subscriptionDataType, consolidatorOutputType);
+            using var consolidator = new TestConsolidator(subscriptionDataType, consolidatorOutputType);
             Assert.AreEqual(expected, SubscriptionManager.IsSubscriptionValidForConsolidator(subscription, consolidator, desiredTickType));
         }
 

@@ -62,7 +62,8 @@ namespace QuantConnect.Tests.Common.Securities.Options
             portfolio.CashBook.Add("EUR", EUR);
             portfolio.SetCash("USD", 0, 1);
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             securities.Add(

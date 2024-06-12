@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -239,7 +239,7 @@ namespace QuantConnect.Tests.Common.Data.Market
                 DataNormalizationMode.Raw);
 
             var quoteLine = "40560000,10000,15000,10000,15000,90,10000,15000,10000,15000,100";
-            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(quoteLine)));
+            using var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(quoteLine)));
 
             var quoteBarFromLine = (QuoteBar)factory.Reader(config, quoteLine, new DateTime(2020, 9, 22), false);
             var quoteBarFromStream = (QuoteBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
@@ -299,7 +299,7 @@ namespace QuantConnect.Tests.Common.Data.Market
                 DataNormalizationMode.Raw);
 
             var quoteLine = "40560000,1.0,1.5,1.0,1.5,90.0,1.0,1.5,1.0,1.5,100.0";
-            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(quoteLine)));
+            using var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(quoteLine)));
 
             var unscaledQuoteBarFromLine = (QuoteBar)factory.Reader(config, quoteLine, new DateTime(2020, 9, 22), false);
             var unscaledQuoteBarFromStream = (QuoteBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(typeof(OpenInterest), TickType.OpenInterest)]
         public void SubscribeSinglePerChannel(Type type, TickType tickType)
         {
-            var subscriptionManager = new FakeDataQueuehandlerSubscriptionManager((t) => t.ToString());
+            using var subscriptionManager = new FakeDataQueuehandlerSubscriptionManager((t) => t.ToString());
 
             subscriptionManager.Subscribe(GetSubscriptionDataConfig(type, Symbols.AAPL, Resolution.Minute));
 
@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void SubscribeManyPerChannel()
         {
-            var subscriptionManager = new FakeDataQueuehandlerSubscriptionManager((t) => t.ToString());
+            using var subscriptionManager = new FakeDataQueuehandlerSubscriptionManager((t) => t.ToString());
 
             for (int i = 0; i < 5; i++)
             {

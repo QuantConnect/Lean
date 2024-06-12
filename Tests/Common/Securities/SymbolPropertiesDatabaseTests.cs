@@ -132,6 +132,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void CustomEntriesStoredAndFetched()
         {
+#pragma warning disable CS0618
             var database = SymbolPropertiesDatabase.FromDataFolder();
             var ticker = "BTC";
             var properties = SymbolProperties.GetDefault("USD");
@@ -142,6 +143,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Fetch the entry to ensure we can access it with the ticker
             var fetchedProperties = database.GetSymbolProperties(Market.USA, ticker, SecurityType.Base, "USD");
             Assert.AreSame(properties, fetchedProperties);
+#pragma warning restore CS0618
         }
 
         [Test]

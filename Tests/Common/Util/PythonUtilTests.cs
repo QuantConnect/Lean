@@ -82,7 +82,8 @@ def Test2(securityType: SecurityType) -> None:
             using (Py.GIL())
             {
                 // Test Python String
-                var test1 = PythonUtil.ConvertToSymbols(new PyString("AIG"));
+                using var pyString = new PyString("AIG");
+                var test1 = PythonUtil.ConvertToSymbols(pyString);
                 Assert.IsTrue(typeof(List<Symbol>) == test1.GetType());
                 Assert.AreEqual(expected.FirstOrDefault(), test1.FirstOrDefault());
 

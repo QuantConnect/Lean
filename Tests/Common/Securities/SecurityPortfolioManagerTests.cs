@@ -1225,7 +1225,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             // Adding cash: strike price times number of shares
@@ -1298,7 +1299,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             portfolio.SetCash(0);
@@ -1368,7 +1370,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             portfolio.SetCash(0);
@@ -1439,7 +1442,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
             portfolio.SetCash(0);
 
@@ -1510,7 +1514,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             // Adding cash: strike price times number of shares
@@ -1583,7 +1588,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
             portfolio.SetCash(0);
 
@@ -1659,7 +1665,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             // Adding cash: strike price times number of shares
@@ -1733,7 +1740,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             // Adding cash: strike price times number of shares
@@ -1808,7 +1816,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             portfolio.SetCash(0);
@@ -1878,7 +1887,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             portfolio.SetCash(0);
@@ -1950,7 +1960,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
             portfolio.SetCash(0);
 
@@ -2147,7 +2158,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
             portfolio.SetCash(0);
 
@@ -2216,7 +2228,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             // (underlying price - strike price) times number of shares
@@ -2289,7 +2302,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             portfolio.SetCash(0);
@@ -2364,7 +2378,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             // (strike price - underlying price) times number of shares
@@ -2438,7 +2453,8 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             transactions.SetOrderProcessor(transactionHandler);
 
             // (strike price - underlying price) times number of shares

@@ -812,7 +812,7 @@ namespace QuantConnect.Tests.Common.Orders
         private static Order DeserializeOrder<T>(string json) where T : Order
         {
             var converter = new OrderJsonConverter();
-            var reader = new JsonTextReader(new StringReader(json));
+            using var reader = new JsonTextReader(new StringReader(json));
             var jsonSerializer = new JsonSerializer();
             jsonSerializer.Converters.Add(converter);
             var actual = jsonSerializer.Deserialize<Order>(reader);

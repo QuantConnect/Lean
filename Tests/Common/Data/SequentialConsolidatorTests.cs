@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -26,9 +26,9 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void SequentialConsolidatorsFiresAllEvents()
         {
-            var first = new IdentityDataConsolidator<IBaseData>();
-            var second = new IdentityDataConsolidator<IBaseData>();
-            var sequential = new SequentialConsolidator(first, second);
+            using var first = new IdentityDataConsolidator<IBaseData>();
+            using var second = new IdentityDataConsolidator<IBaseData>();
+            using var sequential = new SequentialConsolidator(first, second);
 
             bool firstFired = false;
             bool secondFired = false;
@@ -59,9 +59,9 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void SequentialConsolidatorAcceptsSubTypesForSecondInputType()
         {
-            var first = new IdentityDataConsolidator<TradeBar>();
-            var second = new IdentityDataConsolidator<IBaseData>();
-            var sequential = new SequentialConsolidator(first, second);
+            using var first = new IdentityDataConsolidator<TradeBar>();
+            using var second = new IdentityDataConsolidator<IBaseData>();
+            using var sequential = new SequentialConsolidator(first, second);
 
 
             bool firstFired = false;

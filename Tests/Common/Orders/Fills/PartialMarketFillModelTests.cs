@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -93,7 +93,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             algorithm.SetDateTime(referenceTimeUtc);
 
             var transactionHandler = new BacktestingTransactionHandler();
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new TestResultHandler(Console.WriteLine));
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, new TestResultHandler(Console.WriteLine));
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
