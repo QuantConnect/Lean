@@ -65,9 +65,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void SubscriptionIsDisposed()
         {
             var dataPoints = 10;
-            var enumerator = new TestDataEnumerator { MoveNextTrueCount = dataPoints };
+            using var enumerator = new TestDataEnumerator { MoveNextTrueCount = dataPoints };
 
-            var subscription = SubscriptionUtils.CreateAndScheduleWorker(
+            using var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
                     false,
                     null,
@@ -97,9 +97,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void ThrowingEnumeratorStackDisposesOfSubscription()
         {
-            var enumerator = new TestDataEnumerator { MoveNextTrueCount = 10, ThrowException = true};
+            using var enumerator = new TestDataEnumerator { MoveNextTrueCount = 10, ThrowException = true};
 
-            var subscription = SubscriptionUtils.CreateAndScheduleWorker(
+            using var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
                     false,
                     null,
@@ -145,9 +145,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 var dataPoints = 10;
 
-                var enumerator = new TestDataEnumerator {MoveNextTrueCount = dataPoints};
+                using var enumerator = new TestDataEnumerator {MoveNextTrueCount = dataPoints};
 
-                var subscription = SubscriptionUtils.CreateAndScheduleWorker(
+                using var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                     new SubscriptionRequest(
                         false,
                         null,
@@ -190,7 +190,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(factorFile);
 
-            var subscription = SubscriptionUtils.CreateAndScheduleWorker(
+            using var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
                     false,
                     null,
@@ -236,7 +236,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(factorFile);
 
-            var subscription = SubscriptionUtils.CreateAndScheduleWorker(
+            using var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
                     false,
                     null,
@@ -274,7 +274,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var totalPoints = 8;
             var time = new DateTime(2010, 1, 1);
             var enumerator = Enumerable.Range(0, totalPoints).Select(x => new Delisting { Time = time.AddHours(x) }).GetEnumerator();
-            var subscription = SubscriptionUtils.CreateAndScheduleWorker(
+            using var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
                     false,
                     null,
@@ -328,7 +328,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var result = --MoveNextTrueCount >= 0;
                 if (ThrowException)
                 {
-                    throw new Exception("TestDataEnumerator.MoveNext()");
+                    throw new RegressionTestException("TestDataEnumerator.MoveNext()");
                 }
                 return result;
             }

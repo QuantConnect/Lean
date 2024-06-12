@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void Accuracy()
         {
-            var scheduledEventService = new RealTimeScheduleEventService(RealTimeProvider.Instance);
+            using var scheduledEventService = new RealTimeScheduleEventService(RealTimeProvider.Instance);
             EventHandler handler = (_, __) =>
             {
                 Log.Trace($"{DateTime.UtcNow:O}");

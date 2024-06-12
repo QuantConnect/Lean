@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Python
                     "       pass\n");
 
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
-                var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
+                using var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
 
                 var time = DateTime.Today;
                 var period = TimeSpan.FromMinutes(1);
@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Python
                     "       self.scan_was_called = True\n");
 
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
-                var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
+                using var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
 
                 var time = DateTime.Today;
                 var period = TimeSpan.FromMinutes(1);
@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Python
                     "       pass\n");
 
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
-                var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
+                using var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
 
                 var time = DateTime.Today;
                 var period = TimeSpan.FromMinutes(1);
@@ -155,7 +155,7 @@ namespace QuantConnect.Tests.Python
                     "       pass\n");
 
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
-                var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
+                using var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
 
                 var time = DateTime.Today;
                 var period = TimeSpan.FromMinutes(1);
@@ -221,7 +221,7 @@ namespace QuantConnect.Tests.Python
 
                 var implementingClass = module.GetAttr("ImplementingClass").Invoke();
                 var customConsolidator = implementingClass.GetAttr("Consolidator");
-                var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
+                using var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
 
                 bool called;
                 implementingClass.GetAttr("EventCalled").TryConvert(out called);
@@ -275,6 +275,7 @@ namespace QuantConnect.Tests.Python
                     .Sum(x => x.Consolidators.Count);
 
                 Assert.AreEqual(0, count);
+                consolidator.Dispose();
             }
 
         }

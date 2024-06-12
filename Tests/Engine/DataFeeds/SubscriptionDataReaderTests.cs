@@ -60,12 +60,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 false,
                 false,
                 false);
+            using var testDataCacheProvider = new TestDataCacheProvider() { Data = data};
             using var dataReader = new SubscriptionDataReader(config,
                 new HistoryRequest(config, entry.ExchangeHours, start, end),
                 TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
-                new TestDataCacheProvider
-                { Data = data },
+                testDataCacheProvider,
                 TestGlobals.DataProvider,
                 null);
 
@@ -76,11 +76,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private class TestDataCacheProvider : IDataCacheProvider
         {
+            private StreamWriter _writer;
             private bool _alreadyEmitted;
 
             public string Data { get; set; }
             public void Dispose()
             {
+                _writer.DisposeSafely();
             }
             public List<string> GetZipEntries(string zipFile)
             {
@@ -96,9 +98,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _alreadyEmitted = true;
 
                 var stream = new MemoryStream();
-                var writer = new StreamWriter(stream);
-                writer.Write(Data);
-                writer.Flush();
+                _writer = new StreamWriter(stream);
+                _writer.Write(Data);
+                _writer.Flush();
                 stream.Position = 0;
                 return stream;
             }

@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var coarseSymbols = new List<Symbol> { Symbols.SPY, Symbols.AAPL, Symbols.MSFT };
 
-            var emitted = new AutoResetEvent(false);
+            using var emitted = new AutoResetEvent(false);
             var dataQueueHandler = new FuncDataQueueHandler(fdqh => Enumerable.Empty<BaseData>(), timeProvider, new AlgorithmSettings());
 
             var feed = new TestableLiveTradingDataFeed(new AlgorithmSettings(), dataQueueHandler);
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
-            var synchronizer = new TestableLiveSynchronizer(timeProvider);
+            using var synchronizer = new TestableLiveSynchronizer(timeProvider);
             synchronizer.Initialize(algorithm, algorithm.DataManager);
 
             feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             if (exceptionThrown != null)
             {
-                throw new Exception("Exception in timer: ", exceptionThrown);
+                throw new RegressionTestException("Exception in timer: ", exceptionThrown);
             }
 
             Assert.AreEqual(coarseTimes.Count, coarseUniverseSelectionCount, message: "coarseUniverseSelectionCount");

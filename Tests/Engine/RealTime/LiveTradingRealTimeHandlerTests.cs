@@ -58,8 +58,8 @@ namespace QuantConnect.Tests.Engine.RealTime
             realTimeHandler.SetTime(DateTime.UtcNow);
             // wait for the internal thread to start
             Thread.Sleep(500);
-            var scheduledEvent = new ScheduledEvent("1", new []{ Time.EndOfTime }, (_, _) => { });
-            var scheduledEvent2 = new ScheduledEvent("2", new []{ Time.EndOfTime }, (_, _) => { });
+            using var scheduledEvent = new ScheduledEvent("1", new []{ Time.EndOfTime }, (_, _) => { });
+            using var scheduledEvent2 = new ScheduledEvent("2", new []{ Time.EndOfTime }, (_, _) => { });
             Assert.DoesNotThrow(() =>
             {
                 for (var i = 0; i < 100000; i++)
@@ -283,11 +283,12 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             public void AddRefreshHoursScheduledEvent()
             {
-                Add(new ScheduledEvent("RefreshHours", new[] { new DateTime(2023, 6, 29) }, (name, triggerTime) =>
+                using var scheduledEvent = new ScheduledEvent("RefreshHours", new[] { new DateTime(2023, 6, 29) }, (name, triggerTime) =>
                 {
                     // refresh market hours from api every day
                     RefreshMarketHours((new DateTime(2023, 5, 30)).Date);
-                }));
+                });
+                Add(scheduledEvent);
                 OnSecurityUpdated.Reset();
                 SetTime(DateTime.UtcNow);
                 OnSecurityUpdated.WaitOne();

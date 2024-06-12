@@ -136,6 +136,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
+            enumerator.Dispose();
         }
 
         [Test]
@@ -188,6 +189,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
+            enumerator.Dispose();
         }
 
         [TestCase(false)]
@@ -277,6 +279,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             delisted = enumerator.Current as Delisting;
             Assert.IsNotNull(delisted);
             Assert.AreEqual(DelistingType.Delisted, delisted.Type);
+            enumerator.Dispose();
         }
 
         private class TestMapFileProvider : IMapFileProvider

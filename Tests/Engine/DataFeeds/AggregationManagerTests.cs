@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void PassesTicksStraightThrough()
         {
-            var aggregator = GetDataAggregator();
+            using var aggregator = GetDataAggregator();
             var reference = DateTime.Today;
             var config = GetSubscriptionDataConfig<Tick>(Symbols.SPY, Resolution.Tick);
 
@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void BadTicksIgnored()
         {
-            var aggregator = GetDataAggregator();
+            using var aggregator = GetDataAggregator();
             var reference = DateTime.Today;
             var config = GetSubscriptionDataConfig<Tick>(Symbols.SPY, Resolution.Tick);
 
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void TickTypeRespected()
         {
-            var aggregator = GetDataAggregator();
+            using var aggregator = GetDataAggregator();
             var reference = DateTime.Today;
             var config = GetSubscriptionDataConfig<Tick>(Symbols.SPY, Resolution.Tick);
 
@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void UnknownSubscriptionIgnored()
         {
-            var aggregator = GetDataAggregator();
+            using var aggregator = GetDataAggregator();
             var reference = DateTime.Today;
             var config = GetSubscriptionDataConfig<Tick>(Symbols.SPY, Resolution.Tick);
 
@@ -122,7 +122,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(3601, 1, typeof(TradeBar), Resolution.Hour)]
         public void CanHandleMultipleSubscriptions(int secondsToAdd, int expectedBars, Type dataType, Resolution resolution)
         {
-            var aggregator = GetDataAggregator();
+            using var aggregator = GetDataAggregator();
             var reference = DateTime.Today;
             var symbols = new[] { Symbols.SPY, Symbols.AAPL, Symbols.USDJPY, Symbols.EURUSD };
             var enumerators = new Queue<IEnumerator<BaseData>>();
@@ -159,7 +159,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(typeof(Tick), TickType.Quote, Resolution.Tick)]
         public void CanHandleBars(Type type, TickType tickType, Resolution resolution)
         {
-            var aggregator = GetDataAggregator();
+            using var aggregator = GetDataAggregator();
             var reference = DateTime.Today;
             var total = 0;
             var enumerator = aggregator.Add(GetSubscriptionDataConfig(type, Symbols.EURUSD, resolution, tickType), (s, e) => { });
@@ -198,7 +198,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var reference = DateTime.Today;
             var timeProvider = new ManualTimeProvider(reference);
-            var aggregator = GetDataAggregator(timeProvider);
+            using var aggregator = GetDataAggregator(timeProvider);
             var symbol = Symbols.AAPL;
 
             var configs = new[] {

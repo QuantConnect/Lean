@@ -85,7 +85,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test, Category("TravisExclude")]
         public void MoveNextBlocks()
         {
-            var finished = new ManualResetEvent(false);
+            using var finished = new ManualResetEvent(false);
             var enumerator = new EnqueueableEnumerator<Tick>(true);
 
             // producer
@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // consumer
             int dequeuedCount = 0;
             bool encounteredError = false;
-            var consumerTaskFinished = new ManualResetEvent(false);
+            using var consumerTaskFinished = new ManualResetEvent(false);
             Task.Run(() =>
             {
                 while (enumerator.MoveNext())

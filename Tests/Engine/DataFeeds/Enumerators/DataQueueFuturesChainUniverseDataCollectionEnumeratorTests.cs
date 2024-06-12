@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var future = algo.AddFuture(canonicalSymbol.Value);
 
             var universeSettings = new UniverseSettings(resolution, 0, true, false, TimeSpan.Zero);
-            var universe = new FuturesChainUniverse(future, universeSettings);
+            using var universe = new FuturesChainUniverse(future, universeSettings);
             return new SubscriptionRequest(true, universe, future, config, startTime, Time.EndOfTime);
         }
 

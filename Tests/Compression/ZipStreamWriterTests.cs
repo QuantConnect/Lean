@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,6 +24,7 @@ namespace QuantConnect.Tests.Compression
     [TestFixture]
     public class ZipStreamWriterTests
     {
+        #pragma warning disable CA2000
         [Test]
         public void Create()
         {

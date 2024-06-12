@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Optimizer
         [TestCase("QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy")]
         public void MaximizeNoTarget(string strategyName)
         {
-            var resetEvent = new ManualResetEvent(false);
+            using var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
                 OptimizationStrategy = strategyName,
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Optimizer
                 MaximumConcurrentBacktests = 20,
                 OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 }
             };
-            var optimizer = new FakeLeanOptimizer(packet);
+            using var optimizer = new FakeLeanOptimizer(packet);
 
             OptimizationResult result = null;
             optimizer.Ended += (s, solution) =>
@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Optimizer
         [TestCase("QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy")]
         public void MinimizeWithTarget(string strategyName)
         {
-            var resetEvent = new ManualResetEvent(false);
+            using var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
                 OptimizationStrategy = strategyName,
@@ -90,7 +90,7 @@ namespace QuantConnect.Tests.Optimizer
                 MaximumConcurrentBacktests = 20,
                 OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 }
             };
-            var optimizer = new FakeLeanOptimizer(packet);
+            using var optimizer = new FakeLeanOptimizer(packet);
 
             OptimizationResult result = null;
             optimizer.Ended += (s, solution) =>
@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Optimizer
         [Test]
         public void MaximizeGridWithConstraints()
         {
-            var resetEvent = new ManualResetEvent(false);
+            using var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
                 Criterion = new Target("Profit", new Maximization(), null),
@@ -127,7 +127,7 @@ namespace QuantConnect.Tests.Optimizer
                 },
                 MaximumConcurrentBacktests = 20
             };
-            var optimizer = new FakeLeanOptimizer(packet);
+            using var optimizer = new FakeLeanOptimizer(packet);
 
             OptimizationResult result = null;
             optimizer.Ended += (s, solution) =>
@@ -153,7 +153,7 @@ namespace QuantConnect.Tests.Optimizer
         [Test]
         public void MaximizeEulerWithConstraints()
         {
-            var resetEvent = new ManualResetEvent(false);
+            using var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
                 OptimizationStrategy = "QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy",
@@ -170,7 +170,7 @@ namespace QuantConnect.Tests.Optimizer
                 MaximumConcurrentBacktests = 20,
                 OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 }
             };
-            var optimizer = new FakeLeanOptimizer(packet);
+            using var optimizer = new FakeLeanOptimizer(packet);
 
             OptimizationResult result = null;
             optimizer.Ended += (s, solution) =>
@@ -196,7 +196,7 @@ namespace QuantConnect.Tests.Optimizer
         [Test]
         public void MinimizeWithTargetAndConstraints()
         {
-            var resetEvent = new ManualResetEvent(false);
+            using var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
                 Criterion = new Target("Profit", new Minimization(), 20),
@@ -211,7 +211,7 @@ namespace QuantConnect.Tests.Optimizer
                 },
                 MaximumConcurrentBacktests = 20
             };
-            var optimizer = new FakeLeanOptimizer(packet);
+            using var optimizer = new FakeLeanOptimizer(packet);
 
             OptimizationResult result = null;
             optimizer.Ended += (s, solution) =>
@@ -239,7 +239,7 @@ namespace QuantConnect.Tests.Optimizer
         {
             Config.Set("optimization-update-interval", 1);
             OptimizationResult result = null;
-            var resetEvent = new ManualResetEvent(false);
+            using var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
                 Criterion = new Target("Profit", new Minimization(), null),
@@ -254,7 +254,7 @@ namespace QuantConnect.Tests.Optimizer
                 },
                 MaximumConcurrentBacktests = 5
             };
-            var optimizer = new FakeLeanOptimizer(packet);
+            using var optimizer = new FakeLeanOptimizer(packet);
             // keep stats up-to-date
             int totalBacktest = optimizer.GetCurrentEstimate();
             int totalUpdates = 0;

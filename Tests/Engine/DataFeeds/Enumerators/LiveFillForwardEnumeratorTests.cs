@@ -216,6 +216,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             enqueueableEnumerator.Enqueue(secondBar);
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            enqueueableEnumerator.Dispose();
         }
 
         [TestCase(Resolution.Hour, true)]
@@ -276,6 +277,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             enqueueableEnumerator.Enqueue(secondBar);
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            enqueueableEnumerator.Dispose();
         }
 
         [TestCase(true, true)]
@@ -346,6 +348,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(secondBar.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
             Assert.AreEqual(secondBar.EndTime, fillForwardEnumerator.Current.EndTime);
+            enqueueableEnumerator.Dispose();
         }
 
         [TestCase(Resolution.Minute)]
@@ -392,6 +395,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 Assert.AreEqual(openingBar.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
                 Assert.AreEqual(timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork), fillForwardEnumerator.Current.EndTime);
             }
+
+            enqueueableEnumerator.Dispose();
         }
 
         [TestCase(Resolution.Daily, Resolution.Minute)]
@@ -434,6 +439,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 Assert.IsTrue(fillForwardEnumerator.MoveNext());
                 Assert.IsNull(fillForwardEnumerator.Current);
             }
+
+            enqueueableEnumerator.Dispose();
         }
 
         private static LiveFillForwardEnumerator GetLiveFillForwardEnumerator(ITimeProvider timeProvider, Resolution resolution,

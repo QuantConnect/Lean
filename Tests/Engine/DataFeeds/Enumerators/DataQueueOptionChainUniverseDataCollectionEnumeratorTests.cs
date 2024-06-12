@@ -167,7 +167,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             option.Underlying = underlying;
 
             var universeSettings = new UniverseSettings(resolution, 0, true, false, TimeSpan.Zero);
-            var universe = new OptionChainUniverse(option, universeSettings);
+            using var universe = new OptionChainUniverse(option, universeSettings);
             return new SubscriptionRequest(true, universe, option, config, startTime, Time.EndOfTime);
         }
 
