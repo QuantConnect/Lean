@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Util
         public void Setup()
         {
             // clear any existing output
-            using var standardOut = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
+            var standardOut = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
             Console.SetError(standardOut);
             Console.SetOut(standardOut);
         }
