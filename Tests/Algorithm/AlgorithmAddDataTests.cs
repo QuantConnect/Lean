@@ -583,11 +583,13 @@ namespace QuantConnect.Tests.Algorithm
             // self.AddData(CustomPythonData, "IBM", Resolution.Daily)
             qcAlgorithm.Initialize();
 
-            var niftyConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
+            #pragma warning disable CS0618
+            using var niftyConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
             Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("NIFTY", niftyConsolidator));
 
-            var customDataConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
+            using var customDataConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
             Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("IBM", customDataConsolidator));
+            #pragma warning restore CS0618
         }
 
         [Test]
@@ -702,6 +704,7 @@ namespace QuantConnect.Tests.Algorithm
 
             public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
+                #pragma warning disable CS0618
                 var now = DateTime.UtcNow;
                 LastResolutionRequest = requests.First().Resolution;
                 var tradeBar1 = new TradeBar(now, underlyingSymbol, 1, 1, 1, 1, 1, TimeSpan.FromDays(1));
@@ -720,6 +723,7 @@ namespace QuantConnect.Tests.Algorithm
                     new Dividends(now), new Delistings(),
                     new SymbolChangedEvents(), new MarginInterestRates(), now);
                 return new[] { slice1, slice2 };
+                #pragma warning restore CS0618
             }
         }
     }

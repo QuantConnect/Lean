@@ -35,6 +35,7 @@ using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Algorithm
 {
+#pragma warning disable CS0618
     [TestFixture]
     public class AlgorithmWarmupTests
     {
