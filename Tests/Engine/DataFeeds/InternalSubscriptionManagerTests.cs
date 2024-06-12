@@ -234,6 +234,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     else if(_algorithm.Securities["AAPL"].Price != 0 && _algorithm.Securities["IBM"].Price != 0)
                     {
+                        #pragma warning disable CS0618
                         _algorithm.SetHoldings("AAPL", 0.01);
                         _algorithm.SetHoldings("IBM", 0.01);
 
@@ -247,6 +248,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Assert.AreEqual(Symbols.IBM, orders[0].Symbol);
                         Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
                         break;
+                        #pragma warning restore CS0618
                     }
                 }
                 _algorithm.OnEndOfTimeStep();
@@ -378,7 +380,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private void SetupImpl(IDataQueueHandler dataQueueHandler, Synchronizer synchronizer, IDataAggregator dataAggregator)
         {
             _algorithm = new AlgorithmStub(createDataManager: false);
-            _dataFeed = new TestableLiveTradingDataFeed(_algorithm.Settings, dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? new AggregationManager()));
+            using var aggregationManager = new AggregationManager();
+            _dataFeed = new TestableLiveTradingDataFeed(_algorithm.Settings, dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? aggregationManager));
             _synchronizer = synchronizer ?? new LiveSynchronizer();
             _algorithm.SetStartDate(new DateTime(2022, 04, 13));
 
@@ -414,7 +417,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.Securities.SetSecurityService(securityService);
             var backtestingTransactionHandler = new BacktestingTransactionHandler();
-            backtestingTransactionHandler.Initialize(_algorithm, new PaperBrokerage(_algorithm, new LiveNodePacket()), _resultHandler);
+            using var paperBrokerage = new PaperBrokerage(_algorithm, new LiveNodePacket());
+            backtestingTransactionHandler.Initialize(_algorithm, paperBrokerage, _resultHandler);
             _algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
         }
         private class TestAggregationManager : AggregationManager

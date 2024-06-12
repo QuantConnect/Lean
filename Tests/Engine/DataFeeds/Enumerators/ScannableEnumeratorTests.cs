@@ -31,8 +31,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void PassesTicksStraightThrough()
         {
             var currentTime = new DateTime(2000, 01, 01);
+            using var identityDataConsolidator = new IdentityDataConsolidator<Tick>();
             var enumerator = new ScannableEnumerator<Tick>(
-                new IdentityDataConsolidator<Tick>(),
+                identityDataConsolidator,
                 DateTimeZone.ForOffset(Offset.FromHours(-5)),
                 new ManualTimeProvider(currentTime),
                 (s, e) => { }
@@ -63,8 +64,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var currentTime = new DateTime(2000, 01, 01);
             var available = false;
+            using var identityDataConsolidator = new IdentityDataConsolidator<Tick>();
             var enumerator = new ScannableEnumerator<Tick>(
-                new IdentityDataConsolidator<Tick>(),
+                identityDataConsolidator,
                 DateTimeZone.ForOffset(Offset.FromHours(-5)),
                 new ManualTimeProvider(currentTime),
                 (s, e) => { available = true; }
@@ -87,8 +89,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var reference = DateTime.Today;
 
-            var enumerator = new ScannableEnumerator<Data.BaseData>(
-                new TickQuoteBarConsolidator(4),
+            using var tickQuoteBarConsolidator = new TickQuoteBarConsolidator(4);
+            using var enumerator = new ScannableEnumerator<Data.BaseData>(
+                tickQuoteBarConsolidator,
                 DateTimeZone.ForOffset(Offset.FromHours(-5)),
                 new ManualTimeProvider(reference),
                 (s, e) => { }
@@ -184,8 +187,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var reference = new DateTime(2020, 2, 2, 1, 0, 0);
             var timeProvider = new ManualTimeProvider(reference);
             var dateTimeZone = DateTimeZone.ForOffset(Offset.FromHours(-5));
-            var enumerator = new ScannableEnumerator<Data.BaseData>(
-                new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1)),
+            using var tickQuoteBarConsolidator = new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1));
+            using var enumerator = new ScannableEnumerator<Data.BaseData>(
+                tickQuoteBarConsolidator,
                 dateTimeZone,
                 timeProvider,
                 (s, e) => { }
@@ -270,8 +274,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var reference = utc.ToOffset(offset.ToTimeSpan());
             var timeProvider = new ManualTimeProvider(reference.DateTime, timeZone);
 
-            var enumerator = new ScannableEnumerator<Data.BaseData>(
-                new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1)),
+            using var tickQuoteBarConsolidator = new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1));
+            using var enumerator = new ScannableEnumerator<Data.BaseData>(
+                tickQuoteBarConsolidator,
                 timeZone,
                 timeProvider,
                 (s, e) => { }

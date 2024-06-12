@@ -55,8 +55,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SecurityCache()
             );
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
-            var enumerator = new EnqueueableEnumerator<BaseData>();
-            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, enumerator, false, false);
+            using var enumerator = new EnqueueableEnumerator<BaseData>();
+            using var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, enumerator, false, false);
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
             var subscription = new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
 
@@ -143,7 +143,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void UpdatesFillForwardResolutionSuccessfullyWhenAdding()
         {
             var subscriptionColletion = new SubscriptionCollection();
-            var subscription = CreateSubscription(Resolution.Second);
+            using var subscription = CreateSubscription(Resolution.Second);
 
             subscriptionColletion.TryAdd(subscription);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
@@ -179,63 +179,63 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void UpdatesFillForwardResolutionWhenRemoving()
         {
             var subscriptionColletion = new SubscriptionCollection();
-            var subscription = CreateSubscription(Resolution.Second);
-            var subscription2 = CreateSubscription(Resolution.Daily);
+            using var subscription = CreateSubscription(Resolution.Second);
+            using var subscription2 = CreateSubscription(Resolution.Daily);
 
             subscriptionColletion.TryAdd(subscription);
             subscriptionColletion.TryAdd(subscription2);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
-            subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
+            subscriptionColletion.TryRemove(subscription.Configuration, out var outSubscription);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(1, 0, 0, 0));
-            subscriptionColletion.TryRemove(subscription2.Configuration, out subscription2);
+            subscriptionColletion.TryRemove(subscription2.Configuration, out var outSubscription2);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
-            subscription.Dispose();
-            subscription2.Dispose();
+            outSubscription.Dispose();
+            outSubscription2.Dispose();
         }
 
         [Test]
         public void FillForwardResolutionIgnoresTick()
         {
             var subscriptionColletion = new SubscriptionCollection();
-            var subscription = CreateSubscription(Resolution.Tick);
+            using var subscription = CreateSubscription(Resolution.Tick);
 
             subscriptionColletion.TryAdd(subscription);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
-            subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
+            subscriptionColletion.TryRemove(subscription.Configuration, out var outSubscription);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
-            subscription.Dispose();
+            outSubscription.Dispose();
         }
 
         [Test]
         public void FillForwardResolutionIgnoresInternalFeed()
         {
             var subscriptionColletion = new SubscriptionCollection();
-            var subscription = CreateSubscription(Resolution.Second, "AAPL", true);
+            using var subscription = CreateSubscription(Resolution.Second, "AAPL", true);
 
             subscriptionColletion.TryAdd(subscription);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
-            subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
+            subscriptionColletion.TryRemove(subscription.Configuration, out var outSubscription);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
-            subscription.Dispose();
+            outSubscription.Dispose();
         }
 
         [Test]
         public void DoesNotUpdateFillForwardResolutionWhenRemovingDuplicateResolution()
         {
             var subscriptionColletion = new SubscriptionCollection();
-            var subscription = CreateSubscription(Resolution.Second);
-            var subscription2 = CreateSubscription(Resolution.Second, "SPY");
+            using var subscription = CreateSubscription(Resolution.Second);
+            using var subscription2 = CreateSubscription(Resolution.Second, "SPY");
 
             subscriptionColletion.TryAdd(subscription);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
             subscriptionColletion.TryAdd(subscription2);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
-            subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
+            subscriptionColletion.TryRemove(subscription.Configuration, out var outSubscription);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
-            subscriptionColletion.TryRemove(subscription2.Configuration, out subscription2);
+            subscriptionColletion.TryRemove(subscription2.Configuration, out var outSubscription2);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
-            subscription.Dispose();
-            subscription2.Dispose();
+            outSubscription.Dispose();
+            outSubscription2.Dispose();
         }
 
         [Test]
@@ -404,12 +404,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             else
             {
-                throw new Exception("SecurityType not implemented");
+                throw new RegressionTestException("SecurityType not implemented");
             }
             var config = new SubscriptionDataConfig(typeof(TradeBar), _symbol, resolution, DateTimeZone.Utc, DateTimeZone.Utc, true, false, isInternalFeed, false, tickType);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
-            var enumerator = new EnqueueableEnumerator<BaseData>();
-            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, enumerator, false, false);
+            using var enumerator = new EnqueueableEnumerator<BaseData>();
+            using var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, enumerator, false, false);
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
             return new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
         }

@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
             Assert.IsTrue(File.Exists(filePath));
 
             // Open the file are verify we have the expected results
-            var zip = new ZipFile(filePath);
+            using var zip = new ZipFile(filePath);
             Assert.AreEqual(1, zip.Count);
             Assert.IsNotNull(zip.GetEntry(entryName));
 

@@ -42,7 +42,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             {
                 HistoryProvider = historyProviders
             };
-            _historyProviderWrapper.SetBrokerage(new PaperBrokerage(null, null));
+            using var paperBrokerage = new PaperBrokerage(null, null);
+            _historyProviderWrapper.SetBrokerage(paperBrokerage);
             _historyProviderWrapper.Initialize(new HistoryProviderInitializeParameters(
                 jobWithArrayHistoryProviders,
                 null,

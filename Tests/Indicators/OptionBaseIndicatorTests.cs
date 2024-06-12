@@ -273,7 +273,7 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
             algorithm.SetHistoryProvider(historyProvider);
 
             algorithm.SetDateTime(_reference);
-            algorithm.AddEquity(_underlying);
+            algorithm.AddEquity(_underlying.Value);
             algorithm.AddOptionContract(_symbol);
             algorithm.EnableAutomaticIndicatorWarmUp = true;
 

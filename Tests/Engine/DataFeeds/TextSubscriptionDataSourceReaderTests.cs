@@ -54,8 +54,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void CachedDataIsReturnedAsClone()
         {
+            using var defaultDataProvider = new DefaultDataProvider();
+            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(defaultDataProvider);
             var reader = new TextSubscriptionDataSourceReader(
-                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                singleEntryDataCacheProvider,
                 _config,
                 _initialDate,
                 false,
@@ -81,7 +83,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     true,
                     true,
                     false);
-            var dataCacheProvider = new CustomEphemeralDataCacheProvider { IsDataEphemeral = true};
+            using var dataCacheProvider = new CustomEphemeralDataCacheProvider { IsDataEphemeral = true};
             var reader = new TextSubscriptionDataSourceReader(
                 dataCacheProvider,
                 config,
@@ -111,7 +113,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 true,
                 true,
                 false);
-            var dataCacheProvider = new CustomEphemeralDataCacheProvider { IsDataEphemeral = false };
+            using var dataCacheProvider = new CustomEphemeralDataCacheProvider { IsDataEphemeral = false };
             var reader = new TextSubscriptionDataSourceReader(
                 dataCacheProvider,
                 config,
@@ -133,8 +135,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void DataIsCachedCorrectly()
         {
+            using var defaultDataProvider = new DefaultDataProvider();
+            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(defaultDataProvider);
             var reader = new TextSubscriptionDataSourceReader(
-                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                singleEntryDataCacheProvider,
                 _config,
                 _initialDate,
                 false,
@@ -164,8 +168,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void RespectsInitialDate()
         {
+            using var defaultDataProvider = new DefaultDataProvider();
+            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(defaultDataProvider);
             var reader = new TextSubscriptionDataSourceReader(
-                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                singleEntryDataCacheProvider,
                 _config,
                 _initialDate,
                 false,
@@ -177,8 +183,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             // 80 days after _initialDate
             var initialDate2 = _initialDate.AddDays(80);
+            using var defaultDataProvider2 = new DefaultDataProvider();
+            using var singleEntryDataCacheProvider2 = new SingleEntryDataCacheProvider(defaultDataProvider2);
             var reader2 = new TextSubscriptionDataSourceReader(
-                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                singleEntryDataCacheProvider2,
                 _config,
                 initialDate2,
                 false,
@@ -190,8 +198,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             // 80 days before _initialDate
             var initialDate3 = _initialDate.AddDays(-80);
+            using var defaultDataProvider3 = new DefaultDataProvider();
+            using var singleEntryDataCacheProvider3 = new SingleEntryDataCacheProvider(defaultDataProvider3);
             var reader3 = new TextSubscriptionDataSourceReader(
-                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                singleEntryDataCacheProvider3,
                 _config,
                 initialDate3,
                 false,
@@ -218,8 +228,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 true,
                 true,
                 false);
+            using var defaultDataProvider = new DefaultDataProvider();
+            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(defaultDataProvider, isDataEphemeral: false);
             var reader = new TextSubscriptionDataSourceReader(
-                new SingleEntryDataCacheProvider(new DefaultDataProvider(), isDataEphemeral: false),
+                singleEntryDataCacheProvider,
                 _config,
                 new DateTime(2013, 10, 07),
                 false,
@@ -240,7 +252,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var datas = new List<IEnumerable<BaseData>>();
 
             var factory = new TradeBar();
-            var cacheProvider = new CustomEphemeralDataCacheProvider();
+            using var cacheProvider = new CustomEphemeralDataCacheProvider();
 
             // we load SPY hour zip into memory and use it as the source of different fake tickers
             var config = new SubscriptionDataConfig(typeof(TradeBar),
@@ -306,7 +318,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var datas = new List<IEnumerable<BaseData>>();
 
             var factory = new TradeBar();
-            var cacheProvider = new CustomEphemeralDataCacheProvider();
+            using var cacheProvider = new CustomEphemeralDataCacheProvider();
 
             // we load SPY hour zip into memory and use it as the source of different fake tickers
             var config = new SubscriptionDataConfig(typeof(TradeBar),
@@ -381,6 +393,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private class CustomEphemeralDataCacheProvider : IDataCacheProvider
         {
+            public StreamWriter _writer;
             public string Data { set; get; }
             public bool IsDataEphemeral { set; get; }
 
@@ -391,9 +404,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             public Stream Fetch(string key)
             {
                 var stream = new MemoryStream();
-                var writer = new StreamWriter(stream);
-                writer.Write(Data);
-                writer.Flush();
+                _writer = new StreamWriter(stream);
+                _writer.Write(Data);
+                _writer.Flush();
                 stream.Position = 0;
                 return stream;
             }
@@ -402,6 +415,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             public void Dispose()
             {
+                _writer.Dispose();
             }
         }
     }

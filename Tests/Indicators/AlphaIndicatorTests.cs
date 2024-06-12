@@ -34,7 +34,9 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            #pragma warning disable CS0618
             var indicator = new Alpha("testAlphaIndicator", "AMZN 2T", "SPX 2T", 5);
+            #pragma warning restore CS0618
             return indicator;
         }
         [Test]

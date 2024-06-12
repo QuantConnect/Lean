@@ -1955,7 +1955,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                     Volume = 200,
                     Symbol = symbol
                 },
-                new SymbolChangedEvent(symbol, reference.AddDays(3).Date, symbol, symbol),
+                new SymbolChangedEvent(symbol, reference.AddDays(3).Date, symbol.Value, symbol.Value),
                 new TradeBar {
                     Time = reference.AddDays(2),
                     Value = 3,

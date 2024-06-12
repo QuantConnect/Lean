@@ -21,18 +21,21 @@ using System.Net;
 using NUnit.Framework;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Transport
 {
     [TestFixture]
     public class RemoteFileSubscriptionStreamReaderTests
     {
+        private TestDownloadProvider _api;
+
         [SetUp]
         public void SetUp()
         {
-            var api = new TestDownloadProvider();
-            api.Initialize(Globals.UserId, Globals.UserToken, Globals.DataFolder);
-            RemoteFileSubscriptionStreamReader.SetDownloadProvider(api);
+            _api = new TestDownloadProvider();
+            _api.Initialize(Globals.UserId, Globals.UserToken, Globals.DataFolder);
+            RemoteFileSubscriptionStreamReader.SetDownloadProvider(_api);
             TestDownloadProvider.DownloadCount = 0;
             // create cache directory if not existing
             if (!Directory.Exists(Globals.Cache))
@@ -45,6 +48,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
                 Directory.Delete(Globals.Cache, true);
                 Directory.CreateDirectory(Globals.Cache);
             }
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _api.DisposeSafely();
         }
 
         [TestCase(true)]

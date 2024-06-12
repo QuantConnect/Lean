@@ -382,11 +382,12 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             public void AddRefreshHoursScheduledEvent()
             {
-                Add(new ScheduledEvent("RefreshHours", new[] { new DateTime(2023, 6, 29) }, (name, triggerTime) =>
+                using var scheduledEvent = new ScheduledEvent("RefreshHours", new[] { new DateTime(2023, 6, 29) }, (name, triggerTime) =>
                 {
                     // refresh market hours from api every day
                     RefreshMarketHours((new DateTime(2023, 5, 30)).Date);
-                }));
+                });
+                Add(scheduledEvent);
                 OnSecurityUpdated.Reset();
                 SetTime(DateTime.UtcNow);
                 WaitUntilActive(this);

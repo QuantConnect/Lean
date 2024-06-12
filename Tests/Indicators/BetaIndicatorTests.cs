@@ -33,8 +33,10 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            #pragma warning disable CS0618
             var indicator = new Beta("testBetaIndicator", "AMZN 2T", "SPX 2T", 5);
             return indicator;
+            #pragma warning restore CS0618
         }
 
         [Test]
@@ -75,8 +77,10 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void WorksWithLowValues()
         {
+            #pragma warning disable CS0618
             Symbol = "SPX 2T";
             base.WorksWithLowValues();
+            #pragma warning restore CS0618
         }
 
         [Test]
