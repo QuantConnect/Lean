@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Log($"USDT conversion rate: {Portfolio.CashBook["USDT"].ConversionRate}");
                 Log($"BTC conversion rate: {Portfolio.CashBook["BTC"].ConversionRate}");
 
-                throw new Exception("Conversion rate is 0");
+                throw new RegressionTestException("Conversion rate is 0");
             }
 
             if (!_slow.IsReady)
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
             var btcAmount = Portfolio.CashBook["BTC"].Amount;
             if (btcAmount > 0)
             {
-                throw new Exception($"BTC holdings should be zero at the end of the algorithm, but was {btcAmount}");
+                throw new RegressionTestException($"BTC holdings should be zero at the end of the algorithm, but was {btcAmount}");
             }
         }
 

@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Because of issues with Delisting data we have to let Auxiliary data pass through GH #5207
             if (Time.Ticks - _lastSliceTime.Ticks < 1000 && data.Values.Any(x => x.DataType != MarketDataType.Auxiliary))
             {
-                throw new Exception($"Emitted two slices within 1000 ticks of each other.");
+                throw new RegressionTestException($"Emitted two slices within 1000 ticks of each other.");
             }
 
             // Store our slice time
@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_optionSymbol == null)
             {
-                throw new Exception("No option symbol was added!");
+                throw new RegressionTestException("No option symbol was added!");
             }
         }
 

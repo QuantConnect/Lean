@@ -61,12 +61,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_trainTimes.Count != 2)
             {
-                throw new Exception($"Unexpected train count: {_trainTimes.Count}");
+                throw new RegressionTestException($"Unexpected train count: {_trainTimes.Count}");
             }
             if (_trainTimes.Dequeue() != StartDate
                 || _trainTimes.Dequeue() != new DateTime(2013, 10, 13, 8, 0, 0))
             {
-                throw new Exception($"Unexpected train times!");
+                throw new RegressionTestException($"Unexpected train times!");
             }
         }
 

@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // assert underlying still there after the universe selection removed it, still used by the manually added option contract
                     if (!configs.Any())
                     {
-                        throw new Exception($"Was expecting configurations for {_twx}" +
+                        throw new RegressionTestException($"Was expecting configurations for {_twx}" +
                                             $" even after it has been deselected from coarse universe because we still have the option contract.");
                     }
                 }
@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
                         var configs = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol);
                         if (configs.Any())
                         {
-                            throw new Exception($"Unexpected configuration for {symbol} after it has been deselected from coarse universe and option contract is removed.");
+                            throw new RegressionTestException($"Unexpected configuration for {symbol} after it has been deselected from coarse universe and option contract is removed.");
                         }
                     }
                 }
@@ -94,11 +94,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_securityChanges.RemovedSecurities.Intersect(changes.RemovedSecurities).Any())
             {
-                throw new Exception($"SecurityChanges.RemovedSecurities intersect {changes.RemovedSecurities}. We expect no duplicate!");
+                throw new RegressionTestException($"SecurityChanges.RemovedSecurities intersect {changes.RemovedSecurities}. We expect no duplicate!");
             }
             if (_securityChanges.AddedSecurities.Intersect(changes.AddedSecurities).Any())
             {
-                throw new Exception($"SecurityChanges.AddedSecurities intersect {changes.RemovedSecurities}. We expect no duplicate!");
+                throw new RegressionTestException($"SecurityChanges.AddedSecurities intersect {changes.RemovedSecurities}. We expect no duplicate!");
             }
             // keep track of all removed and added securities
             _securityChanges += changes;
@@ -123,11 +123,11 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (!config.Any())
                     {
-                        throw new Exception($"Was expecting configurations for {symbol}");
+                        throw new RegressionTestException($"Was expecting configurations for {symbol}");
                     }
                     if (config.Any(dataConfig => dataConfig.DataNormalizationMode != DataNormalizationMode.Raw))
                     {
-                        throw new Exception($"Was expecting DataNormalizationMode.Raw configurations for {symbol}");
+                        throw new RegressionTestException($"Was expecting DataNormalizationMode.Raw configurations for {symbol}");
                     }
                 }
 
@@ -143,16 +143,16 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (SubscriptionManager.Subscriptions.Any(dataConfig => dataConfig.Symbol == _twx || dataConfig.Symbol.Underlying == _twx))
             {
-                throw new Exception($"Was NOT expecting any configurations for {_twx} or it's options, since we removed the contract");
+                throw new RegressionTestException($"Was NOT expecting any configurations for {_twx} or it's options, since we removed the contract");
             }
 
             if (SubscriptionManager.Subscriptions.All(dataConfig => dataConfig.Symbol != _aapl))
             {
-                throw new Exception($"Was expecting configurations for {_aapl}");
+                throw new RegressionTestException($"Was expecting configurations for {_aapl}");
             }
             if (SubscriptionManager.Subscriptions.All(dataConfig => dataConfig.Symbol.Underlying != _aapl))
             {
-                throw new Exception($"Was expecting options configurations for {_aapl}");
+                throw new RegressionTestException($"Was expecting options configurations for {_aapl}");
             }
         }
 

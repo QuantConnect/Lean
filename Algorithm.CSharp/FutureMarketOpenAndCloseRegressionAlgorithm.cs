@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedMarketClose = _beforeMarketCloseQueue.Dequeue();
             if (Time != expectedMarketClose)
             {
-                throw new Exception($"Expected market close date was {expectedMarketClose} but received {Time}");
+                throw new RegressionTestException($"Expected market close date was {expectedMarketClose} but received {Time}");
             }
         }
 
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedMarketOpen = _afterMarketOpenQueue.Dequeue();
             if (Time != expectedMarketOpen)
             {
-                throw new Exception($"Expected market open date was {expectedMarketOpen} but received {Time}");
+                throw new RegressionTestException($"Expected market open date was {expectedMarketOpen} but received {Time}");
             }
         }
 
@@ -87,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_afterMarketOpenQueue.Any() || _beforeMarketCloseQueue.Any())
             {
-                throw new Exception($"_afterMarketOpenQueue and _beforeMarketCloseQueue should be empty");
+                throw new RegressionTestException($"_afterMarketOpenQueue and _beforeMarketCloseQueue should be empty");
             }
         }
         public bool CanRunLocally { get; } = true;

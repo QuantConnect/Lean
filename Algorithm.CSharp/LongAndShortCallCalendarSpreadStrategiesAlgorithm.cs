@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (positionGroup.Positions.Count() != 2)
             {
-                throw new Exception($"Expected position group to have 2 positions. Actual: {positionGroup.Positions.Count()}");
+                throw new RegressionTestException($"Expected position group to have 2 positions. Actual: {positionGroup.Positions.Count()}");
             }
 
             var nearExpiration = _callCalendarSpread.OptionLegs.Min(leg => leg.Expiration);
@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (nearExpirationPosition.Quantity != -2)
             {
-                throw new Exception($"Expected near expiration position quantity to be -2. Actual: {nearExpirationPosition.Quantity}");
+                throw new RegressionTestException($"Expected near expiration position quantity to be -2. Actual: {nearExpirationPosition.Quantity}");
             }
 
             var farExpiration = _callCalendarSpread.OptionLegs.Max(leg => leg.Expiration);
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (farExpirationPosition.Quantity != 2)
             {
-                throw new Exception($"Expected far expiration position quantity to be 2. Actual: {farExpirationPosition.Quantity}");
+                throw new RegressionTestException($"Expected far expiration position quantity to be 2. Actual: {farExpirationPosition.Quantity}");
             }
         }
 

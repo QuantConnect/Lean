@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_countConsolidation.Count == 0 || _countConsolidation.Count != _periodConsolidation.Count)
             {
-                throw new Exception($"Unexpected consolidated data count. Period: {_periodConsolidation.Count} Count: {_countConsolidation.Count}");
+                throw new RegressionTestException($"Unexpected consolidated data count. Period: {_periodConsolidation.Count} Count: {_countConsolidation.Count}");
             }
 
             while (_countConsolidation.TryDequeue(out var countData))
@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var periodData = _periodConsolidation.Dequeue();
                 if (periodData != countData)
                 {
-                    throw new Exception($"Unexpected consolidated data. Period: '{periodData}' != Count: '{countData}'");
+                    throw new RegressionTestException($"Unexpected consolidated data. Period: '{periodData}' != Count: '{countData}'");
                 }
             }
             _periodConsolidation.Clear();

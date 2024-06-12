@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
             var consolidatorCount = SubscriptionManager.Subscriptions.Sum(s => s.Consolidators.Count);
             if (consolidatorCount > 0)
             {
-                throw new Exception($"The number of consolidator is should be zero. Actual: {consolidatorCount}");
+                throw new RegressionTestException($"The number of consolidator is should be zero. Actual: {consolidatorCount}");
             }
         }
 

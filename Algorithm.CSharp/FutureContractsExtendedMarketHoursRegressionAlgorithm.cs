@@ -71,22 +71,22 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_esRanOnRegularHours)
             {
-                throw new Exception($"Algorithm should have run on regular hours for {_es.Symbol} future, which enabled extended market hours");
+                throw new RegressionTestException($"Algorithm should have run on regular hours for {_es.Symbol} future, which enabled extended market hours");
             }
 
             if (!_esRanOnExtendedHours)
             {
-                throw new Exception($"Algorithm should have run on extended hours for {_es.Symbol} future, which enabled extended market hours");
+                throw new RegressionTestException($"Algorithm should have run on extended hours for {_es.Symbol} future, which enabled extended market hours");
             }
 
             if (!_gcRanOnRegularHours)
             {
-                throw new Exception($"Algorithm should have run on regular hours for {_gc.Symbol} future, which did not enable extended market hours");
+                throw new RegressionTestException($"Algorithm should have run on regular hours for {_gc.Symbol} future, which did not enable extended market hours");
             }
 
             if (_gcRanOnExtendedHours)
             {
-                throw new Exception($"Algorithm should have not run on extended hours for {_gc.Symbol} future, which did not enable extended market hours");
+                throw new RegressionTestException($"Algorithm should have not run on extended hours for {_gc.Symbol} future, which did not enable extended market hours");
             }
         }
 

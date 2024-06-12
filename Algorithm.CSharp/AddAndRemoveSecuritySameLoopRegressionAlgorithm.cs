@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_hasRemoved)
             {
-                throw new Exception("Expect a single call to OnData where we removed the option and underlying");
+                throw new RegressionTestException("Expect a single call to OnData where we removed the option and underlying");
             }
 
             _hasRemoved = true;
@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_hasRemoved)
             {
-                throw new Exception("We did not remove the option contract!");
+                throw new RegressionTestException("We did not remove the option contract!");
             }
         }
 

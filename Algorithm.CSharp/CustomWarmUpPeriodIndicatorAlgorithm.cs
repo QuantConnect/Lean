@@ -59,11 +59,11 @@ namespace QuantConnect.Algorithm.CSharp
             // Check _customWarmUp indicator has already been warmed up with the requested data
             if (!_customWarmUp.IsReady)
             {
-                throw new Exception("_customWarmUp indicator was expected to be ready");
+                throw new RegressionTestException("_customWarmUp indicator was expected to be ready");
             }
             if (_customWarmUp.Samples != 60)
             {
-                throw new Exception("_customWarmUp indicator was expected to have processed 60 datapoints already");
+                throw new RegressionTestException("_customWarmUp indicator was expected to have processed 60 datapoints already");
             }
 
             // Try to warm up _customNotWarmUp indicator. It's expected from LEAN to skip the warm up process
@@ -73,29 +73,29 @@ namespace QuantConnect.Algorithm.CSharp
             // Check _customNotWarmUp indicator is not ready, because the warm up process was skipped
             if (_customNotWarmUp.IsReady)
             {
-                throw new Exception("_customNotWarmUp indicator wasn't expected to be warmed up");
+                throw new RegressionTestException("_customNotWarmUp indicator wasn't expected to be warmed up");
             }
 
             WarmUpIndicator("SPY", _customNotInherit, Resolution.Minute);
             // Check _customWarmUp indicator has already been warmed up with the requested data
             if (!_customNotInherit.IsReady)
             {
-                throw new Exception("_customNotInherit indicator was expected to be ready");
+                throw new RegressionTestException("_customNotInherit indicator was expected to be ready");
             }
             if (_customNotInherit.Samples != 60)
             {
-                throw new Exception("_customNotInherit indicator was expected to have processed 60 datapoints already");
+                throw new RegressionTestException("_customNotInherit indicator was expected to have processed 60 datapoints already");
             }
 
             WarmUpIndicator("SPY", _duplicateSMA, Resolution.Minute);
             // Check _customWarmUp indicator has already been warmed up with the requested data
             if (!_duplicateSMA.IsReady)
             {
-                throw new Exception("_duplicateSMA indicator was expected to be ready");
+                throw new RegressionTestException("_duplicateSMA indicator was expected to be ready");
             }
             if (_duplicateSMA.Samples != 60)
             {
-                throw new Exception("_duplicateSMA indicator was expected to have processed 60 datapoints already");
+                throw new RegressionTestException("_duplicateSMA indicator was expected to have processed 60 datapoints already");
             }
         }
 
@@ -119,13 +119,13 @@ namespace QuantConnect.Algorithm.CSharp
                 // Check _customNotWarmUp indicator is ready when the number of samples is bigger than its period
                 if (_customNotWarmUp.IsReady != (_customNotWarmUp.Samples >= 60))
                 {
-                    throw new Exception("_customNotWarmUp indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter");
+                    throw new RegressionTestException("_customNotWarmUp indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter");
                 }
 
                 // Check their values are the same when both are ready
                 if (diff > 1e-10m && _customNotWarmUp.IsReady && _customWarmUp.IsReady) 
                 {
-                    throw new Exception($"The values of the indicators are not the same. The difference is {diff}");
+                    throw new RegressionTestException($"The values of the indicators are not the same. The difference is {diff}");
                 }
             }
         }

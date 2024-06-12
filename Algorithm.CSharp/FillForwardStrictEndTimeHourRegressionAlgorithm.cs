@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
             var expected  = string.Join(';', Compression.ReadLines(ExpectedDataFile)).ReplaceLineEndings("");
             if (expected != data.ReplaceLineEndings(";").RemoveFromEnd(";"))
             {
-                throw new Exception($"Unexpected data: \"{data}\"{Environment.NewLine}Expected: \"{expected}\"");
+                throw new RegressionTestException($"Unexpected data: \"{data}\"{Environment.NewLine}Expected: \"{expected}\"");
             }
         }
 

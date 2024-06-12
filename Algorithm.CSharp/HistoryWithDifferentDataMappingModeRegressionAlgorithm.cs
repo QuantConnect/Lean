@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (historyResults.Any(x => x.Count != historyResults[0].Count))
             {
-                throw new Exception("History results bar count did not match");
+                throw new RegressionTestException("History results bar count did not match");
             }
 
             // Check that all history results have a mapping date at some point in the history
@@ -68,13 +68,13 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (mappingsCount == 0)
                 {
-                    throw new Exception($"History results for {dataMappingModes[i]} data mapping mode did not contain any mappings");
+                    throw new RegressionTestException($"History results for {dataMappingModes[i]} data mapping mode did not contain any mappings");
                 }
             }
 
             if (mappingDates.Count < dataMappingModes.Count)
             {
-                throw new Exception($"History results should have had different mapping dates for each data mapping mode");
+                throw new RegressionTestException($"History results should have had different mapping dates for each data mapping mode");
             }
 
             // Check that close prices at each time are different for different data mapping modes
@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var closePrices = historyResults.Select(hr => hr[j].Bars.First().Value.Close).ToHashSet();
                 if (closePrices.Count != dataMappingModes.Count)
                 {
-                    throw new Exception($"History results close prices should have been different for each data mapping mode at each time");
+                    throw new RegressionTestException($"History results close prices should have been different for each data mapping mode at each time");
                 }
             }
         }

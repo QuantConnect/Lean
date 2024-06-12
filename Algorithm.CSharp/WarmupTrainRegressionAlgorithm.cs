@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if(_trained != 1)
             {
-                throw new Exception($"Unexpected train count {_trained}");
+                throw new RegressionTestException($"Unexpected train count {_trained}");
             }
         }
 

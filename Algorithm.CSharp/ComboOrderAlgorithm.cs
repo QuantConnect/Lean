@@ -117,28 +117,28 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (OrderLegs == null)
             {
-                throw new Exception("Combo order legs were not initialized");
+                throw new RegressionTestException("Combo order legs were not initialized");
             }
 
             if (Tickets.All(ticket => ticket.OrderType != OrderType.ComboMarket) && !_updated)
             {
-                throw new Exception("Combo order was not updated");
+                throw new RegressionTestException("Combo order was not updated");
             }
 
             if (FillOrderEvents.Count != ExpectedFillCount)
             {
-                throw new Exception($"Expected {ExpectedFillCount} fill order events, found {FillOrderEvents.Count}");
+                throw new RegressionTestException($"Expected {ExpectedFillCount} fill order events, found {FillOrderEvents.Count}");
             }
 
             var fillTimes = FillOrderEvents.Select(x => x.UtcTime).ToHashSet();
             if (fillTimes.Count != 1)
             {
-                throw new Exception($"Expected all fill order events to have the same time, found {string.Join(", ", fillTimes)}");
+                throw new RegressionTestException($"Expected all fill order events to have the same time, found {string.Join(", ", fillTimes)}");
             }
 
             if (FillOrderEvents.Zip(OrderLegs).Any(x => x.First.FillQuantity != x.Second.Quantity * ComboOrderQuantity))
             {
-                throw new Exception("Fill quantity does not match expected quantity for at least one order leg." +
+                throw new RegressionTestException("Fill quantity does not match expected quantity for at least one order leg." +
                     $"Expected: {string.Join(", ", OrderLegs.Select(x => x.Quantity * ComboOrderQuantity))}. " +
                     $"Actual: {string.Join(", ", FillOrderEvents.Select(x => x.FillQuantity))}");
             }

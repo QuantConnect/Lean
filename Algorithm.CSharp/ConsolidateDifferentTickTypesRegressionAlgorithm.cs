@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             _thereIsAtLeastOneQuoteTick = true;
             if (tick.TickType != TickType.Quote)
             {
-                throw new Exception($"The type of the tick should be Quote, but was {tick.TickType}");
+                throw new RegressionTestException($"The type of the tick should be Quote, but was {tick.TickType}");
             }
         }
 
@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             _thereIsAtLeastOneTradeTick = true;
             if (tick.TickType != TickType.Trade)
             {
-                throw new Exception($"The type of the tick should be Trade, but was {tick.TickType}");
+                throw new RegressionTestException($"The type of the tick should be Trade, but was {tick.TickType}");
             }
         }
 
@@ -64,12 +64,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_thereIsAtLeastOneQuoteTick)
             {
-                throw new Exception($"There should have been at least one tick in OnQuoteTick() method, but there wasn't");
+                throw new RegressionTestException($"There should have been at least one tick in OnQuoteTick() method, but there wasn't");
             }
 
             if (!_thereIsAtLeastOneTradeTick)
             {
-                throw new Exception($"There should have been at least one tick in OnTradeTick() method, but there wasn't");
+                throw new RegressionTestException($"There should have been at least one tick in OnTradeTick() method, but there wasn't");
             }
         }
 

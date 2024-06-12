@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (equity.HasData && (equity.Price < minExpectedPrice || equity.Price > maxExpectedPrice))
                 {
-                    throw new Exception($"{equity.Symbol}: Price {equity.Price} is  out of expected range [{minExpectedPrice}, {maxExpectedPrice}]");
+                    throw new RegressionTestException($"{equity.Symbol}: Price {equity.Price} is  out of expected range [{minExpectedPrice}, {maxExpectedPrice}]");
                 }
             }
         }
@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
             var subscriptions = SubscriptionManager.Subscriptions.Where(x => x.Symbol == equity.Symbol);
             if (subscriptions.Any(x => x.DataNormalizationMode != expectedNormalizationMode))
             {
-                throw new Exception($"Expected {equity.Symbol} to have data normalization mode {expectedNormalizationMode} but was {subscriptions.First().DataNormalizationMode}");
+                throw new RegressionTestException($"Expected {equity.Symbol} to have data normalization mode {expectedNormalizationMode} but was {subscriptions.First().DataNormalizationMode}");
             }
         }
 

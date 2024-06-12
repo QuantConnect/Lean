@@ -130,7 +130,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (order.Status != expectedStatus)
                 {
-                    throw new Exception($"Invalid status for order {orderId} - Expected: {expectedStatus}, actual: {order.Status}");
+                    throw new RegressionTestException($"Invalid status for order {orderId} - Expected: {expectedStatus}, actual: {order.Status}");
                 }
             }
         }

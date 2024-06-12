@@ -66,12 +66,12 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!_aapl.Holdings.Invested)
                 {
-                    throw new Exception("AAPL is not invested after split occurred");
+                    throw new RegressionTestException("AAPL is not invested after split occurred");
                 }
 
                 if (_aapl.Holdings.Price != _aapl.Price)
                 {
-                    throw new Exception($"AAPL price is not equal to AAPL holdings price. " +
+                    throw new RegressionTestException($"AAPL price is not equal to AAPL holdings price. " +
                         $"AAPL price: {_aapl.Price}, AAPL holdings price: {_aapl.Holdings.Price}");
                 }
 
@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Math.Abs(priceAfterSplit / priceBeforeSplit - splitFactor) >= 0.0001m)
             {
-                throw new Exception($"{messagePrefix}: split factor is not correct. Expected: {splitFactor}, " +
+                throw new RegressionTestException($"{messagePrefix}: split factor is not correct. Expected: {splitFactor}, " +
                     $"Actual: {priceAfterSplit / priceBeforeSplit}");
             }
         }
@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_splitOccurred)
             {
-                throw new Exception("Split did not occur");
+                throw new RegressionTestException("Split did not occur");
             }
         }
 

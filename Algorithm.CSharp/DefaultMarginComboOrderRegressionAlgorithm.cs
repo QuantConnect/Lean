@@ -33,15 +33,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (ticket.Status != OrderStatus.Invalid)
             {
-                throw new Exception($"Unexpected order status {ticket.Status} for symbol {ticket.Symbol} and quantity {ticket.Quantity}");
+                throw new RegressionTestException($"Unexpected order status {ticket.Status} for symbol {ticket.Symbol} and quantity {ticket.Quantity}");
             }
             if (Portfolio.Positions.Groups.Count != 0)
             {
-                throw new Exception($"Unexpected position group count {Portfolio.Positions.Groups.Count} for symbol {ticket.Symbol} and quantity {ticket.Quantity}");
+                throw new RegressionTestException($"Unexpected position group count {Portfolio.Positions.Groups.Count} for symbol {ticket.Symbol} and quantity {ticket.Quantity}");
             }
             if (Portfolio.TotalMarginUsed != 0)
             {
-                throw new Exception($"Unexpected margin used {Portfolio.TotalMarginUsed} for symbol {ticket.Symbol} and quantity {ticket.Quantity}");
+                throw new RegressionTestException($"Unexpected margin used {Portfolio.TotalMarginUsed} for symbol {ticket.Symbol} and quantity {ticket.Quantity}");
             }
         }
 

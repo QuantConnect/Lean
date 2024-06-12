@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_targetsTagChecked)
             {
-                throw new Exception("The portfolio targets tag were not checked");
+                throw new RegressionTestException("The portfolio targets tag were not checked");
             }
         }
 
@@ -112,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var expectedTag = CustomPortfolioConstructionModel.GeneratePortfolioTargetTag(target);
                     if (target.Tag != expectedTag)
                     {
-                        throw new Exception($"Unexpected portfolio target tag: {target.Tag} - Expected: {expectedTag}");
+                        throw new RegressionTestException($"Unexpected portfolio target tag: {target.Tag} - Expected: {expectedTag}");
                     }
                 }
 

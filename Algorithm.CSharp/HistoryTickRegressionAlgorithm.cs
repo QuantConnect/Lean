@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (quotes.Count == 0 || trades.Count == 0)
             {
-                throw new Exception("Expected to find at least one tick of each type (quote and trade)");
+                throw new RegressionTestException("Expected to find at least one tick of each type (quote and trade)");
             }
         }
 

@@ -56,17 +56,17 @@ namespace QuantConnect.Algorithm.CSharp
 
             if(allInsights.Count != 100 || Insights.GetInsights().Count != 100)
             {
-                throw new Exception($"Unexpected insight count found {allInsights.Count}");
+                throw new RegressionTestException($"Unexpected insight count found {allInsights.Count}");
             }
 
             if(allInsights.Count(insight => insight.Score.Magnitude == 0 || insight.Score.Direction == 0) < 5)
             {
-                throw new Exception($"Insights not scored!");
+                throw new RegressionTestException($"Insights not scored!");
             }
 
             if (allInsights.Count(insight => insight.Score.IsFinalScore) < 99)
             {
-                throw new Exception($"Insights not finalized!");
+                throw new RegressionTestException($"Insights not finalized!");
             }
         }
 

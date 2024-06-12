@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
                         _ticket.SubmitRequest.Response.ErrorCode != OrderResponseErrorCode.OptionOrderOnStockSplit ||
                         _ticket.SubmitRequest.Response.ErrorMessage != "Options orders are not allowed when a split occurred for its underlying stock")
                     {
-                        throw new Exception(
+                        throw new RegressionTestException(
                             $"Expected invalid order ticket with error code {nameof(OrderResponseErrorCode.OptionOrderOnStockSplit)}, " +
                             $"but received {_ticket.SubmitRequest.Response.ErrorCode} - {_ticket.SubmitRequest.Response.ErrorMessage}");
                     }
@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_ticket == null)
             {
-                throw new Exception("Expected invalid order ticket with error code OptionOrderOnStockSplit, but no order was submitted");
+                throw new RegressionTestException("Expected invalid order ticket with error code OptionOrderOnStockSplit, but no order was submitted");
             }
         }
 

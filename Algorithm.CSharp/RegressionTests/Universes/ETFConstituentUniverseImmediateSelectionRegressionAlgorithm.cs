@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!_filtered)
                 {
-                    throw new Exception("Universe selection should have been triggered right away. " +
+                    throw new RegressionTestException("Universe selection should have been triggered right away. " +
                         "The first OnData call should have had happened after the universe selection");
                 }
 
@@ -91,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_filtered)
             {
-                throw new Exception("Universe selection should have been triggered right away");
+                throw new RegressionTestException("Universe selection should have been triggered right away");
             }
 
             if (!_securitiesChanged)
@@ -99,20 +99,20 @@ namespace QuantConnect.Algorithm.CSharp
                 // Selection should be happening right on algorithm start
                 if (Time != StartDate)
                 {
-                    throw new Exception("Universe selection should have been triggered right away");
+                    throw new RegressionTestException("Universe selection should have been triggered right away");
                 }
 
                 // All constituents should have been added to the algorithm.
                 // Plus the ETF itself.
                 if (changes.AddedSecurities.Count != _constituents.Count + 1)
                 {
-                    throw new Exception($"Expected {_constituents.Count + 1} stocks to be added to the algorithm, " +
+                    throw new RegressionTestException($"Expected {_constituents.Count + 1} stocks to be added to the algorithm, " +
                         $"instead added: {changes.AddedSecurities.Count}");
                 }
 
                 if (!_constituents.All(constituent => changes.AddedSecurities.Any(security => security.Symbol == constituent)))
                 {
-                    throw new Exception("Not all constituents were added to the algorithm");
+                    throw new RegressionTestException("Not all constituents were added to the algorithm");
                 }
 
                 _securitiesChanged = true;
@@ -122,12 +122,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Ensures that all expected events were triggered by the end of the algorithm
         /// </summary>
-        /// <exception cref="Exception">An expected event didn't happen</exception>
+        /// <exception cref="RegressionTestException">An expected event didn't happen</exception>
         public override void OnEndOfAlgorithm()
         {
             if (_firstOnData || !_filtered || !_securitiesChanged)
             {
-                throw new Exception("Expected events didn't happen");
+                throw new RegressionTestException("Expected events didn't happen");
             }
         }
 

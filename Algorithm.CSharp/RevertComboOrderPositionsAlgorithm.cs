@@ -100,11 +100,11 @@ namespace QuantConnect.Algorithm.CSharp
                 var expectedQuantity = multiplier * _comboQuantity * _orderLegs.Where(leg => leg.Symbol == orderEvent.Symbol).Single().Quantity;
                 if (orderEvent.Quantity != expectedQuantity)
                 {
-                    throw new Exception($"Order event quantity {orderEvent.Quantity} does not match expected quantity {expectedQuantity}");
+                    throw new RegressionTestException($"Order event quantity {orderEvent.Quantity} does not match expected quantity {expectedQuantity}");
                 }
                 if (orderEvent.FillQuantity != expectedQuantity)
                 {
-                    throw new Exception(
+                    throw new RegressionTestException(
                         $"Order event fill quantity {orderEvent.FillQuantity} does not match expected fill quantity {expectedQuantity}");
                 }
             }
@@ -114,17 +114,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio.Invested)
             {
-                throw new Exception("Portfolio should not be invested at the end of the algorithm.");
+                throw new RegressionTestException("Portfolio should not be invested at the end of the algorithm.");
             }
 
             if (_entryOrderTickets.Count == 0 || _entryOrderTickets.Any(ticket => ticket.Status != OrderStatus.Filled))
             {
-                throw new Exception("Entry order was not filled");
+                throw new RegressionTestException("Entry order was not filled");
             }
 
             if (_exitOrderTickets.Count == 0 || _exitOrderTickets.Any(ticket => ticket.Status != OrderStatus.Filled))
             {
-                throw new Exception("Exit order was not filled");
+                throw new RegressionTestException("Exit order was not filled");
             }
 
             for (var i = 0; i < _orderLegs.Count; i++)
@@ -136,7 +136,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var expectedEntryQuantity = leg.Quantity * _comboQuantity;
                 if (entryOrderTicket.Quantity != expectedEntryQuantity || entryOrderTicket.QuantityFilled != expectedEntryQuantity)
                 {
-                    throw new Exception($@"Entry order ticket quantity and filled quantity do not match expected quantity for leg {i
+                    throw new RegressionTestException($@"Entry order ticket quantity and filled quantity do not match expected quantity for leg {i
                         }. Expected: {expectedEntryQuantity}. Actual quantity: {entryOrderTicket.Quantity}. Actual filled quantity: {
                         entryOrderTicket.QuantityFilled}");
                 }
@@ -144,7 +144,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var expectedExitQuantity = -expectedEntryQuantity;
                 if (exitOrderTicket.Quantity != expectedExitQuantity || exitOrderTicket.QuantityFilled != expectedExitQuantity)
                 {
-                    throw new Exception($@"Exit order ticket quantity and filled quantity do not match expected quantity for leg {i
+                    throw new RegressionTestException($@"Exit order ticket quantity and filled quantity do not match expected quantity for leg {i
                         }. Expected: {expectedExitQuantity}. Actual quantity: {exitOrderTicket.Quantity}. Actual filled quantity: {
                         exitOrderTicket.QuantityFilled}");
                 }

@@ -87,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var expectedQuantity = -Math.Sign(position.Quantity) * 1;
                 if (request.Quantity != expectedQuantity)
                 {
-                    throw new Exception($"Expected margin call order quantity to be {expectedQuantity} but was {request.Quantity}");
+                    throw new RegressionTestException($"Expected margin call order quantity to be {expectedQuantity} but was {request.Quantity}");
                 }
             }
         }

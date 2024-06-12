@@ -128,7 +128,7 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
             }
-            catch (Exception ex)
+            catch (RegressionTestException ex)
             {
                 Error("OnTradeBar: " + ex.Message + "\r\n\r\n" + ex.StackTrace);
             }

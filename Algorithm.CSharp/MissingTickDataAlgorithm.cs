@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (tickCountInSliceHistoryCall != tickCountInTickHistoryCall)
             {
-                throw new Exception($@"Tick count mismatch in Slice and Tick history calls: History() returned {
+                throw new RegressionTestException($@"Tick count mismatch in Slice and Tick history calls: History() returned {
                     tickCountInSliceHistoryCall} ticks, while History<Tick>() returned {tickCountInTickHistoryCall} ticks");
             }
 

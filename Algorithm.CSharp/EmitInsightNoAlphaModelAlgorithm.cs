@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (order != null)
                 {
-                    throw new Exception($"Unexpected open order {order}");
+                    throw new RegressionTestException($"Unexpected open order {order}");
                 }
 
                 EmitInsights(Insight.Price(_symbol, Resolution.Daily, 10, InsightDirection.Down));
@@ -79,12 +79,12 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (order == null)
                 {
-                    throw new Exception("Expected open order for emitted insight");
+                    throw new RegressionTestException("Expected open order for emitted insight");
                 }
                 if (order.Direction != OrderDirection.Sell
                     || order.Symbol != _symbol)
                 {
-                    throw new Exception($"Unexpected open order for emitted insight: {order}");
+                    throw new RegressionTestException($"Unexpected open order for emitted insight: {order}");
                 }
 
                 SetHoldings(_symbol, 1);
@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
             var holdings = Securities[_symbol].Holdings;
             if (Math.Sign(holdings.Quantity) != -1)
             {
-                throw new Exception("Unexpected holdings");
+                throw new RegressionTestException("Unexpected holdings");
             }
         }
 

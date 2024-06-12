@@ -51,33 +51,33 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (customTwxSymbol.Underlying != twxEquity)
             {
-                throw new Exception($"Underlying symbol for {customTwxSymbol} is not equal to TWX equity. Expected {twxEquity} got {customTwxSymbol.Underlying}");
+                throw new RegressionTestException($"Underlying symbol for {customTwxSymbol} is not equal to TWX equity. Expected {twxEquity} got {customTwxSymbol.Underlying}");
             }
             if (customGooglSymbol.Underlying != _googlEquity)
             {
-                throw new Exception($"Underlying symbol for {customGooglSymbol} is not equal to GOOGL equity. Expected {_googlEquity} got {customGooglSymbol.Underlying}");
+                throw new RegressionTestException($"Underlying symbol for {customGooglSymbol} is not equal to GOOGL equity. Expected {_googlEquity} got {customGooglSymbol.Underlying}");
             }
             if (unlinkedDataSymbol.HasUnderlying)
             {
-                throw new Exception($"Unlinked data type (no underlying) has underlying when it shouldn't. Found {unlinkedDataSymbol.Underlying}");
+                throw new RegressionTestException($"Unlinked data type (no underlying) has underlying when it shouldn't. Found {unlinkedDataSymbol.Underlying}");
             }
             if (!unlinkedDataSymbolUnderlying.HasUnderlying)
             {
-                throw new Exception("Unlinked data type (with underlying) has no underlying Symbol even though we added with Symbol");
+                throw new RegressionTestException("Unlinked data type (with underlying) has no underlying Symbol even though we added with Symbol");
             }
             if (unlinkedDataSymbolUnderlying.Underlying != unlinkedDataSymbolUnderlyingEquity)
             {
-                throw new Exception($"Unlinked data type underlying does not equal equity Symbol added. Expected {unlinkedDataSymbolUnderlyingEquity} got {unlinkedDataSymbolUnderlying.Underlying}");
+                throw new RegressionTestException($"Unlinked data type underlying does not equal equity Symbol added. Expected {unlinkedDataSymbolUnderlyingEquity} got {unlinkedDataSymbolUnderlying.Underlying}");
             }
             if (customOptionSymbol.Underlying != optionSymbol)
             {
-                throw new Exception("Option symbol not equal to custom underlying symbol. Expected {optionSymbol} got {customOptionSymbol.Underlying}");
+                throw new RegressionTestException("Option symbol not equal to custom underlying symbol. Expected {optionSymbol} got {customOptionSymbol.Underlying}");
             }
 
             try
             {
                 var customDataNoCache = AddData<LinkedData>("AAPL", Resolution.Daily);
-                throw new Exception("AAPL was found in the SymbolCache, though it should be missing");
+                throw new RegressionTestException("AAPL was found in the SymbolCache, though it should be missing");
             }
             catch (InvalidOperationException)
             {

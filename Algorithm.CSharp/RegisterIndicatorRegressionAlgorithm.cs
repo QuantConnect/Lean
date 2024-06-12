@@ -128,7 +128,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_indicators.Any(indicator => !indicator.IsReady))
             {
-                throw new Exception("All indicators should be ready");
+                throw new RegressionTestException("All indicators should be ready");
             }
             Log($"Total of {_indicators.Count} are ready");
         }

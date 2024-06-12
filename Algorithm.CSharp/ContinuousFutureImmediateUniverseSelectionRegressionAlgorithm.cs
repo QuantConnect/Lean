@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (_esSelectionTimeUtc != _startDateUtc)
                     {
-                        throw new Exception($"Expected ES universe selection to happen on algorithm start ({_startDateUtc}), " +
+                        throw new RegressionTestException($"Expected ES universe selection to happen on algorithm start ({_startDateUtc}), " +
                             $"but happened on {_esSelectionTimeUtc}");
                     }
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (_milkSelectionTimeUtc != _startDateUtc)
                     {
-                        throw new Exception($"Expected DC universe selection to happen on algorithm start ({_startDateUtc}), " +
+                        throw new RegressionTestException($"Expected DC universe selection to happen on algorithm start ({_startDateUtc}), " +
                             $"but happened on {_milkSelectionTimeUtc}");
                     }
                 }
@@ -104,14 +104,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_es.Mapped == null)
             {
-                throw new Exception("ES mapped contract is null");
+                throw new RegressionTestException("ES mapped contract is null");
             }
 
             // This is what we actually want to assert: even though Milk future time zone is 1 hour behind,
             // we should have a mapped contract right away.
             if (_milk.Mapped == null)
             {
-                throw new Exception("DC mapped contract is null");
+                throw new RegressionTestException("DC mapped contract is null");
             }
 
             Log($"{data.Time} :: ES Mapped Contract: {_es.Mapped}. DC Mapped Contract: {_milk.Mapped}");
@@ -125,34 +125,34 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (Time != StartDate)
                 {
-                    throw new Exception($"Expected OnSecuritiesChanged to be called on algorithm start ({StartDate}), " +
+                    throw new RegressionTestException($"Expected OnSecuritiesChanged to be called on algorithm start ({StartDate}), " +
                         $"but happened on {Time}");
                 }
 
                 if (_esSelectionTimeUtc == DateTime.MinValue)
                 {
-                    throw new Exception("ES universe selection time was not set");
+                    throw new RegressionTestException("ES universe selection time was not set");
                 }
 
                 if (_milkSelectionTimeUtc == DateTime.MinValue)
                 {
-                    throw new Exception("DC universe selection time was not set");
+                    throw new RegressionTestException("DC universe selection time was not set");
                 }
 
                 if (changes.AddedSecurities.Count == 0 || changes.RemovedSecurities.Count != 0)
                 {
-                    throw new Exception($"Unexpected securities changes. Expected multiple securities added and none removed " +
+                    throw new RegressionTestException($"Unexpected securities changes. Expected multiple securities added and none removed " +
                         $"but got {changes.AddedSecurities.Count} securities added and {changes.RemovedSecurities.Count} removed.");
                 }
 
                 if (!changes.AddedSecurities.Any(x => !x.Symbol.IsCanonical() && x.Symbol.Canonical == _es.Symbol))
                 {
-                    throw new Exception($"Expected to find a multiple futures for ES");
+                    throw new RegressionTestException($"Expected to find a multiple futures for ES");
                 }
 
                 if (!changes.AddedSecurities.Any(x => !x.Symbol.IsCanonical() && x.Symbol.Canonical == _milk.Symbol))
                 {
-                    throw new Exception($"Expected to find a multiple futures for DC");
+                    throw new RegressionTestException($"Expected to find a multiple futures for DC");
                 }
             }
         }
@@ -162,12 +162,12 @@ namespace QuantConnect.Algorithm.CSharp
             // Just a protection in case data is changed to make sure assertions in OnData were done.
             if (!_dataReceived)
             {
-                throw new Exception("No data was received so no checks were done");
+                throw new RegressionTestException("No data was received so no checks were done");
             }
 
             if (!_securitiesChangedEventReceived)
             {
-                throw new Exception("OnSecuritiesChanged was not called");
+                throw new RegressionTestException("OnSecuritiesChanged was not called");
             }
         }
 

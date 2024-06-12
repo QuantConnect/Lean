@@ -174,7 +174,7 @@ namespace QuantConnect.Algorithm.CSharp
                     Quit("CAPE ratio not supplied in data, exiting.");
                 }
             }
-            catch (Exception err)
+            catch (RegressionTestException err)
             {
                 Error(err.Message);
             }

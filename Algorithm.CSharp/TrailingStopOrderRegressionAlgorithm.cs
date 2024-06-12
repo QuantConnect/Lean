@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var stopPriceToMarketPriceDistance = stopPrice - low;
                 if (stopPriceToMarketPriceDistance > BuyTrailingAmount)
                 {
-                    throw new Exception($"StopPrice {stopPrice} should be within {BuyTrailingAmount} of the previous low price {low} at all times.");
+                    throw new RegressionTestException($"StopPrice {stopPrice} should be within {BuyTrailingAmount} of the previous low price {low} at all times.");
                 }
             }
 
@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var stopPriceToMarketPriceDistance = high - stopPrice;
                 if (stopPriceToMarketPriceDistance > SellTrailingAmount)
                 {
-                    throw new Exception($"StopPrice {stopPrice} should be within {SellTrailingAmount} of the previous high price {high} at all times.");
+                    throw new RegressionTestException($"StopPrice {stopPrice} should be within {SellTrailingAmount} of the previous high price {high} at all times.");
                 }
             }
 
@@ -111,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var stopPrice = _buyOrderTicket.Get(OrderField.StopPrice);
                     if (orderEvent.FillPrice < stopPrice)
                     {
-                        throw new Exception($@"Buy trailing stop order should have filled with price greater than or equal to the stop price {
+                        throw new RegressionTestException($@"Buy trailing stop order should have filled with price greater than or equal to the stop price {
                             stopPrice}. Fill price: {orderEvent.FillPrice}");
                     }
                 }
@@ -120,7 +120,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var stopPrice = _sellOrderTicket.Get(OrderField.StopPrice);
                     if (orderEvent.FillPrice > stopPrice)
                     {
-                        throw new Exception($@"Sell trailing stop order should have filled with price less than or equal to the stop price {
+                        throw new RegressionTestException($@"Sell trailing stop order should have filled with price less than or equal to the stop price {
                             stopPrice}. Fill price: {orderEvent.FillPrice}");
                     }
                 }

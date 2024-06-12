@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug($"{Time} - SymbolChanged event: {changedEvent}");
                 if (Time.TimeOfDay != TimeSpan.Zero)
                 {
-                    throw new Exception($"{Time} unexpected symbol changed event {changedEvent}!");
+                    throw new RegressionTestException($"{Time} unexpected symbol changed event {changedEvent}!");
                 }
             }
 
@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
             var futureMarginModel = buyingPowerModel as FutureMarginModel;
             if (buyingPowerModel == null)
             {
-                throw new Exception($"Invalid buying power model. Found: {buyingPowerModel.GetType().Name}. Expected: {nameof(FutureMarginModel)}");
+                throw new RegressionTestException($"Invalid buying power model. Found: {buyingPowerModel.GetType().Name}. Expected: {nameof(FutureMarginModel)}");
             }
             var initialOvernight = futureMarginModel.InitialOvernightMarginRequirement;
             var maintenanceOvernight = futureMarginModel.MaintenanceOvernightMarginRequirement;
@@ -133,7 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
                     && !addedSecurity.Symbol.IsCanonical()
                     && !addedSecurity.HasData)
                 {
-                    throw new Exception($"Future contracts did not work up as expected: {addedSecurity.Symbol}");
+                    throw new RegressionTestException($"Future contracts did not work up as expected: {addedSecurity.Symbol}");
                 }
             }
         }

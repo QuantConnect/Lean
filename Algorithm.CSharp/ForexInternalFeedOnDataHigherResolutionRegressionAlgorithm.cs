@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (lastDataTime == data.Time)
             {
-                throw new Exception("Duplicate time for current data and last data slice");
+                throw new RegressionTestException("Duplicate time for current data and last data slice");
             }
 
             lastDataTime = data.Time;
@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
                     .Single();
                 if (eurUsdSubscription.IsInternalFeed)
                 {
-                    throw new Exception("Unexpected internal 'EURUSD' Subscription");
+                    throw new RegressionTestException("Unexpected internal 'EURUSD' Subscription");
                 }
             }
             if (!_added)
@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
                     .Single();
                 if (!eurUsdSubscription.IsInternalFeed)
                 {
-                    throw new Exception("Unexpected not internal 'EURUSD' Subscription");
+                    throw new RegressionTestException("Unexpected not internal 'EURUSD' Subscription");
                 }
                 AddForex("EURUSD", Resolution.Hour);
                 _dataPointsPerSymbol.Add(_eurusd, 0);
@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (actualDataPoints != expectedDataPointsPerSymbol[symbol.Value])
                 {
-                    throw new Exception($"Data point count mismatch for symbol {symbol.Value}: expected: {expectedDataPointsPerSymbol[symbol.Value]}, actual: {actualDataPoints}");
+                    throw new RegressionTestException($"Data point count mismatch for symbol {symbol.Value}: expected: {expectedDataPointsPerSymbol[symbol.Value]}, actual: {actualDataPoints}");
                 }
             }
         }

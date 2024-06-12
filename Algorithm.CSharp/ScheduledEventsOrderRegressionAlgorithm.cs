@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // for id 0 event count should always be 0, for id 1 should be 1
                     if (aEventCount != id)
                     {
-                        throw new Exception($"Scheduled event triggered out of order: {Time} expected id {id} but was {aEventCount}");
+                        throw new RegressionTestException($"Scheduled event triggered out of order: {Time} expected id {id} but was {aEventCount}");
                     }
                     aEventCount++;
                     // goes from 0 to 1
@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // for id 0 event count should always be 0, for id 1 should be 1
                     if (bEventCount != id)
                     {
-                        throw new Exception($"Scheduled event triggered out of order: {Time} expected id {id} but was {bEventCount}");
+                        throw new RegressionTestException($"Scheduled event triggered out of order: {Time} expected id {id} but was {bEventCount}");
                     }
                     bEventCount++;
                     // goes from 0 to 1
@@ -87,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // for id 0 event count should always be 0, for id 1 should be 1
                     if (cEventCount != id)
                     {
-                        throw new Exception($"Scheduled event triggered out of order: {Time} expected id {id} but was {cEventCount}");
+                        throw new RegressionTestException($"Scheduled event triggered out of order: {Time} expected id {id} but was {cEventCount}");
                     }
                     cEventCount++;
                     // goes from 0 to 1
@@ -102,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_lastTime > Time)
             {
-                throw new Exception($"Scheduled event time shouldn't go backwards, last time {_lastTime}, current {Time}");
+                throw new RegressionTestException($"Scheduled event time shouldn't go backwards, last time {_lastTime}, current {Time}");
             }
             _lastTime = Time;
             _scheduledEventCount++;
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
             _afterMarketOpenEventCount++;
             if (Time.TimeOfDay != TimeSpan.FromHours(9.5))
             {
-                throw new Exception($"AfterMarketOpen unexpected event time: {Time}");
+                throw new RegressionTestException($"AfterMarketOpen unexpected event time: {Time}");
             }
         }
 
@@ -121,11 +121,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_scheduledEventCount != 28)
             {
-                throw new Exception($"OnEndOfAlgorithm expected scheduled events but was {_scheduledEventCount}");
+                throw new RegressionTestException($"OnEndOfAlgorithm expected scheduled events but was {_scheduledEventCount}");
             }
             if (_afterMarketOpenEventCount != 1)
             {
-                throw new Exception($"OnEndOfAlgorithm expected after MarketOpenEvent count {_afterMarketOpenEventCount}");
+                throw new RegressionTestException($"OnEndOfAlgorithm expected after MarketOpenEvent count {_afterMarketOpenEventCount}");
             }
         }
 

@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (UtcTime - lastOrderFilled < TimeSpan.FromDays(30))
                     {
-                        throw new Exception($"{UtcTime} {orderEvent.Symbol} {UtcTime - lastOrderFilled}");
+                        throw new RegressionTestException($"{UtcTime} {orderEvent.Symbol} {UtcTime - lastOrderFilled}");
                     }
                 }
                 _lastOrderFilled[orderEvent.Symbol] = UtcTime;

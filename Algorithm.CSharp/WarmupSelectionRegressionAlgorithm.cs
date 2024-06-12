@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
             var expected = _selection.Dequeue();
             if (expected != Time && !LiveMode)
             {
-                throw new Exception($"Unexpected selection time: {Time}. Expected {expected}");
+                throw new RegressionTestException($"Unexpected selection time: {Time}. Expected {expected}");
             }
 
             // sort descending by daily dollar volume

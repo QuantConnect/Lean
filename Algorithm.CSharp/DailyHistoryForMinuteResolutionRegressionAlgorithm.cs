@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
 
-                if (!hasHistory) throw new Exception($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
+                if (!hasHistory) throw new RegressionTestException($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
             }
         }
 
@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_received.Count != _symbols.Length)
             {
-                throw new Exception($"Data for symbols {string.Join(",", _symbols.Except(_received))} were not received");
+                throw new RegressionTestException($"Data for symbols {string.Join(",", _symbols.Except(_received))} were not received");
             }
         }
 

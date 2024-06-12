@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (_delisted.Contains(d.Key))
                     {
-                        throw new Exception("We shouldn't be recieving data from an already delisted symbol");
+                        throw new RegressionTestException("We shouldn't be recieving data from an already delisted symbol");
                     }
                 }
             }
@@ -58,11 +58,11 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug("CUSTOM OnEndOfAlgorithm");
                 if (_delisted.Count != 20)
                 {
-                    throw new Exception("Expecting exactly 20 delisted events");
+                    throw new RegressionTestException("Expecting exactly 20 delisted events");
                 }
                 if (_toBeDelisted.Count != 20)
                 {
-                    throw new Exception("Expecting exactly 20 to be delisted warning events");
+                    throw new RegressionTestException("Expecting exactly 20 to be delisted warning events");
                 }
             }
             base.OnEndOfAlgorithm();

@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
             var quantity = CalculateOrderQuantity(_spy, 1m);
             if (quantity % 100 != 0)
             {
-                throw new Exception($"CustomBuyingPowerModel only allow quantity that is multiple of 100 and {quantity} was found");
+                throw new RegressionTestException($"CustomBuyingPowerModel only allow quantity that is multiple of 100 and {quantity} was found");
             }
 
             // We normally get insufficient buying power model, but the

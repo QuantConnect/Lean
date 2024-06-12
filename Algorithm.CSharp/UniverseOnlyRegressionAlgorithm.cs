@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_selectionDone)
             {
-                throw new Exception("Universe selection was not performed");
+                throw new RegressionTestException("Universe selection was not performed");
             }
         }
 

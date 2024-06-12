@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (SubscriptionManager.Subscriptions.Single().Symbol != spx)
             {
-                throw new Exception($"Expected a single subscription to exist ({spx})");
+                throw new RegressionTestException($"Expected a single subscription to exist ({spx})");
             }
 
             var spxOption = QuantConnect.Symbol.CreateOption(
@@ -54,12 +54,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (SubscriptionManager.Subscriptions.Count() < 2)
             {
-                throw new Exception("Expected subscriptions for the added index option contract");
+                throw new RegressionTestException("Expected subscriptions for the added index option contract");
             }
 
             if (SubscriptionManager.Subscriptions.Count(x => x.Symbol == spx) != 1)
             {
-                throw new Exception("Expected a single subscription for the underlying index security");
+                throw new RegressionTestException("Expected a single subscription for the underlying index security");
             }
 
             // Quit early, we already tested what we wanted

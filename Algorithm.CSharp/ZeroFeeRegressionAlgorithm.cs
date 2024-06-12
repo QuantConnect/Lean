@@ -70,22 +70,22 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Portfolio.CashBook["USD"].Amount - _security.Holdings.LastTradeProfit != 100000)
             {
-                throw new Exception("Unexpected USD cash amount: " +
+                throw new RegressionTestException("Unexpected USD cash amount: " +
                     $"{Portfolio.CashBook["USD"].Amount}");
             }
             if (Portfolio.CashBook.ContainsKey(Currencies.NullCurrency))
             {
-                throw new Exception("Unexpected NullCurrency cash");
+                throw new RegressionTestException("Unexpected NullCurrency cash");
             }
 
             var closedTrade = TradeBuilder.ClosedTrades[0];
             if (closedTrade.TotalFees != 0)
             {
-                throw new Exception($"Unexpected closed trades total fees {closedTrade.TotalFees}");
+                throw new RegressionTestException($"Unexpected closed trades total fees {closedTrade.TotalFees}");
             }
             if (_security.Holdings.TotalFees != 0)
             {
-                throw new Exception($"Unexpected closed trades total fees {closedTrade.TotalFees}");
+                throw new RegressionTestException($"Unexpected closed trades total fees {closedTrade.TotalFees}");
             }
         }
 

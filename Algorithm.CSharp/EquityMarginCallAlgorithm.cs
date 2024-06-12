@@ -68,18 +68,18 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_receivedMarginCallWarning)
             {
-                throw new Exception("OnMarginCallWarning was not invoked");
+                throw new RegressionTestException("OnMarginCallWarning was not invoked");
             }
 
             if (!_onMarginCallWasCalled)
             {
-                throw new Exception("OnMarginCall was not invoked");
+                throw new RegressionTestException("OnMarginCall was not invoked");
             }
 
             // margin call orders should have liquidated part of the position and get us within the maintenance margin
             if (Portfolio.MarginRemaining < 0)
             {
-                throw new Exception("MarginRemaining should be positive");
+                throw new RegressionTestException("MarginRemaining should be positive");
             }
         }
 

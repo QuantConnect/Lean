@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Portfolio.MarginRemaining <= 0)
             {
-                throw new Exception($"Unexpected margin remaining value {Portfolio.MarginRemaining}");
+                throw new RegressionTestException($"Unexpected margin remaining value {Portfolio.MarginRemaining}");
             }
 
             // in the 2009 dip buy AAPL

@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!_beta.IsReady)
             {
-                throw new Exception("_beta indicator was expected to be ready");
+                throw new RegressionTestException("_beta indicator was expected to be ready");
             }
         }
 
@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             
             if (_beta.Current.Value < 0m || _beta.Current.Value > 2.80m)
             {
-                throw new Exception($"_beta value was expected to be between 0 and 2.80 but was {_beta.Current.Value}");
+                throw new RegressionTestException($"_beta value was expected to be between 0 and 2.80 but was {_beta.Current.Value}");
             }
 
             Log($"Beta between IBM and SPY is: {_beta.Current.Value}");

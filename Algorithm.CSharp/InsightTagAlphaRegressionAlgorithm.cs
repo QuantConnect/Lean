@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (insight.Tag != OneTimeAlphaModel.GenerateInsightTag(insight.Symbol))
                 {
-                    throw new Exception("Unexpected insight tag was emitted");
+                    throw new RegressionTestException("Unexpected insight tag was emitted");
                 }
 
                 _symbolsWithGeneratedInsights.Add(insight.Symbol);
@@ -76,22 +76,22 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_symbolsWithGeneratedInsights.Count != 3)
             {
-                throw new Exception("Unexpected number of symbols with generated insights");
+                throw new RegressionTestException("Unexpected number of symbols with generated insights");
             }
 
             if (!_symbolsWithGeneratedInsights.Contains(_spy))
             {
-                throw new Exception("SPY symbol was not found in symbols with generated insights");
+                throw new RegressionTestException("SPY symbol was not found in symbols with generated insights");
             }
 
             if (!_symbolsWithGeneratedInsights.Contains(_fb))
             {
-                throw new Exception("FB symbol was not found in symbols with generated insights");
+                throw new RegressionTestException("FB symbol was not found in symbols with generated insights");
             }
 
             if (!_symbolsWithGeneratedInsights.Contains(_ibm))
             {
-                throw new Exception("IBM symbol was not found in symbols with generated insights");
+                throw new RegressionTestException("IBM symbol was not found in symbols with generated insights");
             }
         }
 

@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var customData = slice.Get<ExampleCustomData>(_customSymbol);
                 if (customData.Price == 0)
                 {
-                    throw new Exception("Custom data price was not expected to be zero");
+                    throw new RegressionTestException("Custom data price was not expected to be zero");
                 }
 
                 _receivedData.Add(customData);
@@ -71,13 +71,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_receivedData.Count == 0)
             {
-                throw new Exception("Custom data was not fetched");
+                throw new RegressionTestException("Custom data was not fetched");
             }
 
             var customSecurity = Securities[_customSymbol];
             if (customSecurity == null || customSecurity.Price == 0)
             {
-                throw new Exception("Expected the custom security to be added to the algorithm securities and to have a price that is not zero");
+                throw new RegressionTestException("Expected the custom security to be added to the algorithm securities and to have a price that is not zero");
             }
 
             // Make sure history requests work as expected
@@ -85,14 +85,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (history.Count != _receivedData.Count)
             {
-                throw new Exception("History request returned different data than expected");
+                throw new RegressionTestException("History request returned different data than expected");
             }
 
             for (var i = 0; i < history.Count; i++)
             {
                 if (!history[i].Equals(_receivedData[i]))
                 {
-                    throw new Exception("History request returned different data than expected");
+                    throw new RegressionTestException("History request returned different data than expected");
                 }
             }
         }

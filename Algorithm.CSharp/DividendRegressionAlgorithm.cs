@@ -76,18 +76,18 @@ namespace QuantConnect.Algorithm.CSharp
             // The expected value refers to sum of dividend payments
             if (Portfolio.TotalProfit != _sumOfDividends)
             {
-                throw new Exception($"Total Profit: Expected {_sumOfDividends}. Actual {Portfolio.TotalProfit}");
+                throw new RegressionTestException($"Total Profit: Expected {_sumOfDividends}. Actual {Portfolio.TotalProfit}");
             }
 
             var expectNetProfit = _sumOfDividends - Portfolio.TotalFees;
             if (Portfolio.TotalNetProfit != expectNetProfit)
             {
-                throw new Exception($"Total Net Profit: Expected {expectNetProfit}. Actual {Portfolio.TotalNetProfit}");
+                throw new RegressionTestException($"Total Net Profit: Expected {expectNetProfit}. Actual {Portfolio.TotalNetProfit}");
             }
 
             if (Portfolio[_symbol].TotalDividends != _sumOfDividends)
             {
-                throw new Exception($"{_symbol} Total Dividends: Expected {_sumOfDividends}. Actual {Portfolio[_symbol].TotalDividends}");
+                throw new RegressionTestException($"{_symbol} Total Dividends: Expected {_sumOfDividends}. Actual {Portfolio[_symbol].TotalDividends}");
             }
         }
 

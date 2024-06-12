@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Just making sure we don't get big jumps on volatility
             if (Securities[_aapl].VolatilityModel.Volatility > 0.6m)
             {
-                throw new Exception(
+                throw new RegressionTestException(
                     "Expected volatility to stay less than 0.6 (not big jumps due to price discontinuities on splits and dividends), " +
                     $"but got {Securities[_aapl].VolatilityModel.Volatility}");
             }
@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_splitsCount == 0 || _dividendsCount == 0)
             {
-                throw new Exception($"Expected to receive at least one split and one dividend, but got {_splitsCount} splits and {_dividendsCount} dividends");
+                throw new RegressionTestException($"Expected to receive at least one split and one dividend, but got {_splitsCount} splits and {_dividendsCount} dividends");
             }
         }
 

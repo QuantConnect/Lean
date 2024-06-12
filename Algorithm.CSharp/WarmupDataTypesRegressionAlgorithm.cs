@@ -73,16 +73,16 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_equityGotTradeBars || !_cryptoGotTradeBars)
             {
-                throw new Exception("Did not get any TradeBar during warmup");
+                throw new RegressionTestException("Did not get any TradeBar during warmup");
             }
             // we don't have quote bars for equity in daily/hour resolutions
             if (!_equityGotQuoteBars && !Settings.WarmupResolution.HasValue)
             {
-                throw new Exception("Did not get any QuoteBar during warmup");
+                throw new RegressionTestException("Did not get any QuoteBar during warmup");
             }
             if (Securities["AAPL"].Price == 0)
             {
-                throw new Exception("Security added after warmup didn't get any data!");
+                throw new RegressionTestException("Security added after warmup didn't get any data!");
             }
         }
 

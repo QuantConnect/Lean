@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_spyMovingAverage == 0)
             {
-                throw new Exception("SMA was not updated.");
+                throw new RegressionTestException("SMA was not updated.");
             }
         }
 

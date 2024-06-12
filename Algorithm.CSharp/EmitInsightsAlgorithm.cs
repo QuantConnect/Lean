@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (order != null)
                 {
-                    throw new Exception($"Unexpected open order {order}");
+                    throw new RegressionTestException($"Unexpected open order {order}");
                 }
 
                 // we manually emit an insight
@@ -78,12 +78,12 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (order == null)
                 {
-                    throw new Exception("Expected open order for emitted insight");
+                    throw new RegressionTestException("Expected open order for emitted insight");
                 }
                 if (order.Direction != OrderDirection.Sell
                     || order.Symbol != _symbol)
                 {
-                    throw new Exception($"Unexpected open order for emitted insight: {order}");
+                    throw new RegressionTestException($"Unexpected open order for emitted insight: {order}");
                 }
             }
             else

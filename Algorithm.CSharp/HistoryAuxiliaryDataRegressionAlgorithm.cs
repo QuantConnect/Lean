@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             var multiSymbolRequest = History<Dividend>(new[] { aapl, spy }, 360, Resolution.Daily).ToList();
             if (multiSymbolRequest.Count != 12)
             {
-                throw new Exception($"Unexpected multi symbol dividend count: {multiSymbolRequest.Count}");
+                throw new RegressionTestException($"Unexpected multi symbol dividend count: {multiSymbolRequest.Count}");
             }
 
             // continuous future mapping requests
@@ -52,43 +52,43 @@ namespace QuantConnect.Algorithm.CSharp
                 dataMappingMode: DataMappingMode.OpenInterest).ToList();
             if (continuousFutureOpenInterestMapping.Count != 9)
             {
-                throw new Exception($"Unexpected continuous future mapping event count: {continuousFutureOpenInterestMapping.Count}");
+                throw new RegressionTestException($"Unexpected continuous future mapping event count: {continuousFutureOpenInterestMapping.Count}");
             }
             var continuousFutureLastTradingDayMapping = History<SymbolChangedEvent>(sp500, new DateTime(2007, 1, 1),new DateTime(2012, 1, 1),
                 dataMappingMode: DataMappingMode.LastTradingDay).ToList();
             if (continuousFutureLastTradingDayMapping.Count != 9)
             {
-                throw new Exception($"Unexpected continuous future mapping event count: {continuousFutureLastTradingDayMapping.Count}");
+                throw new RegressionTestException($"Unexpected continuous future mapping event count: {continuousFutureLastTradingDayMapping.Count}");
             }
             // mapping dates should be different
             if (Enumerable.SequenceEqual(continuousFutureOpenInterestMapping.Select(x => x.EndTime), continuousFutureLastTradingDayMapping.Select(x => x.EndTime)))
             {
-                throw new Exception($"Unexpected continuous future mapping times");
+                throw new RegressionTestException($"Unexpected continuous future mapping times");
             }
 
             var dividends = History<Dividend>(aapl, 360).ToList();
             if (dividends.Count != 6)
             {
-                throw new Exception($"Unexpected dividend count: {dividends.Count}");
+                throw new RegressionTestException($"Unexpected dividend count: {dividends.Count}");
             }
             foreach (var dividend in dividends)
             {
                 if (dividend.Distribution == 0)
                 {
-                    throw new Exception($"Unexpected Distribution: {dividend.Distribution}");
+                    throw new RegressionTestException($"Unexpected Distribution: {dividend.Distribution}");
                 }
             }
 
             var splits = History<Split>(aapl, 360).ToList();
             if (splits.Count != 2)
             {
-                throw new Exception($"Unexpected split count: {splits.Count}");
+                throw new RegressionTestException($"Unexpected split count: {splits.Count}");
             }
             foreach (var split in splits)
             {
                 if (split.SplitFactor == 0)
                 {
-                    throw new Exception($"Unexpected SplitFactor: {split.SplitFactor}");
+                    throw new RegressionTestException($"Unexpected SplitFactor: {split.SplitFactor}");
                 }
             }
 
@@ -96,13 +96,13 @@ namespace QuantConnect.Algorithm.CSharp
             var marginInterests = History<MarginInterestRate>(cryptoFuture, 24 * 3, Resolution.Hour).ToList();
             if (marginInterests.Count != 8)
             {
-                throw new Exception($"Unexpected margin interest count: {marginInterests.Count}");
+                throw new RegressionTestException($"Unexpected margin interest count: {marginInterests.Count}");
             }
             foreach (var marginInterest in marginInterests)
             {
                 if (marginInterest.InterestRate == 0)
                 {
-                    throw new Exception($"Unexpected InterestRate: {marginInterest.InterestRate}");
+                    throw new RegressionTestException($"Unexpected InterestRate: {marginInterest.InterestRate}");
                 }
             }
 
@@ -111,15 +111,15 @@ namespace QuantConnect.Algorithm.CSharp
             var delistings = History<Delisting>(delistedSymbol, new DateTime(2007, 5, 15), new DateTime(2007, 5, 21)).ToList();
             if (delistings.Count != 2)
             {
-                throw new Exception($"Unexpected delistings count: {delistings.Count}");
+                throw new RegressionTestException($"Unexpected delistings count: {delistings.Count}");
             }
             if (delistings[0].Type != DelistingType.Warning)
             {
-                throw new Exception($"Unexpected delisting: {delistings[0]}");
+                throw new RegressionTestException($"Unexpected delisting: {delistings[0]}");
             }
             if (delistings[1].Type != DelistingType.Delisted)
             {
-                throw new Exception($"Unexpected delisting: {delistings[1]}");
+                throw new RegressionTestException($"Unexpected delisting: {delistings[1]}");
             }
 
             // get's remapped:
@@ -129,15 +129,15 @@ namespace QuantConnect.Algorithm.CSharp
             var symbolChangedEvents = History<SymbolChangedEvent>(remappedSymbol, new DateTime(2007, 1, 1), new DateTime(2012, 1, 1)).ToList();
             if (symbolChangedEvents.Count != 2)
             {
-                throw new Exception($"Unexpected SymbolChangedEvents count: {symbolChangedEvents.Count}");
+                throw new RegressionTestException($"Unexpected SymbolChangedEvents count: {symbolChangedEvents.Count}");
             }
             if (symbolChangedEvents[0].OldSymbol != "SPWR" || symbolChangedEvents[0].NewSymbol != "SPWRA" || symbolChangedEvents[0].EndTime != new DateTime(2008, 9, 30))
             {
-                throw new Exception($"Unexpected SymbolChangedEvents: {symbolChangedEvents[0]}");
+                throw new RegressionTestException($"Unexpected SymbolChangedEvents: {symbolChangedEvents[0]}");
             }
             if (symbolChangedEvents[1].NewSymbol != "SPWR" || symbolChangedEvents[1].OldSymbol != "SPWRA" || symbolChangedEvents[1].EndTime != new DateTime(2011, 11, 17))
             {
-                throw new Exception($"Unexpected SymbolChangedEvents: {symbolChangedEvents[1]}");
+                throw new RegressionTestException($"Unexpected SymbolChangedEvents: {symbolChangedEvents[1]}");
             }
         }
 
