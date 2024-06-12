@@ -187,7 +187,7 @@ namespace QuantConnect.Tests.Common.Data.Market
                 true,
                 DataNormalizationMode.Raw);
 
-            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tickLine)));
+            using var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tickLine)));
 
             var tickFromLine = (Tick)factory.Reader(config, tickLine, new DateTime(2020, 9, 22), false);
             var tickFromStream = (Tick)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
@@ -229,7 +229,7 @@ namespace QuantConnect.Tests.Common.Data.Market
                 true,
                 DataNormalizationMode.Raw);
 
-            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tickLine)));
+            using var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tickLine)));
 
             var tickFromLine = (Tick)factory.Reader(config, tickLine, new DateTime(2020, 9, 22), false);
             var tickFromStream = (Tick)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);

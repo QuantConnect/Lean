@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         public void TimeTriggeredDoesNotReturnPastTimes()
         {
             // Schedule our universe for 12PM each day
-            var universe = new ScheduledUniverse( 
+            using var universe = new ScheduledUniverse( 
                 _dateRules.EveryDay(), _timeRules.At(12, 0),
                 (time =>
                 {
@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             var dateRule = _dateRules.EveryDay();
             var timeRule = _timeRules.At(12, 0);
 
-            var universe = new ScheduledUniverse(dateRule, timeRule, time =>
+            using var universe = new ScheduledUniverse(dateRule, timeRule, time =>
             {
                 return new List<Symbol>();
             });

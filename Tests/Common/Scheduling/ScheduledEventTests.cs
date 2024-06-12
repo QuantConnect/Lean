@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var fired = false;
             var time = new DateTime(2015, 08, 11, 10, 30, 0);
-            var sevent = new ScheduledEvent("test", time, (n, t) => fired = true);
+            using var sevent = new ScheduledEvent("test", time, (n, t) => fired = true);
             sevent.Scan(time);
             Assert.IsTrue(fired);
         }
@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         [Test]
         public void NextEventTimeIsMaxValueWhenNoEvents()
         {
-            var sevent = new ScheduledEvent("test", new DateTime[0], (n, t) => { });
+            using var sevent = new ScheduledEvent("test", new DateTime[0], (n, t) => { });
             Assert.AreEqual(DateTime.MaxValue, sevent.NextEventUtcTime);
         }
 
@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void NextEventTimeIsMaxValueWhenNoMoreEvents()
         {
             var time = new DateTime(2015, 08, 11, 10, 30, 0);
-            var sevent = new ScheduledEvent("test", time, (n, t) => { });
+            using var sevent = new ScheduledEvent("test", time, (n, t) => { });
             sevent.Scan(time);
             Assert.AreEqual(DateTime.MaxValue, sevent.NextEventUtcTime);
         }
@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var count = 0;
             var time = new DateTime(2015, 08, 11, 10, 30, 0);
-            var sevent = new ScheduledEvent("test", new[] { time.AddSeconds(-2), time.AddSeconds(-1), time}, (n, t) => count++);
+            using var sevent = new ScheduledEvent("test", new[] { time.AddSeconds(-2), time.AddSeconds(-1), time}, (n, t) => count++);
             sevent.Scan(time);
             Assert.AreEqual(3, count);
         }
@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var count = 0;
             var time = new DateTime(2015, 08, 11, 10, 30, 0);
-            var sevent = new ScheduledEvent("test", new[] { time.AddSeconds(-2), time.AddSeconds(-1), time }, (n, t) => count++);
+            using var sevent = new ScheduledEvent("test", new[] { time.AddSeconds(-2), time.AddSeconds(-1), time }, (n, t) => count++);
             // skips all preceding events, not including the specified time
             sevent.SkipEventsUntil(time);
             Assert.AreEqual(time, sevent.NextEventUtcTime);
@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             var count = 0;
             var time = new DateTime(2015, 08, 11, 10, 30, 0);
             var eventTimes = new[] {time, time.AddSeconds(1)};
-            var sevent = new ScheduledEvent("test", eventTimes, (n, t) => count++);
+            using var sevent = new ScheduledEvent("test", eventTimes, (n, t) => count++);
             // skips all preceding events, not including the specified time
             sevent.SkipEventsUntil(time);
             Assert.AreEqual(time, sevent.NextEventUtcTime);
@@ -90,7 +90,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void FiresEventWhenTimeEquals()
         {
             var triggered = false;
-            var se = new ScheduledEvent("test", new DateTime(2015, 08, 07), (name, triggerTime) =>
+            using var se = new ScheduledEvent("test", new DateTime(2015, 08, 07), (name, triggerTime) =>
             {
                 triggered = true;
             })
@@ -107,7 +107,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void FiresEventWhenTimePasses()
         {
             var triggered = false;
-            var se = new ScheduledEvent("test", new DateTime(2015, 08, 07), (name, triggerTime) =>
+            using var se = new ScheduledEvent("test", new DateTime(2015, 08, 07), (name, triggerTime) =>
             {
                 triggered = true;
             })
@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             var first = new DateTime(2015, 08, 07);
             var second = new DateTime(2015, 08, 08);
             var dates = new[] { first, second }.ToHashSet();
-            var se = new ScheduledEvent("test", dates.ToList(), (name, triggerTime) =>
+            using var se = new ScheduledEvent("test", dates.ToList(), (name, triggerTime) =>
             {
                 dates.Remove(triggerTime);
             });
@@ -143,7 +143,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var triggered = false;
             var first = new DateTime(2015, 08, 07);
-            var se = new ScheduledEvent("test", first, (name, triggerTime) =>
+            using var se = new ScheduledEvent("test", first, (name, triggerTime) =>
             {
                 triggered = true;
             });
@@ -160,8 +160,8 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void ScheduledEventsWithSameNameAreDifferent()
         {
             var first = DateTime.UtcNow;
-            var se1 = new ScheduledEvent("test", first);
-            var se2 = new ScheduledEvent("test", first);
+            using var se1 = new ScheduledEvent("test", first);
+            using var se2 = new ScheduledEvent("test", first);
 
             Assert.AreEqual(se1.Name, se2.Name);
             Assert.AreNotEqual(se1, se2);
@@ -171,7 +171,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void CompareToItselfReturnsTrue()
         {
             var time = DateTime.UtcNow;
-            var se1 = new ScheduledEvent("test", time);
+            using var se1 = new ScheduledEvent("test", time);
             var se2 = se1;
 
             Assert.IsTrue(Equals(se1, se2));
@@ -182,7 +182,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void CompareToNullReturnsFalse()
         {
             var time = DateTime.UtcNow;
-            var se = new ScheduledEvent("test", time);
+            using var se = new ScheduledEvent("test", time);
 
             Assert.IsFalse(Equals(se, null));
             Assert.AreNotEqual(se, null);
@@ -192,7 +192,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void ToStringTest()
         {
             var name = "PepeGrillo";
-            var se = new ScheduledEvent(name, DateTime.UtcNow);
+            using var se = new ScheduledEvent(name, DateTime.UtcNow);
 
             Assert.IsNotNull(se);
             Assert.AreEqual(name, se.ToString());

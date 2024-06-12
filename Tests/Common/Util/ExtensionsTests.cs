@@ -1151,18 +1151,18 @@ class Test(PythonData):
         [Test]
         public void PyObjectTryConvertSymbolArray()
         {
-            PyObject value;
             using (Py.GIL())
             {
                 // Wrap a Symbol Array around a PyObject and convert it back
-                value = new PyList(new[] { Symbols.SPY.ToPython(), Symbols.AAPL.ToPython() });
-            }
+                using PyObject value = new PyList(new[] { Symbols.SPY.ToPython(), Symbols.AAPL.ToPython() });
+            
 
-            Symbol[] symbols;
-            var canConvert = value.TryConvert(out symbols);
-            Assert.IsTrue(canConvert);
-            Assert.IsNotNull(symbols);
-            Assert.IsAssignableFrom<Symbol[]>(symbols);
+                Symbol[] symbols;
+                var canConvert = value.TryConvert(out symbols);
+                Assert.IsTrue(canConvert);
+                Assert.IsNotNull(symbols);
+                Assert.IsAssignableFrom<Symbol[]>(symbols);
+            }
         }
 
         [Test]
@@ -1315,10 +1315,10 @@ class Test(PythonData):
             IEnumerable<Symbol> symbols;
             using (Py.GIL())
             {
-                symbols = new PyString("SPY").ConvertToSymbolEnumerable();
+                using var pyString = new PyString("SPY");
+                symbols = pyString.ConvertToSymbolEnumerable();
+                Assert.AreEqual(Symbols.SPY, symbols.Single());
             }
-
-            Assert.AreEqual(Symbols.SPY, symbols.Single());
         }
 
         [Test]
@@ -1330,10 +1330,10 @@ class Test(PythonData):
             IEnumerable<Symbol> symbols;
             using (Py.GIL())
             {
-                symbols = new PyList(new[] { "SPY".ToPython() }).ConvertToSymbolEnumerable();
+                using var pyList = new PyList(new[] { "SPY".ToPython() });
+                symbols = pyList.ConvertToSymbolEnumerable();
+                Assert.AreEqual(Symbols.SPY, symbols.Single());
             }
-
-            Assert.AreEqual(Symbols.SPY, symbols.Single());
         }
 
         [Test]
@@ -1354,10 +1354,10 @@ class Test(PythonData):
             IEnumerable<Symbol> symbols;
             using (Py.GIL())
             {
-                symbols = new PyList(new[] {Symbols.SPY.ToPython()}).ConvertToSymbolEnumerable();
+                using var pyList = new PyList(new[] { Symbols.SPY.ToPython() });
+                symbols = pyList.ConvertToSymbolEnumerable();
+                Assert.AreEqual(Symbols.SPY, symbols.Single());
             }
-
-            Assert.AreEqual(Symbols.SPY, symbols.Single());
         }
 
         [Test]

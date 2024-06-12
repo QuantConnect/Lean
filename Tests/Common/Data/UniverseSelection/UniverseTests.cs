@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test]
         public void RoundsTimeWhenCheckingMinimumTimeInUniverse_Seconds()
         {
-            var universe = new TestUniverse(_config,
+            using var universe = new TestUniverse(_config,
                 new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromSeconds(30)));
             var addedTime = new DateTime(2018, 1, 1);
             universe.AddMember(addedTime, _security, false);
@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test]
         public void RoundsTimeWhenCheckingMinimumTimeInUniverse_Minutes()
         {
-            var universe = new TestUniverse(_config,
+            using var universe = new TestUniverse(_config,
                 new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromMinutes(30)));
             var addedTime = new DateTime(2018, 1, 1);
             universe.AddMember(addedTime, _security, false);
@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test]
         public void RoundsTimeWhenCheckingMinimumTimeInUniverse_Hour()
         {
-            var universe = new TestUniverse(_config,
+            using var universe = new TestUniverse(_config,
                 new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromHours(6)));
             var addedTime = new DateTime(2018, 1, 1);
             universe.AddMember(addedTime, _security, false);
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test]
         public void RoundsTimeWhenCheckingMinimumTimeInUniverse_Daily()
         {
-            var universe = new TestUniverse(_config,
+            using var universe = new TestUniverse(_config,
                 new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(1)));
             var addedTime = new DateTime(2018, 1, 1);
             universe.AddMember(addedTime, _security, false);
@@ -118,7 +118,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         [Test]
         public void RoundsTimeWhenCheckingMinimumTimeInUniverse_SevenDays()
         {
-            var universe = new TestUniverse(_config,
+            using var universe = new TestUniverse(_config,
                 new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(7)));
             var addedTime = new DateTime(2018, 1, 1);
             universe.AddMember(addedTime, _security, false);

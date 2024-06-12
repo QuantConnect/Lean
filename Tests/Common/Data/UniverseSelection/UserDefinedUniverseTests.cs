@@ -50,6 +50,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         private ManualResetEvent _threadStarted = new (false);
         public override void Initialize()
         {
+#pragma warning disable CS0618
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 

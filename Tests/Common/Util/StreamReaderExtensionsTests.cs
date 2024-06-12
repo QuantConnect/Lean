@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var stream = input.ToStream();
 
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
             var value = smartStream.GetString();
 
             Assert.AreEqual(result, value);
@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var stream = input.ToStream();
 
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
             Assert.AreEqual(result, smartStream.GetString());
             Assert.AreEqual(result2, smartStream.GetString());
         }
@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var stream = "16.2".ToStream();
 
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
             bool pastLineEnd;
             var value = smartStream.GetDecimal(out pastLineEnd);
 
@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var stream = "-16.2,-88".ToStream();
 
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             bool pastLineEnd;
             Assert.AreEqual(-16.2, smartStream.GetDecimal(out pastLineEnd));
@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var stream = "16.2,0,12.2111111111,".ToStream();
             bool pastLineEnd;
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(16.2, smartStream.GetDecimal(out pastLineEnd));
             Assert.IsFalse(pastLineEnd);
@@ -111,7 +111,7 @@ namespace QuantConnect.Tests.Common.Util
             bool pastLineEnd;
             var stream = "16.2,0\r12.2111111111".ToStream();
 
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(16.2, smartStream.GetDecimal(out pastLineEnd));
             Assert.IsFalse(pastLineEnd);
@@ -127,7 +127,7 @@ namespace QuantConnect.Tests.Common.Util
             bool pastLineEnd;
             var stream = "16.2,0\n12.2111111111".ToStream();
 
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(16.2, smartStream.GetDecimal(out pastLineEnd));
             Assert.IsFalse(pastLineEnd);
@@ -143,7 +143,7 @@ namespace QuantConnect.Tests.Common.Util
             bool pastLineEnd;
             var stream = "16.2,0\r\n12.2111111111".ToStream();
 
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(16.2, smartStream.GetDecimal(out pastLineEnd));
             Assert.IsFalse(pastLineEnd);
@@ -157,21 +157,21 @@ namespace QuantConnect.Tests.Common.Util
         public void GetDecimalEmptyString()
         {
             var stream = "".ToStream();
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(0, smartStream.GetDecimal());
 
             stream = ",".ToStream();
-            smartStream = new StreamReader(stream);
+            using var secondSmartStream = new StreamReader(stream);
 
-            Assert.AreEqual(0, smartStream.GetDecimal());
+            Assert.AreEqual(0, secondSmartStream.GetDecimal());
         }
 
         [Test]
         public void GetDateTime()
         {
             var stream = "20190102 02:13".ToStream();
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(new DateTime(2019, 1, 2, 2, 13, 0),
                 smartStream.GetDateTime(DateFormat.TwelveCharacter));
@@ -181,7 +181,7 @@ namespace QuantConnect.Tests.Common.Util
         public void GetMultipleDateTime()
         {
             var stream = "20190102 02:13,20190203 05:13".ToStream();
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(new DateTime(2019, 1, 2, 2, 13, 0),
                 smartStream.GetDateTime(DateFormat.TwelveCharacter));
@@ -193,7 +193,7 @@ namespace QuantConnect.Tests.Common.Util
         public void GetMultipleDateTimeWithCarriageReturn()
         {
             var stream = "20190102 02:13\r20190203 05:13".ToStream();
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(new DateTime(2019, 1, 2, 2, 13, 0),
                 smartStream.GetDateTime(DateFormat.TwelveCharacter));
@@ -205,7 +205,7 @@ namespace QuantConnect.Tests.Common.Util
         public void GetMultipleDateTimeWithLineFeed()
         {
             var stream = "20190102 02:13\n20190203 05:13".ToStream();
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(new DateTime(2019, 1, 2, 2, 13, 0),
                 smartStream.GetDateTime(DateFormat.TwelveCharacter));
@@ -217,7 +217,7 @@ namespace QuantConnect.Tests.Common.Util
         public void GetMultipleDateTimeWithCarriageReturnAndLineFeed()
         {
             var stream = "20190102 02:13\r\n20190203 05:13".ToStream();
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(new DateTime(2019, 1, 2, 2, 13, 0),
                 smartStream.GetDateTime(DateFormat.TwelveCharacter));
@@ -229,7 +229,7 @@ namespace QuantConnect.Tests.Common.Util
         public void GetDecimalsAndDateTimes()
         {
             var stream = $"20190102 02:13,0,19{Environment.NewLine}20190203 05:13,15,1000{Environment.NewLine}".ToStream();
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(new DateTime(2019, 1, 2, 2, 13, 0),
                 smartStream.GetDateTime(DateFormat.TwelveCharacter));
@@ -246,7 +246,7 @@ namespace QuantConnect.Tests.Common.Util
         public void GetInt()
         {
             var stream = $"20190,0,19{Environment.NewLine}201900{Environment.NewLine}".ToStream();
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(20190, smartStream.GetInt32());
             Assert.AreEqual(0, smartStream.GetInt32());
@@ -258,7 +258,7 @@ namespace QuantConnect.Tests.Common.Util
         public void GetNegativeInt()
         {
             var stream = $"-20190,0,-19{Environment.NewLine}-201900{Environment.NewLine}".ToStream();
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(-20190, smartStream.GetInt32());
             Assert.AreEqual(0, smartStream.GetInt32());
@@ -270,7 +270,7 @@ namespace QuantConnect.Tests.Common.Util
         public void GetIntWithCarriageReturnAndLineFeed()
         {
             var stream = "20190,0,19\r\n201900\r\n".ToStream();
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(20190, smartStream.GetInt32());
             Assert.AreEqual(0, smartStream.GetInt32());
@@ -282,7 +282,7 @@ namespace QuantConnect.Tests.Common.Util
         public void GetIntWithCarriageReturn()
         {
             var stream = "20190,0,19\r201900\r".ToStream();
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(20190, smartStream.GetInt32());
             Assert.AreEqual(0, smartStream.GetInt32());
@@ -294,7 +294,7 @@ namespace QuantConnect.Tests.Common.Util
         public void GetIntWithLineFeed()
         {
             var stream = "20190,0,19\n201900\n".ToStream();
-            var smartStream = new StreamReader(stream);
+            using var smartStream = new StreamReader(stream);
 
             Assert.AreEqual(20190, smartStream.GetInt32());
             Assert.AreEqual(0, smartStream.GetInt32());
@@ -324,7 +324,7 @@ namespace QuantConnect.Tests.Common.Util
                     false,
                     tickType: tickType
                 );
-                var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
+                using var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
                 var date = new DateTime(2013, 10, 07);
                 var reader = new TextSubscriptionDataSourceReader(
                     zipCache,
@@ -360,7 +360,7 @@ namespace QuantConnect.Tests.Common.Util
                     false,
                     tickType: tickType
                 );
-                var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
+                using var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
                 var date = new DateTime(2013, 10, 07);
                 var reader = new TextSubscriptionDataSourceReader(
                     zipCache,

@@ -95,7 +95,8 @@ namespace QuantConnect.Tests.Common.Brokerages
                 HistoryProvider = new BrokerageTransactionHandlerTests.EmptyHistoryProvider()
             };
             var transactionHandler = new BacktestingTransactionHandler();
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new TestResultHandler(Console.WriteLine));
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, new TestResultHandler(Console.WriteLine));
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
             algorithm.AddEquity("IBM");
@@ -163,7 +164,8 @@ namespace QuantConnect.Tests.Common.Brokerages
                 HistoryProvider = new BrokerageTransactionHandlerTests.EmptyHistoryProvider()
             };
             var transactionHandler = new BacktestingTransactionHandler();
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new TestResultHandler(Console.WriteLine));
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, new TestResultHandler(Console.WriteLine));
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
             algorithm.AddEquity("IBM");

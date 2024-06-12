@@ -81,7 +81,7 @@ def Monthly(dt):
                 new TradeBar(reference.AddDays(14), Symbols.SPY, 11, 13, 9, 11, 100, Time.OneDay)
             };
 
-            var weeklyConsolidator = new TradeBarConsolidator(_weeklyFuncDictionary[language]);
+            using var weeklyConsolidator = new TradeBarConsolidator(_weeklyFuncDictionary[language]);
             weeklyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertTradeBar(
@@ -92,7 +92,7 @@ def Monthly(dt):
                     e);
             };
 
-            var monthlyConsolidator = new TradeBarConsolidator(_monthlyFuncDictionary[language]);
+            using var monthlyConsolidator = new TradeBarConsolidator(_monthlyFuncDictionary[language]);
             monthlyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertTradeBar(
@@ -143,7 +143,7 @@ def Monthly(dt):
                 new QuoteBar(reference.AddDays(14), Symbols.EURUSD, new Bar(11, 13, 9, 11), 10, new Bar(11, 13, 9, 11), 10, Time.OneDay)
             };
 
-            var weeklyConsolidator = new QuoteBarConsolidator(_weeklyFuncDictionary[language]);
+            using var weeklyConsolidator = new QuoteBarConsolidator(_weeklyFuncDictionary[language]);
             weeklyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertQuoteBar(
@@ -154,7 +154,7 @@ def Monthly(dt):
                     e);
             };
 
-            var monthlyConsolidator = new QuoteBarConsolidator(_monthlyFuncDictionary[language]);
+            using var monthlyConsolidator = new QuoteBarConsolidator(_monthlyFuncDictionary[language]);
             monthlyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertQuoteBar(
@@ -210,7 +210,7 @@ def Monthly(dt):
                 new Tick(reference.AddDays(14), Symbols.SPY, 11, 13, 9){ TickType = TickType.Trade,  Quantity = 10 }
             };
 
-            var weeklyConsolidator = new TickConsolidator(_weeklyFuncDictionary[language]);
+            using var weeklyConsolidator = new TickConsolidator(_weeklyFuncDictionary[language]);
             weeklyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertTickTradeBar(
@@ -221,7 +221,7 @@ def Monthly(dt):
                     e);
             };
 
-            var monthlyConsolidator = new TickConsolidator(_monthlyFuncDictionary[language]);
+            using var monthlyConsolidator = new TickConsolidator(_monthlyFuncDictionary[language]);
             monthlyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertTickTradeBar(
@@ -272,7 +272,7 @@ def Monthly(dt):
                 new Tick(reference.AddDays(14), Symbols.EURUSD, 11, 13, 9){ Quantity = 10 }
             };
 
-            var weeklyConsolidator = new TickQuoteBarConsolidator(_weeklyFuncDictionary[language]);
+            using var weeklyConsolidator = new TickQuoteBarConsolidator(_weeklyFuncDictionary[language]);
             weeklyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertTickQuoteBar(
@@ -283,7 +283,7 @@ def Monthly(dt):
                     e);
             };
 
-            var monthlyConsolidator = new TickQuoteBarConsolidator(_monthlyFuncDictionary[language]);
+            using var monthlyConsolidator = new TickQuoteBarConsolidator(_monthlyFuncDictionary[language]);
             monthlyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertTickQuoteBar(
@@ -337,7 +337,7 @@ def Monthly(dt):
                 new Tick(reference.AddDays(14), Symbols.SPY, 11, 13, 9){ Quantity = 10 }
             };
 
-            var weeklyConsolidator = new BaseDataConsolidator(_weeklyFuncDictionary[language]);
+            using var weeklyConsolidator = new BaseDataConsolidator(_weeklyFuncDictionary[language]);
             weeklyConsolidator.DataConsolidated += (s, e) => 
             {
                 AssertBaseTradeBar(
@@ -348,7 +348,7 @@ def Monthly(dt):
                     e);
             };
 
-            var monthlyConsolidator = new BaseDataConsolidator(_monthlyFuncDictionary[language]);
+            using var monthlyConsolidator = new BaseDataConsolidator(_monthlyFuncDictionary[language]);
             monthlyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertBaseTradeBar(
@@ -399,7 +399,7 @@ def Monthly(dt):
                 new TradeBar(reference.AddHours(25), Symbols.SPY, 11, 13, 9, 11, 100, Time.OneHour)
             };
 
-            var dailyConsolidator = new TradeBarConsolidator(_dailyFuncDictionary[language]);
+            using var dailyConsolidator = new TradeBarConsolidator(_dailyFuncDictionary[language]);
             dailyConsolidator.DataConsolidated += (s, e) =>
             {
                 AssertTradeBar(
@@ -521,7 +521,7 @@ def Monthly(dt):
 
         private void CalendarConsolidatesWithRegisterIndicator(dynamic calendarType)
         {
-            var consolidator = new TradeBarConsolidator(calendarType);
+            using var consolidator = new TradeBarConsolidator(calendarType);
             consolidator.DataConsolidated += (s, e) =>
             {
                 if (!indicator.IsReady) return;

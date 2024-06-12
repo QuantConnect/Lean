@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         public void Retrieves()
         {
             var fileProviderTest = new LocalZipMapFileProviderTest();
-            var dataProviderTest = new DefaultDataProviderTest();
+            using var dataProviderTest = new DefaultDataProviderTest();
             fileProviderTest.Initialize(dataProviderTest);
 
             var mapFileResolver = fileProviderTest.Get(AuxiliaryDataKey.EquityUsa);
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         public void CacheIsCleared()
         {
             var fileProviderTest = new LocalZipMapFileProviderTest();
-            var dataProviderTest = new DefaultDataProviderTest();
+            using var dataProviderTest = new DefaultDataProviderTest();
             fileProviderTest.Initialize(dataProviderTest);
             fileProviderTest.CacheCleared.Reset();
 

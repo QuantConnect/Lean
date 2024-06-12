@@ -55,7 +55,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             var transactionHandler = new BrokerageTransactionHandler();
 
-            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
             var spy = spySecurity.Symbol;

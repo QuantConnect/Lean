@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         public void CacheIsCleared()
         {
             var fileProviderTest = new LocalZipFactorFileProviderTest();
-            var dataProviderTest = new DefaultDataProviderTest();
+            using var dataProviderTest = new DefaultDataProviderTest();
 
             fileProviderTest.Initialize(TestGlobals.MapFileProvider, dataProviderTest);
             fileProviderTest.CacheCleared.Reset();

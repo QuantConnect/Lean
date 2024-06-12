@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesNewTradeBarsProperly()
         {
             TradeBar newTradeBar = null;
-            var consolidator = new TickConsolidator(4);
+            using var consolidator = new TickConsolidator(4);
             consolidator.DataConsolidated += (sender, tradeBar) =>
             {
                 newTradeBar = tradeBar;
@@ -85,7 +85,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void DoesNotConsolidateDifferentSymbols()
         {
-            var consolidator = new TickConsolidator(2);
+            using var consolidator = new TickConsolidator(2);
 
             var reference = DateTime.Today;
 
@@ -117,7 +117,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesPeriodInCountModeWithDailyData()
         {
             TradeBar consolidated = null;
-            var consolidator = new TickConsolidator(2);
+            using var consolidator = new TickConsolidator(2);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -147,7 +147,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesPeriodInPeriodModeWithDailyData()
         {
             TradeBar consolidated = null;
-            var consolidator = new TickConsolidator(TimeSpan.FromDays(1));
+            using var consolidator = new TickConsolidator(TimeSpan.FromDays(1));
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -176,7 +176,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesPeriodInPeriodModeWithDailyDataAndRoundedTime()
         {
             TradeBar consolidated = null;
-            var consolidator = new TickConsolidator(TimeSpan.FromDays(1));
+            using var consolidator = new TickConsolidator(TimeSpan.FromDays(1));
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -208,7 +208,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesNewTicksInPeriodWithRoundedTime()
         {
             TradeBar consolidated = null;
-            var consolidator = new TickConsolidator(TimeSpan.FromMinutes(1));
+            using var consolidator = new TickConsolidator(TimeSpan.FromMinutes(1));
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -282,7 +282,7 @@ namespace QuantConnect.Tests.Common.Data
         public void ProcessesTradeTicksOnly()
         {
             TradeBar consolidated = null;
-            var consolidator = new TickConsolidator(TimeSpan.FromMinutes(1));
+            using var consolidator = new TickConsolidator(TimeSpan.FromMinutes(1));
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;

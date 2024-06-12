@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesNewQuoteBarProperly()
         {
             QuoteBar quoteBar = null;
-            var creator = new TickQuoteBarConsolidator(4);
+            using var creator = new TickQuoteBarConsolidator(4);
             creator.DataConsolidated += (sender, args) =>
             {
                 quoteBar = args;
@@ -111,7 +111,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void DoesNotConsolidateDifferentSymbols()
         {
-            var consolidator = new TickQuoteBarConsolidator(2);
+            using var consolidator = new TickQuoteBarConsolidator(2);
 
             var reference = DateTime.Today;
 
@@ -143,7 +143,7 @@ namespace QuantConnect.Tests.Common.Data
         public void LastCloseAndCurrentOpenPriceShouldBeSameConsolidatedOnCount()
         {
             QuoteBar quoteBar = null;
-            var creator = new TickQuoteBarConsolidator(2);
+            using var creator = new TickQuoteBarConsolidator(2);
             creator.DataConsolidated += (sender, args) =>
             {
                 quoteBar = args;
@@ -202,7 +202,7 @@ namespace QuantConnect.Tests.Common.Data
         public void LastCloseAndCurrentOpenPriceShouldBeSameConsolidatedOnTimeSpan()
         {
             QuoteBar quoteBar = null;
-            var creator = new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1));
+            using var creator = new TickQuoteBarConsolidator(TimeSpan.FromMinutes(1));
             creator.DataConsolidated += (sender, args) =>
             {
                 quoteBar = args;

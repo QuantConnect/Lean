@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 using QuantConnect.Util;
 
@@ -7,6 +7,7 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class DisposableExtensionsTests
     {
+        #pragma warning disable CA2000
         [Test]
         public void ReturnsFalseForNullDisposable()
         {
@@ -69,7 +70,7 @@ namespace QuantConnect.Tests.Common.Util
 
                 if (_throwException)
                 {
-                    throw new Exception();
+                    throw new RegressionTestException();
                 }
             }
         }
