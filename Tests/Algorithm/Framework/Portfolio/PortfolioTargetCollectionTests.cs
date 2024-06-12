@@ -26,6 +26,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
+#pragma warning disable CS0618
     [TestFixture]
     public class PortfolioTargetCollectionTests
     {

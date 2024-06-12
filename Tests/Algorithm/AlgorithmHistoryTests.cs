@@ -127,7 +127,7 @@ def getHistory(algorithm, symbol):
             var start = new DateTime(2013, 10, 07);
             _algorithm = GetAlgorithm(start.AddDays(2));
 
-            _algorithm.AddEquity(Symbols.SPY, Resolution.Tick);
+            _algorithm.AddEquity(Symbols.SPY.Value, Resolution.Tick);
 
             if (language == Language.CSharp)
             {
