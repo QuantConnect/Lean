@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             algorithm.SetCurrentSlice(slice);
 
             // invoke brokerage
-            var brokerage = new PaperBrokerage(algorithm, null);
+            using var brokerage = new PaperBrokerage(algorithm, null);
             brokerage.Scan();
 
             // verify results
@@ -87,12 +87,13 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var dataPermissionManager = new DataPermissionManager();
+            using var defaultDataProvider = new DefaultDataProvider();
             var dataManager = new DataManager(feed,
                 new UniverseSelection(
                     algorithm,
                     new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algorithm.Portfolio)),
                     dataPermissionManager,
-                    new DefaultDataProvider()),
+                    defaultDataProvider),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -118,14 +119,18 @@ namespace QuantConnect.Tests.Brokerages.Paper
             };
             var results = new LiveTradingResultHandler();
             var transactions = new BacktestingTransactionHandler();
-            var brokerage = new PaperBrokerage(algorithm, job);
+            using var brokerage = new PaperBrokerage(algorithm, job);
 
             // initialize results and transactions
-            results.Initialize(new (job, new EventMessagingHandler(), new Api.Api(), transactions, null));
+            using var eventMessagingHandler = new EventMessagingHandler();
+            using var api = new Api.Api();
+            results.Initialize(new (job, eventMessagingHandler, api, transactions, null));
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, brokerage, results);
 
             var realTime = new BacktestingRealTimeHandler();
+            using var nullLeanManager = new AlgorithmManagerTests.NullLeanManager();
+
             // run algorithm manager
             manager.Run(job,
                 algorithm,
@@ -133,7 +138,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
                 transactions,
                 results,
                 realTime,
-                new AlgorithmManagerTests.NullLeanManager(),
+                nullLeanManager,
                 new CancellationToken()
             );
 

@@ -23,6 +23,7 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Brokerages
 {
+#pragma warning disable CS0618
     public class TestsHelpers
     {
         public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute, string symbol = "BTCUSD", string market = Market.Coinbase, string quoteCurrency = "USD")
