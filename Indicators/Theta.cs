@@ -181,7 +181,9 @@ namespace QuantConnect.Indicators
         {
         }
 
-        // Calculate the Theta of the option
+        /// <summary>
+        /// Calculate the Theta of the option
+        /// </summary>
         protected override decimal CalculateGreek(decimal timeTillExpiry)
         {
             var math = OptionGreekIndicatorsHelper.DecimalMath;

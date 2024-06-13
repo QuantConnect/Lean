@@ -22,6 +22,9 @@ using System.Linq;
 
 namespace QuantConnect.Report.ReportElements
 {
+    /// <summary>
+    /// Class for render the Sharpe Ratio statistic for a report
+    /// </summary>
     public class SharpeRatioReportElement : ReportElement
     {
         /// <summary>

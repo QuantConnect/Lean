@@ -181,7 +181,11 @@ namespace QuantConnect.Indicators
         {
         }
 
-        // Calculate the Vega of the option
+        /// <summary>
+        /// Calculate the Vega of the option
+        /// </summary>
+        /// <param name="timeTillExpiry"></param>
+        /// <returns></returns>
         protected override decimal CalculateGreek(decimal timeTillExpiry)
         {
             var math = OptionGreekIndicatorsHelper.DecimalMath;

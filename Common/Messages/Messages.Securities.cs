@@ -580,6 +580,9 @@ namespace QuantConnect
         /// </summary>
         public static class SecurityManager
         {
+            /// <summary>
+            /// Returns a string message saying the given symbol was not found in the user security list
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SymbolNotFoundInSecurities(QuantConnect.Symbol symbol)
             {
@@ -588,6 +591,9 @@ namespace QuantConnect
                     QuantConnect.SymbolCache.GetTicker(symbol)}"")'");
             }
 
+            /// <summary>
+            /// Returns a string message saying the given symbol could not be overwritten
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnableToOverwriteSecurity(QuantConnect.Symbol symbol)
             {
@@ -600,37 +606,69 @@ namespace QuantConnect
         /// </summary>
         public static class SecurityPortfolioManager
         {
+            /// <summary>
+            /// Returns a string message saying Portfolio object is an adaptor for Security Manager and that to add a new asset
+            /// the required data should added during initialization
+            /// </summary>
             public static string DictionaryAddNotImplemented =
                 "Portfolio object is an adaptor for Security Manager. To add a new asset add the required data during initialization.";
 
+            /// <summary>
+            /// Returns a string message saying the Portfolio object object is an adaptor for Security Manager and cannot be cleared
+            /// </summary>
             public static string DictionaryClearNotImplemented = "Portfolio object is an adaptor for Security Manager and cannot be cleared.";
 
+            /// <summary>
+            /// Returns a string message saying the Portfolio object is an adaptor for Security Manager and objects cannot be removed
+            /// </summary>
             public static string DictionaryRemoveNotImplemented = "Portfolio object is an adaptor for Security Manager and objects cannot be removed.";
 
+            /// <summary>
+            /// Returns a string message saying the AccountCurrency cannot be changed after adding a Security and that the method
+            /// SetAccountCurrency() should be moved before AddSecurity()
+            /// </summary>
             public static string CannotChangeAccountCurrencyAfterAddingSecurity =
                 "Cannot change AccountCurrency after adding a Security. Please move SetAccountCurrency() before AddSecurity().";
 
+            /// <summary>
+            /// Returns a string message saying the AccountCurrency cannot be changed after setting cash and that the method
+            /// SetAccountCurrency() should be moved before SetCash()
+            /// </summary>
             public static string CannotChangeAccountCurrencyAfterSettingCash =
                 "Cannot change AccountCurrency after setting cash. Please move SetAccountCurrency() before SetCash().";
 
+            /// <summary>
+            /// Returns a string message saying the AccountCurrency has already been set and that the new value for this property
+            /// will be ignored
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string AccountCurrencyAlreadySet(Securities.CashBook cashBook, string newAccountCurrency)
             {
                 return $"account currency has already been set to {cashBook.AccountCurrency}. Will ignore new value {newAccountCurrency}";
             }
 
+            /// <summary>
+            /// Returns a string message saying the AccountCurrency is being set to the given account currency
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SettingAccountCurrency(string accountCurrency)
             {
                 return $"setting account currency to {accountCurrency}";
             }
 
+            /// <summary>
+            /// Returns a string message saying the total margin information, this is, the total margin used as well as the
+            /// margin remaining
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string TotalMarginInformation(decimal totalMarginUsed, decimal marginRemaining)
             {
                 return Invariant($"Total margin information: TotalMarginUsed: {totalMarginUsed:F2}, MarginRemaining: {marginRemaining:F2}");
             }
 
+            /// <summary>
+            /// Returns a string message saying the order request margin information, this is, the margin used and the margin remaining
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string OrderRequestMarginInformation(decimal marginUsed, decimal marginRemaining)
             {
@@ -643,10 +681,13 @@ namespace QuantConnect
         /// </summary>
         public static class SecurityService
         {
+            /// <summary>
+            /// Returns a string message saying the given Symbol could not be found in the Symbol Properties Database
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SymbolNotFoundInSymbolPropertiesDatabase(QuantConnect.Symbol symbol)
             {
-                return $"Symbol can't be found in the Symbol Properties Database: {symbol.Value}";
+                return $"Symbol could not be found in the Symbol Properties Database: {symbol.Value}";
             }
         }
 
@@ -655,21 +696,33 @@ namespace QuantConnect
         /// </summary>
         public static class SecurityTransactionManager
         {
+            /// <summary>
+            /// Returns a string message saying CancelOpenOrders operation is not allowed in Initialize or during warm up
+            /// </summary>
             public static string CancelOpenOrdersNotAllowedOnInitializeOrWarmUp =
                 "This operation is not allowed in Initialize or during warm up: CancelOpenOrders. Please move this code to the OnWarmupFinished() method.";
 
+            /// <summary>
+            /// Returns a string message saying the order was canceled by the CancelOpenOrders() at the given time
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string OrderCanceledByCancelOpenOrders(DateTime time)
             {
                 return Invariant($"Canceled by CancelOpenOrders() at {time:o}");
             }
 
+            /// <summary>
+            /// Returns a string message saying the ticket for the given order ID could not be localized
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnableToLocateOrderTicket(int orderId)
             {
                 return Invariant($"Unable to locate ticket for order: {orderId}");
             }
 
+            /// <summary>
+            /// Returns a string message saying the order did not fill within the given amount of seconds
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string OrderNotFilledWithinExpectedTime(TimeSpan fillTimeout)
             {
@@ -682,12 +735,24 @@ namespace QuantConnect
         /// </summary>
         public static class SymbolProperties
         {
+            /// <summary>
+            /// String message saying the SymbolProperties LotSize can not be less than or equal to 0
+            /// </summary>
             public static string InvalidLotSize = "SymbolProperties LotSize can not be less than or equal to 0";
 
+            /// <summary>
+            /// String message saying the SymbolProperties PriceMagnifier can not be less than or equal to 0
+            /// </summary>
             public static string InvalidPriceMagnifier = "SymbolProprties PriceMagnifier can not be less than or equal to 0";
 
+            /// <summary>
+            /// String message saying the SymbolProperties StrikeMultiplier can not be less than or equal to 0
+            /// </summary>
             public static string InvalidStrikeMultiplier = "SymbolProperties StrikeMultiplier can not be less than or equal to 0";
 
+            /// <summary>
+            /// Parses a given SymbolProperties object into a string message
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Securities.SymbolProperties instance)
             {
@@ -719,12 +784,18 @@ namespace QuantConnect
         {
             //public static string InvalidLotSize = "SymbolProperties LotSize can not be less than or equal to 0";
 
+            /// <summary>
+            /// Returns a string saying a duplicated key was found while processing the given file
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string DuplicateKeyInFile(string file, Securities.SecurityDatabaseKey key)
             {
                 return $"Encountered duplicate key while processing file: {file}. Key: {key}";
             }
 
+            /// <summary>
+            /// Returns a string saying the given symbol properties file could not be localized
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string DatabaseFileNotFound(string file)
             {

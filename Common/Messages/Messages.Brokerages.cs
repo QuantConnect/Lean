@@ -277,21 +277,45 @@ namespace QuantConnect
         /// </summary>
         public static class TradierBrokerageModel
         {
+            /// <summary>
+            /// Unsupported Security Type string message
+            /// </summary>
             public static string UnsupportedSecurityType = "This model only supports equities and options.";
 
+            /// <summary>
+            /// Unsupported Time In Force Type string message
+            /// </summary>
             public static string UnsupportedTimeInForceType = $"This model only supports orders with the following time in force types: {typeof(DayTimeInForce)} and {typeof(GoodTilCanceledTimeInForce)}";
 
+            /// <summary>
+            /// Extended Market Hours Trading Not Supported string message
+            /// </summary>
             public static string ExtendedMarketHoursTradingNotSupported =
                 "Tradier does not support extended market hours trading. Your order will be processed at market open.";
 
+            /// <summary>
+            /// Order Quantity Update Not Supported string message
+            /// </summary>
             public static string OrderQuantityUpdateNotSupported = "Tradier does not support updating order quantities.";
 
+            /// <summary>
+            /// Open Orders Cancel On Reverse Split Symbols string message
+            /// </summary>
             public static string OpenOrdersCancelOnReverseSplitSymbols = "Tradier Brokerage cancels open orders on reverse split symbols";
 
+            /// <summary>
+            /// Short Order Is GTC string message
+            /// </summary>
             public static string ShortOrderIsGtc = "You cannot place short stock orders with GTC, only day orders are allowed";
 
+            /// <summary>
+            /// Sell Short Order Last Price Below 5 string message
+            /// </summary>
             public static string SellShortOrderLastPriceBelow5 = "Sell Short order cannot be placed for stock priced below $5";
 
+            /// <summary>
+            /// Incorrect Order Quantity string message
+            /// </summary>
             public static string IncorrectOrderQuantity = "Quantity should be between 1 and 10,000,000";
         }
 
@@ -300,12 +324,21 @@ namespace QuantConnect
         /// </summary>
         public static class TradingTechnologiesBrokerageModel
         {
+            /// <summary>
+            /// Invalid Stop Market Order Price string message
+            /// </summary>
             public static string InvalidStopMarketOrderPrice =
                 "StopMarket Sell orders must be below market, StopMarket Buy orders must be above market.";
 
+            /// <summary>
+            /// Invalid Stop Limit Order Price string message
+            /// </summary>
             public static string InvalidStopLimitOrderPrice =
                 "StopLimit Sell orders must be below market, StopLimit Buy orders must be above market.";
 
+            /// <summary>
+            /// Invalid Stop Limit Order Limit Price string message
+            /// </summary>
             public static string InvalidStopLimitOrderLimitPrice =
                 "StopLimit Buy limit price must be greater than or equal to stop price, StopLimit Sell limit price must be smaller than or equal to stop price.";
         }
@@ -315,6 +348,9 @@ namespace QuantConnect
         /// </summary>
         public static class WolverineBrokerageModel
         {
+            /// <summary>
+            /// Returns a message for an unsupported order type in Wolverine Brokerage Model
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedOrderType(Orders.Order order)
             {
@@ -327,6 +363,11 @@ namespace QuantConnect
         /// </summary>
         public static class RBIBrokerageModel
         {
+            /// <summary>
+            /// Returns a message for an unsupported order type in RBI Brokerage Model
+            /// </summary>
+            /// <param name="order"></param>
+            /// <returns></returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedOrderType(Orders.Order order)
             {

@@ -103,6 +103,9 @@ namespace QuantConnect
         /// </summary>
         public static class TDAmeritradeFeeModel
         {
+            /// <summary>
+            /// Returns a string message for unsupported security types in TDAmeritradeFeeModel
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedSecurityType(SecurityType securityType)
             {

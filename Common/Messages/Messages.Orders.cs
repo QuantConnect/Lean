@@ -338,6 +338,9 @@ namespace QuantConnect
         /// </summary>
         public static class StopLimitOrder
         {
+            /// <summary>
+            /// Returns an empty string as a tag
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string Tag(Orders.StopLimitOrder order)
             {
@@ -345,6 +348,9 @@ namespace QuantConnect
                 return string.Empty;
             }
 
+            /// <summary>
+            /// Parses the given StopLimitOrder object into a string message
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.StopLimitOrder order)
             {
@@ -359,6 +365,9 @@ namespace QuantConnect
         /// </summary>
         public static class StopMarketOrder
         {
+            /// <summary>
+            /// Returns an empty string as a tag
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string Tag(Orders.StopMarketOrder order)
             {
@@ -366,6 +375,9 @@ namespace QuantConnect
                 return string.Empty;
             }
 
+            /// <summary>
+            /// Parses a given StopMarketOrder object into a string message
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.StopMarketOrder order)
             {
@@ -379,12 +391,18 @@ namespace QuantConnect
         /// </summary>
         public static class TrailingStopOrder
         {
+            /// <summary>
+            /// Returns a tag message for the given TrailingStopOrder
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string Tag(Orders.TrailingStopOrder order)
             {
                 return Invariant($"Trailing Amount: {TrailingAmount(order)}");
             }
 
+            /// <summary>
+            /// Parses a TrailingStopOrder into a string
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.TrailingStopOrder order)
             {
@@ -393,12 +411,18 @@ namespace QuantConnect
                     TrailingAmountImpl(order, currencySymbol)}");
             }
 
+            /// <summary>
+            /// Returns a TrailingAmount string representation for the given TrailingStopOrder
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string TrailingAmount(Orders.TrailingStopOrder order)
             {
                 return TrailingAmountImpl(order, QuantConnect.Currencies.GetCurrencySymbol(order.PriceCurrency));
             }
 
+            /// <summary>
+            /// Returns a message for the given TrailingAmount and PriceCurrency values taking into account if the trailing is as percentage
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string TrailingAmount(decimal trailingAmount, bool trailingAsPercentage, string priceCurrency)
             {
@@ -417,6 +441,9 @@ namespace QuantConnect
         /// </summary>
         public static class SubmitOrderRequest
         {
+            /// <summary>
+            /// Parses a given SubmitOrderRequest object to a string message
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.SubmitOrderRequest request)
             {
@@ -431,6 +458,9 @@ namespace QuantConnect
         /// </summary>
         public static class UpdateOrderRequest
         {
+            /// <summary>
+            /// Parses an UpdateOrderRequest to a string
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.UpdateOrderRequest request)
             {

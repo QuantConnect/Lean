@@ -34,12 +34,23 @@ namespace QuantConnect.Data.Custom.IconicTypes
         /// </summary>
         public static bool AnyTicker { get; set; }
 
+        /// <summary>
+        /// Creates a new instance of an UnlinkedTradeBar
+        /// </summary>
         public UnlinkedDataTradeBar()
         {
             DataType = MarketDataType.Base;
             Period = TimeSpan.FromDays(1);
         }
-        
+
+        /// <summary>
+        /// Get Source for Custom Data File
+        /// >> What source file location would you prefer for each type of usage:
+        /// </summary>
+        /// <param name="config">Configuration object</param>
+        /// <param name="date">Date of this source request if source spread across multiple files</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
+        /// <returns>String source location of the file</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             return new SubscriptionDataSource(
@@ -52,6 +63,14 @@ namespace QuantConnect.Data.Custom.IconicTypes
                 FileFormat.Csv);
         }
 
+        /// <summary>
+        /// Fetch the data from the storage and feed it line by line into the engine.
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
+        /// <returns>Enumerable iterator for returning each line of the required data.</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             return new UnlinkedDataTradeBar

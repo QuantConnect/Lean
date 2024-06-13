@@ -31,12 +31,18 @@ namespace QuantConnect
         /// </summary>
         public static class VolumeShareSlippageModel
         {
+            /// <summary>
+            /// Returns a message for an invalid market data type in Volume Share Slippage Model
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidMarketDataType(BaseData data)
             {
                 return $"VolumeShareSlippageModel.GetSlippageApproximation(): Cannot use this model with market data type {data.GetType()}";
             }
 
+            /// <summary>
+            /// Returns a message for a volume not reported for market data type in Volume Share Slippage Model
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string VolumeNotReportedForMarketDataType(SecurityType securityType)
             {
@@ -44,6 +50,9 @@ namespace QuantConnect
                     "does not report volume. If you intend to model slippage beyond the spread, please consider another model.";
             }
 
+            /// <summary>
+            /// Returns a message for a negative or zero bar volume in Volume Share Slippage Model
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NegativeOrZeroBarVolume(decimal barVolume, decimal slippagePercent)
             {

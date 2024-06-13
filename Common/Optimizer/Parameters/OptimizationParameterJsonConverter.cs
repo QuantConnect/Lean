@@ -26,6 +26,9 @@ namespace QuantConnect.Optimizer.Parameters
     /// </summary>
     public class OptimizationParameterJsonConverter : JsonConverter
     {
+        /// <summary>
+        /// Writes a JSON object from a OptimizationParameter object
+        /// </summary>        
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             JObject jo = new JObject();
@@ -46,6 +49,9 @@ namespace QuantConnect.Optimizer.Parameters
             jo.WriteTo(writer);
         }
 
+        /// <summary>
+        /// Creates a Optimization Parameter object from a JSON object
+        /// </summary>
         public override object ReadJson(
             JsonReader reader,
             Type objectType,
@@ -107,6 +113,9 @@ namespace QuantConnect.Optimizer.Parameters
             return optimizationParameter;
         }
 
+        /// <summary>
+        /// Determines if an OptimizationParameter is assignable from the given object type
+        /// </summary>
         public override bool CanConvert(Type objectType) => typeof(OptimizationParameter).IsAssignableFrom(objectType);
     }
 }

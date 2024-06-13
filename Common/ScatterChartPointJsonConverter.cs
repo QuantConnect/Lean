@@ -56,6 +56,9 @@ namespace QuantConnect
             return new ScatterChartPoint(jArray[0].Value<long>(), jArray[1].Value<decimal?>());
         }
 
+        /// <summary>
+        /// Writes a Json from series
+        /// </summary>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             throw new NotImplementedException();

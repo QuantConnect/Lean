@@ -47,6 +47,9 @@ namespace QuantConnect.Optimizer.Objectives
         /// <remarks>For <see cref="Constraint"/> non optional, the value of the target constraint</remarks>
         public decimal? TargetValue { get; set; }
 
+        /// <summary>
+        /// Creates a new instance of Objective class
+        /// </summary>
         protected Objective()
         {
 

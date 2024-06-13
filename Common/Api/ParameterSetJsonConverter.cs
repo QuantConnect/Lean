@@ -38,6 +38,9 @@ namespace QuantConnect.Api
             return objectType == typeof(ParameterSet);
         }
 
+        /// <summary>
+        /// Writes a JSON object from a Parameter set
+        /// </summary>
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
             var parameterSet = value as ParameterSet;
