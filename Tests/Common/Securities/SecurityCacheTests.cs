@@ -380,6 +380,7 @@ class CustomDataTest(PythonData):
         result.High = 4.1
         result.low = 2.0
         result.close = 3.7
+        result.volume = 33
         result.Time = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
         return result");
 
@@ -392,6 +393,7 @@ class CustomDataTest(PythonData):
                 Assert.AreEqual(3.7, securityCache.Close);
                 Assert.AreEqual(2.0, securityCache.Low);
                 Assert.AreEqual(3.1, securityCache.Open);
+                Assert.AreEqual(33, securityCache.Volume);
 
                 testModule = PyModule.FromString("testModule",
                    @"
@@ -406,6 +408,7 @@ class CustomDataTest(PythonData):
         result.High = 4
         result.low = 2.0
         result.Close = ""test""
+        result.volume = 0
         result.Time = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
         return result");
 
@@ -418,6 +421,7 @@ class CustomDataTest(PythonData):
                 Assert.AreEqual(0, securityCache.Close);
                 Assert.AreEqual(2.0, securityCache.Low);
                 Assert.AreEqual(3.1, securityCache.Open);
+                Assert.AreEqual(0, securityCache.Volume);
             }
         }
 
