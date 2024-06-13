@@ -181,7 +181,9 @@ namespace QuantConnect.Indicators
             return _greekValue;
         }
 
-        // Calculate the greek of the option
+        /// <summary>
+        /// Calculate the greek of the option
+        /// </summary>
         protected virtual decimal CalculateGreek(decimal timeTillExpiry)
         {
             throw new NotImplementedException("'CalculateGreek' method must be implemented");

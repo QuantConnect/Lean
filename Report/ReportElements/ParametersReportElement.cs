@@ -19,6 +19,9 @@ using System.Text.RegularExpressions;
 
 namespace QuantConnect.Report.ReportElements
 {
+    /// <summary>
+    /// Class for creating a two column table for the Algorithm's Parameters in a report
+    /// </summary>
     public class ParametersReportElement : ReportElement
     {
         private IReadOnlyDictionary<string, string> _parameters;

@@ -1547,12 +1547,21 @@ namespace QuantConnect.Algorithm
             return pythonIndicator;
         }
 
+        /// <summary>
+        /// Converts an enumerable of Slice into a Python Pandas dataframe
+        /// </summary>
         protected PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
         {
             var history = PandasConverter.GetDataFrame(RemoveMemoizing(data), dataType);
             return TryCleanupCollectionDataFrame(dataType, history);
         }
 
+        /// <summary>
+        /// Converts an enumerable of BaseData into a Python Pandas dataframe
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="data"></param>
+        /// <returns></returns>
         protected PyObject GetDataFrame<T>(IEnumerable<T> data)
             where T : IBaseData
         {

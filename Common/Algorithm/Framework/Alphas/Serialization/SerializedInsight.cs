@@ -204,6 +204,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
             }
         }
 
+        /// <summary>
+        /// Pass-through for <see cref="CreatedTime"/>
+        /// </summary>
         [JsonProperty("generated-time")]
         double OldGeneratedTime
         {
@@ -213,6 +216,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
             }
         }
 
+        /// <summary>
+        /// See <see cref="Insight.GeneratedTimeUtc"/>
+        /// </summary>
         [JsonProperty("created-time")]
         public double OldCreatedTime
         {
@@ -222,6 +228,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
             }
         }
 
+        /// <summary>
+        /// See <see cref="Insight.CloseTimeUtc"/>
+        /// </summary>
         [JsonProperty("close-time")]
         public double OldCloseTime
         {

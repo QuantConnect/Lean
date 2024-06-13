@@ -163,6 +163,9 @@ namespace QuantConnect.Data.Fundamental
         }
     }
 
+    /// <summary>
+    /// Abstract class for multi-period fields
+    /// </summary>
     public abstract class MultiPeriodField : MultiPeriodField<double>
     {
         /// <summary>
@@ -190,6 +193,9 @@ namespace QuantConnect.Data.Fundamental
         }
     }
 
+    /// <summary>
+    /// Abstract class for multi-period fields long
+    /// </summary>
     public abstract class MultiPeriodFieldLong : MultiPeriodField<long>
     {
         /// <summary>

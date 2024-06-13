@@ -29,8 +29,20 @@ namespace QuantConnect.Indicators
         /// In this VWAP calculation, typical price is defined by (O + H + L + C) / 4
         /// </summary>
         private readonly int _period;
+
+        /// <summary>
+        /// Indentity indicator for price
+        /// </summary>
         protected readonly Identity Price;
+
+        /// <summary>
+        /// Identity indicator for volume
+        /// </summary>
         protected readonly Identity Volume;
+
+        /// <summary>
+        /// Volume Weighted Average Price
+        /// </summary>
         protected CompositeIndicator VWAP;
 
         /// <summary>
