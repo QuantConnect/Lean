@@ -25,8 +25,8 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
-using QuantConnect.Python;
 using QuantConnect.Statistics;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -73,8 +73,12 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         [TestCase(SecurityType.Future, Resolution.Minute, typeof(ZipEntryName), TickType.Quote)]
         [TestCase(SecurityType.Future, Resolution.Tick, typeof(ZipEntryName), TickType.Quote)]
-        [TestCase(SecurityType.Option, Resolution.Minute, typeof(ZipEntryName), TickType.Quote)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(ZipEntryName), TickType.Quote)]
+        [TestCase(SecurityType.FutureOption, Resolution.Minute, typeof(ZipEntryName), TickType.Quote)]
+        [TestCase(SecurityType.FutureOption, Resolution.Tick, typeof(ZipEntryName), TickType.Quote)]
+        [TestCase(SecurityType.Option, Resolution.Minute, typeof(OptionsUniverse), TickType.Quote)]
+        [TestCase(SecurityType.Option, Resolution.Tick, typeof(OptionsUniverse), TickType.Quote)]
+        [TestCase(SecurityType.IndexOption, Resolution.Minute, typeof(OptionsUniverse), TickType.Quote)]
+        [TestCase(SecurityType.IndexOption, Resolution.Tick, typeof(OptionsUniverse), TickType.Quote)]
         public void GetsSubscriptionDataTypesCanonical(SecurityType securityType, Resolution resolution, Type expectedDataType, TickType expectedTickType)
         {
             var types = GetSubscriptionDataTypes(securityType, resolution, true);

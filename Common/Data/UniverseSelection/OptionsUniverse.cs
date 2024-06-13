@@ -189,6 +189,20 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Period of the data
+        /// </summary>
+        public TimeSpan Period { get; } = TimeSpan.FromDays(1);
+
+        /// <summary>
+        /// Time that the data became available to use
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get { return Time + Period; }
+            set { Time = value - Period; }
+        }
+
+        /// <summary>
         /// Creates a new instance of the <see cref="OptionsUniverse"/> class
         /// </summary>
         public OptionsUniverse()
@@ -312,11 +326,6 @@ namespace QuantConnect.Data.UniverseSelection
         {
             return new OptionsUniverse(this);
         }
-
-        //public override Resolution DefaultResolution()
-        //{
-        //    return Resolution.Daily;
-        //}
 
         /// <summary>
         /// Gets the CSV string representation of this universe entry
