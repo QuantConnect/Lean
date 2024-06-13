@@ -26,6 +26,14 @@ namespace QuantConnect.Algorithm.CSharp
     /// Algorithm asserting that using OnlyApplyFilterAtMarketOpen along with other dynamic filters will make the filters be applied only on market
     /// open, regardless of the order of configuration of the filters
     /// </summary>
+    /// <remarks>
+    /// This algorithm is outdated. Options selection happens daily at midnight. The OnlyApplyFilterAtMarketOpen method is not obsolete.
+    ///
+    ///
+    /// TODO: Remove algorithm!
+    ///
+    ///
+    /// </remarks>
     public class AddOptionWithOnMarketOpenOnlyFilterRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
@@ -59,19 +67,9 @@ namespace QuantConnect.Algorithm.CSharp
             var changeOptions = changes.AddedSecurities.Concat(changes.RemovedSecurities)
                                                                         .Where(s => s.Type == SecurityType.Option);
 
-            // Susbtract one minute to get the actual market open. If market open is at 9:30am, this will be invoked at 9:31am
-            var expectedTime = Time.TimeOfDay - TimeSpan.FromMinutes(1);
-            var allOptionsWereChangedOnMarketOpen = changeOptions.All(s =>
+            if (Time != Time.Date)
             {
-                var firstMarketSegment = s.Exchange.Hours.MarketHours[Time.DayOfWeek].Segments
-                                                         .First(segment => segment.State == MarketHoursState.Market);
-
-                return firstMarketSegment.Start == expectedTime;
-            });
-
-            if (!allOptionsWereChangedOnMarketOpen)
-            {
-                throw new RegressionTestException("Expected options filter to be run only on market open");
+                throw new RegressionTestException($"Expected options filter to be run only at midnight. Actual was {Time}");
             }
         }
 
@@ -88,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all time slices of algorithm
         /// </summary>
-        public long DataPoints => 5952220;
+        public long DataPoints => 363590;
 
         /// <summary>
         /// Data Points count of the algorithm history

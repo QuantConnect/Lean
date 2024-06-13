@@ -35,14 +35,15 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly HashSet<Symbol> _expectedData = new HashSet<Symbol>();
         private readonly HashSet<Symbol> _expectedUniverses = new HashSet<Symbol>();
         private bool _expectUniverseSubscription;
+        private DateTime _universeSubscriptionTime;
 
         // order of expected contract additions as price moves
         private int _expectedContractIndex;
         private readonly List<Symbol> _expectedContracts = new List<Symbol>
         {
-            SymbolRepresentation.ParseOptionTickerOSI("GOOG  151224P00747500"),
             SymbolRepresentation.ParseOptionTickerOSI("GOOG  151224P00750000"),
-            SymbolRepresentation.ParseOptionTickerOSI("GOOG  151224P00752500")
+            SymbolRepresentation.ParseOptionTickerOSI("GOOG  151224P00752500"),
+            SymbolRepresentation.ParseOptionTickerOSI("GOOG  151224P00755000")
         };
 
         public override void Initialize()
@@ -68,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Log($"SubscriptionManager.Subscriptions:  {string.Join(" -- ", SubscriptionManager.Subscriptions)}");
                 throw new RegressionTestException($"Unexpected {OptionChainSymbol} subscription presence");
             }
-            if (!slice.ContainsKey(Underlying))
+            if (Time != _universeSubscriptionTime && !data.ContainsKey(Underlying))
             {
                 // TODO : In fact, we're unable to properly detect whether or not we auto-added or it was manually added
                 // this is because when we auto-add the underlying we don't mark it as an internal security like we do with other auto adds
@@ -91,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var actual = string.Join(Environment.NewLine, UniverseManager.Keys.OrderBy(s => s.ToString()));
                 throw new RegressionTestException($"{Time}:: Detected differences in expected and actual universes{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
-            if (_expectedData.AreDifferent(slice.Keys.ToHashSet()))
+            if (Time != _universeSubscriptionTime && _expectedData.AreDifferent(data.Keys.ToHashSet()))
             {
                 var expected = string.Join(Environment.NewLine, _expectedData.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, slice.Keys.OrderBy(s => s.ToString()));
@@ -99,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // 10AM add GOOG option chain
-            if (Time.TimeOfDay.Hours == 10 && Time.TimeOfDay.Minutes == 0)
+            if (Time.TimeOfDay.Hours == 10 && Time.TimeOfDay.Minutes == 0 && !_expectUniverseSubscription)
             {
                 if (Securities.ContainsKey(OptionChainSymbol))
                 {
@@ -110,9 +111,9 @@ namespace QuantConnect.Algorithm.CSharp
                 googOptionChain.SetFilter(u =>
                 {
                     // we added the universe at 10, the universe selection data should not be from before
-                    if (u.Underlying.EndTime.Hour < 10)
+                    if (u.LocalTime.Hour < 10)
                     {
-                        throw new RegressionTestException($"Unexpected underlying data point {u.Underlying.EndTime} {u.Underlying}");
+                        throw new RegressionTestException($"Unexpected selection time {u.LocalTime}");
                     }
                     // find first put above market price
                     return u.IncludeWeeklys()
@@ -124,6 +125,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _expectedSecurities.Add(OptionChainSymbol);
                 _expectedUniverses.Add(OptionChainSymbol);
                 _expectUniverseSubscription = true;
+                _universeSubscriptionTime = Time;
             }
 
             // 11:30AM remove GOOG option chain
@@ -151,7 +153,7 @@ namespace QuantConnect.Algorithm.CSharp
                         var expectedContract = _expectedContracts[_expectedContractIndex];
                         if (added.Symbol != expectedContract)
                         {
-                            throw new RegressionTestException($"Expected option contract {expectedContract} to be added but received {added.Symbol}");
+                            throw new RegressionTestException($"Expected option contract {expectedContract.Value} to be added but received {added.Symbol}");
                         }
 
                         _expectedContractIndex++;
@@ -186,7 +188,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Securities.ContainsKey(Underlying))
             {
-                Console.WriteLine($"{Time:o}:: PRICE:: {Securities[Underlying].Price} CHANGES:: {changes}");
+                Log($"{Time:o}:: PRICE:: {Securities[Underlying].Price} CHANGES:: {changes}");
             }
         }
 
@@ -203,7 +205,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 200807;
+        public long DataPoints => 3503;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -227,7 +229,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "99079"},
+            {"End Equity", "98784"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -243,10 +245,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$6.00"},
-            {"Estimated Strategy Capacity", "$3000.00"},
-            {"Lowest Capacity Asset", "GOOCV 305RBR0BSWIX2|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "1.49%"},
-            {"OrderListHash", "bd115ec8bb7734b1561d6a6cc6c00039"}
+            {"Estimated Strategy Capacity", "$4000.00"},
+            {"Lowest Capacity Asset", "GOOCV 305RBQ2BZBZT2|GOOCV VP83T1ZUHROL"},
+            {"Portfolio Turnover", "2.58%"},
+            {"OrderListHash", "09f766c470a8bcf4bb6862da52bf25a7"}
         };
     }
 }
