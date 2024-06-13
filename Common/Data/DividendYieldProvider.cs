@@ -108,10 +108,10 @@ namespace QuantConnect.Data
         {
             if (!optionSymbol.SecurityType.IsOption() || optionSymbol.SecurityType == SecurityType.Option)
             {
-                return new DividendYieldProvider();
+                return new DividendYieldProvider(optionSymbol.Underlying);
             }
 
-            return new DividendYieldProvider(optionSymbol.Underlying);
+            return new DividendYieldProvider();
         }
 
         /// <summary>
